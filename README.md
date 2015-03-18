@@ -1,14 +1,14 @@
-# Mosaic
+# Matisse
 
-## What is Mosaic?
+## What is Matisse?
 
-Mosaic is a component-based template engine for PHP web applications.
+Matisse is a component-based template engine for PHP web applications.
 
-Mosaic generates an HTML document by combining a source (template) document with data fetched from your domain model.
+Matisse generates an HTML document by combining a source (template) document with data fetched from your domain model.
 
 The source template is a text file with XHTML markup where, besides common HTML tags, components can be specified using special tags prefixed with `c:` for components or `p:` for component parameters.
 
-Example:
+Example of a Matisse template:
 
 ```HTML
 <h1>Some HTML text</h1>
@@ -18,7 +18,8 @@ Example:
 	<c:repeater data="{$myData}">
 		<li>Item {$name}</li>
 		<p:no-data>The are no items.</p:no-data>
-	</c:repeater></ul>
+	</c:repeater>
+</ul>
 ```
 
 Each component tag is converted into an instance of a corresponding PHP class. When the template is rendered, each component instance is responsible for generating an HTML representation of that component, together with optional (embedded or external) javascript code and stylesheet references or embedded CSS styles.
@@ -78,5 +79,5 @@ You can then create instances of this component like this:
 
 Templates, when run for the first time, are parsed into a component tree which is then saved in serialized form into a cache file. Further template renderings will fetch the pre-parsed version from the cache file (or shared memory buffer), therefore speeding up the rendering process.
 
-When a source template file is modified and subsequently requested, Mosaic will automatically re-parse and re-cache the updated version.
+When a source template file is modified and subsequently requested, Matisse will automatically re-parse and re-cache the updated version.
 
