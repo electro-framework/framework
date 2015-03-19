@@ -1,6 +1,8 @@
 <?php
 namespace impactwave\matisse\components;
 use impactwave\matisse\Component;
+use impactwave\matisse\Context;
+use impactwave\matisse\exceptions\MatisseException;
 
 class Page extends Component
 {
@@ -15,25 +17,26 @@ class Page extends Component
    * Array of strings/Parameters containing URLs of CSS stylesheets to be loaded during the page loading process.
    * @var array
    */
-  public $stylesheets;
+  public $stylesheets = [];
 
   /**
    * Array of strings/Parameters containing URLs of scripts to be loaded during the page loading process.
    * @var array
    */
-  public $scripts;
+  public $scripts = [];
 
   /**
    * Array of strings (or Parameter objects with child content) containing inline javascripts.
    * @var array
    */
-  public $inlineScripts;
+  public $inlineScripts = [];
 
   /**
    * Array of strings (or Parameter objects with child content) containing inline css code.
    * @var array
    */
-  public $inlineCssStyles;
+  public $inlineCssStyles = [];
+
   public $statusMessage    = '';
   public $contentIsXML     = false;
   public $autoHTML         = true;
@@ -67,19 +70,12 @@ class Page extends Component
    */
   public $bodyAttrs = null;
 
-  public function __construct ($properties = null, $styles = null)
+  public function __construct (Context $context)
   {
-    global $FRAMEWORK, $application;
-    parent::__construct ($properties, $styles);
+    parent::__construct ($context);
     $this->page = $this;
     $this->checkBrowser ();
     $this->requestURI = $_SERVER['REQUEST_URI'];
-    if ($application->frameworkScripts)
-      $this->scripts = ["js/engine.js"];
-    else $this->scripts = [];
-    $this->stylesheets     = [];
-    $this->inlineScripts   = [];
-    $this->inlineCssStyles = [];
   }
 
   public function checkBrowser ()
@@ -178,7 +174,7 @@ class Page extends Component
       try {
         $this->controller->beginXMLResponse ();
         $this->renderChildren ();
-      } catch (Exception $e) {
+      } catch (\Exception $e) {
         ob_clean ();
         header ('Content-Type: text/html');
         throw $e;
@@ -329,16 +325,6 @@ HTML;
       $this->endTag ();
 
       echo $this->footer;
-      if ($application->URI == $application->baseURI && !empty($application->googleAnalyticsAccount)
-          && $this->controller->isProductionSite
-      )
-        $this->addGoogleAnalytics ($application->googleAnalyticsAccount);
-      if ($application->frameworkScripts)
-        $this->addTag ('script',
-          [
-            'type' => 'text/javascript'
-          ], 'seleneReady()'
-        );
       $this->endTag ();
       $this->endTag ();
     } else $this->renderChildren ();
@@ -360,7 +346,7 @@ HTML;
         $url       = (substr ($URI, 0, 4) == 'http') ? $URI : $application->toFilePath ($URI);
         $newScript = file_get_contents ($url);
         if ($newScript === false)
-          throw new ConfigException("Can't load javascript at $url");
+          throw new MatisseException("Can't load javascript at $url");
         $script .= $newScript;
       }
       $packed = $this->compressScript ($script);
@@ -397,19 +383,4 @@ HTML;
     return $jscomp;
   }
 
-  private function addGoogleAnalytics ($accountID)
-  {
-    echo <<<HTML
-<script type="text/javascript">
-var _gaq = _gaq || [];
-_gaq.push(['_setAccount','$accountID']);
-_gaq.push(['_trackPageview']);
-(function() {
-  var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-  ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-  var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-})();
-</script>
-HTML;
-  }
 }
