@@ -3,7 +3,6 @@ namespace impactwave\matisse;
 
 class VisualComponent extends Component implements IAttributes
 {
-
   /**
    * The components base CSS class.
    * @var string

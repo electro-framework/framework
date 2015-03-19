@@ -13,7 +13,7 @@
     "psr-4": {
       "impactwave\\matisse\\": "src/"
     },
-    "files": ["src/utility.php"]
+    "files": ["src/globals.php", "src/utility.php"]
   },
   "minimum-stability": "dev"
 }

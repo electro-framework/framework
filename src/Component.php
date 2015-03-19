@@ -139,6 +139,15 @@ abstract class Component
   private $regenerateId = false;
 
   /**
+   * Gets the name of the class.
+   * @return string
+   */
+  public static function ref ()
+  {
+    return get_called_class ();
+  }
+
+  /**
    * Creates a new component instance and optionally sets its attributes and styles.
    *
    * @param array   $attributes A map of the component's attributes.
@@ -162,15 +171,18 @@ abstract class Component
   /**
    * Creates a component corresponding to the specified tag and optionally sets its attributes.
    *
-   * @param string $tagName
-   * @param array  $attributes
+   * @param Context $context
+   * @param string  $tagName
+   * @param array   $attributes
    * @return Component subclass instance
    * @throws ComponentException
    */
-  static public function create ($tagName, array $attributes = null)
+  static public function create (Context $context, $tagName, array $attributes = null)
   {
-    $class = normalizeTagName ($tagName);
-    return new $class($attributes);
+    $class = $context->getClassForTag ($tagName);
+    if (!$class)
+      throw new ComponentException (null, "Unknown tag: <b>&lt;c:$tagName></b>\n\n\nDid you forget to register it?");
+    return new $class ($context, $attributes);
   }
 
   public static function isCompositeBinding ($exp)

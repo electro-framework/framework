@@ -103,7 +103,7 @@ class Parser
             }
             /** @var Parameter|boolean $defParam */
             $this->parseAttributes ($attrs, $attributes, $bindings);
-            $component = Component::create ($tag, $attributes);
+            $component = Component::create ($this->context, $tag, $attributes);
             $component->setTagName ($tag); //for performance
             $component->bindings = $bindings;
             $this->addComponent ($component);
@@ -132,7 +132,7 @@ class Parser
             }
             break;
           case 't':
-            $template = get ($this->context->templates, $tag);
+            $template = $this->context->getTemplate ($tag);
             if (is_null ($template))
               try {
                 $template = $this->loadTemplate ($tag);
@@ -182,7 +182,7 @@ class Parser
     $content = extractXML ($content);
     $parser  = new Parser($this->context);
     $parser->parse ($content, $this->root);
-    $template = get ($this->context->templates, $tagName);
+    $template = $this->context->getTemplate ($tagName);
     if (isset($template)) {
       $template->remove ();
       return $template;
@@ -242,7 +242,7 @@ class Parser
 
   protected function canAddComponent ()
   {
-    return $this->current == $this->root || $this->current->className == 'Parameter';
+    return $this->current == $this->root || $this->current instanceof Parameter;
   }
 
   protected function parseAttributes ($attrStr, array &$attributes = null, array &$bindings = null,

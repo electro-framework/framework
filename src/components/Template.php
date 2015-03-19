@@ -1,8 +1,10 @@
 <?php
 namespace impactwave\matisse\components;
+use impactwave\matisse as m;
 use impactwave\matisse\AttributeType;
 use impactwave\matisse\Component;
 use impactwave\matisse\ComponentAttributes;
+use impactwave\matisse\exceptions\ComponentException;
 use impactwave\matisse\IAttributes;
 
 class TemplateAttributes extends ComponentAttributes
@@ -48,7 +50,7 @@ class Template extends Component implements IAttributes
 
     public function parsed ()
     {
-        $this->page->controller->templates[$this->attrs ()->name] = $this;
+        $this->context->addTemplate ($this->attrs ()->name, $this);
     }
 
     /**
@@ -58,7 +60,7 @@ class Template extends Component implements IAttributes
      */
     public function getParameter ($name)
     {
-        $name   = denormalizeAttributeName ($name);
+        $name   = m\denormalizeAttributeName ($name);
         $params = $this->attrs ()->get ('param');
         if (!is_null ($params))
             foreach ($params as $param)
@@ -118,7 +120,6 @@ class Template extends Component implements IAttributes
 
     public function apply (TemplateInstance $instance)
     {
-        global $application;
         $stylesheets = $this->attrs ()->get ('stylesheet');
         if (isset($stylesheets))
             foreach ($stylesheets as $sheet) {
@@ -177,7 +178,7 @@ class Template extends Component implements IAttributes
                                     } else {
                                         //simple exp. (binding ref. only}
                                         $attrName = substr ($exp, 2, -1);
-                                        $normName = normalizeAttributeName ($attrName);
+                                        $normName = m\normalizeAttributeName ($attrName);
                                         if (!$instance->attrs ()->defines ($normName)) {
                                             $s = join ('</b>, <b>', $instance->attrs ()->getAttributeNames ());
                                             throw new ComponentException($instance,
@@ -246,7 +247,7 @@ class Template extends Component implements IAttributes
 
     private static function evalScalarRef ($ref, TemplateInstance $instance, &$transfer_binding)
     {
-        $ref = normalizeAttributeName ($ref);
+        $ref = m\normalizeAttributeName ($ref);
         if (isset($instance->bindings) && array_key_exists ($ref, $instance->bindings)) {
             $transfer_binding = true;
             return $instance->bindings[$ref];
