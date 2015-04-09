@@ -185,7 +185,7 @@ class Page extends Component
       $this->renderChildren ();
       $pageContent = ob_get_clean ();
 
-      $cacheScriptURI = $application->toURI ('src/selene/cache.php?f=');
+      $cacheScriptURI = $application->toURI ('private/selene/cache.php?f=');
 
       $oldIEWarning = !empty($application->oldIEWarning) && $this->browserIsIE6;
       if ($oldIEWarning)
