@@ -979,14 +979,4 @@ abstract class Component
     }
   }
 
-  protected function handleFocus ()
-  {
-    if ($this->supportsAttributes && $this->attrs ()->get ('focus', false)) {
-      $this->beginTag ('script');
-      $this->addAttribute ('type', 'text/javascript');
-      $this->setContent ('focusField("' . $this->attrsObj->name . '")');
-      $this->endTag ();
-    }
-  }
-
 }

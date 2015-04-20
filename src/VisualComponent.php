@@ -26,7 +26,7 @@ class VisualComponent extends Component implements IAttributes
 
   /**
    * Creates an instance of the component's attributes.
-   * @return ButtonAttributes
+   * @return ComponentAttributes
    */
   public function newAttributes ()
   {
@@ -54,6 +54,16 @@ class VisualComponent extends Component implements IAttributes
   {
     $this->endTag ();
     $this->handleFocus ();
+  }
+
+  protected function handleFocus ()
+  {
+    if ($this->supportsAttributes && $this->attrs ()->get ('autofocus', false)) {
+      $this->beginTag ('script');
+      $this->addAttribute ('type', 'text/javascript');
+      $this->setContent ('focusField("' . $this->attrsObj->name . '")');
+      $this->endTag ();
+    }
   }
 
 }
