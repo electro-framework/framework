@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c:template name="menu-item">
+  <p:param name="label"     type="text"/>
+  <p:param name="uri"       type="text" default=" "/>
+  <p:param name="url"       type="text" default="?/"/>
+  <p:param name="match"     type="text"/>
+  <p:param name="css-class" type="text"/>
+  <p:body>
+    <c:test value="{@match}">
+      <p:if-set>
+        <c:test value="{!sitePage.URI_regexp}">
+          <p:if-match value="{@match}">
+            <a class="{@css-class} selected" href="{@url}{@uri}">{@label}</a>
+          </p:if-match>
+          <p:default>
+            <a class="{@css-class}" href="{@url}{@uri}">{@label}</a>
+          </p:default>
+        </c:test>
+      </p:if-set>
+      <p:default>
+        <c:test value="{!sitePage.URI_regexp}">
+          <p:if-match value="{@uri}">
+            <a class="{@css-class} selected" href="{@url}{@uri}">{@label}</a>
+          </p:if-match>
+          <p:default>
+            <a class="{@css-class}" href="{@url}{@uri}">{@label}</a>
+          </p:default>
+        </c:test>
+      </p:default>
+    </c:test>
+  </p:body>
+</c:template>

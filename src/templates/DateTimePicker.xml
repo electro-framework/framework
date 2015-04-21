@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c:template name="date-time-picker">
+  <p:param name="name" type="identifier" default="datetimepicker"/>
+  <p:param name="label" type="text"/>
+  <p:param name="value" type="text"/>
+  <p:param name="format" type="text" default="YYYY-MM-DD HH:mm"/>
+  <p:param name="locale" type="text" default="pt"/>
+  <p:param name="side-by-side" type="boolean" default="true"/>
+  <p:script src="public/lib/moment/min/moment-with-locales.min.js"/>
+  <p:script src="public/lib/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"/>
+  <p:stylesheet src="public/lib/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css"/>
+  <p:body>
+    <div class="Field form-group">
+      <label for="date">{@label}</label>
+      <div class='input-group date' id='{@name}'>
+        <input type='text' class="form-control" name="{@name}"/>
+        <span class="input-group-addon">
+          <span class="glyphicon glyphicon-calendar"></span>
+        </span>
+      </div>
+      <script type="text/javascript">
+        $(function () {
+          $('#{@name}').datetimepicker({
+            locale:      '{@locale}',
+            defaultDate: '{@value}' || new moment(),
+            format:      '{@format}',
+            sideBySide:  {@side-by-side}
+          });
+        });
+      </script>
+    </div>
+  </p:body>
+</c:template>

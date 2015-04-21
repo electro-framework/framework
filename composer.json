@@ -1,0 +1,42 @@
+{
+  "name": "impactwave/selene-kernel",
+  "description": "Selene Framework Kernel",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Impactwave",
+      "email": "impactwave@impactwave.com",
+      "homepage": "http://impactwave.com"
+    },
+    {
+      "name": "Cláudio Silva",
+      "email": "claudio.silva@impactwave.com"
+    }
+  ],
+  "config": {
+    "preferred-install": "dist"
+  },
+  "minimum-stability": "dev",
+  "require": {
+    "php": ">=5.4.0",
+    "impactwave/matisse": "dev-master"
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/impactwave/matisse"
+    }
+  ],
+  "autoload": {
+    "classmap": [
+      "src/classes",
+      "src/components",
+      "src/modules"
+    ],
+    "files": [
+      "src/utility.php",
+      "src/global.php",
+      "src/database.php"
+    ]
+  }
+}

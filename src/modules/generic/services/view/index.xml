@@ -1,0 +1,68 @@
+<data>
+  <c:repeater data="{!default}">
+    <p:repeat>
+      <e>
+        <id>{id}</id>
+        <c:test value="{title}"><p:if-set>
+            <title>
+              <c:literal cdata="yes" whitespace="no" value="{title}"/>
+            </title>
+        </p:if-set></c:test>
+        <c:test value="{date}"><p:if-set><date>{date}</date></p:if-set></c:test>
+        <c:test value="{date2}"><p:if-set><date2>{date2}</date2></p:if-set></c:test>
+        <c:test value="{datetime}"><p:if-set></p:if-set></c:test>
+        <c:test value="{datetime2}"><p:if-set></p:if-set></c:test>
+        <c:test value="{image}"><p:if-set><image>{image}</image></p:if-set></c:test>
+        <c:test value="{image2}"><p:if-set><image2>{image2}</image2></p:if-set></c:test>
+        <c:test value="{file}"><p:if-set><file>{file}</file></p:if-set></c:test>
+        <c:test value="{file2}"><p:if-set><file2>{file2}</file2></p:if-set></c:test>
+        <c:test value="{number}"><p:if-set><number>{number}</number></p:if-set></c:test>
+        <c:test value="{number2}"><p:if-set><number2>{number2}</number2></p:if-set></c:test>
+        <c:test value="{bool}"><p:if-true><bool>{bool}</bool></p:if-true></c:test>
+        <c:test value="{bool2}"><p:if-true><bool2>{bool2}</bool2></p:if-true></c:test>
+        <c:test value="{bool3}"><p:if-true><bool3>{bool3}</bool3></p:if-true></c:test>
+        <c:test value="{bool4}"><p:if-true><bool4>{bool4}</bool4></p:if-true></c:test>
+        <c:test value="{text}"><p:if-set>
+            <text>
+              <c:literal cdata="yes" whitespace="no" value="{text}"/>
+            </text>
+        </p:if-set></c:test>
+        <c:test value="{text2}"><p:if-set>
+            <text2>
+              <c:literal cdata="yes" whitespace="no" value="{text2}"/>
+            </text2>
+        </p:if-set></c:test>
+        <c:test value="{text3}"><p:if-set>
+            <text3>
+              <c:literal cdata="yes" whitespace="no" value="{text3}"/>
+            </text3>
+        </p:if-set></c:test>
+        <c:test value="{text4}"><p:if-set>
+            <text4>
+              <c:literal cdata="yes" whitespace="no" value="{text4}"/>
+            </text4>
+        </p:if-set></c:test>
+        <c:test value="{field1}"><p:if-set>
+            <field1>
+              <c:literal cdata="yes" whitespace="no" value="{field1}"/>
+            </field1>
+        </p:if-set></c:test>
+        <c:test value="{field2}"><p:if-set>
+            <field2>
+              <c:literal cdata="yes" whitespace="no" value="{field2}"/>
+            </field2>
+        </p:if-set></c:test>
+        <c:test value="{field3}"><p:if-set>
+            <field3>
+              <c:literal cdata="yes" whitespace="no" value="{field3}"/>
+            </field3>
+        </p:if-set></c:test>
+        <c:test value="{field4}"><p:if-set>
+            <field4>
+              <c:literal cdata="yes" whitespace="no" value="{field4}"/>
+            </field4>
+        </p:if-set></c:test>
+      </e>
+    </p:repeat>
+  </c:repeater>
+</data>

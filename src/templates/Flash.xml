@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c:template name="flash">
+    <p:param name="id"               type="identifier"   default="flash"/>
+    <p:param name="url"              type="text"         />
+    <p:param name="wmode"            type="identifier"   default="window"/>
+    <p:param name="version"          type="number"       default="9"/>
+    <p:param name="bgcolor"          type="text"         />
+    <p:param name="allow-fullscreen" type="boolean"      default="no"/>
+    <p:param name="css-class"        type="identifier"   />
+    <p:param name="no-flash"         type="source"       />
+    <p:script src="private/selene/addons/SWFObject/swfobject.js"/>
+    <p:script name="flash">
+function onLoadFlash(e) {
+  if (!e.success)
+    if (confirm(e.success))
+        window.open("http://www.adobe.com/shockwave/download/download.cgi?P1_Prod_Version=ShockwaveFlash");
+}
+function loadFlash(id,url,version,bgcolor,allowFS,vars) {
+  if (url) {
+    swfobject.embedSWF(url,id,'100%','100%',version,false,vars,{ bgcolor:bgcolor,allowfullscreen:allowFS},{ 'class':'{@css-class}'},onLoadFlash);
+  }
+}
+    </p:script>
+
+    <p:body>
+      <div id="{@id}" class="{@css-class}">
+        <c:test value="{@url}">
+          <p:if-set>
+            <object id="{@id}Obj" classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" width="100%" height="100%">
+              <param name="movie" value="{@url}" />
+              <param name="bgcolor" value="{@bgcolor}" />
+              <param name="wmode" value="{@wmode}" />
+              <param name="allowfullscreen" value="{@allow-fullscreen}" />
+              <!--[if !IE]>-->
+              <object type="application/x-shockwave-flash" data="{@url}" width="100%" height="100%">
+                <param name="bgcolor" value="{@bgcolor}" />
+                <param name="wmode" value="{@wmode}" />
+                <param name="allowfullscreen" value="{@allow-fullscreen}" />
+              <!--<![endif]-->
+                {@no-flash}
+              <!--[if !IE]>-->
+              </object>
+              <!--<![endif]-->
+            </object>
+          </p:if-set>
+        </c:test>
+      </div>
+      <script>
+        swfobject.registerObject('{@id}Obj','{@version}');
+        var obj = $id('{@id}Obj');
+        if (obj) obj.style.visibility = 'visible';
+      </script>
+    </p:body>
+</c:template>

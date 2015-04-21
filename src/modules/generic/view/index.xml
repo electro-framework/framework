@@ -1,0 +1,41 @@
+<t:admin>
+  <p:page-content>
+    <fieldset class="mainPanel">
+      <div class="fieldset">
+        <c:test value="{!fields.date}">
+          <p:if-set>
+            <c:data-grid data="{!default}">
+              <p:column width="40"   type="row-selector"     />
+              <p:column width="100%" title="{!labels.title}" />
+              <p:column width="160"  title="{!labels.date}"  />
+              <p:row-template on-click="{!URI.mainForm}">
+                <p:column>{#ord}</p:column>
+                <p:column>{{!admin.titleField}}</p:column>
+                <p:column>{date}</p:column>
+              </p:row-template>
+              <p:no-data>
+                {!admin.noItems}
+              </p:no-data>
+            </c:data-grid>
+          </p:if-set>
+          <p:default>
+            <c:data-grid data="{!default}">
+              <p:column width="40"   type="row-selector"     />
+              <p:column width="100%" title="{!labels.title}" />
+              <p:row-template on-click="{!URI.mainForm}">
+                <p:column>{#ord}</p:column>
+                <p:column>{{!admin.titleField}}</p:column>
+              </p:row-template>
+              <p:no-data>
+                {!admin.noItems}
+              </p:no-data>
+            </c:data-grid>
+          </p:default>
+        </c:test>
+        <c:paginator page="{!controller.pageNumber}"
+          total="{!controller.max}" uri="{!controller.URI_noPage}"/>
+        <t:button-new url="{!URI.mainForm}"/>
+      </div>
+    </fieldset>
+  </p:page-content>
+</t:admin>

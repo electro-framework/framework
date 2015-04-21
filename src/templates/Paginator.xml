@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<c:template name="paginator">
+  <p:body>
+    <c:paginator page="{!controller.pageNumber}" total="{!controller.max}" uri="{!controller.URI_noPage}"/>
+  </p:body>
+</c:template>
