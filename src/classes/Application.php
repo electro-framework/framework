@@ -331,6 +331,8 @@ class Application
       throw new ConfigException("Error parsing " . ErrorHandler::shortFileName ($iniPath));
     if (empty($this->name))
       $this->name = $this->URI ? $this->URI : $_SERVER['SERVER_NAME'];
+    if (isset($_ENV['APP_DEFAULT_LANG']))
+      $this->defaultLang = $_ENV['APP_DEFAULT_LANG'];
 
     if (!$NO_APPLICATION) {
       $this->loadSiteMap ();
