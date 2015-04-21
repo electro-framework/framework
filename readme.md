@@ -1,7 +1,7 @@
 # Selene Framework (Kernel)
 
 > Note: This repository contains the core code of the Selene framework.  
-> If you want to build an application using Selene, visit the main [Selene](https://github.com/selene) repository.
+> If you want to build an application using Selene, visit the main [Selene](https://github.com/impactwave/selene) repository.
 
 ## Installation
 

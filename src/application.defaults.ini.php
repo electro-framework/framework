@@ -7,8 +7,6 @@ title                  = "@"
 appName                = ""
 defaultURI             = ""
 favicon                = ""
-homeIcon               = "glyphicon glyphicon-home"
-homeTitle              = "Home"
 
 imageArchivePath       = "private/storage/images"
 fileArchivePath        = "private/storage/files"
