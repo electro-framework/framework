@@ -6,27 +6,48 @@ $transactionDepth = 0;
 function database_open ()
 //--------------------------------------------------------------------------
 {
-  global $db;
+  global $db, $application;
 
-  $dsn = "{$_ENV['DB_DRIVER']}:host={$_ENV['DB_HOST']};dbname={$_ENV['DB_DATABASE']}";
-  if (isset ($_ENV['DB_PORT']))
-    $dsn .= ";port={$_ENV['DB_PORT']}";
-  if (isset ($_ENV['DB_UNIX_SOCKET']))
-    $dsn .= ";unix_socket={$_ENV['DB_UNIX_SOCKET']}";
-  $options = null;
+  $database = $_ENV['DB_DATABASE'];
+  $options  = null;
 
-  // Options specific to the MySQL driver.
-  if ($_ENV['DB_DRIVER'] == 'mysql') {
-    if (!empty($_ENV['DB_CHARSET'])) {
-      $cmd = "SET NAMES '{$_ENV['DB_CHARSET']}'";
-      if (!empty($_ENV['DB_COLLATION'])) {
-        $cmd .= " COLLATE '{$_ENV['DB_COLLATION']}'";
-      }
-      $options = array(PDO::MYSQL_ATTR_INIT_COMMAND => $cmd, PDO::MYSQL_ATTR_FOUND_ROWS => true);
+  if ($_ENV['DB_DRIVER'] == 'sqlite') {
+
+    if ($database != ':memory:') {
+      if ($database[0] != '/')
+        $database = "$application->baseDirectory/$database";
     }
+    $dsn = "sqlite:$database";
+
+  } else {
+
+    $dsn = "{$_ENV['DB_DRIVER']}:host={$_ENV['DB_HOST']};dbname=$database";
+    if (isset ($_ENV['DB_PORT']))
+      $dsn .= ";port={$_ENV['DB_PORT']}";
+    if (isset ($_ENV['DB_UNIX_SOCKET']))
+      $dsn .= ";unix_socket={$_ENV['DB_UNIX_SOCKET']}";
+    $options = null;
+
+    // Options specific to the MySQL driver.
+    if ($_ENV['DB_DRIVER'] == 'mysql') {
+      if (!empty($_ENV['DB_CHARSET'])) {
+        $cmd = "SET NAMES '{$_ENV['DB_CHARSET']}'";
+        if (!empty($_ENV['DB_COLLATION'])) {
+          $cmd .= " COLLATE '{$_ENV['DB_COLLATION']}'";
+        }
+        $options = [PDO::MYSQL_ATTR_INIT_COMMAND => $cmd, PDO::MYSQL_ATTR_FOUND_ROWS => true];
+      }
+    }
+
   }
 
-  $db = new PDO ($dsn, $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'], $options);
+  try {
+    $db = new PDO ($dsn, $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'], $options);
+  } catch (PDOException $e) {
+    $e =
+      new PDOException($e->getMessage () . "\n\nDatabase: " . ErrorHandler::shortFileName ($database), $e->getCode ());
+    throw $e;
+  }
 }
 
 //--------------------------------------------------------------------------
@@ -35,8 +56,8 @@ function database_open ()
  * Opens the database on the first call to this function during the current HTTP request.
  * Afterwards it reuses the same database connection.
  *
- * @param string  $query
- * @param array $params
+ * @param string $query
+ * @param array  $params
  * @return PDOStatement
  */
 function database_query ($query, $params = null)
@@ -49,7 +70,7 @@ function database_query ($query, $params = null)
   }
   if (!isset($db))
     database_open ();
-  $db->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
+  $db->setAttribute (PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
   $st = $db->prepare ($query);
   $st->execute ($params);
   if (defined ('DEBUG_SQL')) {

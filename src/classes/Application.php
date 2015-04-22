@@ -309,7 +309,7 @@ class Application
     //var_dump($_SERVER);exit;
     $this->isSessionRequired = false;
     $this->directory         = $dir;
-    $this->baseDirectory     = "$dir$baseOffs";
+    $this->baseDirectory     = realpath ("$dir$baseOffs");
     $this->URI               = $baseURI;
     $this->baseURI           = "$baseURI$baseOffs";
     $this->frameworkPath     = "$appDir/$FRAMEWORK";
