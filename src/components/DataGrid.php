@@ -11,6 +11,7 @@ class DataGridAttributes extends ComponentAttributes
   public $row_template;
   public $no_data;
   public $data;
+  public $paging_type = 'simple_numbers';
 
   /*
    * Attributes for each column:
@@ -19,35 +20,29 @@ class DataGridAttributes extends ComponentAttributes
    * - title="t" (t is text)
    * - width="n|n%" (n is a number)
    */
-  protected function typeof_column ()
-  {
-    return AttributeType::PARAMS;
-  }
-
-  protected function typeof_row_template ()
-  {
-    return AttributeType::SRC;
-  }
-
-  protected function typeof_no_data ()
-  {
-    return AttributeType::SRC;
-  }
-
-  protected function typeof_data ()
-  {
-    return AttributeType::DATA;
-  }
+  protected function typeof_column () { return AttributeType::PARAMS; }
+  protected function typeof_row_template () { return AttributeType::SRC; }
+  protected function typeof_no_data () { return AttributeType::SRC; }
+  protected function typeof_data () { return AttributeType::DATA; }
+  protected function typeof_paging_type () { return AttributeType::TEXT; }
+  protected function enum_paging_type () { return ['simple', 'simple_numbers', 'full', 'full_numbers']; }
 
 }
 
 class DataGrid extends VisualComponent
 {
 
-  public    $cssClassName   = 'box';
-  protected $autoId         = true;
-  private   $enableRowClick = false;
+  protected static $MIN_PAGE_ITEMS = [
+    'simple'         => 0, // n/a
+    'full'           => 0, // n/a
+    'simple_numbers' => 3,
+    'full_numbers'   => 5
+  ];
 
+  public    $cssClassName = 'box';
+  protected $autoId       = true;
+
+  private $enableRowClick = false;
   /**
    * Returns the component's attributes.
    * @return DataGridAttributes
@@ -69,18 +64,22 @@ class DataGrid extends VisualComponent
   protected function render ()
   {
     global $application, $controller;
-    if (isset($this->attrs ()->data)) {
-      $this->setupColumns ($this->attrs ()->column);
-      $rowTemplate = $this->attrs ()->row_template;
+    $attr = $this->attrs ();
+    if (isset($attr->data)) {
+      $this->setupColumns ($attr->column);
+      $rowTemplate = $attr->row_template;
       if (isset($rowTemplate)) {
+        $this->defaultDataSource = $attr->data;
         $this->enableRowClick    = $rowTemplate->isAttributeSet ('on_click')
                                    || $rowTemplate->isAttributeSet ('on_click_script');
-        $this->defaultDataSource = $this->attrs ()->data;
       }
     } else return;
-    $language = $controller->lang != 'en' ? "language:     { url: '$application->baseURI/js/datatables/{$controller->langISO}.json' }," : '';
+    $id          = $attr->id;
+    $minPagItems = self::$MIN_PAGE_ITEMS [$attr->paging_type];
+    $language    = $controller->lang != 'en'
+      ? "language:     { url: '$application->baseURI/js/datatables/{$controller->langISO}.json' }," : '';
     $this->page->addInlineDeferredScript (<<<JavaScript
-    $('#{$this->attrs ()->id} table').dataTable({
+    $('#$id table').dataTable({
       paging:       true,
       lengthChange: true,
       searching:    true,
@@ -90,12 +89,15 @@ class DataGrid extends VisualComponent
       responsive:   true,
       pageLength:   mem.get ('prefs.rowsPerPage', {$application->pageSize}),
       lengthMenu:   [10, 15, 20, 50, 100],
+      pagingType:   '{$attr->paging_type}',
       $language
       initComplete: function() {
-        $('#{$this->attrs ()->id}').show();
+        $('#$id').show();
       },
       drawCallback: function() {
-        $('#{$this->attrs ()->id} [data-nck]').on('click', function(ev) { ev.stopPropagation() });
+        $('#$id [data-nck]').on('click', function(ev) { ev.stopPropagation() });
+        var p = $('#$id .pagination');
+        p.css ('display', p.children().length <= $minPagItems ? 'none' : 'block');
       }
     }).on ('length.dt', function (e,cfg,len) {
       mem.set ('prefs.rowsPerPage', len);
@@ -108,7 +110,7 @@ JavaScript
     $dataIter = $this->defaultDataSource->getIterator ();
     $dataIter->rewind ();
     if ($dataIter->valid ()) {
-      $columnsCfg = $this->attrs ()->column;
+      $columnsCfg = $attr->column;
       $this->beginTag ('table', [
         'class' => enum (' ', 'table table-striped', $this->enableRowClick ? 'table-clickable' : '')
       ]);
