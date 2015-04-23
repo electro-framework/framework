@@ -14,7 +14,6 @@ class Application
     'data-grid'    => 'DataGrid',
     'field'        => 'Field',
     'file-upload'  => 'FileUpload',
-    'flow-grid'    => 'FlowGrid',
     'html-editor'  => 'HtmlEditor',
     'image'        => 'Image',
     'image-field'  => 'ImageField',
@@ -29,8 +28,6 @@ class Application
     'tab'          => 'Tab',
     'tab-page'     => 'TabPage',
     'tabs'         => 'Tabs',
-    'video-field'  => 'VideoField',
-    'video-player' => 'VideoPlayer',
   ];
 
   /**
