@@ -1,11 +1,11 @@
 <?php
-namespace impactwave\matisse\components;
-use impactwave\matisse as m;
-use impactwave\matisse\AttributeType;
-use impactwave\matisse\Component;
-use impactwave\matisse\ComponentAttributes;
-use impactwave\matisse\exceptions\ComponentException;
-use impactwave\matisse\IAttributes;
+namespace selene\matisse\components;
+use selene\matisse as m;
+use selene\matisse\AttributeType;
+use selene\matisse\Component;
+use selene\matisse\ComponentAttributes;
+use selene\matisse\exceptions\ComponentException;
+use selene\matisse\IAttributes;
 
 class TemplateAttributes extends ComponentAttributes
 {

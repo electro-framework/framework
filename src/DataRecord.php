@@ -1,5 +1,5 @@
 <?php
-namespace impactwave\matisse;
+namespace selene\matisse;
 
 /**
  * A wrapper class for a data source containing a single record.

@@ -1,6 +1,6 @@
 <?php
-namespace impactwave\matisse;
-use impactwave\matisse\exceptions\ComponentException;
+namespace selene\matisse;
+use selene\matisse\exceptions\ComponentException;
 
 class AttributeType
 {

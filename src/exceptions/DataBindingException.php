@@ -1,6 +1,6 @@
 <?php
-namespace impactwave\matisse\exceptions;
-use impactwave\matisse\Component;
+namespace selene\matisse\exceptions;
+use selene\matisse\Component;
 
 class DataBindingException extends MatisseException
 {

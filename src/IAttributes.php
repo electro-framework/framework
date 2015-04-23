@@ -1,5 +1,5 @@
 <?php
-namespace impactwave\matisse;
+namespace selene\matisse;
 
 /**
  * Components that implement this interface support attributes, whose values are usually specified on the HTML markup

@@ -1,5 +1,5 @@
 <?php
-namespace impactwave\matisse\exceptions;
+namespace selene\matisse\exceptions;
 
 class ParseException extends MatisseException
 {

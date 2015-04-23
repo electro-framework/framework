@@ -1,10 +1,10 @@
 <?php
-namespace impactwave\matisse;
-use impactwave\matisse\components\Literal;
-use impactwave\matisse\components\Page;
-use impactwave\matisse\components\Parameter;
-use impactwave\matisse\exceptions\ComponentException;
-use impactwave\matisse\exceptions\DataBindingException;
+namespace selene\matisse;
+use selene\matisse\components\Literal;
+use selene\matisse\components\Page;
+use selene\matisse\components\Parameter;
+use selene\matisse\exceptions\ComponentException;
+use selene\matisse\exceptions\DataBindingException;
 
 /**
  * The base class from which all components derive.

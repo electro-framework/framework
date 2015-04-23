@@ -1,5 +1,5 @@
 <?php
-namespace impactwave\matisse;
+namespace selene\matisse;
 
 /**
  * Wraps any iteratable object or array so that it may function as a data source.

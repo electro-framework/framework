@@ -1,9 +1,9 @@
 <?php
-namespace impactwave\matisse\components;
-use impactwave\matisse\AttributeType;
-use impactwave\matisse\Component;
-use impactwave\matisse\ComponentAttributes;
-use impactwave\matisse\IAttributes;
+namespace selene\matisse\components;
+use selene\matisse\AttributeType;
+use selene\matisse\Component;
+use selene\matisse\ComponentAttributes;
+use selene\matisse\IAttributes;
 
 class TestAttributes extends ComponentAttributes
 {

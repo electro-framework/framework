@@ -1,7 +1,7 @@
 <?php
-namespace impactwave\matisse;
-use impactwave\matisse\components\Page;
-use impactwave\matisse\exceptions\FileIOException;
+namespace selene\matisse;
+use selene\matisse\components\Page;
+use selene\matisse\exceptions\FileIOException;
 
 class MatisseEngine
 {
@@ -19,9 +19,9 @@ class MatisseEngine
    * @var array string => string
    */
   private $tags = [
-    'repeater' => 'impactwave\matisse\components\Repeater',
-    'template' => 'impactwave\matisse\components\Template',
-    'test'     => 'impactwave\matisse\components\Test',
+    'repeater' => 'selene\matisse\components\Repeater',
+    'template' => 'selene\matisse\components\Template',
+    'test'     => 'selene\matisse\components\Test',
   ];
 
   function __construct ()

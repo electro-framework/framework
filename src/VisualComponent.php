@@ -1,5 +1,5 @@
 <?php
-namespace impactwave\matisse;
+namespace selene\matisse;
 
 class VisualComponent extends Component implements IAttributes
 {

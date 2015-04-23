@@ -1,8 +1,13 @@
 {
-  "name": "impactwave/matisse",
+  "name": "selene-framework/matisse",
   "description": "A component-based template engine for PHP web applications.",
   "license": "MIT",
   "authors": [
+    {
+      "name": "Impactwave",
+      "email": "impactwave@impactwave.com",
+      "homepage": "http://impactwave.com"
+    },
     {
       "name": "Claudio Silva",
       "email": "claudio.silva@impactwave.com"
@@ -11,7 +16,7 @@
   "require": {},
   "autoload": {
     "psr-4": {
-      "impactwave\\matisse\\": "src/"
+      "selene\\matisse\\": "src/"
     },
     "files": ["src/globals.php", "src/utility.php"]
   },

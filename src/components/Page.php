@@ -1,8 +1,8 @@
 <?php
-namespace impactwave\matisse\components;
-use impactwave\matisse\Component;
-use impactwave\matisse\Context;
-use impactwave\matisse\exceptions\MatisseException;
+namespace selene\matisse\components;
+use selene\matisse\Component;
+use selene\matisse\Context;
+use selene\matisse\exceptions\MatisseException;
 
 class Page extends Component
 {

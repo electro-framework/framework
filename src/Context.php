@@ -1,6 +1,6 @@
 <?php
-namespace impactwave\matisse;
-use impactwave\matisse\components\Template;
+namespace selene\matisse;
+use selene\matisse\components\Template;
 
 class Context
 {

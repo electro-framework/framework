@@ -1,5 +1,5 @@
 <?php
-namespace impactwave\matisse;
+namespace selene\matisse;
 
 //------------------------
 //  Utility functions
