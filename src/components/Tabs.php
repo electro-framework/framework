@@ -1,10 +1,10 @@
 <?php
 
-use impactwave\matisse\AttributeType;
-use impactwave\matisse\ComponentAttributes;
-use impactwave\matisse\DataSet;
-use impactwave\matisse\exceptions\ComponentException;
-use impactwave\matisse\VisualComponent;
+use selene\matisse\AttributeType;
+use selene\matisse\ComponentAttributes;
+use selene\matisse\DataSet;
+use selene\matisse\exceptions\ComponentException;
+use selene\matisse\VisualComponent;
 
 class TabsAttributes extends ComponentAttributes
 {

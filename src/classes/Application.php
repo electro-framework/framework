@@ -1,6 +1,6 @@
 <?php
 global $FRAMEWORK;
-$FRAMEWORK = '../vendor/impactwave/selene-kernel/src';
+$FRAMEWORK = '../vendor/selene-framework/selene-kernel/src';
 
 class Application
 {

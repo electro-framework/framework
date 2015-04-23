@@ -1,11 +1,11 @@
 <?php
-use impactwave\matisse\components\Page;
-use impactwave\matisse\DataRecord;
-use impactwave\matisse\DataSet;
-use impactwave\matisse\DataSource;
-use impactwave\matisse\exceptions\DataBindingException;
-use impactwave\matisse\exceptions\FileIOException;
-use impactwave\matisse\MatisseEngine;
+use selene\matisse\components\Page;
+use selene\matisse\DataRecord;
+use selene\matisse\DataSet;
+use selene\matisse\DataSource;
+use selene\matisse\exceptions\DataBindingException;
+use selene\matisse\exceptions\FileIOException;
+use selene\matisse\MatisseEngine;
 
 ob_start ();
 

@@ -1,10 +1,10 @@
 <?php
-use impactwave\matisse\AttributeType;
-use impactwave\matisse\Component;
-use impactwave\matisse\ComponentAttributes;
-use impactwave\matisse\components\Literal;
-use impactwave\matisse\exceptions\ComponentException;
-use impactwave\matisse\VisualComponent;
+use selene\matisse\AttributeType;
+use selene\matisse\Component;
+use selene\matisse\ComponentAttributes;
+use selene\matisse\components\Literal;
+use selene\matisse\exceptions\ComponentException;
+use selene\matisse\VisualComponent;
 
 class SelectorAttributes extends ComponentAttributes {
   public $name;

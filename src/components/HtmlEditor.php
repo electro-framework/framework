@@ -1,7 +1,7 @@
 <?php
-use impactwave\matisse\AttributeType;
-use impactwave\matisse\ComponentAttributes;
-use impactwave\matisse\VisualComponent;
+use selene\matisse\AttributeType;
+use selene\matisse\ComponentAttributes;
+use selene\matisse\VisualComponent;
 
 //Note that the file fckeditor/editor/fckeditor.html should be changed from the default to:  <body style="visibility:hidden">
 

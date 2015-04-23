@@ -1,8 +1,8 @@
 <?php
-use impactwave\matisse\AttributeType;
-use impactwave\matisse\ComponentAttributes;
-use impactwave\matisse\components\Parameter;
-use impactwave\matisse\VisualComponent;
+use selene\matisse\AttributeType;
+use selene\matisse\ComponentAttributes;
+use selene\matisse\components\Parameter;
+use selene\matisse\VisualComponent;
 
 class DataGridAttributes extends ComponentAttributes
 {

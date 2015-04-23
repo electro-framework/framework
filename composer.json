@@ -1,5 +1,5 @@
 {
-  "name": "impactwave/selene-kernel",
+  "name": "selene-framework/selene-kernel",
   "description": "Selene Framework Kernel",
   "license": "MIT",
   "authors": [
@@ -19,12 +19,12 @@
   "minimum-stability": "dev",
   "require": {
     "php": ">=5.4.0",
-    "impactwave/matisse": "dev-master"
+    "selene-framework/matisse": "dev-master"
   },
   "repositories": [
     {
       "type": "vcs",
-      "url": "https://github.com/impactwave/matisse"
+      "url": "https://github.com/selene-framework/matisse"
     }
   ],
   "autoload": {
