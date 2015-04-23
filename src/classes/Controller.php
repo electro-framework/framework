@@ -519,6 +519,9 @@ abstract class Controller
           $session->setLang ($this->lang);
         $this->setStatus (Status::ERROR, 'An invalid language was specified.');
       }
+      $info = get($this->langInfo, $this->lang);
+      if (!isset($info))
+        throw new ConfigException("Language <b>$this->lang</b> is not configured for this application.");
       $locales         = $this->langInfo[$this->lang]['locale'];
       $this->locale    = $locales[0];
       $this->langISO   = $this->langInfo[$this->lang]['ISO'];

@@ -51,9 +51,11 @@ class MainMenu extends VisualComponent
       echo html (
         map ($application->siteMap->pages, function ($page) use ($xi) {
           if (!$page->onMenu) return null;
+          $active = $page->selected ? '.active' : '';
+          $sub    = $page->hasSubNav ? '.sub' : '';
           return [
-            h ('li' . ($page->hasSubNav ? '.sub' : ''), [
-              h ('a' . ($page->selected ? '.active' : ''), ['href' => $page->URL], [
+            h ("li$active$sub", [
+              h ("a$active", ['href' => $page->URL], [
                 when ($page->icon, [h ('i.' . $page->icon), ' ']),
                 either ($page->subtitle, $page->title),
                 iftrue (isset($xi) && $page->hasSubNav, h ("span.$xi"))
@@ -75,9 +77,11 @@ class MainMenu extends VisualComponent
           ]),
           map ($grp->pages, function ($page) use ($xi) {
             if (!$page->onMenu) return null;
+            $active = $page->selected ? '.active' : '';
+            $sub    = $page->hasSubNav ? '.sub' : '';
             return [
-              h ('li.treeview' . ($page->selected ? '.active' : '') . ($page->hasSubNav ? '.sub' : ''), [
-                h ('a' . ($page->selected ? '.active' : ''), ['href' => $page->URL], [
+              h ("li.treeview$active$sub", [
+                h ("a$active", ['href' => $page->URL], [
                   when ($page->icon, [h ('i.' . $page->icon), ' ']),
                   either ($page->subtitle, $page->title),
                   iftrue (isset($xi) && $page->hasSubNav, h ("span.$xi"))
@@ -96,15 +100,18 @@ class MainMenu extends VisualComponent
     return h ('ul.nav.collapse.' . $this->depthClass[$depth], [
       map ($pages, function ($page) use ($xi, $depth) {
         if (!$page->onMenu) return null;
-        return h ('li' . ($page->hasSubNav ? '.sub' : '') .
-                  ($page->matches ? '.current' : ''), [
-          h ('a' . ($page->selected ? '.active' : ''), ['href' => $page->URL], [
-            when ($page->icon, [h ('i.' . $page->icon), ' ']),
-            either ($page->subtitle, $page->title),
-            iftrue (isset($xi) && $page->hasSubNav, h ("span.$xi"))
-          ]),
-          when ($page->hasSubNav, $this->renderMenuItem ($page->pages, $xi, $depth + 1))
-        ]);
+        $active  = $page->selected ? '.active' : '';
+        $sub     = $page->hasSubNav ? '.sub' : '';
+        $current = $page->matches ? '.current' : '';
+        return
+          h ("li.$active$sub$current", [
+            h ("a$active", ['href' => $page->URL], [
+              when ($page->icon, [h ('i.' . $page->icon), ' ']),
+              either ($page->subtitle, $page->title),
+              iftrue (isset($xi) && $page->hasSubNav, h ("span.$xi"))
+            ]),
+            when ($page->hasSubNav, $this->renderMenuItem ($page->pages, $xi, $depth + 1))
+          ]);
       })
     ]);
   }
