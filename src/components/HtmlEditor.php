@@ -50,37 +50,46 @@ class HtmlEditor extends VisualComponent
     if (!isset($this->attrs ()->name))
       $this->attrs ()->name = $this->attrs ()->id;
     $lang           = property ($this->attrs (), 'lang', $controller->lang);
+    $lang           = $lang === 'pt' ? 'pt_pt' : $lang;
     $addonURI       = "$application->addonsPath/components/redactor";
     $autofocus          = $this->attrs ()->autofocus ? 'true' : 'false';
     $scriptsBaseURI = $application->framework;
     $initCode       = <<<JAVASCRIPT
-var redactorToolbar = ['html', '|', 'formatting', '|', 'bold', 'italic', '|',
-'unorderedlist', 'orderedlist', 'outdent', 'indent', '|',
-'image', 'video', 'file', 'table', 'link', '|',
-'fontcolor', 'backcolor', '|',
-'alignleft', 'aligncenter', 'alignright', 'justify', '|',
+var redactorToolbar = ['html', 'formatting', 'bold', 'italic',
+'unorderedlist', 'orderedlist', 'outdent', 'indent',
+'image', 'video', 'file', 'table', 'link',
+'fontcolor', 'backcolor',
+'alignment',
 'horizontalrule', 'fullscreen'];
 JAVASCRIPT;
     $code           = <<<JAVASCRIPT
 $(document).ready(
-	function() {
-		$('#{$this->attrs ()->id}_field').redactor({
+  function() {
+    $('#{$this->attrs ()->id}_field').redactor({
       buttons: redactorToolbar,
       lang: '{$lang}',
       focus: $autofocus,
       resize: false,
       autoresize: false,
+      minHeight: 220,
+      plugins: ['video', 'table', 'fullscreen', 'fontcolor', 'imagemanager', 'filemanager'],
       imageUpload: '$scriptsBaseURI/imageUpload.php',
       fileUpload: '$scriptsBaseURI/fileUpload.php',
       imageGetJson: '$scriptsBaseURI/gallery.php',
+      imageManagerJson: '$scriptsBaseURI/gallery.php',
       imageInsertCallback: onInlineImageInsert
     });
-	}
+  }
 );
 JAVASCRIPT;
+    $this->page->addScript ("$addonURI/redactor.min.js");
     $this->page->addScript ("$addonURI/langs/$lang.js");
-    $this->page->addScript ("$addonURI/redactor.js");
     $this->page->addStylesheet ("$addonURI/css/redactor.css");
+    $this->page->addScript ("$addonURI/plugins/fontcolor.js");
+    $this->page->addScript ("$addonURI/plugins/video.js");
+    $this->page->addScript ("$addonURI/plugins/table.js");
+    $this->page->addScript ("$addonURI/plugins/fullscreen.js");
+    $this->page->addScript ("$addonURI/plugins/imagemanager.js");
     $this->page->addInlineScript ($initCode, 'redactor');
     $this->page->addInlineScript ($code);
 
