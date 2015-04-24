@@ -6,7 +6,7 @@
 title                  = "@"
 appName                = ""
 defaultURI             = ""
-favicon                = ""
+favicon                = "data:;base64,iVBORw0KGgo=" // Supress http request
 
 imageArchivePath       = "private/storage/images"
 fileArchivePath        = "private/storage/files"
@@ -28,10 +28,11 @@ moduleViewPath         = ""
 modelPath              = "models"
 publicPath             = "../"
 
-framework              = "framework"
+frameworkPublicPath    = "public"
+frameworkURI           = "framework"
 addonsPath             = "framework/addons"
 
-siteMapFile            = "private/config/mainSiteMap.php"
+siteMapFile            = ""
 modelFile              = ""
 dataSourcesFile        = ""
 SEOFile                = ""

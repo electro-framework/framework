@@ -72,8 +72,5 @@ class ModuleInfo {
     $module = $p !== FALSE ? substr($this->module,$p + 1) : $this->module;
     $this->moduleClassName = $module.'Controller';
     $this->pageClassName = ucfirst($this->modulePage).'Controller';
-    //$this->pageClassName = str_replace('/','\\',$this->module).'\\'.ucfirst($this->modulePage).'Controller';
-    //$this->pageClassName = str_replace('/','_',ucfirst($this->module)).'_'.$this->modulePage.'Controller';
-    //var_dump($this->pageClassName);exit;
   }
 }

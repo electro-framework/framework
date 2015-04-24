@@ -8,33 +8,63 @@
 class ModuleLoader
 {
 
+  static private $MIME_TYPES = [
+    'js'    => 'application/javascript',
+    'css'   => 'text/css',
+    'woff'  => 'application/font-woff',
+    'woff2' => 'application/font-woff2',
+    'ttf'   => 'application/font-sfnt',
+    'otf'   => 'application/font-sfnt',
+    'jpg'   => 'image/jpeg',
+    'png'   => 'image/png',
+    'gif'   => 'image/gif',
+  ];
   /**
    * Sitemap information for the current page.
    * @var SitePage
    */
   public $sitePage = null;
-
   /**
    * The virtual URI following the question mark on the URL.
    * @var string
    */
   public $virtualURI = '';
-
   /**
    * The controller instance for the current module.
-   * @var ModuleController
+   * @var Controller
    */
   public $moduleInstance = null;
-
   /**
    * Assorted information on the module related to this loader.
    * @var ModuleInfo
    */
   public $moduleInfo = null;
-
   public static function loadAndRun ()
   {
-    global $loader, $lang;
+    global $application, $loader, $lang;
+
+    // Serve static assets exposed from packages or from the framework itself.
+
+    $URI = $application->VURI;
+    $p   = strpos ($URI, '/');
+    if ($p) {
+      $head = substr ($URI, 0, $p);
+      $tail = substr ($URI, $p + 1);
+      if (isset($application->mountPoints[$head])) {
+        $path = $application->mountPoints[$head] . "/$tail";
+        $type = get (self::$MIME_TYPES, substr ($tail, strrpos ($tail, '.') + 1), 'application/octet-stream');
+        header ("Content-Type: $type");
+        if (!$application->debugMode) {
+          header ('Expires: ' . gmdate ('D, d M Y H:i:s \G\M\T', time () + 36000)); // add 10 hours
+          header ("Cache-Control: public, max-age=36000");
+        }
+        readfile ($path);
+        exit;
+      }
+    }
+
+    // Load and execute the module that corresponds to the virtual URI.
+
     $loader = new ModuleLoader();
     $loader->init ();
     $loader->moduleInstance       = $loader->load ();
@@ -81,7 +111,7 @@ class ModuleLoader
    */
   public function init ()
   {
-    global $FRAMEWORK, $application;
+    global $application;
 
     //Find SitePage info
 
@@ -114,23 +144,12 @@ class ModuleLoader
    */
   public function load ()
   {
-    global $FRAMEWORK, $application;
-    /*if (!class_exists('DefaultController') && !class_exists('WebServiceController'))
-      require $this->moduleInfo->isWebService ?
-        "$FRAMEWORK/classes/WebServiceController.php" :
-        "$FRAMEWORK/classes/Controller.php";*/
-    /*if (file_exists($this->moduleInfo->moduleFile)) {
-      //require $this->moduleInfo->moduleFile;
+    if ($this->sitePage->autoController)
+      $con = $this->moduleInfo->isWebService ? new WebServiceController : new Controller();
+    else if (class_exists ($this->moduleInfo->pageClassName))
       $con = new $this->moduleInfo->pageClassName();
-    }*/
-    //var_dump($this->moduleInfo->pageClassName,class_exists($this->moduleInfo->pageClassName));exit;
-    if (class_exists ($this->moduleInfo->pageClassName))
-      $con = new $this->moduleInfo->pageClassName();
-    else if ($this->sitePage->autoController)
-      $con = $this->moduleInfo->isWebService ? new WebServiceController : new DefaultController();
     else throw new FatalException("Auto-controller generation is disabled for this URL and the file <b>" .
                                   ErrorHandler::shortFileName ($this->moduleInfo->moduleFile) . "</b> was not found.");
-    //var_dump($con);exit;
     $con->moduleLoader = $this;
     return $con;
   }

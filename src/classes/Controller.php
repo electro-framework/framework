@@ -9,7 +9,7 @@ use selene\matisse\MatisseEngine;
 
 ob_start ();
 
-abstract class Controller
+class Controller
 {
   const FIND_TRANS_KEY  = '#\$([A-Z][A-Z0-9_]*)#';
   const MSG_SUCCESS     = "A informação foi guardada.";
@@ -17,6 +17,8 @@ abstract class Controller
   const MSG_UNSUPPORTED = "A operação não foi implementada.";
   const MSG_DELETED     = 'O registo foi apagado.';
   const MSG_OK          = "A operação foi efectuada.";
+
+  public $TEMPLATE_EXT = '.html';
 
   /**
    * A templating engine instance.
@@ -411,7 +413,7 @@ abstract class Controller
         return false;
     } else {
       // Show login form.
-      $path = $application->viewPath . '/login.xml';
+      $path = $application->viewPath . '/login' . $this->TEMPLATE_EXT;
       $this->loadView ($path);
       $this->page->formAutocomplete = true;
     }
@@ -715,7 +717,7 @@ abstract class Controller
   {
     global $application;
     $this->page->title = str_replace ('@', $this->getTitle (), $application->title);
-    $this->page->addScript("$application->framework/engine.js");
+    $this->page->addScript("$application->frameworkURI/js/engine.js");
     $this->page->defaultDataSource = get ($this->engine->context->dataSources, 'default');
     $this->displayStatus ();
   }
@@ -731,13 +733,13 @@ abstract class Controller
     //override to manually include the view's source markup.
     global $application;
     if (isset($this->moduleLoader)) {
-      $path = $application->moduleViewPath . '/' . $this->moduleLoader->moduleInfo->modulePage . '.xml';
+      $path = $application->moduleViewPath . '/' . $this->moduleLoader->moduleInfo->modulePage . $this->TEMPLATE_EXT;
       return !$this->loadView ($path);
     } else {
       preg_match ('#(\w+?)\.php#', $this->URI, $match);
       if (!count ($match))
         throw new FatalException("Invalid URI <b>$this->URI</b>");
-      $path = $application->moduleViewPath . '/' . $match[1] . '.xml';
+      $path = $application->moduleViewPath . '/' . $match[1] . $this->TEMPLATE_EXT;
       return !$this->loadView ($path);
     }
   }
@@ -764,7 +766,7 @@ abstract class Controller
       }
       return false;
     }
-    $template   = $this->engine->loadTemplate ($path);
+    $template   = $this->engine->loadView ($path);
     $this->page = $this->engine->parse ($template);
     return true;
   }

@@ -8,26 +8,27 @@ class Application
   const DEFAULT_INI_FILENAME = 'application.defaults.ini.php';
 
   public static $TAGS = [
-    'button'       => 'Button',
-    'calendar'     => 'Calendar',
-    'checkbox'     => 'Checkbox',
-    'data-grid'    => 'DataGrid',
-    'field'        => 'Field',
-    'file-upload'  => 'FileUpload',
-    'html-editor'  => 'HtmlEditor',
-    'image'        => 'Image',
-    'image-field'  => 'ImageField',
-    'input'        => 'Input',
-    'label'        => 'Label',
-    'link'         => 'Link',
-    'main-menu'    => 'MainMenu',
-    'model'        => 'Model',
-    'paginator'    => 'Paginator',
-    'radiobutton'  => 'Radiobutton',
-    'selector'     => 'Selector',
-    'tab'          => 'Tab',
-    'tab-page'     => 'TabPage',
-    'tabs'         => 'Tabs',
+    'button'      => 'Button',
+    'calendar'    => 'Calendar',
+    'checkbox'    => 'Checkbox',
+    'data-grid'   => 'DataGrid',
+    'field'       => 'Field',
+    'file-upload' => 'FileUpload',
+    'head'        => 'Head',
+    'html-editor' => 'HtmlEditor',
+    'image'       => 'Image',
+    'image-field' => 'ImageField',
+    'input'       => 'Input',
+    'label'       => 'Label',
+    'link'        => 'Link',
+    'main-menu'   => 'MainMenu',
+    'model'       => 'Model',
+    'paginator'   => 'Paginator',
+    'radiobutton' => 'Radiobutton',
+    'selector'    => 'Selector',
+    'tab'         => 'Tab',
+    'tab-page'    => 'TabPage',
+    'tabs'        => 'Tabs',
   ];
 
   /**
@@ -88,7 +89,12 @@ class Application
    * The path of the framework's public directory.
    * @var string
    */
-  public $framework;
+  public $frameworkPublicPath;
+  /**
+   * The mapped public URI of the framework's public directory.
+   * @var string
+   */
+  public $frameworkURI;
   public $modelPath;
   public $viewPath;
   public $moduleViewPath;
@@ -282,12 +288,29 @@ class Application
    * @var string
    */
   public $publicPath;
+  /**
+   * A map of mappings from virtual URIs to external folders.
+   * <p>This is used to expose assets from composer packages.
+   * <p>Array of URI => physical folder path
+   * @var array
+   */
+  public $mountPoints = [];
 
   public function run ($dir, $appDir, $baseOffs = '')
   {
     ErrorHandler::init ();
     $this->setup ($dir, $appDir, $baseOffs);
     ModuleLoader::loadAndRun ();
+  }
+
+  /**
+   * Composer packages can call this method to expose assets on web.
+   * @param string $URI
+   * @param string $path
+   */
+  public function mount ($URI, $path)
+  {
+    $this->mountPoints[$URI] = $path;
   }
 
   /**
@@ -309,7 +332,7 @@ class Application
     $this->baseDirectory     = realpath ("$dir$baseOffs");
     $this->URI               = $baseURI;
     $this->baseURI           = "$baseURI$baseOffs";
-    $this->frameworkPath     = "$appDir/$FRAMEWORK";
+    $this->frameworkPath     = realpath ("$appDir/$FRAMEWORK");
     $this->VURI              = $vuri ?: '';
     $this->rootPath          = dirname ($appDir);
 
@@ -330,6 +353,8 @@ class Application
       $this->name = $this->URI ? $this->URI : $_SERVER['SERVER_NAME'];
     if (isset($_ENV['APP_DEFAULT_LANG']))
       $this->defaultLang = $_ENV['APP_DEFAULT_LANG'];
+
+    $this->mount ($this->frameworkURI, dirname( $this->frameworkPath) . "/$this->frameworkPublicPath");
 
     if (!$NO_APPLICATION) {
       $this->loadSiteMap ();
