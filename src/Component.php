@@ -34,7 +34,7 @@ abstract class Component
    */
   public $supportsAttributes;
   /**
-   * The currently being outputted tag's value.
+   * The value of the tag being currently outputted.
    *
    * @var string
    */

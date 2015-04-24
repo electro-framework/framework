@@ -46,7 +46,13 @@ class MatisseEngine
   }
 
   //TODO: use cache
-  public function loadTemplate ($filePath)
+  /**
+   * Loads a view
+   * @param string $filePath
+   * @return string
+   * @throws FileIOException
+   */
+  public function loadView ($filePath)
   {
     // Try to load from the include path.
     if ($markup = loadFile ($filePath))
