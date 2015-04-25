@@ -62,7 +62,7 @@ class ImageField extends VisualComponent
     if (isset($this->attrs ()->value)) {
       $image = new Image($this->context, [
         'value'     => $this->attrs ()->value,
-        'css_class' => 'iPreview'
+        'css_class' => 'img-thumbnail'
       ], [
         'width'  => $this->attrs ()->image_width,
         'height' => $this->attrs ()->image_height,
@@ -86,7 +86,7 @@ class ImageField extends VisualComponent
 
     $button = new Button($this->context, [
       'disabled' => $this->attrs ()->disabled,
-      'class'    => 'ImageField_browse'
+      'class'     => 'btn-default glyphicon glyphicon-picture'
     ]);
     $this->runPrivate ($button);
 
@@ -108,7 +108,7 @@ class ImageField extends VisualComponent
         'id'       => "{$this->attrs()->id}Clear",
         'script'   => "ImageField_clear('{$this->attrs()->id}')",
         'disabled' => $this->attrs ()->disabled || !isset($this->attrs ()->value),
-        'class'    => 'ImageField_clear'
+        'class'    => 'btn-default glyphicon glyphicon-remove'
       ]);
       $this->runPrivate ($button);
     }
