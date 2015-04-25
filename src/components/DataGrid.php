@@ -12,6 +12,10 @@ class DataGridAttributes extends ComponentAttributes
   public $no_data;
   public $data;
   public $paging_type = 'simple_numbers';
+  public $ajax        = false;
+  public $action;
+  public $detail_url;
+  public $clickable   = false;
 
   /*
    * Attributes for each column:
@@ -26,6 +30,10 @@ class DataGridAttributes extends ComponentAttributes
   protected function typeof_data () { return AttributeType::DATA; }
   protected function typeof_paging_type () { return AttributeType::TEXT; }
   protected function enum_paging_type () { return ['simple', 'simple_numbers', 'full', 'full_numbers']; }
+  protected function typeof_ajax () { return AttributeType::BOOL; }
+  protected function typeof_action () { return AttributeType::TEXT; }
+  protected function typeof_detail_url () { return AttributeType::TEXT; }
+  protected function typeof_clickable () { return AttributeType::BOOL; }
 
 }
 
@@ -65,68 +73,122 @@ class DataGrid extends VisualComponent
   {
     global $application, $controller;
     $attr = $this->attrs ();
-    if (isset($attr->data)) {
-      $this->setupColumns ($attr->column);
-      $rowTemplate = $attr->row_template;
-      if (isset($rowTemplate)) {
-        $this->defaultDataSource = $attr->data;
-        $this->enableRowClick    = $rowTemplate->isAttributeSet ('on_click')
-                                   || $rowTemplate->isAttributeSet ('on_click_script');
-      }
-    } else return;
+    $this->page->addInlineScript (<<<JAVASCRIPT
+function check(ev,id,action) {
+    action = action || 'check';
+    ev.stopPropagation();
+    $.post(location.href, { _action: action, id: id });
+}
+JAVASCRIPT
+      , 'datagridInit');
     $id          = $attr->id;
     $minPagItems = self::$MIN_PAGE_ITEMS [$attr->paging_type];
     $language    = $controller->lang != 'en'
       ? "language:     { url: '$application->baseURI/js/datatables/{$controller->langISO}.json' }," : '';
-    $this->page->addInlineDeferredScript (<<<JavaScript
-    $('#$id table').dataTable({
-      paging:       true,
-      lengthChange: true,
-      searching:    true,
-      ordering:     true,
-      info:         true,
-      autoWidth:    false,
-      responsive:   true,
-      pageLength:   mem.get ('prefs.rowsPerPage', {$application->pageSize}),
-      lengthMenu:   [10, 15, 20, 50, 100],
-      pagingType:   '{$attr->paging_type}',
-      $language
-      initComplete: function() {
-        $('#$id').show();
-      },
-      drawCallback: function() {
-        $('#$id [data-nck]').on('click', function(ev) { ev.stopPropagation() });
-        var p = $('#$id .pagination');
-        p.css ('display', p.children().length <= $minPagItems ? 'none' : 'block');
-      }
-    }).on ('length.dt', function (e,cfg,len) {
-      mem.set ('prefs.rowsPerPage', len);
-    });
-JavaScript
-    );
 
-    $this->beginTag ('div', ['class' => 'box-body']);
-
-    $dataIter = $this->defaultDataSource->getIterator ();
-    $dataIter->rewind ();
-    if ($dataIter->valid ()) {
-      $columnsCfg = $attr->column;
-      $this->beginTag ('table', [
-        'class' => enum (' ', 'table table-striped', $this->enableRowClick ? 'table-clickable' : '')
-      ]);
-      $this->beginContent ();
-      $this->renderHeader ($columnsCfg);
-      $idx = 0;
-      do {
-        $this->renderRow ($idx++, $rowTemplate->children, $columnsCfg, $rowTemplate);
-        $dataIter->next ();
-      } while ($dataIter->valid ());
-      $this->endTag ();
-    } else {
-      $this->beginContent ();
-      $this->renderSet ($this->getChildren ('no_data'));
+    $this->setupColumns ($attr->column);
+    $rowTemplate = $attr->row_template;
+    if (isset($rowTemplate)) {
+      $this->enableRowClick    = $rowTemplate->isAttributeSet ('on_click')
+                                 || $rowTemplate->isAttributeSet ('on_click_script');
+      $this->defaultDataSource = $attr->data;
     }
-    $this->endTag ();
+
+    // AJAX MODE
+
+    if ($attr->ajax) {
+      $url                  = $_SERVER['REQUEST_URI'];
+      $action               = $attr->action;
+      $detailUrl            = $attr->detail_url;
+      $this->enableRowClick = $attr->clickable;
+      $this->page->addInlineDeferredScript (<<<JavaScript
+$('#$id table').dataTable({
+  serverSide:   true,
+  paging:       true,
+  lengthChange: true,
+  searching:    true,
+  ordering:     true,
+  info:         true,
+  autoWidth:    false,
+  responsive:   true,
+  pageLength:   mem.get ('prefs.rowsPerPage', {$application->pageSize}),
+  lengthMenu:   [10, 15, 20, 50, 100],
+  language: { url: 'public/js/datatables/{$this->getController ()->langISO}.json' },
+  ajax: {
+     url: '$url',
+     type: 'POST',
+     data: {
+        _action: '$action'
+    }
+   },
+  initComplete: function() {
+    $('#$id').show();
+  },
+  drawCallback: function() {
+    $('#$id [data-nck]').on('click', function(ev) { ev.stopPropagation() });
+  }
+}).on ('length.dt', function (e,cfg,len) {
+  mem.set ('prefs.rowsPerPage', len);
+}).on ('click', 'tbody tr', function () {
+    location.href = '$detailUrl' + $(this).attr('rowid');
+});
+JavaScript
+      );
+    }
+    else {
+
+      // IMMEDIATE MODE
+
+      $this->page->addInlineDeferredScript (<<<JavaScript
+$('#$id table').dataTable({
+  paging:       true,
+  lengthChange: true,
+  searching:    true,
+  ordering:     true,
+  info:         true,
+  autoWidth:    false,
+  responsive:   true,
+  pageLength:   mem.get ('prefs.rowsPerPage', {$application->pageSize}),
+  lengthMenu:   [10, 15, 20, 50, 100],
+  pagingType:   '{$attr->paging_type}',
+  $language
+  initComplete: function() {
+    $('#$id').show();
+  },
+  drawCallback: function() {
+    $('#$id [data-nck]').on('click', function(ev) { ev.stopPropagation() });
+    var p = $('#$id .pagination');
+    p.css ('display', p.children().length <= $minPagItems ? 'none' : 'block');
+  }
+}).on ('length.dt', function (e,cfg,len) {
+  mem.set ('prefs.rowsPerPage', len);
+});
+JavaScript
+      );
+      if (isset($this->defaultDataSource)) {
+        $dataIter = $this->defaultDataSource->getIterator ();
+        $dataIter->rewind ();
+        $valid = $dataIter->valid ();
+      }
+      else $valid = true;
+      if ($valid) {
+        $columnsCfg = $attr->column;
+        $this->beginTag ('table', [
+          'class' => enum (' ', 'table table-striped', $this->enableRowClick ? 'table-clickable' : '')
+        ]);
+        $this->beginContent ();
+        $this->renderHeader ($columnsCfg);
+        if (!$attr->ajax) {
+          $idx = 0;
+          do {
+            $this->renderRow ($idx++, $rowTemplate->children, $columnsCfg, $rowTemplate);
+            $dataIter->next ();
+          } while ($dataIter->valid ());
+        }
+        $this->endTag ();
+      }
+      else $this->renderSet ($this->getChildren ('no_data'));
+    }
   }
 
   private function renderRow ($idx, array $columns, array $columnsCfg, Parameter $row)
@@ -154,7 +216,8 @@ JavaScript
         if ($isText) {
           $this->beginContent ();
           $col->renderChildren ();
-        } else {
+        }
+        else {
           if ($this->enableRowClick)
             $this->addAttribute ('data-nck');
           $this->beginContent ();
