@@ -1,63 +1,66 @@
-//<?php exit; ?>
+<?php
+// Preset application configuration
 
-// Preset application configuration:
+return [
+  'main' => [
 
-[main]
-title                  = "@"
-appName                = ""
-defaultURI             = ""
-favicon                = "data:;base64,iVBORw0KGgo=" // Supress http request
+    'title'                  => '@',
+    'appName'                => '',
+    'defaultURI'             => '',
+    'favicon'                => 'data:;base64,iVBORw0KGgo=', // Supress http request
 
-imageArchivePath       = "private/storage/images"
-fileArchivePath        = "private/storage/files"
-inlineArchivePath      = "private/storage/inline_assets"
-galleryPath            = "private/storage/gallery"
-cachePath              = "private/storage/cache"
-imagesCachePath        = "private/storage/cache/images"
-stylesCachePath        = "private/storage/cache"
-CSS_CachePath          = "private/storage/cache"
+    'imageArchivePath'       => 'private/storage/images',
+    'fileArchivePath'        => 'private/storage/files',
+    'inlineArchivePath'      => 'private/storage/inline_assets',
+    'galleryPath'            => 'private/storage/gallery',
+    'cachePath'              => 'private/storage/cache',
+    'imagesCachePath'        => 'private/storage/cache/images',
+    'stylesCachePath'        => 'private/storage/cache',
+    'CSS_CachePath'          => 'private/storage/cache',
 
-frontendConfig         = "app/src/config"
-config                 = "private/config"
-i18nPath               = "../private/resources/lang"
-templatesPath          = "private/resources/templates"
-modulesPath            = "private/app/modules"
-defaultModulesPath     = "private/selene/modules"
-viewPath               = "private/resources/views"
-moduleViewPath         = ""
-modelPath              = "models"
-publicPath             = "../"
+    'frontendConfig'         => 'app/src/config',
+    'config'                 => 'private/config',
+    'i18nPath'               => '../private/resources/lang',
+    'templatesPath'          => 'private/resources/templates',
+    'modulesPath'            => 'private/app/modules',
+    'defaultModulesPath'     => 'private/selene/modules',
+    'viewPath'               => 'private/resources/views',
+    'moduleViewPath'         => '',
+    'modelPath'              => 'models',
+    'publicPath'             => '../',
 
-frameworkPublicPath    = "public"
-frameworkURI           = "framework"
-addonsPath             = "framework/addons"
+    'frameworkPublicPath'    => 'public',
+    'frameworkURI'           => 'framework',
+    'addonsPath'             => 'framework/addons',
 
-siteMapFile            = ""
-modelFile              = ""
-dataSourcesFile        = ""
-SEOFile                = ""
+    'siteMapFile'            => '',
+    'modelFile'              => '',
+    'dataSourcesFile'        => '',
+    'SEOFile'                => '',
 
-translation            = 0
-languages              = ""; //ex: "pt:pt-PT:Português:pt_PT|pt_PT.UTF-8|ptg"
-defaultLang            = null
-pageSize               = 15
-pageNumberParam        = "p"
-frameworkScripts       = 1
-condenseLiterals       = 1
-compressOutput         = 1
-debugMode              = 0
+    'translation'            => false,
+    'languages'              => null,
+    'defaultLang'            => null,
+    'pageSize'               => 15,
+    'pageNumberParam'        => 'p',
+    'frameworkScripts'       => true,
+    'condenseLiterals'       => true,
+    'compressOutput'         => true,
+    'debugMode'              => false,
 
-imageRedirection       = 1
-URINotFoundURL         = 0
-oldIEWarning           = ""
-productionIP           = ""
-googleAnalyticsAccount = ""
+    'imageRedirection'       => true,
+    'URINotFoundURL'         => false,
+    'oldIEWarning'           => '',
+    'productionIP'           => '',
+    'googleAnalyticsAccount' => '',
 
-packScripts            = 0
-packCSS                = 0
-resourceCaching        = 0
+    'packScripts'            => false,
+    'packCSS'                => false,
+    'resourceCaching'        => false,
 
-globalSessions         = 0
-autoSession            = 1
-isSessionRequired      = 0
+    'globalSessions'         => false,
+    'autoSession'            => true,
+    'isSessionRequired'      => false,
 
+  ]
+];

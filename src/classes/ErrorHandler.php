@@ -78,7 +78,7 @@ class ErrorHandler
     <div style="border-top:1px solid #FFF;padding-top:10px">
     <?php if (isset($application)) { ?>
     <img style="float:left;left:12px;margin:0 20px"
-         src="<?=$application->baseURI ?>/framework/assets/icon-error.png">
+         src="<?="$application->baseURI/$application->frameworkURI/assets/icon-error.png" ?>">
   <?php } ?>
     <div style="white-space:pre-wrap;padding:13px 20px 5px 72px;font-family:menlo,monospace"><?php
     $title = isset($exception->title) ? $exception->title : get_class ($exception);

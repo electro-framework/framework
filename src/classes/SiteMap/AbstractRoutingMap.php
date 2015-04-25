@@ -3,7 +3,7 @@ class SiteMapSearchOptions {
     const INCLUDE_GROUPS = 1;
 }
 
-class AbstractSiteMap {
+class AbstractRoutingMap {
   public $groups;
   public $pages;
   /**
@@ -51,7 +51,7 @@ class AbstractSiteMap {
     return null;
   }
 
-  public static function loadModule($moduleName,$configName = 'sitemap') {
+  public static function loadModule($moduleName,$configName = 'routing-map') {
     global $application;
     $path = "$application->modulesPath/$moduleName/config/$configName.php";
     if (!fileExists($path))
@@ -61,7 +61,7 @@ class AbstractSiteMap {
       throw new ConfigException("SiteMap::loadConfigOf can't load <b>$configName.php</b> on module <b>$moduleName</b>.");
     $val = evalPHP($code);
     if ($val === false)
-      throw new ConfigException("Error on <b>$moduleName</b>'s sitemap definiton. Please check the PHP code.");
+      throw new ConfigException("Error on <b>$moduleName</b>'s routing-map definiton. Please check the PHP code.");
     return $val;
   }
 }

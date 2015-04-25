@@ -225,13 +225,21 @@ class Application
    */
   public $translation = false;
   /**
-   * Comma separated list of languages enabled on the application.
-   * Each language should be specified like this: langCode:ISOCode:langLabel:locale1|locale2...
-   * Ex.
-   * pt:pt-PT:Português:pt_PT|pt_PT.UTF-8|ptg,en:en-US:English:en_US|en_US.UTF-8|us,es:es-ES:Español:es_ES|es_ES.UTF-8|esp
-   * @var String
+   * List of languages enabled on the application.
+   *
+   * <p>Each language should be specified like this: `langCode:ISOCode:langLabel:locale1|locale2`
+   *
+   * <p>Ex.
+   * ```
+   * [
+   *   'en:en-US:English:en_US|en_US.UTF-8|us',
+   *   'pt:pt-PT:Português:pt_PT|pt_PT.UTF-8|ptg',
+   *   'es:es-ES:Español:es_ES|es_ES.UTF-8|esp'
+   * ]
+   * ```
+   * @var string[]
    */
-  public $languages = '';
+  public $languages = [];
 
   /**
    * A two letter code for default site language. NULL if i18n is disabled.
@@ -336,19 +344,25 @@ class Application
     $this->VURI              = $vuri ?: '';
     $this->rootPath          = dirname ($appDir);
 
+    // Load default configuration.
+
     $this->setIncludePath ();
     $iniPath = $this->frameworkPath . DIRECTORY_SEPARATOR . self::DEFAULT_INI_FILENAME;
-    $ini     = @parse_ini_file ($iniPath, true);
+    $ini     = @include $iniPath;
     if ($ini)
       extend ($this, $ini['main']);
     else
       throw new ConfigException("Error parsing " . ErrorHandler::shortFileName ($iniPath));
-    $iniPath = $this->directory . DIRECTORY_SEPARATOR . self::INI_FILENAME;
-    $ini     = @parse_ini_file ($iniPath, true);
+
+    // Load application-specific configuration.
+
+    $iniPath = $this->rootPath. DIRECTORY_SEPARATOR . $this->config. DIRECTORY_SEPARATOR . self::INI_FILENAME;
+    $ini     = @include $iniPath;
     if ($ini)
       extend ($this, $ini['main']);
     else
       throw new ConfigException("Error parsing " . ErrorHandler::shortFileName ($iniPath));
+
     if (empty($this->name))
       $this->name = $this->URI ? $this->URI : $_SERVER['SERVER_NAME'];
     if (isset($_ENV['APP_DEFAULT_LANG']))

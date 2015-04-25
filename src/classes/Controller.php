@@ -498,7 +498,7 @@ class Controller
     global $application, $session;
     if (empty($application->languages))
       return;
-    $this->languages = explode (',', $application->languages);
+    $this->languages = $application->languages;
     $this->langInfo  = [];
     foreach ($this->languages as $langDat) {
       $langDat                     = explode (':', $langDat);
