@@ -147,10 +147,10 @@ class Application
    */
   public $frameworkScripts;
   /**
-   * Defines the file path for the SiteMap class or its XML description, set on application.ini.php.
+   * Defines the file path for the RoutingMap class, set on application.ini.php.
    * @var String
    */
-  public $siteMapFile;
+  public $routingMapFile;
   /**
    * Defines the file path for the Model collection or its XML description, set on application.ini.php.
    * @var String
@@ -167,10 +167,10 @@ class Application
    */
   public $SEOFile;
   /**
-   * Holds a SiteMap subclass instance or null;
-   * @var SiteMap
+   * The application'a routing map.
+   * @var RoutingMap
    */
-  public $siteMap;
+  public $routingMap;
   /**
    * Holds an array of multiple DataSourceInfo for each site page or null;
    * @var array
@@ -183,7 +183,7 @@ class Application
   public $SEOInfo;
   /**
    * The default URI when none is specified on the URL.
-   * The URI locates an entry on the SiteMap where additional info. is used to
+   * The URI locates an entry on the routing map where additional info. is used to
    * load the default page.
    * Set by application.ini.php
    * @var String
@@ -356,7 +356,7 @@ class Application
 
     // Load application-specific configuration.
 
-    $iniPath = $this->rootPath. DIRECTORY_SEPARATOR . $this->config. DIRECTORY_SEPARATOR . self::INI_FILENAME;
+    $iniPath = $this->rootPath . DIRECTORY_SEPARATOR . $this->config . DIRECTORY_SEPARATOR . self::INI_FILENAME;
     $ini     = @include $iniPath;
     if ($ini)
       extend ($this, $ini['main']);
@@ -368,7 +368,7 @@ class Application
     if (isset($_ENV['APP_DEFAULT_LANG']))
       $this->defaultLang = $_ENV['APP_DEFAULT_LANG'];
 
-    $this->mount ($this->frameworkURI, dirname( $this->frameworkPath) . "/$this->frameworkPublicPath");
+    $this->mount ($this->frameworkURI, dirname ($this->frameworkPath) . "/$this->frameworkPublicPath");
 
     if (!$NO_APPLICATION) {
       $this->loadSiteMap ();
@@ -442,25 +442,14 @@ class Application
 
   private function loadSiteMap ()
   {
-    global $model; //used by SitePage
-    if (!empty($this->siteMapFile)) {
-      if (substr ($this->siteMapFile, -3) == 'xml')
-        $this->parseXMLSiteMap ();
-      else {
-        require $this->siteMapFile;
-        $name = dirname ($this->siteMapFile);
-        $name =
-          $name == '.' ? $this->siteMapFile . substr (0, -4) : substr ($this->siteMapFile, strlen ($name) + 1, -4);
-        try {
-          $class = new ReflectionClass($name);
-        } catch (ReflectionException $e) {
-          throw new ConfigException(null,
-            "The file <b>$this->siteMapFile</b> does not contain a <b>$name</b> class definiton.");
-        }
-        $this->siteMap = $class->newInstance ();
-      }
-      if (isset($this->siteMap))
-        $this->siteMap->init ();
+    global $model; //used by PageRoute
+    if (!empty($this->routingMapFile)) {
+      $cfg = require $this->routingMapFile;
+      $map = new RoutingMap();
+      foreach ($cfg as $k => $v)
+        $map->$k = $v;
+      $this->routingMap = $map;
+      $map->init ();
     }
   }
 

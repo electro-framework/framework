@@ -166,7 +166,7 @@ class Controller
 
   /**
    * Information about the page associated with this controller.
-   * @var SiteElement
+   * @var AbstractRoute
    */
   public $sitePage;
 
@@ -451,7 +451,7 @@ class Controller
   protected function configPage ()
   {
     global $application;
-    if (isset($application->siteMap)) {
+    if (isset($application->routingMap)) {
       if (!isset($this->moduleLoader))
         throw new ConfigException("The module for the current URI is not working properly.<br>You should check the class code.");
       $this->sitePage          = $this->moduleLoader->sitePage;
@@ -470,7 +470,7 @@ class Controller
   protected function initSEO ()
   {
     global $application;
-    if (isset($application->siteMap)) {
+    if (isset($application->routingMap)) {
       if (isset($this->sitePage->keywords))
         $this->page->keywords =
           isset($this->lang) ? get ($this->sitePage->keywords, $this->lang, '') : $this->sitePage->keywords;

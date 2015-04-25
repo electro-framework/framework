@@ -1,11 +1,11 @@
 <?php
 
-class SitePage extends SiteElement
+class PageRoute extends AbstractRoute
 {
   public $module;
   public $dataModule;
   public $preset;
-  public $pagesMenu = false;
+  public $pagesMenu  = false;
   public $singular;
   public $plural;
   public $gender;
@@ -13,17 +13,22 @@ class SitePage extends SiteElement
   public $config;
   public $model;
   public $links;
-  public $isIndex = false;
+  public $isIndex    = false;
   public $dataSources;
   public $keywords;
   public $description;
-  public $filter = '';
+  public $filter     = '';
   public $fieldNames = '';
-  public $sortBy = '';
+  public $sortBy     = '';
+
+  public function __construct (array &$init = null)
+  {
+    parent::__construct ($init);
+  }
 
   public function getTypes ()
   {
-    return array(
+    return [
       'name'           => 'string',
       'title'          => 'string',
       'subtitle'       => 'string',
@@ -37,7 +42,7 @@ class SitePage extends SiteElement
       'module'         => 'string',
       'dataModule'     => 'string',
       'preset'         => 'string',
-      'pages'          => 'array',
+      'routes'         => 'array',
       'pagesMenu'      => 'boolean',
       'singular'       => 'string',
       'plural'         => 'string',
@@ -57,12 +62,30 @@ class SitePage extends SiteElement
       'fieldNames'     => 'string',
       'filter'         => 'string',
       'sortBy'         => 'string'
-    );
+    ];
   }
 
-  public function __construct (array &$init = null)
+  public function getModel ()
   {
-    parent::__construct ($init);
+    global $model;
+    $modelName = property ($this, 'model');
+    if (!isset($modelName)) {
+      if (isset($this->dataSources)) {
+        $ds = get ($this->dataSources, 'default');
+        if (isset($ds))
+          $modelName = $ds->model;
+      }
+    }
+    else $modelName = property ($this, 'model');
+    if (!isset($modelName))
+      return null;
+    //throw new ConfigException("Default data source model not found");
+    return $modelName;
+  }
+
+  public function getDataModule ()
+  {
+    return isset($this->dataModule) ? $this->dataModule : $this->module;
   }
 
   protected function getDefaultSubtitle ()
@@ -77,28 +100,6 @@ class SitePage extends SiteElement
           return ucfirst ($this->plural);
     }
     return $this->parent->getDefaultSubtitle ();
-  }
-
-  public function getModel ()
-  {
-    global $model;
-    $modelName = property ($this, 'model');
-    if (!isset($modelName)) {
-      if (isset($this->dataSources)) {
-        $ds = get ($this->dataSources, 'default');
-        if (isset($ds))
-          $modelName = $ds->model;
-      }
-    } else $modelName = property ($this, 'model');
-    if (!isset($modelName))
-      return null;
-    //throw new ConfigException("Default data source model not found");
-    return $modelName;
-  }
-
-  public function getDataModule ()
-  {
-    return isset($this->dataModule) ? $this->dataModule : $this->module;
   }
 
 }

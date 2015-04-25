@@ -47,27 +47,27 @@ class MainMenu extends VisualComponent
     $this->runSet ($this->getChildren ('header'));
     $xi = $this->attrs ()->get ('expand_icon');
 
-    if (!empty($application->siteMap->pages))
+    if (!empty($application->routingMap->routes))
       echo html (
-        map ($application->siteMap->pages, function ($page) use ($xi) {
-          if (!$page->onMenu) return null;
-          $active = $page->selected ? '.active' : '';
-          $sub    = $page->hasSubNav ? '.sub' : '';
+        map ($application->routingMap->routes, function ($route) use ($xi) {
+          if (!$route->onMenu) return null;
+          $active = $route->selected ? '.active' : '';
+          $sub    = $route->hasSubNav ? '.sub' : '';
           return [
             h ("li$active$sub", [
-              h ("a$active", ['href' => $page->URL], [
-                when ($page->icon, [h ('i.' . $page->icon), ' ']),
-                either ($page->subtitle, $page->title),
-                iftrue (isset($xi) && $page->hasSubNav, h ("span.$xi"))
+              h ("a$active", ['href' => $route->URL], [
+                when ($route->icon, [h ('i.' . $route->icon), ' ']),
+                either ($route->subtitle, $route->title),
+                iftrue (isset($xi) && $route->hasSubNav, h ("span.$xi"))
               ]),
-              when ($page->hasSubNav, $this->renderMenuItem ($page->pages, $xi))
+              when ($route->hasSubNav, $this->renderMenuItem ($route->routes, $xi))
             ])
           ];
         })
       );
 
     else echo html (
-      map ($application->siteMap->groups, function ($grp) use ($xi) {
+      map ($application->routingMap->groups, function ($grp) use ($xi) {
         return [
           h ('li.header', [
             h ('a', [
@@ -75,18 +75,18 @@ class MainMenu extends VisualComponent
               $grp->title
             ])
           ]),
-          map ($grp->pages, function ($page) use ($xi) {
-            if (!$page->onMenu) return null;
-            $active = $page->selected ? '.active' : '';
-            $sub    = $page->hasSubNav ? '.sub' : '';
+          map ($grp->routes, function ($route) use ($xi) {
+            if (!$route->onMenu) return null;
+            $active = $route->selected ? '.active' : '';
+            $sub    = $route->hasSubNav ? '.sub' : '';
             return [
               h ("li.treeview$active$sub", [
-                h ("a$active", ['href' => $page->URL], [
-                  when ($page->icon, [h ('i.' . $page->icon), ' ']),
-                  either ($page->subtitle, $page->title),
-                  iftrue (isset($xi) && $page->hasSubNav, h ("span.$xi"))
+                h ("a$active", ['href' => $route->URL], [
+                  when ($route->icon, [h ('i.' . $route->icon), ' ']),
+                  either ($route->subtitle, $route->title),
+                  iftrue (isset($xi) && $route->hasSubNav, h ("span.$xi"))
                 ]),
-                when ($page->hasSubNav, $this->renderMenuItem ($page->pages, $xi))
+                when ($route->hasSubNav, $this->renderMenuItem ($route->routes, $xi))
               ])
             ];
           })
@@ -98,19 +98,19 @@ class MainMenu extends VisualComponent
   private function renderMenuItem ($pages, $xi, $depth = 1)
   {
     return h ('ul.nav.collapse.' . $this->depthClass[$depth], [
-      map ($pages, function ($page) use ($xi, $depth) {
-        if (!$page->onMenu) return null;
-        $active  = $page->selected ? '.active' : '';
-        $sub     = $page->hasSubNav ? '.sub' : '';
-        $current = $page->matches ? '.current' : '';
+      map ($pages, function ($route) use ($xi, $depth) {
+        if (!$route->onMenu) return null;
+        $active  = $route->selected ? '.active' : '';
+        $sub     = $route->hasSubNav ? '.sub' : '';
+        $current = $route->matches ? '.current' : '';
         return
           h ("li.$active$sub$current", [
-            h ("a$active", ['href' => $page->URL], [
-              when ($page->icon, [h ('i.' . $page->icon), ' ']),
-              either ($page->subtitle, $page->title),
-              iftrue (isset($xi) && $page->hasSubNav, h ("span.$xi"))
+            h ("a$active", ['href' => $route->URL], [
+              when ($route->icon, [h ('i.' . $route->icon), ' ']),
+              either ($route->subtitle, $route->title),
+              iftrue (isset($xi) && $route->hasSubNav, h ("span.$xi"))
             ]),
-            when ($page->hasSubNav, $this->renderMenuItem ($page->pages, $xi, $depth + 1))
+            when ($route->hasSubNav, $this->renderMenuItem ($route->routes, $xi, $depth + 1))
           ]);
       })
     ]);

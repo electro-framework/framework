@@ -33,7 +33,7 @@ return [
     'frameworkURI'           => 'framework',
     'addonsPath'             => 'framework/addons',
 
-    'siteMapFile'            => '',
+    'routingMapFile'         => '',
     'modelFile'              => '',
     'dataSourcesFile'        => '',
     'SEOFile'                => '',

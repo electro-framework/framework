@@ -21,7 +21,7 @@ class ModuleLoader
   ];
   /**
    * Sitemap information for the current page.
-   * @var SitePage
+   * @var PageRoute
    */
   public $sitePage = null;
   /**
@@ -113,15 +113,15 @@ class ModuleLoader
   {
     global $application;
 
-    //Find SitePage info
+    //Find PageRoute info
 
     $this->virtualURI = $application->VURI;
     if ($this->virtualURI == '')
       $this->virtualURI = $application->defaultURI;
     $key = get ($_GET, 'key');
-    if (!isset($application->siteMap))
+    if (!isset($application->routingMap))
       throw new ConfigException("No sitemap defined.");
-    $this->sitePage = $application->siteMap->searchFor ($this->virtualURI, $key);
+    $this->sitePage = $application->routingMap->searchFor ($this->virtualURI, $key);
     if (is_null ($this->sitePage))
       Controller::pageNotFound ($this->virtualURI);
 

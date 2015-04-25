@@ -1,38 +1,23 @@
 <?php
 
-function FormInfo (array $init)
+function RouteGroup ($init)
 {
-  return new FormInfo($init);
+  return new RouteGroup($init);
 }
 
-function ModelInfo (array $init)
+function PageRoute (array $init)
 {
-  return new ModelInfo($init);
+  return new PageRoute($init);
 }
 
-function FieldInfo (array $init)
+function SubPageRoute (array $init)
 {
-  return new FieldInfo($init);
+  return new SubPageRoute($init);
 }
 
-function SiteGroup ($init)
+function Route (array $init)
 {
-  return new SiteGroup($init);
-}
-
-function SitePage (array $init)
-{
-  return new SitePage($init);
-}
-
-function SiteSubpage (array $init)
-{
-  return new SiteSubpage($init);
-}
-
-function WebService (array $init)
-{
-  return new WebService($init);
+  return new Route($init);
 }
 
 function ForeignKey (array $init)
