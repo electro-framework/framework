@@ -21,12 +21,6 @@
     "php": ">=5.4.0",
     "selene-framework/matisse": "dev-master"
   },
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "https://github.com/selene-framework/matisse"
-    }
-  ],
   "autoload": {
     "classmap": [
       "src/classes",
