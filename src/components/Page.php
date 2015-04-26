@@ -59,7 +59,7 @@ class Page extends Component
   public $keywords         = '';
   public $author           = '';
   public $footer           = '';
-  public $extraHeadTags;
+  public $extraHeadTags    = '';
   public $targetURL;
   public $defaultAction;
   /** Content to be inserted before the form element. */
