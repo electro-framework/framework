@@ -45,7 +45,7 @@ class Head extends Component implements IAttributes
     self::renderSet($content->children);
     $html = ob_get_clean ();
     if (!empty($html))
-      $this->page->extraHeadTags = $html;
+      $this->page->extraHeadTags .= $html;
   }
 }
 

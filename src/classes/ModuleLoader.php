@@ -79,7 +79,6 @@ class ModuleLoader
    */
   public static function loadClass ($className, $filePrefix = '')
   {
-    global $FRAMEWORK, $application;
     if (class_exists ($className))
       return true;
     if ($filePrefix != '' && substr ($filePrefix, -1) != '/')
@@ -144,8 +143,9 @@ class ModuleLoader
    */
   public function load ()
   {
+    global $application;
     if ($this->sitePage->autoController)
-      $con = $this->moduleInfo->isWebService ? new WebServiceController : new Controller();
+      $con = $this->moduleInfo->isWebService ? new WebServiceController : new $application->autoControllerClass;
     else if (class_exists ($this->moduleInfo->pageClassName))
       $con = new $this->moduleInfo->pageClassName();
     else throw new FatalException("Auto-controller generation is disabled for this URL and the file <b>" .

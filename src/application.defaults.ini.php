@@ -9,6 +9,9 @@ return [
     'defaultURI'             => '',
     'favicon'                => 'data:;base64,iVBORw0KGgo=', // Supress http request
 
+    'homeIcon'               => '',
+    'homeTitle'              => 'Home',
+
     'imageArchivePath'       => 'private/storage/images',
     'fileArchivePath'        => 'private/storage/files',
     'inlineArchivePath'      => 'private/storage/inline_assets',
@@ -38,6 +41,7 @@ return [
     'dataSourcesFile'        => '',
     'SEOFile'                => '',
 
+    'autoControllerClass'    => 'Controller',
     'translation'            => false,
     'languages'              => null,
     'defaultLang'            => null,

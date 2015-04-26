@@ -25,14 +25,18 @@ class RouteGroup extends AbstractRoute
     parent::preinit ();
     if (isset($this->baseSubnavURI))
       $this->baseSubnavURI = str_replace ('*', '[^/]*', $this->baseSubnavURI);
+
+    if (!empty($this->URI))
+      $this->prefix = empty($this->inheritedPrefix) ? $this->URI : "$this->inheritedPrefix/$this->URI";
   }
 
   public function searchFor ($URI, $options = 0)
   {
     if ($this->matchesURI ($URI)) {
       $this->selected = true;
-      if ($options & SiteMapSearchOptions::INCLUDE_GROUPS)
-        return $this;
+      if (empty($this->defaultURI))
+        throw new ConfigException("No default URI is configured for the route group matching $URI");
+      $URI = $this->defaultURI;
     }
     if (isset($this->routes))
       foreach ($this->routes as $route) {

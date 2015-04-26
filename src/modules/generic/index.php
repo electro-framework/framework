@@ -1,4 +1,4 @@
 <?php
-class IndexController extends DefaultController {
+class IndexController extends ShellController {
 
 }

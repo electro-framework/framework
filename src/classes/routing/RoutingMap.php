@@ -1,10 +1,5 @@
 <?php
 
-class SiteMapSearchOptions
-{
-  const INCLUDE_GROUPS = 1;
-}
-
 class RoutingMap
 {
   public $groups;
@@ -15,7 +10,7 @@ class RoutingMap
    */
   public $namedNodes;
 
-  public static function loadModule ($moduleName, $configName = 'routing-map')
+  public static function loadModule ($moduleName, $configName = 'routes')
   {
     global $application;
     $path = "$application->modulesPath/$moduleName/config/$configName.php";

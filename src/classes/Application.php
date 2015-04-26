@@ -167,6 +167,11 @@ class Application
    */
   public $SEOFile;
   /**
+   * The class to be instantiated when creating an automatic controller.
+   * @var string
+   */
+  public $autoControllerClass;
+  /**
    * The application'a routing map.
    * @var RoutingMap
    */

@@ -131,8 +131,8 @@ class Controller
    * Possible values are:
    * <p>
    * '' - no default datasource;<br/>
-   * PageFormat::FORM - create a single record default datasource;<br/>
-   * PageFormat::GRID - create a multi-record default datasource.<br/>
+   * 'form' - create a single record default datasource;<br/>
+   * 'grid' - create a multi-record default datasource.<br/>
    * </p>
    * @var String
    */
@@ -227,6 +227,12 @@ class Controller
   public $isProductionSite = true;
 
   /**
+   * True if the login form should be displayed.
+   * @var bool
+   */
+  public $showLogin = false;
+
+  /**
    * Performs the main execution sequence.
    * Provides support for:
    * - the standard GET/POST/redirect cycle;
@@ -273,6 +279,7 @@ class Controller
           }
         } else {
           $authenticate = !$session->validate ();
+          $this->showLogin = $authenticate;
           if ($authenticate && $action)
             $this->prevPost = urlencode (serialize ($_POST));
         }
@@ -627,14 +634,14 @@ class Controller
     $this->pageNumber = get ($_REQUEST, $application->pageNumberParam, 1);
     if (isset($this->sitePage)) {
       if (isset($this->dataItem)) {
-        if ($this->sitePage->format == PageFormat::GRID && $this->dataItem->isNew ()) {
+        if ($this->sitePage->format == 'grid' && $this->dataItem->isNew ()) {
           $st   =
             $this->dataItem->queryBy ($this->sitePage->filter, $this->sitePage->fieldNames, $this->sitePage->sortBy);
           $data = $st->fetchAll (PDO::FETCH_ASSOC);
           $this->paginate ($data);
           $this->interceptViewDataSet ('default', $data);
           $this->setDataSource ('', new DataSet($data), true);
-        } else if ($this->sitePage->format == PageFormat::FORM) {
+        } else if ($this->sitePage->format == 'form') {
           $this->interceptViewDataRecord ('default', $this->dataItem);
           $this->setDataSource ('', new DataRecord($this->dataItem), true);
         }
@@ -645,11 +652,11 @@ class Controller
           $this->setDataSource ($name, $dataSourceInfo->getData ($this, $name)); //interception is done inside getData()
     } else if (isset($this->dataItem))
       switch ($this->defaultPageFormat) {
-        case PageFormat::FORM:
+        case 'form':
           $this->interceptViewDataRecord ('default', $this->dataItem);
           $this->setDataSource ('', new DataRecord($this->dataItem));
           break;
-        case PageFormat::GRID:
+        case 'grid':
           if (isset($this->dataQueryParams)) {
             $params = [];
             foreach ($this->dataQueryParams as $param) {
@@ -759,7 +766,7 @@ class Controller
       if (isset($this->sitePage) && !$this->sitePage->autoView)
         throw new FatalException("Auto-view generation is disabled for this URL and the file <b>$path</b> was not found.");
       if ($this->page->contentIsXML && isset($this->dataItem)) {
-        if ($this->sitePage->format == PageFormat::GRID)
+        if ($this->sitePage->format == 'grid')
           echo $this->dataItem->queryAsXML ($this->sitePage->fields);
         else echo $this->dataItem->serializeToXML (implode (',', $this->sitePage->fields));
         return true;

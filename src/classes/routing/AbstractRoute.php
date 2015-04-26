@@ -43,6 +43,16 @@ abstract class AbstractRoute extends Object
    * @var bool
    */
   public $hasSubNav = false;
+  /**
+   * When set, the real URI is $inheritedPrefix/$URI.
+   * @var string
+   */
+  public $inheritedPrefix = '';
+  /**
+   * When set, children's inheritedPrefix will be set to its value.
+   * @var string
+   */
+  public $prefix = '';
 
   public function __construct (array &$init = null)
   {
@@ -84,11 +94,7 @@ abstract class AbstractRoute extends Object
   public function preinit ()
   {
     global $application;
-    if (!isset($this->URL)) {
-      if (isset($this->URI))
-        $this->URL = "$application->URI/$this->URI";
-      else $this->URL = 'javascript:nop()';
-    }
+
     if (!isset($this->subnavURL)) {
       if (isset($this->subnavURI))
         $this->subnavURL = "$application->URI/$this->subnavURI";
@@ -115,18 +121,17 @@ abstract class AbstractRoute extends Object
     if (isset($this->subtitle))
       return $this->subtitle;
     return $this->title;
-    /*
-    if (isset($this->parent)) {
-      $subtitle = $this->parent->getSubtitle(false);
-      if (strlen($subtitle))
-        return $subtitle;
-    }
-    return $first ? $this->getDefaultSubtitle() : '';
-     */
   }
 
   public function init ($parent)
   {
+    global $application;
+
+    if (!isset($this->URL)) {
+      if (isset($this->URI))
+        $this->URL = "$application->URI/" . ($this->inheritedPrefix ? "$this->inheritedPrefix/" : '') . $this->URI;
+      else $this->URL = 'javascript:nop()';
+    }
     $this->parent = $parent;
     if (empty($this->indexURL)) {
       $index = $this->getIndex ();
@@ -136,10 +141,11 @@ abstract class AbstractRoute extends Object
       }
     }
     if (isset($this->routes))
-      foreach ($this->routes as $page) {
-        /** @var AbstractRoute $page */
-        $page->init ($this);
-        if ($page->onMenu)
+      foreach ($this->routes as $route) {
+        $route->inheritedPrefix = either ($this->prefix, $this->inheritedPrefix);
+        /** @var AbstractRoute $route */
+        $route->init ($this);
+        if ($route->onMenu)
           $this->hasSubNav = true;
       }
   }
@@ -151,8 +157,8 @@ abstract class AbstractRoute extends Object
       return $this;
     }
     if (isset($this->routes)) {
-      foreach ($this->routes as $subpage) {
-        $result = $subpage->searchFor ($URI, $options);
+      foreach ($this->routes as $route) {
+        $result = $route->searchFor ($URI, $options);
         if (isset($result)) {
           $this->selected = true;
           return $result;
@@ -172,15 +178,15 @@ abstract class AbstractRoute extends Object
   }
 
   /**
-   *
+   * @return array
+   * @throws FatalException
    * @global Application  $application
    * @global ModuleLoader $loader
-   * @return array
    */
   public function getURIParams ()
   {
     global $application, $loader;
-    $URI    = $loader->virtualURI;
+    $URI    = $this->removeURIPrefix ($loader->virtualURI);
     $result = [];
     $count  = preg_match ("!^$this->URI_regexp(?:$|&|/)!", urldecode ($URI), $URIValues);
     if ($count)
@@ -212,6 +218,8 @@ abstract class AbstractRoute extends Object
       $URIParams = $this->getURIParams ();
     if (is_null ($URI))
       $URI = $this->URI;
+    $prefix = empty($this->inheritedPrefix) ? '' : "$this->inheritedPrefix/";
+    $URI = "$prefix$URI";
     try {
       return preg_replace_callback ('!\{(.*?)}!', function ($args) use ($URIParams, $ignoreMissing) {
         return self::fillURIParam ($args[1], $URIParams, $ignoreMissing);
@@ -251,8 +259,19 @@ abstract class AbstractRoute extends Object
     return isset($this->parent) ? $this->parent->getDefaultSubtitle () : '';
   }
 
+  protected function removeURIPrefix ($URI)
+  {
+    if (!empty($this->inheritedPrefix)) {
+      $l = strlen ($this->inheritedPrefix);
+      if (substr ($URI, 0, $l) == $this->inheritedPrefix)
+        $URI = substr ($URI, $l + 1);
+    }
+    return $URI;
+  }
+
   protected function matchesMyURI ($URI)
   {
+    $URI = $this->removeURIPrefix ($URI);
     return preg_match ("!^$this->URI_regexp(?:$|&)!", $URI) > 0;
   }
 
