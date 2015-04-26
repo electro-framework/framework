@@ -8,6 +8,7 @@ return [
     'appName'                => '',
     'defaultURI'             => '',
     'favicon'                => 'data:;base64,iVBORw0KGgo=', // Supress http request
+    'subApplications'        => [],
 
     'homeIcon'               => '',
     'homeTitle'              => 'Home',
@@ -21,8 +22,7 @@ return [
     'stylesCachePath'        => 'private/storage/cache',
     'CSS_CachePath'          => 'private/storage/cache',
 
-    'frontendConfig'         => 'app/src/config',
-    'config'                 => 'private/config',
+    'configPath'             => 'private/config',
     'i18nPath'               => '../private/resources/lang',
     'templatesPath'          => 'private/resources/templates',
     'modulesPath'            => 'private/app/modules',

@@ -113,10 +113,10 @@ class Application
    */
   public $defaultModulesPath;
   /**
-   * Location of the frontend's Laravel configuration files.
+   * Folder path for the configuration files.
    * @var string
    */
-  public $frontendConfig;
+  public $configPath;
 
   /* Template related */
   public $templatesPath;
@@ -176,6 +176,11 @@ class Application
    * @var RoutingMap
    */
   public $routingMap;
+  /**
+   * A map of URI prefixes to application configuration files.
+   * @var array
+   */
+  public $subApplications;
   /**
    * Holds an array of multiple DataSourceInfo for each site page or null;
    * @var array
@@ -248,6 +253,7 @@ class Application
 
   /**
    * A two letter code for default site language. NULL if i18n is disabled.
+   * <p>This is set on the environment (ex: .env).
    * @var string
    */
   public $defaultLang = null;
@@ -337,7 +343,7 @@ class Application
 
     $uri     = $_SERVER['REQUEST_URI'];
     $baseURI = dirname ($_SERVER['SCRIPT_NAME']);
-    $vuri    = substr ($uri, strlen ($baseURI) + 1);
+    $vuri    = substr ($uri, strlen ($baseURI) + 1) ?: '';
 
     //var_dump($_SERVER);exit;
     $this->isSessionRequired = false;
@@ -346,27 +352,28 @@ class Application
     $this->URI               = $baseURI;
     $this->baseURI           = "$baseURI$baseOffs";
     $this->frameworkPath     = realpath ("$appDir/$FRAMEWORK");
-    $this->VURI              = $vuri ?: '';
+    $this->VURI              = $vuri;
     $this->rootPath          = dirname ($appDir);
+
+    $this->setIncludePath ();
 
     // Load default configuration.
 
-    $this->setIncludePath ();
     $iniPath = $this->frameworkPath . DIRECTORY_SEPARATOR . self::DEFAULT_INI_FILENAME;
-    $ini     = @include $iniPath;
-    if ($ini)
-      extend ($this, $ini['main']);
-    else
-      throw new ConfigException("Error parsing " . ErrorHandler::shortFileName ($iniPath));
+    $this->loadConfig ($iniPath);
 
     // Load application-specific configuration.
 
-    $iniPath = $this->rootPath . DIRECTORY_SEPARATOR . $this->config . DIRECTORY_SEPARATOR . self::INI_FILENAME;
-    $ini     = @include $iniPath;
-    if ($ini)
-      extend ($this, $ini['main']);
-    else
-      throw new ConfigException("Error parsing " . ErrorHandler::shortFileName ($iniPath));
+    $iniPath = $this->rootPath . DIRECTORY_SEPARATOR . $this->configPath . DIRECTORY_SEPARATOR . self::INI_FILENAME;
+    $this->loadConfig ($iniPath);
+
+    foreach ($this->subApplications as $prefix => $path) {
+      if (substr ($vuri, 0, strlen ($prefix)) == $prefix) {
+        $iniPath = $this->rootPath . DIRECTORY_SEPARATOR . $this->configPath . DIRECTORY_SEPARATOR . $path;
+        $this->loadConfig ($iniPath);
+      }
+    }
+
 
     if (empty($this->name))
       $this->name = $this->URI ? $this->URI : $_SERVER['SERVER_NAME'];
@@ -376,9 +383,10 @@ class Application
     $this->mount ($this->frameworkURI, dirname ($this->frameworkPath) . "/$this->frameworkPublicPath");
 
     if (!$NO_APPLICATION) {
-      $this->loadSiteMap ();
+      $this->loadRoutes ();
     }
   }
+
   public function setIncludePath ($extra = '')
   {
     if (!empty($extra)) {
@@ -391,6 +399,7 @@ class Application
     $this->includePath = $path;
     //var_dump($this);exit;
   }
+
   public function toURL ($URI)
   {
     $port = ':' . $_SERVER['SERVER_PORT'];
@@ -398,41 +407,50 @@ class Application
       $port = '';
     return "http://{$_SERVER['SERVER_NAME']}$port$URI";
   }
+
   public function toURI ($path)
   {
     return "$this->baseURI/$path";
   }
+
   public function fromPathToURL ($path)
   {
     return $this->toURL ($this->toURI ($path));
   }
+
   public function toFilePath ($URI)
   {
     if ($URI[0] == '/')
       return $this->baseDirectory . substr ($URI, strlen ($this->baseURI));
     return "$this->baseDirectory" . DIRECTORY_SEPARATOR . "$URI";
   }
+
   public function toRelativePath ($URI)
   {
     global $application;
     return substr ($URI, strlen ($application->baseURI) + 1);
   }
+
   public function toThemeURI ($relativeURI, Theme &$theme)
   {
     return "$this->baseURI/$theme->path/$relativeURI";
   }
+
   public function getAddonURI ($addonName)
   {
     return "$this->baseURI/$this->addonsPath/$addonName";
   }
+
   public function getImageURI ($fileName)
   {
     return "$this->baseURI/$this->imageArchivePath/$fileName";
   }
+
   public function getFileURI ($fileName)
   {
     return "$this->baseURI/$this->fileArchivePath/$fileName";
   }
+
   /**
    * Given a theme's stylesheet or CSS URI this method returns an unique name
    * suitable for naming a file on the cache folder.
@@ -445,7 +463,16 @@ class Application
     return str_replace ('/', '_', substr ($URI, strlen ($this->baseURI) + strlen ($themesPath) + 2));
   }
 
-  private function loadSiteMap ()
+  private function loadConfig ($iniPath)
+  {
+    $ini = @include $iniPath;
+    if ($ini)
+      extend ($this, $ini['main']);
+    else
+      throw new ConfigException("Error parsing " . ErrorHandler::shortFileName ($iniPath));
+  }
+
+  private function loadRoutes ()
   {
     global $model; //used by PageRoute
     if (!empty($this->routingMapFile)) {
