@@ -1,10 +1,12 @@
 <?php
 class Session {
 
+  /** @var string The session cookie name. */
+  public $name;
   public $isValid = false;
   public $username;
   public $userFullName;
-  public $lang;
+  public $lang = null;
   public $userTable = 'Users';
   public $userField = 'username';
   public $passField = 'password';
@@ -16,7 +18,7 @@ class Session {
   }
 
   //--------------------------------------------------------------------------
-  public function login() {
+  public function login($defaultLang) {
   //--------------------------------------------------------------------------
     $username = get($_POST, 'username');
     $password = get($_POST, 'password');
@@ -32,6 +34,7 @@ class Session {
         $this->username = $username;
         $this->userFullName = ucfirst($username);
         $this->isValid = true;
+        $this->lang = $defaultLang;
       }
     }
   }
@@ -39,11 +42,10 @@ class Session {
   //--------------------------------------------------------------------------
   public function logout() {
     //--------------------------------------------------------------------------
-    if (isset($_COOKIE[session_name()]))
-      setcookie(session_name(), '', time() - 42000, session_name() . '/');
+    if (isset($_COOKIE[$this->name]))
+      setcookie($this->name, '', time() - 42000, '/');
     session_destroy();
-    $this->isValid = false;
-    $this->username = null;
+    $_SESSION['sessionInfo'] = null;
   }
 
   //--------------------------------------------------------------------------

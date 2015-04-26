@@ -17,66 +17,48 @@ class Controller
   const MSG_UNSUPPORTED = "A operação não foi implementada.";
   const MSG_DELETED     = 'O registo foi apagado.';
   const MSG_OK          = "A operação foi efectuada.";
-
-  public $TEMPLATE_EXT = '.html';
-
+  /**
+   * The i18n cached translation table.
+   * @var array An array of arrays indexed by language code.
+   */
+  protected static $translation  = [];
+  public           $TEMPLATE_EXT = '.html';
   /**
    * A templating engine instance.
    * @var MatisseEngine
    */
   public $engine;
-
   /**
    * Points to the root of the components tree.
    * @var Page
    */
   public $page;
-
   /**
    * A two letter code for currently active language. NULL if i18n is disabled.
    * @var string
    */
   public $lang = null;
-
   /**
    * The human readable name of the active language (ex. English).
    * @var string
    */
   public $langLabel = null;
-
   /**
    * The ISO language code of the active language (ex. en-US).
    * @var string
    */
   public $langISO = null;
-
   /**
    * The locale language code of the active language (ex. en_US).
    * @var string
    */
   public $locale = null;
-
   /**
    * Array of information about each enabled language.
    * Each entry is in the format: 'langCode' => array('value'=>,'ISO'=>,'label'=>,'locale'=>)
    * @var array
    */
   public $langInfo;
-
-  /**
-   * A list of languages codes for the available languages, as configured on Application.
-   * @var string
-   */
-  protected $languages;
-
-  /**
-   * Specifies the URL of the index page, to where the browser should naviagate upon the
-   * successful insertion / updatal of records.
-   * If not defined on a subclass then the request will redisplay the same page.
-   * @var string
-   */
-  protected $indexPage = null;
-
   /**
    * If specified on a subclass, the controller will automatically instantiate and initialize
    * a corresponding instance on setupModel() and also setup a default data source named 'default'
@@ -85,37 +67,31 @@ class Controller
    * @var string The name of the class to be instantiated.
    */
   public $dataClass = null;
-
   /**
    * If $dataClass is defined, the instantiated instance is stored in this property.
    * @var DataObject
    */
   public $dataItem = null;
-
   /**
    * @var string A & separated list of key=value pairs to initialize the dataItem.
    */
   public $preset = null;
-
   /**
    * If $dataClass is defined, this property may hold a comma-separated list of field names used
    * on the default query.
    * @var string
    */
   public $dataFields = '';
-
   /**
    * If $dataClass is defined, this property may hold a WHERE expression for the default query.
    * @var string
    */
   public $dataFilter = '';
-
   /**
    * If $dataClass is defined, this property may hold a SORT BY expression for the default query.
    * @var string
    */
   public $dataSortBy = '';
-
   /**
    * If $dataClass is defined, this property may hold an array with information about the parameters
    * automatically supplied to the query.
@@ -124,7 +100,6 @@ class Controller
    * @var array
    */
   public $dataQueryParams = null;
-
   /**
    * If no sitemap is used, this property controls the creation of a default
    * data source.
@@ -137,100 +112,139 @@ class Controller
    * @var String
    */
   public $defaultPageFormat = '';
-
-  protected $redirectURI = null;
-
   /**
    * Associative array of all components on the page which have an explicit ID.
    * @var array of Component
    */
   public $id = [];
-
   /**
    * The current request URI.
    * This property is useful for databing with the expression {!controller.URI}.
    */
   public $URI;
-
   /**
    * The current request URI without the page number parameters.
    * This property is useful for databing with the expression {!controller.URI_noPage}.
    */
   public $URI_noPage;
-
-  /**
-   * The i18n cached translation table.
-   * @var array An array of arrays indexed by language code.
-   */
-  protected static $translation = [];
-
   /**
    * Information about the page associated with this controller.
    * @var AbstractRoute
    */
   public $sitePage;
-
   /**
    * The loader which has loaded this controller.
    * @var ModuleLoader
    */
   public $moduleLoader;
-
   /**
    * @var string The virtual URI following the ? symbol on the current page's URL.
    */
   public $virtualURI;
-
   /**
    * The current module's folder full physical URI.
    * @var string
    */
   public $moduleURI;
-
   /**
    * @var string The parameters on the request URL or an empty string if none are present.
    */
   public $requestParameters;
-
   /**
    * A list of parameter names (inferred from the page definition on the sitemap)
    * and correponding values present on the current URI.
    * @var array
    */
   public $URIParams;
-
   /**
    * Set to true to handle the request in a way more adapted to XML web services.
    * @var Boolean
    */
   public $isWebService = false;
-
   /**
    * Indicate if advanced XML/HTML view processing is enabled.
    * Set to false if your controller generates the response via respond().
    * @var boolean
    */
   public $viewProcessing = true;
-
   /**
    * Stores the POST information that was being sent before the login form appeared.
    * @var string
    */
-  public $prevPost = '';
-
+  public $prevPost   = '';
   public $max        = 1;
   public $pageNumber = 1;
-
   /**
    * @var Boolean True if the page is running on the production web server.
    */
   public $isProductionSite = true;
-
   /**
    * True if the login form should be displayed.
    * @var bool
    */
   public $showLogin = false;
+  /**
+   * A list of languages codes for the available languages, as configured on Application.
+   * @var string
+   */
+  protected $languages;
+  /**
+   * Specifies the URL of the index page, to where the browser should naviagate upon the
+   * successful insertion / updatal of records.
+   * If not defined on a subclass then the request will redisplay the same page.
+   * @var string
+   */
+  protected $indexPage   = null;
+  protected $redirectURI = null;
+
+  public static function modPathOf ($virtualURI = '', $params = null)
+  {
+    global $application;
+    if ($virtualURI == '')
+      return '';
+    $append = (!empty($params) ? '?' . $params : '');
+    if ($virtualURI[0] == '/')
+      return "$virtualURI$append";
+    else return "$application->URI/$virtualURI$append";
+  }
+
+  public static function translate ($lang, $text)
+  {
+    global $application;
+    if (!isset(self::$translation[$lang])) {
+      $path = $application->toFilePath ("$application->i18nPath/$lang.ini");
+      $z    = self::$translation[$lang] = @parse_ini_file ($path);
+      if (empty($z))
+        throw new BaseException("Translation file for language <b>$lang</b> was not found at " .
+                                ErrorHandler::shortFileName ($path), Status::FATAL);
+    }
+    return preg_replace_callback (self::FIND_TRANS_KEY, function ($args) use ($lang) {
+      $a = $args[1];
+      return empty(self::$translation[$lang][$a]) ? '$' . $a
+        : preg_replace ('#\r?\n#', '<br>', self::$translation[$lang][$a]);
+    }, $text);
+  }
+
+  public static function pageNotFound ($virtualURI = '')
+  {
+    global $application;
+
+    if (substr ($virtualURI, 0, strlen ($application->publicPath)) == $application->publicPath) {
+      http_response_code (404);
+      echo "<h1>Not Found</h1><p>The requested file <b><code>$virtualURI</code></b> is missing.</p>";
+      exit;
+    }
+
+    if (!empty($application->URINotFoundURL)) {
+      if (preg_match ('#^(\w\w)/#', $virtualURI, $match))
+        $lang = $match[1];
+      else $lang = $application->defaultLang;
+      $URI = str_replace ('{lang}', $lang, $application->URINotFoundURL);
+      header ('Location: ' . $URI . '&URL=' . $_SERVER['REQUEST_URI'], true, 303);
+      exit();
+    }
+    else throw new FatalException($virtualURI ? "<b>$virtualURI</b> is not a valid URI." : 'Invalid URI.');
+  }
 
   /**
    * Performs the main execution sequence.
@@ -246,7 +260,7 @@ class Controller
   public final function execute ()
   {
     global $application, $session, $controller;
-    $controller = $this;
+    $controller   = $this;
     $authenticate = false;
     try {
       $this->URI        = $_SERVER['REQUEST_URI'];
@@ -265,10 +279,10 @@ class Controller
           $prevPost = get ($_POST, '_prevPost');
           try {
             $this->login ();
-            if ($prevPost) {
-              $_POST    = unserialize (urldecode ($prevPost));
-              $_REQUEST = array_merge ($_POST, $_GET);
-            } else $_POST = [];
+            if ($prevPost)
+              $_POST = unserialize (urldecode ($prevPost));
+            else $_POST = [];
+            $_REQUEST = array_merge ($_POST, $_GET);
             if (empty($_POST))
               $_SERVER['REQUEST_METHOD'] = 'GET';
             $authenticate = false; // user is now logged in; proceed as a normal request
@@ -277,8 +291,9 @@ class Controller
             if ($authenticate && $action)
               $this->prevPost = urlencode (serialize ($_POST));
           }
-        } else {
-          $authenticate = !$session->validate ();
+        }
+        else {
+          $authenticate    = !$session->validate ();
           $this->showLogin = $authenticate;
           if ($authenticate && $action)
             $this->prevPost = urlencode (serialize ($_POST));
@@ -308,7 +323,8 @@ class Controller
           $this->processView ($authenticate);
         $this->wrapWebServiceResponse ();
         $this->finishPostRequest ();
-      } else if (is_null ($this->redirectURI)) {
+      }
+      else if (is_null ($this->redirectURI)) {
         if (!$this->viewProcessing || !$this->processView ($authenticate)) {
           $this->respond ();
           $this->wrapWebServiceResponse ();
@@ -325,7 +341,8 @@ class Controller
       }
       if (!($e instanceof BaseException) || $e->getStatus () == Status::FATAL) {
         ErrorHandler::globalExceptionHandler ($e);
-      } else {
+      }
+      else {
         $this->setStatusFromException ($e);
         try {
           if (!$this->processView ()) //retry the view, this time displaying the error message
@@ -335,6 +352,220 @@ class Controller
         }
       }
     }
+  }
+
+  public function beginXMLResponse ()
+  {
+    header ('Content-Type: text/xml');
+    echo '<?xml version="1.0" encoding="utf-8"?>';
+  }
+
+  public function getRowOffset ()
+  {
+    global $application;
+    return ($this->pageNumber - 1) * $application->pageSize;
+  }
+
+  /**
+   * Perform application-specific transformation on data source data before it is
+   * stored for use on the view.
+   * @param string $dataSourceName
+   * @param array  $data a sequential array of dictionary arrays
+   */
+  public function interceptViewDataSet ($dataSourceName, array &$data)
+  {
+    // override
+  }
+
+  /**
+   * Perform application-specific transformation on data source data before it is
+   * stored for use on the view.
+   * @param string $dataSourceName
+   * @param mixed  $data can be an array or a DataObject
+   */
+  public function interceptViewDataRecord ($dataSourceName, $data)
+  {
+    // override
+  }
+
+  /**
+   * Allows access to the components tree generated by the parsing process.
+   * Component specific initialization can be performed here before the
+   * page is rendered.
+   * Override to add extra initialization.
+   */
+  public function setupView ()
+  {
+    global $application;
+    $this->page->title = str_replace ('@', $this->getTitle (), $application->title);
+    $this->page->addScript ("$application->frameworkURI/js/engine.js");
+    $this->page->defaultDataSource = get ($this->engine->context->dataSources, 'default');
+    $this->displayStatus ();
+  }
+
+  /**
+   * Initializes a data object for a typical GET request.
+   * It is initialized either from the database by primary key value, or
+   * initialized from values sent with the request itsef.
+   * @param DataObject $data
+   */
+  public function standardDataInit (DataObject $data)
+  {
+    if (isset($data)) {
+      if (isset($this->URIParams))
+        extend ($data, $this->URIParams);
+      if ($data->isInstanceRequested ()) {
+        $data->setPrimaryKeyValue ($data->getRequestedPrimaryKeyValue ());
+        if (!$data->read ())
+          $data->initFromQueryString ();
+        return;
+      }
+      if (!$data->isNew ())
+        $data->read ();
+      $data->initFromQueryString ();
+    }
+  }
+
+  /**
+   * Respondes to the standard 'submit' controller action.
+   * The default procedure is to either call insert() or update().
+   * Override to implement non-standard behaviour.
+   * @param DataObject $data
+   * @param null       $param
+   * @throws BaseException
+   */
+  public function action_submit (DataObject $data = null, $param = null)
+  {
+    if (!isset($data))
+      throw new BaseException('Can\'t insert/update NULL DataObject.', Status::FATAL);
+    if ($data->isNew ())
+      $this->insertData ($data, $param);
+    else $this->updateData ($data, $param);
+  }
+
+  /**
+   * Respondes to the standard 'delete' controller action.
+   * The default procedure is to delete the object on the database.
+   * Override to implement non-standard behaviour.
+   * @param DataObject $data
+   * @param null       $param
+   * @throws BaseException
+   * @throws DataModelException
+   * @throws Exception
+   * @throws FatalException
+   */
+  public function action_delete (DataObject $data = null, $param = null)
+  {
+    if (!isset($data))
+      throw new BaseException('Can\'t delete NULL DataObject.', Status::FATAL);
+    if (!isset($data->id) && isset($param)) {
+      $data->setPrimaryKeyValue ($param);
+      $data->read ();
+    }
+    $data->delete ();
+    $this->setStatus (Status::INFO, self::MSG_DELETED);
+    if (!$this->autoRedirect ())
+      throw new FatalException("No index page defined.");
+  }
+
+  public function action_logout ()
+  {
+    global $session, $application;
+    $session->logout ();
+    $this->setRedirection (null, $application->URI);
+  }
+
+  public final function wasPosted ()
+  {
+    return $_SERVER['REQUEST_METHOD'] == 'POST';
+  }
+
+  public final function getPageURI ()
+  {
+    $uri = $_SERVER['REQUEST_URI'];
+    $i   = strpos ($uri, '?');
+    if (!$i) return $uri;
+    else return substr ($uri, 0, $i);
+  }
+
+  /**
+   * Defines a named data source for the view.
+   * @deprecated
+   * @see setModel()
+   * @param string     $name
+   * @param DataSource $data
+   * @param boolean    $isDefault
+   * @param boolean    $overwrite
+   * @throws DataBindingException
+   */
+  public function setDataSource ($name, DataSource $data, $isDefault = false, $overwrite = true)
+  {
+    $name      = empty($name) ? 'default' : $name;
+    $isDefault = $isDefault || $name == 'default';
+    $ctx       = $this->engine->context;
+    if ($isDefault) {
+      if (isset($ctx->dataSources['default']) && !$overwrite)
+        throw new DataBindingException(null,
+          "The default data source for the page has already been set.\n\nThe current default data source is:\n<pre>$name</pre>");
+    }
+    $ctx->dataSources[$name] = $data;
+  }
+
+  /**
+   * Assigns the specified data to a new (or existing) data source with the
+   * specified name.
+   * @param string $name The data source name.
+   * @param mixed  $data An array, object or <i>null</i>.
+   */
+  public function setViewModel ($name, $data)
+  {
+    $ctx = $this->engine->context;
+    if (!isset($data))
+      $ctx->dataSources[$name] = new EmptyIterator();
+    else if ((is_array ($data) && isset($data[0])) || $data instanceof PDOStatement)
+      $ctx->dataSources[$name] = new DataSet($data);
+    else $ctx->dataSources[$name] = new DataRecord($data);
+  }
+
+  /*
+    protected function createDataItem($className,$dataModuleName = '') {
+      if (!class_exists($className)) {
+        if (!$dataModuleName || !isset($this->moduleLoader))
+          throw new FatalException("Undefined data class <b>$className</b>.");
+        $moduleName = property($this->sitePage,'dataModule',$this->moduleLoader->moduleInfo->module);
+        if (!$this->moduleLoader->searchAndLoadClass($className,$dataModuleName))
+          throw new FatalException("Couldn't load data class <b>$className</b> on module <b>$dataModuleName</b>.");
+      }
+      return new $className();
+    }
+  */
+
+  public function getDataRecord ($name = null)
+    //rarely overriden
+  {
+    if (is_null ($name)) {
+      $ds = property ($this->page, 'defaultDataSource');
+      if (isset($ds)) {
+        $it = $ds->getIterator ();
+        if ($it->valid ())
+          return $it->current ();
+        return null;
+      }
+      else throw new DataBindingException(null, "The default data source for the page is not defined.");
+    }
+    $ctx = $this->engine->context;
+    if (array_key_exists ($name, $ctx->dataSources)) {
+      $it = $ctx->dataSources[$name]->getIterator ();
+      if ($it->valid ()) return $it->current ();
+      return null;
+    }
+    throw new DataBindingException(null, "Data source <b>$name</b> is not defined.");
+  }
+
+
+  public function markerHit ($name)
+  {
+    //Override
   }
 
   protected function finalize ()
@@ -352,9 +583,11 @@ class Controller
     global $session, $application;
     if (!$application->globalSessions)
       session_name ($application->name);
+    $name = session_name ();
     session_start ();
     if ($application->autoSession) {
-      $session                 = get ($_SESSION, 'sessionInfo', new Session());
+      $session       = get ($_SESSION, 'sessionInfo', new Session);
+      $session->name = $name;
       $_SESSION['sessionInfo'] = $session;
     }
   }
@@ -365,36 +598,8 @@ class Controller
    */
   protected function login ()
   {
-    global $session;
-    $session->login ();
-  }
-
-  private function wrapWebServiceResponse ()
-  {
-    if ($this->isWebService) {
-      $output = trim (ob_get_clean ());
-      if (strlen ($output)) {
-        $this->beginXMLResponse ();
-        echo $output;
-      }
-    }
-  }
-
-  public function beginXMLResponse ()
-  {
-    header ('Content-Type: text/xml');
-    echo '<?xml version="1.0" encoding="utf-8"?>';
-  }
-
-  public static function modPathOf ($virtualURI = '', $params = null)
-  {
-    global $application;
-    if ($virtualURI == '')
-      return '';
-    $append = (!empty($params) ? '?' . $params : '');
-    if ($virtualURI[0] == '/')
-      return "$virtualURI$append";
-    else return "$application->URI/$virtualURI$append";
+    global $session, $application;
+    $session->login ($application->defaultLang);
   }
 
   protected function setupController ()
@@ -418,7 +623,8 @@ class Controller
       $this->setupViewModel (); //custom setup
       if ($this->defineView ())
         return false;
-    } else {
+    }
+    else {
       // Show login form.
       $path = $application->viewPath . '/login' . $this->TEMPLATE_EXT;
       $this->loadView ($path);
@@ -528,15 +734,15 @@ class Controller
           $session->setLang ($this->lang);
         $this->setStatus (Status::ERROR, 'An invalid language was specified.');
       }
-      $info = get($this->langInfo, $this->lang);
+      $info = get ($this->langInfo, $this->lang);
       if (!isset($info))
         throw new ConfigException("Language <b>$this->lang</b> is not configured for this application.");
       $locales         = $this->langInfo[$this->lang]['locale'];
       $this->locale    = $locales[0];
       $this->langISO   = $this->langInfo[$this->lang]['ISO'];
       $this->langLabel = $this->langInfo[$this->lang]['label'];
+      setlocale (LC_ALL, $locales);
     }
-    setlocale (LC_ALL, $locales);
   }
 
   /**
@@ -559,48 +765,18 @@ class Controller
         */
         $this->dataItem = newInstanceOf ($this->dataClass);
 
-        if (isset($thisModel) && isset($thisModel->pk))
-          $this->dataItem->primaryKeyName = $thisModel->pk;
+        //if (isset($thisModel) && isset($thisModel->pk))
+        //$this->dataItem->primaryKeyName = $thisModel->pk;
         $this->applyPresets ();
         $this->standardDataInit ($this->dataItem);
       }
-    } else if (isset($this->dataClass)) {
+    }
+    else if (isset($this->dataClass)) {
       $this->dataItem = newInstanceOf ($this->dataClass);
       //$this->dataItem = $this->createDataItem($this->dataClass);
       $this->applyPresets ();
       $this->standardDataInit ($this->dataItem);
     }
-  }
-
-  private function applyPresets ()
-  {
-    if (isset($this->preset)) {
-      $presets = explode ('&', $this->preset);
-      foreach ($presets as $preset) {
-        $presetParts = explode ('=', $preset);
-        if ($presetParts[1][0] == '{') {
-          $field                             = substr ($presetParts[1], 1, strlen ($presetParts[1]) - 2);
-          $this->dataItem->{$presetParts[0]} = get ($this->URIParams, $field);
-        } else $this->dataItem->{$presetParts[0]} = $presetParts[1];
-      }
-    }
-  }
-  /*
-    protected function createDataItem($className,$dataModuleName = '') {
-      if (!class_exists($className)) {
-        if (!$dataModuleName || !isset($this->moduleLoader))
-          throw new FatalException("Undefined data class <b>$className</b>.");
-        $moduleName = property($this->sitePage,'dataModule',$this->moduleLoader->moduleInfo->module);
-        if (!$this->moduleLoader->searchAndLoadClass($className,$dataModuleName))
-          throw new FatalException("Couldn't load data class <b>$className</b> on module <b>$dataModuleName</b>.");
-      }
-      return new $className();
-    }
-  */
-  public function getRowOffset ()
-  {
-    global $application;
-    return ($this->pageNumber - 1) * $application->pageSize;
   }
 
   protected function paginate (array &$data, $pageSize = 0)
@@ -641,7 +817,8 @@ class Controller
           $this->paginate ($data);
           $this->interceptViewDataSet ('default', $data);
           $this->setDataSource ('', new DataSet($data), true);
-        } else if ($this->sitePage->format == 'form') {
+        }
+        else if ($this->sitePage->format == 'form') {
           $this->interceptViewDataRecord ('default', $this->dataItem);
           $this->setDataSource ('', new DataRecord($this->dataItem), true);
         }
@@ -650,7 +827,8 @@ class Controller
       if (isset($this->sitePage->dataSources))
         foreach ($this->sitePage->dataSources as $name => $dataSourceInfo)
           $this->setDataSource ($name, $dataSourceInfo->getData ($this, $name)); //interception is done inside getData()
-    } else if (isset($this->dataItem))
+    }
+    else if (isset($this->dataItem))
       switch ($this->defaultPageFormat) {
         case 'form':
           $this->interceptViewDataRecord ('default', $this->dataItem);
@@ -665,16 +843,19 @@ class Controller
                 if (count ($tmp)) {
                   $dataSource = substr ($tmp[0], 1);
                   $dataField  = $tmp[1];
-                } else {
+                }
+                else {
                   $dataSource = 'default';
                   $dataField  = $tmp[0];
                 }
                 $ds       = get ($this->dataSources, $dataSource);
                 $it       = $ds->getIterator ()->current ();
                 $params[] = isset($ds) ? get ($it, $dataField) : null;
-              } else $params[] = $param;
+              }
+              else $params[] = $param;
             }
-          } else $params = null;
+          }
+          else $params = null;
           $data = $this->dataItem->queryBy ($this->dataFilter, $this->dataFields, $this->dataSortBy, $params)
                                  ->fetchAll (PDO::FETCH_ASSOC);
           $this->interceptViewDataSet ('default', $data);
@@ -685,48 +866,11 @@ class Controller
   }
 
   /**
-   * Perform application-specific transformation on data source data before it is
-   * stored for use on the view.
-   * @param string $dataSourceName
-   * @param array  $data a sequential array of dictionary arrays
-   */
-  public function interceptViewDataSet ($dataSourceName, array &$data)
-  {
-    // override
-  }
-
-  /**
-   * Perform application-specific transformation on data source data before it is
-   * stored for use on the view.
-   * @param string $dataSourceName
-   * @param mixed  $data can be an array or a DataObject
-   */
-  public function interceptViewDataRecord ($dataSourceName, $data)
-  {
-    // override
-  }
-
-  /**
    * Generates a response to a GET request when viewProcessing = false.
    */
   protected function respond ()
   {
     //override if required
-  }
-
-  /**
-   * Allows access to the components tree generated by the parsing process.
-   * Component specific initialization can be performed here before the
-   * page is rendered.
-   * Override to add extra initialization.
-   */
-  public function setupView ()
-  {
-    global $application;
-    $this->page->title = str_replace ('@', $this->getTitle (), $application->title);
-    $this->page->addScript("$application->frameworkURI/js/engine.js");
-    $this->page->defaultDataSource = get ($this->engine->context->dataSources, 'default');
-    $this->displayStatus ();
   }
 
   /**
@@ -742,7 +886,8 @@ class Controller
     if (isset($this->moduleLoader)) {
       $path = $application->moduleViewPath . '/' . $this->moduleLoader->moduleInfo->modulePage . $this->TEMPLATE_EXT;
       return !$this->loadView ($path);
-    } else {
+    }
+    else {
       preg_match ('#(\w+?)\.php#', $this->URI, $match);
       if (!count ($match))
         throw new FatalException("Invalid URI <b>$this->URI</b>");
@@ -832,7 +977,8 @@ class Controller
     if ($application->compressOutput && substr_count (get ($_SERVER, 'HTTP_ACCEPT_ENCODING', ''), 'gzip')) {
       header ("Content-Encoding: gzip");
       echo gzencode ($content, 1, FORCE_GZIP);
-    } else {
+    }
+    else {
       echo $content;
       ob_flush ();
     }
@@ -847,29 +993,6 @@ class Controller
   protected function postProcessHook ($content)
   {
     return $content;
-  }
-
-  /**
-   * Initializes a data object for a typical GET request.
-   * It is initialized either from the database by primary key value, or
-   * initialized from values sent with the request itsef.
-   * @param DataObject $data
-   */
-  public function standardDataInit (DataObject $data)
-  {
-    if (isset($data)) {
-      if (isset($this->URIParams))
-        extend ($data, $this->URIParams);
-      if ($data->isInstanceRequested ()) {
-        $data->setPrimaryKeyValue ($data->getRequestedPrimaryKeyValue ());
-        if (!$data->read ())
-          $data->initFromQueryString ();
-        return;
-      }
-      if (!$data->isNew ())
-        $data->read ();
-      $data->initFromQueryString ();
-    }
   }
 
   /**
@@ -915,12 +1038,15 @@ class Controller
     if (preg_match ('#(\w*):(.*)#', $action, $match)) {
       $action = $match[1];
       $param  = $match[2];
-    } else $param = null;
+    }
+    else $param = null;
   }
 
   /**
    * Invokes the right controller method in response to the POST request's specified action.
    * @param DataObject $data
+   * @throws BaseException
+   * @throws FileException
    */
   protected function doFormAction (DataObject $data = null)
   {
@@ -943,20 +1069,6 @@ class Controller
       $data = $this->dataItem;
     if (isset($data) && $data->isModified ())
       $this->action_submit ($data);
-  }
-  /**
-   * Respondes to the standard 'submit' controller action.
-   * The default procedure is to either call insert() or update().
-   * Override to implement non-standard behaviour.
-   * @param DataObject $data
-   */
-  public function action_submit (DataObject $data = null, $param = null)
-  {
-    if (!isset($data))
-      throw new BaseException('Can\'t insert/update NULL DataObject.', Status::FATAL);
-    if ($data->isNew ())
-      $this->insertData ($data, $param);
-    else $this->updateData ($data, $param);
   }
 
   /**
@@ -989,93 +1101,43 @@ class Controller
     $this->autoRedirect ();
   }
 
-  /**
-   * Respondes to the standard 'delete' controller action.
-   * The default procedure is to delete the object on the database.
-   * Override to implement non-standard behaviour.
-   * @param DataObject $data
-   */
-  public function action_delete (DataObject $data = null, $param = null)
-  {
-    if (!isset($data))
-      throw new BaseException('Can\'t delete NULL DataObject.', Status::FATAL);
-    if (!isset($data->id) && isset($param)) {
-      $data->setPrimaryKeyValue ($param);
-      $data->read ();
-    }
-    $data->delete ();
-    $this->setStatus (Status::INFO, self::MSG_DELETED);
-    if (!$this->autoRedirect ())
-      throw new FatalException("No index page defined.");
-  }
-  //--------------------------------------------------------------------------
-  public function action_logout ()
-    //--------------------------------------------------------------------------
-  {
-    global $session, $application;
-    $session->logout ();
-    $this->setRedirection (null, $application->URI);
-  }
-  //--------------------------------------------------------------------------
-  public final function wasPosted ()
-    //--------------------------------------------------------------------------
-  {
-    return $_SERVER['REQUEST_METHOD'] == 'POST';
-  }
-  //--------------------------------------------------------------------------
-  public final function getPageURI ()
-    //--------------------------------------------------------------------------
-  {
-    $uri = $_SERVER['REQUEST_URI'];
-    $i   = strpos ($uri, '?');
-    if (!$i) return $uri;
-    else return substr ($uri, 0, $i);
-  }
-  //--------------------------------------------------------------------------
   protected function getTitle ()
-    //--------------------------------------------------------------------------
     // override to return the title of the current page
   {
     return isset($this->sitePage) ? $this->sitePage->getTitle () : '';
   }
-  //--------------------------------------------------------------------------
+
   protected function finishPostRequest ()
-    //--------------------------------------------------------------------------
     // override to implement actions to be performed before a redirection takes place
   {
     global $session;
     if (isset($this->redirectURI))
       $this->redirect ($this->redirectURI);
   }
-  //--------------------------------------------------------------------------
+
   protected final function redirect ($url)
-    //--------------------------------------------------------------------------
   {
     header ('Location: ' . $url, true, 303);
     exit();
   }
-  //--------------------------------------------------------------------------
+
   protected final function cancelRedirection ()
-    //--------------------------------------------------------------------------
   {
     $this->redirectURI = null;
   }
-  //--------------------------------------------------------------------------
+
   protected final function setStatus ($status, $msg)
-    //--------------------------------------------------------------------------
   {
     $_SESSION['formStatus']  = $status;
     $_SESSION['formMessage'] = $msg;
   }
-  //--------------------------------------------------------------------------
+
   protected function clearStatus ()
-    //--------------------------------------------------------------------------
   {
     unset($_SESSION['formStatus']);
   }
-  //--------------------------------------------------------------------------
+
   protected final function setStatusFromException (BaseException $e)
-    //--------------------------------------------------------------------------
   {
     $_SESSION['formStatus'] = $e->getStatus ();
     if ($e->getStatus () != Status::FATAL)
@@ -1092,10 +1154,9 @@ class Controller
       $_SESSION['formMessage'] = $msg;
     }
   }
-  //--------------------------------------------------------------------------
+
   protected function displayStatus ()
   {
-    //--------------------------------------------------------------------------
     $status = array_key_exists ('formStatus', $_SESSION) ? $_SESSION['formStatus'] : null;
     if (!is_null ($status)) {
       $this->clearStatus ();
@@ -1117,49 +1178,46 @@ class Controller
       else echo $message;
     }
   }
-  //--------------------------------------------------------------------------
+
   protected final function setRedirection ($redirectArgs = null, $redirectURI = null)
   {
-    //--------------------------------------------------------------------------
     if (isset($redirectURI)) {
       if (isset($redirectArgs))
         $this->redirectURI = $redirectURI . '?' . $redirectArgs;
       else $this->redirectURI = $redirectURI;
-    } else if (isset($redirectArgs))
+    }
+    else if (isset($redirectArgs))
       $this->redirectURI = $this->getPageURI () . '?' . $redirectArgs;
     else $this->redirectURI = $_SERVER['REQUEST_URI'];
   }
-  //--------------------------------------------------------------------------
+
   protected final function thenGoTo ($virtualURI, $redirectArgs = null)
   {
-    //--------------------------------------------------------------------------
     $this->redirectURI = $this->modPathOf ($virtualURI, $redirectArgs);
   }
-  //--------------------------------------------------------------------------
+
   protected final function thenGoToSelf ($redirectArgs = null)
   {
-    //--------------------------------------------------------------------------
     //$x = explode('?',$this->URI);
     //$args = count($x) > 1 ? $x[1] : '';
     //$this->redirectURI = $x[0].'?'.$args.(isset($redirectArgs) ? "&$redirectArgs" : '');
   }
-  //--------------------------------------------------------------------------
+
   protected function gotoModuleIndex ()
-    //--------------------------------------------------------------------------
   {
     if (isset($this->sitePage->indexURL)) {
       $URI = $this->sitePage->evalURI (null, false, $this->sitePage->indexURL);
       $this->thenGoTo ($URI);
-    } else {
+    }
+    else {
       $index = $this->sitePage->getIndex ();
       if (!$index)
         throw new ConfigException ("No index page found for URI " . $this->sitePage->URI);
       $this->thenGoTo ($index->evalURI ($this->URIParams));
     }
   }
-  //--------------------------------------------------------------------------
+
   protected function autoRedirect ()
-    //--------------------------------------------------------------------------
   {
     if ($this->isWebService)
       return true;
@@ -1170,91 +1228,9 @@ class Controller
     else return false;
     return true;
   }
-  //--------------------------------------------------------------------------
-  public static function translate ($lang, $text)
-  {
-    //--------------------------------------------------------------------------
-    global $application;
-    if (!isset(self::$translation[$lang])) {
-      $path = $application->toFilePath ("$application->i18nPath/$lang.ini");
-      $z = self::$translation[$lang] = @parse_ini_file ($path);
-      if (empty($z))
-        throw new BaseException("Translation file for language <b>$lang</b> was not found at ".
-                                ErrorHandler::shortFileName($path), Status::FATAL);
-    }
-    return preg_replace_callback (self::FIND_TRANS_KEY, function ($args) use ($lang) {
-      $a = $args[1];
-      return empty(self::$translation[$lang][$a]) ? '$' . $a
-        : preg_replace ('#\r?\n#', '<br>', self::$translation[$lang][$a]);
-    }, $text);
-  }
-  //--------------------------------------------------------------------------
-  /**
-   * Defines a named data source for the view.
-   * @deprecated
-   * @see setModel()
-   * @param string     $name
-   * @param DataSource $data
-   * @param boolean    $isDefault
-   * @param boolean    $overwrite
-   * @throws DataBindingException
-   */
-  public function setDataSource ($name, DataSource $data, $isDefault = false, $overwrite = true)
-    //--------------------------------------------------------------------------
-  {
-    $name = empty($name) ? 'default' : $name;
-    $isDefault = $isDefault || $name == 'default';
-    $ctx = $this->engine->context;
-    if ($isDefault) {
-      if (isset($ctx->dataSources['default']) && !$overwrite)
-        throw new DataBindingException(null,
-          "The default data source for the page has already been set.\n\nThe current default data source is:\n<pre>$name</pre>");
-    }
-    $ctx->dataSources[$name] = $data;
-  }
-  //--------------------------------------------------------------------------
-  /**
-   * Assigns the specified data to a new (or existing) data source with the
-   * specified name.
-   * @param string $name The data source name.
-   * @param mixed  $data An array, object or <i>null</i>.
-   */
-  public function setViewModel ($name, $data)
-    //--------------------------------------------------------------------------
-  {
-    $ctx = $this->engine->context;
-    if (!isset($data))
-      $ctx->dataSources[$name] = new EmptyIterator();
-    else if ((is_array ($data) && isset($data[0])) || $data instanceof PDOStatement)
-      $ctx->dataSources[$name] = new DataSet($data);
-    else $ctx->dataSources[$name] = new DataRecord($data);
-  }
-  //--------------------------------------------------------------------------
-  public function getDataRecord ($name = null)
-    //--------------------------------------------------------------------------
-    //rarely overriden
-  {
-    if (is_null ($name)) {
-      $ds = property ($this->page, 'defaultDataSource');
-      if (isset($ds)) {
-        $it = $ds->getIterator ();
-        if ($it->valid ())
-          return $it->current ();
-        return null;
-      } else throw new DataBindingException(null, "The default data source for the page is not defined.");
-    }
-    $ctx = $this->engine->context;
-    if (array_key_exists ($name, $ctx->dataSources)) {
-      $it = $ctx->dataSources[$name]->getIterator ();
-      if ($it->valid ()) return $it->current ();
-      return null;
-    }
-    throw new DataBindingException(null, "Data source <b>$name</b> is not defined.");
-  }
-  //--------------------------------------------------------------------------
+
   protected function join ($masterSourceName, $slavesBaseName, $masterData, DataObject $slaveTemplate, $joinExpr,
                            $masterKeyField = 'id')
-    //--------------------------------------------------------------------------
   {
     $ctx = $this->engine->context;
     if (!isset($ctx->dataSources[$masterSourceName]))
@@ -1265,7 +1241,7 @@ class Controller
       $this->setDataSource ($slavesBaseName . $record[$masterKeyField], $slaveDataSet);
     }
   }
-  //--------------------------------------------------------------------------
+
   /**
    * Installs the module on the application.
    * Performs module initialization operations, including the creation of tables
@@ -1273,45 +1249,40 @@ class Controller
    * This method is called only when the user manually requests an application
    * configuration re-check.
    */
-  //--------------------------------------------------------------------------
   protected function setupModule ()
-    //--------------------------------------------------------------------------
   {
     //Override
   }
-  //--------------------------------------------------------------------------
+
   /**
    * Called when a Marker component is parsed. This gives the controller the
    * opportunity to replace the marker with some other content.
-   * @param string $name the marker name.
    * @return array Array or Object: one or more components.
    */
-  //--------------------------------------------------------------------------
-  public function markerHit ($name)
-    //--------------------------------------------------------------------------
+  private function wrapWebServiceResponse ()
   {
-    //Override
-  }
-  //--------------------------------------------------------------------------
-  public static function pageNotFound ($virtualURI = '')
-  {
-    //--------------------------------------------------------------------------
-    global $application;
-
-    if (substr ($virtualURI, 0, strlen ($application->publicPath)) == $application->publicPath) {
-      http_response_code (404);
-      echo "<h1>Not Found</h1><p>The requested file <b><code>$virtualURI</code></b> is missing.</p>";
-      exit;
+    if ($this->isWebService) {
+      $output = trim (ob_get_clean ());
+      if (strlen ($output)) {
+        $this->beginXMLResponse ();
+        echo $output;
+      }
     }
+  }
 
-    if (!empty($application->URINotFoundURL)) {
-      if (preg_match ('#^(\w\w)/#', $virtualURI, $match))
-        $lang = $match[1];
-      else $lang = $application->defaultLang;
-      $URI = str_replace ('{lang}', $lang, $application->URINotFoundURL);
-      header ('Location: ' . $URI . '&URL=' . $_SERVER['REQUEST_URI'], true, 303);
-      exit();
-    } else throw new FatalException($virtualURI ? "<b>$virtualURI</b> is not a valid URI." : 'Invalid URI.');
+  private function applyPresets ()
+  {
+    if (isset($this->preset)) {
+      $presets = explode ('&', $this->preset);
+      foreach ($presets as $preset) {
+        $presetParts = explode ('=', $preset);
+        if ($presetParts[1][0] == '{') {
+          $field                             = substr ($presetParts[1], 1, strlen ($presetParts[1]) - 2);
+          $this->dataItem->{$presetParts[0]} = get ($this->URIParams, $field);
+        }
+        else $this->dataItem->{$presetParts[0]} = $presetParts[1];
+      }
+    }
   }
 
 }

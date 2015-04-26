@@ -10,9 +10,12 @@ class MainMenuAttributes extends ComponentAttributes
   public $header;
   /** @var  string */
   public $expand_icon;
+  /** @var int */
+  public $depth = 99;
 
   protected function typeof_header () { return AttributeType::SRC; }
   protected function typeof_expand_icon () { return AttributeType::TEXT; }
+  protected function typeof_depth () { return AttributeType::NUM; }
 }
 
 class MainMenu extends VisualComponent
@@ -42,10 +45,11 @@ class MainMenu extends VisualComponent
   protected function render ()
   {
     global $application;
+    $attr = $this->attrs ();
 
     $this->beginContent ();
     $this->runSet ($this->getChildren ('header'));
-    $xi = $this->attrs ()->get ('expand_icon');
+    $xi = $attr->get ('expand_icon');
 
     if (!empty($application->routingMap->routes))
       echo html (
@@ -97,6 +101,8 @@ class MainMenu extends VisualComponent
 
   private function renderMenuItem ($pages, $xi, $depth = 1)
   {
+    if ($depth >= $this->attrs()->depth)
+      return null;
     return h ('ul.nav.collapse.' . $this->depthClass[$depth], [
       map ($pages, function ($route) use ($xi, $depth) {
         if (!$route->onMenu) return null;
