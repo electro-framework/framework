@@ -1,7 +1,7 @@
 <?php
-use selene\matisse\AttributeType;
-use selene\matisse\ComponentAttributes;
-use selene\matisse\VisualComponent;
+use Selene\Matisse\AttributeType;
+use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\VisualComponent;
 
 //Note that the file fckeditor/editor/fckeditor.html should be changed from the default to:  <body style="visibility:hidden">
 

@@ -1,10 +1,10 @@
 <?php
 
-use selene\matisse\AttributeType;
-use selene\matisse\ComponentAttributes;
-use selene\matisse\DataSet;
-use selene\matisse\exceptions\ComponentException;
-use selene\matisse\VisualComponent;
+use Selene\Matisse\AttributeType;
+use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\DataSet;
+use Selene\Matisse\Exceptions\ComponentException;
+use Selene\Matisse\VisualComponent;
 
 class TabsAttributes extends ComponentAttributes
 {

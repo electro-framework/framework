@@ -1,10 +1,10 @@
 <?php
-use selene\matisse\components\Page;
-use selene\matisse\DataRecord;
-use selene\matisse\DataSet;
-use selene\matisse\DataSource;
-use selene\matisse\exceptions\DataBindingException;
-use selene\matisse\MatisseEngine;
+use Selene\Matisse\Components\Page;
+use Selene\Matisse\DataRecord;
+use Selene\Matisse\DataSet;
+use Selene\Matisse\DataSource;
+use Selene\Matisse\Exceptions\DataBindingException;
+use Selene\Matisse\MatisseEngine;
 
 ob_start ();
 

@@ -1,7 +1,7 @@
 <?php
-use selene\matisse\AttributeType;
-use selene\matisse\ComponentAttributes;
-use selene\matisse\VisualComponent;
+use Selene\Matisse\AttributeType;
+use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\VisualComponent;
 
 class CheckboxAttributes extends ComponentAttributes
 {

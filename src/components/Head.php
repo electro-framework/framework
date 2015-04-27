@@ -1,9 +1,9 @@
 <?php
-use selene\matisse\AttributeType;
-use selene\matisse\ComponentAttributes;
-use selene\matisse\Component;
-use selene\matisse\components\Parameter;
-use selene\matisse\IAttributes;
+use Selene\Matisse\AttributeType;
+use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\Component;
+use Selene\Matisse\Components\Parameter;
+use Selene\Matisse\IAttributes;
 
 class HeadAttributes extends ComponentAttributes
 {

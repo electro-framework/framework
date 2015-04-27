@@ -1,8 +1,8 @@
 <?php
-use selene\matisse\AttributeType;
-use selene\matisse\ComponentAttributes;
-use selene\matisse\DataSet;
-use selene\matisse\exceptions\ComponentException;
+use Selene\Matisse\AttributeType;
+use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\DataSet;
+use Selene\Matisse\Exceptions\ComponentException;
 
 class ModelAttributes extends ComponentAttributes
 {

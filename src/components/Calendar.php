@@ -1,9 +1,9 @@
 <?php
-use selene\matisse\AttributeType;
-use selene\matisse\Component;
-use selene\matisse\ComponentAttributes;
-use selene\matisse\exceptions\ComponentException;
-use selene\matisse\IAttributes;
+use Selene\Matisse\AttributeType;
+use Selene\Matisse\Component;
+use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\Exceptions\ComponentException;
+use Selene\Matisse\IAttributes;
 
 class CalendarAttributes extends ComponentAttributes {
     public $name;

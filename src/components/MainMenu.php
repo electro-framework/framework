@@ -1,8 +1,8 @@
 <?php
-use selene\matisse\AttributeType;
-use selene\matisse\ComponentAttributes;
-use selene\matisse\components\Parameter;
-use selene\matisse\VisualComponent;
+use Selene\Matisse\AttributeType;
+use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\Components\Parameter;
+use Selene\Matisse\VisualComponent;
 
 class MainMenuAttributes extends ComponentAttributes
 {
