@@ -1,5 +1,5 @@
 <?php
-namespace selene\matisse;
+namespace Selene\Matisse;
 
 /**
  * Represents a wrapper for a data aggregate which can be used as a data source for databinding.

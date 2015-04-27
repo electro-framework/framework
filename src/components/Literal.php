@@ -1,10 +1,10 @@
 <?php
-namespace selene\matisse\components;
-use selene\matisse\AttributeType;
-use selene\matisse\Component;
-use selene\matisse\ComponentAttributes;
-use selene\matisse\Context;
-use selene\matisse\IAttributes;
+namespace Selene\Matisse\Components;
+use Selene\Matisse\AttributeType;
+use Selene\Matisse\Component;
+use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\Context;
+use Selene\Matisse\IAttributes;
 
 class LiteralAttributes extends ComponentAttributes
 {

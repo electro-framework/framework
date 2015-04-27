@@ -1,5 +1,5 @@
 <?php
-namespace selene\matisse;
+namespace Selene\Matisse;
 
 //------------------------
 //  Utility functions

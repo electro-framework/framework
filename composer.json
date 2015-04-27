@@ -16,7 +16,7 @@
   "require": {},
   "autoload": {
     "psr-4": {
-      "selene\\matisse\\": "src/"
+      "Selene\\Matisse\\": "src/"
     },
     "files": ["src/globals.php", "src/utility.php"]
   },

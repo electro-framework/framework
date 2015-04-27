@@ -1,8 +1,8 @@
 <?php
-namespace selene\matisse\components;
-use selene\matisse\Component;
-use selene\matisse\Context;
-use selene\matisse\exceptions\MatisseException;
+namespace Selene\Matisse\Components;
+use Selene\Matisse\Component;
+use Selene\Matisse\Context;
+use Selene\Matisse\Exceptions\MatisseException;
 
 class Page extends Component
 {

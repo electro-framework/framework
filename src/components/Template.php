@@ -1,11 +1,11 @@
 <?php
-namespace selene\matisse\components;
-use selene\matisse as m;
-use selene\matisse\AttributeType;
-use selene\matisse\Component;
-use selene\matisse\ComponentAttributes;
-use selene\matisse\exceptions\ComponentException;
-use selene\matisse\IAttributes;
+namespace Selene\Matisse\Components;
+use Selene\Matisse as m;
+use Selene\Matisse\AttributeType;
+use Selene\Matisse\Component;
+use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\Exceptions\ComponentException;
+use Selene\Matisse\IAttributes;
 
 class TemplateAttributes extends ComponentAttributes
 {

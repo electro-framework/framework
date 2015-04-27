@@ -1,7 +1,7 @@
 <?php
-namespace selene\matisse;
-use selene\matisse\components\Page;
-use selene\matisse\exceptions\FileIOException;
+namespace Selene\Matisse;
+use Selene\Matisse\Components\Page;
+use Selene\Matisse\Exceptions\FileIOException;
 
 class MatisseEngine
 {
@@ -19,9 +19,9 @@ class MatisseEngine
    * @var array string => string
    */
   private $tags = [
-    'repeater' => 'selene\matisse\components\Repeater',
-    'template' => 'selene\matisse\components\Template',
-    'test'     => 'selene\matisse\components\Test',
+    'repeater' => 'Selene\Matisse\Components\Repeater',
+    'template' => 'Selene\Matisse\Components\Template',
+    'test'     => 'Selene\Matisse\Components\Test',
   ];
 
   function __construct ()

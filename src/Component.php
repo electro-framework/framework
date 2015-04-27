@@ -1,10 +1,10 @@
 <?php
-namespace selene\matisse;
-use selene\matisse\components\Literal;
-use selene\matisse\components\Page;
-use selene\matisse\components\Parameter;
-use selene\matisse\exceptions\ComponentException;
-use selene\matisse\exceptions\DataBindingException;
+namespace Selene\Matisse;
+use Selene\Matisse\Components\Literal;
+use Selene\Matisse\Components\Page;
+use Selene\Matisse\Components\Parameter;
+use Selene\Matisse\Exceptions\ComponentException;
+use Selene\Matisse\Exceptions\DataBindingException;
 
 /**
  * The base class from which all components derive.

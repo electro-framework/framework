@@ -1,5 +1,5 @@
 <?php
-namespace selene\matisse;
+namespace Selene\Matisse;
 
 /**
  * A wrapper class for a data source containing a single record.

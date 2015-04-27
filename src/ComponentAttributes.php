@@ -1,6 +1,6 @@
 <?php
-namespace selene\matisse;
-use selene\matisse\exceptions\ComponentException;
+namespace Selene\Matisse;
+use Selene\Matisse\Exceptions\ComponentException;
 
 class AttributeType
 {

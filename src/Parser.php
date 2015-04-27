@@ -1,11 +1,11 @@
 <?php
-namespace selene\matisse;
-use selene\matisse\components\Literal;
-use selene\matisse\components\Page;
-use selene\matisse\components\Parameter;
-use selene\matisse\components\TemplateInstance;
-use selene\matisse\exceptions\FileIOException;
-use selene\matisse\exceptions\ParseException;
+namespace Selene\Matisse;
+use Selene\Matisse\Components\Literal;
+use Selene\Matisse\Components\Page;
+use Selene\Matisse\Components\Parameter;
+use Selene\Matisse\Components\TemplateInstance;
+use Selene\Matisse\Exceptions\FileIOException;
+use Selene\Matisse\Exceptions\ParseException;
 
 class Parser
 {

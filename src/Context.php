@@ -1,7 +1,7 @@
 <?php
-namespace selene\matisse;
-use selene\matisse\components\Template;
-use selene\matisse\exceptions\FileIOException;
+namespace Selene\Matisse;
+use Selene\Matisse\Components\Template;
+use Selene\Matisse\Exceptions\FileIOException;
 
 class Context
 {

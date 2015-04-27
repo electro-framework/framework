@@ -1,5 +1,5 @@
 <?php
-namespace selene\matisse\exceptions;
+namespace Selene\Matisse\Exceptions;
 
 class ParseException extends MatisseException
 {

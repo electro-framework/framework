@@ -1,5 +1,5 @@
 <?php
-namespace selene\matisse;
+namespace Selene\Matisse;
 
 /**
  * Components that implement this interface support attributes, whose values are usually specified on the HTML markup
