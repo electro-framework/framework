@@ -16,7 +16,8 @@ abstract class AbstractRoute extends Object
   public $routes  = null;
   public $isIndex = false;
   public $indexURL;      //autoset if isIndex is set
-  public $autoView;
+  public $module = '';
+  public $controller;
   public $autoController;
   /**
    * CSS class name(s) for menu icon.
@@ -85,7 +86,9 @@ abstract class AbstractRoute extends Object
       'routes'         => 'array',
       'isIndex'        => 'boolean',
       'indexURL'       => 'string',
-      'autoView'       => 'boolean',
+      'module'         => 'string',
+      'view'           => 'string',
+      'controller'     => 'string',
       'autoController' => 'boolean',
       'icon'           => 'string'
     ];
@@ -148,6 +151,8 @@ abstract class AbstractRoute extends Object
           array_splice ($this->routes,$i,1, $route);
           $route = $this->routes[$i]; // taking into account that the new array may be empty.
         }
+        if (!isset($route->module))
+          $route->module = $this->module;
         $route->inheritedPrefix = either ($this->prefix, $this->inheritedPrefix);
         /** @var AbstractRoute $route */
         $route->init ($this);

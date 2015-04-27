@@ -3,7 +3,6 @@
 class Route extends AbstractRoute
 {
   public $onMenu = false;
-  public $module;
   public $dataModule;
   public $preset;
   public $model;
@@ -29,7 +28,8 @@ class Route extends AbstractRoute
       'format'         => 'string',
       'routes'         => 'array',
       'fields'         => 'string',
-      'autoView'       => 'boolean',
+      'view'           => 'string',
+      'controller'     => 'string',
       'autoController' => 'boolean'
     ];
   }

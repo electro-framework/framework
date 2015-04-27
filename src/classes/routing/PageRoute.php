@@ -2,7 +2,6 @@
 
 class PageRoute extends AbstractRoute
 {
-  public $module;
   public $dataModule;
   public $preset;
   public $pagesMenu  = false;
@@ -54,7 +53,8 @@ class PageRoute extends AbstractRoute
       'isIndex'        => 'boolean',
       'indexURL'       => 'string',
       'dataSources'    => 'array',
-      'autoView'       => 'boolean',
+      'view'           => 'string',
+      'controller'     => 'string',
       'autoController' => 'boolean',
       'icon'           => 'string',
       'keywords'       => '',

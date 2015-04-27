@@ -75,42 +75,7 @@ class ModuleLoader
     $loader->moduleInstance->lang = $lang;
     $loader->moduleInstance->execute ();
   }
-  /**
-   * Loads the specified class.
-   * @param string $className  The name of the class to be loaded (if not already loaded).
-   * @param string $filePrefix An optional folder name.
-   * @return boolean TRUE if the class was loaded.
-   */
-  public static function loadClass ($className, $filePrefix = '')
-  {
-    if (class_exists ($className))
-      return true;
-    if ($filePrefix != '' && substr ($filePrefix, -1) != '/')
-      $filePrefix .= '/';
-    $fname = "$filePrefix$className.php";
-    if (!fileExists ($fname))
-      return false;
-    require_once $fname;
-    return true;
-  }
 
-  /**
-   *
-   * @global Application $application
-   * @param string       $className
-   * @param string       $moduleName
-   * @return bool
-   */
-  public static function searchAndLoadClass ($className, $moduleName)
-  {
-    global $application;
-    $p = strpos ($moduleName, '/services');
-    if ($p !== false)
-      $moduleName = substr ($moduleName, 0, $p);
-    if (self::loadClass ($className, "$application->modulesPath/$moduleName/$application->modelPath"))
-      return true;
-    return self::loadClass ($className, "$application->defaultModulesPath/$moduleName/$application->modelPath");
-  }
   /**
    * Initialize loader context.
    */
@@ -139,10 +104,7 @@ class ModuleLoader
     //Setup module paths and other related info.
 
     $this->moduleInfo = new ModuleInfo($this->sitePage->module);
-    if ($this->moduleInfo->isWebService)
-      $application->setIncludePath ($this->moduleInfo->modulePath . PATH_SEPARATOR
-                                    . dirname ($this->moduleInfo->modulePath));
-    else $application->setIncludePath ($this->moduleInfo->modulePath);
+    $application->setIncludePath ($this->moduleInfo->modulePath);
   }
   /**
    * Load the module determined by the virtual URI.
@@ -151,11 +113,11 @@ class ModuleLoader
   {
     global $application;
     if ($this->sitePage->autoController)
-      $con = $this->moduleInfo->isWebService ? new WebServiceController : new $application->autoControllerClass;
-    else if (class_exists ($this->moduleInfo->pageClassName))
-      $con = new $this->moduleInfo->pageClassName();
-    else throw new FatalException("Auto-controller generation is disabled for this URL and the file <b>" .
-                                  ErrorHandler::shortFileName ($this->moduleInfo->moduleFile) . "</b> was not found.");
+      $con = new $application->autoControllerClass;
+    else if (class_exists ($this->sitePage->controller))
+      $con = new $this->sitePage->controller;
+    else throw new FatalException("Auto-controller generation is disabled for this URL and the controller class <b>{$this->sitePage->controller}</b> was not found on <b>" .
+                                  ErrorHandler::shortFileName ($this->moduleInfo->moduleFile) . "</b>.");
     $con->moduleLoader = $this;
     return $con;
   }
