@@ -1,6 +1,7 @@
 <?php
 namespace selene\matisse;
 use selene\matisse\components\Template;
+use selene\matisse\exceptions\FileIOException;
 
 class Context
 {
@@ -56,5 +57,14 @@ class Context
   public function getTemplate ($name)
   {
     return get ($this->templates, $name);
+  }
+
+  public function loadTemplate ($filename)
+  {
+    foreach ($this->templateDirectories as $dir) {
+      $f = loadFile ("$dir/$filename", false);
+      if ($f) return $f;
+    }
+    throw new FileIOException($filename);
   }
 }

@@ -80,11 +80,6 @@ function strJoin ($s1, $s2, $delimiter)
   return strlen ($s1) && strlen ($s2) ? $s1 . $delimiter . $s2 : (strlen ($s1) ? $s1 : $s2);
 }
 
-function extractXML ($src)
-{
-  return preg_replace ('#^\s*<\?xml [^\?]*\?>\s*(?:<!DOCTYPE[\s\S]*?\]>)?#', '', $src);
-}
-
 function fileExists ($filename)
 {
   $r = @fopen ($filename, 'rb', true);

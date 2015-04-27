@@ -45,26 +45,6 @@ class MatisseEngine
     return $parent;
   }
 
-  //TODO: use cache
-  /**
-   * Loads a view
-   * @param string $filePath
-   * @return string
-   * @throws FileIOException
-   */
-  public function loadView ($filePath)
-  {
-    // Try to load from the include path.
-    if ($markup = loadFile ($filePath))
-      return $markup;
-    // Then, try to load from each of the registered directories.
-    foreach ($this->context->templateDirectories as $dir) {
-      if ($markup = loadFile ("$dir/$filePath", false))
-        return $markup;
-    }
-    throw new FileIOException ($filePath);
-  }
-
   public function render (Component $root)
   {
     ob_start (null, self::MAX_BUFFER_SIZE);

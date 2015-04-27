@@ -88,7 +88,8 @@ class Parser
         }
         if ($attrs) throw new ParseException('Closing tags must not have attributes.', $body, $start, $end);
         $this->tagComplete ();
-      } else {
+      }
+      else {
         //new tag
         if ($this->scalarParam)
           throw new ParseException("Invalid value for a scalar parameter.", $body, $start, $end);
@@ -125,7 +126,8 @@ class Parser
                   $body, $start, $end);
               }
               $this->createParameter ($name, $tag, $attributes, $bindings);
-            } else {
+            }
+            else {
               //create subparameter
               $this->parseAttributes ($attrs, $attributes, $bindings);
               $this->createSubparameter ($name, $tag, $attributes, $bindings);
@@ -168,19 +170,9 @@ class Parser
 
   protected function loadTemplate ($tagName)
   {
-    global $application, $FRAMEWORK;
     $filename = normalizeTagName ($tagName) . '.xml';
-    $path     = "$application->templatesPath/$filename";
-    if (fileExists ($path))
-      $content = @file_get_contents ($path, true);
-    else {
-      $path = "$FRAMEWORK/templates/$filename";
-      if (fileExists ($path))
-        $content = @file_get_contents ($path, true);
-      else throw new FileIOException($filename);
-    }
-    $content = extractXML ($content);
-    $parser  = new Parser($this->context);
+    $content  = $this->context->loadTemplate ($filename);
+    $parser   = new Parser($this->context);
     $parser->parse ($content, $this->root);
     $template = $this->context->getTemplate ($tagName);
     if (isset($template)) {
@@ -255,7 +247,8 @@ class Parser
         if (substr ($key, 0, 6) == 'style:') {
           $key                  = substr ($key, 6);
           $attributes['styles'] = strJoin (get ($attributes, 'styles', ''), "$key:$value", ';');
-        } else {
+        }
+        else {
           if ($processBindings && strpos ($value, '{') !== false)
             $bindings[renameAttribute ($key)] = $value;
           else if ($key == 'styles')
@@ -311,7 +304,8 @@ class Parser
       if ($content[0] == '{') {
         $lit           = new Literal($this->context);
         $lit->bindings = $v;
-      } else $lit = new Literal($this->context, $v);
+      }
+      else $lit = new Literal($this->context, $v);
       $this->current->addChild ($lit);
     }
   }
