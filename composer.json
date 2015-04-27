@@ -24,8 +24,7 @@
   "autoload": {
     "classmap": [
       "src/classes",
-      "src/components",
-      "src/modules"
+      "src/components"
     ],
     "files": [
       "src/utility.php",
