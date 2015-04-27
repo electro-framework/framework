@@ -86,10 +86,15 @@ class Application
    */
   public $VURI;
   /**
-   * The path of the framework's public directory.
+   * The relative path of the public folder inside a module.
    * @var string
    */
-  public $frameworkPublicPath;
+  public $modulePublicPath;
+  /**
+   * The application's main public (web) folder.
+   * @var string
+   */
+  public $appPublicPath;
   /**
    * The mapped public URI of the framework's public directory.
    * @var string
@@ -97,21 +102,47 @@ class Application
   public $frameworkURI;
   public $modelPath;
   public $viewPath;
-  public $moduleViewPath;
-  public $addonsPath;
-  public $i18nPath;
   /**
-   * The folder name for the application-specific modules.
-   * Set by application.ini.php.
+   * The relative path of the views folder inside a module.
+   * @var string
+   */
+  public $moduleViewsPath;
+  /**
+   * The relative path of the templates folder inside a module.
+   * @var string
+   */
+  public $moduleTemplatesPath;
+  public $addonsPath;
+  /**
+   * The path of the application's language files' folder.
+   * @var string
+   */
+  public $langPath;
+  /**
+   * The relative path of the language files' folder inside a module.
+   * @var string
+   */
+  public $moduleLangPath;
+  /**
+   * The folder where the framework will search for your application-specific modules.
+   * <p>If a module is not found there, it will then search on `defaultModulesPath`.
+   * <p>Set by application.ini.php.
    * @var String
    */
   public $modulesPath;
   /**
-   * The folder name for the predefined framework modules.
-   * Set by application.ini.php.
+   * <p>The fallback folder name where the framework will search for modules.
+   * <p>Modules installed as Composer packages will be found there.
+   * <p>Set by application.ini.php.
    * @var String
    */
   public $defaultModulesPath;
+  /**
+   * A list of modules that are always bootstrapped when the framework boots.
+   * <p>A `bootstrap.php` file will be executed on each registered module.
+   * @var array
+   */
+  public $modules;
   /**
    * Folder path for the configuration files.
    * @var string
@@ -303,17 +334,22 @@ class Application
    */
   public $homeTitle;
   /**
-   * The public folder's path.
-   * @var string
-   */
-  public $publicPath;
-  /**
    * A map of mappings from virtual URIs to external folders.
    * <p>This is used to expose assets from composer packages.
    * <p>Array of URI => physical folder path
    * @var array
    */
   public $mountPoints = [];
+  /**
+   * Additional template directories to be registered on the templating engine.
+   * @var array
+   */
+  public $templateDirectories = [];
+  /**
+   * Search paths for module language files, in order of precedence.
+   * @var array
+   */
+  public $languageFolders = [];
 
   public function run ($dir, $appDir, $baseOffs = '')
   {
@@ -374,13 +410,16 @@ class Application
       }
     }
 
+    $this->templateDirectories[] = $this->templatesPath;
+    $this->languageFolders[] = $this->langPath;
+    $this->bootModules ();
 
     if (empty($this->name))
       $this->name = $this->URI ? $this->URI : $_SERVER['SERVER_NAME'];
     if (isset($_ENV['APP_DEFAULT_LANG']))
       $this->defaultLang = $_ENV['APP_DEFAULT_LANG'];
 
-    $this->mount ($this->frameworkURI, dirname ($this->frameworkPath) . "/$this->frameworkPublicPath");
+    $this->mount ($this->frameworkURI, dirname ($this->frameworkPath) . "/$this->modulePublicPath");
 
     if (!$NO_APPLICATION) {
       $this->loadRoutes ();
@@ -461,6 +500,20 @@ class Application
   {
     $themesPath = strpos ($URI, $this->themesPath) !== false ? $this->themesPath : $this->defaultThemesPath;
     return str_replace ('/', '_', substr ($URI, strlen ($this->baseURI) + strlen ($themesPath) + 2));
+  }
+
+  private function bootModules ()
+  {
+    global $application; // Used by the loaded bootstrap.php
+
+    foreach ($this->modules as $path) {
+      $boot = "$path/bootstrap.php";
+      $f    = @include "$this->modulesPath/$boot";
+      if ($f === false)
+        $f = @include "$this->defaultModulesPath/$boot";
+      if ($f === false)
+        throw new ConfigException("File <b>$boot</b> was not found.");
+    }
   }
 
   private function loadConfig ($iniPath)

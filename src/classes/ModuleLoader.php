@@ -58,7 +58,11 @@ class ModuleLoader
           header ('Expires: ' . gmdate ('D, d M Y H:i:s \G\M\T', time () + 36000)); // add 10 hours
           header ("Cache-Control: public, max-age=36000");
         }
-        readfile ($path);
+        if (@readfile ($path) === false) {
+          header ("Content-Type: text/plain");
+          http_response_code (404);
+          echo "Not found: $path";
+        }
         exit;
       }
     }
@@ -89,11 +93,13 @@ class ModuleLoader
     require_once $fname;
     return true;
   }
+
   /**
    *
    * @global Application $application
    * @param string       $className
    * @param string       $moduleName
+   * @return bool
    */
   public static function searchAndLoadClass ($className, $moduleName)
   {
@@ -119,7 +125,7 @@ class ModuleLoader
       $this->virtualURI = $application->defaultURI;
     $key = get ($_GET, 'key');
     if (!isset($application->routingMap))
-      throw new ConfigException("No sitemap defined.");
+      throw new ConfigException("No route map defined.");
     $this->sitePage = $application->routingMap->searchFor ($this->virtualURI, $key);
     if (is_null ($this->sitePage))
       Controller::pageNotFound ($this->virtualURI);

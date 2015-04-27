@@ -9,6 +9,7 @@ return [
     'defaultURI'             => '',
     'favicon'                => 'data:;base64,iVBORw0KGgo=', // Supress http request
     'subApplications'        => [],
+    'modules'                => [],
 
     'homeIcon'               => '',
     'homeTitle'              => 'Home',
@@ -23,16 +24,17 @@ return [
     'CSS_CachePath'          => 'private/storage/cache',
 
     'configPath'             => 'private/config',
-    'i18nPath'               => '../private/resources/lang',
+    'langPath'               => 'private/resources/lang',
+    'moduleLangPath'         => 'resources/lang',
     'templatesPath'          => 'private/resources/templates',
     'modulesPath'            => 'private/app/modules',
-    'defaultModulesPath'     => 'private/selene/modules',
+    'defaultModulesPath'     => 'vendor',
     'viewPath'               => 'private/resources/views',
-    'moduleViewPath'         => '',
+    'moduleViewsPath'        => 'resources/views',
+    'moduleTemplatesPath'    => 'resources/templates',
     'modelPath'              => 'models',
-    'publicPath'             => '../',
-
-    'frameworkPublicPath'    => 'public',
+    'modulePublicPath'       => 'public',
+    'appPublicPath'          => 'public_html',
     'frameworkURI'           => 'framework',
     'addonsPath'             => 'framework/addons',
 

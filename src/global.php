@@ -1,5 +1,10 @@
 <?php
 
+function ModuleOptions ($path, array $options)
+{
+  return new ModuleOptions($path, $options);
+}
+
 function RouteGroup ($init)
 {
   return new RouteGroup($init);

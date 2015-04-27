@@ -1,5 +1,7 @@
 <?php
-class ModuleInfo {
+
+class ModuleInfo
+{
 
   /**
    * The base name for the current module.
@@ -45,32 +47,33 @@ class ModuleInfo {
   public $isWebService = false;
 
   /**
-   *
    * @global Application $application
-   * @param string $moduleURI
+   * @param string       $moduleURI
+   * @throws FatalException
    */
-  public function __construct($moduleURI) {
-    global $application,$isWebService;
-    //var_dump($this);
-    if (substr($moduleURI,-1) == '/')
-      throw new ConfigException("Invalid module path: <pre><b>$moduleURI</b></pre>\nModule paths ending with / are no longer supported.");
-      //$moduleURI .= 'index';
-    $this->URI = $moduleURI;
-    $this->module = dirname($moduleURI);
+  public function __construct ($moduleURI)
+  {
+    global $application, $isWebService;
+    $this->URI    = $moduleURI;
+    $this->module = dirname ($moduleURI);
     if ($this->module == '.') {
-      $this->module = $moduleURI;
+      $this->module     = $moduleURI;
       $this->modulePage = '';
     }
-    else $this->modulePage = substr($moduleURI,strrpos($moduleURI,'/') + 1);
+    else $this->modulePage = substr ($moduleURI, strrpos ($moduleURI, '/') + 1);
     $defaultPath = "$application->rootPath/$application->defaultModulesPath/$this->module";
-    $customPath = "$application->rootPath/$application->modulesPath/$this->module";
-    $this->modulePath = file_exists($customPath) ? $customPath : $defaultPath;
-    if ($isWebService || substr($this->module,-9) == '/services')
+    $customPath  = "$application->rootPath/$application->modulesPath/$this->module";
+    if (file_exists ($customPath))
+      $this->modulePath = $customPath;
+    elseif (file_exists ($defaultPath))
+      $this->modulePath = $defaultPath;
+    else throw new FatalException ("Module not found:<p><b>$moduleURI</b>");
+    if ($isWebService || substr ($this->module, -9) == '/services')
       $this->isWebService = true;
-    $this->moduleFile = $this->modulePath.'/'.$this->modulePage.'.php';
-    $p = strrpos($this->module,'/');
-    $module = $p !== FALSE ? substr($this->module,$p + 1) : $this->module;
-    $this->moduleClassName = $module.'Controller';
-    $this->pageClassName = ucfirst($this->modulePage).'Controller';
+    $this->moduleFile      = $this->modulePath . '/' . $this->modulePage . '.php';
+    $p                     = strrpos ($this->module, '/');
+    $module                = $p !== false ? substr ($this->module, $p + 1) : $this->module;
+    $this->moduleClassName = $module . 'Controller';
+    $this->pageClassName   = ucfirst ($this->modulePage) . 'Controller';
   }
 }

@@ -4,7 +4,6 @@ use selene\matisse\DataRecord;
 use selene\matisse\DataSet;
 use selene\matisse\DataSource;
 use selene\matisse\exceptions\DataBindingException;
-use selene\matisse\exceptions\FileIOException;
 use selene\matisse\MatisseEngine;
 
 ob_start ();
@@ -210,13 +209,19 @@ class Controller
 
   public static function translate ($lang, $text)
   {
-    global $application;
+    /** @var ModuleLoader $loader */
+    global $application, $loader;
     if (!isset(self::$translation[$lang])) {
-      $path = $application->toFilePath ("$application->i18nPath/$lang.ini");
-      $z    = self::$translation[$lang] = @parse_ini_file ($path);
+      $paths = [];
+      foreach ($application->languageFolders as $folder) {
+        $path = "$folder/$lang.ini";
+        $z    = self::$translation[$lang] = @parse_ini_file ($path);
+        if (!empty($z)) break;
+        $paths[] = "<li>" . ErrorHandler::shortFileName ($path);
+      }
       if (empty($z))
-        throw new BaseException("Translation file for language <b>$lang</b> was not found at " .
-                                ErrorHandler::shortFileName ($path), Status::FATAL);
+        throw new BaseException("Translation file for language <b>$lang</b> was not found.<p>Search paths:<ul>" .
+                                implode ('', $paths) . "</ul>", Status::FATAL);
     }
     return preg_replace_callback (self::FIND_TRANS_KEY, function ($args) use ($lang) {
       $a = $args[1];
@@ -229,7 +234,7 @@ class Controller
   {
     global $application;
 
-    if (substr ($virtualURI, 0, strlen ($application->publicPath)) == $application->publicPath) {
+    if (substr ($virtualURI, 0, strlen ($application->appPublicPath)) == $application->appPublicPath) {
       http_response_code (404);
       echo "<h1>Not Found</h1><p>The requested file <b><code>$virtualURI</code></b> is missing.</p>";
       exit;
@@ -586,8 +591,8 @@ class Controller
     $name = session_name ();
     session_start ();
     if ($application->autoSession) {
-      $session       = get ($_SESSION, 'sessionInfo', new Session);
-      $session->name = $name;
+      $session                 = get ($_SESSION, 'sessionInfo', new Session);
+      $session->name           = $name;
       $_SESSION['sessionInfo'] = $session;
     }
   }
@@ -626,8 +631,9 @@ class Controller
     }
     else {
       // Show login form.
-      $path = $application->viewPath . '/login' . $this->TEMPLATE_EXT;
-      $this->loadView ($path);
+      $path = 'private/app/modules/selene-framework/admin-module/resources/views/login' . $this->TEMPLATE_EXT;
+      if (!$this->loadView ($path))
+        throw new FileNotFoundException($path);
       $this->page->formAutocomplete = true;
     }
     $this->setupView ();
@@ -648,10 +654,7 @@ class Controller
     $ctx                      = $this->engine->context;
     $ctx->condenseLiterals    = $application->condenseLiterals;
     $ctx->debugMode           = $application->debugMode;
-    $ctx->templateDirectories = [
-      $application->templatesPath,
-      "$application->frameworkPath/templates"
-    ];
+    $ctx->templateDirectories = $application->templateDirectories;
   }
 
   /**
@@ -875,23 +878,35 @@ class Controller
 
   /**
    * Loads or generates the view's source markup.
-   * @return bool <b>true</b> cancels markup postprocessing.
+   * <p>Override to manually include the view's source markup.
+   * @return bool Usually you should return false. Return <b>true</b> tp cancel additional processing beyond this point.
    * @throws FatalException
    * @global Application $application
    */
   protected function defineView ()
   {
-    //override to manually include the view's source markup.
     global $application;
     if (isset($this->moduleLoader)) {
-      $path = $application->moduleViewPath . '/' . $this->moduleLoader->moduleInfo->modulePage . $this->TEMPLATE_EXT;
-      return !$this->loadView ($path);
+      /** @var ModuleInfo $info */
+      $info     = $this->moduleLoader->moduleInfo;
+      $viewFile = $info->modulePage . $this->TEMPLATE_EXT;
+      $path     = "$info->modulePath/$application->moduleViewsPath/$viewFile";
+      $found    = $this->loadView ($path);
+      if (!$found) {
+        $path2 = "$application->viewPath/$viewFile";
+        $found = $this->loadView ($path2);
+        if (!$found) {
+          $path = ErrorHandler::shortFileName ($path);
+          throw new FatalException("View <b>$info->modulePage</b> was not found.<p>Search paths:<ul><li>$path<li>$path2</ul>");
+        }
+      }
+      return false;
     }
     else {
       preg_match ('#(\w+?)\.php#', $this->URI, $match);
       if (!count ($match))
         throw new FatalException("Invalid URI <b>$this->URI</b>");
-      $path = $application->moduleViewPath . '/' . $match[1] . $this->TEMPLATE_EXT;
+      $path = $application->viewPath . '/' . $match[1] . $this->TEMPLATE_EXT;
       return !$this->loadView ($path);
     }
   }
@@ -901,24 +916,13 @@ class Controller
    * @param string $path
    * @return bool <b>true</b> if the file was found.
    * @throws FatalException
-   * @throws FileIOException
+   * @throws FileNotFoundException
    */
   protected function loadView ($path)
   {
-    if ($path[0] == '/')
-      $path = substr ($path, 1);
-    if (!fileExists ($path)) {
-      if (isset($this->sitePage) && !$this->sitePage->autoView)
-        throw new FatalException("Auto-view generation is disabled for this URL and the file <b>$path</b> was not found.");
-      if ($this->page->contentIsXML && isset($this->dataItem)) {
-        if ($this->sitePage->format == 'grid')
-          echo $this->dataItem->queryAsXML ($this->sitePage->fields);
-        else echo $this->dataItem->serializeToXML (implode (',', $this->sitePage->fields));
-        return true;
-      }
+    $template = loadFile ($path);
+    if (!$template)
       return false;
-    }
-    $template   = $this->engine->loadView ($path);
     $this->page = $this->engine->parse ($template);
     return true;
   }

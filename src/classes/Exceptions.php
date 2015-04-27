@@ -167,7 +167,7 @@ class ValidationException extends BaseException {
 class FileNotFoundException extends BaseException {
 
   public function __construct($filename) {
-    parent::__construct("File '$filename' was not found.", Status::FATAL);
+    parent::__construct("File <b>$filename</b> was not found.", Status::FATAL);
   }
 
 }
