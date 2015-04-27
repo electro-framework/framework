@@ -140,14 +140,21 @@ abstract class AbstractRoute extends Object
         $this->indexURL   = $index->URL;
       }
     }
-    if (isset($this->routes))
-      foreach ($this->routes as $route) {
+    if (isset($this->routes)) {
+      for ($i = 0; $i < count($this->routes); ++$i) {
+        $route = $this->routes[$i];
+        // Flatten subarrays into the base array.
+        if (is_array ($route)) {
+          array_splice ($this->routes,$i,1, $route);
+          $route = $this->routes[$i]; // taking into account that the new array may be empty.
+        }
         $route->inheritedPrefix = either ($this->prefix, $this->inheritedPrefix);
         /** @var AbstractRoute $route */
         $route->init ($this);
         if ($route->onMenu)
           $this->hasSubNav = true;
       }
+    }
   }
 
   public function searchFor ($URI, $options = 0)
