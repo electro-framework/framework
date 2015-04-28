@@ -154,6 +154,11 @@ class Application
    * @var string
    */
   public $loginView;
+  /**
+   * The FQN of the logged in user's model class.
+   * @var string
+   */
+  public $userModel;
 
   /* Template related */
   public $templatesPath;

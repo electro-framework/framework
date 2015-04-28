@@ -54,6 +54,7 @@ return [
     'condenseLiterals'       => true,
     'compressOutput'         => true,
     'debugMode'              => false,
+    'userModel'              => '',
 
     'imageRedirection'       => true,
     'URINotFoundURL'         => false,

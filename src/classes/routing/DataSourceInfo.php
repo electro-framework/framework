@@ -46,7 +46,7 @@ class DataSourceInfo extends Object {
   }
 
   public function createDataItem() {
-    global $application,$model;
+    global $model;
     if (!isset($this->model))
       throw new ConfigException("Property <b>model</b> is required on a DataSourceInfo instance.");
     $modelItem = get($model,$this->model);
@@ -57,9 +57,6 @@ class DataSourceInfo extends Object {
       throw new ConfigException("No data class defined for model <b>$this->model</b>.");
     if (!isset($modelItem->module))
       throw new ConfigException("No module defined for model <b>$this->model</b>.");
-    //$x = ModuleLoader::searchAndLoadClass($dataClass,$modelItem->module);
-    //if (!$x)
-    //  throw new ConfigException("Can't create an instance of class <b>$this->model</b> for a DataSourceInfo instance.");
     return newInstanceOf($dataClass);
   }
 
