@@ -50,6 +50,10 @@ class ModuleLoader
     $p   = strpos ($URI, '/');
     if ($p) {
       $head = substr ($URI, 0, $p);
+      if ($head == 'modules') {
+        $p    = strpos ($URI, '/', $p + 1);
+        $head = substr ($URI, 0, $p);
+      }
       $tail = substr ($URI, $p + 1);
       if (isset($application->mountPoints[$head])) {
         $path = $application->mountPoints[$head] . "/$tail";
@@ -113,7 +117,7 @@ class ModuleLoader
   public function load ()
   {
     global $application;
-    $con = null;
+    $con  = null;
     $auto = $this->sitePage->autoController;
     if ($auto) {
       $class = $application->autoControllerClass;
