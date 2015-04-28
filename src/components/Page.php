@@ -94,21 +94,25 @@ class Page extends Component
     $this->browserIsChrome = strpos ($b, 'Chrome') !== false;
     $this->clientIsWindows = strpos ($b, 'Windows') !== false;
   }
+
   public function error ($msg)
   {
     $this->statusMessage =
-      '<div id="alertBox"><div class="box error">' . $msg . '</div><div class="shadow"></div></div>';
+      '<div class="alert alert-danger" role="alert">' . $msg . '</div>';
   }
+
   public function warning ($msg)
   {
     $this->statusMessage =
-      '<div id="alertBox"><div class="box warning">' . $msg . '</div><div class="shadow"></div></div>';
+      '<div class="alert alert-warning" role="alert">' . $msg . '</div>';
   }
+
   public function info ($msg)
   {
     $this->statusMessage =
-      '<div id="alertBox"><div class="box info">' . $msg . '</div><div class="shadow"></div></div>';
+      '<div class="alert alert-info" role="alert">' . $msg . '</div>';
   }
+
   public function fatal ($msg)
   {
     @ob_clean ();
@@ -116,16 +120,19 @@ class Page extends Component
          '</pre></body></html>';
     exit();
   }
+
   public function addStylesheet ($uri)
   {
     if (array_search ($uri, $this->stylesheets) === false)
       $this->stylesheets[] = $uri;
   }
+
   public function addScript ($uri)
   {
     if (array_search ($uri, $this->scripts) === false)
       $this->scripts[] = $uri;
   }
+
   /**
    * Adds an inline script to the HEAD section of the page.
    * @param mixed  $code Either a string or a Parameter.
@@ -140,6 +147,7 @@ class Page extends Component
       $this->inlineScripts[$name] = $code;
     else $this->inlineScripts[] = $code;
   }
+
   /**
    * Similar to addInlineScript(), but the script will only run on the document.ready event.
    * @param mixed  $code Either a string or a Parameter.
@@ -152,6 +160,7 @@ class Page extends Component
     $code = "$(function(){\n$code\n});";
     $this->addInlineScript ($code, $name);
   }
+
   /**
    * Adds an inline stylesheet to the HEAD section of the page.
    * @param mixed  $css  Either a string or a Parameter.
@@ -167,6 +176,7 @@ class Page extends Component
     else
       $this->inlineCssStyles[] = $css;
   }
+
   protected function render ()
   {
     global $application;
@@ -179,7 +189,8 @@ class Page extends Component
         header ('Content-Type: text/html');
         throw $e;
       }
-    } else if ($this->autoHTML) {
+    }
+    else if ($this->autoHTML) {
 
       ob_start ();
       $this->renderChildren ();
@@ -268,7 +279,8 @@ class Page extends Component
         foreach ($this->inlineScripts as $item)
           if ($item instanceof Parameter) {
             $code .= $item->getContent ();
-          } else $code .= $item;
+          }
+          else $code .= $item;
         $this->addTag ('script',
           [
             'type' => 'text/javascript'
@@ -327,8 +339,10 @@ HTML;
       echo $this->footer;
       $this->endTag ();
       $this->endTag ();
-    } else $this->renderChildren ();
+    }
+    else $this->renderChildren ();
   }
+
   private function packScripts ()
   {
     global $application;
