@@ -39,6 +39,7 @@ class ModuleLoader
    * @var ModuleInfo
    */
   public $moduleInfo = null;
+
   public static function loadAndRun ()
   {
     global $application, $loader, $lang;
@@ -102,22 +103,38 @@ class ModuleLoader
     $_GET         = array_merge ($_GET, (array)$presetParams);
 
     //Setup module paths and other related info.
-
     $this->moduleInfo = new ModuleInfo($this->sitePage->module);
     $application->setIncludePath ($this->moduleInfo->modulePath);
   }
+
   /**
    * Load the module determined by the virtual URI.
    */
   public function load ()
   {
     global $application;
-    if ($this->sitePage->autoController)
-      $con = new $application->autoControllerClass;
-    else if (class_exists ($this->sitePage->controller))
-      $con = new $this->sitePage->controller;
-    else throw new FatalException("Auto-controller generation is disabled for this URL and the controller class <b>{$this->sitePage->controller}</b> was not found on <b>" .
-                                  ErrorHandler::shortFileName ($this->moduleInfo->moduleFile) . "</b>.");
+    $con = null;
+    $auto = $this->sitePage->autoController;
+    if ($auto) {
+      $class = $application->autoControllerClass;
+      if (class_exists ($class))
+        $con = new $class;
+    }
+    else {
+      $class = $this->sitePage->controller;
+      if (class_exists ($class))
+        $con = new $class;
+    }
+    if (!$con) {
+      if (!$class)
+        $class = "null";
+      $auto = $auto ? 'enabled' : 'disabled';
+      throw new ConfigException("<p><b>Controller not found.</b>
+  <li>Class:           <b>$class</b>
+  <li>Search path:     <b>" . ErrorHandler::shortFileName ($this->moduleInfo->modulePath) . "</b>
+  <li>Auto-controller: <b>$auto</b> for this URL
+");
+    }
     $con->moduleLoader = $this;
     return $con;
   }

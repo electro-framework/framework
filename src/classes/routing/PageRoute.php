@@ -67,7 +67,6 @@ class PageRoute extends AbstractRoute
 
   public function getModel ()
   {
-    global $model;
     $modelName = property ($this, 'model');
     if (!isset($modelName)) {
       if (isset($this->dataSources)) {
@@ -76,7 +75,7 @@ class PageRoute extends AbstractRoute
           $modelName = $ds->model;
       }
     }
-    else $modelName = property ($this, 'model');
+    else $modelName = $this->model;
     if (!isset($modelName))
       return null;
     //throw new ConfigException("Default data source model not found");

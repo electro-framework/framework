@@ -16,7 +16,12 @@ abstract class AbstractRoute extends Object
   public $routes  = null;
   public $isIndex = false;
   public $indexURL;      //autoset if isIndex is set
-  public $module = '';
+  /**
+   * The module name for the route.
+   * <p>Inherited by all children unless overridden.
+   * @var string
+   */
+  public $module = null; // must not be an empty string.
   public $controller;
   public $autoController;
   /**
@@ -24,6 +29,12 @@ abstract class AbstractRoute extends Object
    * @var string
    */
   public $icon;
+  /**
+   * When set, children's inheritedPrefix will be set to its value.
+   * <p>Inherited by all children unless overridden.
+   * @var string
+   */
+  public $prefix = '';
 
   public $parent = null; //internal use
   public $URI_regexp;    //internal use
@@ -43,17 +54,12 @@ abstract class AbstractRoute extends Object
    * Automatically set to true when any sub-navigation links are available under this page.
    * @var bool
    */
-  public $hasSubNav = false;
+  public $hasSubNav = false; //internal use
   /**
    * When set, the real URI is $inheritedPrefix/$URI.
    * @var string
    */
-  public $inheritedPrefix = '';
-  /**
-   * When set, children's inheritedPrefix will be set to its value.
-   * @var string
-   */
-  public $prefix = '';
+  public $inheritedPrefix = ''; //internal use
 
   public function __construct (array &$init = null)
   {

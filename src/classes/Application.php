@@ -148,6 +148,12 @@ class Application
    * @var string
    */
   public $configPath;
+  /**
+   * Relative file path of the view to be used for authenticating the user.
+   * <p>It will be searched for on both the active module and on the application.
+   * @var string
+   */
+  public $loginView;
 
   /* Template related */
   public $templatesPath;

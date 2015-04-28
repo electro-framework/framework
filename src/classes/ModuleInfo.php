@@ -25,8 +25,8 @@ class ModuleInfo
   {
     global $application;
     $this->module = $moduleName;
-    $defaultPath = "$application->rootPath/$application->defaultModulesPath/$this->module";
-    $customPath  = "$application->rootPath/$application->modulesPath/$this->module";
+    $defaultPath = "$application->rootPath/$application->defaultModulesPath/$moduleName";
+    $customPath  = "$application->rootPath/$application->modulesPath/$moduleName";
     if (file_exists ($customPath))
       $this->modulePath = $customPath;
     elseif (file_exists ($defaultPath))

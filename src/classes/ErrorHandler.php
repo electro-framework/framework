@@ -23,7 +23,7 @@ class ErrorHandler
     $label = self::shortFileName ($file);
     if (!isset($application)) return $label;
     if (substr($file, 0, strlen($application->rootPath)) != $application->rootPath)
-      $file = $application->rootPath . $file;
+      $file = "$application->rootPath/$file";
     $file = urlencode ($file);
     --$line;
     --$col;

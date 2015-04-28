@@ -36,7 +36,6 @@ class Route extends AbstractRoute
 
   public function getModel ()
   {
-    global $model;
     $modelName = property ($this, 'model');
     if (!isset($modelName)) {
       if (isset($this->dataSources)) {
@@ -45,14 +44,11 @@ class Route extends AbstractRoute
           $modelName = $ds->model;
       }
     }
-    else $modelName = property ($this, 'model');
+    else $modelName = $this->model;
     if (!isset($modelName))
       return null;
     //throw new ConfigException("Default data source model not found");
-    $thisModel = get ($model, $modelName);
-    if (!isset($thisModel))
-      throw new ConfigException("Model <b>$modelName</b> was not found");
-    return $thisModel;
+    return $modelName;
   }
 
 }

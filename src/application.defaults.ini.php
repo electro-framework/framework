@@ -44,6 +44,7 @@ return [
     'SEOFile'                => '',
 
     'autoControllerClass'    => 'Controller',
+    'loginView'              => '',
     'translation'            => false,
     'languages'              => null,
     'defaultLang'            => null,

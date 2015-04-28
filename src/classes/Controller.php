@@ -617,6 +617,7 @@ class Controller
    * @param bool $authenticate Is this a login form?
    * @return bool
    * @throws FatalException
+   * @throws FileNotFoundException
    */
   protected function processView ($authenticate = false)
   {
@@ -631,7 +632,7 @@ class Controller
     }
     else {
       // Show login form.
-      $path = 'private/app/modules/selene-framework/admin-module/resources/views/login' . $this->TEMPLATE_EXT;
+      $path = $application->loginView;
       if (!$this->loadView ($path))
         throw new FileNotFoundException($path);
       $this->page->formAutocomplete = true;
@@ -767,6 +768,11 @@ class Controller
         $this->dataItem = $this->createDataItem($this->dataClass,$moduleName);
         */
         $this->dataItem = newInstanceOf ($this->dataClass);
+        if (!isset($this->dataItem))
+          throw new ConfigException("<p><b>Model class not found.</b>
+  <li>Class:         <b>$this->dataClass</b>
+  <li>Active module: <b>{$this->sitePage->module}</b>
+");
 
         //if (isset($thisModel) && isset($thisModel->pk))
         //$this->dataItem->primaryKeyName = $thisModel->pk;
@@ -889,7 +895,7 @@ class Controller
     if (isset($this->moduleLoader)) {
       /** @var ModuleInfo $info */
       $info     = $this->moduleLoader->moduleInfo;
-      $viewFile = $info->modulePage . $this->TEMPLATE_EXT;
+      $viewFile = $this->sitePage->view;
       $path     = "$info->modulePath/$application->moduleViewsPath/$viewFile";
       $found    = $this->loadView ($path);
       if (!$found) {
@@ -897,7 +903,7 @@ class Controller
         $found = $this->loadView ($path2);
         if (!$found) {
           $path = ErrorHandler::shortFileName ($path);
-          throw new FatalException("View <b>$info->modulePage</b> was not found.<p>Search paths:<ul><li>$path<li>$path2</ul>");
+          throw new FatalException("View <b>$viewFile</b> was not found.<p>Search paths:<ul><li>$path<li>$path2</ul>");
         }
       }
       return false;
