@@ -39,6 +39,7 @@ class DataGridAttributes extends ComponentAttributes
 
 class DataGrid extends VisualComponent
 {
+  const PUBLIC_URI = 'modules/admin';
 
   protected static $MIN_PAGE_ITEMS = [
     'simple'         => 0, // n/a
@@ -83,8 +84,9 @@ JAVASCRIPT
       , 'datagridInit');
     $id          = $attr->id;
     $minPagItems = self::$MIN_PAGE_ITEMS [$attr->paging_type];
+    $PUBLIC_URI = self::PUBLIC_URI;
     $language    = $controller->lang != 'en'
-      ? "language:     { url: '$application->baseURI/js/datatables/{$controller->langISO}.json' }," : '';
+      ? "language:     { url: '$PUBLIC_URI/js/datatables/{$controller->langISO}.json' }," : '';
 
     $this->setupColumns ($attr->column);
     $rowTemplate = $attr->row_template;
@@ -113,7 +115,7 @@ $('#$id table').dataTable({
   responsive:   true,
   pageLength:   mem.get ('prefs.rowsPerPage', {$application->pageSize}),
   lengthMenu:   [10, 15, 20, 50, 100],
-  language: { url: 'public/js/datatables/{$this->getController ()->langISO}.json' },
+  $language
   ajax: {
      url: '$url',
      type: 'POST',
