@@ -23,7 +23,7 @@ abstract class AbstractRoute extends Object
    */
   public $module = null; // must not be an empty string.
   public $controller;
-  public $autoController;
+  public $autoController = false;
   /**
    * CSS class name(s) for menu icon.
    * @var string
@@ -150,12 +150,19 @@ abstract class AbstractRoute extends Object
       }
     }
     if (isset($this->routes)) {
-      for ($i = 0; $i < count($this->routes); ++$i) {
+      for ($i = 0; $i < count ($this->routes); ++$i) {
         $route = $this->routes[$i];
         // Flatten subarrays into the base array.
         if (is_array ($route)) {
-          array_splice ($this->routes,$i,1, $route);
-          $route = $this->routes[$i]; // taking into account that the new array may be empty.
+          array_splice ($this->routes, $i, 1, $route);
+          --$i;
+          continue;
+        }
+        // Remove null entries.
+        if (is_null ($route)) {
+          array_splice ($this->routes, $i, 1);
+          --$i;
+          continue;
         }
         if (!isset($route->module))
           $route->module = $this->module;
@@ -237,7 +244,7 @@ abstract class AbstractRoute extends Object
     if (is_null ($URI))
       $URI = $this->URI;
     $prefix = empty($this->inheritedPrefix) ? '' : "$this->inheritedPrefix/";
-    $URI = "$prefix$URI";
+    $URI    = "$prefix$URI";
     try {
       return preg_replace_callback ('!\{(.*?)}!', function ($args) use ($URIParams, $ignoreMissing) {
         return self::fillURIParam ($args[1], $URIParams, $ignoreMissing);

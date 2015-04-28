@@ -35,8 +35,22 @@ class RoutingMap
             $route->init ($group);
     //NEW
     if (isset($this->routes))
-      foreach ($this->routes as $route)
+      for ($i = 0; $i < count ($this->routes); ++$i) {
+        $route = $this->routes[$i];
+        // Flatten subarrays into the base array.
+        if (is_array ($route)) {
+          array_splice ($this->routes, $i, 1, $route);
+          --$i;
+          continue;
+        }
+        // Remove null entries.
+        if (is_null ($route)) {
+          array_splice ($this->routes, $i, 1);
+          --$i;
+          continue;
+        }
         $route->init ($this);
+      }
   }
 
   /**

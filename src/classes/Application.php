@@ -356,6 +356,13 @@ class Application
    * @var array
    */
   public $languageFolders = [];
+  /**
+   * Extended application configuration.
+   * <p>Key 'main' has the configuration of the Application class.
+   * <p>Other keys may hold module-specific configs.
+   * @var array
+   */
+  public $config;
 
   public function run ($dir, $appDir, $baseOffs = '')
   {
@@ -529,6 +536,7 @@ class Application
       extend ($this, $ini['main']);
     else
       throw new ConfigException("Error parsing " . ErrorHandler::shortFileName ($iniPath));
+    $this->config = $ini;
   }
 
   private function loadRoutes ()

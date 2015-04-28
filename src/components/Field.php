@@ -1,6 +1,9 @@
 <?php
+
 use Selene\Matisse\AttributeType;
+use Selene\Matisse\Component;
 use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\Exceptions\ComponentException;
 use Selene\Matisse\VisualComponent;
 
 class FieldAttributes extends ComponentAttributes
@@ -12,9 +15,13 @@ class FieldAttributes extends ComponentAttributes
   public $width       = 'col-sm-8 col-md-7 col-lg-6';
 
   protected function typeof_name () { return AttributeType::ID; }
+
   protected function typeof_label () { return AttributeType::TEXT; }
+
   protected function typeof_field () { return AttributeType::SRC; }
+
   protected function typeof_width () { return AttributeType::TEXT; }
+
   protected function typeof_label_width () { return AttributeType::TEXT; }
 }
 
@@ -44,30 +51,34 @@ class Field extends VisualComponent
 
   protected function render ()
   {
-    /** @var Parameter $inputFld */
-    $inputFld = $this->getChildren ('field');
-    if (count ($inputFld) != 1)
-      throw new ComponentException($this, "<b>field</b> parameter must define <b>one</b> component instance.", true);
-
-    $this->beginContent ();
-    /** @var Component $input */
-    $input = $inputFld[0];
+    $inputFlds = $this->getChildren ('field');
+    if (empty ($inputFlds))
+      throw new ComponentException($this, "<b>field</b> parameter must define <b>one or more</b> component instances.",
+        true);
 
     $name = $this->attrs ()->get ('name');
     if (empty($name))
       throw new ComponentException($this, "<b>name</b> parameter is required.");
 
+    // Treat the first child component specially
+
+    /** @var Component $input */
+    $input = $inputFlds[0];
+
     $fldId = $input->attrs ()->get ('id', $name);
 
     if ($input instanceof HtmlEditor) {
-      $forId = $fldId . '_field';
-      $click = "$('#$fldId .redactor_editor').focus()";
-    } else {
-      $forId = $fldId;
+      $forId = $fldId . '0_field';
+      $click = "$('#{$fldId}0 .redactor_editor').focus()";
+    }
+    else {
+      $forId = $fldId . '0';
       $click = null;
     }
 
-    // LABEL
+    $this->beginContent ();
+
+    // Output a LABEL
 
     $label = $this->attrs ()->label;
     if (!empty($label))
@@ -77,17 +88,22 @@ class Field extends VisualComponent
         'onclick' => $click
       ], $label);
 
+    // Output child components
+
     $this->beginTag ('div', [
       'class' => $this->attrs ()->width
     ]);
     $this->beginContent ();
 
-    // EMBEDDED COMPONENT
+    foreach ($inputFlds as $i => $input) {
 
-    $input->attrsObj->css_class .= ' form-control';
-    $input->attrsObj->id   = $fldId;
-    $input->attrsObj->name = $name;
-    $input->doRender ();
+      // EMBEDDED COMPONENTS
+
+      $input->attrsObj->css_class .= ' form-control';
+      $input->attrsObj->id   = "$fldId$i";
+      $input->attrsObj->name = $name;
+      $input->doRender ();
+    }
 
     $this->endTag ();
   }

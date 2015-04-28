@@ -21,10 +21,7 @@ class ErrorHandler
     if (empty($file))
       return '';
     $label = self::shortFileName ($file);
-    if (!isset($application)) return $label;
-    if (substr($file, 0, strlen($application->rootPath)) != $application->rootPath)
-      $file = "$application->rootPath/$file";
-    $file = urlencode ($file);
+    $file = urlencode ($label);
     --$line;
     --$col;
     return "<a href='$application->baseURI/goto-source.php?file=$file&line=$line&col=$col'>$label</a>";
