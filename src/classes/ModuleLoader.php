@@ -13,8 +13,9 @@ class ModuleLoader
     'css'   => 'text/css',
     'woff'  => 'application/font-woff',
     'woff2' => 'application/font-woff2',
-    'ttf'   => 'application/font-sfnt',
-    'otf'   => 'application/font-sfnt',
+    'ttf'   => 'font/ttf',
+    'otf'   => 'font/otf',
+    'eot'   => 'application/vnd.ms-fontobject',
     'jpg'   => 'image/jpeg',
     'png'   => 'image/png',
     'gif'   => 'image/gif',
@@ -120,6 +121,9 @@ class ModuleLoader
     $con  = null;
     $auto = $this->sitePage->autoController;
     if ($auto) {
+      if (!empty($this->sitePage->controller))
+        throw new ConfigException("<p><b>A controller should not be specified when autoController is enabled.</b>
+<p>Hint: is autoController=true being inherited?");
       $class = $application->autoControllerClass;
       if (class_exists ($class))
         $con = new $class;

@@ -1215,10 +1215,8 @@ class Controller
 
   protected function gotoModuleIndex ()
   {
-    if (isset($this->sitePage->indexURL)) {
-      $URI = $this->sitePage->evalURI (null, false, $this->sitePage->indexURL);
-      $this->thenGoTo ($URI);
-    }
+    if (isset($this->sitePage->indexURL))
+      $this->thenGoTo ($this->sitePage->indexURL);
     else {
       $index = $this->sitePage->getIndex ();
       if (!$index)

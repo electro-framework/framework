@@ -143,7 +143,7 @@ function preventDefault(ev) {
     ev.preventDefault();
 }
 
-function focusField(name) {
+function focusField(name, select) {
   setTimeout(function(){
     var e=document.forms[0].elements[name];
     if(e){
@@ -152,6 +152,7 @@ function focusField(name) {
         e.focus();
       }
       catch(x){}
+      if (select) e.select();
     }
   },100);
 }

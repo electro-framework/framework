@@ -123,7 +123,7 @@ class Input extends VisualComponent {
                 'readonly' => $this->attrs()->read_only ? 'readonly' : NULL,
                 'disabled' => $this->attrs()->disabled ? 'disabled' : NULL,
                 'tabindex' => $this->attrs()->tab_index,
-                'onclick'  => $this->attrs()->autoselect ? 'this.select()' : NULL,
+                'onfocus'  => $this->attrs()->autoselect ? 'this.select()' : NULL,
                 'onchange' => $this->attrs()->on_change,
                 'spellcheck' => 'false',
                 ]);
@@ -141,7 +141,7 @@ class Input extends VisualComponent {
                 'autocomplete' => $this->attrs()->autocomplete ? NULL : 'off',
                 'disabled'   => $this->attrs()->disabled ? 'disabled' : NULL,
                 'tabindex'   => $this->attrs()->tab_index,
-                'onclick'    => $this->attrs()->autoselect ? 'this.select()' : NULL,
+                'onfocus'    => $this->attrs()->autoselect ? 'this.select()' : NULL,
                 'onchange'   => $this->attrs()->on_change,
                 'onkeypress' => $action
         ]);
