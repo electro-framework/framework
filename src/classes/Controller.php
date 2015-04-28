@@ -268,10 +268,12 @@ class Controller
     $controller   = $this;
     $authenticate = false;
     try {
-      $this->URI        = $_SERVER['REQUEST_URI'];
-      $this->URI_noPage =
-        preg_replace ('#&?' . $application->pageNumberParam . '=\d*#', '', $this->URI); //remove page number parameter
+      $this->URI = $_SERVER['REQUEST_URI'];
+      // remove page number parameter
+      /*
+      $this->URI_noPage = preg_replace ('#&?' . $application->pageNumberParam . '=\d*#', '', $this->URI);
       $this->URI_noPage = preg_replace ('#\?$#', '', $this->URI_noPage);
+      */
       $this->setupController ();
       $this->initTemplateEngine ();
       $this->configPage ();
@@ -293,17 +295,18 @@ class Controller
             $authenticate = false; // user is now logged in; proceed as a normal request
           } catch (SessionException $e) {
             $this->setStatus (Status::WARNING, $e->getMessage ());
-            if ($authenticate && $action)
-              $this->prevPost = urlencode (serialize ($_POST));
+            // note: if $prevPost === false, it keeps that value instead of (erroneously) storing the login form data
+            if ($action)
+              $this->prevPost = isset($prevPost) ? $prevPost : urlencode (serialize ($_POST));
           }
         }
         else {
-          $authenticate    = !$session->validate ();
-          $this->showLogin = $authenticate;
+          $authenticate = !$session->validate ();
           if ($authenticate && $action)
             $this->prevPost = urlencode (serialize ($_POST));
         }
       }
+      $this->showLogin = $authenticate;
       $this->configLanguage ();
       $this->initSEO ();
       $this->initialize (); //custom setup
@@ -350,8 +353,11 @@ class Controller
       else {
         $this->setStatusFromException ($e);
         try {
-          if (!$this->processView ()) //retry the view, this time displaying the error message
+          if (!$this->processView ($authenticate)) //retry the view, this time displaying the error message
+          {
+            @ob_clean ();
             echo "<pre>" . $e->getMessage () . "\n\n" . htmlentities ($e->getTraceAsString ()) . "</pre>";
+          }
         } catch (Exception $e) {
           echo "<pre>" . $e->getMessage () . "\n\n" . htmlentities ($e->getTraceAsString ()) . "</pre>";
         }
@@ -406,6 +412,7 @@ class Controller
     $this->page->addScript ("$application->frameworkURI/js/engine.js");
     $this->page->defaultDataSource = get ($this->engine->context->dataSources, 'default');
     $this->displayStatus ();
+    $this->setDataSource ('page', new DataRecord($this->page));
   }
 
   /**
@@ -615,7 +622,7 @@ class Controller
   /**
    * Performs all processing related to the view generation.
    * @param bool $authenticate Is this a login form?
-   * @return bool
+   * @return bool False if the view rendering was interrupted..
    * @throws FatalException
    * @throws FileNotFoundException
    */
@@ -885,7 +892,7 @@ class Controller
   /**
    * Loads or generates the view's source markup.
    * <p>Override to manually include the view's source markup.
-   * @return bool Usually you should return false. Return <b>true</b> tp cancel additional processing beyond this point.
+   * @return bool Usually you should return false. Return <b>true</b> to cancel additional processing beyond this point.
    * @throws FatalException
    * @global Application $application
    */
@@ -954,7 +961,6 @@ class Controller
     $this->setDataSource ('application', new DataRecord($application));
     $this->setDataSource ('session', new DataRecord($_SESSION));
     $this->setDataSource ('sessionInfo', new DataRecord($session));
-    $this->setDataSource ('page', new DataRecord($this->page));
     $this->setDataSource ('controller', new DataRecord($this));
     $this->setDataSource ('request', new DataRecord($_REQUEST));
     if (isset($this->sitePage)) {
