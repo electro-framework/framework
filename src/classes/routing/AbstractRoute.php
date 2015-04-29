@@ -22,6 +22,9 @@ abstract class AbstractRoute extends Object
    * @var string
    */
   public $module = null; // must not be an empty string.
+  /**
+   * @var Controller
+   */
   public $controller;
   public $autoController = false;
   /**
@@ -30,7 +33,8 @@ abstract class AbstractRoute extends Object
    */
   public $icon;
   /**
-   * When set, children's inheritedPrefix will be set to its value.
+   * When set, children's inheritedPrefix will be set to inheritedPrefix + prefix.
+   * <p>Note that the route's inheritedPrefix is not affected by / related to this.
    * <p>Inherited by all children unless overridden.
    * @var string
    */
@@ -83,11 +87,6 @@ abstract class AbstractRoute extends Object
       'name'           => 'string',
       'title'          => 'string',
       'subtitle'       => 'string',
-      'URI'            => 'string',
-      'URIAlias'       => 'string',
-      'URL'            => 'string',
-      'subnavURI'      => 'string',
-      'subnavURL'      => 'string',
       'onMenu'         => 'boolean',
       'routes'         => 'array',
       'isIndex'        => 'boolean',
@@ -109,12 +108,6 @@ abstract class AbstractRoute extends Object
         $this->subnavURL = "$application->URI/$this->subnavURI";
       else $this->subnavURL = 'javascript:nop()';
     }
-    if (isset($this->URI))
-      $this->URI_regexp = preg_replace ('!\{.*?}!', '([^/&]*)', $this->URI);
-    else $this->URI_regexp = '<unmatchable>';
-    if (isset($this->URIAlias))
-      $this->URIAlias_regexp = preg_replace ('!\{.*?}!', '([^/&]*)', $this->URIAlias);
-    else $this->URIAlias_regexp = '<unmatchable>';
   }
 
   public function getTitle ()
@@ -135,13 +128,20 @@ abstract class AbstractRoute extends Object
   public function init ($parent)
   {
     global $application;
+    $this->parent = $parent;
+
+    if ($this->URI && $this->inheritedPrefix)
+      $this->URI = "$this->inheritedPrefix/$this->URI";
+
+    $this->compileURI ();
 
     if (!isset($this->URL)) {
       if (isset($this->URI))
-        $this->URL = "$application->URI/" . ($this->inheritedPrefix ? "$this->inheritedPrefix/" : '') . $this->URI;
+        $this->URL = "$application->URI/$this->URI";
       else $this->URL = 'javascript:nop()';
     }
-    $this->parent = $parent;
+
+
     if (empty($this->indexURL)) {
       $index = $this->getIndex ();
       if (isset($index)) {
@@ -166,7 +166,9 @@ abstract class AbstractRoute extends Object
         }
         if (!isset($route->module))
           $route->module = $this->module;
-        $route->inheritedPrefix = either ($this->prefix, $this->inheritedPrefix);
+        $route->inheritedPrefix =
+          $this->prefix ? ($this->inheritedPrefix ? "$this->inheritedPrefix/$this->prefix" : $this->prefix)
+            : $this->inheritedPrefix;
         /** @var AbstractRoute $route */
         $route->init ($this);
         if ($route->onMenu)
@@ -211,7 +213,7 @@ abstract class AbstractRoute extends Object
   public function getURIParams ()
   {
     global $application, $loader;
-    $URI    = $this->removeURIPrefix ($loader->virtualURI);
+    $URI    = $loader->virtualURI;
     $result = [];
     $count  = preg_match ("!^$this->URI_regexp(?:$|&|/)!", urldecode ($URI), $URIValues);
     if ($count)
@@ -243,8 +245,6 @@ abstract class AbstractRoute extends Object
       $URIParams = $this->getURIParams ();
     if (is_null ($URI))
       $URI = $this->URI;
-    $prefix = empty($this->inheritedPrefix) ? '' : "$this->inheritedPrefix/";
-    $URI    = "$prefix$URI";
     try {
       return preg_replace_callback ('!\{(.*?)}!', function ($args) use ($URIParams, $ignoreMissing) {
         return self::fillURIParam ($args[1], $URIParams, $ignoreMissing);
@@ -284,19 +284,8 @@ abstract class AbstractRoute extends Object
     return isset($this->parent) ? $this->parent->getDefaultSubtitle () : '';
   }
 
-  protected function removeURIPrefix ($URI)
-  {
-    if (!empty($this->inheritedPrefix)) {
-      $l = strlen ($this->inheritedPrefix);
-      if (substr ($URI, 0, $l) == $this->inheritedPrefix)
-        $URI = substr ($URI, $l + 1);
-    }
-    return $URI;
-  }
-
   protected function matchesMyURI ($URI)
   {
-    $URI = $this->removeURIPrefix ($URI);
     return preg_match ("!^$this->URI_regexp(?:$|&)!", $URI) > 0;
   }
 
@@ -311,4 +300,13 @@ abstract class AbstractRoute extends Object
     return $this->matchesMyURI ($URI) || $this->matchesMyURIAlias ($URI);
   }
 
+  private function compileURI ()
+  {
+    if (isset($this->URI))
+      $this->URI_regexp = preg_replace ('!\{.*?}!', '([^/&]*)', $this->URI);
+    else $this->URI_regexp = '<unmatchable>';
+    if (isset($this->URIAlias))
+      $this->URIAlias_regexp = preg_replace ('!\{.*?}!', '([^/&]*)', $this->URIAlias);
+    else $this->URIAlias_regexp = '<unmatchable>';
+  }
 }

@@ -903,13 +903,13 @@ class Controller
       /** @var ModuleInfo $info */
       $info     = $this->moduleLoader->moduleInfo;
       $viewFile = $this->sitePage->view;
-      $path     = "$info->modulePath/$application->moduleViewsPath/$viewFile";
+      $path     = "$application->viewPath/$viewFile";
       $found    = $this->loadView ($path);
       if (!$found) {
-        $path2 = "$application->viewPath/$viewFile";
+        $path2 = "$info->modulePath/$application->moduleViewsPath/$viewFile";
         $found = $this->loadView ($path2);
         if (!$found) {
-          $path = ErrorHandler::shortFileName ($path);
+          $path2 = ErrorHandler::shortFileName ($path2);
           throw new FatalException("View <b>$viewFile</b> was not found.<p>Search paths:<ul><li>$path<li>$path2</ul>");
         }
       }

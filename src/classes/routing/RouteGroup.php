@@ -14,6 +14,7 @@ class RouteGroup extends AbstractRoute
   public function getTypes ()
   {
     return array_merge (parent::getTypes (), [
+      'prefix'               => 'string',
       'module'               => 'string',
       'defaultURI'           => 'string',
       'baseSubnavURI'        => 'string',

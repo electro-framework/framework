@@ -30,6 +30,8 @@ HTML;
     }
   }
 
+  public static $openLogPaneMessage = "<p><a href='javascript:void(0)' onclick='document.getElementById(&quot;__console&quot;).style.height=&quot;auto&quot;'>Open the log pane</a> to see more details.";
+
   /**
   * Logs detailed information about the specified values or variables to the PHP console.
   * Params: list of one or more values to be displayed.
@@ -71,5 +73,22 @@ HTML;
     $args = func_get_args();
     array_shift($args);
     call_user_func_array('Console::debug',$args);
+  }
+
+  public static function logSection($title) {
+    self::write("<div style='background:#E8E8E8;border:1px solid #DDD;margin-bottom:-6px;padding:5px 10px;color:#666;font-size:14px;font-weight:bold;text-shadow:#FFF 1px 1px'>$title</div>");
+    $args = func_get_args();
+    array_shift($args);
+    call_user_func_array('Console::log',$args);
+  }
+
+  public static function log() {
+    self::write(<<<HTML
+<div style="white-space:pre;margin:5px 0;padding:10px;border:1px solid #E4E4E4;background:#FFF;overflow-x:auto">
+HTML
+);
+    foreach (func_get_args() as $text)
+      self::write($text);
+    self::write('</div>');
   }
 }

@@ -19,7 +19,8 @@ function database_open ()
     }
     $dsn = "sqlite:$database";
 
-  } else {
+  }
+  else {
 
     $dsn = "{$_ENV['DB_DRIVER']}:host={$_ENV['DB_HOST']};dbname=$database";
     if (isset ($_ENV['DB_PORT']))
@@ -64,19 +65,28 @@ function database_query ($query, $params = null)
 //--------------------------------------------------------------------------
 {
   global $db;
+  $showQuery = function () use ($query, $params) {
+    Console::logSection ("SQL QUERY", $query, empty($params) ? '' : "<p><b>Parameters:</b> " . print_r ($params, true));
+  };
+
   if (defined ('DEBUG_SQL')) {
-    echo "<p><pre><li>$query</li><ul>" . print_r ($params, true) . "</ul></pre></p>";
+    $showQuery();
     $start = microtime (true);
   }
   if (!isset($db))
     database_open ();
   $db->setAttribute (PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
   $st = $db->prepare ($query);
-  $st->execute ($params);
+  try {
+    $st->execute ($params);
+  } catch (PDOException $e) {
+    $showQuery();
+    throw new PDOException ($e->getMessage () . Console::$openLogPaneMessage, 0, $e);
+  }
   if (defined ('DEBUG_SQL')) {
     $end = microtime (true);
     $dur = round ($end - $start, 4);
-    echo "<p>Query took $dur seconds.</p>";
+    Console::debugSection ("SQL QUERY", "Query took $dur seconds.");
   }
   return $st;
 }
