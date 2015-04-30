@@ -372,6 +372,11 @@ abstract class Component
     $this->doRender ();
   }
 
+  public final function addClass ($class)
+  {
+    $this->attrsObj->class = enum (' ', $this->attrsObj->class, $class);
+  }
+
   public final function addChild (Component $child)
   {
     if (isset($child)) {
