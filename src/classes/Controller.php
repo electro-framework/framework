@@ -937,6 +937,7 @@ class Controller
     if (!$template)
       return false;
     $this->page = $this->engine->parse ($template);
+    $this->page->controller = $this;
     return true;
   }
 

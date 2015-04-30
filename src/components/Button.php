@@ -63,44 +63,44 @@ class Button extends VisualComponent
 
   protected function render ()
   {
+    $attr = $this->attrs ();
     $actionData = '';
-    if ($this->attrs ()->disabled)
+    if ($attr->disabled)
       $this->addAttribute ('disabled', 'disabled');
-    $this->addAttributeIf ($this->attrs ()->tab_index, 'tabindex', $this->attrs ()->tab_index);
+    $this->addAttributeIf ($attr->tab_index, 'tabindex', $attr->tab_index);
     $this->addAttribute ('type', 'button');
     if ($this->page->browserIsIE)
       $this->addAttribute ('hideFocus', 'true');
-    if (isset($this->attrs ()->action)) {
-      if (isset($this->attrs ()->param))
-        $action = $this->attrs ()->action . ':' . $this->attrs ()->param;
-      else $action = $this->attrs ()->action;
+    if (isset($attr->action)) {
+      if (isset($attr->param))
+        $action = $attr->action . ':' . $attr->param;
+      else $action = $attr->action;
       //if ($this->page->browserIsIE) $actionData = "<!--$action-->";
       //else $this->addAttribute('value',$action);
       $this->beginAttribute ('onclick', null, ';');
-      if ($this->attrs ()->confirm)
+      if ($attr->confirm)
         $this->addAttributeValue ("Button_onConfirm('{$action}','{$this->attrs()->message}')");
       else $this->addAttributeValue ("doAction('" . $action . "')");
 
       $this->endAttribute ();
     } else {
-      if (isset($this->attrs ()->script))
-        $this->addAttribute ('onclick', $this->attrs ()->script);
-      else if (isset($this->attrs ()->url))
+      if (isset($attr->script))
+        $this->addAttribute ('onclick', $attr->script);
+      else if (isset($attr->url))
         $this->addAttribute ('onclick', "go('{$this->attrs()->url}',event);");
     }
-    if (isset($this->attrs ()->help))
-      $this->addAttribute ('title', $this->attrs ()->help);
+    if (isset($attr->help))
+      $this->addAttribute ('title', $attr->help);
 
     $this->beginContent ();
 
-    if (isset($this->attrs ()->icon)) {
+    if (isset($attr->icon)) {
       $this->addTag ('i', [
-        'class' => $this->attrs ()->icon
+        'class' => $attr->icon
       ]);
     }
-
-    $txt = trim ($this->attrs ()->label . $actionData);
-    echo strlen ($txt) ? $txt : '&nbsp;';
+    $txt = trim ($attr->label . $actionData);
+    echo strlen ($txt) ? $txt : (isset($attr->icon) ? '' : '&nbsp;');
 
   }
 }
