@@ -1,5 +1,6 @@
 <?php
 namespace Selene\Matisse;
+use ErrorHandler;
 use Selene\Matisse\Components\Literal;
 use Selene\Matisse\Components\Page;
 use Selene\Matisse\Components\Parameter;
@@ -139,7 +140,10 @@ class Parser
               try {
                 $template = $this->loadTemplate ($tag);
               } catch (FileIOException $e) {
-                throw new ParseException("Template <b>$tag</b> was not found.\n" . $e->getMessage (),
+                $paths = implode ('', map ($this->context->templateDirectories,
+                  function ($dir) { return "<li>" . ErrorHandler::shortFileName ($dir); }));
+                throw new ParseException("Template <b>$tag</b> was not found.\n\n" . $e->getMessage () .
+                                         "\n\nSearch path:<ul>$paths</ul>",
                   $body, $start, $end);
               }
             $this->parseAttributes ($attrs, $attributes, $bindings, true);
