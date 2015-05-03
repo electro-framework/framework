@@ -19,13 +19,13 @@
   "minimum-stability": "dev",
   "require": {
     "php": ">=5.4.0",
-    "selene-framework/matisse": "dev-master"
+    "selene-framework/matisse": "dev-master",
+    "selene-framework/matisse-components": "dev-master"
   },
   "autoload": {
-    "classmap": [
-      "src/classes",
-      "src/components"
-    ],
+    "psr-4": {
+      "Selene\\": "src/Selene"
+    },
     "files": [
       "src/utility.php",
       "src/global.php",

@@ -451,24 +451,6 @@ function getPathToSelf() {
   }
 }
 
-function fixImgPng() {
-  this.runtimeStyle.behavior="none";
-  if (this.nodeName=="IMG"&&this.src.match(/\.png/i)) {
-    this.runtimeStyle.filter="progid:DXImageTransform.Microsoft.AlphaImageLoader(src='"+this.src+"')";
-    this.src=getPathToSelf()+"empty.gif";
-  }
-}
-
-function fixBkPng() {
-  this.runtimeStyle.behavior="none";
-  var url=this.currentStyle.backgroundImage;
-  if (url.match(/\.png/i)) {
-    url=url.match(/\(['"]?(.*?)['"]?\)/)[1];
-    this.runtimeStyle.filter="progid:DXImageTransform.Microsoft.AlphaImageLoader(src='"+url+"',sizingMethod='crop')";
-    this.runtimeStyle.backgroundImage="none";
-  }
-}
-
 function FCKeditor_OnComplete(fck) {
   fck.EditorWindow.parent.document.body.style.visibility = '';
 }
