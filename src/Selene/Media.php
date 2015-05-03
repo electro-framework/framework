@@ -1,6 +1,9 @@
 <?php
 namespace Selene;
 
+use Selene\Exceptions\FileException;
+use Selene\Exceptions\ImageException;
+
 abstract class Media {
 
   /** Original jpeg images resized to a lower size will use this compression level. */
@@ -137,7 +140,7 @@ abstract class Media {
   public static function getImageExt($id)
   //--------------------------------------------------------------------------
   {
-    return database_query('SELECT ext FROM Images WHERE id=?',array($id))->fetchColumn();
+    return database_query('SELECT ext FROM Images WHERE id=?',[$id])->fetchColumn();
   }
   //--------------------------------------------------------------------------
   public static function deleteImage($id)
@@ -146,7 +149,7 @@ abstract class Media {
     if (!empty($id)) {
       $ext = self::getImageExt($id);
       $path = self::getImagePath($id,$ext);
-      database_query('DELETE FROM Images WHERE id=?',array($id));
+      database_query('DELETE FROM Images WHERE id=?',[$id]);
       if (file_exists($path)) {
         if (!@unlink($path))
           throw new ImageException(ImageException::CAN_NOT_DELETE_FILE,$path);
@@ -214,13 +217,13 @@ abstract class Media {
   {
     database_query(
       'UPDATE Images SET gallery=?,sort=?,`key`=?,caption=? WHERE id=?',
-      array(
+      [
         $gallery,
         $sort,
         $key,
         $caption,
         $id
-      )
+      ]
     );
   }
   //--------------------------------------------------------------------------
@@ -228,25 +231,25 @@ abstract class Media {
   //--------------------------------------------------------------------------
   {
     if (is_null($sort)) {
-      $maxsort = database_get("SELECT IFNULL((SELECT MAX(sort) FROM Images WHERE gallery=? AND `key` IS NULL),-1)+1",array($gallery));
+      $maxsort = database_get("SELECT IFNULL((SELECT MAX(sort) FROM Images WHERE gallery=? AND `key` IS NULL),-1)+1",[$gallery]);
 
       if (is_null($key))
         database_query(
           'INSERT INTO Images (id,ext,gallery,sort,`key`,caption)
            VALUES (?,?,?,?,?,?)',
-          array(
+          [
             $id,
             $ext,
             $gallery,
             $maxsort,
             $key,
             $caption
-          )
+          ]
         );
       else database_query(
           'INSERT INTO Images (id,ext,gallery,sort,`key`,caption)
            VALUES (?,?,?,?,?,?)',
-          array(
+          [
             $id,
             $ext,
             $gallery,
@@ -254,20 +257,20 @@ abstract class Media {
             $key,
             $key,
             $caption
-          )
+          ]
         );
     }
     else database_query(
       'INSERT INTO Images (id,ext,gallery,sort,`key`,caption)
        VALUES (?,?,?,?,?,?)',
-      array(
+      [
         $id,
         $ext,
         $gallery,
         $sort,
         $key,
         $caption
-      )
+      ]
     );
   }
   //--------------------------------------------------------------------------
@@ -374,13 +377,13 @@ abstract class Media {
   public static function getFileExt($id)
   //--------------------------------------------------------------------------
   {
-    return database_query('SELECT ext FROM Files WHERE id=?',array($id))->fetchColumn();
+    return database_query('SELECT ext FROM Files WHERE id=?',[$id])->fetchColumn();
   }
   //--------------------------------------------------------------------------
   public static function getFileBaseName($id)
   //--------------------------------------------------------------------------
   {
-    return database_query('SELECT name FROM Files WHERE id=?',array($id))->fetchColumn();
+    return database_query('SELECT name FROM Files WHERE id=?',[$id])->fetchColumn();
   }
   //--------------------------------------------------------------------------
   public static function getFileURI($id)
@@ -400,7 +403,7 @@ abstract class Media {
   public static function getOriginalFileName($id)
   //--------------------------------------------------------------------------
   {
-    return database_query("SELECT name||'.'||ext FROM Files WHERE id=?",array($id))->fetchColumn();
+    return database_query("SELECT name||'.'||ext FROM Files WHERE id=?",[$id])->fetchColumn();
   }
   //--------------------------------------------------------------------------
   public static function deleteFile($id)
@@ -409,7 +412,7 @@ abstract class Media {
     if (!empty($id)) {
       $ext = self::getFileExt($id);
       $path = self::getFilePath($id,$ext);
-      database_query('DELETE FROM Files WHERE id=?',array($id));
+      database_query('DELETE FROM Files WHERE id=?',[$id]);
       if (file_exists($path)) {
         if (!unlink($path))
           throw new FileException(FileException::CAN_NOT_DELETE_FILE,$path);
@@ -450,10 +453,10 @@ abstract class Media {
   {
     database_query(
       'UPDATE Files SET name=? WHERE id=?',
-      array(
+      [
         $name,
         $id
-      )
+      ]
     );
   }
   //--------------------------------------------------------------------------
@@ -462,11 +465,11 @@ abstract class Media {
   {
     database_query(
       'INSERT INTO Files (id,ext,name) VALUES (?,?,?)',
-      array(
+      [
         $id,
         $ext,
         $name
-      )
+      ]
     );
   }
   //--------------------------------------------------------------------------

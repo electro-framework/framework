@@ -1,5 +1,6 @@
 <?php
 namespace Selene;
+use Selene\Exceptions\ConfigException;
 
 /**
  * Loads and runs modules.
@@ -38,7 +39,7 @@ class ModuleLoader
   public $moduleInstance = null;
   /**
    * Assorted information on the module related to this loader.
-   * @var ModuleInfo
+   * @var Module
    */
   public $moduleInfo = null;
 
@@ -109,8 +110,8 @@ class ModuleLoader
     $_GET         = array_merge ($_GET, (array)$presetParams);
 
     //Setup module paths and other related info.
-    $this->moduleInfo = new ModuleInfo($this->sitePage->module);
-    $application->setIncludePath ($this->moduleInfo->modulePath);
+    $this->moduleInfo = new Module($this->sitePage->module);
+    $application->setIncludePath ($this->moduleInfo->path);
   }
 
   /**
@@ -140,7 +141,7 @@ class ModuleLoader
       $auto = $auto ? 'enabled' : 'disabled';
       throw new ConfigException("<p><b>Controller not found.</b>
   <li>Class:           <b>$class</b>
-  <li>Search path:     <b>" . ErrorHandler::shortFileName ($this->moduleInfo->modulePath) . "</b>
+  <li>Search path:     <b>" . ErrorHandler::shortFileName ($this->moduleInfo->path) . "</b>
   <li>Auto-controller: <b>$auto</b> for this URL
 ");
     }

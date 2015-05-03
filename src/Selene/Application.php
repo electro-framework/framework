@@ -1,6 +1,8 @@
 <?php
 namespace Selene;
 
+use Selene\Exceptions\ConfigException;
+
 class Application
 {
   const INI_FILENAME         = 'application.ini.php';
@@ -400,7 +402,6 @@ class Application
     $uri     = $_SERVER['REQUEST_URI'];
     $baseURI = dirname ($_SERVER['SCRIPT_NAME']);
     $vuri    = substr ($uri, strlen ($baseURI) + 1) ?: '';
-    $FRAMEWORK = dirname (__DIR__);
 
     //var_dump($_SERVER);exit;
     $this->isSessionRequired = false;
@@ -408,7 +409,7 @@ class Application
     $this->baseDirectory     = realpath ("$publicDir$baseOffs");
     $this->URI               = $baseURI;
     $this->baseURI           = "$baseURI$baseOffs";
-    $this->frameworkPath     = realpath ("$appDir/$FRAMEWORK");
+    $this->frameworkPath     = dirname (__DIR__);
     $this->VURI              = $vuri;
     $this->rootPath          = dirname ($appDir);
 

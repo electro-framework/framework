@@ -1,6 +1,9 @@
 <?php
 namespace Selene;
 
+use Selene\Exceptions\BaseException;
+use Selene\Exceptions\Status;
+
 abstract class Object
 {
   public function __construct (array &$initializers = null)

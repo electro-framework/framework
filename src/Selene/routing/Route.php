@@ -51,10 +51,12 @@ class Route
    * Causes the specified module to be loaded.
    * @var string $module The module name (vendor/module).
    * @var array  $config A map of one or more Settings that can be accessed by name.
+   * @return $this
    */
   function module ($module, array $config = null)
   {
     $this->module = $module;
     $this->config = $config;
+    return $this;
   }
 }

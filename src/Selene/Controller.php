@@ -1,6 +1,15 @@
 <?php
 namespace Selene;
 
+use Selene\Exceptions\BaseException;
+use Selene\Exceptions\ConfigException;
+use Selene\Exceptions\DataModelException;
+use Selene\Exceptions\FatalException;
+use Selene\Exceptions\FileException;
+use Selene\Exceptions\FileNotFoundException;
+use Selene\Exceptions\SessionException;
+use Selene\Exceptions\Status;
+use Selene\Exceptions\ValidationException;
 use Selene\Matisse\Components\Page;
 use Selene\Matisse\DataRecord;
 use Selene\Matisse\DataSet;
@@ -682,7 +691,7 @@ class Controller
         throw new ConfigException("The module for the current URI is not working properly.<br>You should check the class code.");
       $this->sitePage          = $this->moduleLoader->sitePage;
       $this->modulePath        =
-        $application->toURI ($application->modulesPath . '/' . $this->moduleLoader->moduleInfo->module);
+        $application->toURI ($application->modulesPath . '/' . $this->moduleLoader->moduleInfo->name);
       $this->URIParams         = $this->sitePage->getURIParams ();
       $this->virtualURI        = $this->moduleLoader->virtualURI;
       $this->requestParameters = preg_match ('/&(.*)/', $this->URI, $matches) ? $matches[1] : null;
@@ -902,13 +911,13 @@ class Controller
   {
     global $application;
     if (isset($this->moduleLoader)) {
-      /** @var ModuleInfo $info */
+      /** @var Module $info */
       $info     = $this->moduleLoader->moduleInfo;
       $viewFile = $this->sitePage->view;
       $path     = "$application->viewPath/$viewFile";
       $found    = $this->loadView ($path);
       if (!$found) {
-        $path2 = "$info->modulePath/$application->moduleViewsPath/$viewFile";
+        $path2 = "$info->path/$application->moduleViewsPath/$viewFile";
         $found = $this->loadView ($path2);
         if (!$found) {
           $path2 = ErrorHandler::shortFileName ($path2);

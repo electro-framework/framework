@@ -1,6 +1,10 @@
 <?php
 namespace Selene;
 
+use Exception;
+use Selene\Exceptions\BaseException;
+use Selene\Exceptions\Status;
+
 ob_start ();
 
 /**
@@ -12,9 +16,9 @@ class ErrorHandler
 
   public static function init ()
   {
-    set_error_handler (['ErrorHandler', 'globalErrorHandler']);
-    set_exception_handler (['ErrorHandler', 'globalExceptionHandler']);
-    register_shutdown_function (['ErrorHandler', 'onShutDown']);
+    set_error_handler (['Selene\\ErrorHandler', 'globalErrorHandler']);
+    set_exception_handler (['Selene\\ErrorHandler', 'globalExceptionHandler']);
+    register_shutdown_function (['Selene\\ErrorHandler', 'onShutDown']);
   }
 
   private static function errorLink ($file, $line = 1, $col = 1)
@@ -43,6 +47,8 @@ class ErrorHandler
       if (strpos ($fileName, $application->rootPath) === 0)
         return substr ($fileName, strlen ($application->rootPath) + 1);
     }
+    $p = strpos ($fileName, '/vendor/');
+    if ($p) return substr($fileName, $p + 1);
     return $fileName;
   }
 
@@ -66,17 +72,21 @@ class ErrorHandler
   {
     global $application;
     ?>
+    <style>
+      a:link { color: #99C }
+      a:visited { color: #AAA }
+    </style>
     <table id="__error"
            style="position:fixed;z-index:9998;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.1)">
     <tr>
     <td valign="center" align="center">
-    <div style='display:inline-block;position:relative;min-width:256px;max-width:600px;min-height:128px;text-align:left;border:1px solid #CCC;border-radius:5px;background:#F5F5F5;font-family:sans-serif;font-size:12px;box-shadow:2px 2px 10px rgba(0,0,0,0.1)'>
+    <div style='display:inline-block;position:relative;min-width:256px;max-width:1024px;min-height:128px;text-align:left;border:1px solid #CCC;border-radius:5px;background:#F5F5F5;font-family:sans-serif;font-size:12px;box-shadow:2px 2px 10px rgba(0,0,0,0.1)'>
     <div style="background:#ECECEC;background-image:-moz-linear-gradient(90deg,#ECECEC,#F9F9F9);background-image:-webkit-linear-gradient(90deg,#ECECEC,#F9F9F9);border-bottom:1px solid #DFDFDF;border-radius:5px 5px 0 0;padding:5px;color:#888;text-shadow:#FFF 1px 1px;text-align:center;font-size:14px;position:relative">
       Selene Framework<span style="position:absolute;right:10px;cursor:pointer"
                             onclick="document.getElementById('__error').style.display='none'">&#xD7;</span></div>
     <div style="border-top:1px solid #FFF;padding-top:10px">
     <?php if (isset($application)) { ?>
-    <img style="float:left;left:12px;margin:0 20px"
+    <img style="float:left;left:12px;margin:0 20px" onerror="this.style.display='none'"
          src="<?="$application->baseURI/$application->frameworkURI/i/icon-error.png" ?>">
   <?php } ?>
     <div style="white-space:pre-wrap;padding:13px 20px 5px 72px;font-family:menlo,monospace"><?php
@@ -92,16 +102,28 @@ class ErrorHandler
          onclick="this.style.display='none'"><u>Stack trace</u> <span style="font-size:16px">&blacktriangledown;</span></a>
       </div>
       <div id="__trace"
-           style="display:none;margin-top:15px;border-top:1px solid #DFDFDF;font-family:menlo,monospace;font-size:12px">
-        <div style="border-top:1px solid #FFF">
-          <div style="margin:10px 10px 10px 20px;color:#555;overflow-y:auto;max-height:220px"><?php
+           style="display:none;margin-top:15px;border-top:1px solid #DDD;font-family:menlo,monospace;font-size:12px">
+        <div style="background:#FFF;padding-top:10px">
+          <div style="margin:10px 10px 10px 20px;color:#555;overflow:auto;max-height:350px;white-space:nowrap"><?php
       $link = self::errorLink ($exception->getFile (), $exception->getLine (), 1);
       if ($link)
         echo "Thrown from $link, line <b>{$exception->getLine()}</b><br/><br/>";
       $first = true;
-      $trace = function_exists ('xdebug_get_function_stack')
+      /*$trace = function_exists ('xdebug_get_function_stack')
         ? array_reverse (xdebug_get_function_stack ()) : ($exception instanceof PHPError ? debug_backtrace ()
-          : $exception->getTrace ());
+          : $exception->getTrace ());*/
+      $trace = $exception instanceof PHPError ? debug_backtrace () : $exception->getTrace ();
+      if (function_exists ('xdebug_get_function_stack')) {
+        $trace2 = array_reverse (xdebug_get_function_stack ());
+        if (count ($trace2) > count ($trace)) {
+          $trace = $trace2;
+          $me = get_class();
+          while (!empty($trace) && strpos($trace[0]['class'], $me) !== false)
+            array_shift($trace);
+        }
+      }
+      if ($trace[count($trace) - 1]['function'] == '{main}')
+        array_pop ($trace);
       foreach ($trace as $k => $v) {
         $fn    = isset($v['function']) ? $v['function'] : 'global scope';
         $class = isset($v['class']) ? $v['class'] : '';
@@ -120,6 +142,9 @@ class ErrorHandler
                   break;
                 case 'integer':
                 case 'double':
+                  break;
+                case 'array':
+                  $arg = '[' . substr(var_export ($arg, true), 10, -3) . ']';
                   break;
                 default:
                   $arg = ucfirst (gettype ($arg));
@@ -140,12 +165,12 @@ class ErrorHandler
           echo 'Stack trace:<ol>';
         }
         echo <<<HTML
-<li style="margin-bottom:5px;line-height:18px"><b>$class$fn $args</b>
+<li style="line-height:18px;padding:10px;margin-bottom:10px;border-bottom:1px solid #EEE"><b>$class$fn $args</b>
 HTML;
         if ($file == '')
           continue;
         echo <<<HTML
-<div style="color:#999">At $link$lineStr</div></li>
+<div style="color:#999;margin-top:10px">At $link$lineStr</div></li>
 HTML;
       }
       echo "</ol></div></div></div></td></tr></table>";
@@ -153,7 +178,7 @@ HTML;
     echo "</div></div>";
     if (function_exists ('database_rollback'))
       database_rollback ();
-    if (class_exists ('BaseException', false) && $exception instanceof BaseException &&
+    if (class_exists ('Selene\Exceptions\BaseException', false) && $exception instanceof BaseException &&
         $exception->getStatus () != Status::FATAL
     )
       return;

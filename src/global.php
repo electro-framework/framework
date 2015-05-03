@@ -1,5 +1,6 @@
 <?php
 use Selene\ForeignKey;
+use Selene\Module;
 use Selene\ModuleOptions;
 use Selene\Routing\IPage;
 use Selene\Routing\IPageGroup;
@@ -37,6 +38,10 @@ function ModuleOptions ($path, array $options)
 function ForeignKey (array $init)
 {
   return new ForeignKey($init);
+}
+
+function module ($name) {
+  return new Module ($name);
 }
 
 //------------------------------------------------------------------------------------------------------------------------

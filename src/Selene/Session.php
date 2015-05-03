@@ -1,6 +1,9 @@
 <?php
 namespace Selene;
 
+use Selene\Exceptions\ConfigException;
+use Selene\Exceptions\SessionException;
+
 class Session
 {
 

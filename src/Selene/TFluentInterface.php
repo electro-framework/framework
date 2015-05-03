@@ -1,5 +1,6 @@
 <?php
 namespace Selene;
+use Selene\Exceptions\ConfigException;
 
 /**
  * Note: do not initalize your subclass properties with an empty array if the property will hold an associative array.
@@ -16,11 +17,11 @@ trait TFluentInterface
         $c = count ($a);
         if ($c < 2)
           $this->$p = !$c ?: $a[0];
-        else throw new \RuntimeException ("Wrong number of arguments for setter $p.");
+        else throw new ConfigException ("Wrong number of arguments for setter <b>$p</b>.");
       }
       return $this;
     }
-    else throw new \RuntimeException ("Invalid setter $p.");
+    else throw new ConfigException ("Invalid setter <b>$p</b> on an instance of <b>" . get_class () . '</b>.');
   }
 
 }
