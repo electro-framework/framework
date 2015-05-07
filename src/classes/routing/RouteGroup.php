@@ -32,6 +32,12 @@ class RouteGroup extends AbstractRoute
       $this->prefix = empty($this->inheritedPrefix) ? $this->URI : "$this->inheritedPrefix/$this->URI";
   }
 
+  public function init ($parent) {
+    if (isset($this->defaultURI) && $this->inheritedPrefix)
+      $this->defaultURI = "$this->inheritedPrefix/$this->defaultURI";
+    parent::init ($parent);
+  }
+
   public function searchFor ($URI, $options = 0)
   {
     if ($this->matchesURI ($URI)) {

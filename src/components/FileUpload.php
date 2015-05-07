@@ -21,6 +21,8 @@ class FileUpload extends VisualComponent
 
   protected $autoId = true;
 
+  protected $containerTag = 'input';
+
   /**
    * Returns the component's attributes.
    * @return FileUploadAttributes
@@ -41,6 +43,9 @@ class FileUpload extends VisualComponent
 
   protected function render ()
   {
+    $this->addAttribute ('type', 'file');
+    $this->endTag ();
+
     $this->page->enableFileUpload = true;
     $value                        = $this->attrs ()->get ('value', '');
 
@@ -51,8 +56,9 @@ class FileUpload extends VisualComponent
       $this->addAttribute ('name', $this->attrs ()->name);
     else $this->addAttribute ('name', $this->attrs ()->id);
     $this->addAttribute ('value', $value);
-    $this->endTag ();
+//    $this->endTag ();
 
+/*
     $inputFld = new Input($this->context, [
       'id'        => "{$this->attrs()->id}Input",
       'value'     => empty($value) ? '' : Media::getOriginalFileName ($value),
@@ -60,7 +66,6 @@ class FileUpload extends VisualComponent
       'read_only' => true
     ]);
     $this->runPrivate ($inputFld);
-
     $this->beginTag ('div');
     $this->addAttribute ('class', 'fileBtn');
     $this->beginContent ();
@@ -96,6 +101,7 @@ class FileUpload extends VisualComponent
     $this->addTag ('div', [
       'class' => 'end'
     ]);
+*/
   }
 }
 

@@ -146,7 +146,8 @@ abstract class AbstractRoute extends Object
       $index = $this->getIndex ();
       if (isset($index)) {
         $this->indexTitle = $index->getSubtitle ();
-        $this->indexURL   = $index->URL;
+        $this->indexURL   = $index instanceof RouteGroup ? $index->defaultURI : $index->URL;
+        $this->indexURL   = $this->evalURI (null, true, $this->indexURL);
       }
     }
     if (isset($this->routes)) {
@@ -213,7 +214,7 @@ abstract class AbstractRoute extends Object
   public function getURIParams ()
   {
     global $application, $loader;
-    $URI    = $loader->virtualURI;
+    $URI    = $application->VURI;
     $result = [];
     $count  = preg_match ("!^$this->URI_regexp(?:$|&|/)!", urldecode ($URI), $URIValues);
     if ($count)

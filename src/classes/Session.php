@@ -60,8 +60,12 @@ class Session
       throw new ConfigException("No user model is set.");
     /** @var DataObject $user */
     $user = new $class;
-    $user->username = $this->username;
-    $user->read();
+    if (method_exists($user, 'findByName'))
+      $user->findByName ($this->username);
+    else {
+      $user->username = $this->username;
+      $user->read();
+    }
     return $user;
   }
 

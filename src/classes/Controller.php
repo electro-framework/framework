@@ -196,6 +196,8 @@ class Controller
   protected $indexPage   = null;
   protected $redirectURI = null;
 
+  protected $modelMethod = null;
+
   public static function modPathOf ($virtualURI = '', $params = null)
   {
     global $application;
@@ -765,15 +767,8 @@ class Controller
     if (isset($this->sitePage)) {
       $thisModel = $this->sitePage->getModel ();
 
-      if (!empty($thisModel))
-        $this->dataClass = $thisModel;
-      if (!empty($this->dataClass)) {
-        /*
-        $moduleName = property($this->sitePage,'dataModule',isset($this->moduleLoader) ? $this->moduleLoader->moduleInfo->module : '');
-        if (empty($moduleName))
-          $moduleName = $thisModel->module;
-        $this->dataItem = $this->createDataItem($this->dataClass,$moduleName);
-        */
+      if (!empty($thisModel)) {
+        list ($this->dataClass, $this->modelMethod) = $this->evalModelRef ($thisModel);
         $this->dataItem = newInstanceOf ($this->dataClass);
         if (!isset($this->dataItem))
           throw new ConfigException("<p><b>Model class not found.</b>
@@ -812,6 +807,17 @@ class Controller
     }
   }
 
+  protected function evalModelRef ($ref)
+  {
+    if (!empty($ref)) {
+      $s = explode ('::', $ref);
+      if (count ($s) == 2)
+        return $s;
+      return [$s[0], null];
+    }
+    return [null, null];
+  }
+
   /**
    * Sets up page specific data sources for use on the processView() phase only.
    * Models for use on the processRequest() phase should be defined on setupModel().
@@ -827,7 +833,9 @@ class Controller
     if (isset($this->sitePage)) {
       if (isset($this->dataItem)) {
         if ($this->sitePage->format == 'grid' && $this->dataItem->isNew ()) {
-          $st   =
+          if ($this->modelMethod)
+            $st = $this->dataItem->{$this->modelMethod}($this);
+          else $st =
             $this->dataItem->queryBy ($this->sitePage->filter, $this->sitePage->fieldNames, $this->sitePage->sortBy);
           $data = $st->fetchAll (PDO::FETCH_ASSOC);
           $this->paginate ($data);
@@ -936,7 +944,7 @@ class Controller
     $template = loadFile ($path);
     if (!$template)
       return false;
-    $this->page = $this->engine->parse ($template);
+    $this->page             = $this->engine->parse ($template);
     $this->page->controller = $this;
     return true;
   }
