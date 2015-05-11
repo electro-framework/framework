@@ -2,8 +2,11 @@
 namespace Selene;
 
 use EmptyIterator;
+use Exception;
 use PDO;
 use PDOStatement;
+use ReflectionException;
+use ReflectionObject;
 use Selene\Exceptions\BaseException;
 use Selene\Exceptions\ConfigException;
 use Selene\Exceptions\DataModelException;
@@ -19,6 +22,7 @@ use Selene\Matisse\DataSet;
 use Selene\Matisse\DataSource;
 use Selene\Matisse\Exceptions\DataBindingException;
 use Selene\Matisse\MatisseEngine;
+use Selene\Routing\PageRoute;
 
 ob_start ();
 
@@ -142,7 +146,7 @@ class Controller
   public $URI_noPage;
   /**
    * Information about the page associated with this controller.
-   * @var AbstractRoute
+   * @var PageRoute
    */
   public $sitePage;
   /**
@@ -695,8 +699,6 @@ class Controller
       if (!isset($this->moduleLoader))
         throw new ConfigException("The module for the current URI is not working properly.<br>You should check the class code.");
       $this->sitePage          = $this->moduleLoader->sitePage;
-      $this->modulePath        =
-        $application->toURI ($application->modulesPath . '/' . $this->moduleLoader->moduleInfo->name);
       $this->URIParams         = $this->sitePage->getURIParams ();
       $this->virtualURI        = $this->moduleLoader->virtualURI;
       $this->requestParameters = preg_match ('/&(.*)/', $this->URI, $matches) ? $matches[1] : null;
@@ -843,6 +845,7 @@ class Controller
   protected function setupViewModel ()
   {
     global $application;
+    $ctx       = $this->engine->context;
     $this->pageNumber = get ($_REQUEST, $application->pageNumberParam, 1);
     if (isset($this->sitePage)) {
       if (isset($this->dataItem)) {
@@ -886,7 +889,7 @@ class Controller
                   $dataSource = 'default';
                   $dataField  = $tmp[0];
                 }
-                $ds       = get ($this->dataSources, $dataSource);
+                $ds       = get ($ctx->dataSources, $dataSource);
                 $it       = $ds->getIterator ()->current ();
                 $params[] = isset($ds) ? get ($it, $dataField) : null;
               }
@@ -1115,6 +1118,8 @@ class Controller
    * The default procedure is to create a new record on the database.
    * Override to implement non-standard behaviour.
    * @param DataObject $data
+   * @param null       $param
+   * @throws Exception
    */
   protected function insertData (DataObject $data, $param = null)
   {
@@ -1132,6 +1137,8 @@ class Controller
    * The default procedure is to save the object to the database.
    * Override to implement non-standard behaviour.
    * @param DataObject $data
+   * @param null       $param
+   * @throws Exception
    */
   protected function updateData (DataObject $data, $param = null)
   {
@@ -1149,7 +1156,6 @@ class Controller
   protected function finishPostRequest ()
     // override to implement actions to be performed before a redirection takes place
   {
-    global $session;
     if (isset($this->redirectURI))
       $this->redirect ($this->redirectURI);
   }
@@ -1247,6 +1253,7 @@ class Controller
     if (isset($this->sitePage->indexURL))
       $this->thenGoTo ($this->sitePage->indexURL);
     else {
+      /** @var PageRoute $index */
       $index = $this->sitePage->getIndex ();
       if (!$index)
         throw new ConfigException ("No index page found for URI " . $this->sitePage->URI);

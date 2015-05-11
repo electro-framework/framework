@@ -3,7 +3,7 @@ namespace Selene;
 use Selene\Exceptions\ConfigException;
 
 /**
- * Note: do not initalize your subclass properties with an empty array if the property will hold an associative array.
+ * Note: do not initialize your subclass properties with an empty array if the property will hold an associative array.
  */
 trait TFluentInterface
 {

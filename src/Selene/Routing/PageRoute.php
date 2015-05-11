@@ -20,6 +20,7 @@ class PageRoute extends AbstractRoute
   public $filter     = '';
   public $fieldNames = '';
   public $sortBy     = '';
+  public $view       = '';
 
   public function __construct (array &$init = null)
   {
