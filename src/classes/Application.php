@@ -1,6 +1,6 @@
 <?php
 global $FRAMEWORK;
-$FRAMEWORK = '../vendor/selene-framework/selene-kernel/src';
+$FRAMEWORK = 'vendor/selene-framework/selene-kernel/src';
 
 class Application
 {
@@ -369,10 +369,13 @@ class Application
    */
   public $config;
 
-  public function run ($dir, $appDir, $baseOffs = '')
+  /**
+   * @param string $rootDir
+   */
+  public function run ($rootDir)
   {
     ErrorHandler::init ();
-    $this->setup ($dir, $appDir, $baseOffs);
+    $this->setup ($rootDir);
     ModuleLoader::loadAndRun ();
   }
 
@@ -390,8 +393,10 @@ class Application
    * Sets up the application configuration.
    * When overriding this method, always call the super() after running your own
    * code, so that paths computed here can take into account your changes.
+   * @param string $rootDir
+   * @throws ConfigException
    */
-  public function setup ($dir, $appDir, $baseOffs)
+  public function setup ($rootDir)
   {
     global $FRAMEWORK, $NO_APPLICATION;
 
@@ -401,13 +406,13 @@ class Application
 
     //var_dump($_SERVER);exit;
     $this->isSessionRequired = false;
-    $this->directory         = $dir;
-    $this->baseDirectory     = realpath ("$dir$baseOffs");
+    $this->directory         = $rootDir;
+    $this->baseDirectory     = $rootDir;
+    $this->rootPath          = $rootDir;
     $this->URI               = $baseURI;
-    $this->baseURI           = "$baseURI$baseOffs";
-    $this->frameworkPath     = realpath ("$appDir/$FRAMEWORK");
+    $this->baseURI           = $baseURI;
+    $this->frameworkPath     = realpath ("$rootDir/$FRAMEWORK");
     $this->VURI              = $vuri;
-    $this->rootPath          = dirname ($appDir);
 
     $this->setIncludePath ();
 
@@ -428,7 +433,7 @@ class Application
       }
     }
 
-    $this->templateDirectories[] = $this->templatesPath;
+    $this->templateDirectories[] = $this->toFilePath($this->templatesPath);
     $this->languageFolders[] = $this->langPath;
     $this->bootModules ();
 
