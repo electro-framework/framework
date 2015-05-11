@@ -1,4 +1,5 @@
 <?php
+namespace Selene\Routing;
 
 class Route extends AbstractRoute
 {

@@ -1,38 +1,35 @@
 <?php
 use Selene\ForeignKey;
-use Selene\Module;
 use Selene\ModuleOptions;
-use Selene\Routing\IPage;
-use Selene\Routing\IPageGroup;
-use Selene\Routing\IRoute;
+use Selene\Routing\DataSourceInfo;
+use Selene\Routing\PageRoute;
 use Selene\Routing\Route;
-use Selene\Routing\Page;
-use Selene\Routing\PageGroup;
-
-/**
- * @return IRoute
- */
-function route () {
-  return new Route;
-}
-
-/**
- * @return IPage
- */
-function page () {
-  return new Page;
-}
-
-/**
- * @return IPageGroup
- */
-function pageGroup () {
-  return new PageGroup;
-}
+use Selene\Routing\RouteGroup;
+use Selene\Routing\SubPageRoute;
 
 function ModuleOptions ($path, array $options)
 {
   return new ModuleOptions($path, $options);
+}
+
+function RouteGroup ($init)
+{
+  return new RouteGroup($init);
+}
+
+function PageRoute (array $init)
+{
+  return new PageRoute($init);
+}
+
+function SubPageRoute (array $init)
+{
+  return new SubPageRoute($init);
+}
+
+function Route (array $init)
+{
+  return new Route($init);
 }
 
 function ForeignKey (array $init)
@@ -40,8 +37,9 @@ function ForeignKey (array $init)
   return new ForeignKey($init);
 }
 
-function module ($name) {
-  return new Module ($name);
+function DataSourceInfo (array $init)
+{
+  return new DataSourceInfo($init);
 }
 
 //------------------------------------------------------------------------------------------------------------------------

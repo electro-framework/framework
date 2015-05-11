@@ -2,6 +2,7 @@
 namespace Selene;
 
 use Selene\Exceptions\ConfigException;
+use Selene\Routing\RoutingMap;
 
 class Application
 {
@@ -9,27 +10,27 @@ class Application
   const DEFAULT_INI_FILENAME = 'application.defaults.ini.php';
 
   public static $TAGS = [
-    'button'      => 'Button',
-    'calendar'    => 'Calendar',
-    'checkbox'    => 'Checkbox',
-    'data-grid'   => 'DataGrid',
-    'field'       => 'Field',
-    'file-upload' => 'FileUpload',
-    'head'        => 'Head',
-    'html-editor' => 'HtmlEditor',
-    'image'       => 'Image',
-    'image-field' => 'ImageField',
-    'input'       => 'Input',
-    'label'       => 'Label',
-    'link'        => 'Link',
-    'main-menu'   => 'MainMenu',
-    'model'       => 'Model',
-    'paginator'   => 'Paginator',
-    'radiobutton' => 'Radiobutton',
-    'selector'    => 'Selector',
-    'tab'         => 'Tab',
-    'tab-page'    => 'TabPage',
-    'tabs'        => 'Tabs',
+    'button'      => 'Selene\Matisse\Components\Button',
+    'calendar'    => 'Selene\Matisse\Components\Calendar',
+    'checkbox'    => 'Selene\Matisse\Components\Checkbox',
+    'data-grid'   => 'Selene\Matisse\Components\DataGrid',
+    'field'       => 'Selene\Matisse\Components\Field',
+    'file-upload' => 'Selene\Matisse\Components\FileUpload',
+    'head'        => 'Selene\Matisse\Components\Head',
+    'html-editor' => 'Selene\Matisse\Components\HtmlEditor',
+    'image'       => 'Selene\Matisse\Components\Image',
+    'image-field' => 'Selene\Matisse\Components\ImageField',
+    'input'       => 'Selene\Matisse\Components\Input',
+    'label'       => 'Selene\Matisse\Components\Label',
+    'link'        => 'Selene\Matisse\Components\Link',
+    'main-menu'   => 'Selene\Matisse\Components\MainMenu',
+    'model'       => 'Selene\Matisse\Components\Model',
+    'paginator'   => 'Selene\Matisse\Components\Paginator',
+    'radiobutton' => 'Selene\Matisse\Components\Radiobutton',
+    'selector'    => 'Selene\Matisse\Components\Selector',
+    'tab'         => 'Selene\Matisse\Components\Tab',
+    'tab-page'    => 'Selene\Matisse\Components\TabPage',
+    'tabs'        => 'Selene\Matisse\Components\Tabs',
   ];
 
   /**
@@ -377,6 +378,7 @@ class Application
   {
     ErrorHandler::init ();
     $this->setup ($rootDir);
+    $this->loadRoutes ();
     ModuleLoader::loadAndRun ();
   }
 
@@ -400,9 +402,9 @@ class Application
   public function setup ($rootDir)
   {
     $FRAMEWORK = 'vendor/selene-framework/selene-kernel/src';
-    $uri     = $_SERVER['REQUEST_URI'];
-    $baseURI = dirname ($_SERVER['SCRIPT_NAME']);
-    $vuri    = substr ($uri, strlen ($baseURI) + 1) ?: '';
+    $uri       = $_SERVER['REQUEST_URI'];
+    $baseURI   = dirname ($_SERVER['SCRIPT_NAME']);
+    $vuri      = substr ($uri, strlen ($baseURI) + 1) ?: '';
 
     $this->isSessionRequired = false;
     $this->directory         = $rootDir;
@@ -432,8 +434,8 @@ class Application
       }
     }
 
-    $this->templateDirectories[] = $this->toFilePath($this->templatesPath);
-    $this->languageFolders[] = $this->langPath;
+    $this->templateDirectories[] = $this->toFilePath ($this->templatesPath);
+    $this->languageFolders[]     = $this->langPath;
     $this->bootModules ();
 
     if (empty($this->name))

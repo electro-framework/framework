@@ -1,6 +1,9 @@
 <?php
 namespace Selene;
 
+use EmptyIterator;
+use PDO;
+use PDOStatement;
 use Selene\Exceptions\BaseException;
 use Selene\Exceptions\ConfigException;
 use Selene\Exceptions\DataModelException;

@@ -1,4 +1,13 @@
 <?php
+namespace Selene\Routing;
+
+use Exception;
+use Selene\Application;
+use Selene\Controller;
+use Selene\Exceptions\ConfigException;
+use Selene\Exceptions\FatalException;
+use Selene\ModuleLoader;
+use Selene\Object;
 
 abstract class AbstractRoute extends Object
 {
@@ -40,6 +49,7 @@ abstract class AbstractRoute extends Object
    */
   public $prefix = '';
 
+  /** @var AbstractRoute */
   public $parent = null; //internal use
   public $URI_regexp;    //internal use
   public $URIAlias_regexp;    //internal use
@@ -185,6 +195,7 @@ abstract class AbstractRoute extends Object
       return $this;
     }
     if (isset($this->routes)) {
+      /** @var AbstractRoute $route */
       foreach ($this->routes as $route) {
         $result = $route->searchFor ($URI, $options);
         if (isset($result)) {
@@ -213,7 +224,7 @@ abstract class AbstractRoute extends Object
    */
   public function getURIParams ()
   {
-    global $application, $loader;
+    global $application;
     $URI    = $application->VURI;
     $result = [];
     $count  = preg_match ("!^$this->URI_regexp(?:$|&|/)!", urldecode ($URI), $URIValues);

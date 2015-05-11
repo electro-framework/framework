@@ -1,4 +1,7 @@
 <?php
+namespace Selene\Routing;
+
+use Selene\Exceptions\ConfigException;
 
 class RoutingMap
 {
@@ -31,11 +34,13 @@ class RoutingMap
     if (isset($this->groups))
       foreach ($this->groups as $group)
         if (isset($group->routes))
+          /** @var AbstractRoute $route */
           foreach ($group->routes as $route)
             $route->init ($group);
     //NEW
     if (isset($this->routes))
       for ($i = 0; $i < count ($this->routes); ++$i) {
+        /** @var AbstractRoute $route */
         $route = $this->routes[$i];
         // Flatten subarrays into the base array.
         if (is_array ($route)) {
@@ -55,7 +60,10 @@ class RoutingMap
 
   /**
    * Returns the AbstractRoute sublass instance that matches the given URI.
+   * @param     $URI
+   * @param int $options
    * @return AbstractRoute or array(PageRoute,SubPageRoute)
+   * @throws ConfigException
    */
   public function searchFor ($URI, $options = 0)
   {
@@ -66,12 +74,14 @@ class RoutingMap
     //LEGACY
     if (isset($this->groups))
       foreach ($this->groups as $group) {
+        /** @var RouteGroup $group */
         $result = $group->searchFor ($URI, $options);
         if (isset($result))
           return $result;
       }
     else if (isset($this->routes))
       foreach ($this->routes as $route) {
+        /** @var AbstractRoute $route */
         $result = $route->searchFor ($URI, $options);
         if (isset($result))
           return $result;

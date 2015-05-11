@@ -1,6 +1,12 @@
 <?php
+namespace Selene\Routing;
+
+use Selene\Controller;
+use Selene\DataObject;
+use Selene\Exceptions\ConfigException;
 use Selene\Matisse\DataRecord;
 use Selene\Matisse\DataSet;
+use Selene\Object;
 
 class DataSourceFormat
 {

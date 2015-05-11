@@ -1,4 +1,7 @@
 <?php
+namespace Selene\Routing;
+
+use Selene\Exceptions\ConfigException;
 
 class RouteGroup extends AbstractRoute
 {
@@ -48,6 +51,7 @@ class RouteGroup extends AbstractRoute
     }
     if (isset($this->routes))
       foreach ($this->routes as $route) {
+      /** @var AbstractRoute $route */
         $result = $route->searchFor ($URI, $key = null);
         if (isset($result)) {
           $this->selected = true;

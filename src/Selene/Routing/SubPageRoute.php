@@ -1,4 +1,5 @@
 <?php
+namespace Selene\Routing;
 
 /**
  * Defines a website location which represents an operation on the same data as

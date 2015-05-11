@@ -1,6 +1,8 @@
 <?php
 namespace Selene\Exceptions;
 
+use Selene\DataObject;
+
 class DataModelException extends BaseException {
 
   public function __construct(DataObject $obj, $msg) {

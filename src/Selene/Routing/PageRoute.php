@@ -1,4 +1,5 @@
 <?php
+namespace Selene\Routing;
 
 class PageRoute extends AbstractRoute
 {
@@ -94,7 +95,7 @@ class PageRoute extends AbstractRoute
       case PageFormat::FORM:
         if (isset($this->singular))
           return ucfirst($this->singular);*/
-      case PageFormat::GRID:
+      case 'grid':
         if (isset($this->plural))
           return ucfirst ($this->plural);
     }

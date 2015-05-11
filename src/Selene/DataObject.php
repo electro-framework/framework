@@ -1,6 +1,10 @@
 <?php
 namespace Selene;
 
+use Exception;
+use PDO;
+use PDOStatement;
+use ReflectionObject;
 use Selene\Exceptions\BaseException;
 use Selene\Exceptions\DataModelException;
 use Selene\Exceptions\Status;
@@ -393,8 +397,6 @@ class DataObject
    */
   public function delete ()
   {
-    global $application;
-    $z = 1;
     database_begin ();
     try {
       $this->beforeDelete ();
@@ -776,7 +778,7 @@ class DataObject
     if (is_null ($fieldNames))
       $fieldNames = $this->fieldNames;
     $fields = [];
-    foreach ($this->fieldNames as $k)
+    foreach ($fieldNames as $k)
       $fields[] = "$k=" . str_replace (',', '§', $this->$k);
     return implode (',', $fields);
   }
