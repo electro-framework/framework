@@ -376,7 +376,16 @@ class Application
    */
   public function run ($rootDir)
   {
-    ErrorHandler::init ();
+    ErrorHandler::init ($this->debugMode, $rootDir);
+    WebConsole::init ($this->debugMode);
+    WebConsole::registerPanel ('request', new HttpRequestPanel ('Request', 'fa fa-paper-plane'));
+    WebConsole::registerPanel ('response', new ConsolePanel ('Response', 'fa fa-file'));
+    WebConsole::registerPanel ('routes', new ConsolePanel ('Routes', 'fa fa-sitemap'));
+    WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
+    WebConsole::registerPanel ('database', new ConsolePanel ('Database', 'fa fa-database'));
+    //ErrorHandler::$appName = 'Selene Framework';
+    set_exception_handler ([get_class (), 'exceptionHandler']);
+
     $this->setup ($rootDir);
     $this->loadRoutes ();
     ModuleLoader::loadAndRun ();
@@ -519,6 +528,12 @@ class Application
   {
     $themesPath = strpos ($URI, $this->themesPath) !== false ? $this->themesPath : $this->defaultThemesPath;
     return str_replace ('/', '_', substr ($URI, strlen ($this->baseURI) + strlen ($themesPath) + 2));
+  }
+
+  private function exceptionHandler (Exception $e)
+  {
+    if (function_exists ('database_rollback'))
+      database_rollback ();
   }
 
   private function bootModules ()
