@@ -368,7 +368,7 @@ class Controller
         @ob_clean ();
       }
       if (!($e instanceof BaseException) || $e->getStatus () == Status::FATAL) {
-        ErrorHandler::globalExceptionHandler ($e);
+        throw $e;
       }
       else {
         $this->setStatusFromException ($e);

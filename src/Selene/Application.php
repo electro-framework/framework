@@ -1,6 +1,11 @@
 <?php
 namespace Selene;
 
+use Exception;
+use Impactwave\WebConsole\ConsolePanel;
+use Impactwave\WebConsole\ErrorHandler;
+use Impactwave\WebConsole\Panels\HttpRequestPanel;
+use Impactwave\WebConsole\WebConsole;
 use Selene\Exceptions\ConfigException;
 use Selene\Routing\RoutingMap;
 
@@ -371,11 +376,20 @@ class Application
    */
   public $config;
 
+  static function exceptionHandler (Exception $e)
+  {
+    if (function_exists ('database_rollback'))
+      database_rollback ();
+  }
+
   /**
    * @param string $rootDir
    */
   public function run ($rootDir)
   {
+    set_exception_handler ([get_class (), 'exceptionHandler']);
+    $this->debugMode = isset($_SERVER['APP_DEBUG']) && $_SERVER['APP_DEBUG'] == 'true';
+
     ErrorHandler::init ($this->debugMode, $rootDir);
     WebConsole::init ($this->debugMode);
     WebConsole::registerPanel ('request', new HttpRequestPanel ('Request', 'fa fa-paper-plane'));
@@ -383,12 +397,12 @@ class Application
     WebConsole::registerPanel ('routes', new ConsolePanel ('Routes', 'fa fa-sitemap'));
     WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
     WebConsole::registerPanel ('database', new ConsolePanel ('Database', 'fa fa-database'));
-    //ErrorHandler::$appName = 'Selene Framework';
-    set_exception_handler ([get_class (), 'exceptionHandler']);
-
+    ErrorHandler::$appName = 'Selene Framework';
+    debug("Test",123);
     $this->setup ($rootDir);
     $this->loadRoutes ();
     ModuleLoader::loadAndRun ();
+    WebConsole::outputContent();
   }
 
   /**
@@ -528,12 +542,6 @@ class Application
   {
     $themesPath = strpos ($URI, $this->themesPath) !== false ? $this->themesPath : $this->defaultThemesPath;
     return str_replace ('/', '_', substr ($URI, strlen ($this->baseURI) + strlen ($themesPath) + 2));
-  }
-
-  private function exceptionHandler (Exception $e)
-  {
-    if (function_exists ('database_rollback'))
-      database_rollback ();
   }
 
   private function bootModules ()

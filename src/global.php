@@ -1,4 +1,6 @@
 <?php
+use Impactwave\WebConsole\WebConsole;
+use Selene\Exceptions\FatalException;
 use Selene\ForeignKey;
 use Selene\ModuleOptions;
 use Selene\Routing\DataSourceInfo;
@@ -302,5 +304,5 @@ function stopProfiling ()
 
 function debug ()
 {
-  call_user_func_array ('Console::debug', func_get_args ());
+  call_user_func_array ([WebConsole::class, 'debug'], func_get_args ());
 }

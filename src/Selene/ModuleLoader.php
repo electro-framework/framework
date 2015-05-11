@@ -71,7 +71,7 @@ class ModuleLoader
           http_response_code (404);
           echo "Not found: $path";
         }
-        exit;
+        exit; // The file has been sent, so stop here.
       }
     }
 
