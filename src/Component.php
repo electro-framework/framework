@@ -139,15 +139,6 @@ abstract class Component
   private $regenerateId = false;
 
   /**
-   * Gets the name of the class.
-   * @return string
-   */
-  public static function ref ()
-  {
-    return get_called_class ();
-  }
-
-  /**
    * Creates a new component instance and optionally sets its attributes and styles.
    *
    * @param array   $attributes A map of the component's attributes.
@@ -156,16 +147,28 @@ abstract class Component
    */
   public function __construct (Context $context, array $attributes = null)
   {
+    $class                    = get_class ($this);
+    $s                        = explode ('\\', $class);
     $this->context            = $context;
-    $this->className          = get_class ($this);
+    $this->className          = end ($s);
     $this->supportsAttributes = $this instanceof IAttributes;
     if ($this->supportsAttributes) {
       $this->attrsObj = $this->newAttributes ();
       if ($attributes)
         foreach ($attributes as $name => $value)
           $this->attrsObj->set ($name, $value);
-    } else if ($attributes)
+    }
+    else if ($attributes)
       throw new ComponentException($this, 'This component does not support attributes.');
+  }
+
+  /**
+   * Gets the name of the class.
+   * @return string
+   */
+  public static function ref ()
+  {
+    return get_called_class ();
   }
 
   /**
@@ -343,7 +346,8 @@ abstract class Component
     if ($p !== false) {
       array_splice ($this->parent->children, $p, 1, $components);
       $this->parent->attach ($components);
-    } else {
+    }
+    else {
       ob_start ();
       self::inspectSet ($this->parent->children);
       $t = ob_get_clean ();
@@ -374,7 +378,10 @@ abstract class Component
 
   public final function addClass ($class)
   {
-    $this->attrsObj->class = enum (' ', $this->attrsObj->class, $class);
+    $c = " {$this->attrsObj->class} ";
+    $c = str_replace (" $class ", ' ', $c);
+
+    $this->attrsObj->class = trim ("$c $class");
   }
 
   public final function addChild (Component $child)
@@ -740,7 +747,8 @@ abstract class Component
           $bindExp = preg_replace_callback (self::PARSE_PARAM_BINDING_EXP, [$this, 'evalBindingExp'], $bindExp);
           if (!self::isBindingExpression ($bindExp))
             return $bindExp;
-        } else {
+        }
+        else {
           //simple expression
           preg_match (self::PARSE_PARAM_BINDING_EXP, $bindExp, $matches);
           $bindExp = $this->evalBindingExp ($matches, true);
@@ -777,7 +785,8 @@ abstract class Component
         $dataSource .= substr ($exp, 0, $z);
         $dataField = substr ($exp, $z + 1);
         return "{!$dataSource.$dataField}";
-      } else
+      }
+      else
         return empty($dataSource) ? '{' . "$exp}" : "{!$dataSource" . ($p == 0 ? '' : '.') . "$exp}";
     }
     if (empty($dataSource))
@@ -910,7 +919,7 @@ abstract class Component
       echo " $name=\"$value1$value2\"";
   }
 
-  protected function addAttributeIf ($checkValue, $name, $value)
+  protected function addAttributeIf ($checkValue, $name, $value = '')
   {
     if ($checkValue)
       $this->addAttribute ($name, $value);
@@ -921,7 +930,8 @@ abstract class Component
     if (strlen ($value) == 0) {
       $this->tag->attrName     = " $name=\"";
       $this->tag->isFirstValue = true;
-    } else
+    }
+    else
       echo " $name=\"$value";
     $this->tag->attrSep = $attrSep;
   }
@@ -934,7 +944,8 @@ abstract class Component
       if ($this->tag->isFirstValue) {
         echo $value;
         $this->tag->isFirstValue = false;
-      } else
+      }
+      else
         echo $this->tag->attrSep . $value;
     }
   }
@@ -947,7 +958,8 @@ abstract class Component
       if ($this->tag->isFirstValue) {
         echo $value1 . $value2;
         $this->tag->isFirstValue = false;
-      } else
+      }
+      else
         echo $this->tag->attrSep . $value1 . $value2;
     }
   }
@@ -960,7 +972,8 @@ abstract class Component
       if ($this->tag->isFirstValue) {
         echo $value;
         $this->tag->isFirstValue = false;
-      } else
+      }
+      else
         echo $this->tag->attrSep . $value;
     }
   }
