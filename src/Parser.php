@@ -123,7 +123,7 @@ class Parser
               $this->parseAttributes ($attrs, $attributes, $bindings);
               if (!$this->current->attrs ()->defines ($name)) {
                 $s = join ('</b>, <b>', $this->current->attrs ()->getAttributeNames ());
-                throw new ParseException("The component does not support the specified parameter <b>$tag</b>.\nExpected: <b>$s</b>.",
+                throw new ParseException("The component does not support the specified parameter <b>$tag</b>.<p>Expected: <b>$s</b>.",
                   $body, $start, $end);
               }
               $this->createParameter ($name, $tag, $attributes, $bindings);
@@ -141,9 +141,9 @@ class Parser
                 $template = $this->loadTemplate ($tag);
               } catch (FileIOException $e) {
                 $paths = implode ('', map ($this->context->templateDirectories,
-                  function ($dir) { return "<li>" . ErrorHandler::shortFileName ($dir); }));
-                throw new ParseException("Template <b>$tag</b> was not found.\n\n" . $e->getMessage () .
-                                         "\n\nSearch path:<ul>$paths</ul>",
+                  function ($dir) { return "<li><path>$dir</path></li>"; }));
+                throw new ParseException("Template <b>$tag</b> was not found.<blockquote>" . $e->getMessage () .
+                                         "</blockquote>Search path:<ul>$paths</ul>",
                   $body, $start, $end);
               }
             $this->parseAttributes ($attrs, $attributes, $bindings, true);
