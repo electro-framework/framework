@@ -77,11 +77,12 @@ function database_query ($query, $params = null)
 {
   global $db, $application;
   $showQuery = function ($dur = null) use ($query, $params) {
-    WebConsole::log ('database', highlightQuery ($query, SQL_KEYWORDS, 'identifier'));
+    WebConsole::database ('<#section|SQL QUERY>', highlightQuery ($query, SQL_KEYWORDS, 'identifier'));
     if (!empty($params))
-      WebConsole::log ('database', "<header>Parameters</header>", $params);
+      WebConsole::database ("<#header>Parameters</#header>", $params);
     if (isset($dur))
-      WebConsole::log ('database', "<div align=right>Query took <b>$dur</b> seconds.</div>");
+      WebConsole::database ("<#footer>Query took <b>$dur</b> seconds.</#footer>");
+    WebConsole::database ('</#section>');
   };
 
   if ($application->debugMode)

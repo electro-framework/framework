@@ -333,7 +333,6 @@ class Controller
       if (!$authenticate) {
         // Normal page request (it's not a login form).
         $this->setupModel (); //custom setup. Note: this may load a BOM into the output buffer.
-        ob_clean ();
         if ($this->wasPosted ()) {
           if (!$this->isWebService)
             $this->setRedirection (); //defaults to the same URI
@@ -1022,7 +1021,6 @@ class Controller
     }
     else {
       echo $content;
-      ob_flush ();
     }
   }
 

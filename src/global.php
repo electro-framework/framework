@@ -264,10 +264,8 @@ function array_append (&$target, &$source)
 {
   if (!count ($source))
     return;
-  if (!isset($source[0])) {
-    debug ($source);
+  if (!isset($source[0]))
     throw new FatalException('array_append was called with a non-list array as source argument.');
-  }
   foreach ($source as $k => &$e)
     $target[] = $e;
 }
@@ -300,9 +298,4 @@ function stopProfiling ()
   ob_clean ();
   endProfiling ();
   exit;
-}
-
-function debug ()
-{
-  call_user_func_array ([WebConsole::$class, 'debug'], array_merge (['console'], func_get_args ()));
 }

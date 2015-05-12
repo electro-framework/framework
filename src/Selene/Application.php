@@ -577,8 +577,8 @@ class Application
       $this->routingMap = $map;
       $map->init ();
       if ($this->debugMode) {
-        $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v); };
-        WebConsole::debugWithFilter ('routes', $filter, $this->routingMap->routes);
+        $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
+        WebConsole::routes()->withFilter ($filter, $this->routingMap->routes);
       }
     }
   }
