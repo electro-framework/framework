@@ -234,7 +234,8 @@ class Controller
     global $application, $loader;
     if (!isset(self::$translation[$lang])) {
       $paths = [];
-      foreach ($application->languageFolders as $folder) {
+      $folders = array_reverse($application->languageFolders);
+      foreach ($folders as $folder) {
         $path = "$folder/$lang.ini";
         $z    = @parse_ini_file ($path);
         if (empty($z))
