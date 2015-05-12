@@ -59,7 +59,8 @@ function database_open ()
 function highlightQuery ($msg, array $keywords, $baseStyle)
 {
   $msg = preg_replace ("#`[^`]*`#", '<span class=dbcolumn>$0</span>', $msg);
-  return WebConsole::highlight ($msg, $keywords, $baseStyle);
+  $msg = WebConsole::highlight ($msg, $keywords, $baseStyle);
+  return "<#t>$msg</#t>";
 }
 
 //--------------------------------------------------------------------------
@@ -77,6 +78,7 @@ function database_query ($query, $params = null)
 {
   global $db, $application;
   $showQuery = function ($dur = null) use ($query, $params) {
+    $query = trim ($query);
     WebConsole::database ('<#section|SQL QUERY>', highlightQuery ($query, SQL_KEYWORDS, 'identifier'));
     if (!empty($params))
       WebConsole::database ("<#header>Parameters</#header>", $params);

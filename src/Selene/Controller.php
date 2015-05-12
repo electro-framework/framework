@@ -3,6 +3,7 @@ namespace Selene;
 
 use EmptyIterator;
 use Exception;
+use Impactwave\WebConsole\ErrorHandler;
 use PDO;
 use PDOStatement;
 use ReflectionException;
@@ -235,9 +236,10 @@ class Controller
       $paths = [];
       foreach ($application->languageFolders as $folder) {
         $path = "$folder/$lang.ini";
-        $z    = self::$translation[$lang] = @parse_ini_file ($path);
-        if (!empty($z)) break;
-        $paths[] = "<li>" . ErrorHandler::shortFileName ($path);
+        $z    = @parse_ini_file ($path);
+        if (empty($z))
+          $paths[] = "<li>" . ErrorHandler::shortFileName ($path);
+        else self::$translation[$lang] = array_merge (get (self::$translation, $lang, []), $z);
       }
       if (empty($z))
         throw new BaseException("Translation file for language <b>$lang</b> was not found.<p>Search paths:<ul>" .
@@ -844,7 +846,7 @@ class Controller
   protected function setupViewModel ()
   {
     global $application;
-    $ctx       = $this->engine->context;
+    $ctx              = $this->engine->context;
     $this->pageNumber = get ($_REQUEST, $application->pageNumberParam, 1);
     if (isset($this->sitePage)) {
       if (isset($this->dataItem)) {

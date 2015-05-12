@@ -299,3 +299,8 @@ function stopProfiling ()
   endProfiling ();
   exit;
 }
+
+function _log () {
+  $args = array_merge (['<#log>'], func_get_args());
+  return call_user_func_array ([WebConsole::$class, 'log'], $args)->showCallLocation ()->log('</#log>');
+}

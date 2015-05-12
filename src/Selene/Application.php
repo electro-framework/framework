@@ -400,7 +400,12 @@ class Application
     ErrorHandler::$appName = 'Selene Framework';
     $this->setup ($rootDir);
     $this->loadRoutes ();
-    ModuleLoader::loadAndRun ();
+    $loader = ModuleLoader::loadAndRun ();
+    if ($this->debugMode) {
+      $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
+      WebConsole::routes ()->withCaption ('Active Route')->withFilter ($filter, $loader->sitePage);
+      WebConsole::response (['Content-Length' => round(ob_get_length () / 1024) . ' KB']);
+    }
     WebConsole::outputContent ();
   }
 
@@ -576,10 +581,10 @@ class Application
         $map->$k = $v;
       $this->routingMap = $map;
       $map->init ();
-      if ($this->debugMode) {
-        $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
-        WebConsole::routes()->withFilter ($filter, $this->routingMap->routes);
-      }
+//      if ($this->debugMode) {
+//        $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
+//        WebConsole::routes()->withFilter ($filter, $this->routingMap->routes);
+//      }
     }
   }
 

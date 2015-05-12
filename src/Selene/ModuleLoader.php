@@ -82,6 +82,7 @@ class ModuleLoader
     $loader->moduleInstance       = $loader->load ();
     $loader->moduleInstance->lang = $lang;
     $loader->moduleInstance->execute ();
+    return $loader;
   }
 
   /**
