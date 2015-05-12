@@ -304,5 +304,5 @@ function stopProfiling ()
 
 function debug ()
 {
-  call_user_func_array ([WebConsole::class, 'debug'], func_get_args ());
+  call_user_func_array ([WebConsole::$class, 'debug'], array_merge (['console'], func_get_args ()));
 }

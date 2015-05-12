@@ -398,11 +398,10 @@ class Application
     WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
     WebConsole::registerPanel ('database', new ConsolePanel ('Database', 'fa fa-database'));
     ErrorHandler::$appName = 'Selene Framework';
-    debug("Test",123);
     $this->setup ($rootDir);
     $this->loadRoutes ();
     ModuleLoader::loadAndRun ();
-    WebConsole::outputContent();
+    WebConsole::outputContent ();
   }
 
   /**
@@ -577,6 +576,10 @@ class Application
         $map->$k = $v;
       $this->routingMap = $map;
       $map->init ();
+      if ($this->debugMode) {
+        $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v); };
+        WebConsole::debugWithFilter ('routes', $filter, $this->routingMap->routes);
+      }
     }
   }
 

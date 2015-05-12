@@ -1,4 +1,10 @@
 <?php
+use Impactwave\WebConsole\WebConsole;
+
+const SQL_KEYWORDS = [
+  'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'JOIN', 'LEFT', 'RIGHT', 'OUTER',
+  'ORDER BY', 'GROUP BY', 'HAVING', 'LIMIT', 'UNION'
+];
 
 $transactionDepth = 0;
 //--------------------------------------------------------------------------
@@ -12,7 +18,6 @@ function database_open ()
   $options  = null;
 
   if ($_ENV['DB_DRIVER'] == 'sqlite') {
-
     if ($database != ':memory:') {
       if ($database[0] != '/')
         $database = "$application->baseDirectory/$database";
@@ -46,9 +51,15 @@ function database_open ()
     $db = new PDO ($dsn, $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'], $options);
   } catch (PDOException $e) {
     $e =
-      new PDOException($e->getMessage () . "\n\nDatabase: " . ErrorHandler::shortFileName ($database), $e->getCode ());
+      new PDOException($e->getMessage () . "\n\nDatabase: <path>$database</path>", $e->getCode ());
     throw $e;
   }
+}
+
+function highlightQuery ($msg, array $keywords, $baseStyle)
+{
+  $msg = preg_replace ("#`[^`]*`#", '<span class=dbcolumn>$0</span>', $msg);
+  return WebConsole::highlight ($msg, $keywords, $baseStyle);
 }
 
 //--------------------------------------------------------------------------
@@ -64,15 +75,17 @@ function database_open ()
 function database_query ($query, $params = null)
 //--------------------------------------------------------------------------
 {
-  global $db;
-  $showQuery = function () use ($query, $params) {
-    Console::logSection ("SQL QUERY", $query, empty($params) ? '' : "<p><b>Parameters:</b> " . print_r ($params, true));
+  global $db, $application;
+  $showQuery = function ($dur = null) use ($query, $params) {
+    WebConsole::log ('database', highlightQuery ($query, SQL_KEYWORDS, 'identifier'));
+    if (!empty($params))
+      WebConsole::log ('database', "<header>Parameters</header>", $params);
+    if (isset($dur))
+      WebConsole::log ('database', "<div align=right>Query took <b>$dur</b> seconds.</div>");
   };
 
-  if (defined ('DEBUG_SQL')) {
-    $showQuery();
+  if ($application->debugMode)
     $start = microtime (true);
-  }
   if (!isset($db))
     database_open ();
   $db->setAttribute (PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -81,12 +94,12 @@ function database_query ($query, $params = null)
     $st->execute ($params);
   } catch (PDOException $e) {
     $showQuery();
-    throw new PDOException ($e->getMessage () . Console::$openLogPaneMessage, 0, $e);
+    WebConsole::throwErrorWithLog ($e);
   }
-  if (defined ('DEBUG_SQL')) {
+  if ($application->debugMode) {
     $end = microtime (true);
     $dur = round ($end - $start, 4);
-    Console::debugSection ("SQL QUERY", "Query took $dur seconds.");
+    $showQuery($dur);
   }
   return $st;
 }
