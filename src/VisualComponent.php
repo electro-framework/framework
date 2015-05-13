@@ -4,7 +4,11 @@ namespace Selene\Matisse;
 class VisualComponent extends Component implements IAttributes
 {
   /**
-   * The components base CSS class.
+   * The component's runtime CSS classes.
+   *
+   * You should never change the `class` attribute at rendering time, because if the component
+   * is being repeatedly re-rendered (being part of a repeater section, for instance), the
+   * attribute will become instable. Use this property instead.
    * @var string
    */
   public $cssClassName = '';
@@ -33,6 +37,14 @@ class VisualComponent extends Component implements IAttributes
     return new ComponentAttributes($this);
   }
 
+  public final function addClass ($class)
+  {
+    $c = " {$this->cssClassName} ";
+    $c = str_replace (" $class ", ' ', $c);
+
+    $this->cssClassName = trim ("$c $class");
+  }
+
   protected function preRender ()
   {
     if ($this->autoId)
@@ -43,7 +55,6 @@ class VisualComponent extends Component implements IAttributes
       $this->className,
       $this->cssClassName,
       $this->attrs ()->class,
-      $this->attrs ()->css_class,
       $this->attrs ()->disabled ? 'disabled' : null
     ));
     if (!empty($this->attrs ()->html_attrs))

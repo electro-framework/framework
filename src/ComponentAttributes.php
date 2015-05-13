@@ -47,7 +47,6 @@ class ComponentAttributes
   ];
   public $id;
   public $styles;
-  public $css_class;
   public $class;
   public $disabled   = false;
   public $html_attrs = '';
@@ -244,10 +243,6 @@ class ComponentAttributes
   protected function typeof_styles ()
   {
     return AttributeType::TEXT;
-  }
-  protected function typeof_css_class ()
-  {
-    return AttributeType::ID;
   }
   protected function typeof_class ()
   {

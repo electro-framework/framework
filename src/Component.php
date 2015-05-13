@@ -60,7 +60,7 @@ abstract class Component
    */
   public $namespace = 'c';
   /**
-   * The components PHP class name.
+   * The component's PHP class name.
    *
    * @var string
    */
@@ -374,14 +374,6 @@ abstract class Component
   public final function run ()
   {
     $this->doRender ();
-  }
-
-  public final function addClass ($class)
-  {
-    $c = " {$this->attrsObj->class} ";
-    $c = str_replace (" $class ", ' ', $c);
-
-    $this->attrsObj->class = trim ("$c $class");
   }
 
   public final function addChild (Component $child)
