@@ -404,7 +404,7 @@ class Application
     if ($this->debugMode) {
       $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
       WebConsole::routes ()->withCaption ('Active Route')->withFilter ($filter, $loader->sitePage);
-      WebConsole::response (['Content-Length' => round(ob_get_length () / 1024) . ' KB']);
+      WebConsole::response (['Content-Length' => round (ob_get_length () / 1024) . ' KB']);
     }
     WebConsole::outputContent ();
   }
@@ -432,6 +432,8 @@ class Application
     $uri       = $_SERVER['REQUEST_URI'];
     $baseURI   = dirname ($_SERVER['SCRIPT_NAME']);
     $vuri      = substr ($uri, strlen ($baseURI) + 1) ?: '';
+    if (($p = strpos ($vuri, '?')) !== false)
+      $vuri = substr ($vuri, 0, $p);
 
     $this->isSessionRequired = false;
     $this->directory         = $rootDir;
