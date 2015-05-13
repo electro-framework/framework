@@ -403,7 +403,8 @@ abstract class Media {
   public static function getOriginalFileName($id)
   //--------------------------------------------------------------------------
   {
-    return database_query("SELECT name||'.'||ext FROM Files WHERE id=?",[$id])->fetchColumn();
+    //return database_query("SELECT name||'.'||ext FROM Files WHERE id=?",[$id])->fetchColumn();
+    return database_query("SELECT CONCAT(name,'.',ext) FROM Files WHERE id=?",[$id])->fetchColumn();
   }
   //--------------------------------------------------------------------------
   public static function deleteFile($id)
