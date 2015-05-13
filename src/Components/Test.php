@@ -61,6 +61,8 @@ class Test extends Component implements IAttributes
 
   private function switchContent ()
   {
+    // Clear the current children (required if the component is being repeated)
+    $this->setChildren ([]);
     $isSet = $this->attrs ()->get ('is_set');
     if (isset($isSet)) {
       $this->setChildren ($this->getChildren ('if_true'));
