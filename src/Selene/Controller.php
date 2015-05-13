@@ -808,36 +808,9 @@ class Controller
     }
   }
 
-  protected function paginate (array &$data, $pageSize = 0)
-  {
-    global $application;
-    if (!$pageSize)
-      $pageSize = $application->pageSize;
-    $this->pageNumber = get ($_REQUEST, $application->pageNumberParam, 1);
-    $count            = count ($data);
-    if ($count > $pageSize) {
-      $this->max = ceil ($count / $pageSize);
-      if ($this->pageNumber > 1) {
-        $skip = $this->getRowOffset ();
-        array_splice ($data, 0, $skip);
-      }
-      array_splice ($data, $pageSize);
-    }
-  }
-
-  protected function evalModelRef ($ref)
-  {
-    if (!empty($ref)) {
-      $s = explode ('::', $ref);
-      if (count ($s) == 2)
-        return $s;
-      return [$s[0], null];
-    }
-    return [null, null];
-  }
-
   /**
    * Sets up page specific data sources for use on the processView() phase only.
+   *
    * Models for use on the processRequest() phase should be defined on setupModel().
    * Override to provide specific functionality.
    * If <code>dataItem</code> is set, the default action is to create a default
@@ -908,6 +881,34 @@ class Controller
       }
   }
 
+  protected function paginate (array &$data, $pageSize = 0)
+  {
+    global $application;
+    if (!$pageSize)
+      $pageSize = $application->pageSize;
+    $this->pageNumber = get ($_REQUEST, $application->pageNumberParam, 1);
+    $count            = count ($data);
+    if ($count > $pageSize) {
+      $this->max = ceil ($count / $pageSize);
+      if ($this->pageNumber > 1) {
+        $skip = $this->getRowOffset ();
+        array_splice ($data, 0, $skip);
+      }
+      array_splice ($data, $pageSize);
+    }
+  }
+
+  protected function evalModelRef ($ref)
+  {
+    if (!empty($ref)) {
+      $s = explode ('::', $ref);
+      if (count ($s) == 2)
+        return $s;
+      return [$s[0], null];
+    }
+    return [null, null];
+  }
+
   /**
    * Generates a response to a GET request when viewProcessing = false.
    */
@@ -926,6 +927,15 @@ class Controller
   protected function defineView ()
   {
     global $application;
+
+    ob_start();
+    $this->render();
+    $view = ob_get_clean();
+    if (strlen($view)) {
+      $this->parseView ($view);
+      return false;
+    }
+
     if (isset($this->moduleLoader)) {
       /** @var Module $info */
       $info     = $this->moduleLoader->moduleInfo;
@@ -952,6 +962,19 @@ class Controller
   }
 
   /**
+   * Allows subclasses to generate the view's markup dinamically.
+   * If noting is sent to the output buffer from this method, the controller will try to load the view from metadata.
+   */
+  protected function render () {
+    // Override
+  }
+
+  protected function parseView ($viewTemplate) {
+    $this->page             = $this->engine->parse ($viewTemplate);
+    $this->page->controller = $this;
+  }
+
+  /**
    * Attempts to load the specified view file.
    * @param string $path
    * @return bool <b>true</b> if the file was found.
@@ -960,11 +983,10 @@ class Controller
    */
   protected function loadView ($path)
   {
-    $template = loadFile ($path);
-    if (!$template)
+    $view = loadFile ($path);
+    if (!$view)
       return false;
-    $this->page             = $this->engine->parse ($template);
-    $this->page->controller = $this;
+    $this->parseView ($view);
     return true;
   }
 
