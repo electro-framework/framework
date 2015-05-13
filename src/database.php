@@ -60,7 +60,7 @@ function highlightQuery ($msg, array $keywords, $baseStyle)
 {
   $msg = preg_replace ("#`[^`]*`#", '<span class=dbcolumn>$0</span>', $msg);
   $msg = WebConsole::highlight ($msg, $keywords, $baseStyle);
-  return "<#t>$msg</#t>";
+  return "<#i>$msg</#i>";
 }
 
 //--------------------------------------------------------------------------
@@ -74,9 +74,9 @@ function highlightQuery ($msg, array $keywords, $baseStyle)
  * @return PDOStatement
  */
 function database_query ($query, $params = null)
-//--------------------------------------------------------------------------
 {
-  global $db, $application;
+  global /** @var PDO $db */
+  $db, $application;
   $showQuery = function ($dur = null) use ($query, $params) {
     $query = trim ($query);
     WebConsole::database ('<#section|SQL QUERY>', highlightQuery ($query, SQL_KEYWORDS, 'identifier'));
@@ -92,17 +92,18 @@ function database_query ($query, $params = null)
   if (!isset($db))
     database_open ();
   $db->setAttribute (PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-  $st = $db->prepare ($query);
   try {
+    $st = $db->prepare ($query);
     $st->execute ($params);
   } catch (PDOException $e) {
-    $showQuery();
+    $showQuery ();
+    WebConsole::database ('<#footer><#alert>Query failed!</#alert></#footer>');
     WebConsole::throwErrorWithLog ($e);
   }
   if ($application->debugMode) {
     $end = microtime (true);
     $dur = round ($end - $start, 4);
-    $showQuery($dur);
+    $showQuery ($dur);
   }
   return $st;
 }
