@@ -37,6 +37,11 @@ abstract class AbstractRoute extends Object
   public $controller;
   public $autoController = false;
   /**
+   * The type of user that can see this route.
+   * @var string
+   */
+  public $userType;
+  /**
    * CSS class name(s) for menu icon.
    * @var string
    */
@@ -128,7 +133,7 @@ abstract class AbstractRoute extends Object
       /** @var Controller $ctrl */
       $ctrl = new $this->controller;
       $ctrl->sitePage = $this;
-      return $this->title = $ctrl->getTitle();
+      $this->title = $ctrl->getTitle();
     }
     return isset($this->title)
       ? $this->title

@@ -1025,6 +1025,7 @@ class Controller
     $_SESSION['isValid'] = isset($session) && $session->isValid;
     $this->setDataSource ('application', new DataRecord($application));
     $this->setDataSource ('session', new DataRecord($_SESSION));
+    $this->setDataSource ('user', new DataRecord ($session->user()));
     $this->setDataSource ('sessionInfo', new DataRecord($session));
     $this->setDataSource ('controller', new DataRecord($this));
     $this->setDataSource ('request', new DataRecord($_REQUEST));

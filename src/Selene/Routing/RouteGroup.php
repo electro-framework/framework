@@ -1,7 +1,9 @@
 <?php
 namespace Selene\Routing;
 
+use App\Models\User;
 use Selene\Exceptions\ConfigException;
+use Selene\Session;
 
 class RouteGroup extends AbstractRoute
 {
@@ -21,7 +23,8 @@ class RouteGroup extends AbstractRoute
       'module'               => 'string',
       'defaultURI'           => 'string',
       'baseSubnavURI'        => 'string',
-      'includeMainItemOnNav' => 'boolean'
+      'includeMainItemOnNav' => 'boolean',
+      'userType'             => 'string',
     ]);
   }
 
@@ -43,6 +46,18 @@ class RouteGroup extends AbstractRoute
 
   public function searchFor ($URI, $options = 0)
   {
+    global $session;
+      /** @var Session $session */
+    if (isset($this->userType)) {
+      /** @var User $user */
+      $user = $session->user();
+      if ($this->userType[0] == '!') {
+        if ($user->type == substr($this->userType, 1))
+          return null;
+      }
+      else if ($user->type != $this->userType)
+        return null;
+    }
     if ($this->matchesURI ($URI)) {
       $this->selected = true;
       if (empty($this->defaultURI))
