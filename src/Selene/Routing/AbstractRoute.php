@@ -122,6 +122,14 @@ abstract class AbstractRoute extends Object
 
   public function getTitle ()
   {
+    if (!empty($this->title))
+      return $this->title;
+    if (isset($this->controller)) {
+      /** @var Controller $ctrl */
+      $ctrl = new $this->controller;
+      $ctrl->sitePage = $this;
+      return $this->title = $ctrl->getTitle();
+    }
     return isset($this->title)
       ? $this->title
       : (isset($this->subtitle) ? $this->subtitle
@@ -130,6 +138,7 @@ abstract class AbstractRoute extends Object
 
   public function getSubtitle ($first = true)
   {
+    return $this->getTitle();
     if (isset($this->subtitle))
       return $this->subtitle;
     return $this->title;

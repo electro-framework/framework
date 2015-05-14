@@ -220,16 +220,6 @@ function loadFile ($filename, $useIncludePath = true)
   return '';
 }
 
-function newInstanceOf ($name)
-{
-  try {
-    $class = new ReflectionClass($name);
-  } catch (Exception $e) {
-    return null;
-  }
-  return $class->newInstance ();
-}
-
 function removeBOM ($string)
 {
   if (substr ($string, 0, 3) == pack ('CCC', 0xef, 0xbb, 0xbf))

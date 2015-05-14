@@ -62,7 +62,7 @@ class DataSourceInfo extends Object
   {
     if (!isset($this->model))
       throw new ConfigException("Property <b>model</b> is required on a DataSourceInfo instance.");
-    return newInstanceOf ($this->model);
+    return new $this->model;
   }
 
   public function getDataItem ()

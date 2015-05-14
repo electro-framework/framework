@@ -797,7 +797,7 @@ class Controller
 
       if (!empty($thisModel)) {
         list ($this->dataClass, $this->modelMethod) = $this->evalModelRef ($thisModel);
-        $this->dataItem = newInstanceOf ($this->dataClass);
+        $this->dataItem = new $this->dataClass;
         if (!isset($this->dataItem))
           throw new ConfigException("<p><b>Model class not found.</b>
   <li>Class:         <b>$this->dataClass</b>
@@ -812,7 +812,7 @@ class Controller
       }
     }
     if (isset($this->dataClass)) {
-      $this->dataItem = newInstanceOf ($this->dataClass);
+      $this->dataItem = new $this->dataClass;
       //$this->dataItem = $this->createDataItem($this->dataClass);
       $this->applyPresets ();
       $this->standardDataInit ($this->dataItem);
@@ -1185,11 +1185,11 @@ class Controller
     $this->autoRedirect ();
   }
 
-  protected function getTitle ()
+  public function getTitle ()
     // override to return the title of the current page
   {
     return firstNonNull(
-      isset($this->sitePage) ? $this->sitePage->getTitle () : null,
+      isset($this->sitePage) ? $this->sitePage->title : null,
       $this->pageTitle,
       ''
     );
