@@ -1,7 +1,7 @@
 <?php
 namespace Selene\Routing;
 
-use App\Models\User;
+use App\Models\Utilizador;
 use Selene\Exceptions\ConfigException;
 use Selene\Session;
 
