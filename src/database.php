@@ -1,11 +1,6 @@
 <?php
 use Impactwave\WebConsole\WebConsole;
 
-const SQL_KEYWORDS = [
-  'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'JOIN', 'LEFT', 'RIGHT', 'OUTER',
-  'ORDER BY', 'GROUP BY', 'HAVING', 'LIMIT', 'UNION'
-];
-
 $transactionDepth = 0;
 //--------------------------------------------------------------------------
 /** Do not call directly! */
@@ -75,11 +70,16 @@ function highlightQuery ($msg, array $keywords, $baseStyle)
  */
 function database_query ($query, $params = null)
 {
+  $SQL_KEYWORDS = [
+    'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'JOIN', 'LEFT', 'RIGHT', 'OUTER',
+    'ORDER BY', 'GROUP BY', 'HAVING', 'LIMIT', 'UNION'
+  ];
+
   global /** @var PDO $db */
   $db, $application;
-  $showQuery = function ($dur = null) use ($query, $params) {
+  $showQuery = function ($dur = null) use ($query, $params, $SQL_KEYWORDS) {
     $query = trim ($query);
-    WebConsole::database ('<#section|SQL QUERY>', highlightQuery ($query, SQL_KEYWORDS, 'identifier'));
+    WebConsole::database ('<#section|SQL QUERY>', highlightQuery ($query, $SQL_KEYWORDS, 'identifier'));
     if (!empty($params))
       WebConsole::database ("<#header>Parameters</#header>", $params);
     if (isset($dur))
