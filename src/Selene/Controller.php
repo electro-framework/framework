@@ -78,14 +78,6 @@ class Controller
    */
   public $langInfo;
   /**
-   * If specified on a subclass, the controller will automatically instantiate and initialize
-   * a corresponding instance on setupModel() and also setup a default data source named 'default'
-   * on setupViewModel().
-   * @see Controller::dataItem
-   * @var string The name of the class to be instantiated.
-   */
-  public $dataClass = null;
-  /**
    * If $dataClass is defined, the instantiated instance is stored in this property.
    * @var DataObject
    */
@@ -202,6 +194,20 @@ class Controller
    */
   public $showLogin = false;
   /**
+   * If specified on a subclass, the controller will automatically instantiate and initialize
+   * a corresponding instance on setupModel() and also setup a default data source named 'default'
+   * on setupViewModel().
+   * @see Controller::dataItem
+   * @var string The name of the class to be instantiated.
+   */
+  protected $dataClass = null;
+  /**
+   * If specified on a subclass, the controller will automatically invoke the specified method on an
+   * instance of $dataClass to retrieve the default data source.
+   * @var string
+   */
+  protected $modelMethod = null;
+  /**
    * A list of languages codes for the available languages, as configured on Application.
    * @var string
    */
@@ -214,8 +220,6 @@ class Controller
    */
   protected $indexPage   = null;
   protected $redirectURI = null;
-
-  protected $modelMethod = null;
 
   public static function modPathOf ($virtualURI = '', $params = null)
   {
@@ -233,8 +237,8 @@ class Controller
     /** @var ModuleLoader $loader */
     global $application, $loader;
     if (!isset(self::$translation[$lang])) {
-      $paths = [];
-      $folders = array_reverse($application->languageFolders);
+      $paths   = [];
+      $folders = array_reverse ($application->languageFolders);
       foreach ($folders as $folder) {
         $path = "$folder/$lang.ini";
         $z    = @parse_ini_file ($path);
@@ -798,9 +802,10 @@ class Controller
         //$this->dataItem->primaryKeyName = $thisModel->pk;
         $this->applyPresets ();
         $this->standardDataInit ($this->dataItem);
+        return;
       }
     }
-    else if (isset($this->dataClass)) {
+    if (isset($this->dataClass)) {
       $this->dataItem = newInstanceOf ($this->dataClass);
       //$this->dataItem = $this->createDataItem($this->dataClass);
       $this->applyPresets ();
@@ -872,8 +877,10 @@ class Controller
             }
           }
           else $params = null;
-          $data = $this->dataItem->queryBy ($this->dataFilter, $this->dataFields, $this->dataSortBy, $params)
-                                 ->fetchAll (PDO::FETCH_ASSOC);
+          if ($this->modelMethod)
+            $st = $this->dataItem->{$this->modelMethod}($this);
+          else $st = $this->dataItem->queryBy ($this->dataFilter, $this->dataFields, $this->dataSortBy, $params);
+          $data = $st->fetchAll (PDO::FETCH_ASSOC);
           $this->interceptViewDataSet ('default', $data);
           $this->paginate ($data);
           $this->setDataSource ('', new DataSet($data));
@@ -928,10 +935,10 @@ class Controller
   {
     global $application;
 
-    ob_start();
-    $this->render();
-    $view = ob_get_clean();
-    if (strlen($view)) {
+    ob_start ();
+    $this->render ();
+    $view = ob_get_clean ();
+    if (strlen ($view)) {
       $this->parseView ($view);
       return false;
     }
@@ -965,11 +972,13 @@ class Controller
    * Allows subclasses to generate the view's markup dinamically.
    * If noting is sent to the output buffer from this method, the controller will try to load the view from metadata.
    */
-  protected function render () {
+  protected function render ()
+  {
     // Override
   }
 
-  protected function parseView ($viewTemplate) {
+  protected function parseView ($viewTemplate)
+  {
     $this->page             = $this->engine->parse ($viewTemplate);
     $this->page->controller = $this;
   }
