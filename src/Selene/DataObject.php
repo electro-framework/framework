@@ -295,6 +295,9 @@ class DataObject
   /**
    * Inserts the instance's fields into a new record in the database.
    * Note: the primary key value is included for it will only be null for autoincrement or trigger-filled fields.
+   * @param bool $insertFiles
+   * @throws Exception
+   * @throws ValidationException
    */
   public function insert ($insertFiles = true)
   {

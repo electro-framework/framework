@@ -387,6 +387,7 @@ class Application
    */
   public function run ($rootDir)
   {
+    global $session;
     set_exception_handler ([get_class (), 'exceptionHandler']);
     $this->debugMode = isset($_SERVER['APP_DEBUG']) && $_SERVER['APP_DEBUG'] == 'true';
 
@@ -395,8 +396,9 @@ class Application
     WebConsole::registerPanel ('request', new HttpRequestPanel ('Request', 'fa fa-paper-plane'));
     WebConsole::registerPanel ('response', new ConsolePanel ('Response', 'fa fa-file'));
     WebConsole::registerPanel ('routes', new ConsolePanel ('Routes', 'fa fa-sitemap'));
-    WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
+    WebConsole::registerPanel ('session', new ConsolePanel ('Session', 'fa fa-user'));
     WebConsole::registerPanel ('database', new ConsolePanel ('Database', 'fa fa-database'));
+    WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
     ErrorHandler::$appName = 'Selene Framework';
     $this->setup ($rootDir);
     $this->loadRoutes ();
@@ -405,6 +407,7 @@ class Application
       $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
       WebConsole::routes ()->withCaption ('Active Route')->withFilter ($filter, $loader->sitePage);
       WebConsole::response (['Content-Length' => round (ob_get_length () / 1024) . ' KB']);
+      WebConsole::session ($session);
     }
     WebConsole::outputContent ();
   }

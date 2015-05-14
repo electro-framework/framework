@@ -6,7 +6,8 @@ use Selene\Exceptions\SessionException;
 
 class Session
 {
-
+  /** @var mixed The logged-in user's primary key value. */
+  public $userId;
   /** @var string The session cookie name. */
   public $name;
   public $isValid   = false;
@@ -40,6 +41,7 @@ class Session
         $this->userFullName = ucfirst ($username);
         $this->isValid      = true;
         $this->lang         = $defaultLang;
+        $this->userId       = $this->user ()->getPrimaryKeyValue ();
       }
     }
   }
@@ -57,18 +59,24 @@ class Session
     $this->lang = $lang;
   }
 
-  public function user () {
+  public function user ()
+  {
     global $application;
     $class = $application->userModel;
     if (!$class)
       throw new ConfigException("No user model is set.");
     /** @var DataObject $user */
     $user = new $class;
-    if (method_exists($user, 'findByName'))
+    if (isset($this->userId)) {
+      $user->setPrimaryKeyValue($this->userId);
+      $user->read();
+    }
+    else if (method_exists ($user, 'findByName'))
       $user->findByName ($this->username);
     else {
+      // Assume the username is the primary key.
       $user->username = $this->username;
-      $user->read();
+      $user->read ();
     }
     return $user;
   }
