@@ -1,5 +1,6 @@
 <?php
 namespace Selene;
+use Impactwave\WebConsole\ErrorHandler;
 use Selene\Exceptions\ConfigException;
 
 /**
@@ -144,10 +145,12 @@ class ModuleLoader
       if (!$class)
         $class = "null";
       $auto = $auto ? 'enabled' : 'disabled';
-      throw new ConfigException("<p><b>Controller not found.</b>
-  <li>Class:           <b>$class</b>
-  <li>Search path:     <b>" . ErrorHandler::shortFileName ($this->moduleInfo->path) . "</b>
-  <li>Auto-controller: <b>$auto</b> for this URL
+      throw new ConfigException("<p><b>Controller not found.</b></p>
+  <table>
+  <tr><th>Class:                  <td>$class
+  <tr><th>Additional search path: <td>" . ErrorHandler::shortFileName ($this->moduleInfo->path) . "
+  <tr><th>Auto-controller:        <td><i>$auto</i> for this URL
+  </table>
 ");
     }
     $con->moduleLoader = $this;

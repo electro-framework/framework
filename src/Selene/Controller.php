@@ -208,6 +208,12 @@ class Controller
    */
   protected $modelMethod = null;
   /**
+   * If set, defines the page title. It will generate a document `<title>` and it can be used on
+   * breadcrumbs.
+   * @var string
+   */
+  protected $pageTitle = null;
+  /**
    * A list of languages codes for the available languages, as configured on Application.
    * @var string
    */
@@ -1182,7 +1188,11 @@ class Controller
   protected function getTitle ()
     // override to return the title of the current page
   {
-    return isset($this->sitePage) ? $this->sitePage->getTitle () : '';
+    return firstNonNull(
+      isset($this->sitePage) ? $this->sitePage->getTitle () : null,
+      $this->pageTitle,
+      ''
+    );
   }
 
   protected function finishPostRequest ()

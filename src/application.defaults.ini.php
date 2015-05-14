@@ -27,7 +27,7 @@ return [
     'langPath'               => 'private/resources/lang',
     'moduleLangPath'         => 'resources/lang',
     'templatesPath'          => 'private/resources/templates',
-    'modulesPath'            => 'private/app/modules',
+    'modulesPath'            => 'private/modules',
     'defaultModulesPath'     => 'vendor',
     'viewPath'               => 'private/resources/views',
     'moduleViewsPath'        => 'resources/views',
