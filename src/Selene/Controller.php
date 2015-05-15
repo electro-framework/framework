@@ -341,7 +341,6 @@ class Controller
       }
       $this->showLogin = $authenticate;
       $this->configLanguage ();
-      $this->initSEO ();
       $this->initialize (); //custom setup
       if (!$authenticate) {
         // Normal page request (it's not a login form).
@@ -676,6 +675,7 @@ class Controller
         throw new FileNotFoundException($path);
       $this->page->formAutocomplete = true;
     }
+    $this->initSEO ();
     $this->setupView ();
     $output = $this->renderView ();
     $this->postProcess ($output);
