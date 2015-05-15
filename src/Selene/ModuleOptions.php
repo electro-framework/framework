@@ -18,14 +18,15 @@ class ModuleOptions extends Object
   public function getTypes ()
   {
     return [
-      'templates' => 'boolean',
-      'views'     => 'boolean',
-      'public'    => 'string',
-      'lang'      => 'boolean',
-      'bower'     => 'boolean',
-      'grunt'     => 'boolean',
-      'less'      => 'string',
-      'config'    => 'array',
+      'templates'  => 'boolean',
+      'views'      => 'boolean',
+      'public'     => 'string',
+      'lang'       => 'boolean',
+      'bower'      => 'boolean',
+      'grunt'      => 'boolean',
+      'less'       => 'string',
+      'config'     => 'array',
+      'components' => 'array',
     ];
   }
 
@@ -97,6 +98,14 @@ class ModuleOptions extends Object
           $application->$k = $v;
     }
 
+  }
+
+  /**
+   * @param array $v Map of tag names to componenbt classes.
+   */
+  function set_components (array $v)
+  {
+    Application::$TAGS = array_merge (Application::$TAGS, $v);
   }
 
 }
