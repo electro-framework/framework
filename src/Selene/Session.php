@@ -1,47 +1,39 @@
 <?php
 namespace Selene;
 
-use Selene\Exceptions\ConfigException;
+use Selene\Contracts\UserInterface;
 use Selene\Exceptions\SessionException;
 
 class Session
 {
-  /** @var mixed The logged-in user's primary key value. */
-  public $userId;
   /** @var string The session cookie name. */
   public $name;
   public $isValid   = false;
-  public $username;
-  public $userFullName;
   public $lang      = null;
-  public $userTable = 'Users';
-  public $userField = 'username';
-  public $passField = 'password';
+  /** @var UserInterface|null The logged-in user or null if not logged-in. */
+  public $user;
 
   public function validate ()
   {
-    return $this->isValid = isset($this->username);
+    return $this->isValid = isset($this->user);
   }
 
   public function login ($defaultLang)
   {
+    global $application;
     $username = get ($_POST, 'username');
     $password = get ($_POST, 'password');
     if (empty($username))
       throw new SessionException(SessionException::MISSING_INFO);
     else {
-      $pass = database_query ("SELECT $this->passField FROM $this->userTable WHERE $this->userField=?",
-        [$username])->fetchColumn ();
-      if (!$pass)
+      $this->user = new $application->userModel;
+      if (!$this->user->findByName($username))
         throw new SessionException(SessionException::UNKNOWN_USER);
-      else if ($password != $pass)
+      else if ($this->user->password() != $password)
         throw new SessionException(SessionException::WRONG_PASSWORD);
       else {
-        $this->username     = $username;
-        $this->userFullName = ucfirst ($username);
         $this->isValid      = true;
         $this->lang         = $defaultLang;
-        $this->userId       = $this->user ()->getPrimaryKeyValue ();
       }
     }
   }
@@ -57,28 +49,6 @@ class Session
   public function setLang ($lang)
   {
     $this->lang = $lang;
-  }
-
-  public function user ()
-  {
-    global $application;
-    $class = $application->userModel;
-    if (!$class)
-      throw new ConfigException("No user model is set.");
-    /** @var DataObject $user */
-    $user = new $class;
-    if (isset($this->userId)) {
-      $user->setPrimaryKeyValue($this->userId);
-      $user->read();
-    }
-    else if (method_exists ($user, 'findByName'))
-      $user->findByName ($this->username);
-    else {
-      // Assume the username is the primary key.
-      $user->username = $this->username;
-      $user->read ();
-    }
-    return $user;
   }
 
 }

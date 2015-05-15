@@ -392,22 +392,18 @@ class Application
     $this->debugMode = isset($_SERVER['APP_DEBUG']) && $_SERVER['APP_DEBUG'] == 'true';
 
     ErrorHandler::init ($this->debugMode, $rootDir);
-    WebConsole::init ($this->debugMode);
-    WebConsole::registerPanel ('request', new HttpRequestPanel ('Request', 'fa fa-paper-plane'));
-    WebConsole::registerPanel ('response', new ConsolePanel ('Response', 'fa fa-file'));
-    WebConsole::registerPanel ('routes', new ConsolePanel ('Routes', 'fa fa-sitemap'));
-    WebConsole::registerPanel ('session', new ConsolePanel ('Session', 'fa fa-user'));
-    WebConsole::registerPanel ('database', new ConsolePanel ('Database', 'fa fa-database'));
-    WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
-    ErrorHandler::$appName = 'Selene Framework';
+    $this->setupWebConsole ();
     $this->setup ($rootDir);
+    $this->initSession ();
+    if ($this->debugMode) {
+      WebConsole::session ($session);
+    }
     $this->loadRoutes ();
     $loader = ModuleLoader::loadAndRun ();
     if ($this->debugMode) {
       $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
       WebConsole::routes ()->withCaption ('Active Route')->withFilter ($filter, $loader->sitePage);
       WebConsole::response (['Content-Length' => round (ob_get_length () / 1024) . ' KB']);
-      WebConsole::session ($session);
     }
     WebConsole::outputContent ();
   }
@@ -551,6 +547,32 @@ class Application
   {
     $themesPath = strpos ($URI, $this->themesPath) !== false ? $this->themesPath : $this->defaultThemesPath;
     return str_replace ('/', '_', substr ($URI, strlen ($this->baseURI) + strlen ($themesPath) + 2));
+  }
+
+  protected function setupWebConsole ()
+  {
+    WebConsole::init ($this->debugMode);
+    WebConsole::registerPanel ('request', new HttpRequestPanel ('Request', 'fa fa-paper-plane'));
+    WebConsole::registerPanel ('response', new ConsolePanel ('Response', 'fa fa-file'));
+    WebConsole::registerPanel ('routes', new ConsolePanel ('Routes', 'fa fa-sitemap'));
+    WebConsole::registerPanel ('session', new ConsolePanel ('Session', 'fa fa-user'));
+    WebConsole::registerPanel ('database', new ConsolePanel ('Database', 'fa fa-database'));
+    WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
+    ErrorHandler::$appName = 'Selene Framework';
+  }
+
+  protected function initSession ()
+  {
+    global $session;
+    if (!$this->globalSessions)
+      session_name ($this->name);
+    $name = session_name ();
+    session_start ();
+    if ($this->autoSession) {
+      $session                 = get ($_SESSION, 'sessionInfo', new Session);
+      $session->name           = $name;
+      $_SESSION['sessionInfo'] = $session;
+    }
   }
 
   private function bootModules ()

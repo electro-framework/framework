@@ -310,7 +310,6 @@ class Controller
       $this->setupController ();
       $this->initTemplateEngine ();
       $this->configPage ();
-      $this->initSession ();
       $authenticate = false;
       if (isset($session) && $application->isSessionRequired) {
         $this->getActionAndParam ($action, $param);
@@ -611,6 +610,16 @@ class Controller
     //Override
   }
 
+  public function getTitle ()
+    // override to return the title of the current page
+  {
+    return firstNonNull (
+      isset($this->sitePage) ? $this->sitePage->title : null,
+      $this->pageTitle,
+      ''
+    );
+  }
+
   protected function finalize ()
   {
     //override
@@ -619,20 +628,6 @@ class Controller
   protected function afterPageRender ()
   {
     //override
-  }
-
-  protected function initSession ()
-  {
-    global $session, $application;
-    if (!$application->globalSessions)
-      session_name ($application->name);
-    $name = session_name ();
-    session_start ();
-    if ($application->autoSession) {
-      $session                 = get ($_SESSION, 'sessionInfo', new Session);
-      $session->name           = $name;
-      $_SESSION['sessionInfo'] = $session;
-    }
   }
 
   /**
@@ -1025,7 +1020,7 @@ class Controller
     $_SESSION['isValid'] = isset($session) && $session->isValid;
     $this->setDataSource ('application', new DataRecord($application));
     $this->setDataSource ('session', new DataRecord($_SESSION));
-    $this->setDataSource ('user', new DataRecord ($session->user()));
+    $this->setDataSource ('user', new DataRecord ($session->user));
     $this->setDataSource ('sessionInfo', new DataRecord($session));
     $this->setDataSource ('controller', new DataRecord($this));
     $this->setDataSource ('request', new DataRecord($_REQUEST));
@@ -1186,16 +1181,6 @@ class Controller
     $this->autoRedirect ();
   }
 
-  public function getTitle ()
-    // override to return the title of the current page
-  {
-    return firstNonNull(
-      isset($this->sitePage) ? $this->sitePage->title : null,
-      $this->pageTitle,
-      ''
-    );
-  }
-
   protected function finishPostRequest ()
     // override to implement actions to be performed before a redirection takes place
   {
@@ -1341,6 +1326,21 @@ class Controller
     //Override
   }
 
+  protected function applyPresets ()
+  {
+    if (isset($this->preset)) {
+      $presets = explode ('&', $this->preset);
+      foreach ($presets as $preset) {
+        $presetParts = explode ('=', $preset);
+        if ($presetParts[1][0] == '{') {
+          $field                             = substr ($presetParts[1], 1, strlen ($presetParts[1]) - 2);
+          $this->dataItem->{$presetParts[0]} = get ($this->URIParams, $field);
+        }
+        else $this->dataItem->{$presetParts[0]} = $presetParts[1];
+      }
+    }
+  }
+
   /**
    * Called when a Marker component is parsed. This gives the controller the
    * opportunity to replace the marker with some other content.
@@ -1353,21 +1353,6 @@ class Controller
       if (strlen ($output)) {
         $this->beginXMLResponse ();
         echo $output;
-      }
-    }
-  }
-
-  private function applyPresets ()
-  {
-    if (isset($this->preset)) {
-      $presets = explode ('&', $this->preset);
-      foreach ($presets as $preset) {
-        $presetParts = explode ('=', $preset);
-        if ($presetParts[1][0] == '{') {
-          $field                             = substr ($presetParts[1], 1, strlen ($presetParts[1]) - 2);
-          $this->dataItem->{$presetParts[0]} = get ($this->URIParams, $field);
-        }
-        else $this->dataItem->{$presetParts[0]} = $presetParts[1];
       }
     }
   }
