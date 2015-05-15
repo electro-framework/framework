@@ -1,8 +1,8 @@
 <?php
 namespace Selene\Routing;
 
-use App\Models\Utilizador;
 use Selene\Exceptions\ConfigException;
+use Selene\Modules\Admin\Models\User;
 use Selene\Session;
 
 class RouteGroup extends AbstractRoute
