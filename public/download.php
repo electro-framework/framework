@@ -1,17 +1,9 @@
 <?php
-use Selene\Application;
 use Selene\Exceptions\FatalException;
 use Selene\Exceptions\FileException;
 use Selene\Media;
 
 $rootDir = __DIR__ . "/../../../..";
-
-require "$rootDir/vendor/autoload.php";
-$FRAMEWORK      = 'private/selene';
-$NO_APPLICATION = true;
-$application    = new Application();
-$application->setup ($rootDir);
-ob_end_clean ();
 
 $URI      = get ($_GET, 'URI');
 $filename = get ($_GET, 'name');

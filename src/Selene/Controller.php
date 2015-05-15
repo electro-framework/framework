@@ -310,33 +310,11 @@ class Controller
       $this->setupController ();
       $this->initTemplateEngine ();
       $this->configPage ();
-      $authenticate = false;
-      if (isset($session) && $application->isSessionRequired) {
-        $this->getActionAndParam ($action, $param);
-        $authenticate = true;
-        if ($action == 'login') {
-          $prevPost = get ($_POST, '_prevPost');
-          try {
-            $this->login ();
-            if ($prevPost)
-              $_POST = unserialize (urldecode ($prevPost));
-            else $_POST = [];
-            $_REQUEST = array_merge ($_POST, $_GET);
-            if (empty($_POST))
-              $_SERVER['REQUEST_METHOD'] = 'GET';
-            $authenticate = false; // user is now logged in; proceed as a normal request
-          } catch (SessionException $e) {
-            $this->setStatus (Status::WARNING, $e->getMessage ());
-            // note: if $prevPost === false, it keeps that value instead of (erroneously) storing the login form data
-            if ($action)
-              $this->prevPost = isset($prevPost) ? $prevPost : urlencode (serialize ($_POST));
-          }
-        }
-        else {
-          $authenticate = !$session->validate ();
-          if ($authenticate && $action)
-            $this->prevPost = urlencode (serialize ($_POST));
-        }
+      $authenticate = $this->authenticate ();
+      _log($authenticate);
+      if ($authenticate === 'retry') {
+        $this->setRedirection ();
+        $this->redirectAndHalt ();
       }
       $this->showLogin = $authenticate;
       $this->configLanguage ();
@@ -360,7 +338,7 @@ class Controller
         if ($authenticate)
           $this->processView ($authenticate);
         $this->wrapWebServiceResponse ();
-        $this->finishPostRequest ();
+        $this->redirectAndHalt ();
       }
       else if (is_null ($this->redirectURI)) {
         if (!$this->viewProcessing || !$this->processView ($authenticate)) {
@@ -373,7 +351,7 @@ class Controller
       if ($e instanceof BaseException) {
         if (isset($this->redirectURI) && $e->getStatus () != Status::FATAL) {
           $this->setStatusFromException ($e);
-          $this->finishPostRequest ();
+          $this->redirectAndHalt ();
         }
         @ob_clean ();
       }
@@ -618,6 +596,48 @@ class Controller
       $this->pageTitle,
       ''
     );
+  }
+
+  /**
+   * @return bool|string
+   * <li> True is a login form should be displayed.
+   * <li> False to proceed as a normal request.
+   * <li> <code>'retry'</code> to retry GET request by redirecting to same URI.
+   */
+  protected function authenticate ()
+  {
+    global $application, $session;
+    $authenticate = false;
+    if (isset($session) && $application->isSessionRequired) {
+      $this->getActionAndParam ($action, $param);
+      $authenticate = true;
+      if ($action == 'login') {
+        $prevPost = get ($_POST, '_prevPost');
+        try {
+          $this->login ();
+          if ($prevPost)
+            $_POST = unserialize (urldecode ($prevPost));
+          else $_POST = [];
+          $_REQUEST = array_merge ($_POST, $_GET);
+          if (empty($_POST))
+            $_SERVER['REQUEST_METHOD'] = 'GET';
+          if ($this->wasPosted ())
+            $authenticate = false; // user is now logged in; proceed as a normal request
+          else $authenticate = 'retry';
+        } catch (SessionException $e) {
+          $this->setStatus (Status::WARNING, $e->getMessage ());
+          // note: if $prevPost === false, it keeps that value instead of (erroneously) storing the login form data
+          if ($action)
+            $this->prevPost = isset($prevPost) ? $prevPost : urlencode (serialize ($_POST));
+        }
+      }
+      else {
+        $authenticate = !$session->validate ();
+        if ($authenticate && $action)
+          $this->prevPost = urlencode (serialize ($_POST));
+      }
+    }
+    return $authenticate;
   }
 
   protected function finalize ()
@@ -1181,7 +1201,7 @@ class Controller
     $this->autoRedirect ();
   }
 
-  protected function finishPostRequest ()
+  protected function redirectAndHalt ()
     // override to implement actions to be performed before a redirection takes place
   {
     if (isset($this->redirectURI))

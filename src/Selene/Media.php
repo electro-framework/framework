@@ -377,13 +377,13 @@ abstract class Media {
   public static function getFileExt($id)
   //--------------------------------------------------------------------------
   {
-    return database_query('SELECT ext FROM Files WHERE id=?',[$id])->fetchColumn();
+    return database_query('SELECT ext FROM files WHERE id=?',[$id])->fetchColumn();
   }
   //--------------------------------------------------------------------------
   public static function getFileBaseName($id)
   //--------------------------------------------------------------------------
   {
-    return database_query('SELECT name FROM Files WHERE id=?',[$id])->fetchColumn();
+    return database_query('SELECT name FROM files WHERE id=?',[$id])->fetchColumn();
   }
   //--------------------------------------------------------------------------
   public static function getFileURI($id)
@@ -396,15 +396,14 @@ abstract class Media {
   public static function getFileDownloadURI($id)
   //--------------------------------------------------------------------------
   {
-    global $application,$FRAMEWORK;
-    return "$FRAMEWORK/download.php?id=$id";
+    return "framework/download.php?id=$id";
   }
   //--------------------------------------------------------------------------
   public static function getOriginalFileName($id)
   //--------------------------------------------------------------------------
   {
-    //return database_query("SELECT name||'.'||ext FROM Files WHERE id=?",[$id])->fetchColumn();
-    return database_query("SELECT CONCAT(name,'.',ext) FROM Files WHERE id=?",[$id])->fetchColumn();
+    $d = database_query("SELECT name,ext FROM files WHERE id=?",[$id])->fetch(\PDO::FETCH_NUM);
+    return $d ? "$d[0].$d[1]" : '';
   }
   //--------------------------------------------------------------------------
   public static function deleteFile($id)
@@ -413,7 +412,7 @@ abstract class Media {
     if (!empty($id)) {
       $ext = self::getFileExt($id);
       $path = self::getFilePath($id,$ext);
-      database_query('DELETE FROM Files WHERE id=?',[$id]);
+      database_query('DELETE FROM files WHERE id=?',[$id]);
       if (file_exists($path)) {
         if (!unlink($path))
           throw new FileException(FileException::CAN_NOT_DELETE_FILE,$path);
@@ -453,7 +452,7 @@ abstract class Media {
   //--------------------------------------------------------------------------
   {
     database_query(
-      'UPDATE Files SET name=? WHERE id=?',
+      'UPDATE files SET name=? WHERE id=?',
       [
         $name,
         $id
@@ -465,7 +464,7 @@ abstract class Media {
   //--------------------------------------------------------------------------
   {
     database_query(
-      'INSERT INTO Files (id,ext,name) VALUES (?,?,?)',
+      'INSERT INTO files (id,ext,name) VALUES (?,?,?)',
       [
         $id,
         $ext,
