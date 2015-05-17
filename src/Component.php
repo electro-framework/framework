@@ -441,9 +441,11 @@ abstract class Component
   {
     if (!$this->inactive) {
       $this->databind ();
-      $this->preRender ();
-      $this->render ();
-      $this->postRender ();
+      if (!isset($this->attrsObj) || $this->attrsObj->visible) {
+        $this->preRender ();
+        $this->render ();
+        $this->postRender ();
+      }
     }
   }
 

@@ -26,7 +26,6 @@ class AttributeType
 
 class ComponentAttributes
 {
-
   /**
    * An array of names for each attribute data type.
    * Its public to allow access from the Template class.
@@ -50,6 +49,7 @@ class ComponentAttributes
   public $class;
   public $disabled   = false;
   public $html_attrs = '';
+  public $visible = true;
   /**
    * The component that owns these attributes.
    * @var Component
@@ -249,6 +249,11 @@ class ComponentAttributes
     return AttributeType::ID;
   }
   protected function typeof_disabled ()
+  {
+    return AttributeType::BOOL;
+  }
+
+  protected function typeof_visible ()
   {
     return AttributeType::BOOL;
   }
