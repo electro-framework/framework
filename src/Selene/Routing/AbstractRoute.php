@@ -96,6 +96,13 @@ abstract class AbstractRoute extends Object
     throw new Exception($match);
   }
 
+  function matchIf ($condition)
+  {
+    if (!$condition)
+      $this->URI = '<unmatchable>';
+    return $this;
+  }
+
   public function getTypes ()
   {
     return [
@@ -131,9 +138,9 @@ abstract class AbstractRoute extends Object
       return $this->title;
     if (isset($this->controller)) {
       /** @var Controller $ctrl */
-      $ctrl = new $this->controller;
+      $ctrl           = new $this->controller;
       $ctrl->sitePage = $this;
-      $this->title = $ctrl->getTitle();
+      $this->title    = $ctrl->getTitle ();
     }
     return isset($this->title)
       ? $this->title
@@ -143,7 +150,7 @@ abstract class AbstractRoute extends Object
 
   public function getSubtitle ($first = true)
   {
-    return $this->getTitle();
+    return $this->getTitle ();
     if (isset($this->subtitle))
       return $this->subtitle;
     return $this->title;
