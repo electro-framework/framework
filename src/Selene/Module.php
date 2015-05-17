@@ -1,6 +1,7 @@
 <?php
 namespace Selene;
 
+use Impactwave\WebConsole\ErrorHandler;
 use Selene\Exceptions\ConfigException;
 
 class Module
@@ -34,7 +35,12 @@ class Module
       $this->path = $customPath;
     elseif (file_exists ($defaultPath))
       $this->path = $defaultPath;
-    else throw new ConfigException ("Module not found:<p><b>$moduleName</b>");
+    else throw new ConfigException ("<p><b>Module not found.</b></p>
+  <table>
+  <tr><th>Name:         <td>$moduleName
+  <tr><th>Default path: <td>" . ErrorHandler::shortFileName ($defaultPath) . "
+  <tr><th>Extra path:   <td>" . ErrorHandler::shortFileName ($customPath) . "
+  </table>");
   }
 
   function loadRoutes ($configName = 'routes')

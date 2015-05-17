@@ -231,7 +231,7 @@ class Controller
   {
     global $application;
     if ($virtualURI == '')
-      return '';
+      return '.';
     $append = (!empty($params) ? '?' . $params : '');
     if ($virtualURI[0] == '/')
       return "$virtualURI$append";
@@ -311,7 +311,6 @@ class Controller
       $this->initTemplateEngine ();
       $this->configPage ();
       $authenticate = $this->authenticate ();
-      _log($authenticate);
       if ($authenticate === 'retry') {
         $this->setRedirection ();
         $this->redirectAndHalt ();
@@ -321,7 +320,7 @@ class Controller
       $this->initialize (); //custom setup
       if (!$authenticate) {
         // Normal page request (it's not a login form).
-        $this->setupModel (); //custom setup. Note: this may load a BOM into the output buffer.
+        $this->setupModel ();
         if ($this->wasPosted ()) {
           if (!$this->isWebService)
             $this->setRedirection (); //defaults to the same URI
@@ -418,7 +417,8 @@ class Controller
     global $application;
     $this->page->title = str_replace ('@', $this->getTitle (), $application->title);
     $this->page->addScript ("$application->frameworkURI/js/engine.js");
-    $this->page->defaultDataSource = get ($this->engine->context->dataSources, 'default');
+    if (isset($this->engine->context->dataSources['default']))
+      $this->page->defaultDataSource =& $this->engine->context->dataSources['default'];
     $this->displayStatus ();
     $this->setDataSource ('page', new DataRecord($this->page));
   }
@@ -803,7 +803,10 @@ class Controller
 
   /**
    * Sets up a page specific data model for use on the processRequest() phase and/or on the processView() phase.
-   * Override to provide specific functionality.
+   *
+   * Override this if you want to manually specify the model.
+   * - The model is saved on `$this->dataItem`.
+   * - Do not try to modify the default data source here, as it will be overriden with `$this->dataItem` later.
    */
   protected function setupModel ()
   {
@@ -1298,14 +1301,15 @@ class Controller
 
   protected function gotoModuleIndex ()
   {
+    global $application;
     if (isset($this->sitePage->indexURL))
       $this->thenGoTo ($this->sitePage->indexURL);
     else {
       /** @var PageRoute $index */
       $index = $this->sitePage->getIndex ();
       if (!$index)
-        throw new ConfigException ("No index page found for URI " . $this->sitePage->URI);
-      $this->thenGoTo ($index->evalURI ($this->URIParams));
+        $this->thenGoTo ($application->homeURI);
+      else $this->thenGoTo ($index->evalURI ($this->URIParams));
     }
   }
 
