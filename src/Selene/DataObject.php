@@ -1,7 +1,9 @@
 <?php
 namespace Selene;
 
+use ArrayIterator;
 use Exception;
+use Iterator;
 use PDO;
 use PDOStatement;
 use ReflectionObject;
@@ -68,16 +70,18 @@ class DataObject
                     $this->$field = date('Y-m-d');*/
   }
 
-  public static function find ($idFld){
+  public static function find ($idFld)
+  {
     return function () use ($idFld) {
       $id = 0; //TODO: get id from route params
-      $i = new static ($id);
+      $i  = new static ($id);
       $i->read ();
       return $i;
     };
   }
 
-  public static function all (){
+  public static function all ()
+  {
     return function () {
       $i = new static ();
       return $i->query ();
@@ -100,12 +104,12 @@ class DataObject
     return empty($date) || (preg_match ('#^\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2}:\d{2})?$#', $date) && strtotime ($date));
   }
 
-  public static function now ()
+  public static function today ()
   {
     return date ('Y-m-d');
   }
 
-  public static function currentDateTime ()
+  public static function now ()
   {
     return date ('Y-m-d H:i:s');
   }
@@ -553,13 +557,17 @@ class DataObject
 
   public function initFromQueryString ()
   {
-    // may be overriden
+    $fields = [];
+    if (isset($this->primaryKeyName))
+      $fields[] = $this->primaryKeyName;
     if (isset($this->filterFields))
-      foreach ($this->filterFields as $field) {
-        $param = safeParameter ($field);
-        if (isset($param))
-          $this->$field = $param;
-      }
+      $fields = array_merge ($fields, $this->filterFields);
+    // may be overriden
+    foreach ($fields as $field) {
+      $param = safeParameter ($field);
+      if (isset($param))
+        $this->$field = $param;
+    }
   }
 
   /**
@@ -708,6 +716,18 @@ class DataObject
     $this->$fileFieldName = Media::insertUploadedFile ($fileFieldName);
   }
 
+  /**
+   * Returns a map of field names and the corresponding values.
+   * @return array
+   */
+  function getValues ()
+  {
+    $o = [];
+    foreach ($this->fieldNames as $k)
+      $o[$k] = $this->$k;
+    return $o;
+  }
+
   public function serializeToJSON (array $fields)
   {
     $output = '{';
@@ -737,32 +757,37 @@ class DataObject
     return self::serializePropertiesToXML ((array)$this, $fields, $tag);
   }
 
-  public function iterate (array $data, $callback, $param = null)
+  /**
+   * @param array|Iterator $data
+   * @param callable $callback
+   */
+  public function iterate ($data, callable $callback)
   {
-    if (!empty($data)) {
-      $rowCount = count ($data);
-      $rowData  = clone $this;
-      for ($rowNumber = 1; $rowNumber <= $rowCount; ++$rowNumber) {
-        $rowData->loadFrom ($data[$rowNumber - 1]);
-        call_user_func ($callback, $rowData, $param);
-      }
+    if (is_array($data))
+      $data = new ArrayIterator($data);
+    while ($data->valid ()) {
+      $this->loadFrom ($data->current ());
+      call_user_func ($callback, $this, $data->key ());
+      $data->next ();
     }
   }
 
-  public function enumerateAsJSON ($callback, $param = null)
+  /**
+   * @param array|Iterator $data
+   * @param callable $callback
+   * @return array
+   */
+  public function map ($data, callable $callback)
   {
-    $values = $this->iterate ($callback, $param);
-    if (isset($values))
-      return '[' . join (',', str_replace ("\n", '\n', $values)) . ']';
-    return '';
-  }
-
-  public function enumerateAsXML ($callback, $param = null)
-  {
-    $values = $this->iterate ($callback, $param);
-    if (isset($values))
-      return join ('', $values);
-    return '';
+    if (is_array($data))
+      $data = new ArrayIterator($data);
+    $o = [];
+    while ($data->valid ()) {
+      $this->loadFrom ($data->current ());
+      $o [] = call_user_func ($callback, $this, $data->key ());
+      $data->next ();
+    }
+    return $o;
   }
 
   public function queryAsXML ($fields = null, $rootTag = 'data', $rowTag = 'e')

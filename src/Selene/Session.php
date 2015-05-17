@@ -1,6 +1,7 @@
 <?php
 namespace Selene;
 
+use Exception;
 use Selene\Contracts\UserInterface;
 use Selene\Exceptions\SessionException;
 
@@ -8,8 +9,8 @@ class Session
 {
   /** @var string The session cookie name. */
   public $name;
-  public $isValid   = false;
-  public $lang      = null;
+  public $isValid = false;
+  public $lang    = null;
   /** @var UserInterface|null The logged-in user or null if not logged-in. */
   public $user;
 
@@ -26,14 +27,22 @@ class Session
     if (empty($username))
       throw new SessionException(SessionException::MISSING_INFO);
     else {
-      $this->user = new $application->userModel;
-      if (!$this->user->findByName($username))
+      $user = new $application->userModel;
+      if (!$user->findByName ($username))
         throw new SessionException(SessionException::UNKNOWN_USER);
-      else if ($this->user->password() != $password)
+      else if (!$user->verifyPassword ($password))
         throw new SessionException(SessionException::WRONG_PASSWORD);
+      else if (!$user->active ())
+        throw new SessionException(SessionException::DISABLED);
       else {
-        $this->isValid      = true;
-        $this->lang         = $defaultLang;
+        $this->lang = $defaultLang;
+        try {
+          $user->onLogin ();
+          $this->isValid = true;
+          $this->user    = $user;
+        } catch (Exception $e) {
+          throw new SessionException($e->getMessage ());
+        }
       }
     }
   }
