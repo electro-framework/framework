@@ -241,13 +241,15 @@ class Application
    */
   public $SEOInfo;
   /**
-   * The default URI when none is specified on the URL.
+   * The application's entry point URI.
+   *
+   * It is also the default URI to redirect to when none is specified on the URL.
    * The URI locates an entry on the routing map where additional info. is used to
    * load the default page.
    * Set by application.ini.php
    * @var String
    */
-  public $defaultURI;
+  public $homeURI;
   /**
    * The address of the page to be displayed when the current page URI is invalid.
    * If null an exception is thrown.

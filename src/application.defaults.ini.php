@@ -6,7 +6,7 @@ return [
 
     'title'                  => '@',
     'appName'                => '',
-    'defaultURI'             => '',
+    'homeURI'                => '',
     'favicon'                => 'data:;base64,iVBORw0KGgo=', // Supress http request
     'subApplications'        => [],
     'modules'                => [],

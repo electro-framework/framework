@@ -101,7 +101,7 @@ class ModuleLoader
 
     $this->virtualURI = $application->VURI;
     if ($this->virtualURI == '')
-      $this->virtualURI = $application->defaultURI;
+      $this->virtualURI = $application->homeURI;
     $key = get ($_GET, 'key');
     if (!isset($application->routingMap))
       throw new ConfigException("No route map defined.");
