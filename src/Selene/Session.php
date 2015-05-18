@@ -13,6 +13,8 @@ class Session
   public $lang    = null;
   /** @var UserInterface|null The logged-in user or null if not logged-in. */
   public $user;
+  /** @var string */
+  public $userRealName;
 
   public function validate ()
   {
@@ -40,6 +42,7 @@ class Session
           $user->onLogin ();
           $this->isValid = true;
           $this->user    = $user;
+          $this->userRealName = $user->realName();
         } catch (Exception $e) {
           throw new SessionException($e->getMessage ());
         }

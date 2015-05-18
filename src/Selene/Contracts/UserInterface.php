@@ -4,24 +4,29 @@ namespace Selene\Contracts;
 interface UserInterface
 {
   /**
+   * The application developer's super-user role.
+   *
+   * Users with this role have access to all application features plus application design/building features.
+   */
+  const USER_ROLE_DEVELOPER = 'developer';
+  /**
    * The administration role.
    *
-   * This role acts as a super-user that can access all features.
-   * This is usually reserved for the application's developers.
+   * Uses with this role can access all application features.
+   * This is the most common role for backend administration users (usually the developer's clients).
    */
   const USER_ROLE_ADMIN = 'admin';
   /**
    * A standard user role.
    *
-   * Users with this role have access to most features.
-   * This is the common role for backoffice users, for instance.
+   * Users with this role have access to a restricted set of features.
+   * This is the common role for the end-users of your app (excluding your client).
    */
   const USER_ROLE_STANDARD = 'standard';
   /**
-   * A guest user role.
+   * A guest (anonymous) user role.
    *
-   * Users with this role have access to a restricted set of features.
-   * This is the common role for the end-users of your app (excluding your client).
+   * Users with this role are not authenticated and they have access only to a very restricted set of features.
    */
   const USER_ROLE_GUEST = 'guest';
 

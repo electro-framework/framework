@@ -96,10 +96,12 @@ abstract class AbstractRoute extends Object
     throw new Exception($match);
   }
 
-  function matchIf ($condition)
+  function activeFor ($condition)
   {
-    if (!$condition)
-      $this->URI = '<unmatchable>';
+    if (!$condition) {
+      $this->onMenu = false;
+      $this->URI    = '<unmatchable>';
+    }
     return $this;
   }
 
