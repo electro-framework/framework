@@ -26,6 +26,14 @@ class Context
   public $templateDirectories = [];
 
   /**
+   * Map of pipe names to pipe implementation functions.
+   *
+   * Pipes can be used on databinding expressions. Ex: {!a.c|myPipe}
+   * @var array
+   */
+  private $pipes = [];
+
+  /**
    * A map of tag names to fully qualified PHP class names.
    * @var array string => string
    */
@@ -37,34 +45,41 @@ class Context
   private $templates = [];
 
   /**
-   * @param array $tags A map of tag names to fully qualified PHP class names.
+   * @param array $tags  A map of tag names to fully qualified PHP class names.
+   * @param array $pipes A map of pipe names to pipe implementation functions..
    */
-  public function __construct (array &$tags)
+  function __construct (array &$tags, array &$pipes)
   {
-    $this->tags =& $tags;
+    $this->tags  =& $tags;
+    $this->pipes =& $pipes;
   }
 
-  public function getClassForTag ($tag)
+  function getClassForTag ($tag)
   {
     return get ($this->tags, $tag);
   }
 
-  public function addTemplate ($name, Template $template)
+  function addTemplate ($name, Template $template)
   {
     $this->templates[$name] = $template;
   }
 
-  public function getTemplate ($name)
+  function getTemplate ($name)
   {
     return get ($this->templates, $name);
   }
 
-  public function loadTemplate ($filename)
+  function loadTemplate ($filename)
   {
     foreach ($this->templateDirectories as $dir) {
       $f = loadFile ("$dir/$filename", false);
       if ($f) return $f;
     }
     throw new FileIOException($filename);
+  }
+
+  function getPipe ($name)
+  {
+    return get ($this->pipes, $name);
   }
 }

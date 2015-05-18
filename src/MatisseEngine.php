@@ -14,7 +14,7 @@ class MatisseEngine
   public $context;
 
   /**
-   * A map of tag names to fully qualified PHP class names.
+   * A map of tag names to fully qualified PHP component class names.
    * It is initialized to the core Matisse components that can be instantiated via tags.
    * @var array string => string
    */
@@ -24,17 +24,25 @@ class MatisseEngine
     'test'     => 'Selene\Matisse\Components\Test',
   ];
 
+  /**
+   * Map of pipe names to pipe implementation functions.
+   *
+   * Pipes can be used on databinding expressions. Ex: {!a.c|myPipe}
+   * @var array
+   */
+  private $pipes = [];
+
   function __construct ()
   {
     $this->reset ();
   }
 
-  public function reset ()
+  function reset ()
   {
-    $this->context = new Context($this->tags);
+    $this->context = new Context($this->tags, $this->pipes);
   }
 
-  public function parse ($markup, Component $parent = null, Page $page = null)
+  function parse ($markup, Component $parent = null, Page $page = null)
   {
     if (!$page) $page = $parent ? $parent->page : new Page($this->context);
     if (!$parent) $parent = $page;
@@ -45,15 +53,39 @@ class MatisseEngine
     return $parent;
   }
 
-  public function render (Component $root)
+  /**
+   * Renders the given component tree and returns the resulting markup.
+   * @param Component $root The component tree's root element.
+   * @return string The resulting markup (usually HTML).
+   */
+  function render (Component $root)
   {
     ob_start (null, self::MAX_BUFFER_SIZE);
     $root->run ();
     return ob_get_clean ();
   }
 
-  public function registerComponents (array $map)
+  /**
+   * Registers a map of tag names to fully qualified PHP component class names.
+   * @param array $map
+   */
+  function registerComponents (array $map)
   {
     $this->tags = array_merge ($this->tags, $map);
+  }
+
+  /**
+   * Register a set of pipes for use on databinding expressions when rendering.
+   * @param array|object $pipes Either a map of pipe names to pipe implementation functions or an instance of a class
+   *                            where each public method (except the constructor) is a named pipe function.
+   */
+  function registerPipes ($pipes)
+  {
+    if (is_object ($pipes)) {
+      $keys   = array_diff (get_class_methods ($pipes), ['__construct']);
+      $values = array_map (function ($v) use ($pipes) { return [$pipes, $v]; }, $keys);
+      $pipes  = array_combine ($keys, $values);
+    };
+    $this->pipes = array_merge ($this->pipes, $pipes);
   }
 }

@@ -821,7 +821,17 @@ abstract class Component
     }
     if (is_null ($rec))
       $rec = new \EmptyIterator();
-    return $dataField == '#self' ? $rec : getField ($rec, $dataField);
+    $pipes     = explode ('|', $dataField);
+    $dataField = array_shift ($pipes);
+    $v         = $dataField == '#self' ? $rec : getField ($rec, $dataField);
+    foreach ($pipes as $name) {
+      $pipe = $this->context->getPipe ($name);
+      if (!$pipe)
+        throw new ComponentException ($this, "Pipe <b>$name</b> is not defined.");
+      $v = call_user_func ($pipe, $v, $this->context);
+    }
+
+    return $v;
   }
 
   protected function getUniqueId ()
