@@ -61,8 +61,8 @@ class ModuleLoader
       $tail = substr ($URI, $p + 1);
       if (isset($application->mountPoints[$head])) {
         $path = $application->mountPoints[$head] . "/$tail";
-        if (substr($path, -4) == '.php' && file_exists($path)) {
-          require $path;
+        if (file_exists($x = "$path.php")) {
+          require $x;
           exit;
         }
         $type = get (self::$MIME_TYPES, substr ($tail, strrpos ($tail, '.') + 1), 'application/octet-stream');

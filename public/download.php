@@ -3,8 +3,6 @@ use Selene\Exceptions\FatalException;
 use Selene\Exceptions\FileException;
 use Selene\Media;
 
-$rootDir = __DIR__ . "/../../../..";
-
 $URI      = get ($_GET, 'URI');
 $filename = get ($_GET, 'name');
 $id       = get ($_GET, 'id');

@@ -39,6 +39,12 @@ class Application
   ];
 
   /**
+   * A list of arrays or objects containing pipe definitions.
+   * @var array
+   */
+  public $pipeRegistrations = [];
+
+  /**
    * The application name.
    * This should be composed only of alphanumeric characters. It is used as the session name.
    * If not specified, defaults to the parent application name or, if not defined, the application path or,
@@ -401,6 +407,7 @@ class Application
       WebConsole::session ($session);
     }
     $this->loadRoutes ();
+    $this->registerPipes (new Pipes);
     $loader = ModuleLoader::loadAndRun ();
     if ($this->debugMode) {
       $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
@@ -408,6 +415,11 @@ class Application
       WebConsole::response (['Content-Length' => round (ob_get_length () / 1024) . ' KB']);
     }
     WebConsole::outputContent ();
+  }
+
+  function registerPipes ($mapOrObject)
+  {
+    $this->pipeRegistrations[] = $mapOrObject;
   }
 
   /**
@@ -537,6 +549,16 @@ class Application
   public function getFileURI ($fileName)
   {
     return "$this->baseURI/$this->fileArchivePath/$fileName";
+  }
+
+  public function getImageDownloadURI ($fileId)
+  {
+    return "$this->frameworkURI/image?id=$fileId";
+  }
+
+  public function getFileDownloadURI ($fileId)
+  {
+    return "$this->frameworkURI/download?id=$fileId";
   }
 
   /**

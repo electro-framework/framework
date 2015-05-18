@@ -184,6 +184,13 @@ abstract class Media {
     return $application->getImageURI($id.'.'.self::getImageExt($id));
   }
   //--------------------------------------------------------------------------
+  public static function getDownloadURI($id)
+  //--------------------------------------------------------------------------
+  {
+    global $application;
+    return $application->getImageDownloadURI($id);
+  }
+  //--------------------------------------------------------------------------
   public static function saveUploadedImage($fileFieldName,$id,$ext = '')
   //--------------------------------------------------------------------------
   {
@@ -396,7 +403,8 @@ abstract class Media {
   public static function getFileDownloadURI($id)
   //--------------------------------------------------------------------------
   {
-    return "framework/download.php?id=$id";
+    global $application;
+    return $application->getFileDownloadURI($id);
   }
   //--------------------------------------------------------------------------
   public static function getOriginalFileName($id)

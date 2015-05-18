@@ -417,10 +417,8 @@ class Controller
     global $application;
     $this->page->title = str_replace ('@', $this->getTitle (), $application->title);
     $this->page->addScript ("$application->frameworkURI/js/engine.js");
-    if (isset($this->engine->context->dataSources['default']))
-      $this->page->defaultDataSource =& $this->engine->context->dataSources['default'];
     $this->displayStatus ();
-    $this->setDataSource ('page', new DataRecord($this->page));
+    $this->page->defaultDataSource =& $this->engine->context->dataSources['default'];
   }
 
   /**
@@ -582,6 +580,11 @@ class Controller
     throw new DataBindingException(null, "Data source <b>$name</b> is not defined.");
   }
 
+  function getField ($field, $dataSource = null)
+  {
+    return $this->getDataRecord($dataSource)[$field];
+  }
+
 
   public function markerHit ($name)
   {
@@ -680,6 +683,7 @@ class Controller
       // Normal page rendering (not a login form).
 
       $this->setupViewModel (); //custom setup
+      $this->setDataSource ('page', new DataRecord($this->page));
       if ($this->defineView ())
         return false;
     }
@@ -688,6 +692,7 @@ class Controller
       $path = $application->loginView;
       if (!$this->loadView ($path))
         throw new FileNotFoundException($path);
+      $this->setDataSource ('page', new DataRecord($this->page));
       $this->page->formAutocomplete = true;
     }
     $this->initSEO ();
@@ -706,6 +711,8 @@ class Controller
     global $application;
     $this->engine = new MatisseEngine();
     $this->engine->registerComponents (Application::$TAGS);
+    foreach ($application->pipeRegistrations as $pipeReg)
+      $this->engine->registerPipes ($pipeReg);
     $ctx                      = $this->engine->context;
     $ctx->condenseLiterals    = $application->condenseLiterals;
     $ctx->debugMode           = $application->debugMode;
