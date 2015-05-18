@@ -26,12 +26,18 @@ class Context
   public $templateDirectories = [];
 
   /**
-   * Map of pipe names to pipe implementation functions.
+   * A class instance who's methods provide pipe implementations.
    *
-   * Pipes can be used on databinding expressions. Ex: {!a.c|myPipe}
-   * @var array
+   * The handler can be an instance of a proxy class, which dynamically resolves the pipe invocations trough a
+   * `__call` method.
+   *
+   * > Pipe Handlers should throw an exception if a handler method is not found.
+   *
+   * > <p>An handler implementation is available on the {@see PipeHandler} class.
+   *
+   * @var object
    */
-  private $pipes = [];
+  private $pipeHandler;
 
   /**
    * A map of tag names to fully qualified PHP class names.
@@ -45,13 +51,13 @@ class Context
   private $templates = [];
 
   /**
-   * @param array $tags  A map of tag names to fully qualified PHP class names.
-   * @param array $pipes A map of pipe names to pipe implementation functions..
+   * @param array $tags A map of tag names to fully qualified PHP class names.
+   * @param object $pipeHandler A value for {@see $pipeHandler}
    */
-  function __construct (array &$tags, array &$pipes)
+  function __construct (array &$tags, $pipeHandler = null)
   {
     $this->tags  =& $tags;
-    $this->pipes =& $pipes;
+    $this->pipeHandler = $pipeHandler;
   }
 
   function getClassForTag ($tag)
@@ -78,8 +84,16 @@ class Context
     throw new FileIOException($filename);
   }
 
+  /**
+   * @param $name
+   * @return callable A function that implements the pipe.
+   *                  <p>Note: the function may throw an {@see HandlerNotFoundException} if it can't handle
+   *                  the required pipe.
+   */
   function getPipe ($name)
   {
-    return get ($this->pipes, $name);
+    if (!isset($this->pipeHandler))
+      throw new \RuntimeException ("Can't use pipes if no pipe handler is set.");
+    return [$this->pipeHandler, $name];
   }
 }

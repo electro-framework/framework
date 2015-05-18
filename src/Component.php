@@ -5,6 +5,7 @@ use Selene\Matisse\Components\Page;
 use Selene\Matisse\Components\Parameter;
 use Selene\Matisse\Exceptions\ComponentException;
 use Selene\Matisse\Exceptions\DataBindingException;
+use Selene\Matisse\Exceptions\HandlerNotFoundException;
 
 /**
  * The base class from which all components derive.
@@ -826,9 +827,12 @@ abstract class Component
     $v         = $dataField == '#self' ? $rec : getField ($rec, $dataField);
     foreach ($pipes as $name) {
       $pipe = $this->context->getPipe ($name);
-      if (!$pipe)
-        throw new ComponentException ($this, "Pipe <b>$name</b> is not defined.");
-      $v = call_user_func ($pipe, $v, $this->context);
+      try {
+        $v = call_user_func ($pipe, $v, $this->context);
+      }
+      catch (HandlerNotFoundException $e) {
+        throw new ComponentException ($this, "Pipe <b>$name</b> was not found.");
+      }
     }
 
     return $v;
