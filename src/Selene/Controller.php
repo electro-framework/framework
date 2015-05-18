@@ -213,6 +213,18 @@ class Controller
    */
   protected $modelMethod = null;
   /**
+   * If specified, allows a controller to simultaneously define $dataClass and $modelMethod.
+   *
+   * Syntax:
+   *
+   *       $model = 'ModelClass'
+   *       $model = 'ModelClass::modelMethod'
+   *       $model = ['ModelClass', 'modelMethod']
+   *
+   * @var string|array
+   */
+  protected $model = null;
+  /**
    * If set, defines the page title. It will generate a document `<title>` and it can be used on
    * breadcrumbs.
    * @var string
@@ -840,7 +852,12 @@ class Controller
         return;
       }
     }
+    if (isset($this->model))
+      list ($this->dataClass, $this->modelMethod) =
+        array_merge (is_array ($this->model) ? $this->model : explode ('::', $this->model), [null]);
     if (isset($this->dataClass)) {
+      if (!class_exists ($this->dataClass))
+        throw new ConfigException ("Model not found: '<b>$this->dataClass</b>'<p>For controller: <b>".get_class($this).'</b>');
       $this->dataItem = new $this->dataClass;
       //$this->dataItem = $this->createDataItem($this->dataClass);
       $this->applyPresets ();
