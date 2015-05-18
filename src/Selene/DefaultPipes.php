@@ -3,7 +3,10 @@ namespace Selene;
 
 use Selene\Matisse\Context;
 
-class Pipes
+/**
+ * Predefined pipes provided by the framework.
+ */
+class DefaultPipes
 {
   /**
    * @param string $v
@@ -15,4 +18,5 @@ class Pipes
     global $application;
     return $application->getFileDownloadURI($v);
   }
+
 }

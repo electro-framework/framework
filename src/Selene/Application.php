@@ -7,6 +7,7 @@ use Impactwave\WebConsole\ErrorHandler;
 use Impactwave\WebConsole\Panels\HttpRequestPanel;
 use Impactwave\WebConsole\WebConsole;
 use Selene\Exceptions\ConfigException;
+use Selene\Matisse\PipeHandler;
 use Selene\Routing\RoutingMap;
 
 class Application
@@ -37,12 +38,6 @@ class Application
     'tab-page'    => 'Selene\Matisse\Components\TabPage',
     'tabs'        => 'Selene\Matisse\Components\Tabs',
   ];
-
-  /**
-   * A list of arrays or objects containing pipe definitions.
-   * @var array
-   */
-  public $pipeRegistrations = [];
 
   /**
    * The application name.
@@ -384,6 +379,11 @@ class Application
    */
   public $config;
 
+  /**
+   * @var PipeHandler
+   */
+  public $pipeHandler;
+
   static function exceptionHandler (Exception $e)
   {
     if (function_exists ('database_rollback'))
@@ -407,7 +407,7 @@ class Application
       WebConsole::session ($session);
     }
     $this->loadRoutes ();
-    $this->registerPipes (new Pipes);
+    $this->registerPipes ();
     $loader = ModuleLoader::loadAndRun ();
     if ($this->debugMode) {
       $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
@@ -417,9 +417,10 @@ class Application
     WebConsole::outputContent ();
   }
 
-  function registerPipes ($mapOrObject)
+  protected function registerPipes ()
   {
-    $this->pipeRegistrations[] = $mapOrObject;
+    $this->pipeHandler = new PipeHandler;
+    $this->pipeHandler->registerPipes (new DefaultPipes);
   }
 
   /**

@@ -104,11 +104,14 @@ function enum ($delimiter)
   return join ($delimiter, $r);
 }
 
-function concat ($arg1, $arg2)
+/**
+ * Concatenates array
+ * @param array $a
+ * @param array $b
+ */
+function concat (array &$a, array $b)
 {
-  if ($arg1 && $arg2)
-    return $arg1 . $arg2;
-  return '';
+  $a = array_merge ($a, $b);
 }
 
 function convertToInt (&$variable)
@@ -249,16 +252,6 @@ function toURISafeText ($text)
   //$text = iconv('UTF-8','ISO-8859-1//TRANSLIT',$text);
   //$text = strtr($text,'áéíóúàèìòùãõâêôçÁÉÍÓÚÀÈÌÒÙÃÕÂÊÔÇ','aeiouaeiouaoaeocAEIOUAEIOUAOAEOC');
   return urlencode ($text);
-}
-
-function array_append (&$target, &$source)
-{
-  if (!count ($source))
-    return;
-  if (!isset($source[0]))
-    throw new FatalException('array_append was called with a non-list array as source argument.');
-  foreach ($source as $k => &$e)
-    $target[] = $e;
 }
 
 /**

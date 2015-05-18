@@ -18,6 +18,7 @@ use Selene\Exceptions\SessionException;
 use Selene\Exceptions\Status;
 use Selene\Exceptions\ValidationException;
 use Selene\Matisse\Components\Page;
+use Selene\Matisse\Context;
 use Selene\Matisse\DataRecord;
 use Selene\Matisse\DataSet;
 use Selene\Matisse\DataSource;
@@ -46,6 +47,10 @@ class Controller
    * @var MatisseEngine
    */
   public $engine;
+  /**
+   * @var Context
+   */
+  public $context;
   /**
    * Points to the root of the components tree.
    * @var Page
@@ -418,7 +423,7 @@ class Controller
     $this->page->title = str_replace ('@', $this->getTitle (), $application->title);
     $this->page->addScript ("$application->frameworkURI/js/engine.js");
     $this->displayStatus ();
-    $this->page->defaultDataSource =& $this->engine->context->dataSources['default'];
+    $this->page->defaultDataSource =& $this->context->dataSources['default'];
   }
 
   /**
@@ -520,7 +525,7 @@ class Controller
   {
     $name      = empty($name) ? 'default' : $name;
     $isDefault = $isDefault || $name == 'default';
-    $ctx       = $this->engine->context;
+    $ctx       = $this->context;
     if ($isDefault) {
       if (isset($ctx->dataSources['default']) && !$overwrite)
         throw new DataBindingException(null,
@@ -537,7 +542,7 @@ class Controller
    */
   public function setViewModel ($name, $data)
   {
-    $ctx = $this->engine->context;
+    $ctx = $this->context;
     if (!isset($data))
       $ctx->dataSources[$name] = new EmptyIterator();
     else if ((is_array ($data) && isset($data[0])) || $data instanceof PDOStatement)
@@ -571,7 +576,7 @@ class Controller
       }
       else throw new DataBindingException(null, "The default data source for the page is not defined.");
     }
-    $ctx = $this->engine->context;
+    $ctx = $this->context;
     if (array_key_exists ($name, $ctx->dataSources)) {
       $it = $ctx->dataSources[$name]->getIterator ();
       if ($it->valid ()) return $it->current ();
@@ -582,7 +587,7 @@ class Controller
 
   function getField ($field, $dataSource = null)
   {
-    return $this->getDataRecord($dataSource)[$field];
+    return $this->getDataRecord ($dataSource)[$field];
   }
 
 
@@ -709,11 +714,10 @@ class Controller
   protected function initTemplateEngine ()
   {
     global $application;
-    $this->engine = new MatisseEngine();
-    $this->engine->registerComponents (Application::$TAGS);
-    foreach ($application->pipeRegistrations as $pipeReg)
-      $this->engine->registerPipes ($pipeReg);
-    $ctx                      = $this->engine->context;
+    $this->engine = new MatisseEngine;
+    $pipeHandler  = clone $application->pipeHandler;
+    $pipeHandler->registerFallbackHandler ($this);
+    $ctx                      = $this->context = $this->engine->createContext (Application::$TAGS, $pipeHandler);
     $ctx->condenseLiterals    = $application->condenseLiterals;
     $ctx->debugMode           = $application->debugMode;
     $ctx->templateDirectories = $application->templateDirectories;
@@ -856,7 +860,7 @@ class Controller
   protected function setupViewModel ()
   {
     global $application;
-    $ctx              = $this->engine->context;
+    $ctx              = $this->context;
     $this->pageNumber = get ($_REQUEST, $application->pageNumberParam, 1);
     if (isset($this->sitePage)) {
       if (isset($this->dataItem)) {
@@ -1010,7 +1014,7 @@ class Controller
 
   protected function parseView ($viewTemplate)
   {
-    $this->page             = $this->engine->parse ($viewTemplate);
+    $this->page             = $this->engine->parse ($viewTemplate, $this->context);
     $this->page->controller = $this;
   }
 
@@ -1335,7 +1339,7 @@ class Controller
   protected function join ($masterSourceName, $slavesBaseName, $masterData, DataObject $slaveTemplate, $joinExpr,
                            $masterKeyField = 'id')
   {
-    $ctx = $this->engine->context;
+    $ctx = $this->context;
     if (!isset($ctx->dataSources[$masterSourceName]))
       $this->setDataSource ($masterSourceName, new DataSet($masterData));
     foreach ($masterData as &$record) {
