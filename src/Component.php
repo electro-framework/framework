@@ -185,7 +185,7 @@ abstract class Component
   {
     $class = $context->getClassForTag ($tagName);
     if (!$class)
-      throw new ComponentException (null, "Unknown tag: <b>&lt;c:$tagName></b>\n\n\nDid you forget to register it?");
+      throw new ComponentException (null, "Unknown tag: <b>&lt;c:$tagName></b><p>Did you forget to register it?");
     return new $class ($context, $attributes);
   }
 

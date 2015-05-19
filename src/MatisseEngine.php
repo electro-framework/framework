@@ -16,6 +16,7 @@ class MatisseEngine
     'repeater' => 'Selene\Matisse\Components\Repeater',
     'template' => 'Selene\Matisse\Components\Template',
     'test'     => 'Selene\Matisse\Components\Test',
+    'literal'  => 'Selene\Matisse\Components\Literal',
   ];
 
   /**
