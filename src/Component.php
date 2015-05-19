@@ -12,7 +12,7 @@ use Selene\Matisse\Exceptions\HandlerNotFoundException;
  */
 abstract class Component
 {
-  const PARSE_PARAM_BINDING_EXP = '#\{(?:\!([^.}{]*))?\.?((?:[^{}]*|\{[^{}]*\})*)\}#';
+  const PARSE_PARAM_BINDING_EXP = '#\{ \s* (?: \! ([^.}{]*) )? \.? ( (?: [^{}]* | \{ [^{}]* \} )* ) \}#x';
   /**
    * An array containing the instance creation counters for each component class name.
    *
@@ -771,7 +771,9 @@ abstract class Component
     if (empty($matches))
       throw new \InvalidArgumentException();
     list($full, $dataSource, $dataField) = $matches;
-    $p = strpos ($dataField, '{');
+    $dataSource = trim ($dataSource);
+    $dataField  = trim ($dataField);
+    $p          = strpos ($dataField, '{');
     if ($p !== false && $p >= 0) {
       //recursive binding expression
       $exp = preg_replace_callback (self::PARSE_PARAM_BINDING_EXP, [$this, 'evalBindingExp'], $dataField);
@@ -822,15 +824,14 @@ abstract class Component
     }
     if (is_null ($rec))
       $rec = new \EmptyIterator();
-    $pipes     = explode ('|', $dataField);
+    $pipes     = preg_split ('/\s*\|\s*/', $dataField);
     $dataField = array_shift ($pipes);
     $v         = $dataField == '#self' ? $rec : getField ($rec, $dataField);
     foreach ($pipes as $name) {
-      $pipe = $this->context->getPipe ($name);
+      $pipe = $this->context->getPipe (trim ($name));
       try {
         $v = call_user_func ($pipe, $v, $this->context);
-      }
-      catch (HandlerNotFoundException $e) {
+      } catch (HandlerNotFoundException $e) {
         throw new ComponentException ($this, "Pipe <b>$name</b> was not found.");
       }
     }
