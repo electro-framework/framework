@@ -59,7 +59,7 @@ class DataObject
    */
   public $plural;
 
-  public function __construct ($keyValue = null)
+  function __construct ($keyValue = null)
   {
     if (isset($keyValue))
       $this->setPrimaryKeyValue ($keyValue);
@@ -184,19 +184,22 @@ class DataObject
   /**
    * Loads the record with the given id into the model object.
    * @param $id
+   * @return $this
    * @throws DataModelException
    */
-  public function find ($id)
+  function find ($id)
   {
     $this->setPrimaryKeyValue ($id);
     $this->read ();
+    return $this;
   }
 
   /**
+   * Returns all records from the corresponding database table.
    * An alias for {@see query()}.
    * @return PDOStatement
    */
-  public function all ()
+  function all ()
   {
     return $this->query ();
   }
@@ -215,13 +218,13 @@ class DataObject
     return $this;
   }
 
-  public function getTitle ($default = '')
+  function getTitle ($default = '')
   {
     $title = isset($this->titleField) ? $this->{$this->titleField} : ''; //$this->getPrimaryKeyValue()
     return strlen ($title) ? $title : $default;
   }
 
-  public function validate ($forInsert = false)
+  function validate ($forInsert = false)
   {
     if ($this->disableValidation)
       return;
@@ -250,7 +253,7 @@ class DataObject
    * @param string $fieldName
    * @return mixed
    */
-  public function fromPropertyToFieldValue ($fieldName)
+  function fromPropertyToFieldValue ($fieldName)
   {
     $value = property ($this, $fieldName);
     if ($this->isBoolean ($fieldName))
@@ -273,7 +276,7 @@ class DataObject
    * @param string $fieldName
    * @param mixed  $value
    */
-  public function setPropertyFromFieldValue ($fieldName, $value)
+  function setPropertyFromFieldValue ($fieldName, $value)
   {
     if ($this->isBoolean ($fieldName))
       switch ($value) {
@@ -291,7 +294,7 @@ class DataObject
     $this->$fieldName = $value;
   }
 
-  public function read ($keyName = null)
+  function read ($keyName = null)
   {
     $cache = $this->cache ();
     if (isset($keyName)) {
@@ -319,7 +322,7 @@ class DataObject
    * @throws Exception
    * @throws ValidationException
    */
-  public function insert ($insertFiles = true)
+  function insert ($insertFiles = true)
   {
     global $db;
     $this->validate (true);
@@ -370,7 +373,7 @@ class DataObject
    * Saves the instance's fields into a record in the database.
    * Note: if no record exists yet, a new one is inserted.
    */
-  public function update ()
+  function update ()
   {
     $this->validate (false);
     $cache = $this->cache ();
@@ -418,7 +421,7 @@ class DataObject
    * Note: any associated files/images are also deleted.
    * @global Application $application
    */
-  public function delete ()
+  function delete ()
   {
     database_begin ();
     try {
@@ -480,12 +483,12 @@ class DataObject
    * Defauls to returning all fields from all records.
    * @return PDOStatement
    */
-  public function query ()
+  function query ()
   {
     return $this->queryAllFields ($this->primarySortField);
   }
 
-  public function getFilterSQLAndValues ($prefix = ' WHERE ')
+  function getFilterSQLAndValues ($prefix = ' WHERE ')
   {
     if (isset($this->filterFields)) {
       $where  = '';
@@ -502,7 +505,7 @@ class DataObject
     return ['', []];
   }
 
-  public function queryAllFields ($sortBy = '')
+  function queryAllFields ($sortBy = '')
   {
     if (!empty($sortBy))
       $sortBy = " ORDER BY $sortBy";
@@ -520,7 +523,7 @@ class DataObject
    * @param string $limit
    * @return PDOStatement
    */
-  public function queryBy ($condition, $fields = '', $sortBy = '', array $params = null, $limit = '')
+  function queryBy ($condition, $fields = '', $sortBy = '', array $params = null, $limit = '')
   {
     list ($where, $values) = $this->getFilterSQLAndValues ();
     if (!empty($condition))
@@ -536,26 +539,26 @@ class DataObject
     return database_query ("SELECT $fields FROM {$this->tableName} $this->prefix$where$sortBy $limit", $values);
   }
 
-  public function getPrimaryKeyValue ()
+  function getPrimaryKeyValue ()
   {
     $name = $this->primaryKeyName;
     if (empty($name)) return null;
     return property ($this, $name);
   }
 
-  public function setPrimaryKeyValue ($value)
+  function setPrimaryKeyValue ($value)
   {
     if (isset($this->primaryKeyName))
       $this->{$this->primaryKeyName} = $value;
     else throw new DataModelException($this, "There is no primary key defined.");
   }
 
-  public function isInstanceRequested ()
+  function isInstanceRequested ()
   {
     return isset($_REQUEST[$this->primaryKeyName]);
   }
 
-  public function getRequestedPrimaryKeyValue ()
+  function getRequestedPrimaryKeyValue ()
   {
     $pk = $this->getPrimaryKeyValue ();
     if (isset($pk))
@@ -565,13 +568,13 @@ class DataObject
     return null;
   }
 
-  public function isNew ()
+  function isNew ()
   {
     $v = $this->getPrimaryKeyValue ();
     return is_null ($v) || $v === ''; //don't use empty()
   }
 
-  public function initFromQueryString ()
+  function initFromQueryString ()
   {
     $fields = [];
     if (isset($this->primaryKeyName))
@@ -590,7 +593,7 @@ class DataObject
    * Loads this instance's properties with values read from the supplied database struct.
    * @param array $record
    */
-  public function loadFrom (array $record = null)
+  function loadFrom (array $record = null)
   {
     if (!is_null ($record)) {
       foreach ($record as $name => $value)
@@ -608,7 +611,7 @@ class DataObject
    * The loaded values will be escaped to avoid SQL injection. HTML content is not modified.
    * @param array $allowedFields A list of field names to load.
    */
-  public function loadFromHttpRequest (array $allowedFields = null)
+  function loadFromHttpRequest (array $allowedFields = null)
   {
     if (isset($allowedFields)) {
       foreach ($allowedFields as $name)
@@ -627,7 +630,7 @@ class DataObject
    * same primary key value as this object's primary key.
    * @return DataObject
    */
-  public function getCurrentValues ()
+  function getCurrentValues ()
   {
     if (!$this->isNew ()) {
       $class   = new ReflectionObject($this);
@@ -639,7 +642,7 @@ class DataObject
     return null;
   }
 
-  public function isModified ()
+  function isModified ()
   {
     $current = $this->getCurrentValues ();
     if (is_null ($current))
@@ -650,7 +653,7 @@ class DataObject
     return false;
   }
 
-  public function setBoolField ($fieldName, $value, $filter = '')
+  function setBoolField ($fieldName, $value, $filter = '')
   {
 
     if (!empty($filter))
@@ -660,7 +663,7 @@ class DataObject
     );
   }
 
-  public function deleteImage ($fieldName)
+  function deleteImage ($fieldName)
   {
     if (!property_exists ($this, $fieldName))
       throw new DataModelException($this, "Undefined field $fieldName.");
@@ -670,7 +673,7 @@ class DataObject
     }
   }
 
-  public function deleteFile ($fieldName)
+  function deleteFile ($fieldName)
   {
     if (!property_exists ($this, $fieldName))
       throw new DataModelException($this, "Undefined field $fieldName.");
@@ -680,7 +683,7 @@ class DataObject
     }
   }
 
-  public function deleteGallery ()
+  function deleteGallery ()
   {
     $id = $this->getPrimaryKeyValue ();
     if (isset($id)) {
@@ -693,7 +696,7 @@ class DataObject
     }
   }
 
-  public function handleImageUpdate ($imageFieldName)
+  function handleImageUpdate ($imageFieldName)
   {
     $fileFormFieldName = $imageFieldName . '_file';
     $current           = $this->getCurrentValues ();
@@ -709,12 +712,12 @@ class DataObject
       Media::updateImageInfo ($this->$imageFieldName, null, null);
   }
 
-  public function handleImageInsert ($imageFieldName)
+  function handleImageInsert ($imageFieldName)
   {
     $this->$imageFieldName = Media::insertUploadedImage ($imageFieldName);
   }
 
-  public function handleFileUpdate ($fileFieldName)
+  function handleFileUpdate ($fileFieldName)
   {
     $fileFormFieldName = $fileFieldName . '_file';
     $current           = $this->getCurrentValues ();
@@ -727,7 +730,7 @@ class DataObject
       Media::deleteFile ($current->$fileFieldName);
   }
 
-  public function handleFileInsert ($fileFieldName)
+  function handleFileInsert ($fileFieldName)
   {
     $this->$fileFieldName = Media::insertUploadedFile ($fileFieldName);
   }
@@ -744,7 +747,7 @@ class DataObject
     return $o;
   }
 
-  public function serializeToJSON (array $fields)
+  function serializeToJSON (array $fields)
   {
     $output = '{';
     $sep    = false;
@@ -766,7 +769,7 @@ class DataObject
     return $output . '}';
   }
 
-  public function serializeToXML (array $fields = null, $tag = 'e')
+  function serializeToXML (array $fields = null, $tag = 'e')
   {
     if (is_null ($fields))
       $fields = $this->fieldNames;
@@ -777,7 +780,7 @@ class DataObject
    * @param array|Iterator $data
    * @param callable       $callback
    */
-  public function iterate ($data, callable $callback)
+  function iterate ($data, callable $callback)
   {
     if (is_array ($data))
       $data = new ArrayIterator($data);
@@ -793,7 +796,7 @@ class DataObject
    * @param callable       $callback
    * @return array
    */
-  public function map ($data, callable $callback)
+  function map ($data, callable $callback)
   {
     if (is_array ($data))
       $data = new ArrayIterator($data);
@@ -806,7 +809,7 @@ class DataObject
     return $o;
   }
 
-  public function queryAsXML ($fields = null, $rootTag = 'data', $rowTag = 'e')
+  function queryAsXML ($fields = null, $rootTag = 'data', $rowTag = 'e')
   {
     $st     = $this->query ();
     $result = "<$rootTag>";
@@ -817,7 +820,7 @@ class DataObject
     return $result . "</$rootTag>";
   }
 
-  public function serialize (array $fieldNames = null)
+  function serialize (array $fieldNames = null)
   {
     if (is_null ($fieldNames))
       $fieldNames = $this->fieldNames;
@@ -827,7 +830,7 @@ class DataObject
     return implode (',', $fields);
   }
 
-  public function unserialize ($data)
+  function unserialize ($data)
   {
     $fields = explode (',', $data);
     foreach ($fields as $field) {

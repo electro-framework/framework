@@ -243,6 +243,13 @@ class Controller
    */
   protected $indexPage   = null;
   protected $redirectURI = null;
+  /**
+   * When `true`, the framework will attempt to automatically load the model object by fetching key information from
+   * the URL, the route's `preset` property or from the request data.
+   * This setting is usually defined on routes, but if no routing is being used, it can also be set here.
+   * @var bool
+   */
+  public $autoloadModel = false;
 
   public static function modPathOf ($virtualURI = '', $params = null)
   {
@@ -858,7 +865,8 @@ class Controller
       if ($model instanceof DataObject) {
         $this->dataItem = $model;
         $this->applyPresets ();
-        $this->standardDataInit ($model);
+        if (isset($this->sitePage) && $this->sitePage->autoloadModel)
+          $this->standardDataInit ($model);
         return;
       }
       $this->modelData = $model;
@@ -876,11 +884,9 @@ class Controller
   <li>Class:         <b>$this->dataClass</b>
   <li>Active module: <b>{$this->sitePage->module}</b>
 ");
-
-        //if (isset($thisModel) && isset($thisModel->pk))
-        //$this->dataItem->primaryKeyName = $thisModel->pk;
         $this->applyPresets ();
-        $this->standardDataInit ($this->dataItem);
+        if ($this->sitePage->autoloadModel)
+          $this->standardDataInit ($this->dataItem);
         return;
       }
     }
@@ -897,7 +903,8 @@ class Controller
 
     if (isset($this->dataItem)) {
       $this->applyPresets ();
-      $this->standardDataInit ($this->dataItem);
+      if ($this->autoloadModel)
+        $this->standardDataInit ($this->dataItem);
     }
   }
 

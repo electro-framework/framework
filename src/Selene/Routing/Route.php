@@ -26,6 +26,7 @@ class Route extends AbstractRoute
       'dataModule'     => 'string',
       'preset'         => 'string',
       'model'          => 'string',
+      'autoloadModel'  => 'boolean',
       'format'         => 'string',
       'routes'         => 'array',
       'fields'         => 'string',

@@ -21,7 +21,7 @@ abstract class AbstractRoute extends Object
   public $URL; //autoset if $URI is set
   public $subnavURI;
   public $subnavURL; //autoset if $subnavURI is set
-  public $onMenu  = true;
+  public $onMenu;    // do not set a default!
   public $routes  = null;
   public $isIndex = false;
   public $indexURL;      //autoset if isIndex is set
@@ -79,6 +79,12 @@ abstract class AbstractRoute extends Object
    * @var string
    */
   public $inheritedPrefix = ''; //internal use
+  /**
+   * When `true`, the framework will attempt to automatically load the model object by fetching key information from
+   * the URL, the route's `preset` property or from the request data.
+   * @var bool
+   */
+  public $autoloadModel = false;
 
   public function __construct (array &$init = null)
   {
@@ -162,6 +168,9 @@ abstract class AbstractRoute extends Object
   {
     global $application;
     $this->parent = $parent;
+
+    if (!isset ($this->onMenu))
+      $this->onMenu = $parent->onMenu;
 
     if ($this->URI && $this->inheritedPrefix)
       $this->URI = "$this->inheritedPrefix/$this->URI";

@@ -12,6 +12,8 @@ class RoutingMap
    * @var array
    */
   public $namedNodes;
+  /** @var bool Reserved for cascading into the children routes. */
+  public $onMenu = true;
 
   public static function loadModule ($moduleName, $configName = 'routes')
   {

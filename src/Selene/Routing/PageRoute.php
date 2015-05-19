@@ -43,6 +43,7 @@ class PageRoute extends AbstractRoute
       'module'         => 'string',
       'dataModule'     => 'string',
       'preset'         => 'string',
+      'autoloadModel'  => 'boolean',
       'routes'         => 'array',
       'pagesMenu'      => 'boolean',
       'singular'       => 'string',
