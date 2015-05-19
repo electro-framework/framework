@@ -20,6 +20,7 @@ class DataSourceInfo extends Object
   public $model;
   public $preset;
   public $filter    = '';
+  public $params    = null;
   public $key       = 'id';
   public $value     = null;
   public $limit;
@@ -47,6 +48,7 @@ class DataSourceInfo extends Object
       'format'    => 'string',
       'model'     => 'string',
       'filter'    => 'string',
+      'params'    => 'array',
       'preset'    => 'string',
       'key'       => 'string',
       'value'     => 'string',
@@ -99,13 +101,13 @@ class DataSourceInfo extends Object
     if (isset($this->pageSize)) {
       $page            = get ($_REQUEST, $this->pageParam, 1);
       $start           = ($page - 1) * $this->pageSize;
-      $count           = $dataItem->queryBy ($this->filter, 'COUNT(*)', null, null)->fetchColumn (0);
+      $count           = $dataItem->queryBy ($this->filter, 'COUNT(*)', null, $this->params)->fetchColumn (0);
       $data            =
-        $dataItem->queryBy ($this->filter, $this->fields, $this->sortBy, null, "LIMIT $start,$this->pageSize")
+        $dataItem->queryBy ($this->filter, $this->fields, $this->sortBy, $this->params, "LIMIT $start,$this->pageSize")
                  ->fetchAll ();
       $controller->max = ceil ($count / $this->pageSize);
     }
-    else $data = $dataItem->queryBy ($this->filter, $this->fields, $this->sortBy, null,
+    else $data = $dataItem->queryBy ($this->filter, $this->fields, $this->sortBy, $this->params,
       isset($this->limit) ? "LIMIT $this->limit" : '')->fetchAll ();
     $controller->interceptViewDataSet ($dataSourceName, $data);
     return new DataSet($data);
