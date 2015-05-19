@@ -47,6 +47,17 @@ function DataSourceInfo (array $init)
 
 //------------------------------------------------------------------------------------------------------------------------
 
+/**
+ * @param string|array $ref Either a 'Class::method' string or a ['Class', 'Method'] array.
+ * @return array A ['Class', 'Method'] array.
+ */
+function parseMethodRef ($ref)
+{
+  if (empty($ref))
+    return [null, null];
+  return array_merge (is_array ($ref) ? $ref : explode ('::', $ref), [null]);
+}
+
 function check_syntax ($code, &$output = 0)
 {
   $b = 0;

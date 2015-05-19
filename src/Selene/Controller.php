@@ -194,10 +194,10 @@ class Controller
    */
   public $isProductionSite = true;
   /**
-   * True if the login form should be displayed.
-   * @var bool
+   * When set, the value will be used to set the default data source for the view.
+   * @var PDOStatement|array
    */
-  public $showLogin = false;
+  protected $modelData;
   /**
    * If specified on a subclass, the controller will automatically instantiate and initialize
    * a corresponding instance on setupModel() and also setup a default data source named 'default'
@@ -237,7 +237,7 @@ class Controller
   protected $languages;
   /**
    * Specifies the URL of the index page, to where the browser should naviagate upon the
-   * successful insertion / updatal of records.
+   * successful insertion / update of records.
    * If not defined on a subclass then the request will redisplay the same page.
    * @var string
    */
@@ -332,7 +332,6 @@ class Controller
         $this->setRedirection ();
         $this->redirectAndHalt ();
       }
-      $this->showLogin = $authenticate;
       $this->configLanguage ();
       $this->initialize (); //custom setup
       if (!$authenticate) {
@@ -387,6 +386,11 @@ class Controller
         }
       }
     }
+  }
+
+  function param ($name)
+  {
+    return get ($this->URIParams, $name);
   }
 
   public function beginXMLResponse ()
@@ -825,19 +829,47 @@ class Controller
   }
 
   /**
+   * Override to return the main model for the controller / view.
+   *
+   * <p>If not set, the model will be created by the controller by inspecting:
+   * - the model property of the current route;
+   * - the controller's model property;
+   * - the controller's dataClass and modelMethod properties.
+   *
+   * @return DataObject|PDOStatement|array
+   */
+  protected function model ()
+  {
+    return null;
+  }
+
+  /**
    * Sets up a page specific data model for use on the processRequest() phase and/or on the processView() phase.
    *
    * Override this if you want to manually specify the model.
    * - The model is saved on `$this->dataItem`.
-   * - Do not try to modify the default data source here, as it will be overriden with `$this->dataItem` later.
+   * - Do not try to modify the default data source here, as it will be overridden with the value of `$this->dataItem`
+   * later on.
    */
   protected function setupModel ()
   {
+    $model = $this->model ();
+    if (isset($model)) {
+      if ($model instanceof DataObject) {
+        $this->dataItem = $model;
+        $this->applyPresets ();
+        $this->standardDataInit ($model);
+        return;
+      }
+      $this->modelData = $model;
+      return;
+    }
+
     if (isset($this->sitePage)) {
       $thisModel = $this->sitePage->getModel ();
 
       if (!empty($thisModel)) {
-        list ($this->dataClass, $this->modelMethod) = $this->evalModelRef ($thisModel);
+        list ($this->dataClass, $this->modelMethod) = parseMethodRef ($thisModel);
         $this->dataItem = new $this->dataClass;
         if (!isset($this->dataItem))
           throw new ConfigException("<p><b>Model class not found.</b>
@@ -852,14 +884,18 @@ class Controller
         return;
       }
     }
+
     if (isset($this->model))
-      list ($this->dataClass, $this->modelMethod) =
-        array_merge (is_array ($this->model) ? $this->model : explode ('::', $this->model), [null]);
+      list ($this->dataClass, $this->modelMethod) = parseMethodRef ($this->model);
+
     if (isset($this->dataClass)) {
       if (!class_exists ($this->dataClass))
-        throw new ConfigException ("Model not found: '<b>$this->dataClass</b>'<p>For controller: <b>".get_class($this).'</b>');
+        throw new ConfigException ("Model not found: '<b>$this->dataClass</b>'<p>For controller: <b>" .
+                                   get_class ($this) . '</b>');
       $this->dataItem = new $this->dataClass;
-      //$this->dataItem = $this->createDataItem($this->dataClass);
+    }
+
+    if (isset($this->dataItem)) {
       $this->applyPresets ();
       $this->standardDataInit ($this->dataItem);
     }
@@ -877,13 +913,26 @@ class Controller
   protected function setupViewModel ()
   {
     global $application;
+
+    //Initialize data sources defined on the sitemap
+    if (isset($this->sitePage)) {
+      if (isset($this->sitePage->dataSources))
+        foreach ($this->sitePage->dataSources as $name => $dataSourceInfo)
+          $this->setDataSource ($name, $dataSourceInfo->getData ($this, $name)); //interception is done inside getData()
+    }
+
+    if (isset($this->modelData)) {
+      $this->setViewModel ('default', $this->modelData);
+      return;
+    }
+
     $ctx              = $this->context;
     $this->pageNumber = get ($_REQUEST, $application->pageNumberParam, 1);
     if (isset($this->sitePage)) {
       if (isset($this->dataItem)) {
         if ($this->sitePage->format == 'grid' && $this->dataItem->isNew ()) {
           if ($this->modelMethod)
-            $st = $this->dataItem->{$this->modelMethod}($this);
+            $st = $this->dataItem->{$this->modelMethod}();
           else $st =
             $this->dataItem->queryBy ($this->sitePage->filter, $this->sitePage->fieldNames, $this->sitePage->sortBy);
           $data = $st->fetchAll (PDO::FETCH_ASSOC);
@@ -891,22 +940,14 @@ class Controller
           $this->interceptViewDataSet ('default', $data);
           $this->setDataSource ('', new DataSet($data), true);
         }
-        else if ($this->sitePage->format == 'form') {
+        else {
           $this->interceptViewDataRecord ('default', $this->dataItem);
           $this->setDataSource ('', new DataRecord($this->dataItem), true);
         }
       }
-      //Initialize data sources defined on the sitemap
-      if (isset($this->sitePage->dataSources))
-        foreach ($this->sitePage->dataSources as $name => $dataSourceInfo)
-          $this->setDataSource ($name, $dataSourceInfo->getData ($this, $name)); //interception is done inside getData()
     }
     else if (isset($this->dataItem))
       switch ($this->defaultPageFormat) {
-        case 'form':
-          $this->interceptViewDataRecord ('default', $this->dataItem);
-          $this->setDataSource ('', new DataRecord($this->dataItem));
-          break;
         case 'grid':
           if (isset($this->dataQueryParams)) {
             $params = [];
@@ -930,12 +971,16 @@ class Controller
           }
           else $params = null;
           if ($this->modelMethod)
-            $st = $this->dataItem->{$this->modelMethod}($this);
+            $st = $this->dataItem->{$this->modelMethod}();
           else $st = $this->dataItem->queryBy ($this->dataFilter, $this->dataFields, $this->dataSortBy, $params);
           $data = $st->fetchAll (PDO::FETCH_ASSOC);
           $this->interceptViewDataSet ('default', $data);
           $this->paginate ($data);
           $this->setDataSource ('', new DataSet($data));
+          break;
+        default:
+          $this->interceptViewDataRecord ('default', $this->dataItem);
+          $this->setDataSource ('', new DataRecord($this->dataItem));
           break;
       }
   }
@@ -955,17 +1000,6 @@ class Controller
       }
       array_splice ($data, $pageSize);
     }
-  }
-
-  protected function evalModelRef ($ref)
-  {
-    if (!empty($ref)) {
-      $s = explode ('::', $ref);
-      if (count ($s) == 2)
-        return $s;
-      return [$s[0], null];
-    }
-    return [null, null];
   }
 
   /**

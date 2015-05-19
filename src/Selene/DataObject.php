@@ -70,24 +70,6 @@ class DataObject
                     $this->$field = date('Y-m-d');*/
   }
 
-  public static function find ($idFld)
-  {
-    return function () use ($idFld) {
-      $id = 0; //TODO: get id from route params
-      $i  = new static ($id);
-      $i->read ();
-      return $i;
-    };
-  }
-
-  public static function all ()
-  {
-    return function () {
-      $i = new static ();
-      return $i->query ();
-    };
-  }
-
   public static function encodeDate ($date)
   {
     //return preg_replace('#(\\d{2})-(\\d{2})-(\\d{4})#','$3-$2-$1',$date);
@@ -197,6 +179,40 @@ class DataObject
       }
     }
     return $output . "</$tag>";
+  }
+
+  /**
+   * Loads the record with the given id into the model object.
+   * @param $id
+   * @throws DataModelException
+   */
+  public function find ($id)
+  {
+    $this->setPrimaryKeyValue ($id);
+    $this->read ();
+  }
+
+  /**
+   * An alias for {@see query()}.
+   * @return PDOStatement
+   */
+  public function all ()
+  {
+    return $this->query ();
+  }
+
+  /**
+   * Sets the specified field to the given value.
+   *
+   * Can be used for chaining calls.
+   * @param string $field
+   * @param mixed  $value
+   * @return $this
+   */
+  function set ($field, $value)
+  {
+    $this->$field = $value;
+    return $this;
   }
 
   public function getTitle ($default = '')
@@ -759,11 +775,11 @@ class DataObject
 
   /**
    * @param array|Iterator $data
-   * @param callable $callback
+   * @param callable       $callback
    */
   public function iterate ($data, callable $callback)
   {
-    if (is_array($data))
+    if (is_array ($data))
       $data = new ArrayIterator($data);
     while ($data->valid ()) {
       $this->loadFrom ($data->current ());
@@ -774,12 +790,12 @@ class DataObject
 
   /**
    * @param array|Iterator $data
-   * @param callable $callback
+   * @param callable       $callback
    * @return array
    */
   public function map ($data, callable $callback)
   {
-    if (is_array($data))
+    if (is_array ($data))
       $data = new ArrayIterator($data);
     $o = [];
     while ($data->valid ()) {

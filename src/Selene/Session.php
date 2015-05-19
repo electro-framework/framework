@@ -16,6 +16,16 @@ class Session
   /** @var string */
   public $userRealName;
 
+  /**
+   * The logged-in user or null if not logged-in.
+   * @return null|UserInterface
+   */
+  static function user ()
+  {
+    global $session;
+    return $session->user;
+  }
+
   public function validate ()
   {
     return $this->isValid = isset($this->user);
@@ -40,9 +50,9 @@ class Session
         $this->lang = $defaultLang;
         try {
           $user->onLogin ();
-          $this->isValid = true;
-          $this->user    = $user;
-          $this->userRealName = $user->realName();
+          $this->isValid      = true;
+          $this->user         = $user;
+          $this->userRealName = $user->realName ();
         } catch (Exception $e) {
           throw new SessionException($e->getMessage ());
         }
