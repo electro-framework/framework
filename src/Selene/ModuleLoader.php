@@ -106,8 +106,14 @@ class ModuleLoader
     if (!isset($application->routingMap))
       throw new ConfigException("No route map defined.");
     $this->sitePage = $application->routingMap->searchFor ($this->virtualURI, $key);
-    if (is_null ($this->sitePage))
-      Controller::pageNotFound ($this->virtualURI);
+    if (is_null ($this->sitePage)) {
+      if (strpos($_SERVER['HTTP_ACCEPT'], 'text/html') !== false)
+        Controller::pageNotFound ($this->virtualURI);
+      else {
+        header ("Content-Type: text/plain");
+        http_response_code (404);
+      }
+    }
 
     //Setup preset parameters
 
