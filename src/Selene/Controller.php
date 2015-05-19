@@ -400,13 +400,26 @@ class Controller
     return get ($this->URIParams, $name);
   }
 
-  public function beginXMLResponse ()
+  /**
+   * Loads the record with the id specified on from the request URI into the model object.
+   * @param DataObject $model
+   * @param string     $param The parameter name. As a convention, it is usually `id`.
+   * @return DataObject The input model.
+   */
+  function loadRequested (DataObject $model, $param = 'id')
+  {
+    return $model->find ($this->param ($param));
+  }
+
+
+
+  function beginXMLResponse ()
   {
     header ('Content-Type: text/xml');
     echo '<?xml version="1.0" encoding="utf-8"?>';
   }
 
-  public function getRowOffset ()
+  function getRowOffset ()
   {
     global $application;
     return ($this->pageNumber - 1) * $application->pageSize;
@@ -418,7 +431,7 @@ class Controller
    * @param string $dataSourceName
    * @param array  $data a sequential array of dictionary arrays
    */
-  public function interceptViewDataSet ($dataSourceName, array &$data)
+  function interceptViewDataSet ($dataSourceName, array &$data)
   {
     // override
   }
@@ -429,7 +442,7 @@ class Controller
    * @param string $dataSourceName
    * @param mixed  $data can be an array or a DataObject
    */
-  public function interceptViewDataRecord ($dataSourceName, $data)
+  function interceptViewDataRecord ($dataSourceName, $data)
   {
     // override
   }
@@ -440,7 +453,7 @@ class Controller
    * page is rendered.
    * Override to add extra initialization.
    */
-  public function setupView ()
+  function setupView ()
   {
     global $application;
     $this->page->title = str_replace ('@', $this->getTitle (), $application->title);
@@ -455,7 +468,7 @@ class Controller
    * initialized from values sent with the request itsef.
    * @param DataObject $data
    */
-  public function standardDataInit (DataObject $data)
+  function standardDataInit (DataObject $data)
   {
     if (isset($data)) {
       if (isset($this->URIParams))
@@ -480,7 +493,7 @@ class Controller
    * @param null       $param
    * @throws BaseException
    */
-  public function action_submit (DataObject $data = null, $param = null)
+  function action_submit (DataObject $data = null, $param = null)
   {
     if (!isset($data))
       throw new BaseException('Can\'t insert/update NULL DataObject.', Status::FATAL);
@@ -500,7 +513,7 @@ class Controller
    * @throws Exception
    * @throws FatalException
    */
-  public function action_delete (DataObject $data = null, $param = null)
+  function action_delete (DataObject $data = null, $param = null)
   {
     if (!isset($data))
       throw new BaseException('Can\'t delete NULL DataObject.', Status::FATAL);
@@ -514,7 +527,7 @@ class Controller
       throw new FatalException("No index page defined.");
   }
 
-  public function action_logout ()
+  function action_logout ()
   {
     global $session, $application;
     $session->logout ();
@@ -544,7 +557,7 @@ class Controller
    * @param boolean    $overwrite
    * @throws DataBindingException
    */
-  public function setDataSource ($name, DataSource $data, $isDefault = false, $overwrite = true)
+  function setDataSource ($name, DataSource $data, $isDefault = false, $overwrite = true)
   {
     $name      = empty($name) ? 'default' : $name;
     $isDefault = $isDefault || $name == 'default';
@@ -563,7 +576,7 @@ class Controller
    * @param string $name The data source name.
    * @param mixed  $data An array, object or <i>null</i>.
    */
-  public function setViewModel ($name, $data)
+  function setViewModel ($name, $data)
   {
     $ctx = $this->context;
     if (!isset($data))
@@ -586,7 +599,7 @@ class Controller
     }
   */
 
-  public function getDataRecord ($name = null)
+  function getDataRecord ($name = null)
     //rarely overriden
   {
     if (is_null ($name)) {
@@ -614,12 +627,12 @@ class Controller
   }
 
 
-  public function markerHit ($name)
+  function markerHit ($name)
   {
     //Override
   }
 
-  public function getTitle ()
+  function getTitle ()
     // override to return the title of the current page
   {
     return firstNonNull (
