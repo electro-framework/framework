@@ -19,4 +19,13 @@ class DefaultPipes
     return $application->getFileDownloadURI($v);
   }
 
+  /**
+   * @param string $v
+   * @return string
+   */
+  function datePart ($v)
+  {
+    return explode(' ', $v) [0];
+  }
+
 }
