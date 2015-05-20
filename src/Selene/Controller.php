@@ -580,7 +580,7 @@ class Controller
   {
     $ctx = $this->context;
     if (!isset($data))
-      $ctx->dataSources[$name] = new EmptyIterator();
+      $ctx->dataSources[$name] = new DataSet ();
     else if ((is_array ($data) && isset($data[0])) || $data instanceof PDOStatement)
       $ctx->dataSources[$name] = new DataSet($data);
     else $ctx->dataSources[$name] = new DataRecord($data);
