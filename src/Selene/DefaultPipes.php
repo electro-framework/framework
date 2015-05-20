@@ -9,14 +9,14 @@ use Selene\Matisse\Context;
 class DefaultPipes
 {
   /**
-   * @param string $v
+   * @param string  $v
    * @param Context $ctx
    * @return string
    */
   function fileURL ($v, $ctx)
   {
     global $application;
-    return $application->getFileDownloadURI($v);
+    return $application->getFileDownloadURI ($v);
   }
 
   /**
@@ -25,7 +25,16 @@ class DefaultPipes
    */
   function datePart ($v)
   {
-    return explode(' ', $v) [0];
+    return explode (' ', $v) [0];
+  }
+
+  /**
+   * @param string $v
+   * @return string
+   */
+  function currency ($v)
+  {
+    return formatMoney ($v) . ' €';
   }
 
 }
