@@ -15,9 +15,10 @@ if (empty($URI)) {
   $filename = urlencode (Media::getOriginalFileName ($id));
   $URI      = Media::getFileURI ($id);
 }
+else $URI = "$application->appPublicPath/$URI";
 $filepath = $application->toFilePath ($URI);
 if (!file_exists ($filepath))
-  throw new FileException(FileException::FILE_NOT_FOUND);
+  throw new FileException(FileException::FILE_NOT_FOUND, "<p>File: <b>$filepath</b>");
 
 Media::streamFile ($filepath, $cache ? Media::CACHING_ENABLED : Media::CACHING_DISABLED,
   $mode == 'attachment' ? $filename : '');
