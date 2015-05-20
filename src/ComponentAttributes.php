@@ -59,6 +59,13 @@ class ComponentAttributes
   {
     $this->component = $component;
   }
+
+  public function apply (array $attrs) {
+    foreach ($attrs as $k => $v)
+      $this->set( $k, $v);
+  }
+
+
   public static function getBoolean ($mixed)
   {
     if (is_bool ($mixed))

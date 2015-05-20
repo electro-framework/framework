@@ -17,6 +17,7 @@ class MatisseEngine
     'template' => 'Selene\Matisse\Components\Template',
     'test'     => 'Selene\Matisse\Components\Test',
     'literal'  => 'Selene\Matisse\Components\Literal',
+    'apply'    => 'Selene\Matisse\Components\Apply',
   ];
 
   /**
