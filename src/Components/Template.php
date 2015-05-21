@@ -186,7 +186,8 @@ class Template extends Component implements IAttributes
                                         if (!$instance->attrs ()->defines ($normName)) {
                                             $s = join ('</b>, <b>', $instance->attrs ()->getAttributeNames ());
                                             throw new ComponentException($instance,
-                                              "The parameter <b>$attrName</b> ($normName), specified on a call to/in the <b>{$this->attrs ()->name}</b> template, is not defined on that template.<p>Expected parameters: <b>$s</b>.<p>Instance: <b>{$instance->getTagName ()}</b>");
+                                              "<p>The parameter <b>$attrName</b>, specified on a call to/in the <b>{$this->attrs ()->name}</b> template, is not defined on that template.</p>
+<table><tr><th>Expected parameters:<td>$s<tr><th>Instance:<td>{$instance->getTagName ()}</table>");
                                         }
                                         if (isset($this->bindings) && array_key_exists ($normName, $this->bindings))
                                             $content = $this->bindings[$normName];

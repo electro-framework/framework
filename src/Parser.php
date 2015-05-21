@@ -1,11 +1,8 @@
 <?php
 namespace Selene\Matisse;
-use ErrorHandler;
 use Selene\Matisse\Components\Literal;
 use Selene\Matisse\Components\Page;
 use Selene\Matisse\Components\Parameter;
-use Selene\Matisse\Components\TemplateInstance;
-use Selene\Matisse\Exceptions\FileIOException;
 use Selene\Matisse\Exceptions\ParseException;
 
 class Parser
@@ -117,10 +114,13 @@ class Parser
               throw new ParseException('Parameters must be specified as direct descendant nodes of a component.',
                 $body, $start, $end);
             $name = normalizeAttributeName ($tag);
+            // Allow the placement of additional parameters after the content of a default (implicit) parameter.
+            if (isset($this->current->isImplicit))
+              $this->tagComplete (false);
             if (!$this->current instanceof Parameter) {
               //create parameter
               if (!$this->current->supportsAttributes)
-                throw new ParseException('The component does not support parameters.', $body, $start,
+                throw new ParseException("The component <b>&lt;{$this->current->getQualifiedName()}&gt;</b> does not support parameters.", $body, $start,
                   $end);
               $this->parseAttributes ($attrs, $attributes, $bindings);
               if (!$this->current->attrs ()->defines ($name)) {
@@ -158,7 +158,7 @@ class Parser
 
   }
 
-  protected function tagComplete ()
+  protected function tagComplete ($fromClosingTag = true)
   {
     $current = $this->current;
     if ($this->scalarParam)
@@ -168,7 +168,7 @@ class Parser
     $this->current = $parent; //also discards the current scalar parameter, if that is the case.
 
     // Closing a component's tag must also close an implicit parameter.
-    if (isset($current->isImplicit))
+    if ($fromClosingTag && isset($current->isImplicit))
       $this->tagComplete ();
   }
 
