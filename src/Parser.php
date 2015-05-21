@@ -100,7 +100,7 @@ class Parser
           case 'c':
             if (!$this->canAddComponent ()) {
               if (!isset($this->current->defaultAttribute))
-                throw new ParseException('You may not define a component at this location.', $body,
+                throw new ParseException('You may not instantiate a component at this location.', $body,
                   $start, $end);
               $this->generateImplicitParameter ();
             }
@@ -136,6 +136,12 @@ class Parser
             }
             break;
           case 't':
+            if (!$this->canAddComponent ()) {
+              if (!isset($this->current->defaultAttribute))
+                throw new ParseException('You may not instantiate a template at this location.', $body,
+                  $start, $end);
+              $this->generateImplicitParameter ();
+            }
             $template = $this->context->getTemplate ($tag);
             if (is_null ($template))
               try {

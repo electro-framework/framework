@@ -32,6 +32,8 @@ class Template extends Component implements IAttributes
     /** Finds binding expressions which are not template bindings. */
     const FIND_NON_TEMPLATE_EXP = '#\{(?!\@)#';
 
+    public $defaultAttribute = 'body';
+
     /**
      * @see IAttributes::attrs()
      * @return TemplateAttributes
