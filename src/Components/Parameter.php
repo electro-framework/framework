@@ -84,7 +84,6 @@ class Parameter extends Component implements IAttributes
   {
     parent::__construct ($context, $attributes);
     $this->type      = $type;
-    $this->namespace = 'p';
     $this->setTagName ($tagName);
   }
 

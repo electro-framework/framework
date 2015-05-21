@@ -157,7 +157,6 @@ class TemplateInstance extends Component implements IAttributes
   {
     $this->template = $template; //must be defined before the parent constructor is called
     parent::__construct ($context, $attributes);
-    $this->namespace = 't';
     $this->setTagName ($tagName);
     $this->defaultAttribute = $template->attrs()->default_param;
   }

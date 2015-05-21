@@ -3,9 +3,12 @@ namespace Selene\Matisse;
 use Selene\Matisse\Components\Literal;
 use Selene\Matisse\Components\Page;
 use Selene\Matisse\Components\Parameter;
+use Selene\Matisse\Components\TemplateInstance;
 use Selene\Matisse\Exceptions\ComponentException;
 use Selene\Matisse\Exceptions\DataBindingException;
+use Selene\Matisse\Exceptions\FileIOException;
 use Selene\Matisse\Exceptions\HandlerNotFoundException;
+use Selene\Matisse\Exceptions\ParseException;
 
 /**
  * The base class from which all components derive.
@@ -175,18 +178,60 @@ abstract class Component
   /**
    * Creates a component corresponding to the specified tag and optionally sets its attributes.
    *
-   * @param Context $context
-   * @param string  $tagName
-   * @param array   $attributes
-   * @return Component subclass instance
+   * @param Context   $context
+   * @param Component $parent
+   * @param string    $tagName
+   * @param array     $attributes
+   * @param boolean   $strict If true, failure to find a component class will throw an exception.
+   *                          If false, an attempt is made to load a template with the same name,
+   * @return Component Component instance. For templates, an instance of Template is returned.
+   *                          You should them
    * @throws ComponentException
+   * @throws ParseException
    */
-  static public function create (Context $context, $tagName, array $attributes = null)
+  static public function create (Context $context, Component $parent, $tagName, array $attributes = null,
+                                 $strict = false)
   {
     $class = $context->getClassForTag ($tagName);
-    if (!$class)
-      throw new ComponentException (null, "Unknown tag: <b>&lt;c:$tagName></b><p>Did you forget to register it?");
-    return new $class ($context, $attributes);
+    if (!$class) {
+      if ($strict)
+        self::throwUnknownComponent ($context, $tagName);
+
+      // Component class not found.
+      // Try to load a template with the same tag name.
+
+      $template = $context->getTemplate ($tagName);
+      try {
+        if (is_null ($template))
+          $template = self::loadTemplate ($context, $parent, $tagName);
+      } catch (FileIOException $e) {
+        self::throwUnknownComponent ($context, $tagName);
+      }
+      $component = new TemplateInstance($context, $tagName, $template, $attributes);
+    }
+
+    // Component class was found.
+
+    else $component = new $class ($context, $attributes);
+
+    // For both types of components:
+
+    $component->setTagName ($tagName); //for performance
+    return $component;
+  }
+
+  static function loadTemplate (Context $context, Component $parent, $tagName)
+  {
+    $filename = normalizeTagName ($tagName) . '.xml';
+    $content  = $context->loadTemplate ($filename);
+    $parser   = new Parser($context);
+    $parser->parse ($content, $parent);
+    $template = $context->getTemplate ($tagName);
+    if (isset($template)) {
+      $template->remove ();
+      return $template;
+    }
+    throw new ParseException("File <b>$filename</b> does not define a template named <b>$tagName</b>.");
   }
 
   public static function isCompositeBinding ($exp)
@@ -247,6 +292,17 @@ abstract class Component
     if (isset($components))
       foreach ($components as $component)
         $component->doRender ();
+  }
+
+  private static function throwUnknownComponent (Context $context, $tagName)
+  {
+    $paths = implode ('', map ($context->templateDirectories,
+      function ($dir) { return "<li><path>$dir</path></li>"; }));
+    throw new ComponentException (null,
+      "<h3>Unknown tag: <b>&lt;c:$tagName></b></h3>
+<p>Neither a class nor a template implementing that tag were found.
+<p>Perhaps you forgot to register the tag?
+<p>If it's a template, Matisse is searching for it on these paths:<ul>$paths</ul>");
   }
 
   /**

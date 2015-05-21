@@ -98,6 +98,7 @@ class Parser
         $attributes = $bindings = null;
         switch ($namespace) {
           case 'c':
+          case 't':
             if (!$this->canAddComponent ()) {
               if (!isset($this->current->defaultAttribute))
                 throw new ParseException('You may not instantiate a component at this location.', $body,
@@ -105,9 +106,9 @@ class Parser
               $this->generateImplicitParameter ();
             }
             /** @var Parameter|boolean $defParam */
-            $this->parseAttributes ($attrs, $attributes, $bindings);
-            $component = Component::create ($this->context, $tag, $attributes);
-            $component->setTagName ($tag); //for performance
+            $this->parseAttributes ($attrs, $attributes, $bindings, true);
+            $component = Component::create ($this->context, $this->current, $tag, $attributes);
+            $component->namespace = $namespace;
             $component->bindings = $bindings;
             $this->addComponent ($component);
             break;
@@ -124,39 +125,17 @@ class Parser
               $this->parseAttributes ($attrs, $attributes, $bindings);
               if (!$this->current->attrs ()->defines ($name)) {
                 $s = join ('</b>, <b>', $this->current->attrs ()->getAttributeNames ());
-                throw new ParseException("The component does not support the specified parameter <b>$tag</b>.<p>Expected: <b>$s</b>.",
+                throw new ParseException("The component <b>&lt;{$this->current->getQualifiedName()}&gt;</b> ({$this->current->className}) does not support the specified parameter <b>$tag</b>.<p>Expected: <b>$s</b>.",
                   $body, $start, $end);
               }
-              $this->createParameter ($name, $tag, $attributes, $bindings);
+              $param = $this->createParameter ($name, $tag, $attributes, $bindings);
             }
             else {
               //create subparameter
               $this->parseAttributes ($attrs, $attributes, $bindings);
-              $this->createSubparameter ($name, $tag, $attributes, $bindings);
+              $param = $this->createSubparameter ($name, $tag, $attributes, $bindings);
             }
-            break;
-          case 't':
-            if (!$this->canAddComponent ()) {
-              if (!isset($this->current->defaultAttribute))
-                throw new ParseException('You may not instantiate a template at this location.', $body,
-                  $start, $end);
-              $this->generateImplicitParameter ();
-            }
-            $template = $this->context->getTemplate ($tag);
-            if (is_null ($template))
-              try {
-                $template = $this->loadTemplate ($tag);
-              } catch (FileIOException $e) {
-                $paths = implode ('', map ($this->context->templateDirectories,
-                  function ($dir) { return "<li><path>$dir</path></li>"; }));
-                throw new ParseException("Template <b>$tag</b> was not found.<blockquote>" . $e->getMessage () .
-                                         "</blockquote>Search path:<ul>$paths</ul>",
-                  $body, $start, $end);
-              }
-            $this->parseAttributes ($attrs, $attributes, $bindings, true);
-            $component           = new TemplateInstance($this->context, $tag, $template, $attributes);
-            $component->bindings = $bindings;
-            $this->addComponent ($component);
+            $param->namespace = $namespace;
             break;
         }
         //short tag
@@ -177,20 +156,6 @@ class Parser
     if (is_null ($current->attrs ()->$defName))
       $this->createParameter (normalizeAttributeName ($defName), $defName)->isImplicit = true;
 
-  }
-
-  protected function loadTemplate ($tagName)
-  {
-    $filename = normalizeTagName ($tagName) . '.xml';
-    $content  = $this->context->loadTemplate ($filename);
-    $parser   = new Parser($this->context);
-    $parser->parse ($content, $this->root);
-    $template = $this->context->getTemplate ($tagName);
-    if (isset($template)) {
-      $template->remove ();
-      return $template;
-    }
-    throw new ParseException("File <b>$filename</b> does not define a template named <b>$tagName</b>.");
   }
 
   protected function tagComplete ()
@@ -236,6 +201,7 @@ class Parser
     $this->current      = $subparam = new Parameter($this->context, $tagName, AttributeType::SRC, $attributes);
     $subparam->bindings = $bindings;
     $param->addChild ($subparam);
+    return $subparam;
   }
 
   protected function canAddParameter ()
