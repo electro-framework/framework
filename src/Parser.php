@@ -66,8 +66,9 @@ class Parser
           else {
             if (!$this->canAddComponent ()) {
               if (!isset($this->current->defaultAttribute)) {
-                $s = join ('</b>, <b>', $this->current->attrs ()->getAttributeNames ());
-                throw new ParseException("You may not define literal content at this.location.\nExpected parameters: <b>$s</b>.",
+                $s = join (', ', $this->current->attrs ()->getAttributeNames ());
+                throw new ParseException("<h4>You may not define literal content at this.location.</h4>
+<table><tr><th>Component:<td>&lt;{$this->current->getQualifiedName()}&gt;<tr><th>Expected parameters:<td>$s</table>",
                   $body, $pos, $start);
               }
               $this->generateImplicitParameter ();
