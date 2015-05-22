@@ -66,6 +66,7 @@ class PageRoute extends AbstractRoute
       'filter'         => 'string',
       'sortBy'         => 'string',
       'menu'           => 'array',
+      'prefix'         => 'string',
     ];
   }
 
