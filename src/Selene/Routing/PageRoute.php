@@ -64,7 +64,8 @@ class PageRoute extends AbstractRoute
       'description'    => '',
       'fieldNames'     => 'string',
       'filter'         => 'string',
-      'sortBy'         => 'string'
+      'sortBy'         => 'string',
+      'menu'           => 'array',
     ];
   }
 

@@ -26,6 +26,7 @@ class RouteGroup extends AbstractRoute
       'baseSubnavURI'        => 'string',
       'includeMainItemOnNav' => 'boolean',
       'userType'             => 'string',
+      'menu'                 => 'array',
     ]);
   }
 

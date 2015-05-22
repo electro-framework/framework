@@ -85,6 +85,12 @@ abstract class AbstractRoute extends Object
    * @var bool
    */
   public $autoloadModel = false;
+  /**
+   * An ordered map of titles to URIs, used to generate menu entries, if set. Otherwise, menu items are generated for
+   * the subroutes.
+   * @var array|null
+   */
+  public $menu = null;
 
   public function __construct (array &$init = null)
   {
@@ -183,6 +189,9 @@ abstract class AbstractRoute extends Object
       else $this->URL = 'javascript:nop()';
     }
 
+    if (isset($this->menu) && $this->inheritedPrefix)
+      foreach ($this->menu as $title=>&$URI)
+        $URI = "$this->inheritedPrefix/$URI";
 
     if (empty($this->indexURL)) {
       $index = $this->getIndex ();
