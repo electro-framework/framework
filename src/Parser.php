@@ -12,7 +12,7 @@ class Parser
   const TRIM_LITERAL_CONTENT = '#^\s+|(?<=\>)\s+(?=\s)|(?<=\s)\s+(?=\<)|\s+$#';
   const TRIM_LEFT_CONTENT    = '#^\s+|(?<=\>)\s+(?=\s)#';
   const TRIM_RIGHT_CONTENT   = '#(?<=\s)\s+(?=\<)|\s+$#';
-  const PARSE_PARAMS         = '#([\w\-\:]+)\s*=\s*"(.*?)(")#s';
+  const PARSE_PARAMS         = '#([\w\-\:]+)\s*(?:=\s*("|\')(.*?)\2)?( |@)#s';
   const NO_TRIM              = 0;
   const TRIM_LEFT            = 1;
   const TRIM_RIGHT           = 2;
@@ -219,8 +219,10 @@ class Parser
   {
     if (!empty($attrStr)) {
       $sPos = 0;
-      while (preg_match (self::PARSE_PARAMS, $attrStr, $match, PREG_OFFSET_CAPTURE, $sPos)) {
-        list(, list($key), list($value), list(, $next)) = $match;
+      while (preg_match (self::PARSE_PARAMS, "$attrStr@", $match, PREG_OFFSET_CAPTURE, $sPos)) {
+        list(, list($key), list($quote), list($value,$exists), list($marker, $next)) = $match;
+        if ($exists < 0)
+          $value = 'true';
         if (substr ($key, 0, 6) == 'style:') {
           $key                  = substr ($key, 6);
           $attributes['styles'] = strJoin (get ($attributes, 'styles', ''), "$key:$value", ';');
@@ -232,7 +234,7 @@ class Parser
             $attributes['styles'] = strJoin (get ($attributes, 'styles', ''), $value, ';');
           else $attributes[renameAttribute ($key)] = $value;
         }
-        $sPos = $next + 1;
+        $sPos = $next;
       }
     }
   }
