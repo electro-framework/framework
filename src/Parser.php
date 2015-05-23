@@ -12,7 +12,7 @@ class Parser
   const TRIM_LITERAL_CONTENT = '#^\s+|(?<=\>)\s+(?=\s)|(?<=\s)\s+(?=\<)|\s+$#';
   const TRIM_LEFT_CONTENT    = '#^\s+|(?<=\>)\s+(?=\s)#';
   const TRIM_RIGHT_CONTENT   = '#(?<=\s)\s+(?=\<)|\s+$#';
-  const PARSE_PARAMS         = '#([\w\-\:]+)\s*(?:=\s*("|\')(.*?)\2)?( |@)#s';
+  const PARSE_ATTRS          = '#([\w\-\:]+)\s*(?:=\s*("|\')(.*?)\2)?(\s|@)#s';
   const NO_TRIM              = 0;
   const TRIM_LEFT            = 1;
   const TRIM_RIGHT           = 2;
@@ -219,7 +219,7 @@ class Parser
   {
     if (!empty($attrStr)) {
       $sPos = 0;
-      while (preg_match (self::PARSE_PARAMS, "$attrStr@", $match, PREG_OFFSET_CAPTURE, $sPos)) {
+      while (preg_match (self::PARSE_ATTRS, "$attrStr@", $match, PREG_OFFSET_CAPTURE, $sPos)) {
         list(, list($key), list($quote), list($value,$exists), list($marker, $next)) = $match;
         if ($exists < 0)
           $value = 'true';

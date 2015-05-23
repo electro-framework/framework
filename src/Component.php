@@ -405,7 +405,7 @@ abstract class Component
       $this->parent->attach ($components);
     }
     else {
-      ob_start ();
+      ob_start (null, 0);
       self::inspectSet ($this->parent->children);
       $t = ob_get_clean ();
       throw new ComponentException($this,
@@ -514,7 +514,7 @@ abstract class Component
    */
   public function getContent ()
   {
-    ob_start ();
+    ob_start (null, 0);
     if (!$this->inactive) {
       $this->databind ();
       $this->preRender ();
@@ -905,7 +905,7 @@ abstract class Component
 
   protected function beginCapture ()
   {
-    ob_start ();
+    ob_start (null, 0);
   }
 
   protected function getLiteral ()
@@ -927,7 +927,7 @@ abstract class Component
   protected function flushCapture ()
   {
     $this->endCapture ();
-    ob_start ();
+    ob_start (null, 0);
   }
 
   protected function beginTag ($name, array $attributes = null)
