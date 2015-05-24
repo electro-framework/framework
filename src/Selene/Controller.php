@@ -267,18 +267,21 @@ class Controller
     /** @var ModuleLoader $loader */
     global $application, $loader;
     if (!isset(self::$translation[$lang])) {
-      $paths   = [];
+      $found = false;
       $folders = array_reverse ($application->languageFolders);
       foreach ($folders as $folder) {
         $path = "$folder/$lang.ini";
         $z    = @parse_ini_file ($path);
-        if (empty($z))
-          $paths[] = "<li>" . ErrorHandler::shortFileName ($path);
-        else self::$translation[$lang] = array_merge (get (self::$translation, $lang, []), $z);
+        if (!empty($z)) {
+          $found = true;
+          self::$translation[$lang] = array_merge (get (self::$translation, $lang, []), $z);
+        }
       }
-      if (empty($z))
-        throw new BaseException("Translation file for language <b>$lang</b> was not found.<p>Search paths:<ul>" .
+      if (!$found) {
+        $paths = array_map(function ($path) { return "<li>" . ErrorHandler::shortFileName ($path);}, $folders);
+        throw new BaseException("A translation file for language <b>$lang</b> was not found.<p>Search paths:<ul>" .
                                 implode ('', $paths) . "</ul>", Status::FATAL);
+      }
     }
     return preg_replace_callback (self::FIND_TRANS_KEY, function ($args) use ($lang) {
       $a = $args[1];

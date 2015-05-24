@@ -43,7 +43,7 @@ return [
     'dataSourcesFile'        => '',
     'SEOFile'                => '',
 
-    'autoControllerClass'    => 'Controller',
+    'autoControllerClass'    => 'Selene\Controller',
     'loginView'              => '',
     'translation'            => false,
     'languages'              => null,
