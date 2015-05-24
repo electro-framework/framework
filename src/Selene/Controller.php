@@ -1,7 +1,6 @@
 <?php
 namespace Selene;
 
-use EmptyIterator;
 use Exception;
 use Impactwave\WebConsole\ErrorHandler;
 use PDO;
@@ -267,18 +266,18 @@ class Controller
     /** @var ModuleLoader $loader */
     global $application, $loader;
     if (!isset(self::$translation[$lang])) {
-      $found = false;
+      $found   = false;
       $folders = array_reverse ($application->languageFolders);
       foreach ($folders as $folder) {
         $path = "$folder/$lang.ini";
         $z    = @parse_ini_file ($path);
         if (!empty($z)) {
-          $found = true;
+          $found                    = true;
           self::$translation[$lang] = array_merge (get (self::$translation, $lang, []), $z);
         }
       }
       if (!$found) {
-        $paths = array_map(function ($path) { return "<li>" . ErrorHandler::shortFileName ($path);}, $folders);
+        $paths = array_map (function ($path) { return "<li>" . ErrorHandler::shortFileName ($path); }, $folders);
         throw new BaseException("A translation file for language <b>$lang</b> was not found.<p>Search paths:<ul>" .
                                 implode ('', $paths) . "</ul>", Status::FATAL);
       }
@@ -405,13 +404,19 @@ class Controller
 
   /**
    * Loads the record with the id specified on from the request URI into the model object.
+   *
+   * If the URI parameter is empty, the model is returned unmodified.
+   *
    * @param DataObject $model
    * @param string     $param The parameter name. As a convention, it is usually `id`.
-   * @return DataObject The input model.
+   * @return DataObject|false The input model on success, `false` if it was not found.
    */
   function loadRequested (DataObject $model, $param = 'id')
   {
-    return $model->find ($this->param ($param));
+    $id = $this->param ($param);
+    if (!$id) return $model;
+    $f = $model->find ($id);
+    return $f ? $model : false;
   }
 
 
