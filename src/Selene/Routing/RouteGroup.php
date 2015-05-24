@@ -21,7 +21,7 @@ class RouteGroup extends AbstractRoute
     return array_merge (parent::getTypes (), [
       'prefix'               => 'string',
       'module'               => 'string',
-//      'URI'                  => 'string',
+      'URI'                  => 'string',
       'defaultURI'           => 'string',
       'baseSubnavURI'        => 'string',
       'includeMainItemOnNav' => 'boolean',
@@ -43,6 +43,8 @@ class RouteGroup extends AbstractRoute
   public function init ($parent) {
     if (isset($this->defaultURI) && $this->inheritedPrefix)
       $this->defaultURI = "$this->inheritedPrefix/$this->defaultURI";
+    if (isset($this->prefix))
+      $this->URI = $this->inheritedPrefix ? "$this->inheritedPrefix/$this->prefix" : $this->prefix;
     parent::init ($parent);
   }
 

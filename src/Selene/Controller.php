@@ -194,6 +194,13 @@ class Controller
    */
   public $isProductionSite = true;
   /**
+   * When `true`, the framework will attempt to automatically load the model object by fetching key information from
+   * the URL, the route's `preset` property or from the request data.
+   * This setting is usually defined on routes, but if no routing is being used, it can also be set here.
+   * @var bool
+   */
+  public $autoloadModel = false;
+  /**
    * When set, the value will be used to set the default data source for the view.
    * @var PDOStatement|array
    */
@@ -243,13 +250,6 @@ class Controller
    */
   protected $indexPage   = null;
   protected $redirectURI = null;
-  /**
-   * When `true`, the framework will attempt to automatically load the model object by fetching key information from
-   * the URL, the route's `preset` property or from the request data.
-   * This setting is usually defined on routes, but if no routing is being used, it can also be set here.
-   * @var bool
-   */
-  public $autoloadModel = false;
 
   public static function modPathOf ($virtualURI = '', $params = null)
   {
@@ -410,7 +410,6 @@ class Controller
   {
     return $model->find ($this->param ($param));
   }
-
 
 
   function beginXMLResponse ()
@@ -1085,8 +1084,7 @@ class Controller
 
   protected function parseView ($viewTemplate)
   {
-    $this->page             = $this->engine->parse ($viewTemplate, $this->context);
-    $this->page->controller = $this;
+    $this->page = $this->engine->parse ($viewTemplate, $this->context);
   }
 
   /**
