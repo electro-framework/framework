@@ -7,7 +7,7 @@ use Selene\Matisse\Exceptions\ParseException;
 
 class Parser
 {
-  const PARSE_TAG            = '#(<)(/?)([cpt]):([\w\-]+)\s*(.*?)(/?)(>)#s';
+  const PARSE_TAG            = '#(<)(/?)([cpth]):([\w\-]+)\s*(.*?)(/?)(>)#s';
   const PARSE_DATABINDINGS   = '#\{(?=\S) ( [^{}]* | \{[^{}]*\} )* \}#x';
   const TRIM_LITERAL_CONTENT = '#^\s+|(?<=\>)\s+(?=\s)|(?<=\s)\s+(?=\<)|\s+$#';
   const TRIM_LEFT_CONTENT    = '#^\s+|(?<=\>)\s+(?=\s)#';
@@ -91,11 +91,13 @@ class Parser
       else {
         //new tag
         if ($this->scalarParam)
-          throw new ParseException("Invalid value for a scalar parameter.", $body, $start, $end);
+          throw new ParseException("Can't set tag <b>$tag</b> as a value for the scalar parameter <b>{$this->current->getTagName()}</b>.",
+            $body, $start, $end);
         $attributes = $bindings = null;
         switch ($namespace) {
           case 'c':
           case 't':
+          case 'h':
             if (!$this->canAddComponent ()) {
               if (!isset($this->current->defaultAttribute))
                 throw new ParseException('You may not instantiate a component at this location.', $body,
@@ -104,10 +106,12 @@ class Parser
             }
             /** @var Parameter|boolean $defParam */
             $this->parseAttributes ($attrs, $attributes, $bindings, true);
-            $component = Component::create ($this->context, $this->current, $tag, $attributes);
+            $component            =
+              Component::create ($this->context, $this->current, $tag, $attributes, $namespace == 'h');
             $component->namespace = $namespace;
-            $component->bindings = $bindings;
-            $this->addComponent ($component);
+            $component->bindings  = $bindings;
+            $this->current->addChild ($component);
+            $this->current = $component;
             break;
           case 'p':
             if (!$this->canAddParameter ())
@@ -120,7 +124,8 @@ class Parser
             if (!$this->current instanceof Parameter) {
               //create parameter
               if (!$this->current->supportsAttributes)
-                throw new ParseException("The component <b>&lt;{$this->current->getQualifiedName()}&gt;</b> does not support parameters.", $body, $start,
+                throw new ParseException("The component <b>&lt;{$this->current->getQualifiedName()}&gt;</b> does not support parameters.",
+                  $body, $start,
                   $end);
               $this->parseAttributes ($attrs, $attributes, $bindings);
               if (!$this->current->attrs ()->defines ($name)) {
@@ -220,7 +225,7 @@ class Parser
     if (!empty($attrStr)) {
       $sPos = 0;
       while (preg_match (self::PARSE_ATTRS, "$attrStr@", $match, PREG_OFFSET_CAPTURE, $sPos)) {
-        list(, list($key), list($quote), list($value,$exists), list($marker, $next)) = $match;
+        list(, list($key), list($quote), list($value, $exists), list($marker, $next)) = $match;
         if ($exists < 0)
           $value = 'true';
         if (substr ($key, 0, 6) == 'style:') {
@@ -237,12 +242,6 @@ class Parser
         $sPos = $next;
       }
     }
-  }
-
-  private function addComponent (Component $instance)
-  {
-    $this->current->addChild ($instance);
-    $this->current = $instance;
   }
 
   private function processLiteral ($content)

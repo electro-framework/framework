@@ -6,7 +6,6 @@ namespace Selene\Matisse;
  */
 class DataSet extends DataSource implements \IteratorAggregate
 {
-
   protected $iterator;
 
   /**

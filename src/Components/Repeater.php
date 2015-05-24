@@ -18,13 +18,21 @@ class RepeaterAttributes extends ComponentAttributes
   public $rewind  = true;
 
   protected function typeof_repeat () { return AttributeType::SRC; }
+
   protected function typeof_header () { return AttributeType::SRC; }
+
   protected function typeof_footer () { return AttributeType::SRC; }
+
   protected function typeof_glue () { return AttributeType::SRC; }
+
   protected function typeof_no_data () { return AttributeType::SRC; }
+
   protected function typeof_data () { return AttributeType::DATA; }
+
   protected function typeof_count () { return AttributeType::NUM; }
+
   protected function typeof_consume () { return AttributeType::BOOL; }
+
   protected function typeof_rewind () { return AttributeType::BOOL; }
 }
 

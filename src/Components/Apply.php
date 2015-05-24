@@ -72,7 +72,7 @@ class Apply extends Component implements IAttributes
       foreach ($content as $k => $child)
         $child->attrs ()->apply ($attrs);
     }
-    else $this->scan ($this, $this->attrs()->where, $attrs);
+    else $this->scan ($this, $this->attrs ()->where, $attrs);
     $this->renderSet ($content);
   }
 

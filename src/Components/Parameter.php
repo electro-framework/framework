@@ -4,56 +4,8 @@ use Selene\Matisse\AttributeType;
 use Selene\Matisse\Component;
 use Selene\Matisse\ComponentAttributes;
 use Selene\Matisse\Context;
+use Selene\Matisse\GenericAttributes;
 use Selene\Matisse\IAttributes;
-
-class ParameterAttributes extends ComponentAttributes
-{
-  /**
-   * Dynamic set of attributes, as specified on the source markup.
-   * @var array
-   */
-  private $attributes;
-
-  public function __get ($name)
-  {
-    if (isset($this->attributes)) {
-      if (array_key_exists ($name, $this->attributes)) return $this->attributes[$name];
-      return null;
-    }
-    return null;
-  }
-
-  public function __set ($name, $value)
-  {
-    if (!isset($this->attributes)) $this->attributes = [$name => $value];
-    else $this->attributes[$name] = $value;
-  }
-
-  public function __isset ($name)
-  {
-    return isset($this->attributes) && array_key_exists ($name, $this->attributes);
-  }
-
-  public function getTypeOf ($name)
-  {
-    return AttributeType::TEXT;
-  }
-
-  public function defines ($name)
-  {
-    return true;
-  }
-
-  public function getAttributeNames ()
-  {
-    return isset($this->attributes) ? array_keys ($this->attributes) : null;
-  }
-
-  public function getAll ()
-  {
-    return $this->attributes;
-  }
-}
 
 class Parameter extends Component implements IAttributes
 {
@@ -83,13 +35,13 @@ class Parameter extends Component implements IAttributes
   public function __construct (Context $context, $tagName, $type, array $attributes = null)
   {
     parent::__construct ($context, $attributes);
-    $this->type      = $type;
+    $this->type = $type;
     $this->setTagName ($tagName);
   }
 
   /**
    * @see IAttributes::attrs()
-   * @return ParameterAttributes
+   * @return GenericAttributes
    */
   function attrs ()
   {
@@ -98,11 +50,11 @@ class Parameter extends Component implements IAttributes
 
   /**
    * @see IAttributes::newAttributes()
-   * @return ParameterAttributes
+   * @return GenericAttributes
    */
   function newAttributes ()
   {
-    return new ParameterAttributes($this);
+    return new GenericAttributes($this);
   }
 
   public function setScalar ($v)
@@ -133,4 +85,3 @@ class Parameter extends Component implements IAttributes
     $this->parent->renderParameter ($this);
   }
 }
-

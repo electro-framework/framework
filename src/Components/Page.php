@@ -8,12 +8,6 @@ class Page extends Component
 {
 
   /**
-   * The controlling Controller instance.
-   * @var Controller
-   */
-  public $controller;
-
-  /**
    * Array of strings/Parameters containing URLs of CSS stylesheets to be loaded during the page loading process.
    * @var array
    */
@@ -38,7 +32,6 @@ class Page extends Component
   public $inlineCssStyles = [];
 
   public $statusMessage    = '';
-  public $contentIsXML     = false;
   public $autoHTML         = true;
   public $doctype          = '<!DOCTYPE HTML>';
   public $charset          = 'UTF-8';
@@ -180,17 +173,7 @@ class Page extends Component
   protected function render ()
   {
     global $application;
-    if ($this->contentIsXML) {
-      try {
-        $this->controller->beginXMLResponse ();
-        $this->renderChildren ();
-      } catch (\Exception $e) {
-        ob_clean ();
-        header ('Content-Type: text/html');
-        throw $e;
-      }
-    }
-    else if ($this->autoHTML) {
+    if ($this->autoHTML) {
 
       ob_start ();
       $this->renderChildren ();

@@ -1,5 +1,6 @@
 <?php
 namespace Selene\Matisse;
+use Selene\Matisse\Base\GenericComponent;
 use Selene\Matisse\Components\Literal;
 use Selene\Matisse\Components\Page;
 use Selene\Matisse\Components\Parameter;
@@ -182,16 +183,21 @@ abstract class Component
    * @param Component $parent
    * @param string    $tagName
    * @param array     $attributes
-   * @param boolean   $strict If true, failure to find a component class will throw an exception.
-   *                          If false, an attempt is made to load a template with the same name,
+   * @param bool      $generic If true, an instance of GenericComponent is created.
+   * @param boolean   $strict  If true, failure to find a component class will throw an exception.
+   *                           If false, an attempt is made to load a template with the same name,
    * @return Component Component instance. For templates, an instance of Template is returned.
-   *                          You should them
+   *                           You should them
    * @throws ComponentException
    * @throws ParseException
    */
   static public function create (Context $context, Component $parent, $tagName, array $attributes = null,
-                                 $strict = false)
+                                 $generic = false, $strict = false)
   {
+    if ($generic) {
+      $component = new GenericComponent($context, $tagName, $attributes);
+      return $component;
+    }
     $class = $context->getClassForTag ($tagName);
     if (!$class) {
       if ($strict)
@@ -498,7 +504,7 @@ abstract class Component
   {
     if (!$this->inactive) {
       $this->databind ();
-      if (!isset($this->attrsObj) || $this->attrsObj->visible) {
+      if (!isset($this->attrsObj) || !$this->attrsObj->hidden) {
         $this->preRender ();
         $this->render ();
         $this->postRender ();

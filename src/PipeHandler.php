@@ -43,7 +43,8 @@ class PipeHandler
     $this->pipes = array_merge ($this->pipes, $pipes);
   }
 
-  function registerFallbackHandler ($handler) {
+  function registerFallbackHandler ($handler)
+  {
     $this->fallbackHandler = $handler;
   }
 
@@ -59,6 +60,5 @@ class PipeHandler
     }
     throw new HandlerNotFoundException;
   }
-
 
 }

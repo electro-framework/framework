@@ -38,7 +38,7 @@ An example of a component template that implements a customizable panel:
   <p:param name="actions" type="source"/>
   <p:body>
     <div class="form box {@type}">
-      <c:test is-set="{@title}">
+      <c:if the="{@title}" is-set>
         <div class="box-header with-border">
           <h3 class="box-title">{@title}</h3>
         </div>
@@ -61,8 +61,8 @@ You can then create instances of this component like this:
 ```HTML
 <c:form type="box-info" title="My title">
 	<p:content>
-		<h1>Welcome</h1>
-		<p>Some text here...</p>
+<h1>Welcome</h1>
+<p>Some text here...</p>
 	</p:content>
 	<p:footer>
 		Some footer markup here...

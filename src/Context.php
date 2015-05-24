@@ -51,12 +51,12 @@ class Context
   private $templates = [];
 
   /**
-   * @param array $tags A map of tag names to fully qualified PHP class names.
+   * @param array  $tags        A map of tag names to fully qualified PHP class names.
    * @param object $pipeHandler A value for {@see $pipeHandler}
    */
   function __construct (array &$tags, $pipeHandler = null)
   {
-    $this->tags  =& $tags;
+    $this->tags        =& $tags;
     $this->pipeHandler = $pipeHandler;
   }
 

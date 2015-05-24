@@ -1,5 +1,6 @@
 <?php
 namespace Selene\Matisse;
+use Selene\Matisse\Components\Literal;
 use Selene\Matisse\Exceptions\ComponentException;
 
 class AttributeType
@@ -31,7 +32,7 @@ class ComponentAttributes
    * Its public to allow access from the Template class.
    * @var array
    */
-  public static $TYPE_NAMES = [
+  public static    $TYPE_NAMES     = [
     'undefined', 'identifier', 'text', 'number', 'boolean', 'parameters', 'source', 'data', 'binding'
   ];
   protected static $BOOLEAN_VALUES = [
@@ -44,27 +45,21 @@ class ComponentAttributes
     'off'   => false,
     'on'    => true
   ];
-  public $id;
-  public $styles;
-  public $class;
-  public $disabled   = false;
-  public $html_attrs = '';
-  public $visible = true;
+  public           $id;
+  public           $class;
+  public           $disabled       = false;
+  public           $html_attrs     = '';
+  public           $hidden         = false;
   /**
    * The component that owns these attributes.
    * @var Component
    */
   protected $component;
+
   public function __construct ($component)
   {
     $this->component = $component;
   }
-
-  public function apply (array $attrs) {
-    foreach ($attrs as $k => $v)
-      $this->set( $k, $v);
-  }
-
 
   public static function getBoolean ($mixed)
   {
@@ -74,6 +69,7 @@ class ComponentAttributes
       return self::$BOOLEAN_VALUES[$mixed];
     return !is_null ($mixed) && !empty($mixed);
   }
+
   public static function validateScalar ($type, $v)
   {
     if (isset($v) && $v !== '') {
@@ -117,24 +113,35 @@ class ComponentAttributes
     }
     return null;
   }
+
   public static function getTypeIdOf ($typeName)
   {
     return array_search ($typeName, self::$TYPE_NAMES);
   }
+
+  public function apply (array $attrs)
+  {
+    foreach ($attrs as $k => $v)
+      $this->set ($k, $v);
+  }
+
   public function __get ($name)
   {
     throw new ComponentException($this->component, "Can't read non existing attribute <b>$name</b>.");
   }
+
   public function __set ($name, $value)
   {
     throw new ComponentException($this->component, "Can't set non existing attribute <b>$name</b>.");
   }
+
   public function get ($name, $default = null)
   {
     if (isset($this->$name))
       return $this->$name;
     return $default;
   }
+
   public function set ($name, $value)
   {
     if (!$this->defines ($name))
@@ -143,17 +150,20 @@ class ComponentAttributes
       $this->setScalar ($name, $value);
     else $this->$name = $value;
   }
+
   public function getTypeOf ($name)
   {
     $fn = "typeof_$name";
     if (method_exists ($this, $fn))
       return $this->$fn();
-    return null;
+    return AttributeType::TEXT;
   }
+
   public function getEnumOf ($name)
   {
     return $this->{"enum_$name"}();
   }
+
   public function getTypeNameOf ($name)
   {
     $t = $this->getTypeOf ($name);
@@ -161,42 +171,40 @@ class ComponentAttributes
       return self::$TYPE_NAMES[$t];
     return self::$TYPE_NAMES[0];
   }
+
   public function defines ($name)
   {
     return method_exists ($this, "typeof_$name");
   }
+
   public function isEnum ($name)
   {
     return method_exists ($this, "enum_$name");
   }
+
   public function isScalar ($name)
   {
     $type = $this->getTypeOf ($name);
     return $type == AttributeType::BOOL || $type == AttributeType::ID || $type == AttributeType::NUM ||
            $type == AttributeType::TEXT;
   }
+
   public function getAttributeNames ()
   {
-    $r = new \ReflectionClass(get_class ($this));
-    $a = $r->getProperties (\ReflectionProperty::IS_PUBLIC);
-    $s = $r->getProperties (\ReflectionProperty::IS_STATIC);
-    $p = array_diff ($a, $s);
-    $r = [];
-    foreach ($p as $prop)
-      $r[] = $prop->name;
-    return $r;
+    $a = array_keys (get_object_vars ($this));
+    $a = array_diff ($a, ['component']);
+    return $a;
   }
+
   public function getAll ()
   {
-    $r = new \ReflectionClass(get_class ($this));
-    $a = $r->getProperties (\ReflectionProperty::IS_PUBLIC);
-    $s = $r->getProperties (\ReflectionProperty::IS_STATIC);
-    $p = array_diff ($a, $s);
+    $p = $this->getAttributeNames ();
     $r = [];
     foreach ($p as $prop)
-      $r[$prop->name] = $this->{$prop->name};
+      $r[$prop] = $this->{$prop};
     return $r;
   }
+
   public function getAttributesOfType ($type)
   {
     $result = [];
@@ -207,10 +215,12 @@ class ComponentAttributes
           $result[$name] = $this->get ($name);
     return $result;
   }
+
   public function getScalar ($name)
   {
     return self::validateScalar ($this->getTypeOf ($name), $this->get ($name));
   }
+
   public function setScalar ($name, $v)
   {
     if ($this->isEnum ($name)) {
@@ -223,6 +233,7 @@ class ComponentAttributes
     }
     $this->$name = self::validateScalar ($this->getTypeOf ($name), $v);
   }
+
   public function setComponent (Component $owner)
   {
     $this->component = $owner;
@@ -239,30 +250,16 @@ class ComponentAttributes
       if (!empty($values))
         $this->$name = Component::cloneComponents ($values, $owner);
   }
-  protected function typeof_html_attrs ()
-  {
-    return AttributeType::TEXT;
-  }
-  protected function typeof_id ()
-  {
-    return AttributeType::ID;
-  }
-  protected function typeof_styles ()
-  {
-    return AttributeType::TEXT;
-  }
-  protected function typeof_class ()
-  {
-    return AttributeType::ID;
-  }
-  protected function typeof_disabled ()
-  {
-    return AttributeType::BOOL;
-  }
 
-  protected function typeof_visible ()
-  {
-    return AttributeType::BOOL;
-  }
+  protected function typeof_html_attrs () { return AttributeType::TEXT; }
 
+  protected function typeof_id () { return AttributeType::ID; }
+
+  protected function typeof_styles () { return AttributeType::TEXT; }
+
+  protected function typeof_class () { return AttributeType::ID; }
+
+  protected function typeof_disabled () { return AttributeType::BOOL; }
+
+  protected function typeof_hidden () { return AttributeType::BOOL; }
 }

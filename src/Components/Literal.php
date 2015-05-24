@@ -17,10 +17,15 @@ class LiteralAttributes extends ComponentAttributes
   public $nl2br   = false;
 
   protected function typeof_value () { return AttributeType::TEXT; }
+
   protected function typeof_encode () { return AttributeType::BOOL; }
+
   protected function typeof_whitespace () { return AttributeType::BOOL; }
+
   protected function typeof_cdata () { return AttributeType::BOOL; }
+
   protected function typeof_content () { return AttributeType::SRC; }
+
   protected function typeof_nl2br () { return AttributeType::BOOL; }
 }
 
