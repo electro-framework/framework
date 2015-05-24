@@ -48,11 +48,11 @@ return [
     'translation'            => false,
     'languages'              => null,
     'defaultLang'            => null,
-    'pageSize'               => 15,
+    'pageSize'               => 99999,
     'pageNumberParam'        => 'p',
     'frameworkScripts'       => true,
     'condenseLiterals'       => true,
-    'compressOutput'         => true,
+    'compressOutput'         => $_SERVER['APP_DEBUG'] != 'true',
     'debugMode'              => false,
     'userModel'              => '',
 
