@@ -26,6 +26,16 @@ class Session
     return $session->user;
   }
 
+  /**
+   * True if the user islogged-in.
+   * @return boolean
+   */
+  static function loggedIn ()
+  {
+    global $session;
+    return (bool)$session->user;
+  }
+
   public function validate ()
   {
     return $this->isValid = isset($this->user);

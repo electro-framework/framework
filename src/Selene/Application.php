@@ -404,7 +404,9 @@ class Application
     $this->setup ($rootDir);
     $this->initSession ();
     if ($this->debugMode) {
-      WebConsole::session ($session);
+      WebConsole::session ()
+                ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="__doAction(\'logout\')">Log out</button>')
+                ->log ($session);
     }
     $this->loadRoutes ();
     $this->registerPipes ();
@@ -415,12 +417,6 @@ class Application
       WebConsole::response (['Content-Length' => round (ob_get_length () / 1024) . ' KB']);
     }
     WebConsole::outputContent ();
-  }
-
-  protected function registerPipes ()
-  {
-    $this->pipeHandler = new PipeHandler;
-    $this->pipeHandler->registerPipes (new DefaultPipes);
   }
 
   /**
@@ -572,6 +568,12 @@ class Application
   {
     $themesPath = strpos ($URI, $this->themesPath) !== false ? $this->themesPath : $this->defaultThemesPath;
     return str_replace ('/', '_', substr ($URI, strlen ($this->baseURI) + strlen ($themesPath) + 2));
+  }
+
+  protected function registerPipes ()
+  {
+    $this->pipeHandler = new PipeHandler;
+    $this->pipeHandler->registerPipes (new DefaultPipes);
   }
 
   protected function setupWebConsole ()
