@@ -1,6 +1,5 @@
 <?php
 namespace Selene\Matisse;
-use Selene\Matisse\Components\Literal;
 use Selene\Matisse\Exceptions\ComponentException;
 
 class AttributeType
@@ -45,11 +44,19 @@ class ComponentAttributes
     'off'   => false,
     'on'    => true
   ];
-  public           $id;
-  public           $class;
-  public           $disabled       = false;
-  public           $html_attrs     = '';
-  public           $hidden         = false;
+  protected static $NEVER_DIRTY = [];
+
+  public $id;
+  public $class;
+  public $disabled       = false;
+  public $html_attrs     = '';
+  public $hidden         = false;
+
+  /**
+   * Set to `true` when one or more attributes have been changed from their default values.
+   * @var bool
+   */
+  public $_modified = false;
   /**
    * The component that owns these attributes.
    * @var Component
@@ -148,7 +155,10 @@ class ComponentAttributes
       throw new ComponentException($this->component, "Invalid attribute <b>$name</b> specified.");
     if ($this->isScalar ($name))
       $this->setScalar ($name, $value);
-    else $this->$name = $value;
+    else {
+      $this->$name     = $value;
+      $this->_modified = true;
+    }
   }
 
   public function getTypeOf ($name)
@@ -231,7 +241,12 @@ class ComponentAttributes
           "Invalid value for attribute/parameter <b>$name</b>.\nExpected: <b>$list</b>.");
       }
     }
-    $this->$name = self::validateScalar ($this->getTypeOf ($name), $v);
+    $newV = self::validateScalar ($this->getTypeOf ($name), $v);
+    if ($this->$name !== $newV) {
+      $this->$name     = $newV;
+      if (!isset(static::$NEVER_DIRTY[$name]))
+        $this->_modified = true;
+    }
   }
 
   public function setComponent (Component $owner)
@@ -262,4 +277,6 @@ class ComponentAttributes
   protected function typeof_disabled () { return AttributeType::BOOL; }
 
   protected function typeof_hidden () { return AttributeType::BOOL; }
+
+  protected function typeof__modified () { return AttributeType::BOOL; }
 }

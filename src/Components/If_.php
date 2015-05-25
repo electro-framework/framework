@@ -111,24 +111,24 @@ class If_ extends Component implements IAttributes
 
     if (isset($is)) {
       if (!isset($v)) {
-        $is = isset($is) && $is != '';
+        $is = strToBool($is);
         $v  = true;
       }
-      if ($v == $is xor $not)
+      if ($v === $is xor $not)
         $this->setChildren ($this->getChildren ('then'));
       else $this->setChildren ($this->getChildren ('else'));
       return;
     }
 
-    if (isset($attr->is_set)) {
+    if ($attr->is_set) {
       if ((isset($v) && $v != '') xor $not)
         $this->setChildren ($this->getChildren ('then'));
       else $this->setChildren ($this->getChildren ('else'));
       return;
     }
 
-    if (isset($attr->is_true)) {
-      if ($v xor $not)
+    if ($attr->is_true) {
+      if (strToBool($v) xor $not)
         $this->setChildren ($this->getChildren ('then'));
       else $this->setChildren ($this->getChildren ('else'));
       return;

@@ -166,6 +166,7 @@ class Parser
   protected function tagComplete ($fromClosingTag = true)
   {
     $current = $this->current;
+    $this->mergeLiterals ($current);
     if ($this->scalarParam)
       $this->scalarParam = false;
     $parent = $current->parent;
@@ -175,6 +176,31 @@ class Parser
     // Closing a component's tag must also close an implicit parameter.
     if ($fromClosingTag && isset($current->isImplicit))
       $this->tagComplete ();
+  }
+
+  /**
+   * Merges adjacent Literal children of the specified container whenever that merge can be safely done.
+   *
+   * > Note: Although the parser doesn't generate redundant literals, they may occur after macro substitutions are
+   * performed.
+   * @param Component $c The container component.
+   */
+  protected function mergeLiterals (Component $c) {
+    $o = [];
+    $prev = null;
+    if (isset($c->children))
+    foreach ($c->children as $child) {
+      if ($prev && $prev instanceof Literal && $child instanceof Literal && !$prev->bindings && !$child->bindings
+      && !$prev->attrs()->_modified && !$child->attrs()->_modified) {
+        // safe to merge
+        $prev->attrs()->value .= $child->attrs()->value;
+      }
+      else {
+        $o[]  = $child;
+        $prev = $child;
+      }
+    }
+    $c->children = $o;
   }
 
   protected function createParameter ($name, $tagName, array $attributes = null, array $bindings = null)

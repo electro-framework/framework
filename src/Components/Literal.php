@@ -27,6 +27,8 @@ class LiteralAttributes extends ComponentAttributes
   protected function typeof_content () { return AttributeType::SRC; }
 
   protected function typeof_nl2br () { return AttributeType::BOOL; }
+
+  protected static $NEVER_DIRTY = ['value' => 1];
 }
 
 class Literal extends Component implements IAttributes
