@@ -292,7 +292,7 @@ abstract class AbstractRoute extends Object
     return $result;
   }
 
-  public function evalURI ($URIParams = null, $ignoreMissing = false, $URI = null)
+  public function evalURI ($URIParams = null, $ignoreMissing = true, $URI = null)
   {
     if (is_null ($URIParams))
       $URIParams = $this->getURIParams ();
