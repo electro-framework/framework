@@ -252,7 +252,7 @@ abstract class AbstractRoute extends Object
   {
     if ($this->isIndex)
       return $this;
-    if (is_a ($this->parent, 'AbstractRoute'))
+    if ($this->parent instanceof AbstractRoute)
       return $this->parent->getIndex ();
     return null;
   }

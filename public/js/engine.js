@@ -159,6 +159,11 @@ function focusField(name, select) {
 
 function Form_onSubmit(ev)
 {
+  // HTML5 native validation integration.
+  if ('validateInput' in window)
+    $('input,textarea,select').each(function(){ validateInput(this) });
+  if (!$f().checkValidity()) return false;
+
   if (window.onSubmit) return window.onSubmit($f());
   return $f('_action').value != '';
 }

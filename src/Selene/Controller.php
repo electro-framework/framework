@@ -858,6 +858,9 @@ class Controller
   /**
    * Override to return the main model for the controller / view.
    *
+   * > This model will be available on both GET and POST requests and it will also be set as the default data source
+   * for the view model.
+   *
    * <p>If not set, the model will be created by the controller by inspecting:
    * - the model property of the current route;
    * - the controller's model property;
@@ -868,6 +871,16 @@ class Controller
   protected function model ()
   {
     return null;
+  }
+
+  /**
+   * Override to set addition models for the controller / view.
+   *
+   * > View models are available only on GET requests.
+   */
+  protected function viewModel ()
+  {
+    //Override.
   }
 
   /**
@@ -947,6 +960,8 @@ class Controller
         foreach ($this->sitePage->dataSources as $name => $dataSourceInfo)
           $this->setDataSource ($name, $dataSourceInfo->getData ($this, $name)); //interception is done inside getData()
     }
+
+    $this->viewModel ();
 
     if (isset($this->modelData)) {
       $this->setViewModel ('default', $this->modelData);
