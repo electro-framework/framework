@@ -205,6 +205,45 @@ class DataObject
   }
 
   /**
+   * Returns records matching a filter.
+   * @param        $condition
+   * @param array  $params
+   * @param string $orderBy
+   * @param string $limit
+   * @return PDOStatement
+   */
+  function where ($condition, array $params = null, $orderBy = '', $limit = '')
+  {
+    return $this->queryBy ($condition, '', $orderBy, $params, $limit);
+  }
+
+  /**
+   * Generates and executes an SQL query with joined tables.
+   * @param array  $joins
+   * @param string $where
+   * @param array  $params
+   * @param string $orderBy
+   * @return PDOStatement
+   */
+  function join (array $joins, $where='', array $params=null, $orderBy='') {
+    $o = [];
+    $ch = 'B';
+    foreach ($joins as $field => $modelClass) {
+      $m = new $modelClass;
+      $o[] = "LEFT JOIN $m->tableName $ch ON A.$field=$ch.$m->primaryKeyName";
+      ++$ch;
+    }
+    $joinClauses = implode("\n", $o);
+    $where = $where ? "WHERE $where" : '';
+    $orderBy = $orderBy ?: $this->primarySortField;
+    $orderBy = $orderBy ? "ORDER BY $orderBy" : '';
+    return database_query (
+      "SELECT * FROM $this->tableName A $where
+        $joinClauses
+        $orderBy", $params);
+  }
+
+  /**
    * Sets the specified field to the given value.
    *
    * Can be used for chaining calls.
