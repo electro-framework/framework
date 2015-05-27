@@ -764,6 +764,7 @@ class Controller
     $ctx->condenseLiterals    = $application->condenseLiterals;
     $ctx->debugMode           = $application->debugMode;
     $ctx->templateDirectories = $application->templateDirectories;
+    $this->page               = new Page($ctx);
   }
 
   /**
@@ -1107,7 +1108,7 @@ class Controller
 
   protected function parseView ($viewTemplate)
   {
-    $this->page = $this->engine->parse ($viewTemplate, $this->context);
+    $this->engine->parse ($viewTemplate, $this->context, $this->page);
   }
 
   /**
