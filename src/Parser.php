@@ -17,6 +17,11 @@ class Parser
   const TRIM_LEFT            = 1;
   const TRIM_RIGHT           = 2;
   const TRIM                 = 3;
+
+  const EXPECT_COMPONENT_OR_TEXT = 1;
+  const EXPECT_PARAM_OR_DEFAULT_PARAM = 2;
+  const EXPECT_METADATA = 3;
+
   /**
    * Points to the root of the component hierarchy.
    *
