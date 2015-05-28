@@ -92,7 +92,8 @@ class Parser
 <table>
   <tr><th>Found:<td><b>&lt;/$tag&gt;</b>
   <tr><th>Expected:<td><b>&lt;/{$this->current->getTagName ()}&gt;</b>
-  <tr><th>Component in scope:<td><b>&lt;{$parent->getTagName()}></b>, of type <b>{$parent->className}</b>
+  <tr><th>Component in scope:<td><b>&lt;{$parent->getTagName()}></b><td>Class: <b>{$parent->className}</b>
+  <tr><th>Scope's parent:<td><b>&lt;{$parent->parent->getTagName()}></b><td>Class: <b>{$parent->parent->className}</b>
 </table>",
               $body, $start, $end);
         }
