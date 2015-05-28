@@ -56,7 +56,7 @@ return [
     'debugMode'              => false,
     'userModel'              => '',
 
-    'imageRedirection'       => true,
+    'imageRedirection'       => false,
     'URINotFoundURL'         => false,
     'oldIEWarning'           => '',
     'productionIP'           => '',
