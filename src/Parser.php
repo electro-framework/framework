@@ -7,12 +7,12 @@ use Selene\Matisse\Exceptions\ParseException;
 
 class Parser
 {
-  const PARSE_TAG            = '#(<)(/?)([cpth]):([\w\-]+)\s*(.*?)(/?)(>)#s';
-  const PARSE_DATABINDINGS   = '#\{(?=\S) ( [^{}]* | \{[^{}]*\} )* \}#x';
-  const TRIM_LITERAL_CONTENT = '#^\s+|(?<=\>)\s+(?=\s)|(?<=\s)\s+(?=\<)|\s+$#';
-  const TRIM_LEFT_CONTENT    = '#^\s+|(?<=\>)\s+(?=\s)#';
-  const TRIM_RIGHT_CONTENT   = '#(?<=\s)\s+(?=\<)|\s+$#';
-  const PARSE_ATTRS          = '#([\w\-\:]+)\s*(?:=\s*("|\')(.*?)\2)?(\s|@)#s';
+  const PARSE_TAG            = '# (<) (/?) ([cpth]) : ([\w\-]+) \s* (.*?) (/?) (>) #sx';
+  const PARSE_DATABINDINGS   = '# \{(?=\S) ( [^{}]* | \{[^{}]*\} )* \} #x';
+  const TRIM_LITERAL_CONTENT = '# ^ \s+ | (?<=\>) \s+ (?=\s) | (?<=\s) \s+ (?=\<) | \s+ $ #x';
+  const TRIM_LEFT_CONTENT    = '# ^ \s+ | (?<=\>) \s+ (?=\s) #x';
+  const TRIM_RIGHT_CONTENT   = '# (?<=\s) \s+ (?=\<) | \s+ $ #x';
+  const PARSE_ATTRS          = '# ([\w\-\:]+) \s* (?: = \s* ("|\') (.*?) \2 )? (\s|@) #sx'; // @ is at the end of the attrs string and it's used as a marker.
   const NO_TRIM              = 0;
   const TRIM_LEFT            = 1;
   const TRIM_RIGHT           = 2;
