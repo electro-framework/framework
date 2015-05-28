@@ -13,12 +13,12 @@ Example of a Matisse template:
 ```HTML
 <h1>Some HTML text</h1>
 <form>
-	<c:input name="field1" value="{$myVar}"/>
+	<Input name="field1" value="{$myVar}"/>
 	<ul>
-	<c:repeater data="{$myData}">
+	<Repeater data="{$myData}">
 		<li>Item {$name}</li>
-		<p:no-data>The are no items.</p:no-data>
-	</c:repeater>
+		<NoData>The are no items.</p:no-data>
+	</Repeater>
 </ul>
 ```
 
@@ -31,43 +31,40 @@ Components can also be defined with pure markup via template files, without any 
 An example of a component template that implements a customizable panel:
 
 ```HTML
-<c:template name="form">
-  <p:param name="type" type="text" default="box-solid box-default"/>
-  <p:param name="title" type="text"/>
-  <p:param name="content" type="source"/>
-  <p:param name="actions" type="source"/>
-  <p:body>
-    <div class="form box {@type}">
-      <c:if the="{@title}" is-set>
-        <div class="box-header with-border">
-          <h3 class="box-title">{@title}</h3>
-        </div>
-      </c:test>
-      <div class="box-body">
-        {@content}
+<Template name="Form">
+  <Param name="type" type="text" default="box-solid box-default"/>
+  <Param name="title" type="text"/>
+  <Param name="content" type="source"/>
+  <Param name="actions" type="source"/>
+
+  <div class="form box {@type}">
+    <If the="{@title}" is-set>
+      <div class="box-header with-border">
+        <h3 class="box-title">{@title}</h3>
       </div>
-      <div class="box-footer">
-        <div class="buttonBar right">
-          {@actions}
-        </div>
-      </div>
+    </If>
+    <div class="box-body">
+      {@content}
     </div>
-  </p:body>
-</c:template>
+    <div class="box-footer">
+      <ButtonBar>
+        {@actions}
+      </ButtonBar>
+    </div>
+  </div>
+</Template>
 ```
 
 You can then create instances of this component like this:
 
 ```HTML
-<c:form type="box-info" title="My title">
-	<p:content>
-<h1>Welcome</h1>
-<p>Some text here...</p>
-	</p:content>
-	<p:footer>
-		Some footer markup here...
-	</p:footer>
-</c:form>
+<Form type="box-info" title="My title">
+  <h1>Welcome</h1>
+  <p>Some text here...</p>
+    <Footer>
+      Some footer markup here...
+    </Footer>
+  </Form>
 ```
 
 
@@ -75,7 +72,7 @@ You can then create instances of this component like this:
 > For instance, `<br>` must be written as `<br/>` and an empty `div` can be written as `<div/>`.  
 > Both examples are not valid HTML syntax, but they are valid XML syntax.
 
-> Note: although the `c:` and `p:` prefixes are similar to XML namespace prefixes, no real namespaces are used, nor should you define any XML namespace on templates. These prefixes are used only to differentiate component markup from normal XHTML markup.
+> Note: Component tags always begin with a capital letter and are camel cased. Regular HTML tags must be always lower cased.
 
 Templates, when run for the first time, are parsed into a component tree which is then saved in serialized form into a cache file. Further template renderings will fetch the pre-parsed version from the cache file (or shared memory buffer), therefore speeding up the rendering process.
 

@@ -44,13 +44,13 @@ class ComponentAttributes
     'off'   => false,
     'on'    => true
   ];
-  protected static $NEVER_DIRTY = [];
+  protected static $NEVER_DIRTY    = [];
 
   public $id;
   public $class;
-  public $disabled       = false;
-  public $html_attrs     = '';
-  public $hidden         = false;
+  public $disabled  = false;
+  public $htmlAttrs = '';
+  public $hidden    = false;
 
   /**
    * Set to `true` when one or more attributes have been changed from their default values.
@@ -243,7 +243,7 @@ class ComponentAttributes
     }
     $newV = self::validateScalar ($this->getTypeOf ($name), $v);
     if ($this->$name !== $newV) {
-      $this->$name     = $newV;
+      $this->$name = $newV;
       if (!isset(static::$NEVER_DIRTY[$name]))
         $this->_modified = true;
     }
@@ -266,7 +266,7 @@ class ComponentAttributes
         $this->$name = Component::cloneComponents ($values, $owner);
   }
 
-  protected function typeof_html_attrs () { return AttributeType::TEXT; }
+  protected function typeof_htmlAttrs () { return AttributeType::TEXT; }
 
   protected function typeof_id () { return AttributeType::ID; }
 

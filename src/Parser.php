@@ -7,7 +7,7 @@ use Selene\Matisse\Exceptions\ParseException;
 
 class Parser
 {
-  const PARSE_TAG            = '# (<) (/?) ([cpth]) : ([\w\-]+) \s* (.*?) (/?) (>) #sx';
+  const PARSE_TAG            = '# (<) (/?) ([A-Z]\w+) \s* (.*?) (/?) (>) #sx';
   const PARSE_DATABINDINGS   = '# \{(?=\S) ( [^{}]* | \{[^{}]*\} )* \} #x';
   const TRIM_LITERAL_CONTENT = '# ^ \s+ | (?<=\>) \s+ (?=\s) | (?<=\s) \s+ (?=\<) | \s+ $ #x';
   const TRIM_LEFT_CONTENT    = '# ^ \s+ | (?<=\>) \s+ (?=\s) #x';
@@ -53,7 +53,7 @@ class Parser
     $this->current = $parent;
     $this->root    = $root;
     while (preg_match (self::PARSE_TAG, $body, $match, PREG_OFFSET_CAPTURE, $pos)) {
-      list(, list(, $start), list($term), list($namespace), list($tag), list($attrs), list($term2), list(, $end)
+      list(, list(, $start), list($term), list($tag), list($attrs), list($term2), list(, $end)
         ) = $match;
       //literal content
       if ($start > $pos) {
@@ -77,12 +77,11 @@ class Parser
       //process tag
       if ($term) {
         //close previous tag
-        if ($namespace != $this->current->namespace || $tag != $this->current->getTagName ()) {
+        if ($tag != $this->current->getTagName ()) {
           $parent = $this->current->parent;
-          if (!($this->current instanceof Parameter && $this->current->isImplicit &&
-                $namespace == $parent->namespace && $tag == $parent->getTagName ())
+          if (!($this->current instanceof Parameter && $this->current->isImplicit && $tag == $parent->getTagName ())
           )
-            throw new ParseException("Closing tag &lt;/$namespace:$tag&gt; does not match the opening tag &lt;{$this->current->getQualifiedName ()}&gt;.",
+            throw new ParseException("Closing tag &lt;/$tag&gt; does not match the opening tag &lt;{$this->current->getTagName ()}&gt;.",
               $body, $start, $end);
         }
         if ($attrs) throw new ParseException('Closing tags must not have attributes.', $body, $start, $end);
@@ -94,54 +93,60 @@ class Parser
           throw new ParseException("Can't set tag <b>$tag</b> as a value for the scalar parameter <b>{$this->current->getTagName()}</b>.",
             $body, $start, $end);
         $attributes = $bindings = null;
-        switch ($namespace) {
-          case 'c':
-          case 't':
-          case 'h':
-            if (!$this->canAddComponent ()) {
-              if (!isset($this->current->defaultAttribute))
-                throw new ParseException('You may not instantiate a component at this location.', $body,
-                  $start, $end);
-              $this->generateImplicitParameter ();
-            }
-            /** @var Parameter|boolean $defParam */
-            $this->parseAttributes ($attrs, $attributes, $bindings, true);
-            $component            =
-              Component::create ($this->context, $this->current, $tag, $attributes, $namespace == 'h');
-            $component->namespace = $namespace;
-            $component->bindings  = $bindings;
-            $this->current->addChild ($component);
-            $this->current = $component;
-            break;
-          case 'p':
-            if (!$this->canAddParameter ())
-              throw new ParseException('Parameters must be specified as direct descendant nodes of a component.',
+
+        $name = lcfirst ($tag);
+        if ($this->current instanceof IAttributes && $this->current->attrs()->defines($name)) {
+
+          // IT'S A PARAMETER
+
+          if (!$this->canAddParameter ()) {
+            throw new ParseException('Parameters must be specified as direct descendant nodes of a component.',
+              $body, $start, $end);
+          }
+          // Allow the placement of additional parameters after the content of a default (implicit) parameter.
+          if (isset($this->current->isImplicit))
+            $this->tagComplete (false);
+          if (!$this->current instanceof Parameter) {
+
+            // Create a component parameter
+
+            if (!$this->current->supportsAttributes)
+              throw new ParseException("The component <b>&lt;{$this->current->getQualifiedName()}&gt;</b> does not support parameters.",
+                $body, $start,
+                $end);
+            $this->parseAttributes ($attrs, $attributes, $bindings);
+            if (!$this->current->attrs ()->defines ($name)) {
+              $s = join ('</b>, <b>', $this->current->attrs ()->getAttributeNames ());
+              throw new ParseException("The component <b>&lt;{$this->current->getQualifiedName()}&gt;</b> ({$this->current->className}) does not support the specified parameter <b>$tag</b>.<p>Expected: <b>$s</b>.",
                 $body, $start, $end);
-            $name = normalizeAttributeName ($tag);
-            // Allow the placement of additional parameters after the content of a default (implicit) parameter.
-            if (isset($this->current->isImplicit))
-              $this->tagComplete (false);
-            if (!$this->current instanceof Parameter) {
-              //create parameter
-              if (!$this->current->supportsAttributes)
-                throw new ParseException("The component <b>&lt;{$this->current->getQualifiedName()}&gt;</b> does not support parameters.",
-                  $body, $start,
-                  $end);
-              $this->parseAttributes ($attrs, $attributes, $bindings);
-              if (!$this->current->attrs ()->defines ($name)) {
-                $s = join ('</b>, <b>', $this->current->attrs ()->getAttributeNames ());
-                throw new ParseException("The component <b>&lt;{$this->current->getQualifiedName()}&gt;</b> ({$this->current->className}) does not support the specified parameter <b>$tag</b>.<p>Expected: <b>$s</b>.",
-                  $body, $start, $end);
-              }
-              $param = $this->createParameter ($name, $tag, $attributes, $bindings);
             }
-            else {
-              //create subparameter
-              $this->parseAttributes ($attrs, $attributes, $bindings);
-              $param = $this->createSubparameter ($name, $tag, $attributes, $bindings);
-            }
-            $param->namespace = $namespace;
-            break;
+            $param = $this->createParameter ($name, $name, $attributes, $bindings);
+          }
+          else {
+
+            // Create parameter's subparameter
+
+            $this->parseAttributes ($attrs, $attributes, $bindings);
+            $param = $this->createSubparameter ($name, $name, $attributes, $bindings);
+          }
+        }
+        else {
+
+          // IT'S A COMPONENT OR A MACRO
+
+          if (!$this->canAddComponent ()) {
+            if (!isset($this->current->defaultAttribute))
+              throw new ParseException('You may not instantiate a component at this location.', $body,
+                $start, $end);
+            $this->generateImplicitParameter ();
+          }
+          /** @var Parameter|boolean $defParam */
+          $this->parseAttributes ($attrs, $attributes, $bindings, true);
+          $component = Component::create ($this->context, $this->current, $tag, $attributes, false /*TODO: support HTML components*/);
+
+          $component->bindings  = $bindings;
+          $this->current->addChild ($component);
+          $this->current = $component;
         }
         //short tag
         if ($term2)
@@ -159,7 +164,7 @@ class Parser
     $defName = $current->defaultAttribute;
     // Synthesise a parameter only when no corresponding one already exists.
     if (is_null ($current->attrs ()->$defName))
-      $this->createParameter (normalizeAttributeName ($defName), $defName)->isImplicit = true;
+      $this->createParameter ($defName, $defName)->isImplicit = true;
 
   }
 
@@ -185,21 +190,23 @@ class Parser
    * performed.
    * @param Component $c The container component.
    */
-  protected function mergeLiterals (Component $c) {
-    $o = [];
+  protected function mergeLiterals (Component $c)
+  {
+    $o    = [];
     $prev = null;
     if (isset($c->children))
-    foreach ($c->children as $child) {
-      if ($prev && $prev instanceof Literal && $child instanceof Literal && !$prev->bindings && !$child->bindings
-      && !$prev->attrs()->_modified && !$child->attrs()->_modified) {
-        // safe to merge
-        $prev->attrs()->value .= $child->attrs()->value;
+      foreach ($c->children as $child) {
+        if ($prev && $prev instanceof Literal && $child instanceof Literal && !$prev->bindings && !$child->bindings
+            && !$prev->attrs ()->_modified && !$child->attrs ()->_modified
+        ) {
+          // safe to merge
+          $prev->attrs ()->value .= $child->attrs ()->value;
+        }
+        else {
+          $o[]  = $child;
+          $prev = $child;
+        }
       }
-      else {
-        $o[]  = $child;
-        $prev = $child;
-      }
-    }
     $c->children = $o;
   }
 

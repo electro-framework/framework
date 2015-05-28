@@ -28,10 +28,10 @@ class ApplyAttributes extends ComponentAttributes
  *
  * ##### Syntax:
  * ```
- * <c:apply [where="tag-name"]>
- *   <p:attrs attr1="value1" ... attrN="valueN"/>
+ * <Apply [where="tag-name"]>
+ *   <Attrs attr1="value1" ... attrN="valueN"/>
  *   content
- * </c:apply>
+ * </Apply>
  *  ```
  * <p>If no filter is provided, only direct children of the component will be affected.
  *

@@ -9,7 +9,7 @@ class RepeaterAttributes extends ComponentAttributes
 {
   public $repeat;
   public $glue;
-  public $no_data;
+  public $noData;
   public $data;
   public $header;
   public $footer;
@@ -25,7 +25,7 @@ class RepeaterAttributes extends ComponentAttributes
 
   protected function typeof_glue () { return AttributeType::SRC; }
 
-  protected function typeof_no_data () { return AttributeType::SRC; }
+  protected function typeof_noData () { return AttributeType::SRC; }
 
   protected function typeof_data () { return AttributeType::DATA; }
 
@@ -103,7 +103,7 @@ class Repeater extends Component implements IAttributes
         }
       }
     }
-    if (isset($this->attrs ()->no_data)) {
+    if (isset($this->attrs ()->noData)) {
       $this->setChildren ($this->getChildren ('no_data'));
       $this->runChildren ();
     }

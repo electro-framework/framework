@@ -14,7 +14,7 @@ class TemplateAttributes extends ComponentAttributes
   public $body;
   public $script;
   public $stylesheet;
-  public $default_param;
+  public $defaultParam;
 
   protected function typeof_name () { return AttributeType::ID; }
 
@@ -26,7 +26,7 @@ class TemplateAttributes extends ComponentAttributes
 
   protected function typeof_stylesheet () { return AttributeType::PARAMS; }
 
-  protected function typeof_default_param () { return AttributeType::ID; }
+  protected function typeof_defaultParam () { return AttributeType::ID; }
 }
 
 class Template extends Component implements IAttributes

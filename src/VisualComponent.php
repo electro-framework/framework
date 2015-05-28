@@ -57,8 +57,8 @@ class VisualComponent extends Component implements IAttributes
       $this->attrs ()->class,
       $this->attrs ()->disabled ? 'disabled' : null
     ));
-    if (!empty($this->attrs ()->html_attrs))
-      echo ' ' . $this->attrs ()->html_attrs;
+    if (!empty($this->attrs ()->htmlAttrs))
+      echo ' ' . $this->attrs ()->htmlAttrs;
   }
 
   protected function postRender ()
