@@ -38,7 +38,7 @@ An example of a component template that implements a customizable panel:
   <Param name="actions" type="source"/>
 
   <div class="form box {@type}">
-    <If the="{@title}" is-set>
+    <If the="{@title}" isSet>
       <div class="box-header with-border">
         <h3 class="box-title">{@title}</h3>
       </div>

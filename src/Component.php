@@ -59,12 +59,6 @@ abstract class Component
    */
   public $children = null;
   /**
-   * The namespace of the component's tag.
-   *
-   * @var string
-   */
-  public $namespace = 'c';
-  /**
    * The component's PHP class name.
    *
    * @var string
@@ -201,7 +195,7 @@ abstract class Component
     $class = $context->getClassForTag ($tagName);
     if (!$class) {
       if ($strict)
-        self::throwUnknownComponent ($context, $tagName);
+        self::throwUnknownComponent ($context, $tagName, $parent);
 
       // Component class not found.
       // Try to load a template with the same tag name.
@@ -211,7 +205,7 @@ abstract class Component
         if (is_null ($template))
           $template = self::loadTemplate ($context, $parent, $tagName);
       } catch (FileIOException $e) {
-        self::throwUnknownComponent ($context, $tagName);
+        self::throwUnknownComponent ($context, $tagName, $parent);
       }
       $component = new TemplateInstance($context, $tagName, $template, $attributes);
     }
@@ -300,15 +294,19 @@ abstract class Component
         $component->doRender ();
   }
 
-  private static function throwUnknownComponent (Context $context, $tagName)
+  private static function throwUnknownComponent (Context $context, $tagName, Component $parent)
   {
     $paths = implode ('', map ($context->templateDirectories,
       function ($dir) { return "<li><path>$dir</path></li>"; }));
     throw new ComponentException (null,
-      "<h3>Unknown tag: <b>&lt;c:$tagName></b></h3>
-<p>Neither a class nor a template implementing that tag were found.
+      "<h3>Unknown tag: <b>&lt;$tagName></b></h3>
+<p>Neither a class, parameter or template implementing that tag were found.
 <p>Perhaps you forgot to register the tag?
-<p>If it's a template, Matisse is searching for it on these paths:<ul>$paths</ul>");
+<p>If it's a template, Matisse is searching for it on these paths:<ul>$paths</ul>
+<table>
+  <th>Container component:<td><b>&lt;{$parent->getTagName()}></b>, of type <b>{$parent->className}</b>
+</table>
+");
   }
 
   /**
@@ -344,11 +342,6 @@ abstract class Component
   public final function setTagName ($name)
   {
     $this->tagName = $name;
-  }
-
-  public final function getQualifiedName ()
-  {
-    return $this->namespace . ':' . $this->getTagName ();
   }
 
   public function __get ($name)
@@ -638,9 +631,9 @@ abstract class Component
 
   public final function inspect ($deep = true)
   {
-    echo '<pre style="background-color:#FFF">&lt;<b>' . $this->getQualifiedName () . '</b>';
+    echo '&lt;<span>' . $this->getTagName () . '</span><table style="color:#CCC;margin:0 0 0 15px">';
     if (!isset($this->parent))
-      echo ' <b style="color:#F00">NO PARENT</b>';
+      echo '&nbsp;<span style="color:#888">(detached)</span>';
     if ($this->supportsAttributes) {
       $props = $this->attrsObj->getAll ();
       if (isset($props))
@@ -649,7 +642,7 @@ abstract class Component
             $t = $this->attrsObj->getTypeOf ($k);
             if (!$deep || ($t != AttributeType::SRC && $t != AttributeType::PARAMS)) {
               $tn = $this->attrsObj->getTypeNameOf ($k);
-              echo "\n   $k: <i style='color:#00C'>$tn</i> = ";
+              echo "<tr><td style='color:#5fc9d9'>$k<td><i style='color:#d0a557'>$tn</i><td>";
               switch ($t) {
                 case AttributeType::BOOL:
                   echo '<i>' . ($v ? 'TRUE' : 'FALSE') . '</i>';
@@ -675,11 +668,11 @@ abstract class Component
             }
           }
     }
-    echo "&gt;<blockquote>";
+    echo "</table>&gt;<div style='margin:0 0 0 15px'>";
     if (isset($this->bindings)) {
-      echo "<div style='background-color:#EFF;padding:4px;border:1px solid #DDD'><b>Bindings</b>:<ul>";
+      echo "<div style='background-color:#515658;padding:4px'>Bindings:<ul>";
       foreach ($this->bindings as $k => $v)
-        echo "<li>$k = <span style='color:#800'>" . htmlspecialchars ($v) . '</span></li>';
+        echo "<li>$k = <span style='color:#c5a3e6'>" . htmlspecialchars ($v) . '</span></li>';
       echo '</ul></div>';
     }
     if ($deep) {
@@ -717,7 +710,7 @@ abstract class Component
           echo '</div>';
       }
     }
-    echo "</blockquote></pre>";
+    echo "</div></pre>";
   }
 
   public function __clone ()

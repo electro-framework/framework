@@ -8,11 +8,11 @@ class ParseException extends MatisseException
     $b = $start > 100 ? $start - 100 : 0;
     $m = $msg;
     if (isset($body))
-      $m .= nl2br ("<h4>Error location:</h4><code>..." .
+      $m .= "<h4>Error location:</h4><code>..." .
                    htmlentities (substr ($body, $b, $start - $b), null, 'utf-8') .
                    '<b>' . htmlentities (substr ($body, $start, $end - $start + 1), null, 'utf-8') . '</b>' .
-                   htmlentities (substr ($body, $end + 1, 100), null, 'utf-8') . '...</code>');
-    parent::__construct ($m, 'Parse error');
+                   htmlentities (substr ($body, $end + 1, 100), null, 'utf-8') . '...</code>';
+    parent::__construct ($m, 'Parsing error');
   }
 
 }

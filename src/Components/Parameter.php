@@ -30,7 +30,7 @@ class Parameter extends Component implements IAttributes
    * must be generated to hold that content.
    * @var Parameter
    */
-  public $isImplicit;
+  public $isImplicit = false;
 
   public function __construct (Context $context, $tagName, $type, array $attributes = null)
   {

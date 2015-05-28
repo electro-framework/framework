@@ -50,13 +50,13 @@ class IfAttributes extends ComponentAttributes
  *
  * <If not is="value"> content if value is falsy </If>
  *
- * <If the="value" is-true> content if value is truthy </If>
+ * <If the="value" isTrue> content if value is truthy </If>
  *
- * <If the="value" not is-true> content if value is falsy </If>
+ * <If the="value" not isTrue> content if value is falsy </If>
  *
- * <If the="value" is-set> content if value is different from null and the empty string </If>
+ * <If the="value" isSet> content if value is different from null and the empty string </If>
  *
- * <If the="value" not is-set> content if value is equal to null or an empty string </If>
+ * <If the="value" not isSet> content if value is equal to null or an empty string </If>
  *
  * <If the="value" matches="regexp"> content if value matches the regular expression </If>
  *

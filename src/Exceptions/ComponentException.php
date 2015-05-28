@@ -14,9 +14,9 @@ class ComponentException extends MatisseException
       parent::__construct (
         $id
           ?
-          "<blockquote>$msg</blockquote>$i"
+          "<blockquote>$msg</blockquote><code>$i</code>"
           :
-          "<blockquote>$msg</blockquote>Component attributes (no child components are shown):\n$i"
+          "<blockquote>$msg</blockquote>Component attributes (no child components are shown):<br><br><code>$i</code>"
         ,
         $id
           ?

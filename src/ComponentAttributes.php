@@ -22,6 +22,8 @@ class AttributeType
    * Do not define attributes/parameters of this type. It is used only on template instances when binding expreesions
    * are specified for template parameters instead of constant values. */
   const BINDING = 8;
+  /** A parameter that can contain other parameters. */
+  const METADATA = 9;
 }
 
 class ComponentAttributes
@@ -32,7 +34,7 @@ class ComponentAttributes
    * @var array
    */
   public static    $TYPE_NAMES     = [
-    'undefined', 'identifier', 'text', 'number', 'boolean', 'parameters', 'source', 'data', 'binding'
+    'undefined', 'identifier', 'text', 'number', 'boolean', 'parameters', 'source', 'data', 'binding', 'metadata'
   ];
   protected static $BOOLEAN_VALUES = [
     0       => false,
@@ -202,7 +204,7 @@ class ComponentAttributes
   public function getAttributeNames ()
   {
     $a = array_keys (get_object_vars ($this));
-    $a = array_diff ($a, ['component']);
+    $a = array_diff ($a, ['component', '_modified']);
     return $a;
   }
 

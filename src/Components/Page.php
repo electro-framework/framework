@@ -67,6 +67,7 @@ class Page extends Component
   {
     parent::__construct ($context);
     $this->page = $this;
+    $this->setTagName('Page');
     $this->checkBrowser ();
     $this->requestURI = $_SERVER['REQUEST_URI'];
   }
