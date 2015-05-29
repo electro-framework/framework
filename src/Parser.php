@@ -90,20 +90,14 @@ class Parser
       $this->currentTagStart = $start;
       $this->currentTagEnd   = $end;
 
-      // PROCESS TEXT CONTENT
-
       if ($start > $pos)
         $this->parseLiteral (substr ($body, $pos, $start - $pos));
-
-      // PROCESS TAG
 
       if ($term) {
         if ($attrs) $this->error ('Closing tags must not have attributes.');
         $this->parseClosingTag ($tag);
       }
-
       else {
-
         // OPEN TAG
 
         if ($this->scalarParam)
@@ -112,28 +106,17 @@ class Parser
         _log ("OPEN $tag ON {$this->current->getTagName()}, meta context?", isset($this->metadataContainer),
           "implicit?", isset($this->current->isImplicit) && $this->current->isImplicit);
 
-        if (isset($this->metadataContainer) || $this->isParameter ($tag)) {
-
-          // IT'S A PARAMETER
-
+        if (isset($this->metadataContainer) || $this->isParameter ($tag))
           $this->parseParameter ($tag, $attrs);
-        }
-        else {
 
-          // IT'S A COMPONENT OR A TEMPLATE
-
-          $this->parseComponent ($tag, $attrs);
-        }
+        else $this->parseComponent ($tag, $attrs);
 
         // SELF-CLOSING TAG
-
         if ($term2)
           $this->tagComplete (true, $tag);
-
       }
 
       // LOOP: advance to the next component tag
-
       $pos = $end + 1;
     }
 
