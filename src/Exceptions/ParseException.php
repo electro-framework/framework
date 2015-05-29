@@ -17,8 +17,8 @@ class ParseException extends MatisseException
       array_shift ($lines);
       $code = implode ("\n", $lines);
       $code = htmlentities ($code, null, 'utf-8');
-      $code = preg_replace ('/&lt;.*?&gt;/', '<span class="tag">$0</span>', $code);
-      $code = preg_replace ('/&lt;%(.*?)%&gt;/', '<span class="tag-hilight">$1</span>', $code);
+      $code = preg_replace ('/&lt;.*?&gt;/s', '<span class="tag">$0</span>', $code);
+      $code = preg_replace ('/&lt;%(.*?)%&gt;/s', '<span class="tag-hilight">$1</span>', $code);
       $msg .= "<h4>Error location:</h4><code>$code</code>";
     }
     parent::__construct ($msg, 'Parsing error');
