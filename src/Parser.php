@@ -18,9 +18,9 @@ class Parser
   const TRIM_RIGHT           = 2;
   const TRIM                 = 3;
 
-  const EXPECT_COMPONENT_OR_TEXT = 1;
+  const EXPECT_COMPONENT_OR_TEXT      = 1;
   const EXPECT_PARAM_OR_DEFAULT_PARAM = 2;
-  const EXPECT_METADATA = 3;
+  const EXPECT_METADATA               = 3;
 
   /**
    * Points to the root of the component hierarchy.
@@ -45,6 +45,11 @@ class Parser
    * @var boolean
    */
   private $scalarParam = false;
+  /**
+   * When set, all tags are created as paramenters and added to the specified parameter's subtree.
+   * @var Parameter
+   */
+  private $metadataContainer = null;
 
   function __construct (Context $context)
   {
@@ -64,6 +69,7 @@ class Parser
       if ($start > $pos) {
         $v = trim (substr ($body, $pos, $start - $pos));
         if (!empty($v)) {
+_log("Create LITERAL", $v);
           if ($this->scalarParam) $this->current->setScalar ($v);
           else {
             if (!$this->canAddComponent ()) {
@@ -76,7 +82,8 @@ class Parser
 </table>",
                   $body, $pos, $start);
               }
-              $this->generateImplicitParameter ();
+              if (!$this->current instanceof Parameter)
+                $this->generateImplicitParameter ();
             }
             $this->processLiteral ($v);
           }
@@ -91,9 +98,16 @@ class Parser
 
         if ($tag != $this->current->getTagName ()) {
           $parent = $this->current->parent;
-          if (!($this->current instanceof Parameter && $this->current->isImplicit && $tag == $parent->getTagName ())
-          )
-            throw new ParseException("Closing tag mismatch.
+
+          // If the current context is an implicit parameter and we are closing the tag of the parameter's owner,
+          // proceed, otherwise the closing tag is mismatched.
+
+          if ($this->current instanceof Parameter && $this->current->isImplicit && $tag == $this->current->parent->getTagName ()) {
+            // Closing a component's tag must also close an implicit parameter.
+_log ("CLOSE IMPLICIT PARAM WHEN CLOSING COMPONENT TAG </$tag>");
+              $this->tagComplete (false, 'implicit');
+          }
+          else throw new ParseException("Closing tag mismatch.
 <table>
   <tr><th>Found:<td><b>&lt;/$tag&gt;</b>
   <tr><th>Expected:<td><b>&lt;/{$this->current->getTagName ()}&gt;</b>
@@ -103,7 +117,7 @@ class Parser
               $body, $start, $end);
         }
         if ($attrs) throw new ParseException('Closing tags must not have attributes.', $body, $start, $end);
-        $this->tagComplete ();
+        $this->tagComplete (true, $tag);
       }
       else {
 
@@ -115,8 +129,8 @@ class Parser
         $attributes = $bindings = null;
 
         $attrName = lcfirst ($tag);
-
-        if ($this->isParameter ($attrName)) {
+_log ("OPEN $attrName ON {$this->current->getTagName()}, meta context?", isset($this->metadataContainer),"implicit?",isset($this->current->isImplicit) && $this->current->isImplicit);
+        if (isset($this->metadataContainer) || $this->isParameter ($attrName)) {
 
           // IT'S A PARAMETER
 
@@ -130,10 +144,11 @@ class Parser
               $body, $start, $end);
           }
           // Allow the placement of additional parameters after the content of a default (implicit) parameter.
-          if (isset($this->current->isImplicit))
+          if (isset($this->current->isImplicit) && $this->current->isImplicit) {
+_log ("CLOSE IMPLICIT PARAM WHEN OPENING NEW PARAM");
             $this->tagComplete (false);
+          }
           if (!$this->current instanceof Parameter) {
-
             // Create a component parameter
 
             if (!$this->current->supportsAttributes)
@@ -168,6 +183,7 @@ class Parser
           }
           /** @var Parameter|boolean $defParam */
           $this->parseAttributes ($attrs, $attributes, $bindings, true);
+_log("Create COMPONENT $tag");
           $component = Component::create ($this->context, $this->current, $tag, $attributes,
             false /*TODO: support HTML components*/);
 
@@ -177,7 +193,7 @@ class Parser
         }
         //short tag
         if ($term2)
-          $this->tagComplete ();
+          $this->tagComplete (true, $tag);
       }
       $pos = $end + 1;
     }
@@ -187,18 +203,22 @@ class Parser
 
   protected function isParameter ($attrName)
   {
+    // All descendants of a metadata parameter are always parameters.
     if ($this->current instanceof Parameter) {
       switch ($this->current->type) {
         case AttributeType::METADATA:
           return true;
       }
+      // Descendants of parameters not of metadata type cannot be parameters.
       return false;
     }
+    // If the current component defines an attribute with the same name as the tag being checked, the tag is a parameter.
     return $this->current instanceof IAttributes && $this->current->attrs ()->defines ($attrName);
   }
 
   protected function generateImplicitParameter ()
   {
+_log("Create IMPLICIT PARAMETER");
     $current = $this->current;
     $defName = $current->defaultAttribute;
     // Synthesise a parameter only when no corresponding one already exists.
@@ -207,19 +227,24 @@ class Parser
 
   }
 
-  protected function tagComplete ($fromClosingTag = true)
+  protected function tagComplete ($fromClosingTag = true, $tag = '')
   {
     $current = $this->current;
+_log ("CLOSE </$tag> from closing tag?", $fromClosingTag,"implicit?",isset($current->parent->isImplicit) && $current->parent->isImplicit);
     $this->mergeLiterals ($current);
     if ($this->scalarParam)
       $this->scalarParam = false;
+
     $parent = $current->parent;
     $current->parsed (); //calling this method may unset the 'parent' property.
-    $this->current = $parent; //also discards the current scalar parameter, if that is the case.
 
-    // Closing a component's tag must also close an implicit parameter.
-    if ($fromClosingTag && isset($current->isImplicit) && $current->isImplicit)
-      $this->tagComplete ();
+    // Check if the metadata context is being closed.
+    if (isset($this->metadataContainer) && $this->current == $this->metadataContainer) {
+_log ("END META", $this->current->getTagName (), "parent", $parent->getTagName ());
+      unset ($this->metadataContainer);
+    }
+
+    $this->current = $parent; //also discards the current scalar parameter, if that is the case.
   }
 
   /**
@@ -251,6 +276,7 @@ class Parser
 
   protected function createParameter ($attrName, $tagName, array $attributes = null, array $bindings = null)
   {
+_log("CREATE PARAMETER $tagName");
     $component     = $this->current;
     $type          = $component->attrs ()->getTypeOf ($attrName);
     $this->current = $param = new Parameter($this->context, $tagName, $type, $attributes);
@@ -261,7 +287,8 @@ class Parser
         $param->bindings                = $bindings;
         break;
       case AttributeType::METADATA:
-        $component->addChild($param);
+        $component->attrs ()->$attrName = $param;
+        $this->metadataContainer        = $param;
         break;
       case AttributeType::PARAMS:
         if (isset($component->attrs ()->$attrName))
@@ -277,6 +304,7 @@ class Parser
 
   protected function createSubparameter ($name, $tagName, array $attributes = null, array $bindings = null)
   {
+_log("CREATE SUBPARAMETER $name");
     $param              = $this->current;
     $this->current      = $subparam = new Parameter($this->context, $tagName, AttributeType::SRC, $attributes);
     $subparam->bindings = $bindings;
@@ -303,17 +331,9 @@ class Parser
         list(, list($key), list($quote), list($value, $exists), list($marker, $next)) = $match;
         if ($exists < 0)
           $value = 'true';
-        if (substr ($key, 0, 6) == 'style:') {
-          $key                  = substr ($key, 6);
-          $attributes['styles'] = strJoin (get ($attributes, 'styles', ''), "$key:$value", ';');
-        }
-        else {
-          if ($processBindings && strpos ($value, '{') !== false)
-            $bindings[renameAttribute ($key)] = $value;
-          else if ($key == 'styles')
-            $attributes['styles'] = strJoin (get ($attributes, 'styles', ''), $value, ';');
-          else $attributes[renameAttribute ($key)] = $value;
-        }
+        if ($processBindings && strpos ($value, '{') !== false)
+          $bindings[renameAttribute ($key)] = $value;
+        else $attributes[renameAttribute ($key)] = $value;
         $sPos = $next;
       }
     }
