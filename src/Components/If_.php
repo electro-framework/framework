@@ -72,8 +72,7 @@ class IfAttributes extends ComponentAttributes
  */
 class If_ extends Component implements IAttributes
 {
-
-  public $defaultAttribute = 'then';
+  public $allowsChildren = true;
 
   /**
    * Returns the component's attributes.

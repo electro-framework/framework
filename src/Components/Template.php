@@ -37,7 +37,7 @@ class Template extends Component implements IAttributes
   /** Finds binding expressions which are not template bindings. */
   const FIND_NON_TEMPLATE_EXP = '#\{(?!\@)#';
 
-  public $defaultAttribute = 'body';
+  public $allowsChildren = true;
 
   private static function parsingtimeDatabind (Component $component, TemplateInstance $instance, $force = false)
   {

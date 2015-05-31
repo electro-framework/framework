@@ -84,14 +84,6 @@ abstract class Component
    */
   public $defaultDataSource;
   /**
-   * The attribute name to be used when content is placed immediatly after a component's opening tag, without
-   * explicitly specifying a `<p:xxx>` parameter.
-   * This should be specified in snake-case (ex: if-set -> if_set).
-   *
-   * @var string
-   */
-  public $defaultAttribute = null;
-  /**
    * Set by Repeater components for supporting pagination.
    * @var int
    */
@@ -102,6 +94,11 @@ abstract class Component
    * @var Page
    */
   public $page;
+  /**
+   * Can this component have children?
+   * @var bool
+   */
+  public $allowsChildren = false;
   /**
    * The rendering context for the current request.
    * @var Context

@@ -38,6 +38,7 @@ class RepeaterAttributes extends ComponentAttributes
 
 class Repeater extends Component implements IAttributes
 {
+  public $allowsChildren = true;
 
   /**
    * Returns the component's attributes.

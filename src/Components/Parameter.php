@@ -23,14 +23,7 @@ class Parameter extends Component implements IAttributes
    */
   public $value;
 
-  /**
-   * This is used by the Parser for it to know when an implicit parameter is being used.
-   * It is set to `true` when this parameter is not present on the markup and it was created as an implicit parameter.
-   * This usually happens when content is placed immediately after a component's opening tag and a default parameter
-   * must be generated to hold that content.
-   * @var Parameter
-   */
-  public $isImplicit = false;
+  public $allowsChildren = true;
 
   public function __construct (Context $context, $tagName, $type, array $attributes = null)
   {

@@ -146,6 +146,7 @@ class TemplateInstanceAttributes
 
 class TemplateInstance extends Component implements IAttributes
 {
+  public $allowsChildren = true;
 
   /**
    * Points to the component that defines the template for this instance.
@@ -158,7 +159,6 @@ class TemplateInstance extends Component implements IAttributes
     $this->template = $template; //must be defined before the parent constructor is called
     parent::__construct ($context, $attributes);
     $this->setTagName ($tagName);
-    $this->defaultAttribute = $template->attrs ()->defaultParam;
   }
 
   /**
