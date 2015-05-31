@@ -10,7 +10,7 @@ function database_open ()
   global $db, $application;
 
   $database = $_ENV['DB_DATABASE'];
-  $options  = null;
+  $options  = [];
 
   if ($_ENV['DB_DRIVER'] == 'sqlite') {
     if ($database != ':memory:') {
@@ -18,7 +18,6 @@ function database_open ()
         $database = "$application->baseDirectory/$database";
     }
     $dsn = "sqlite:$database";
-
   }
   else {
 
@@ -27,7 +26,6 @@ function database_open ()
       $dsn .= ";port={$_ENV['DB_PORT']}";
     if (isset ($_ENV['DB_UNIX_SOCKET']))
       $dsn .= ";unix_socket={$_ENV['DB_UNIX_SOCKET']}";
-    $options = null;
 
     // Options specific to the MySQL driver.
     if ($_ENV['DB_DRIVER'] == 'mysql') {
@@ -41,9 +39,14 @@ function database_open ()
     }
 
   }
+  $options [PDO::ATTR_ERRMODE]            = PDO::ERRMODE_EXCEPTION;
+  $options [PDO::ATTR_DEFAULT_FETCH_MODE] = PDO::FETCH_ASSOC;
+  $options [PDO::ATTR_TIMEOUT]            = 5;
 
   try {
     $db = new PDO ($dsn, $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'], $options);
+    if ($_ENV['DB_DRIVER'] == 'sqlite')
+      $db->exec ('PRAGMA foreign_keys = ON;');
   } catch (PDOException $e) {
     $e =
       new PDOException($e->getMessage () . "\n\nDatabase: <path>$database</path>", $e->getCode ());
