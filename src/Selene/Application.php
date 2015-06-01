@@ -415,8 +415,18 @@ class Application
       $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
       WebConsole::routes ()->withCaption ('Active Route')->withFilter ($filter, $loader->sitePage);
       WebConsole::response (['Content-Length' => round (ob_get_length () / 1024) . ' KB']);
+      $this->initDOMPanel($loader->moduleInstance);
     }
     WebConsole::outputContent ();
+  }
+
+  private function initDOMPanel (Controller $controller) {
+    if (isset($controller->page)) {
+      ob_start ();
+      $controller->page->inspect (true);
+      $insp = ob_get_clean ();
+      WebConsole::DOM ()->write ("<code>$insp)</code>");
+    }
   }
 
   /**
@@ -581,9 +591,10 @@ class Application
     WebConsole::init ($this->debugMode);
     WebConsole::registerPanel ('request', new HttpRequestPanel ('Request', 'fa fa-paper-plane'));
     WebConsole::registerPanel ('response', new ConsolePanel ('Response', 'fa fa-file'));
-    WebConsole::registerPanel ('routes', new ConsolePanel ('Routes', 'fa fa-sitemap'));
+    WebConsole::registerPanel ('routes', new ConsolePanel ('Routes', 'fa fa-location-arrow'));
     WebConsole::registerPanel ('session', new ConsolePanel ('Session', 'fa fa-user'));
     WebConsole::registerPanel ('database', new ConsolePanel ('Database', 'fa fa-database'));
+    WebConsole::registerPanel ('DOM', new ConsolePanel ('DOM', 'fa fa-sitemap'));
     WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
     ErrorHandler::$appName = 'Selene Framework';
   }
