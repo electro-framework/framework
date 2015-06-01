@@ -171,7 +171,8 @@ abstract class Component
    * Creates a component corresponding to the specified tag and optionally sets its attributes.
    *
    * @param Context   $context
-   * @param Component $parent
+   * @param Component $parent  This is used only for error reporting. You should still manually add the component to
+   *                           it's parent's child list or source parameter.
    * @param string    $tagName
    * @param array     $attributes
    * @param bool      $generic If true, an instance of GenericComponent is created.
@@ -213,7 +214,8 @@ abstract class Component
 
     // For both types of components:
 
-    $component->setTagName ($tagName); //for performance
+    $component->setTagName ($tagName);
+
     return $component;
   }
 
@@ -434,6 +436,7 @@ abstract class Component
     if (isset($child)) {
       $this->children[] = $child;
       $this->attach ($child);
+_log("ADD CHILD ".$child->getTagName()." (".$child->className.") TO ".$this->getTagName()." COUNT ".count($this->children));
     }
   }
 
@@ -494,7 +497,7 @@ abstract class Component
   {
     if (!$this->inactive) {
       $this->databind ();
-      if (!isset($this->attrsObj) || !$this->attrsObj->hidden) {
+      if (!isset($this->attrsObj) || !isset($this->attrsObj->hidden) || !$this->attrsObj->hidden) {
         $this->preRender ();
         $this->render ();
         $this->postRender ();
@@ -699,8 +702,8 @@ abstract class Component
       }
       if (isset($this->children)) {
         $b = isset($this->parent) && $this->className != 'Parameter';
-        if ($b)
-          echo '<h3 style="border:1px solid #ccc;padding:8px;background-color:#eee;margin-bottom:-1px">Generated children</h3><div style="border:1px solid #ccc;padding:8px">';
+        if ($b && count ($this->children))
+          echo '<h5 style="border:1px solid #333;padding:8px;background-color:#555;margin-bottom:-1px">Generated children</h5><div style="border:1px solid #333;padding:8px;margin-bottom:10px">';
         foreach ($this->children as $c)
           $c->inspect ();
         if ($b)

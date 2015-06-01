@@ -1,10 +1,10 @@
 <?php
 namespace Selene\Matisse\Base;
 use Selene\Matisse\AttributeType;
-use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\VisualComponentAttributes;
 use Selene\Matisse\VisualComponent;
 
-class VisualContainerAttributes extends ComponentAttributes
+class VisualContainerAttributes extends VisualComponentAttributes
 {
   public $content;
 

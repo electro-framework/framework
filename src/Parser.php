@@ -1,8 +1,10 @@
 <?php
 namespace Selene\Matisse;
+use Impactwave\WebConsole\WebConsole;
 use Selene\Matisse\Components\Literal;
 use Selene\Matisse\Components\Page;
 use Selene\Matisse\Components\Parameter;
+use Selene\Matisse\Base\Text;
 use Selene\Matisse\Exceptions\ParseException;
 
 class Parser
@@ -76,6 +78,7 @@ class Parser
    ********************************************************************************************************************/
   public function parse ($body, Component $parent, Page $root = null)
   {
+    WebConsole::log()->write("<#section|NEW PARSER CONTEXT|></#section>");
     $pos = 0;
     if (!$root) $root = $parent;
     $this->current = $parent;
@@ -103,8 +106,8 @@ class Parser
         if ($this->scalarParam)
           $this->error ("Can't set tag <b>$tag</b> as a value for the scalar parameter <b>{$this->current->getTagName()}</b>.");
 
-        _log ("OPEN $tag ON {$this->current->getTagName()}, meta context?", isset($this->metadataContainer),
-          "implicit?", isset($this->current->isImplicit) && $this->current->isImplicit);
+        _log ("OPEN $tag ON {$this->current->getTagName()}");//, meta context?", isset($this->metadataContainer),
+//          "implicit?", isset($this->current->isImplicit) && $this->current->isImplicit);
 
         if (isset($this->metadataContainer) || $this->isParameter ($tag))
           $this->parseParameter ($tag, $attrs);
@@ -124,7 +127,10 @@ class Parser
 
     $nextContent = substr ($body, $pos);
     if (strlen ($nextContent)) $this->processLiteral (trim ($nextContent));
+    _log($parent->children);
+    $this->mergeLiterals ($parent);
 
+    WebConsole::log()->write("<#section|END PARSER CONTEXT></#section>",'');
     // DONE.
   }
 
@@ -138,13 +144,13 @@ class Parser
   private function parseComponent ($tag, $attrs)
   {
     if (!$this->current->allowsChildren)
-      $this->error ("The component <b>&lt;{$this->current->getTagName()}&gt;</b> does not support parameters.");
+      $this->error ("The component <b>&lt;{$this->current->getTagName()}&gt;</b> does not support children.");
 
     /** @var Parameter|boolean $defParam */
     $this->parseAttributes ($attrs, $attributes, $bindings, true);
     _log ("Create COMPONENT $tag");
-    $component = Component::create ($this->context, $this->current, $tag, $attributes,
-      false /*TODO: support HTML components*/);
+    $component =
+      Component::create ($this->context, $this->current, $tag, $attributes, false /*TODO: support HTML components*/);
 
     $component->bindings = $bindings;
     $this->current->addChild ($component);
@@ -227,18 +233,7 @@ does not support the specified parameter <b>$tag</b>.
   {
     if ($tag != $this->current->getTagName ()) {
       $parent = $this->current->parent;
-
-      // If the current context is an implicit parameter and we are closing the tag of the parameter's owner,
-      // proceed, otherwise the closing tag is mismatched.
-
-      if ($this->current instanceof Parameter && $this->current->isImplicit &&
-          $tag == $this->current->parent->getTagName ()
-      ) {
-        // Closing a component's tag must also close an implicit parameter.
-        _log ("CLOSE IMPLICIT PARAM WHEN CLOSING COMPONENT TAG </$tag>");
-        $this->tagComplete (false, 'implicit');
-      }
-      else $this->error ("Closing tag mismatch.
+      $this->error ("Closing tag mismatch.
 <table>
   <tr><th>Found:<td class='fixed'><b>&lt;/$tag&gt;</b>
   <tr><th>Expected:<td class='fixed'><b>&lt;/{$this->current->getTagName ()}&gt;</b>
@@ -260,8 +255,7 @@ does not support the specified parameter <b>$tag</b>.
   private function tagComplete ($fromClosingTag = true, $tag = '')
   {
     $current = $this->current;
-    _log ("CLOSE </$tag> from closing tag?", $fromClosingTag, "implicit?",
-      isset($current->parent->isImplicit) && $current->parent->isImplicit);
+    _log ("CLOSE </$tag>");// from closing tag?", $fromClosingTag);
     $this->mergeLiterals ($current);
     if ($this->scalarParam)
       $this->scalarParam = false;
@@ -340,16 +334,20 @@ does not support the specified parameter <b>$tag</b>.
     $prev = null;
     if (isset($c->children))
       foreach ($c->children as $child) {
-        if ($prev && $prev instanceof Literal && $child instanceof Literal && !$prev->bindings && !$child->bindings
-            && !$prev->attrs ()->_modified && !$child->attrs ()->_modified
-        ) {
-          // safe to merge
-          $prev->attrs ()->value .= $child->attrs ()->value;
+        if ($prev && ($child instanceof Literal || $child instanceof Text)) {
+          if (!strlen($child->attrs()->value) && !empty($child->bindings))
+            continue;
+          if (($prev instanceof Literal || $prev instanceof Text) &&
+              empty($prev->bindings) && empty($child->bindings) &&
+              !$prev->attrs ()->_modified && !$child->attrs ()->_modified
+          ) {
+            // safe to merge
+            $prev->attrs ()->value .= $child->attrs ()->value;
+            continue;
+          }
         }
-        else {
-          $o[]  = $child;
-          $prev = $child;
-        }
+        $o[]  = $child;
+        $prev = $child;
       }
     $c->children = $o;
   }
@@ -436,7 +434,7 @@ does not support the specified parameter <b>$tag</b>.
         $lit           = new Literal($this->context);
         $lit->bindings = $v;
       }
-      else $lit = new Literal($this->context, $v);
+      else $lit = new Text ($this->context, $v);
       $this->current->addChild ($lit);
     }
   }

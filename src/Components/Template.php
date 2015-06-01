@@ -178,7 +178,7 @@ class Template extends Component implements IAttributes
         }
       }
     }
-    $cloned = $this->cloneComponents ($this->cloneComponents($this->children));
+    $cloned = $this->cloneComponents($this->children);
     $this->applyTo ($cloned, $instance);
     return $cloned;
   }

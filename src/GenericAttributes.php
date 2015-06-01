@@ -1,7 +1,7 @@
 <?php
 namespace Selene\Matisse;
 
-class GenericAttributes extends ComponentAttributes
+class GenericAttributes extends VisualComponentAttributes
 {
   public function __get ($name)
   {

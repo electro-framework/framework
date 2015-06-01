@@ -185,6 +185,7 @@ class TemplateInstance extends Component implements IAttributes
     $this->databind ();
     $content = $this->template->apply ($this);
     $this->replaceBy ($content);
+    _log("REPLACED ".$this->getTagName()." BY TEMPLATE CONTENT",$content);
   }
 
   private function processParameters ()
