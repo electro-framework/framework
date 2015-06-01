@@ -871,24 +871,28 @@ abstract class Component
     /** @var \Iterator $it */
     if (!$it->valid ())
       return null;
-    switch ($dataField) {
-      case '#key':
-        return $it->key ();
-      case '#ord':
-        return $it->key () + 1 + $this->rowOffset;
-      case '#alt':
-        return $it->key () % 2;
-    }
-    $rec = $it->current ();
-    if (is_null ($rec)) {
-      $it->rewind ();
-      $rec = $it->current ();
-    }
-    if (is_null ($rec))
-      $rec = new \EmptyIterator();
     $pipes     = preg_split ('/\s*\|\s*/', $dataField);
     $dataField = array_shift ($pipes);
-    $v         = $dataField == '#self' ? $rec : getField ($rec, $dataField);
+    switch ($dataField) {
+      case '#key':
+        $v = $it->key ();
+        break;
+      case '#ord':
+        $v = $it->key () + 1 + $this->rowOffset;
+        break;
+      case '#alt':
+        $v = $it->key () % 2;
+        break;
+      default:
+        $rec = $it->current ();
+        if (is_null ($rec)) {
+          $it->rewind ();
+          $rec = $it->current ();
+        }
+        if (is_null ($rec))
+          $rec = new \EmptyIterator();
+        $v         = $dataField == '#self' ? $rec : getField ($rec, $dataField);
+    }
     foreach ($pipes as $name) {
       $pipe = $this->context->getPipe (trim ($name));
       try {
