@@ -53,7 +53,7 @@ return [
     'frameworkScripts'       => true,
     'condenseLiterals'       => true,
     'compressOutput'         => $_SERVER['APP_DEBUG'] != 'true',
-    'debugMode'              => false,
+    'debugMode'              => $_SERVER['APP_DEBUG'] == 'true',
     'userModel'              => '',
 
     'imageRedirection'       => true,

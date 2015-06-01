@@ -397,7 +397,7 @@ class Application
   {
     global $session;
     set_exception_handler ([get_class (), 'exceptionHandler']);
-    $this->debugMode = isset($_SERVER['APP_DEBUG']) && $_SERVER['APP_DEBUG'] == 'true';
+    $this->debugMode = $_SERVER['APP_DEBUG'] == 'true';
 
     ErrorHandler::init ($this->debugMode, $rootDir);
     $this->setupWebConsole ();
@@ -425,7 +425,9 @@ class Application
       ob_start ();
       $controller->page->inspect (true);
       $insp = ob_get_clean ();
-      WebConsole::DOM ()->write ("<code>$insp)</code>");
+      WebConsole::DOM ()->write ("<code>$insp</code>");
+//      $filter = function ($k, $v) { return $k !== 'parent' && $k !== 'page'; };
+//      WebConsole::DOM ()->withFilter($filter, $controller->page);
     }
   }
 
