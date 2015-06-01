@@ -11,7 +11,6 @@ class TemplateAttributes extends ComponentAttributes
 {
   public $name;
   public $param;
-  public $body;
   public $script;
   public $stylesheet;
   public $defaultParam;
@@ -19,8 +18,6 @@ class TemplateAttributes extends ComponentAttributes
   protected function typeof_name () { return AttributeType::ID; }
 
   protected function typeof_param () { return AttributeType::PARAMS; }
-
-  protected function typeof_body () { return AttributeType::SRC; }
 
   protected function typeof_script () { return AttributeType::PARAMS; }
 
@@ -181,7 +178,7 @@ class Template extends Component implements IAttributes
         }
       }
     }
-    $cloned = $this->cloneComponents ($this->getChildren ('body'));
+    $cloned = $this->cloneComponents ($this->cloneComponents($this->children));
     $this->applyTo ($cloned, $instance);
     return $cloned;
   }

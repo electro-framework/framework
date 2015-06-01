@@ -175,7 +175,7 @@ class Parser
       $this->parseAttributes ($attrs, $attributes, $bindings);
 
       if (!$this->current->attrs ()->defines ($attrName)) {
-        $s = '&lt;' . join ('>, &lt;', array_map('ucfirst', $this->current->attrs ()->getAttributeNames ())) . '>';
+        $s = '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->attrs ()->getAttributeNames ())) . '>';
         $this->error ("The component <b>&lt;{$this->current->getTagName()}&gt;</b> ({$this->current->className})
 does not support the specified parameter <b>$tag</b>.
 <p>Expected: <span class='fixed'>$s</span>");
@@ -243,7 +243,9 @@ does not support the specified parameter <b>$tag</b>.
   <tr><th>Found:<td class='fixed'><b>&lt;/$tag&gt;</b>
   <tr><th>Expected:<td class='fixed'><b>&lt;/{$this->current->getTagName ()}&gt;</b>
   <tr><th>Component in scope:<td class='fixed'><b>&lt;{$parent->getTagName()}></b><td>Class: <b>{$parent->className}</b>
-  <tr><th>Scope's parent:<td><b>&lt;{$parent->parent->getTagName()}></b><td>Class: <b>{$parent->parent->className}</b>
+" . (isset($parent->parent) ? "
+  <tr><th>Scope's parent:<td><b>&lt;{$parent->parent->getTagName()}></b><td>Class: <b>{$parent->parent->className}</b>"
+          : '') . "
 </table>");
     }
     $this->tagComplete (true, $tag);
@@ -291,7 +293,7 @@ does not support the specified parameter <b>$tag</b>.
       else {
         if (!$this->current->allowsChildren) {
           $s = $this->current instanceof IAttributes ?
-            '&lt;' . join ('>, &lt;', array_map('ucfirst', $this->current->attrs ()->getAttributeNames ())) . '>' : '';
+            '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->attrs ()->getAttributeNames ())) . '>' : '';
           throw new ParseException("
 <h4>You may not define literal content at this location.</h4>
 <table>

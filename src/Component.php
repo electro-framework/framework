@@ -639,7 +639,7 @@ abstract class Component
             $t = $this->attrsObj->getTypeOf ($k);
             if (!$deep || ($t != AttributeType::SRC && $t != AttributeType::PARAMS)) {
               $tn = $this->attrsObj->getTypeNameOf ($k);
-              echo "<tr><td style='color:#5fc9d9'>$k<td><i style='color:#d0a557'>$tn</i><td>";
+              echo "<tr><td style='color:#9ae6ef'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
               switch ($t) {
                 case AttributeType::BOOL:
                   echo '<i>' . ($v ? 'TRUE' : 'FALSE') . '</i>';
