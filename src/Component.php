@@ -439,8 +439,6 @@ abstract class Component
     if (isset($child)) {
       $this->children[] = $child;
       $this->attach ($child);
-      _log ("ADD CHILD " . $child->getTagName () . " (" . $child->className . ") TO " . $this->getTagName () .
-            " COUNT " . count ($this->children));
     }
   }
 

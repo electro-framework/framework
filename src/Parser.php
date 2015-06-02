@@ -1,6 +1,5 @@
 <?php
 namespace Selene\Matisse;
-use Impactwave\WebConsole\WebConsole;
 use Selene\Matisse\Components\Literal;
 use Selene\Matisse\Components\Page;
 use Selene\Matisse\Components\Parameter;
@@ -78,7 +77,6 @@ class Parser
    ********************************************************************************************************************/
   public function parse ($body, Component $parent, Page $root = null)
   {
-    WebConsole::log()->write("<#section|NEW PARSER CONTEXT|></#section>");
     $pos = 0;
     if (!$root) $root = $parent;
     $this->current = $parent;
@@ -106,9 +104,6 @@ class Parser
         if ($this->scalarParam)
           $this->error ("Can't set tag <b>$tag</b> as a value for the scalar parameter <b>{$this->current->getTagName()}</b>.");
 
-        _log ("OPEN $tag ON {$this->current->getTagName()}");//, meta context?", isset($this->metadataContainer),
-//          "implicit?", isset($this->current->isImplicit) && $this->current->isImplicit);
-
         if (isset($this->metadataContainer) || $this->isParameter ($tag))
           $this->parseParameter ($tag, $attrs);
 
@@ -128,9 +123,7 @@ class Parser
     $nextContent = substr ($body, $pos);
     if (strlen ($nextContent)) $this->processLiteral (trim ($nextContent));
     $this->mergeLiterals ($parent);
-    _log("Children of ".$parent->getTagName().":")->write($parent->inspect(true));
 
-    //WebConsole::log()->write("<#section|END PARSER CONTEXT></#section>",'');
     // DONE.
   }
 
@@ -148,7 +141,6 @@ class Parser
 
     /** @var Parameter|boolean $defParam */
     $this->parseAttributes ($attrs, $attributes, $bindings, true);
-    _log ("Create COMPONENT $tag");
     $component =
       Component::create ($this->context, $this->current, $tag, $attributes, false /*TODO: support HTML components*/);
 
@@ -167,10 +159,8 @@ class Parser
   private function parseParameter ($tag, $attrs)
   {
     // Allow the placement of additional parameters after the content of a default (implicit) parameter.
-    if (isset($this->current->isImplicit) && $this->current->isImplicit) {
-      _log ("CLOSE IMPLICIT PARAM WHEN OPENING NEW PARAM");
+    if (isset($this->current->isImplicit) && $this->current->isImplicit)
       $this->tagComplete (false);
-    }
     $attrName = lcfirst ($tag);
 
     if (!$this->current instanceof Parameter) {
@@ -255,7 +245,6 @@ does not support the specified parameter <b>$tag</b>.
   private function tagComplete ($fromClosingTag = true, $tag = '')
   {
     $current = $this->current;
-    _log ("CLOSE </$tag>");// from closing tag?", $fromClosingTag);
     $this->mergeLiterals ($current);
     if ($this->scalarParam)
       $this->scalarParam = false;
@@ -264,10 +253,8 @@ does not support the specified parameter <b>$tag</b>.
     $current->parsed (); //calling this method may unset the 'parent' property.
 
     // Check if the metadata context is being closed.
-    if (isset($this->metadataContainer) && $this->current == $this->metadataContainer) {
-      _log ("END META", $this->current->getTagName (), "parent", $parent->getTagName ());
+    if (isset($this->metadataContainer) && $this->current == $this->metadataContainer)
       unset ($this->metadataContainer);
-    }
 
     $this->current = $parent; //also discards the current scalar parameter, if that is the case.
   }
@@ -282,7 +269,6 @@ does not support the specified parameter <b>$tag</b>.
   {
     $text = trim ($text);
     if (!empty($text)) {
-      _log ("Create LITERAL", $text);
       if ($this->scalarParam) $this->current->setScalar ($text);
       else {
         if (!$this->current->allowsChildren) {
@@ -352,7 +338,6 @@ does not support the specified parameter <b>$tag</b>.
 
   private function createParameter ($attrName, $tagName, array $attributes = null, array $bindings = null)
   {
-    _log ("CREATE PARAMETER $tagName");
     $component     = $this->current;
     $type          = $component->attrs ()->getTypeOf ($attrName);
     $this->current = $param = new Parameter($this->context, $tagName, $type, $attributes);
@@ -380,7 +365,6 @@ does not support the specified parameter <b>$tag</b>.
 
   private function createSubparameter ($name, $tagName, array $attributes = null, array $bindings = null)
   {
-    _log ("CREATE SUBPARAMETER $name");
     $param              = $this->current;
     $this->current      = $subparam = new Parameter($this->context, $tagName, AttributeType::SRC, $attributes);
     $subparam->bindings = $bindings;
@@ -431,12 +415,8 @@ does not support the specified parameter <b>$tag</b>.
       if ($content[0] == '{') {
         $lit           = new Literal($this->context);
         $lit->bindings = $v;
-        _log("BINDINGS:",$v);
       }
-      else {
-        $lit = new Text ($this->context, $v);
-        _log("TEXT:",$content);
-      }
+      else $lit = new Text ($this->context, $v);
       $this->current->addChild ($lit);
     }
   }

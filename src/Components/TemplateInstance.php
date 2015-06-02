@@ -183,7 +183,6 @@ class TemplateInstance extends Component implements IAttributes
   {
     $this->processParameters ();
     $this->databind ();
-//    _log ("##########")->write ($this->inspect (true));
 
     // Move children to default parameter
 
@@ -203,13 +202,10 @@ class TemplateInstance extends Component implements IAttributes
         $param->attachTo ($this);
         $param->setChildren ($this->children, false);
         $this->children = [];
-        _log ("INSTANCE %%%%%%%%%%%%%%%")->write (($this->inspect (true)));
       }
     }
-        _log ("TEMPLATE ************")->write (($this->template->inspect (true)));
     $content = $this->template->apply ($this);
     $this->replaceBy ($content);
-    _log ("REPLACED " . $this->getTagName () . " BY TEMPLATE CONTENT")->write( self::inspectSet($content));
   }
 
   private function processParameters ()
