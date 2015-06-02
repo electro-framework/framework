@@ -7,11 +7,8 @@ use Selene\Matisse\IAttributes;
 
 class ApplyAttributes extends ComponentAttributes
 {
-  public $content;
   public $attrs;
   public $where;
-
-  protected function typeof_content () { return AttributeType::SRC; }
 
   protected function typeof_attrs () { return AttributeType::SRC; }
 
@@ -66,13 +63,12 @@ class Apply extends Component implements IAttributes
     $attrParam = $attr->attrs;
     $attrs     = $attrParam->attrs ()->getAll ();
     $where     = $attr->where;
-    $content   = $this->getChildren ('content');
-    if (!$where) {
-      foreach ($content as $k => $child)
+    if (!$where && !empty($this->children)) {
+      foreach ($this->children as $k => $child)
         $child->attrs ()->apply ($attrs);
     }
     else $this->scan ($this, $this->attrs ()->where, $attrs);
-    $this->renderSet ($content);
+    $this->renderChildren();
   }
 
   private function scan (Component $parent, $where, $attrs)

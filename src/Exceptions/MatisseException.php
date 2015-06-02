@@ -14,9 +14,7 @@ class MatisseException extends \Exception
 
   protected function inspect (Component $component, $deep = false)
   {
-    ob_start ();
-    $component->inspect ($deep);
-    return ob_get_clean ();
+    return $component->inspect ($deep);
   }
 
 }
