@@ -245,13 +245,18 @@ abstract class Component
 
   /**
    * @param Component[] $components
+   * @param bool        $deep
+   * @param bool        $nested True if no `<code>` block should be output.
+   * @return string
    */
-  public static function inspectSet (array $components = null)
+  public static function inspectSet (array $components = null, $deep = false, $nested = false)
   {
+    ob_start (null, 0);
     if (is_array ($components))
       foreach ($components as $component)
         /** @var Component $component */
-        $component->inspect ();
+        $component->_inspect ($deep);
+    return $nested ? ob_get_clean () : "<code>" . ob_get_clean () . "</code>";
   }
 
   /**
@@ -403,9 +408,7 @@ abstract class Component
       $this->parent->attach ($components);
     }
     else {
-      ob_start (null, 0);
-      self::inspectSet ($this->parent->children);
-      $t = ob_get_clean ();
+      $t = self::inspectSet ($this->parent->children);
       throw new ComponentException($this,
         "The component was not found on the parent's children.<h3>The children are:</h3><fieldset>$t</fieldset>");
     }
@@ -436,7 +439,8 @@ abstract class Component
     if (isset($child)) {
       $this->children[] = $child;
       $this->attach ($child);
-_log("ADD CHILD ".$child->getTagName()." (".$child->className.") TO ".$this->getTagName()." COUNT ".count($this->children));
+      _log ("ADD CHILD " . $child->getTagName () . " (" . $child->className . ") TO " . $this->getTagName () .
+            " COUNT " . count ($this->children));
     }
   }
 
@@ -578,11 +582,12 @@ _log("ADD CHILD ".$child->getTagName()." (".$child->className.") TO ".$this->get
     return null;
   }
 
-  public final function setChildren (array $children = null)
+  public final function setChildren (array $children = null, $attach = true)
   {
     if (isset($children)) {
       $this->children = $children;
-      $this->attach ($children);
+      if ($attach)
+        $this->attach ($children);
     }
   }
 
@@ -629,14 +634,38 @@ _log("ADD CHILD ".$child->getTagName()." (".$child->className.") TO ".$this->get
     }
   }
 
-  public final function inspect ($deep = true)
+  function inspect ($deep = true)
   {
-    echo '&lt;<span>' . $this->getTagName () . '</span><table style="color:#CCC;margin:0 0 0 15px">';
+    ob_start (null, 0);
+    $this->_inspect ($deep);
+    return "<code>" . ob_get_clean () . "</code>";
+  }
+
+  public function __clone ()
+  {
+    if (isset($this->attrsObj)) {
+      $this->attrsObj = clone $this->attrsObj;
+      $this->attrsObj->setComponent ($this);
+    }
+    if (isset($this->children))
+      $this->children = self::cloneComponents ($this->children, $this);
+  }
+
+  /**
+   * Do not call this from user code.
+   * @param bool $deep
+   */
+  function _inspect ($deep = true)
+  {
+    $tag        = $this->getTagName ();
+    $hasContent = false;
+    echo "&lt;$tag";
     if (!isset($this->parent))
       echo '&nbsp;<span style="color:#888">(detached)</span>';
     if ($this->supportsAttributes) {
+      echo '<table style="color:#CCC;margin:0 0 0 15px">';
       $props = $this->attrsObj->getAll ();
-      if (isset($props))
+      if (!empty($props))
         foreach ($props as $k => $v)
           if (isset($v)) {
             $t = $this->attrsObj->getTypeOf ($k);
@@ -667,60 +696,50 @@ _log("ADD CHILD ".$child->getTagName()." (".$child->className.") TO ".$this->get
               }
             }
           }
+      if (!empty($props))
+        foreach ($props as $k => $v)
+          if (isset($v)) {
+            $t = $this->attrsObj->getTypeOf ($k);
+            if ($t == AttributeType::SRC || $t == AttributeType::PARAMS) {
+              $tn = $this->attrsObj->getTypeNameOf ($k);
+              echo "<tr><td style='color:#9ae6ef'>$k<td><i style='color:#ffcb69'>$tn</i>" .
+                   "<tr><td><td colspan=2>";
+              switch ($t) {
+                case AttributeType::SRC:
+                  $x = $this->attrsObj->$k->children;
+                  if (!empty($x)) {
+                    foreach ($x as $c)
+                      /** @var Component $c */
+                      $c->_inspect ($deep);
+                  }
+                  else echo "<i>empty</i>";
+                  break;
+                case AttributeType::PARAMS:
+                  echo self::inspectSet ($this->attrsObj->$k, true, true);
+                  break;
+              }
+              echo '</tr>';
+            }
+          }
+      echo "</table>";
     }
-    echo "</table>&gt;<div style='margin:0 0 0 15px'>";
     if (isset($this->bindings)) {
+      $hasContent = true;
       echo "<div style='background-color:#515658;padding:4px'>Bindings:<ul>";
       foreach ($this->bindings as $k => $v)
-        echo "<li>$k = <span style='color:#c5a3e6'>" . htmlspecialchars ($v) . '</span></li>';
+        echo "<li>$k = <span style='color:#c5a3e6'>" . htmlspecialchars ($v) . '</span>';
       echo '</ul></div>';
     }
     if ($deep) {
-      if ($this->supportsAttributes) {
-        if (isset($props))
-          foreach ($props as $k => $v)
-            if (isset($v)) {
-              $t = $this->attrsObj->getTypeOf ($k);
-              if ($t == AttributeType::SRC || $t == AttributeType::PARAMS) {
-                $tn = $this->attrsObj->getTypeNameOf ($k);
-                echo "<p style='border:1px solid #ccc;padding:8px;background-color:#eee;margin-bottom:-1px'><b>$k</b>: <i style='color:#00C'>$tn</i></p><div style='border:1px solid #ccc;padding:8px'>";
-                switch ($t) {
-                  case AttributeType::SRC:
-                    $x = $this->attrsObj->$k->children;
-                    if (isset($x))
-                      foreach ($x as $c)
-                        /** @var Component $c */
-                        $c->inspect ();
-                    break;
-                  case AttributeType::PARAMS:
-                    self::inspectSet ($this->attrsObj->$k);
-                    break;
-                }
-                echo '</div>';
-              }
-            }
-      }
-      if (isset($this->children)) {
-        $b = isset($this->parent) && $this->className != 'Parameter';
-        if ($b && count ($this->children))
-          echo '<h5 style="border:1px solid #333;padding:8px;background-color:#555;margin-bottom:-1px">Generated children</h5><div style="border:1px solid #333;padding:8px;margin-bottom:10px">';
+      if (!empty($this->children)) {
+        $hasContent = true;
+        echo '&gt;<div style="margin:0 0 0 20px">';
         foreach ($this->children as $c)
-          $c->inspect ();
-        if ($b)
-          echo '</div>';
+          $c->_inspect (true);
+        echo '</div>';
       }
     }
-    echo "</div></pre>";
-  }
-
-  public function __clone ()
-  {
-    if (isset($this->attrsObj)) {
-      $this->attrsObj = clone $this->attrsObj;
-      $this->attrsObj->setComponent ($this);
-    }
-    if (isset($this->children))
-      $this->children = self::cloneComponents ($this->children, $this);
+    echo $hasContent ? "&lt;/$tag&gt;\n" : "/&gt;\n";
   }
 
   protected function setAutoId ()
