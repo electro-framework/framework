@@ -304,7 +304,7 @@ class Controller
         $lang = $match[1];
       else $lang = $application->defaultLang;
       $URI = str_replace ('{lang}', $lang, $application->URINotFoundURL);
-      header ('Location: ' . $URI . '&URL=' . $_SERVER['REQUEST_URI'], true, 303);
+      header ('Location: ' . "$application->baseURI/$URI" . '?URL=' . $_SERVER['REQUEST_URI'], true, 303);
       exit();
     }
     else throw new FatalException($virtualURI ? "<b>$virtualURI</b> is not a valid URI." : 'Invalid URI.');
