@@ -158,9 +158,6 @@ class Parser
    */
   private function parseParameter ($tag, $attrs)
   {
-    // Allow the placement of additional parameters after the content of a default (implicit) parameter.
-    if (isset($this->current->isImplicit) && $this->current->isImplicit)
-      $this->tagComplete (false);
     $attrName = lcfirst ($tag);
 
     if (!$this->current instanceof Parameter) {
@@ -349,6 +346,7 @@ does not support the specified parameter <b>$tag</b>.
         break;
       case AttributeType::METADATA:
         $component->attrs ()->$attrName = $param;
+        $param->bindings                = $bindings;
         $this->metadataContainer        = $param;
         break;
       case AttributeType::PARAMS:

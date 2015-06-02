@@ -667,7 +667,7 @@ abstract class Component
         foreach ($props as $k => $v)
           if (isset($v)) {
             $t = $this->attrsObj->getTypeOf ($k);
-            if (!$deep || ($t != AttributeType::SRC && $t != AttributeType::PARAMS)) {
+            if (!$deep || ($t != AttributeType::SRC && $t != AttributeType::PARAMS && $t != AttributeType::METADATA)) {
               $tn = $this->attrsObj->getTypeNameOf ($k);
               echo "<tr><td style='color:#9ae6ef'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
               switch ($t) {
@@ -698,19 +698,14 @@ abstract class Component
         foreach ($props as $k => $v)
           if (isset($v)) {
             $t = $this->attrsObj->getTypeOf ($k);
-            if ($t == AttributeType::SRC || $t == AttributeType::PARAMS) {
+            if ($t == AttributeType::SRC || $t == AttributeType::PARAMS || $t == AttributeType::METADATA) {
               $tn = $this->attrsObj->getTypeNameOf ($k);
               echo "<tr><td style='color:#9ae6ef'>$k<td><i style='color:#ffcb69'>$tn</i>" .
                    "<tr><td><td colspan=2>";
               switch ($t) {
                 case AttributeType::SRC:
-                  $x = $this->attrsObj->$k->children;
-                  if (!empty($x)) {
-                    foreach ($x as $c)
-                      /** @var Component $c */
-                      $c->_inspect ($deep);
-                  }
-                  else echo "<i>empty</i>";
+                case AttributeType::METADATA:
+                  echo $this->attrsObj->$k->inspect($deep);
                   break;
                 case AttributeType::PARAMS:
                   echo self::inspectSet ($this->attrsObj->$k, true, true);
