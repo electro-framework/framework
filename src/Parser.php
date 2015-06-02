@@ -127,10 +127,10 @@ class Parser
 
     $nextContent = substr ($body, $pos);
     if (strlen ($nextContent)) $this->processLiteral (trim ($nextContent));
-    _log($parent->children);
     $this->mergeLiterals ($parent);
+    _log("Children of ".$parent->getTagName().":")->write($parent->inspect(true));
 
-    WebConsole::log()->write("<#section|END PARSER CONTEXT></#section>",'');
+    //WebConsole::log()->write("<#section|END PARSER CONTEXT></#section>",'');
     // DONE.
   }
 
@@ -334,9 +334,7 @@ does not support the specified parameter <b>$tag</b>.
     $prev = null;
     if (isset($c->children))
       foreach ($c->children as $child) {
-        if ($prev && ($child instanceof Literal || $child instanceof Text)) {
-          if (!strlen($child->attrs()->value) && !empty($child->bindings))
-            continue;
+        if ($prev && ($child instanceof Literal || $child instanceof Text) && empty($child->bindings)) {
           if (($prev instanceof Literal || $prev instanceof Text) &&
               empty($prev->bindings) && empty($child->bindings) &&
               !$prev->attrs ()->_modified && !$child->attrs ()->_modified
@@ -433,8 +431,12 @@ does not support the specified parameter <b>$tag</b>.
       if ($content[0] == '{') {
         $lit           = new Literal($this->context);
         $lit->bindings = $v;
+        _log("BINDINGS:",$v);
       }
-      else $lit = new Text ($this->context, $v);
+      else {
+        $lit = new Text ($this->context, $v);
+        _log("TEXT:",$content);
+      }
       $this->current->addChild ($lit);
     }
   }

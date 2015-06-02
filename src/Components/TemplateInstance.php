@@ -183,9 +183,33 @@ class TemplateInstance extends Component implements IAttributes
   {
     $this->processParameters ();
     $this->databind ();
+//    _log ("##########")->write ($this->inspect (true));
+
+    // Move children to default parameter
+
+    if (!empty($this->children)) {
+      $def = $this->template->attrs ()->defaultParam;
+      if (!empty($def)) {
+        $param = $this->template->getParameter ($def);
+        if (!$param)
+          throw new ComponentException($this, "The template's declared default parameter is invalid: $def");
+        $type = $this->attrsObj->getTypeOf ($def);
+        if ($type != AttributeType::SRC && $type != AttributeType::METADATA)
+          throw new ComponentException($this,
+            "The template's default parameter <b>$def</b> can't hold content (type: " .
+            ComponentAttributes::$TYPE_NAMES[$type] . ").");
+        $param                = new Parameter($this->context, ucfirst($def), $type);
+        $this->attrsObj->$def = $param;
+        $param->attachTo ($this);
+        $param->setChildren ($this->children, false);
+        $this->children = [];
+        _log ("INSTANCE %%%%%%%%%%%%%%%")->write (($this->inspect (true)));
+      }
+    }
+        _log ("TEMPLATE ************")->write (($this->template->inspect (true)));
     $content = $this->template->apply ($this);
     $this->replaceBy ($content);
-    _log("REPLACED ".$this->getTagName()." BY TEMPLATE CONTENT",$content);
+    _log ("REPLACED " . $this->getTagName () . " BY TEMPLATE CONTENT")->write( self::inspectSet($content));
   }
 
   private function processParameters ()
