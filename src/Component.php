@@ -663,7 +663,7 @@ abstract class Component
     if (!isset($this->parent))
       echo '&nbsp;<span style="color:#888">(detached)</span>';
     if ($this->supportsAttributes) {
-      echo '<table style="color:#CCC;margin:0 0 0 15px">';
+      echo '<table style="color:#CCC;margin:0 0 0 15px"><colgroup><col width=1><col width=1><col></colgroup>';
       $props = $this->attrsObj->getAll ();
       if (!empty($props))
         foreach ($props as $k => $v)
@@ -683,7 +683,7 @@ abstract class Component
                   echo $v;
                   break;
                 case AttributeType::TEXT:
-                  echo "\"<span style='color:#888'>" . str_replace ("\n", '&#8626;', htmlspecialchars ($v)) .
+                  echo "\"<span style='color:#888;white-space: pre-wrap'>" . str_replace ("\n", '&#8626;', htmlspecialchars ($v)) .
                        '</span>"';
                   break;
                 default:
@@ -721,14 +721,12 @@ abstract class Component
               echo '</tr>';
             }
           }
+      if (isset($this->bindings)) {
+        echo "<tr><td colspan=3><div style='border-top: 1px solid #666;margin:5px 0'></div>";
+        foreach ($this->bindings as $k => $v)
+          echo "<tr><td style='color:#7ae17a'>$k<td style='color:#ffcb69'>binding<td style='color:#c5a3e6'>" . htmlspecialchars ($v);
+      }
       echo "</table>";
-    }
-    if (isset($this->bindings)) {
-      $hasContent = true;
-      echo "<div style='background-color:#515658;padding:4px'>Bindings:<ul>";
-      foreach ($this->bindings as $k => $v)
-        echo "<li>$k = <span style='color:#c5a3e6'>" . htmlspecialchars ($v) . '</span>';
-      echo '</ul></div>';
     }
     if ($deep) {
       if (!empty($this->children)) {
