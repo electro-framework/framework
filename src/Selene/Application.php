@@ -422,10 +422,8 @@ class Application
 
   private function initDOMPanel (Controller $controller) {
     if (isset($controller->page)) {
-      ob_start ();
-      $controller->page->inspect (true);
-      $insp = ob_get_clean ();
-      WebConsole::DOM ()->write ("<code>$insp</code>");
+      $insp = $controller->page->inspect (true);
+      WebConsole::DOM ()->write ($insp);
 //      $filter = function ($k, $v) { return $k !== 'parent' && $k !== 'page'; };
 //      WebConsole::DOM ()->withFilter($filter, $controller->page);
     }
