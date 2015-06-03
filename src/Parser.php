@@ -137,7 +137,7 @@ class Parser
   private function parseComponent ($tag, $attrs)
   {
     if (!$this->current->allowsChildren)
-      $this->error ("The component <b>&lt;{$this->current->getTagName()}&gt;</b> does not support children.");
+      $this->error ("Neither the component <b>{$this->current->getTagName()}</b> supports children, neither the element <b>$tag</b> is a {$this->current->getTagName()} parameter.");
 
     /** @var Parameter|boolean $defParam */
     $this->parseAttributes ($attrs, $attributes, $bindings, true);

@@ -527,11 +527,8 @@ abstract class Component
 
   protected function setContent ($content)
   {
-    if (!$this->tag->isContentSet) {
+    if (!$this->tag->isContentSet)
       echo '>';
-      if ($this->context->debugMode)
-        echo "\n";
-    }
     echo $content;
     $this->tag->isContentSet = true;
   }
@@ -793,6 +790,18 @@ abstract class Component
       foreach ($this->bindings as $attrName => $bindExp) {
         $this->bindToAttribute ($attrName, $this->evalBinding ($bindExp));
       };
+  }
+
+  /**
+   * Returns the current value of an attribute, performing databinding if necessary.
+   * @param string $name
+   * @return mixed
+   * @throws DataBindingException
+   */
+  protected function evaluateAttr ($name) {
+    if (isset($this->bindings[$name]))
+      return $this->evalBinding ($this->bindings[$name]);
+    return $this->attrsObj->$name;
   }
 
   protected function evalBinding ($bindExp)
@@ -1065,8 +1074,6 @@ abstract class Component
   {
     if (isset($this->tag) && !$this->tag->isContentSet) {
       echo '>';
-      if ($this->context->debugMode)
-        echo "\n";
       $this->tag->isContentSet = true;
     }
   }
