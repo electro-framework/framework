@@ -2,7 +2,7 @@
 namespace Selene\Matisse\Components;
 use Selene\Matisse\AttributeType;
 use Selene\Matisse\Component;
-use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\Attributes\ComponentAttributes;
 use Selene\Matisse\Context;
 use Selene\Matisse\Exceptions\ComponentException;
 use Selene\Matisse\IAttributes;

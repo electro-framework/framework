@@ -16,7 +16,7 @@ class ComponentException extends MatisseException
           ?
           "<blockquote>$msg</blockquote><code>$i</code>"
           :
-          "<blockquote>$msg</blockquote>Component attributes (no child components are shown):<br><br><code>$i</code>"
+          "<blockquote>$msg</blockquote><h4>$component->className instance's current attributes values:</h4><code>$i</code>"
         ,
         $id
           ?

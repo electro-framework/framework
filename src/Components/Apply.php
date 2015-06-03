@@ -2,13 +2,14 @@
 namespace Selene\Matisse\Components;
 use Selene\Matisse\AttributeType;
 use Selene\Matisse\Component;
-use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\Attributes\ComponentAttributes;
 use Selene\Matisse\IAttributes;
 
 class ApplyAttributes extends ComponentAttributes
 {
   public $attrs;
   public $where;
+  public $recursive;
 
   protected function typeof_attrs () { return AttributeType::SRC; }
 
@@ -67,13 +68,21 @@ class Apply extends Component implements IAttributes
       foreach ($this->children as $k => $child)
         $child->attrs ()->apply ($attrs);
     }
-    else $this->scan ($this, $this->attrs ()->where, $attrs);
+    else $this->scan ($this, $attr->where, $attrs);
     $this->renderChildren();
   }
 
   private function scan (Component $parent, $where, $attrs)
   {
+    if (isset($parent->children))
+      foreach ($parent->children as $child) {
+        if ($child->getTagName () == $where)
+          $child->attrs ()->apply ($attrs);
+        $this->scan ($child, $where, $attrs);
+      }
+    return;
     /** @var ComponentAttributes $params */
+    /*
     $params = $parent->attrs ();
     foreach ($params->getAll () as $param) {
       if ($param instanceof Parameter) {
@@ -85,7 +94,7 @@ class Apply extends Component implements IAttributes
             $this->scan ($child, $where, $attrs);
           }
       }
-    }
+    }*/
 
   }
 

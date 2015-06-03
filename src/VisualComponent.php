@@ -1,6 +1,8 @@
 <?php
 namespace Selene\Matisse;
 
+use Selene\Matisse\Attributes\VisualComponentAttributes;
+
 class VisualComponent extends Component implements IAttributes
 {
   /**

@@ -1,7 +1,7 @@
 <?php
 namespace Selene\Matisse\Base;
 use Selene\Matisse\AttributeType;
-use Selene\Matisse\VisualComponentAttributes;
+use Selene\Matisse\Attributes\VisualComponentAttributes;
 use Selene\Matisse\VisualComponent;
 
 class VisualContainerAttributes extends VisualComponentAttributes

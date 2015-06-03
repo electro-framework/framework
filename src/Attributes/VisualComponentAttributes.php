@@ -1,6 +1,7 @@
 <?php
-namespace Selene\Matisse;
-use Selene\Matisse\Exceptions\ComponentException;
+namespace Selene\Matisse\Attributes;
+
+use Selene\Matisse\AttributeType;
 
 class VisualComponentAttributes extends ComponentAttributes
 {

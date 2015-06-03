@@ -1,17 +1,16 @@
 <?php
 namespace Selene\Matisse\Components;
+use Selene\Matisse\Attributes\ComponentAttributes;
+use Selene\Matisse\Attributes\ParameterAttributes;
 use Selene\Matisse\AttributeType;
 use Selene\Matisse\Component;
-use Selene\Matisse\ComponentAttributes;
 use Selene\Matisse\Context;
-use Selene\Matisse\GenericAttributes;
 use Selene\Matisse\IAttributes;
 
 class Parameter extends Component implements IAttributes
 {
-
   /**
-   * The ComponentAttributes type of the parameter's value.
+   * The AttributeType type of the parameter's value.
    * @var number
    */
   public $type;
@@ -34,7 +33,7 @@ class Parameter extends Component implements IAttributes
 
   /**
    * @see IAttributes::attrs()
-   * @return GenericAttributes
+   * @return ParameterAttributes
    */
   function attrs ()
   {
@@ -43,11 +42,11 @@ class Parameter extends Component implements IAttributes
 
   /**
    * @see IAttributes::newAttributes()
-   * @return GenericAttributes
+   * @return ParameterAttributes
    */
   function newAttributes ()
   {
-    return new GenericAttributes($this);
+    return new ParameterAttributes($this);
   }
 
   public function setScalar ($v)

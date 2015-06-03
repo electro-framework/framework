@@ -1,5 +1,6 @@
 <?php
 namespace Selene\Matisse;
+use Selene\Matisse\Attributes\ComponentAttributes;
 use Selene\Matisse\Base\GenericComponent;
 use Selene\Matisse\Components\Literal;
 use Selene\Matisse\Components\Page;
