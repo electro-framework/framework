@@ -20,8 +20,8 @@
   "require": {
     "php": ">=5.4.0",
     "impactwave/php-web-console": "dev-master",
-    "selene-framework/matisse": "dev-master",
-    "selene-framework/matisse-components": "dev-master",
+    "selene-framework/matisse": "~0.2.0",
+    "selene-framework/matisse-components": "~0.2.0",
     "ircmaxell/password-compat": "dev-master"
   },
   "autoload": {
