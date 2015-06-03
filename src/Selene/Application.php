@@ -362,10 +362,19 @@ class Application
    */
   public $mountPoints = [];
   /**
-   * Additional template directories to be registered on the templating engine.
+   * Directories where templates can be found.
+   * <p>They will be search in order until the requested template is found.
+   * <p>These paths will be registered on the templating engine.
+   * <p>This is preinitialized to the application template's path.
    * @var array
    */
   public $templateDirectories = [];
+  /**
+   * Folders where views can be found.
+   * <p>They will be search in order until the requested view is found.
+   * @var array
+   */
+  public $viewsDirectories = [];
   /**
    * Search paths for module language files, in order of precedence.
    * @var array
@@ -415,18 +424,9 @@ class Application
       $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
       WebConsole::routes ()->withCaption ('Active Route')->withFilter ($filter, $loader->sitePage);
       WebConsole::response (['Content-Length' => round (ob_get_length () / 1024) . ' KB']);
-      $this->initDOMPanel($loader->moduleInstance);
+      $this->initDOMPanel ($loader->moduleInstance);
     }
     WebConsole::outputContent ();
-  }
-
-  private function initDOMPanel (Controller $controller) {
-    if (isset($controller->page)) {
-      $insp = $controller->page->inspect (true);
-      WebConsole::DOM ()->write ($insp);
-//      $filter = function ($k, $v) { return $k !== 'parent' && $k !== 'page'; };
-//      WebConsole::DOM ()->withFilter($filter, $controller->page);
-    }
   }
 
   /**
@@ -484,6 +484,7 @@ class Application
     }
 
     $this->templateDirectories[] = $this->toFilePath ($this->templatesPath);
+    $this->viewsDirectories[]    = $this->toFilePath ($this->viewPath);
     $this->languageFolders[]     = $this->langPath;
     $this->bootModules ();
 
@@ -610,6 +611,16 @@ class Application
       $session                 = get ($_SESSION, 'sessionInfo', new Session);
       $session->name           = $name;
       $_SESSION['sessionInfo'] = $session;
+    }
+  }
+
+  private function initDOMPanel (Controller $controller)
+  {
+    if (isset($controller->page)) {
+      $insp = $controller->page->inspect (true);
+      WebConsole::DOM ()->write ($insp);
+//      $filter = function ($k, $v) { return $k !== 'parent' && $k !== 'page'; };
+//      WebConsole::DOM ()->withFilter($filter, $controller->page);
     }
   }
 
