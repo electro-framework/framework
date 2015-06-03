@@ -39,6 +39,7 @@ class RepeaterAttributes extends ComponentAttributes
 class Repeater extends Component implements IAttributes
 {
 
+  public $defaultAttribute = 'repeat';
   /**
    * Returns the component's attributes.
    * @return RepeaterAttributes
