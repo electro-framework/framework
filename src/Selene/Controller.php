@@ -965,7 +965,7 @@ class Controller
     $this->viewModel ();
 
     if (isset($this->modelData)) {
-      $this->setViewModel ('default', $this->modelData);
+      $this->setViewModel ('default', $this->modelData ?: null);
       return;
     }
 
