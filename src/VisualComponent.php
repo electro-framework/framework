@@ -1,6 +1,8 @@
 <?php
 namespace Selene\Matisse;
 
+use Selene\Matisse\Attributes\VisualComponentAttributes;
+
 class VisualComponent extends Component implements IAttributes
 {
   /**
@@ -21,7 +23,7 @@ class VisualComponent extends Component implements IAttributes
 
   /**
    * Returns the component's attributes.
-   * @return ComponentAttributes
+   * @return VisualComponentAttributes
    */
   public function attrs ()
   {
@@ -30,11 +32,11 @@ class VisualComponent extends Component implements IAttributes
 
   /**
    * Creates an instance of the component's attributes.
-   * @return ComponentAttributes
+   * @return VisualComponentAttributes
    */
   public function newAttributes ()
   {
-    return new ComponentAttributes($this);
+    return new VisualComponentAttributes($this);
   }
 
   public final function addClass ($class)
@@ -57,8 +59,8 @@ class VisualComponent extends Component implements IAttributes
       $this->attrs ()->class,
       $this->attrs ()->disabled ? 'disabled' : null
     ));
-    if (!empty($this->attrs ()->html_attrs))
-      echo ' ' . $this->attrs ()->html_attrs;
+    if (!empty($this->attrs ()->htmlAttrs))
+      echo ' ' . $this->attrs ()->htmlAttrs;
   }
 
   protected function postRender ()

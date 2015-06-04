@@ -2,7 +2,7 @@
 namespace Selene\Matisse\Base;
 use Selene\Matisse\AttributeType;
 use Selene\Matisse\Context;
-use Selene\Matisse\GenericAttributes;
+use Selene\Matisse\Attributes\GenericAttributes;
 use Selene\Matisse\VisualComponent;
 
 class GenericComponentAttributes extends GenericAttributes

@@ -2,7 +2,7 @@
 namespace Selene\Matisse\Components;
 use Selene\Matisse\AttributeType;
 use Selene\Matisse\Component;
-use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\Attributes\ComponentAttributes;
 use Selene\Matisse\Context;
 use Selene\Matisse\Exceptions\ComponentException;
 use Selene\Matisse\IAttributes;
@@ -146,6 +146,7 @@ class TemplateInstanceAttributes
 
 class TemplateInstance extends Component implements IAttributes
 {
+  public $allowsChildren = true;
 
   /**
    * Points to the component that defines the template for this instance.
@@ -158,7 +159,6 @@ class TemplateInstance extends Component implements IAttributes
     $this->template = $template; //must be defined before the parent constructor is called
     parent::__construct ($context, $attributes);
     $this->setTagName ($tagName);
-    $this->defaultAttribute = $template->attrs ()->default_param;
   }
 
   /**
@@ -183,6 +183,27 @@ class TemplateInstance extends Component implements IAttributes
   {
     $this->processParameters ();
     $this->databind ();
+
+    // Move children to default parameter
+
+    if (!empty($this->children)) {
+      $def = $this->template->attrs ()->defaultParam;
+      if (!empty($def)) {
+        $param = $this->template->getParameter ($def);
+        if (!$param)
+          throw new ComponentException($this, "The template's declared default parameter is invalid: $def");
+        $type = $this->attrsObj->getTypeOf ($def);
+        if ($type != AttributeType::SRC && $type != AttributeType::METADATA)
+          throw new ComponentException($this,
+            "The template's default parameter <b>$def</b> can't hold content (type: " .
+            ComponentAttributes::$TYPE_NAMES[$type] . ").");
+        $param                = new Parameter($this->context, ucfirst($def), $type);
+        $this->attrsObj->$def = $param;
+        $param->attachTo ($this);
+        $param->setChildren ($this->children, false);
+        $this->children = [];
+      }
+    }
     $content = $this->template->apply ($this);
     $this->replaceBy ($content);
   }

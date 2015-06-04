@@ -1,5 +1,6 @@
 <?php
 namespace Selene\Matisse;
+use Selene\Matisse\Attributes\ComponentAttributes;
 use Selene\Matisse\Base\GenericComponent;
 use Selene\Matisse\Components\Literal;
 use Selene\Matisse\Components\Page;
@@ -59,12 +60,6 @@ abstract class Component
    */
   public $children = null;
   /**
-   * The namespace of the component's tag.
-   *
-   * @var string
-   */
-  public $namespace = 'c';
-  /**
    * The component's PHP class name.
    *
    * @var string
@@ -90,14 +85,6 @@ abstract class Component
    */
   public $defaultDataSource;
   /**
-   * The attribute name to be used when content is placed immediatly after a component's opening tag, without
-   * explicitly specifying a `<p:xxx>` parameter.
-   * This should be specified in snake-case (ex: if-set -> if_set).
-   *
-   * @var string
-   */
-  public $defaultAttribute = null;
-  /**
    * Set by Repeater components for supporting pagination.
    * @var int
    */
@@ -108,6 +95,11 @@ abstract class Component
    * @var Page
    */
   public $page;
+  /**
+   * Can this component have children?
+   * @var bool
+   */
+  public $allowsChildren = false;
   /**
    * The rendering context for the current request.
    * @var Context
@@ -180,7 +172,8 @@ abstract class Component
    * Creates a component corresponding to the specified tag and optionally sets its attributes.
    *
    * @param Context   $context
-   * @param Component $parent
+   * @param Component $parent  This is used only for error reporting. You should still manually add the component to
+   *                           it's parent's child list or source parameter.
    * @param string    $tagName
    * @param array     $attributes
    * @param bool      $generic If true, an instance of GenericComponent is created.
@@ -201,7 +194,7 @@ abstract class Component
     $class = $context->getClassForTag ($tagName);
     if (!$class) {
       if ($strict)
-        self::throwUnknownComponent ($context, $tagName);
+        self::throwUnknownComponent ($context, $tagName, $parent);
 
       // Component class not found.
       // Try to load a template with the same tag name.
@@ -211,7 +204,7 @@ abstract class Component
         if (is_null ($template))
           $template = self::loadTemplate ($context, $parent, $tagName);
       } catch (FileIOException $e) {
-        self::throwUnknownComponent ($context, $tagName);
+        self::throwUnknownComponent ($context, $tagName, $parent);
       }
       $component = new TemplateInstance($context, $tagName, $template, $attributes);
     }
@@ -222,7 +215,8 @@ abstract class Component
 
     // For both types of components:
 
-    $component->setTagName ($tagName); //for performance
+    $component->setTagName ($tagName);
+
     return $component;
   }
 
@@ -252,13 +246,18 @@ abstract class Component
 
   /**
    * @param Component[] $components
+   * @param bool        $deep
+   * @param bool        $nested True if no `<code>` block should be output.
+   * @return string
    */
-  public static function inspectSet (array $components = null)
+  public static function inspectSet (array $components = null, $deep = false, $nested = false)
   {
+    ob_start (null, 0);
     if (is_array ($components))
       foreach ($components as $component)
         /** @var Component $component */
-        $component->inspect ();
+        $component->_inspect ($deep);
+    return $nested ? ob_get_clean () : "<code>" . ob_get_clean () . "</code>";
   }
 
   /**
@@ -300,15 +299,19 @@ abstract class Component
         $component->doRender ();
   }
 
-  private static function throwUnknownComponent (Context $context, $tagName)
+  private static function throwUnknownComponent (Context $context, $tagName, Component $parent)
   {
     $paths = implode ('', map ($context->templateDirectories,
       function ($dir) { return "<li><path>$dir</path></li>"; }));
     throw new ComponentException (null,
-      "<h3>Unknown tag: <b>&lt;c:$tagName></b></h3>
-<p>Neither a class nor a template implementing that tag were found.
+      "<h3>Unknown tag: <b>&lt;$tagName></b></h3>
+<p>Neither a class, parameter or template implementing that tag were found.
 <p>Perhaps you forgot to register the tag?
-<p>If it's a template, Matisse is searching for it on these paths:<ul>$paths</ul>");
+<p>If it's a template, Matisse is searching for it on these paths:<ul>$paths</ul>
+<table>
+  <th>Container component:<td><b>&lt;{$parent->getTagName()}></b>, of type <b>{$parent->className}</b>
+</table>
+");
   }
 
   /**
@@ -344,11 +347,6 @@ abstract class Component
   public final function setTagName ($name)
   {
     $this->tagName = $name;
-  }
-
-  public final function getQualifiedName ()
-  {
-    return $this->namespace . ':' . $this->getTagName ();
   }
 
   public function __get ($name)
@@ -411,9 +409,7 @@ abstract class Component
       $this->parent->attach ($components);
     }
     else {
-      ob_start (null, 0);
-      self::inspectSet ($this->parent->children);
-      $t = ob_get_clean ();
+      $t = self::inspectSet ($this->parent->children);
       throw new ComponentException($this,
         "The component was not found on the parent's children.<h3>The children are:</h3><fieldset>$t</fieldset>");
     }
@@ -504,7 +500,7 @@ abstract class Component
   {
     if (!$this->inactive) {
       $this->databind ();
-      if (!isset($this->attrsObj) || !$this->attrsObj->hidden) {
+      if (!isset($this->attrsObj) || !isset($this->attrsObj->hidden) || !$this->attrsObj->hidden) {
         $this->preRender ();
         $this->render ();
         $this->postRender ();
@@ -532,11 +528,8 @@ abstract class Component
 
   protected function setContent ($content)
   {
-    if (!$this->tag->isContentSet) {
+    if (!$this->tag->isContentSet)
       echo '>';
-      if ($this->context->debugMode)
-        echo "\n";
-    }
     echo $content;
     $this->tag->isContentSet = true;
   }
@@ -585,11 +578,12 @@ abstract class Component
     return null;
   }
 
-  public final function setChildren (array $children = null)
+  public final function setChildren (array $children = null, $attach = true)
   {
     if (isset($children)) {
       $this->children = $children;
-      $this->attach ($children);
+      if ($attach)
+        $this->attach ($children);
     }
   }
 
@@ -636,20 +630,44 @@ abstract class Component
     }
   }
 
-  public final function inspect ($deep = true)
+  function inspect ($deep = true)
   {
-    echo '<pre style="background-color:#FFF">&lt;<b>' . $this->getQualifiedName () . '</b>';
+    ob_start (null, 0);
+    $this->_inspect ($deep);
+    return "<code>" . ob_get_clean () . "</code>";
+  }
+
+  public function __clone ()
+  {
+    if (isset($this->attrsObj)) {
+      $this->attrsObj = clone $this->attrsObj;
+      $this->attrsObj->setComponent ($this);
+    }
+    if (isset($this->children))
+      $this->children = self::cloneComponents ($this->children, $this);
+  }
+
+  /**
+   * Do not call this from user code.
+   * @param bool $deep
+   */
+  function _inspect ($deep = true)
+  {
+    $tag        = $this->getTagName ();
+    $hasContent = false;
+    echo "&lt;$tag";
     if (!isset($this->parent))
-      echo ' <b style="color:#F00">NO PARENT</b>';
+      echo '&nbsp;<span style="color:#888">(detached)</span>';
     if ($this->supportsAttributes) {
+      echo '<table style="color:#CCC;margin:0 0 0 15px"><colgroup><col width=1><col width=1><col></colgroup>';
       $props = $this->attrsObj->getAll ();
-      if (isset($props))
+      if (!empty($props))
         foreach ($props as $k => $v)
           if (isset($v)) {
             $t = $this->attrsObj->getTypeOf ($k);
-            if (!$deep || ($t != AttributeType::SRC && $t != AttributeType::PARAMS)) {
+            if (!$deep || ($t != AttributeType::SRC && $t != AttributeType::PARAMS && $t != AttributeType::METADATA)) {
               $tn = $this->attrsObj->getTypeNameOf ($k);
-              echo "\n   $k: <i style='color:#00C'>$tn</i> = ";
+              echo "<tr><td style='color:#9ae6ef'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
               switch ($t) {
                 case AttributeType::BOOL:
                   echo '<i>' . ($v ? 'TRUE' : 'FALSE') . '</i>';
@@ -661,7 +679,7 @@ abstract class Component
                   echo $v;
                   break;
                 case AttributeType::TEXT:
-                  echo "\"<span style='color:#888'>" . str_replace ("\n", '&#8626;', htmlspecialchars ($v)) .
+                  echo "\"<span style='color:#888;white-space: pre-wrap'>" . str_replace ("\n", '&#8626;', htmlspecialchars ($v)) .
                        '</span>"';
                   break;
                 default:
@@ -674,60 +692,43 @@ abstract class Component
               }
             }
           }
-    }
-    echo "&gt;<blockquote>";
-    if (isset($this->bindings)) {
-      echo "<div style='background-color:#EFF;padding:4px;border:1px solid #DDD'><b>Bindings</b>:<ul>";
-      foreach ($this->bindings as $k => $v)
-        echo "<li>$k = <span style='color:#800'>" . htmlspecialchars ($v) . '</span></li>';
-      echo '</ul></div>';
+      if (!empty($props))
+        foreach ($props as $k => $v)
+          if (isset($v)) {
+            $t = $this->attrsObj->getTypeOf ($k);
+            if ($t == AttributeType::SRC || $t == AttributeType::PARAMS || $t == AttributeType::METADATA) {
+              $tn = $this->attrsObj->getTypeNameOf ($k);
+              echo "<tr><td style='color:#9ae6ef'>$k<td><i style='color:#ffcb69'>$tn</i>" .
+                   "<tr><td><td colspan=2>";
+              switch ($t) {
+                case AttributeType::SRC:
+                case AttributeType::METADATA:
+                  echo $this->attrsObj->$k->inspect($deep);
+                  break;
+                case AttributeType::PARAMS:
+                  echo self::inspectSet ($this->attrsObj->$k, true, true);
+                  break;
+              }
+              echo '</tr>';
+            }
+          }
+      if (isset($this->bindings)) {
+        echo "<tr><td colspan=3><div style='border-top: 1px solid #666;margin:5px 0'></div>";
+        foreach ($this->bindings as $k => $v)
+          echo "<tr><td style='color:#7ae17a'>$k<td style='color:#ffcb69'>binding<td style='color:#c5a3e6'>" . htmlspecialchars ($v);
+      }
+      echo "</table>";
     }
     if ($deep) {
-      if ($this->supportsAttributes) {
-        if (isset($props))
-          foreach ($props as $k => $v)
-            if (isset($v)) {
-              $t = $this->attrsObj->getTypeOf ($k);
-              if ($t == AttributeType::SRC || $t == AttributeType::PARAMS) {
-                $tn = $this->attrsObj->getTypeNameOf ($k);
-                echo "<p style='border:1px solid #ccc;padding:8px;background-color:#eee;margin-bottom:-1px'><b>$k</b>: <i style='color:#00C'>$tn</i></p><div style='border:1px solid #ccc;padding:8px'>";
-                switch ($t) {
-                  case AttributeType::SRC:
-                    $x = $this->attrsObj->$k->children;
-                    if (isset($x))
-                      foreach ($x as $c)
-                        /** @var Component $c */
-                        $c->inspect ();
-                    break;
-                  case AttributeType::PARAMS:
-                    self::inspectSet ($this->attrsObj->$k);
-                    break;
-                }
-                echo '</div>';
-              }
-            }
-      }
-      if (isset($this->children)) {
-        $b = isset($this->parent) && $this->className != 'Parameter';
-        if ($b)
-          echo '<h3 style="border:1px solid #ccc;padding:8px;background-color:#eee;margin-bottom:-1px">Generated children</h3><div style="border:1px solid #ccc;padding:8px">';
+      if (!empty($this->children)) {
+        $hasContent = true;
+        echo '&gt;<div style="margin:0 0 0 20px">';
         foreach ($this->children as $c)
-          $c->inspect ();
-        if ($b)
-          echo '</div>';
+          $c->_inspect (true);
+        echo '</div>';
       }
     }
-    echo "</blockquote></pre>";
-  }
-
-  public function __clone ()
-  {
-    if (isset($this->attrsObj)) {
-      $this->attrsObj = clone $this->attrsObj;
-      $this->attrsObj->setComponent ($this);
-    }
-    if (isset($this->children))
-      $this->children = self::cloneComponents ($this->children, $this);
+    echo $hasContent ? "&lt;/$tag&gt;\n" : "/&gt;\n";
   }
 
   protected function setAutoId ()
@@ -790,6 +791,18 @@ abstract class Component
       foreach ($this->bindings as $attrName => $bindExp) {
         $this->bindToAttribute ($attrName, $this->evalBinding ($bindExp));
       };
+  }
+
+  /**
+   * Returns the current value of an attribute, performing databinding if necessary.
+   * @param string $name
+   * @return mixed
+   * @throws DataBindingException
+   */
+  protected function evaluateAttr ($name) {
+    if (isset($this->bindings[$name]))
+      return $this->evalBinding ($this->bindings[$name]);
+    return $this->attrsObj->$name;
   }
 
   protected function evalBinding ($bindExp)
@@ -1066,8 +1079,6 @@ abstract class Component
   {
     if (isset($this->tag) && !$this->tag->isContentSet) {
       echo '>';
-      if ($this->context->debugMode)
-        echo "\n";
       $this->tag->isContentSet = true;
     }
   }

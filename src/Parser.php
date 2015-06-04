@@ -3,11 +3,12 @@ namespace Selene\Matisse;
 use Selene\Matisse\Components\Literal;
 use Selene\Matisse\Components\Page;
 use Selene\Matisse\Components\Parameter;
+use Selene\Matisse\Base\Text;
 use Selene\Matisse\Exceptions\ParseException;
 
 class Parser
 {
-  const PARSE_TAG            = '# (<) (/?) ([cpth]) : ([\w\-]+) \s* (.*?) (/?) (>) #sx';
+  const PARSE_TAG            = '# (<) (/?) ([A-Z]\w+) \s* (.*?) (/?) (>) #sx';
   const PARSE_DATABINDINGS   = '# \{(?=\S) ( [^{}]* | \{[^{}]*\} )* \} #x';
   const TRIM_LITERAL_CONTENT = '# ^ \s+ | (?<=\>) \s+ (?=\s) | (?<=\s) \s+ (?=\<) | \s+ $ #x';
   const TRIM_LEFT_CONTENT    = '# ^ \s+ | (?<=\>) \s+ (?=\s) #x';
@@ -17,6 +18,7 @@ class Parser
   const TRIM_LEFT            = 1;
   const TRIM_RIGHT           = 2;
   const TRIM                 = 3;
+
   /**
    * Points to the root of the component hierarchy.
    *
@@ -40,142 +42,266 @@ class Parser
    * @var boolean
    */
   private $scalarParam = false;
+  /**
+   * When set, all tags are created as parameters and added to the specified parameter's subtree.
+   * @var Parameter
+   */
+  private $metadataContainer = null;
+  /**
+   * The ending position + 1 of the tag that was parsed previously.
+   * @var int
+   */
+  private $prevTagEnd;
+  /**
+   * The starting position of the tag currently being parsed.
+   * @var int
+   */
+  private $currentTagStart;
+  /**
+   * The ending position of the tag currently being parsed.
+   * @var int
+   */
+  private $currentTagEnd;
+  /**
+   * @var string The source markup being parsed.
+   */
+  private $source;
 
   function __construct (Context $context)
   {
     $this->context = $context;
   }
 
+  /*********************************************************************************************************************
+   * THE PARSING LOOP
+   ********************************************************************************************************************/
   public function parse ($body, Component $parent, Page $root = null)
   {
     $pos = 0;
     if (!$root) $root = $parent;
     $this->current = $parent;
     $this->root    = $root;
+    $this->source  = $body;
+
     while (preg_match (self::PARSE_TAG, $body, $match, PREG_OFFSET_CAPTURE, $pos)) {
-      list(, list(, $start), list($term), list($namespace), list($tag), list($attrs), list($term2), list(, $end)
+      list(, list(, $start), list($term), list($tag), list($attrs), list($term2), list(, $end)
         ) = $match;
-      //literal content
-      if ($start > $pos) {
-        $v = trim (substr ($body, $pos, $start - $pos));
-        if (!empty($v)) {
-          if ($this->scalarParam) $this->current->setScalar ($v);
-          else {
-            if (!$this->canAddComponent ()) {
-              if (!isset($this->current->defaultAttribute)) {
-                $s = join (', ', $this->current->attrs ()->getAttributeNames ());
-                throw new ParseException("<h4>You may not define literal content at this.location.</h4>
-<table><tr><th>Component:<td>&lt;{$this->current->getQualifiedName()}&gt;<tr><th>Expected parameters:<td>$s</table>",
-                  $body, $pos, $start);
-              }
-              $this->generateImplicitParameter ();
-            }
-            $this->processLiteral ($v);
-          }
-        }
-      }
-      //process tag
+
+      $this->prevTagEnd      = $pos;
+      $this->currentTagStart = $start;
+      $this->currentTagEnd   = $end;
+
+      if ($start > $pos)
+        $this->parseLiteral (substr ($body, $pos, $start - $pos));
+
       if ($term) {
-        //close previous tag
-        if ($namespace != $this->current->namespace || $tag != $this->current->getTagName ()) {
-          $parent = $this->current->parent;
-          if (!($this->current instanceof Parameter && $this->current->isImplicit &&
-                $namespace == $parent->namespace && $tag == $parent->getTagName ())
-          )
-            throw new ParseException("Closing tag &lt;/$namespace:$tag&gt; does not match the opening tag &lt;{$this->current->getQualifiedName ()}&gt;.",
-              $body, $start, $end);
-        }
-        if ($attrs) throw new ParseException('Closing tags must not have attributes.', $body, $start, $end);
-        $this->tagComplete ();
+        if ($attrs) $this->error ('Closing tags must not have attributes.');
+        $this->parseClosingTag ($tag);
       }
       else {
-        //new tag
+        // OPEN TAG
+
         if ($this->scalarParam)
-          throw new ParseException("Can't set tag <b>$tag</b> as a value for the scalar parameter <b>{$this->current->getTagName()}</b>.",
-            $body, $start, $end);
-        $attributes = $bindings = null;
-        switch ($namespace) {
-          case 'c':
-          case 't':
-          case 'h':
-            if (!$this->canAddComponent ()) {
-              if (!isset($this->current->defaultAttribute))
-                throw new ParseException('You may not instantiate a component at this location.', $body,
-                  $start, $end);
-              $this->generateImplicitParameter ();
-            }
-            /** @var Parameter|boolean $defParam */
-            $this->parseAttributes ($attrs, $attributes, $bindings, true);
-            $component            =
-              Component::create ($this->context, $this->current, $tag, $attributes, $namespace == 'h');
-            $component->namespace = $namespace;
-            $component->bindings  = $bindings;
-            $this->current->addChild ($component);
-            $this->current = $component;
-            break;
-          case 'p':
-            if (!$this->canAddParameter ())
-              throw new ParseException('Parameters must be specified as direct descendant nodes of a component.',
-                $body, $start, $end);
-            $name = normalizeAttributeName ($tag);
-            // Allow the placement of additional parameters after the content of a default (implicit) parameter.
-            if (isset($this->current->isImplicit))
-              $this->tagComplete (false);
-            if (!$this->current instanceof Parameter) {
-              //create parameter
-              if (!$this->current->supportsAttributes)
-                throw new ParseException("The component <b>&lt;{$this->current->getQualifiedName()}&gt;</b> does not support parameters.",
-                  $body, $start,
-                  $end);
-              $this->parseAttributes ($attrs, $attributes, $bindings);
-              if (!$this->current->attrs ()->defines ($name)) {
-                $s = join ('</b>, <b>', $this->current->attrs ()->getAttributeNames ());
-                throw new ParseException("The component <b>&lt;{$this->current->getQualifiedName()}&gt;</b> ({$this->current->className}) does not support the specified parameter <b>$tag</b>.<p>Expected: <b>$s</b>.",
-                  $body, $start, $end);
-              }
-              $param = $this->createParameter ($name, $tag, $attributes, $bindings);
-            }
-            else {
-              //create subparameter
-              $this->parseAttributes ($attrs, $attributes, $bindings);
-              $param = $this->createSubparameter ($name, $tag, $attributes, $bindings);
-            }
-            $param->namespace = $namespace;
-            break;
-        }
-        //short tag
+          $this->error ("Can't set tag <b>$tag</b> as a value for the scalar parameter <b>{$this->current->getTagName()}</b>.");
+
+        if (isset($this->metadataContainer) || $this->isParameter ($tag))
+          $this->parseParameter ($tag, $attrs);
+
+        else $this->parseComponent ($tag, $attrs);
+
+        // SELF-CLOSING TAG
         if ($term2)
-          $this->tagComplete ();
+          $this->tagComplete (true, $tag);
       }
+
+      // LOOP: advance to the next component tag
       $pos = $end + 1;
     }
+
+    // PROCESS REMAINING TEXT
+
     $nextContent = substr ($body, $pos);
     if (strlen ($nextContent)) $this->processLiteral (trim ($nextContent));
+    $this->mergeLiterals ($parent);
+
+    // DONE.
   }
 
-  protected function generateImplicitParameter ()
+  /*********************************************************************************************************************
+   * PARSE A COMPONENT TAG
+   *********************************************************************************************************************
+   * @param string $tag
+   * @param string $attrs
+   * @throws ParseException
+   */
+  private function parseComponent ($tag, $attrs)
   {
-    $current = $this->current;
-    $defName = $current->defaultAttribute;
-    // Synthesise a parameter only when no corresponding one already exists.
-    if (is_null ($current->attrs ()->$defName))
-      $this->createParameter (normalizeAttributeName ($defName), $defName)->isImplicit = true;
+    if (!$this->current->allowsChildren)
+      $this->error ("Neither the component <b>{$this->current->getTagName()}</b> supports children, neither the element <b>$tag</b> is a {$this->current->getTagName()} parameter.");
 
+    /** @var Parameter|boolean $defParam */
+    $this->parseAttributes ($attrs, $attributes, $bindings, true);
+    $component =
+      Component::create ($this->context, $this->current, $tag, $attributes, false /*TODO: support HTML components*/);
+
+    $component->bindings = $bindings;
+    $this->current->addChild ($component);
+    $this->current = $component;
   }
 
-  protected function tagComplete ($fromClosingTag = true)
+  /*********************************************************************************************************************
+   * PARSE A SUBTAG
+   *********************************************************************************************************************
+   * @param string $tag
+   * @param string $attrs
+   * @throws ParseException
+   */
+  private function parseParameter ($tag, $attrs)
+  {
+    $attrName = lcfirst ($tag);
+
+    if (!$this->current instanceof Parameter) {
+      // Create a component parameter
+
+      if (!$this->current->supportsAttributes)
+        $this->error ("The component <b>&lt;{$this->current->getTagName()}&gt;</b> does not support parameters.");
+      $this->parseAttributes ($attrs, $attributes, $bindings);
+
+      if (!$this->current->attrs ()->defines ($attrName)) {
+        $s = '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->attrs ()->getAttributeNames ())) . '>';
+        $this->error ("The component <b>&lt;{$this->current->getTagName()}&gt;</b> ({$this->current->className})
+does not support the specified parameter <b>$tag</b>.
+<p>Expected: <span class='fixed'>$s</span>");
+      }
+      $param = $this->createParameter ($attrName, $tag, $attributes, $bindings);
+    }
+    else {
+
+      // Create parameter's subparameter
+
+      $this->parseAttributes ($attrs, $attributes, $bindings);
+      $param = $this->createSubparameter ($attrName, $tag, $attributes, $bindings);
+    }
+  }
+
+  /*********************************************************************************************************************
+   * PARSE ATTRIBUTES
+   *********************************************************************************************************************
+   * @param string $attrStr
+   * @param array  $attributes
+   * @param array  $bindings
+   * @param bool   $processBindings
+   */
+  private function parseAttributes ($attrStr, array &$attributes = null, array &$bindings = null,
+                                    $processBindings = true)
+  {
+    $attributes = $bindings = null;
+    if (!empty($attrStr)) {
+      $sPos = 0;
+      while (preg_match (self::PARSE_ATTRS, "$attrStr@", $match, PREG_OFFSET_CAPTURE, $sPos)) {
+        list(, list($key), list($quote), list($value, $exists), list($marker, $next)) = $match;
+        if ($exists < 0)
+          $value = 'true';
+        if ($processBindings && strpos ($value, '{') !== false)
+          $bindings[renameAttribute ($key)] = $value;
+        else $attributes[renameAttribute ($key)] = $value;
+        $sPos = $next;
+      }
+    }
+  }
+
+  /*********************************************************************************************************************
+   * PARSE CLOSING TAG
+   *********************************************************************************************************************
+   * @param string $tag
+   * @throws ParseException
+   */
+  private function parseClosingTag ($tag)
+  {
+    if ($tag != $this->current->getTagName ()) {
+      $parent = $this->current->parent;
+      $this->error ("Closing tag mismatch.
+<table>
+  <tr><th>Found:<td class='fixed'><b>&lt;/$tag&gt;</b>
+  <tr><th>Expected:<td class='fixed'><b>&lt;/{$this->current->getTagName ()}&gt;</b>
+  <tr><th>Component in scope:<td class='fixed'><b>&lt;{$parent->getTagName()}></b><td>Class: <b>{$parent->className}</b>
+" . (isset($parent->parent) ? "
+  <tr><th>Scope's parent:<td><b>&lt;{$parent->parent->getTagName()}></b><td>Class: <b>{$parent->parent->className}</b>"
+          : '') . "
+</table>");
+    }
+    $this->tagComplete (true, $tag);
+  }
+
+  /*********************************************************************************************************************
+   * END THE CURRENT TAG CONTEXT
+   *********************************************************************************************************************
+   * @param bool   $fromClosingTag
+   * @param string $tag
+   */
+  private function tagComplete ($fromClosingTag = true, $tag = '')
   {
     $current = $this->current;
     $this->mergeLiterals ($current);
     if ($this->scalarParam)
       $this->scalarParam = false;
+
     $parent = $current->parent;
     $current->parsed (); //calling this method may unset the 'parent' property.
-    $this->current = $parent; //also discards the current scalar parameter, if that is the case.
 
-    // Closing a component's tag must also close an implicit parameter.
-    if ($fromClosingTag && isset($current->isImplicit))
-      $this->tagComplete ();
+    // Check if the metadata context is being closed.
+    if (isset($this->metadataContainer) && $this->current == $this->metadataContainer)
+      unset ($this->metadataContainer);
+
+    $this->current = $parent; //also discards the current scalar parameter, if that is the case.
+  }
+
+  /*********************************************************************************************************************
+   * PARSE LITERAL TEXT
+   *********************************************************************************************************************
+   * @param string $text
+   * @throws ParseException
+   */
+  private function parseLiteral ($text)
+  {
+    $text = trim ($text);
+    if (!empty($text)) {
+      if ($this->scalarParam) $this->current->setScalar ($text);
+      else {
+        if (!$this->current->allowsChildren) {
+          $s = $this->current instanceof IAttributes ?
+            '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->attrs ()->getAttributeNames ())) . '>' : '';
+          throw new ParseException("
+<h4>You may not define literal content at this location.</h4>
+<table>
+  <tr><th>Component:<td class='fixed'>&lt;{$this->current->getTagName()}&gt;
+  <tr><th>Expected&nbsp;tags:<td class='fixed'>$s
+</table>", $this->source, $this->prevTagEnd, $this->currentTagStart);
+        }
+      }
+      $this->processLiteral ($text);
+    }
+  }
+
+  /**
+   * Checkes if a subtag is a parameter of the current component.
+   * @param string $subtagName
+   * @return bool
+   */
+  private function isParameter ($subtagName)
+  {
+    $attrName = lcfirst ($subtagName);
+    // All descendants of a metadata parameter are always parameters.
+    if ($this->current instanceof Parameter) {
+      switch ($this->current->type) {
+        case AttributeType::METADATA:
+          return true;
+      }
+      // Descendants of parameters not of metadata type cannot be parameters.
+      return false;
+    }
+    // If the current component defines an attribute with the same name as the tag being checked, the tag is a parameter.
+    return $this->current instanceof IAttributes && $this->current->attrs ()->defines ($attrName);
   }
 
   /**
@@ -185,39 +311,48 @@ class Parser
    * performed.
    * @param Component $c The container component.
    */
-  protected function mergeLiterals (Component $c) {
-    $o = [];
+  private function mergeLiterals (Component $c)
+  {
+    $o    = [];
     $prev = null;
     if (isset($c->children))
-    foreach ($c->children as $child) {
-      if ($prev && $prev instanceof Literal && $child instanceof Literal && !$prev->bindings && !$child->bindings
-      && !$prev->attrs()->_modified && !$child->attrs()->_modified) {
-        // safe to merge
-        $prev->attrs()->value .= $child->attrs()->value;
-      }
-      else {
+      foreach ($c->children as $child) {
+        if ($prev && ($child instanceof Literal || $child instanceof Text) && empty($child->bindings)) {
+          if (($prev instanceof Literal || $prev instanceof Text) &&
+              empty($prev->bindings) && empty($child->bindings) &&
+              !$prev->attrs ()->_modified && !$child->attrs ()->_modified
+          ) {
+            // safe to merge
+            $prev->attrs ()->value .= $child->attrs ()->value;
+            continue;
+          }
+        }
         $o[]  = $child;
         $prev = $child;
       }
-    }
     $c->children = $o;
   }
 
-  protected function createParameter ($name, $tagName, array $attributes = null, array $bindings = null)
+  private function createParameter ($attrName, $tagName, array $attributes = null, array $bindings = null)
   {
     $component     = $this->current;
-    $type          = $component->attrs ()->getTypeOf ($name);
+    $type          = $component->attrs ()->getTypeOf ($attrName);
     $this->current = $param = new Parameter($this->context, $tagName, $type, $attributes);
     $param->attachTo ($component);
     switch ($type) {
       case AttributeType::SRC:
-        $component->attrs ()->$name = $param;
-        $param->bindings            = $bindings;
+        $component->attrs ()->$attrName = $param;
+        $param->bindings                = $bindings;
+        break;
+      case AttributeType::METADATA:
+        $component->attrs ()->$attrName = $param;
+        $param->bindings                = $bindings;
+        $this->metadataContainer        = $param;
         break;
       case AttributeType::PARAMS:
-        if (isset($component->attrs ()->$name))
-          $component->attrs ()->{$name}[] = $param;
-        else $component->attrs ()->$name = [$param];
+        if (isset($component->attrs ()->$attrName))
+          $component->attrs ()->{$attrName}[] = $param;
+        else $component->attrs ()->$attrName = [$param];
         $param->bindings = $bindings;
         break;
       default:
@@ -226,7 +361,7 @@ class Parser
     return $param;
   }
 
-  protected function createSubparameter ($name, $tagName, array $attributes = null, array $bindings = null)
+  private function createSubparameter ($name, $tagName, array $attributes = null, array $bindings = null)
   {
     $param              = $this->current;
     $this->current      = $subparam = new Parameter($this->context, $tagName, AttributeType::SRC, $attributes);
@@ -235,39 +370,9 @@ class Parser
     return $subparam;
   }
 
-  protected function canAddParameter ()
+  private function error ($msg)
   {
-    return $this->current != $this->root;
-  }
-
-  protected function canAddComponent ()
-  {
-    return $this->current == $this->root || $this->current instanceof Parameter;
-  }
-
-  protected function parseAttributes ($attrStr, array &$attributes = null, array &$bindings = null,
-                                      $processBindings = true)
-  {
-    if (!empty($attrStr)) {
-      $sPos = 0;
-      while (preg_match (self::PARSE_ATTRS, "$attrStr@", $match, PREG_OFFSET_CAPTURE, $sPos)) {
-        list(, list($key), list($quote), list($value, $exists), list($marker, $next)) = $match;
-        if ($exists < 0)
-          $value = 'true';
-        if (substr ($key, 0, 6) == 'style:') {
-          $key                  = substr ($key, 6);
-          $attributes['styles'] = strJoin (get ($attributes, 'styles', ''), "$key:$value", ';');
-        }
-        else {
-          if ($processBindings && strpos ($value, '{') !== false)
-            $bindings[renameAttribute ($key)] = $value;
-          else if ($key == 'styles')
-            $attributes['styles'] = strJoin (get ($attributes, 'styles', ''), $value, ';');
-          else $attributes[renameAttribute ($key)] = $value;
-        }
-        $sPos = $next;
-      }
-    }
+    throw new ParseException($msg, $this->source, $this->currentTagStart, $this->currentTagEnd);
   }
 
   private function processLiteral ($content)
@@ -309,7 +414,7 @@ class Parser
         $lit           = new Literal($this->context);
         $lit->bindings = $v;
       }
-      else $lit = new Literal($this->context, $v);
+      else $lit = new Text ($this->context, $v);
       $this->current->addChild ($lit);
     }
   }

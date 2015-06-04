@@ -2,7 +2,7 @@
 namespace Selene\Matisse\Components;
 use Selene\Matisse\AttributeType;
 use Selene\Matisse\Component;
-use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\Attributes\ComponentAttributes;
 use Selene\Matisse\Context;
 use Selene\Matisse\IAttributes;
 
@@ -33,9 +33,9 @@ class LiteralAttributes extends ComponentAttributes
 
 class Literal extends Component implements IAttributes
 {
-  public function __construct (Context $context, $properties = null, $styles = null)
+  public function __construct (Context $context, $properties = null)
   {
-    parent::__construct ($context, $properties, $styles);
+    parent::__construct ($context, $properties);
     $this->page = $this;
     $this->setTagName ('literal');
   }

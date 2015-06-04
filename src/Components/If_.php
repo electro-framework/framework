@@ -2,16 +2,16 @@
 namespace Selene\Matisse\Components;
 use Selene\Matisse\AttributeType;
 use Selene\Matisse\Component;
-use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\Attributes\ComponentAttributes;
 use Selene\Matisse\IAttributes;
 
 class IfAttributes extends ComponentAttributes
 {
   public $the;
   public $is;
-  public $is_set  = false;
-  public $is_true = false;
-  public $not     = false;
+  public $isSet  = false;
+  public $isTrue = false;
+  public $not    = false;
   public $matches;
   public $case;          //note: doesn't work with databinding
   public $then;
@@ -21,9 +21,9 @@ class IfAttributes extends ComponentAttributes
 
   protected function typeof_is () { return AttributeType::TEXT; }
 
-  protected function typeof_is_set () { return AttributeType::BOOL; }
+  protected function typeof_isSet () { return AttributeType::BOOL; }
 
-  protected function typeof_is_true () { return AttributeType::BOOL; }
+  protected function typeof_isTrue () { return AttributeType::BOOL; }
 
   protected function typeof_not () { return AttributeType::BOOL; }
 
@@ -41,39 +41,38 @@ class IfAttributes extends ComponentAttributes
  *
  * ##### Syntax:
  * ```
- * <c:if the="value1" is="value2">
+ * <If the="value1" is="value2">
  *   content if true
- *   <p:else> content if false </p:else>
- * </c:if>
+ *   <Else> content if false </Else>
+ * </If>
  *
- * <c:if is="value"> content if value is truthy </c:if>
+ * <If is="value"> content if value is truthy </If>
  *
- * <c:if not is="value"> content if value is falsy </c:if>
+ * <If not is="value"> content if value is falsy </If>
  *
- * <c:if the="value" is-true> content if value is truthy </c:if>
+ * <If the="value" isTrue> content if value is truthy </If>
  *
- * <c:if the="value" not is-true> content if value is falsy </c:if>
+ * <If the="value" not isTrue> content if value is falsy </If>
  *
- * <c:if the="value" is-set> content if value is different from null and the empty string </c:if>
+ * <If the="value" isSet> content if value is different from null and the empty string </If>
  *
- * <c:if the="value" not is-set> content if value is equal to null or an empty string </c:if>
+ * <If the="value" not isSet> content if value is equal to null or an empty string </If>
  *
- * <c:if the="value" matches="regexp"> content if value matches the regular expression </c:if>
+ * <If the="value" matches="regexp"> content if value matches the regular expression </If>
  *
- * <c:if the="value" not matches="regexp"> content if value doesn't matche the regular expression </c:if>
+ * <If the="value" not matches="regexp"> content if value doesn't matche the regular expression </If>
  *
- * <c:if the="value">
+ * <If the="value">
  *   <p:case is="value1"> content if value == value1 </p:case>
  *   ...
  *   <p:case is="valueN"> content if value == valueN </p:case>
- *   <p:else> content if no match </p:else>
- * </c:if>
+ *   <Else> content if no match </Else>
+ * </If>
  * ```
  */
 class If_ extends Component implements IAttributes
 {
-
-  public $defaultAttribute = 'then';
+  public $allowsChildren = true;
 
   /**
    * Returns the component's attributes.
@@ -111,7 +110,7 @@ class If_ extends Component implements IAttributes
 
     if (isset($is)) {
       if (!isset($v)) {
-        $is = strToBool($is);
+        $is = strToBool ($is);
         $v  = true;
       }
       if ($v === $is xor $not)
@@ -120,15 +119,15 @@ class If_ extends Component implements IAttributes
       return;
     }
 
-    if ($attr->is_set) {
+    if ($attr->isSet) {
       if ((isset($v) && $v != '') xor $not)
         $this->setChildren ($this->getChildren ('then'));
       else $this->setChildren ($this->getChildren ('else'));
       return;
     }
 
-    if ($attr->is_true) {
-      if (strToBool($v) xor $not)
+    if ($attr->isTrue) {
+      if (strToBool ($v) xor $not)
         $this->setChildren ($this->getChildren ('then'));
       else $this->setChildren ($this->getChildren ('else'));
       return;

@@ -2,16 +2,14 @@
 namespace Selene\Matisse\Components;
 use Selene\Matisse\AttributeType;
 use Selene\Matisse\Component;
-use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\Attributes\ComponentAttributes;
 use Selene\Matisse\IAttributes;
 
 class ApplyAttributes extends ComponentAttributes
 {
-  public $content;
   public $attrs;
   public $where;
-
-  protected function typeof_content () { return AttributeType::SRC; }
+  public $recursive;
 
   protected function typeof_attrs () { return AttributeType::SRC; }
 
@@ -28,18 +26,17 @@ class ApplyAttributes extends ComponentAttributes
  *
  * ##### Syntax:
  * ```
- * <c:apply [where="tag-name"]>
- *   <p:attrs attr1="value1" ... attrN="valueN"/>
+ * <Apply [where="tag-name"]>
+ *   <Attrs attr1="value1" ... attrN="valueN"/>
  *   content
- * </c:apply>
+ * </Apply>
  *  ```
  * <p>If no filter is provided, only direct children of the component will be affected.
  *
  */
 class Apply extends Component implements IAttributes
 {
-
-  public $defaultAttribute = 'content';
+  public $allowsChildren = true;
 
   /**
    * Returns the component's attributes.
@@ -67,18 +64,25 @@ class Apply extends Component implements IAttributes
     $attrParam = $attr->attrs;
     $attrs     = $attrParam->attrs ()->getAll ();
     $where     = $attr->where;
-    $content   = $this->getChildren ('content');
-    if (!$where) {
-      foreach ($content as $k => $child)
+    if (!$where && !empty($this->children)) {
+      foreach ($this->children as $k => $child)
         $child->attrs ()->apply ($attrs);
     }
-    else $this->scan ($this, $this->attrs ()->where, $attrs);
-    $this->renderSet ($content);
+    else $this->scan ($this, $attr->where, $attrs);
+    $this->renderChildren();
   }
 
   private function scan (Component $parent, $where, $attrs)
   {
+    if (isset($parent->children))
+      foreach ($parent->children as $child) {
+        if ($child->getTagName () == $where)
+          $child->attrs ()->apply ($attrs);
+        $this->scan ($child, $where, $attrs);
+      }
+    return;
     /** @var ComponentAttributes $params */
+    /*
     $params = $parent->attrs ();
     foreach ($params->getAll () as $param) {
       if ($param instanceof Parameter) {
@@ -90,7 +94,7 @@ class Apply extends Component implements IAttributes
             $this->scan ($child, $where, $attrs);
           }
       }
-    }
+    }*/
 
   }
 

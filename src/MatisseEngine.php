@@ -12,11 +12,11 @@ class MatisseEngine
    * @var array string => string
    */
   private static $coreTags = [
-    'repeater' => 'Selene\Matisse\Components\Repeater',
-    'template' => 'Selene\Matisse\Components\Template',
-    'if'       => 'Selene\Matisse\Components\If_',
-    'literal'  => 'Selene\Matisse\Components\Literal',
-    'apply'    => 'Selene\Matisse\Components\Apply',
+    'Repeater' => 'Selene\Matisse\Components\Repeater',
+    'Template' => 'Selene\Matisse\Components\Template',
+    'If'       => 'Selene\Matisse\Components\If_',
+    'Literal'  => 'Selene\Matisse\Components\Literal',
+    'Apply'    => 'Selene\Matisse\Components\Apply',
   ];
 
   /**

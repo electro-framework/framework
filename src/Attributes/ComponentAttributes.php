@@ -1,28 +1,10 @@
 <?php
-namespace Selene\Matisse;
-use Selene\Matisse\Exceptions\ComponentException;
+namespace Selene\Matisse\Attributes;
 
-class AttributeType
-{
-  /** Alphanumeric identifier. */
-  const ID = 1;
-  /** Plain text. */
-  const TEXT = 2;
-  /** Number */
-  const NUM = 3;
-  /** Boolean (1/0, yes/no, on/off, true/false). */
-  const BOOL = 4;
-  /** Parameter list. This attribute type is an array of Parameters. */
-  const PARAMS = 5;
-  /** Source code. This attribute type is a parameter with child components. */
-  const SRC = 6;
-  /** Data source. This attribute type is a DataSource object. */
-  const DATA = 7;
-  /** Binding expression. This attribute is a string.
-   * Do not define attributes/parameters of this type. It is used only on template instances when binding expreesions
-   * are specified for template parameters instead of constant values. */
-  const BINDING = 8;
-}
+use Selene\Matisse\AttributeType;
+use Selene\Matisse\Component;
+use Selene\Matisse\DataSet;
+use Selene\Matisse\Exceptions\ComponentException;
 
 class ComponentAttributes
 {
@@ -32,7 +14,7 @@ class ComponentAttributes
    * @var array
    */
   public static    $TYPE_NAMES     = [
-    'undefined', 'identifier', 'text', 'number', 'boolean', 'parameters', 'source', 'data', 'binding'
+    'undefined', 'identifier', 'text', 'number', 'boolean', 'parameters', 'source', 'data', 'binding', 'metadata'
   ];
   protected static $BOOLEAN_VALUES = [
     0       => false,
@@ -44,13 +26,7 @@ class ComponentAttributes
     'off'   => false,
     'on'    => true
   ];
-  protected static $NEVER_DIRTY = [];
-
-  public $id;
-  public $class;
-  public $disabled       = false;
-  public $html_attrs     = '';
-  public $hidden         = false;
+  protected static $NEVER_DIRTY    = [];
 
   /**
    * Set to `true` when one or more attributes have been changed from their default values.
@@ -202,7 +178,7 @@ class ComponentAttributes
   public function getAttributeNames ()
   {
     $a = array_keys (get_object_vars ($this));
-    $a = array_diff ($a, ['component']);
+    $a = array_diff ($a, ['component', '_modified']);
     return $a;
   }
 
@@ -243,7 +219,7 @@ class ComponentAttributes
     }
     $newV = self::validateScalar ($this->getTypeOf ($name), $v);
     if ($this->$name !== $newV) {
-      $this->$name     = $newV;
+      $this->$name = $newV;
       if (!isset(static::$NEVER_DIRTY[$name]))
         $this->_modified = true;
     }
@@ -265,18 +241,6 @@ class ComponentAttributes
       if (!empty($values))
         $this->$name = Component::cloneComponents ($values, $owner);
   }
-
-  protected function typeof_html_attrs () { return AttributeType::TEXT; }
-
-  protected function typeof_id () { return AttributeType::ID; }
-
-  protected function typeof_styles () { return AttributeType::TEXT; }
-
-  protected function typeof_class () { return AttributeType::ID; }
-
-  protected function typeof_disabled () { return AttributeType::BOOL; }
-
-  protected function typeof_hidden () { return AttributeType::BOOL; }
 
   protected function typeof__modified () { return AttributeType::BOOL; }
 }

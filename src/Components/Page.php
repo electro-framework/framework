@@ -6,6 +6,7 @@ use Selene\Matisse\Exceptions\MatisseException;
 
 class Page extends Component
 {
+  public $allowsChildren = true;
 
   /**
    * Array of strings/Parameters containing URLs of CSS stylesheets to be loaded during the page loading process.
@@ -67,6 +68,7 @@ class Page extends Component
   {
     parent::__construct ($context);
     $this->page = $this;
+    $this->setTagName('Page');
     $this->checkBrowser ();
     $this->requestURI = $_SERVER['REQUEST_URI'];
   }

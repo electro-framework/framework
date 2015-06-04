@@ -3,7 +3,7 @@ namespace Selene\Matisse\Components;
 use Selene\Matisse as m;
 use Selene\Matisse\AttributeType;
 use Selene\Matisse\Component;
-use Selene\Matisse\ComponentAttributes;
+use Selene\Matisse\Attributes\ComponentAttributes;
 use Selene\Matisse\Exceptions\ComponentException;
 use Selene\Matisse\IAttributes;
 
@@ -11,22 +11,19 @@ class TemplateAttributes extends ComponentAttributes
 {
   public $name;
   public $param;
-  public $body;
   public $script;
   public $stylesheet;
-  public $default_param;
+  public $defaultParam;
 
   protected function typeof_name () { return AttributeType::ID; }
 
   protected function typeof_param () { return AttributeType::PARAMS; }
 
-  protected function typeof_body () { return AttributeType::SRC; }
-
   protected function typeof_script () { return AttributeType::PARAMS; }
 
   protected function typeof_stylesheet () { return AttributeType::PARAMS; }
 
-  protected function typeof_default_param () { return AttributeType::ID; }
+  protected function typeof_defaultParam () { return AttributeType::ID; }
 }
 
 class Template extends Component implements IAttributes
@@ -37,7 +34,7 @@ class Template extends Component implements IAttributes
   /** Finds binding expressions which are not template bindings. */
   const FIND_NON_TEMPLATE_EXP = '#\{(?!\@)#';
 
-  public $defaultAttribute = 'body';
+  public $allowsChildren = true;
 
   private static function parsingtimeDatabind (Component $component, TemplateInstance $instance, $force = false)
   {
@@ -181,7 +178,7 @@ class Template extends Component implements IAttributes
         }
       }
     }
-    $cloned = $this->cloneComponents ($this->getChildren ('body'));
+    $cloned = $this->cloneComponents($this->children);
     $this->applyTo ($cloned, $instance);
     return $cloned;
   }
@@ -218,21 +215,23 @@ class Template extends Component implements IAttributes
                   else {
                     //simple exp. (binding ref. only}
                     $attrName = substr ($exp, 2, -1);
-                    $normName = m\normalizeAttributeName ($attrName);
-                    if (!$instance->attrs ()->defines ($normName)) {
-                      $s = join ('</b>, <b>', $instance->attrs ()->getAttributeNames ());
+                    if (!$instance->attrs ()->defines ($attrName)) {
+                      $s = join (', ', $instance->attrs ()->getAttributeNames ());
                       throw new ComponentException($instance,
                         "<p>The parameter <b>$attrName</b>, specified on a call to/in the <b>{$this->attrs ()->name}</b> template, is not defined on that template.</p>
-<table><tr><th>Expected parameters:<td>$s<tr><th>Instance:<td>{$instance->getTagName ()}</table>");
+<table>
+  <th>Expected parameters:<td>$s
+  <tr><th>Instance:<td>{$instance->getTagName ()}
+</table>");
                     }
-                    if (isset($this->bindings) && array_key_exists ($normName, $this->bindings))
-                      $content = $this->bindings[$normName];
-                    else $content = $instance->attrs ()->$normName;
+                    if (isset($this->bindings) && array_key_exists ($attrName, $this->bindings))
+                      $content = $this->bindings[$attrName];
+                    else $content = $instance->attrs ()->$attrName;
                     if (isset($instance->bindings) &&
-                        array_key_exists ($normName, $instance->bindings)
+                        array_key_exists ($attrName, $instance->bindings)
                     ) {
                       //transfer binding from the template instance to the component
-                      $component->addBinding ($field, $instance->bindings[$normName]);
+                      $component->addBinding ($field, $instance->bindings[$attrName]);
                       continue;
                     }
                     $value = $content instanceof Parameter ? $content->getValue () : $content;
@@ -245,7 +244,7 @@ class Template extends Component implements IAttributes
                       }
                       if (!self::isBindingExpression ($value))
                         //convert boolean value to string, only for literals
-                        if ($instance->attrs ()->getTypeOf ($normName) == AttributeType::BOOL)
+                        if ($instance->attrs ()->getTypeOf ($attrName) == AttributeType::BOOL)
                           $value =
                             ComponentAttributes::validateScalar (AttributeType::BOOL, $value)
                               ? 'true' : 'false';
