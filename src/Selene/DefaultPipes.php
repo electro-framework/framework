@@ -1,19 +1,16 @@
 <?php
 namespace Selene;
 
-use Selene\Matisse\Context;
-
 /**
  * Predefined pipes provided by the framework.
  */
 class DefaultPipes
 {
   /**
-   * @param string  $v
-   * @param Context $ctx
+   * @param string $v
    * @return string
    */
-  function fileURL ($v, $ctx)
+  function fileURL ($v)
   {
     global $application;
     return $application->getFileDownloadURI ($v);
