@@ -536,9 +536,8 @@ abstract class Component
 
   /**
    * Invokes doRender() recursively on the component's children.
-   * Override to restrict the set of children which are affected.
    */
-  public final function renderChildren ()
+  function renderChildren ()
   {
     if (isset($this->children))
       foreach ($this->children as $child)
@@ -546,14 +545,16 @@ abstract class Component
   }
 
   /**
-   * Renders a child parameter.
-   * This method is invoked by the child when being rendered.
-   *
-   * @param Parameter $param
+   * Invokes doRender() recursively on the specified attribute's children.
+   * @param string $name
+   * @throws ComponentException
    */
-  public function renderParameter (Parameter $param)
+  function renderParameter ($name)
   {
-    //implementation is optional
+    $children = $this->getChildren ($name);
+    if (!empty($children))
+      foreach ($children as $child)
+        $child->doRender ();
   }
 
   /**

@@ -3,21 +3,17 @@ namespace Selene\Matisse\Components;
 use Selene\Matisse\AttributeType;
 use Selene\Matisse\Component;
 use Selene\Matisse\Attributes\ComponentAttributes;
+use Selene\Matisse\DataSet;
 use Selene\Matisse\IAttributes;
 
 class RepeaterAttributes extends ComponentAttributes
 {
-  public $repeat;
   public $glue;
   public $noData;
   public $data;
   public $header;
   public $footer;
   public $count;
-  public $consume = true;
-  public $rewind  = true;
-
-  protected function typeof_repeat () { return AttributeType::SRC; }
 
   protected function typeof_header () { return AttributeType::SRC; }
 
@@ -30,17 +26,12 @@ class RepeaterAttributes extends ComponentAttributes
   protected function typeof_data () { return AttributeType::DATA; }
 
   protected function typeof_count () { return AttributeType::NUM; }
-
-  protected function typeof_consume () { return AttributeType::BOOL; }
-
-  protected function typeof_rewind () { return AttributeType::BOOL; }
 }
 
 class Repeater extends Component implements IAttributes
 {
   public $allowsChildren = true;
 
-  public $defaultAttribute = 'repeat';
   /**
    * Returns the component's attributes.
    * @return RepeaterAttributes
@@ -59,56 +50,38 @@ class Repeater extends Component implements IAttributes
     return new RepeaterAttributes($this);
   }
 
+
   protected function render ()
   {
-    $count                   = $this->attrs ()->get ('count');
-    $consume                 = $this->attrs ()->get ('consume');
+    $count                   = $this->attrs ()->get ('count', -1);
     $this->defaultDataSource = $this->attrs ()->get ('data');
     if (isset($this->defaultDataSource)) {
-      if (is_array ($this->defaultDataSource))
-        $this->defaultDataSource = new DataSet($this->defaultDataSource);
-      $dataIter = $this->defaultDataSource->getIterator ();
-      if ($this->attrs ()->rewind)
-        $dataIter->rewind ();
-      $template = $this->getChildren ('repeat');
-      if ($dataIter->valid () && isset($template)) {
-        $glue  = $this->getChildren ('glue');
-        $first = true;
-        $this->runSet ($this->getChildren ('header'));
-        do {
-          if ($first)
-            $first = false;
-          else if (isset($glue))
-            $this->runSet ($glue);
-          $this->runSet ($template);
-          if ($consume)
-            $dataIter->next ();
-        } while ($dataIter->valid () && (!isset($count) || --$count > 0));
-        $this->runSet ($this->getChildren ('footer'));
+      $first = true;
+      foreach ($this->defaultDataSource as $v) {
+        if ($first) {
+          $first = false;
+          $this->renderParameter ('header');
+        }
+        else $this->renderParameter ('glue');
+        $this->renderChildren ();
+        if (!--$count) break;
+      }
+      if (!$first) $this->renderParameter ('footer');
+      return;
+    }
+    if ($count > 0) {
+      for ($i = 0; $i < $count; ++$i) {
+        if ($i == 0)
+          $this->renderParameter ('header');
+        else $this->renderParameter ('glue');
+        $this->renderChildren ();
+      }
+      if ($i) {
+        $this->renderParameter ('footer');
         return;
       }
     }
-    if (isset($count)) {
-      $template = $this->getChildren ('repeat');
-      if (isset($template)) {
-        $glue = $this->getChildren ('glue');
-        for ($i = 0; $i < $count; ++$i) {
-          if ($i == 0)
-            $this->runSet ($this->getChildren ('header'));
-          if ($i > 0 && isset($glue))
-            $this->runSet ($glue);
-          $this->runSet ($template);
-        }
-        if ($i > 0) {
-          $this->runSet ($this->getChildren ('footer'));
-          return;
-        }
-      }
-    }
-    if (isset($this->attrs ()->noData)) {
-      $this->setChildren ($this->getChildren ('no_data'));
-      $this->runChildren ();
-    }
+    $this->renderParameter ('noData');
   }
 
 }

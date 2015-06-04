@@ -72,8 +72,4 @@ class Parameter extends Component implements IAttributes
     $this->databind ();
   }
 
-  protected function render ()
-  {
-    $this->parent->renderParameter ($this);
-  }
 }
