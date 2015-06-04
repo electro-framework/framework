@@ -9,7 +9,7 @@ class RepeaterAttributes extends ComponentAttributes
 {
   public $glue;
   public $noData;
-  public $data;
+  public $for;
   public $header;
   public $footer;
   public $count;
@@ -22,12 +22,12 @@ class RepeaterAttributes extends ComponentAttributes
 
   protected function typeof_noData () { return AttributeType::SRC; }
 
-  protected function typeof_data () { return AttributeType::DATA; }
+  protected function typeof_for () { return AttributeType::DATA; }
 
   protected function typeof_count () { return AttributeType::NUM; }
 }
 
-class Repeater extends Component implements IAttributes
+class Repeat extends Component implements IAttributes
 {
   public $allowsChildren = true;
 
@@ -52,9 +52,8 @@ class Repeater extends Component implements IAttributes
 
   protected function render ()
   {
-    $count                   = $this->attrs ()->get ('count', -1);
-    $this->defaultDataSource = $this->attrs ()->get ('data');
-    if (isset($this->defaultDataSource)) {
+    $count = $this->attrs ()->get ('count', -1);
+    if (!is_null ($this->defaultDataSource = $this->attrs ()->get ('for'))) {
       $first = true;
       foreach ($this->defaultDataSource as $v) {
         if ($first) {
