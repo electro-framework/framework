@@ -14,7 +14,6 @@ class IfAttributes extends ComponentAttributes
   public $not    = false;
   public $matches;
   public $case;          //note: doesn't work with databinding
-  public $then;
   public $else;
 
   protected function typeof_the () { return AttributeType::TEXT; }
@@ -30,8 +29,6 @@ class IfAttributes extends ComponentAttributes
   protected function typeof_matches () { return AttributeType::TEXT; }
 
   protected function typeof_case () { return AttributeType::PARAMS; }
-
-  protected function typeof_then () { return AttributeType::SRC; }
 
   protected function typeof_else () { return AttributeType::SRC; }
 }
@@ -100,8 +97,6 @@ class If_ extends Component implements IAttributes
 
   private function switchContent ()
   {
-    // Clear the current children (required if the component is being repeated)
-    $this->setChildren ([]);
     $attr = $this->attrs ();
 
     $v   = $attr->get ('the');
@@ -114,29 +109,29 @@ class If_ extends Component implements IAttributes
         $v  = true;
       }
       if ($v === $is xor $not)
-        $this->setChildren ($this->getChildren ('then'));
-      else $this->setChildren ($this->getChildren ('else'));
+        $this->renderChildren ();
+      else $this->renderParameter ('else');
       return;
     }
 
     if ($attr->isSet) {
       if ((isset($v) && $v != '') xor $not)
-        $this->setChildren ($this->getChildren ('then'));
-      else $this->setChildren ($this->getChildren ('else'));
+        $this->renderChildren ();
+      else $this->renderParameter ('else');
       return;
     }
 
     if ($attr->isTrue) {
       if (strToBool ($v) xor $not)
-        $this->setChildren ($this->getChildren ('then'));
-      else $this->setChildren ($this->getChildren ('else'));
+        $this->renderChildren ();
+      else $this->renderParameter ('else');
       return;
     }
 
     if (isset($attr->matches)) {
       if (preg_match ("%$attr->matches%", $v) xor $not)
-        $this->setChildren ($this->getChildren ('then'));
-      else $this->setChildren ($this->getChildren ('else'));
+        $this->renderChildren ();
+      else $this->renderParameter ('else');
       return;
     }
 
@@ -150,13 +145,13 @@ class If_ extends Component implements IAttributes
           return;
         }
       }
-      $this->setChildren ($this->getChildren ('else'));
+      $this->renderParameter ('else');
       return;
     }
 
     if ($v)
-      $this->setChildren ($this->getChildren ('then'));
-    else $this->setChildren ($this->getChildren ('else'));
+      $this->renderChildren ();
+    else $this->renderParameter ('else');
   }
 
 }
