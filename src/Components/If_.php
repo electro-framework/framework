@@ -91,12 +91,6 @@ class If_ extends Component implements IAttributes
 
   protected function render ()
   {
-    $this->switchContent ();
-    $this->renderChildren ();
-  }
-
-  private function switchContent ()
-  {
     $attr = $this->attrs ();
 
     $v   = $attr->get ('the');
