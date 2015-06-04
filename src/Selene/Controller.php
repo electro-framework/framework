@@ -731,16 +731,15 @@ class Controller
       // Normal page rendering (not a login form).
 
       $this->setupViewModel (); //custom setup
-      $this->setDataSource ('page', new DataRecord($this->page));
+      $this->setViewModel ('page', $this->page);
       if ($this->defineView ())
         return false;
     }
     else {
       // Show login form.
       $path = $application->loginView;
-      if (!$this->loadView ($path))
-        throw new FileNotFoundException($path);
-      $this->setDataSource ('page', new DataRecord($this->page));
+      $this->loadView ($path, true);
+      $this->setViewModel ('page', $this->page);
       $this->page->formAutocomplete = true;
     }
     $this->initSEO ();
@@ -965,7 +964,7 @@ class Controller
     $this->viewModel ();
 
     if (isset($this->modelData)) {
-      $this->setViewModel ('default', $this->modelData ?: null);
+      $this->setViewModel ('default', $this->modelData ?: null); // empty arrays are converted to null.
       return;
     }
 
@@ -1062,8 +1061,6 @@ class Controller
    */
   protected function defineView ()
   {
-    global $application;
-
     ob_start ();
     $this->render ();
     $view = ob_get_clean ();
@@ -1071,28 +1068,15 @@ class Controller
       $this->parseView ($view);
       return false;
     }
-
     if (isset($this->moduleLoader)) {
-      /** @var Module $info */
-      $info     = $this->moduleLoader->moduleInfo;
-      $viewFile = $this->sitePage->view;
-      $path     = "$application->viewPath/$viewFile";
-      $found    = $this->loadView ($path);
-      if (!$found) {
-        $path2 = "$info->path/$application->moduleViewsPath/$viewFile";
-        $found = $this->loadView ($path2);
-        if (!$found) {
-          $path2 = ErrorHandler::shortFileName ($path2);
-          throw new FatalException("View <b>$viewFile</b> was not found.<p>Search paths:<ul><li>$path<li>$path2</ul>");
-        }
-      }
+      $this->loadView ($this->sitePage->view, true);
       return false;
     }
     else {
       preg_match ('#(\w+?)\.php#', $this->URI, $match);
       if (!count ($match))
         throw new FatalException("Invalid URI <b>$this->URI</b>");
-      $path = $application->viewPath . '/' . $match[1] . $this->TEMPLATE_EXT;
+      $path = $match[1] . $this->TEMPLATE_EXT;
       return !$this->loadView ($path);
     }
   }
@@ -1114,17 +1098,31 @@ class Controller
   /**
    * Attempts to load the specified view file.
    * @param string $path
+   * @param bool   $errorIfNotFound When true an exception is thrown if the view file is not found, instead of returning
+   *                                `false`.
    * @return bool <b>true</b> if the file was found.
    * @throws FatalException
-   * @throws FileNotFoundException
    */
-  protected function loadView ($path)
+  protected function loadView ($path, $errorIfNotFound = false)
   {
-    $view = loadFile ($path);
-    if (!$view)
-      return false;
-    $this->parseView ($view);
-    return true;
+    global $application;
+    $dirs = $application->viewsDirectories;
+    foreach ($dirs as $dir) {
+      $p    = "$dir/$path";
+      $view = loadFile ($p);
+      if ($view) {
+        $this->parseView ($view);
+        return true;
+      }
+    }
+//          $path2 = ErrorHandler::shortFileName ($path2);
+    if ($errorIfNotFound) {
+      $paths = implode('', map ($dirs, function ($path) {
+        return "<li><path>$path</path>";
+      }));
+      throw new FatalException("View <b>$path</b> was not found.<p>Search paths:<ul>$paths</ul>");
+    }
+    return false;
   }
 
   /**

@@ -42,7 +42,9 @@ class ModuleOptions extends Object
 
   function set_views ($v)
   {
-
+    global $application;
+    if ($v)
+      $application->viewsDirectories[] = "$this->path/$application->moduleViewsPath";
   }
 
   /**

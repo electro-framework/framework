@@ -16,27 +16,27 @@ class Application
   const DEFAULT_INI_FILENAME = 'application.defaults.ini.php';
 
   public static $TAGS = [
-    'button'      => 'Selene\Matisse\Components\Button',
-    'calendar'    => 'Selene\Matisse\Components\Calendar',
-    'checkbox'    => 'Selene\Matisse\Components\Checkbox',
-    'data-grid'   => 'Selene\Matisse\Components\DataGrid',
-    'field'       => 'Selene\Matisse\Components\Field',
-    'file-upload' => 'Selene\Matisse\Components\FileUpload',
-    'head'        => 'Selene\Matisse\Components\Head',
-    'html-editor' => 'Selene\Matisse\Components\HtmlEditor',
-    'image'       => 'Selene\Matisse\Components\Image',
-    'image-field' => 'Selene\Matisse\Components\ImageField',
-    'input'       => 'Selene\Matisse\Components\Input',
-    'label'       => 'Selene\Matisse\Components\Label',
-    'link'        => 'Selene\Matisse\Components\Link',
-    'main-menu'   => 'Selene\Matisse\Components\MainMenu',
-    'model'       => 'Selene\Matisse\Components\Model',
-    'paginator'   => 'Selene\Matisse\Components\Paginator',
-    'radiobutton' => 'Selene\Matisse\Components\Radiobutton',
-    'selector'    => 'Selene\Matisse\Components\Selector',
-    'tab'         => 'Selene\Matisse\Components\Tab',
-    'tab-page'    => 'Selene\Matisse\Components\TabPage',
-    'tabs'        => 'Selene\Matisse\Components\Tabs',
+    'Button'      => 'Selene\Matisse\Components\Button',
+    'Calendar'    => 'Selene\Matisse\Components\Calendar',
+    'Checkbox'    => 'Selene\Matisse\Components\Checkbox',
+    'DataGrid'    => 'Selene\Matisse\Components\DataGrid',
+    'Field'       => 'Selene\Matisse\Components\Field',
+    'FileUpload'  => 'Selene\Matisse\Components\FileUpload',
+    'Head'        => 'Selene\Matisse\Components\Head',
+    'HtmlRditor'  => 'Selene\Matisse\Components\HtmlEditor',
+    'Image'       => 'Selene\Matisse\Components\Image',
+    'ImageField'  => 'Selene\Matisse\Components\ImageField',
+    'Input'       => 'Selene\Matisse\Components\Input',
+    'Label'       => 'Selene\Matisse\Components\Label',
+    'Link'        => 'Selene\Matisse\Components\Link',
+    'MainMenu'    => 'Selene\Matisse\Components\MainMenu',
+    'Model'       => 'Selene\Matisse\Components\Model',
+    'Paginator'   => 'Selene\Matisse\Components\Paginator',
+    'RadioButton' => 'Selene\Matisse\Components\Radiobutton',
+    'Selector'    => 'Selene\Matisse\Components\Selector',
+    'Tab'         => 'Selene\Matisse\Components\Tab',
+    'TabPage'     => 'Selene\Matisse\Components\TabPage',
+    'Tabs'        => 'Selene\Matisse\Components\Tabs',
   ];
 
   /**
@@ -362,10 +362,19 @@ class Application
    */
   public $mountPoints = [];
   /**
-   * Additional template directories to be registered on the templating engine.
+   * Directories where templates can be found.
+   * <p>They will be search in order until the requested template is found.
+   * <p>These paths will be registered on the templating engine.
+   * <p>This is preinitialized to the application template's path.
    * @var array
    */
   public $templateDirectories = [];
+  /**
+   * Folders where views can be found.
+   * <p>They will be search in order until the requested view is found.
+   * @var array
+   */
+  public $viewsDirectories = [];
   /**
    * Search paths for module language files, in order of precedence.
    * @var array
@@ -397,7 +406,7 @@ class Application
   {
     global $session;
     set_exception_handler ([get_class (), 'exceptionHandler']);
-    $this->debugMode = isset($_SERVER['APP_DEBUG']) && $_SERVER['APP_DEBUG'] == 'true';
+    $this->debugMode = $_SERVER['APP_DEBUG'] == 'true';
 
     ErrorHandler::init ($this->debugMode, $rootDir);
     $this->setupWebConsole ();
@@ -415,6 +424,7 @@ class Application
       $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
       WebConsole::routes ()->withCaption ('Active Route')->withFilter ($filter, $loader->sitePage);
       WebConsole::response (['Content-Length' => round (ob_get_length () / 1024) . ' KB']);
+      $this->initDOMPanel ($loader->moduleInstance);
     }
     WebConsole::outputContent ();
   }
@@ -474,6 +484,7 @@ class Application
     }
 
     $this->templateDirectories[] = $this->toFilePath ($this->templatesPath);
+    $this->viewsDirectories[]    = $this->toFilePath ($this->viewPath);
     $this->languageFolders[]     = $this->langPath;
     $this->bootModules ();
 
@@ -581,9 +592,10 @@ class Application
     WebConsole::init ($this->debugMode);
     WebConsole::registerPanel ('request', new HttpRequestPanel ('Request', 'fa fa-paper-plane'));
     WebConsole::registerPanel ('response', new ConsolePanel ('Response', 'fa fa-file'));
-    WebConsole::registerPanel ('routes', new ConsolePanel ('Routes', 'fa fa-sitemap'));
+    WebConsole::registerPanel ('routes', new ConsolePanel ('Routes', 'fa fa-location-arrow'));
     WebConsole::registerPanel ('session', new ConsolePanel ('Session', 'fa fa-user'));
     WebConsole::registerPanel ('database', new ConsolePanel ('Database', 'fa fa-database'));
+    WebConsole::registerPanel ('DOM', new ConsolePanel ('DOM', 'fa fa-sitemap'));
     WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
     ErrorHandler::$appName = 'Selene Framework';
   }
@@ -599,6 +611,16 @@ class Application
       $session                 = get ($_SESSION, 'sessionInfo', new Session);
       $session->name           = $name;
       $_SESSION['sessionInfo'] = $session;
+    }
+  }
+
+  private function initDOMPanel (Controller $controller)
+  {
+    if (isset($controller->page)) {
+      $insp = $controller->page->inspect (true);
+      WebConsole::DOM ()->write ($insp);
+//      $filter = function ($k, $v) { return $k !== 'parent' && $k !== 'page'; };
+//      WebConsole::DOM ()->withFilter($filter, $controller->page);
     }
   }
 
