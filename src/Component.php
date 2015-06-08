@@ -656,7 +656,7 @@ abstract class Component
   {
     $tag        = $this->getTagName ();
     $hasContent = false;
-    echo "&lt;$tag";
+    echo "<span style='color:#9ae6ef'>&lt;$tag</span>";
     if (!isset($this->parent))
       echo '&nbsp;<span style="color:#888">(detached)</span>';
     if ($this->supportsAttributes) {
@@ -668,7 +668,7 @@ abstract class Component
             $t = $this->attrsObj->getTypeOf ($k);
             if (!$deep || ($t != AttributeType::SRC && $t != AttributeType::PARAMS && $t != AttributeType::METADATA)) {
               $tn = $this->attrsObj->getTypeNameOf ($k);
-              echo "<tr><td style='color:#9ae6ef'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
+              echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
               switch ($t) {
                 case AttributeType::BOOL:
                   echo '<i>' . ($v ? 'TRUE' : 'FALSE') . '</i>';
@@ -699,7 +699,7 @@ abstract class Component
             $t = $this->attrsObj->getTypeOf ($k);
             if ($t == AttributeType::SRC || $t == AttributeType::PARAMS || $t == AttributeType::METADATA) {
               $tn = $this->attrsObj->getTypeNameOf ($k);
-              echo "<tr><td style='color:#9ae6ef'>$k<td><i style='color:#ffcb69'>$tn</i>" .
+              echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i>" .
                    "<tr><td><td colspan=2>";
               switch ($t) {
                 case AttributeType::SRC:
@@ -723,13 +723,13 @@ abstract class Component
     if ($deep) {
       if (!empty($this->children)) {
         $hasContent = true;
-        echo '&gt;<div style="margin:0 0 0 20px">';
+        echo '<span style="color:#9ae6ef">&gt;</span><div style="margin:0 0 0 30px">';
         foreach ($this->children as $c)
           $c->_inspect (true);
         echo '</div>';
       }
     }
-    echo $hasContent ? "&lt;/$tag&gt;\n" : "/&gt;\n";
+    echo "<span style='color:#9ae6ef'>" . ($hasContent ? "&lt;/$tag&gt;\n" : "/&gt;\n") . "</span>";
   }
 
   protected function setAutoId ()
