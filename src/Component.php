@@ -222,7 +222,7 @@ abstract class Component
 
   static function loadTemplate (Context $context, Component $parent, $tagName)
   {
-    $filename = normalizeTagName ($tagName) . '.xml';
+    $filename = normalizeTagName ($tagName) . $context->templatesExt;
     $content  = $context->loadTemplate ($filename);
     $parser   = new Parser($context);
     $parser->parse ($content, $parent);

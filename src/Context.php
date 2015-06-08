@@ -24,6 +24,11 @@ class Context
    * @var string[]
    */
   public $templateDirectories = [];
+  /**
+   * File extension of macro files.
+   * @var string
+   */
+  public $templatesExt = '.html';
 
   /**
    * A class instance who's methods provide pipe implementations.
