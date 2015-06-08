@@ -5,10 +5,15 @@ class ModuleOptions extends Object
 {
   public $path;
 
-  function __construct ($path, array $options)
+  function __construct ($path, array $options, callable $initializer = null)
   {
     $this->path = $path;
     parent::__construct ($options);
+    if ($initializer) {
+      $ini = $initializer();
+      foreach ($ini as $k => &$v)
+        $this->set ($k, $v);
+    }
   }
 
   /**
@@ -21,6 +26,7 @@ class ModuleOptions extends Object
       'templates'  => 'boolean',
       'views'      => 'boolean',
       'public'     => 'string',
+      'publish'    => 'array',
       'lang'       => 'boolean',
       'bower'      => 'boolean',
       'grunt'      => 'boolean',
@@ -54,6 +60,16 @@ class ModuleOptions extends Object
   {
     global $application;
     $application->mount ($v, "$this->path/$application->modulePublicPath");
+  }
+
+  /**
+   * @param array $v A map of URIs to folder paths. Paths are relative to the project's base folder.
+   */
+  function set_publish ($v)
+  {
+    global $application;
+    foreach ($v as $URI => $path)
+      $application->mount ($URI, "$application->baseDirectory/$path");
   }
 
   /**
@@ -99,7 +115,6 @@ class ModuleOptions extends Object
         foreach ($appCfg as $k => $v)
           $application->$k = $v;
     }
-
   }
 
   /**

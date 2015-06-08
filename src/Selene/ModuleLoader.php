@@ -50,34 +50,25 @@ class ModuleLoader
 
     // Serve static assets exposed from packages or from the framework itself.
 
-    $URI = $application->VURI;
-    $p   = strpos ($URI, '/');
-    if ($p) {
-      $head = substr ($URI, 0, $p);
-      if ($head == 'modules') {
-        $p    = strpos ($URI, '/', $p + 1);
-        $head = substr ($URI, 0, $p);
+    $URI  = $application->VURI;
+    $path = $application->toFilePath ($URI, $isMapped);
+    if ($isMapped) {
+      if (file_exists ($x = "$path.php")) {
+        require $x;
+        exit;
       }
-      $tail = substr ($URI, $p + 1);
-      if (isset($application->mountPoints[$head])) {
-        $path = $application->mountPoints[$head] . "/$tail";
-        if (file_exists($x = "$path.php")) {
-          require $x;
-          exit;
-        }
-        $type = get (self::$MIME_TYPES, substr ($tail, strrpos ($tail, '.') + 1), 'application/octet-stream');
-        header ("Content-Type: $type");
-        if (!$application->debugMode) {
-          header ('Expires: ' . gmdate ('D, d M Y H:i:s \G\M\T', time () + 36000)); // add 10 hours
-          header ("Cache-Control: public, max-age=36000");
-        }
-        if (@readfile ($path) === false) {
-          header ("Content-Type: text/plain");
-          http_response_code (404);
-          echo "Not found: $path";
-        }
-        exit; // The file has been sent, so stop here.
+      $type = get (self::$MIME_TYPES, substr ($path, strrpos ($path, '.') + 1), 'application/octet-stream');
+      header ("Content-Type: $type");
+      if (!$application->debugMode) {
+        header ('Expires: ' . gmdate ('D, d M Y H:i:s \G\M\T', time () + 36000)); // add 10 hours
+        header ("Cache-Control: public, max-age=36000");
       }
+      if (@readfile ($path) === false) {
+        header ("Content-Type: text/plain");
+        http_response_code (404);
+        echo "Not found: $path";
+      }
+      exit; // The file has been sent, so stop here.
     }
 
     // Load and execute the module that corresponds to the virtual URI.
@@ -107,7 +98,7 @@ class ModuleLoader
       throw new ConfigException("No route map defined.");
     $this->sitePage = $application->routingMap->searchFor ($this->virtualURI, $key);
     if (is_null ($this->sitePage)) {
-      if (strpos($_SERVER['HTTP_ACCEPT'], 'text/html') !== false)
+      if (strpos ($_SERVER['HTTP_ACCEPT'], 'text/html') !== false)
         Controller::pageNotFound ($this->virtualURI);
       else {
         header ("Content-Type: text/plain");

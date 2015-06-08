@@ -1,7 +1,6 @@
 <?php
 use Impactwave\WebConsole\ConsolePanel;
 use Impactwave\WebConsole\WebConsole;
-use Selene\Exceptions\FatalException;
 use Selene\ForeignKey;
 use Selene\ModuleOptions;
 use Selene\Routing\DataSourceInfo;
@@ -10,9 +9,9 @@ use Selene\Routing\Route;
 use Selene\Routing\RouteGroup;
 use Selene\Routing\SubPageRoute;
 
-function ModuleOptions ($path, array $options)
+function ModuleOptions ($path, array $options, callable $initializer = null)
 {
-  return new ModuleOptions($path, $options);
+  return new ModuleOptions($path, $options, $initializer);
 }
 
 function RouteGroup ($init)
@@ -298,7 +297,8 @@ function stopProfiling ()
 /**
  * @return ConsolePanel
  */
-function _log () {
-  $args = array_merge (['<#log>'], func_get_args());
-  return call_user_func_array ([WebConsole::$class, 'log'], $args)->showCallLocation ()->log('</#log>');
+function _log ()
+{
+  $args = array_merge (['<#log>'], func_get_args ());
+  return call_user_func_array ([WebConsole::$class, 'log'], $args)->showCallLocation ()->log ('</#log>');
 }

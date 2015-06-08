@@ -7,6 +7,7 @@ use Impactwave\WebConsole\ErrorHandler;
 use Impactwave\WebConsole\Panels\HttpRequestPanel;
 use Impactwave\WebConsole\WebConsole;
 use Selene\Exceptions\ConfigException;
+use Selene\Exceptions\FileNotFoundException;
 use Selene\Matisse\PipeHandler;
 use Selene\Routing\RoutingMap;
 
@@ -173,17 +174,13 @@ class Application
   public $pageTemplate;
 
   /* Archive related */
-  public $archivePath;
+  public $storagePath;
   public $imageArchivePath;
   public $fileArchivePath;
-  public $inlineArchivePath;
-  public $galleryPath;
 
   /* Cache related */
   public $cachePath;
   public $imagesCachePath;
-  public $stylesCachePath;
-  public $CSS_CachePath;
 
   /* Page processing control settings */
   public $enableCompression;
@@ -526,11 +523,24 @@ class Application
     return $this->toURL ($this->toURI ($path));
   }
 
-  public function toFilePath ($URI)
+  public function toFilePath ($URI, &$isMapped = false)
   {
-    if ($URI[0] == '/')
-      return $this->baseDirectory . substr ($URI, strlen ($this->baseURI));
-    return "$this->baseDirectory" . DIRECTORY_SEPARATOR . "$URI";
+    $p   = strpos ($URI, '/');
+    if ($p) {
+      $head = substr ($URI, 0, $p);
+      if ($head == 'modules') {
+        $p    = strpos ($URI, '/', $p + 1);
+        $head = substr ($URI, 0, $p);
+      }
+      $tail = substr ($URI, $p + 1);
+      if (isset($this->mountPoints[$head])) {
+        if (func_num_args() == 2)
+          $isMapped = true;
+        $path = $this->mountPoints[$head] . "/$tail";
+        return $path;
+      }
+    }
+    return "$this->baseDirectory/$URI";
   }
 
   public function toRelativePath ($URI)

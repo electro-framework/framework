@@ -14,14 +14,11 @@ return [
     'homeIcon'               => '',
     'homeTitle'              => 'Home',
 
+    'storagePath'            => 'private/storage',
     'imageArchivePath'       => 'private/storage/images',
     'fileArchivePath'        => 'private/storage/files',
-    'inlineArchivePath'      => 'private/storage/inline_assets',
-    'galleryPath'            => 'private/storage/gallery',
     'cachePath'              => 'private/storage/cache',
     'imagesCachePath'        => 'private/storage/cache/images',
-    'stylesCachePath'        => 'private/storage/cache',
-    'CSS_CachePath'          => 'private/storage/cache',
 
     'configPath'             => 'private/config',
     'langPath'               => 'private/resources/lang',
