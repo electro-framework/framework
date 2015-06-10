@@ -161,10 +161,6 @@ class Controller
    */
   public $moduleURI;
   /**
-   * @var string The parameters on the request URL or an empty string if none are present.
-   */
-  public $requestParameters;
-  /**
    * A list of parameter names (inferred from the page definition on the sitemap)
    * and correponding values present on the current URI.
    * @var array
@@ -249,6 +245,11 @@ class Controller
    */
   protected $indexPage   = null;
   protected $redirectURI = null;
+  /**
+   * If set to true, the view will be rendered on the POST request without a redirection taking place.
+   * @var bool
+   */
+  protected $renderOnPOST = false;
 
   public static function modPathOf ($virtualURI = '', $params = null)
   {
@@ -359,10 +360,14 @@ class Controller
         }
       }
       if ($this->wasPosted ()) {
-        if ($authenticate)
+        if ($this->renderOnPOST)
           $this->processView ($authenticate);
-        $this->wrapWebServiceResponse ();
-        $this->redirectAndHalt ();
+        else {
+          if ($authenticate)
+            $this->processView ($authenticate);
+          $this->wrapWebServiceResponse ();
+          $this->redirectAndHalt ();
+        }
       }
       else if (is_null ($this->redirectURI)) {
         if (!$this->viewProcessing || !$this->processView ($authenticate)) {
@@ -397,6 +402,11 @@ class Controller
     }
   }
 
+  /**
+   * Returns the URI parameter with the specified name.
+   * @param string $name The parameter name, as specified on the route.
+   * @return string
+   */
   function param ($name)
   {
     return get ($this->URIParams, $name);
@@ -532,6 +542,21 @@ class Controller
     $this->setStatus (Status::INFO, self::MSG_DELETED);
     if (!$this->autoRedirect ())
       throw new FatalException("No index page defined.");
+  }
+
+  /**
+   * Allows processing on the server side to occur and redraws the current page.
+   * This is useful, for instance, for updating a form by submitting it without actually saving it.
+   * The custom processing will usually take place on the render() or the viewModel() methods, but you may also override
+   * this method; just make sure you call the inherited one.
+   * @param DataObject $data The current model object as being filled out on the form, if any.
+   * @param string $param A JQuery selector for the element that should automatically receive focus after the page reloads.
+   */
+  function action_refresh (DataObject $data = null, $param = null)
+  {
+    $this->renderOnPOST = true;
+    if ($param)
+      $this->page->addInlineDeferredScript ("$('$param').focus()");
   }
 
   function action_logout ()
@@ -782,7 +807,6 @@ class Controller
       $this->sitePage          = $this->moduleLoader->sitePage;
       $this->URIParams         = $this->sitePage->getURIParams ();
       $this->virtualURI        = $this->moduleLoader->virtualURI;
-      $this->requestParameters = preg_match ('/&(.*)/', $this->URI, $matches) ? $matches[1] : null;
     }
   }
 
