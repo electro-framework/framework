@@ -901,10 +901,13 @@ class Controller
    * Override to set addition models for the controller / view.
    *
    * > View models are available only on GET requests.
+   *
+   * @return array|void If you return an array, the keys will be set as datasource names.
    */
   protected function viewModel ()
   {
     //Override.
+    return null;
   }
 
   /**
@@ -985,7 +988,13 @@ class Controller
           $this->setDataSource ($name, $dataSourceInfo->getData ($this, $name)); //interception is done inside getData()
     }
 
-    $this->viewModel ();
+    $vm = $this->viewModel ();
+    if ($vm) {
+      if (is_array($vm))
+        foreach ($vm as $k => $v)
+          $this->setViewModel ($k, $v);
+      else throw new \RuntimeException ("Invalid view model");
+    }
 
     if (isset($this->modelData)) {
       $this->setViewModel ('default', $this->modelData ?: null); // empty arrays are converted to null.
