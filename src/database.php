@@ -94,7 +94,6 @@ function database_query ($query, $params = null)
     $start = microtime (true);
   if (!isset($db))
     database_open ();
-  $db->setAttribute (PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
   try {
     $st = $db->prepare ($query);
     $st->execute ($params);
@@ -121,11 +120,8 @@ function database_begin ()
 function database_commit ()
 {
   global $transactionDepth;
-  if (--$transactionDepth == 0) {
-//database_rollback();
-//exit;
+  if (--$transactionDepth == 0)
     database_query ('COMMIT');
-  }
 }
 
 function database_rollback ()
