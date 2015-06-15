@@ -17,7 +17,7 @@ use Selene\Matisse\Exceptions\ParseException;
  */
 abstract class Component
 {
-  const PARSE_PARAM_BINDING_EXP = '#\{ \s* (?: \! ([^.}{]*) )? \.? ( (?: [^{}]* | \{ [^{}]* \} )* ) \}#x';
+  const PARSE_PARAM_BINDING_EXP = '#\{\{ \s* (?: \! ([^.}{]*) )? \.? ( (?: [^{}]* | \{ [^{}]* \} )* ) \}\}#x';
   /**
    * An array containing the instance creation counters for each component class name.
    *
@@ -236,12 +236,12 @@ abstract class Component
 
   public static function isCompositeBinding ($exp)
   {
-    return $exp[0] != '{' || substr ($exp, -1) != '}' || strpos ($exp, '{', 1) > 0;
+    return $exp[0] != '{' || substr ($exp, -1) != '}' || strpos ($exp, '{{', 2) > 0 || strpos ($exp, '{!!', 2) > 0;
   }
 
   public static function isBindingExpression ($exp)
   {
-    return is_string ($exp) ? strpos ($exp, '{') !== false : false;
+    return is_string ($exp) ? strpos ($exp, '{{') !== false || strpos ($exp, '{!!') !== false : false;
   }
 
   /**
@@ -794,6 +794,13 @@ abstract class Component
       };
   }
 
+  protected function bindToAttribute ($name, $value)
+  {
+    if (is_object ($value))
+      $this->attrsObj->$name = $value;
+    else $this->attrsObj->set ($name, $value);
+  }
+
   /**
    * Returns the current value of an attribute, performing databinding if necessary.
    * @param string $name
@@ -833,13 +840,6 @@ abstract class Component
     } catch (\InvalidArgumentException $e) {
       throw new DataBindingException($this, "Invalid databinding expression: $bindExp\n" . $e->getMessage ());
     }
-  }
-
-  protected function bindToAttribute ($name, $value)
-  {
-    if (is_object ($value))
-      $this->attrsObj->$name = $value;
-    else $this->attrsObj->set ($name, $value);
   }
 
   protected function evalBindingExp ($matches, $allowFullSource = false)

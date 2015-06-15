@@ -29,10 +29,10 @@ class TemplateAttributes extends ComponentAttributes
 class Template extends Component implements IAttributes
 {
   /** Finds template binding expressions. */
-  const PARSE_TEMPLATE_BINDING_EXP = '#\{@(.*?)\}#';
+  const PARSE_TEMPLATE_BINDING_EXP = '#\{\{\s*@(.*?)\s*\}\}#';
 
   /** Finds binding expressions which are not template bindings. */
-  const FIND_NON_TEMPLATE_EXP = '#\{(?!\@)#';
+  const FIND_NON_TEMPLATE_EXP = '#\{\{\s*(?!\@)#';
 
   public $allowsChildren = true;
 

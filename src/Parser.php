@@ -1,15 +1,19 @@
 <?php
 namespace Selene\Matisse;
+use Selene\Matisse\Base\Text;
 use Selene\Matisse\Components\Literal;
 use Selene\Matisse\Components\Page;
 use Selene\Matisse\Components\Parameter;
-use Selene\Matisse\Base\Text;
 use Selene\Matisse\Exceptions\ParseException;
 
 class Parser
 {
+  const EXP_BEGIN            = '{{';
+  const EXP_END              = '}}';
+  const RAW_EXP_BEGIN        = '{!!';
+  const RAW_EXP_END          = '!!}';
   const PARSE_TAG            = '# (<) (/?) ([A-Z]\w+) \s* (.*?) (/?) (>) #sx';
-  const PARSE_DATABINDINGS   = '# \{(?=\S) ( [^{}]* | \{[^{}]*\} )* \} #x';
+  const PARSE_DATABINDINGS   = '# (?: \{\{ | \{!! ) ( .*? ) (?: \}\} | !!\} ) #x';
   const TRIM_LITERAL_CONTENT = '# ^ \s+ | (?<=\>) \s+ (?=\s) | (?<=\s) \s+ (?=\<) | \s+ $ #x';
   const TRIM_LEFT_CONTENT    = '# ^ \s+ | (?<=\>) \s+ (?=\s) #x';
   const TRIM_RIGHT_CONTENT   = '# (?<=\s) \s+ (?=\<) | \s+ $ #x';
