@@ -2,7 +2,6 @@
 namespace Selene\Matisse;
 use Selene\Matisse\Attributes\ComponentAttributes;
 use Selene\Matisse\Base\GenericComponent;
-use Selene\Matisse\Components\Literal;
 use Selene\Matisse\Components\Page;
 use Selene\Matisse\Components\Parameter;
 use Selene\Matisse\Components\TemplateInstance;
@@ -40,26 +39,11 @@ abstract class Component
    */
   protected static $uniqueIDs = [];
   /**
-   * An array containing the names of the HTML tags which must not have a closing tag.
-   *
-   * @var array
-   */
-  private static $VOID_ELEMENTS = [
-    'area', 'base', 'br', 'col', 'command', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source',
-    'track', 'wbr'
-  ];
-  /**
    * Indicates if the component supports the IAttributes interface.
    *
    * @var boolean
    */
   public $supportsAttributes;
-  /**
-   * The value of the tag being currently outputted.
-   *
-   * @var string
-   */
-  public $content;
   /**
    * Points to the parent component in the page hierarchy.
    * It is set to NULL if the component is the top one (a Page instance) or if it's standalone.
@@ -141,8 +125,6 @@ abstract class Component
    * @var string
    */
   private $tagName;
-  private $tags = [];
-  private $tag;
   /**
    * When true, forces generation of a new auto-id, event if the component already has an assigned id.
    *
@@ -572,14 +554,6 @@ abstract class Component
     return ob_get_clean ();
   }
 
-  protected function setContent ($content)
-  {
-    if (!$this->tag->isContentSet)
-      echo '>';
-    echo $content;
-    $this->tag->isContentSet = true;
-  }
-
   /**
    * Invokes doRender() recursively on the component's children.
    */
@@ -891,163 +865,6 @@ abstract class Component
       return ++self::$uniqueIDs[$this->className];
     self::$uniqueIDs[$this->className] = 1;
     return 1;
-  }
-
-  protected function beginCapture ()
-  {
-    ob_start (null, 0);
-  }
-
-  protected function getLiteral ()
-  {
-    $this->beginContent ();
-    $text = ob_get_clean ();
-    if (strlen ($text))
-      return Literal::from ($this->context, $text);
-    return null;
-  }
-
-  protected function endCapture ()
-  {
-    $literal = $this->getLiteral ();
-    if (isset($literal))
-      $this->addChild ($literal);
-  }
-
-  protected function flushCapture ()
-  {
-    $this->endCapture ();
-    ob_start (null, 0);
-  }
-
-  protected function beginTag ($name, array $attributes = null)
-  {
-    if (isset($this->tag)) {
-      $this->beginContent ();
-      array_push ($this->tags, $this->tag);
-    }
-    $this->tag       = new Tag();
-    $this->tag->name = strtolower ($name);
-    echo '<' . $name;
-    if ($attributes)
-      foreach ($attributes as $k => $v)
-        $this->addAttribute ($k, $v);
-  }
-
-  protected function endTag ()
-  {
-    if (is_null ($this->tag))
-      throw new ComponentException($this, "Unbalanced beginTag() / endTag() pairs.");
-    $name = $this->tag->name;
-    $x    = $this->context->debugMode ? "\n" : '';
-    if ($this->tag->isContentSet)
-      echo "</$name>$x";
-    elseif (array_search ($name, self::$VOID_ELEMENTS) !== false)
-      echo "/>$x";
-    else
-      echo "></$name>$x";
-    $this->tag = array_pop ($this->tags);
-  }
-
-  protected function addTag ($name, array $parameters = null, $content = null)
-  {
-    $this->beginTag ($name, $parameters);
-    if (!is_null ($content))
-      $this->setContent ($content);
-    $this->endTag ();
-  }
-
-  protected function addAttributes ($attrs)
-  {
-    foreach ($attrs as $name => $val)
-      $this->addAttribute ($name, $val);
-  }
-
-  protected function addAttribute ($name, $value = '')
-  {
-    echo isset($value) ? (strlen ($value) ? " $name=\"$value\"" : " $name") : '';
-  }
-
-  protected function addAttribute2 ($name, $value1, $value2)
-  {
-    if (strlen ($value2))
-      echo " $name=\"$value1$value2\"";
-  }
-
-  protected function addAttributeIf ($checkValue, $name, $value = '')
-  {
-    if ($checkValue)
-      $this->addAttribute ($name, $value);
-  }
-
-  protected function beginAttribute ($name, $value = null, $attrSep = ' ')
-  {
-    if (strlen ($value) == 0) {
-      $this->tag->attrName     = " $name=\"";
-      $this->tag->isFirstValue = true;
-    }
-    else
-      echo " $name=\"$value";
-    $this->tag->attrSep = $attrSep;
-  }
-
-  protected function addAttributeValue ($value)
-  {
-    if (strlen ($value)) {
-      echo $this->tag->attrName;
-      $this->tag->attrName = '';
-      if ($this->tag->isFirstValue) {
-        echo $value;
-        $this->tag->isFirstValue = false;
-      }
-      else
-        echo $this->tag->attrSep . $value;
-    }
-  }
-
-  protected function addAttributeValue2 ($value1, $value2)
-  {
-    if (strlen ($value2)) {
-      echo $this->tag->attrName;
-      $this->tag->attrName = '';
-      if ($this->tag->isFirstValue) {
-        echo $value1 . $value2;
-        $this->tag->isFirstValue = false;
-      }
-      else
-        echo $this->tag->attrSep . $value1 . $value2;
-    }
-  }
-
-  protected function addAttributeValueIf ($checkValue, $value)
-  {
-    if ($checkValue) {
-      echo $this->tag->attrName;
-      $this->tag->attrName = '';
-      if ($this->tag->isFirstValue) {
-        echo $value;
-        $this->tag->isFirstValue = false;
-      }
-      else
-        echo $this->tag->attrSep . $value;
-    }
-  }
-
-  protected function endAttribute ()
-  {
-    if ($this->tag->attrName != '')
-      $this->tag->attrName = '';
-    else
-      echo '"';
-    $this->tag->isFirstValue = false;
-  }
-
-  protected function beginContent ()
-  {
-    if (isset($this->tag) && !$this->tag->isContentSet) {
-      echo '>';
-      $this->tag->isContentSet = true;
-    }
   }
 
 }

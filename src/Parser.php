@@ -12,8 +12,8 @@ class Parser
   const EXP_END              = '}}';
   const RAW_EXP_BEGIN        = '{!!';
   const RAW_EXP_END          = '!!}';
-  const PARSE_TAG            = '# (<) (/?) ([A-Z]\w+) \s* (.*?) (/?) (>) #sx';
   const PARSE_DATABINDINGS   = '# (?: \{\{ | \{!! ) ( .*? ) (?: \}\} | !!\} ) #x';
+  const PARSE_TAG            = '# (<) (/?) ([A-Z]\w+) \s* (.*?) (/?) (>) #sx';
   const TRIM_LITERAL_CONTENT = '# ^ \s+ | (?<=\>) \s+ (?=\s) | (?<=\s) \s+ (?=\<) | \s+ $ #x';
   const TRIM_LEFT_CONTENT    = '# ^ \s+ | (?<=\>) \s+ (?=\s) #x';
   const TRIM_RIGHT_CONTENT   = '# (?<=\s) \s+ (?=\<) | \s+ $ #x';
