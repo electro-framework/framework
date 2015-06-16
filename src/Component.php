@@ -249,32 +249,6 @@ abstract class Component
     throw new ParseException("File <b>$filename</b> does not define a template named <b>$tagName</b>.");
   }
 
-  public static function isCompositeBinding ($exp)
-  {
-    return $exp[0] != '{' || substr ($exp, -1) != '}' || strpos ($exp, '{{', 2) > 0 || strpos ($exp, '{!!', 2) > 0;
-  }
-
-  public static function isBindingExpression ($exp)
-  {
-    return is_string ($exp) ? strpos ($exp, '{{') !== false || strpos ($exp, '{!!') !== false : false;
-  }
-
-  /**
-   * @param Component[] $components
-   * @param bool        $deep
-   * @param bool        $nested True if no `<code>` block should be output.
-   * @return string
-   */
-  public static function inspectSet (array $components = null, $deep = false, $nested = false)
-  {
-    ob_start (null, 0);
-    if (is_array ($components))
-      foreach ($components as $component)
-        /** @var Component $component */
-        $component->_inspect ($deep);
-    return $nested ? ob_get_clean () : "<code>" . ob_get_clean () . "</code>";
-  }
-
   /**
    * @param Component[] $components
    * @param Component   $parent
@@ -295,6 +269,16 @@ abstract class Component
       return $result;
     }
     return null;
+  }
+
+  static function isCompositeBinding ($exp)
+  {
+    return $exp[0] != '{' || substr ($exp, -1) != '}' || strpos ($exp, '{{', 2) > 0 || strpos ($exp, '{!!', 2) > 0;
+  }
+
+  static function isBindingExpression ($exp)
+  {
+    return is_string ($exp) ? strpos ($exp, '{{') !== false || strpos ($exp, '{!!') !== false : false;
   }
 
   protected static function runSet (array $components = null)
@@ -327,6 +311,53 @@ abstract class Component
   <th>Container component:<td><b>&lt;{$parent->getTagName()}></b>, of type <b>{$parent->className}</b>
 </table>
 ");
+  }
+
+  /**
+   * Escapes (secures) data for output.<br>
+   *
+   * <p>Array attribute values are converted to space-separated value string lists.
+   * > A useful use case for an array attribute is the `class` attribute.
+   *
+   * Object attribute values generate either:
+   * - a space-separated list of keys who's corresponding value is truthy;
+   * - a semicolon-separated list of key:value elements if at least one value is a string.
+   *
+   * Boolean values will generate the string "true" or "false".
+   *
+   * @param mixed $o
+   * @return string
+   */
+  function e ($o)
+  {
+    if (!is_string ($o)) {
+      switch (gettype ($o)) {
+        case 'boolean':
+          return $o ? 'true' : 'false';
+        case 'integer':
+        case 'double':
+          return strval ($o);
+        case 'array':
+          $at = [];
+          $s  = ' ';
+          foreach ($o as $k => $v)
+            if (is_numeric ($k))
+              $at[] = $v;
+            else if (is_string ($v)) {
+              $at[] = "$k:$v";
+              $s    = ';';
+            }
+            else
+              $at[] = $k;
+          $o = implode ($s, $at);
+          break;
+        case 'NULL':
+          return '';
+        default:
+          throw new \InvalidArgumentException ("Can't output a value of type " . gettype ($o));
+      }
+    }
+    return htmlentities ($o, ENT_QUOTES, 'UTF-8', false);
   }
 
   /**
@@ -424,7 +455,7 @@ abstract class Component
       $this->parent->attach ($components);
     }
     else {
-      $t = self::inspectSet ($this->parent->children);
+      $t = ComponentInspector::inspectSet ($this->parent->children);
       throw new ComponentException($this,
         "The component was not found on the parent's children.<h3>The children are:</h3><fieldset>$t</fieldset>");
     }
@@ -648,9 +679,12 @@ abstract class Component
 
   function inspect ($deep = true)
   {
-    ob_start (null, 0);
-    $this->_inspect ($deep);
-    return "<code>" . ob_get_clean () . "</code>";
+    return ComponentInspector::inspect($this, $deep);
+  }
+
+  function __toString ()
+  {
+    return $this->inspect ();
   }
 
   public function __clone ()
@@ -661,90 +695,6 @@ abstract class Component
     }
     if (isset($this->children))
       $this->children = self::cloneComponents ($this->children, $this);
-  }
-
-  /**
-   * Do not call this from user code.
-   * @param bool $deep
-   */
-  function _inspect ($deep = true)
-  {
-    $tag        = $this->getTagName ();
-    $hasContent = false;
-    echo "<span style='color:#9ae6ef'>&lt;$tag</span>";
-    if (!isset($this->parent))
-      echo '&nbsp;<span style="color:#888">(detached)</span>';
-    if ($this->supportsAttributes) {
-      echo '<table style="color:#CCC;margin:0 0 0 15px"><colgroup><col width=1><col width=1><col></colgroup>';
-      $props = $this->attrsObj->getAll ();
-      if (!empty($props))
-        foreach ($props as $k => $v)
-          if (isset($v)) {
-            $t = $this->attrsObj->getTypeOf ($k);
-            if (!$deep || ($t != AttributeType::SRC && $t != AttributeType::PARAMS && $t != AttributeType::METADATA)) {
-              $tn = $this->attrsObj->getTypeNameOf ($k);
-              echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
-              switch ($t) {
-                case AttributeType::BOOL:
-                  echo '<i>' . ($v ? 'TRUE' : 'FALSE') . '</i>';
-                  break;
-                case AttributeType::ID:
-                  echo "\"$v\"";
-                  break;
-                case AttributeType::NUM:
-                  echo $v;
-                  break;
-                case AttributeType::TEXT:
-                  echo "\"<span style='color:#888;white-space: pre-wrap'>" . str_replace ("\n", '&#8626;', htmlspecialchars ($v)) .
-                       '</span>"';
-                  break;
-                default:
-                  if (is_object ($v))
-                    echo '<i>object</i>';
-                  else if (is_array ($v))
-                    echo '<i>array</i>';
-                  else
-                    echo "\"$v\"";
-              }
-            }
-          }
-      if (!empty($props))
-        foreach ($props as $k => $v)
-          if (isset($v)) {
-            $t = $this->attrsObj->getTypeOf ($k);
-            if ($t == AttributeType::SRC || $t == AttributeType::PARAMS || $t == AttributeType::METADATA) {
-              $tn = $this->attrsObj->getTypeNameOf ($k);
-              echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i>" .
-                   "<tr><td><td colspan=2>";
-              switch ($t) {
-                case AttributeType::SRC:
-                case AttributeType::METADATA:
-                  echo $this->attrsObj->$k->inspect($deep);
-                  break;
-                case AttributeType::PARAMS:
-                  echo self::inspectSet ($this->attrsObj->$k, true, true);
-                  break;
-              }
-              echo '</tr>';
-            }
-          }
-      if (isset($this->bindings)) {
-        echo "<tr><td colspan=3><div style='border-top: 1px solid #666;margin:5px 0'></div>";
-        foreach ($this->bindings as $k => $v)
-          echo "<tr><td style='color:#7ae17a'>$k<td style='color:#ffcb69'>binding<td style='color:#c5a3e6'>" . htmlspecialchars ($v);
-      }
-      echo "</table>";
-    }
-    if ($deep) {
-      if (!empty($this->children)) {
-        $hasContent = true;
-        echo '<span style="color:#9ae6ef">&gt;</span><div style="margin:0 0 0 30px">';
-        foreach ($this->children as $c)
-          $c->_inspect (true);
-        echo '</div>';
-      }
-    }
-    echo "<span style='color:#9ae6ef'>" . ($hasContent ? "&lt;/$tag&gt;<br>" : "/&gt;<br>") . "</span>";
   }
 
   protected function setAutoId ()
@@ -822,7 +772,8 @@ abstract class Component
    * @return mixed
    * @throws DataBindingException
    */
-  protected function evaluateAttr ($name) {
+  protected function evaluateAttr ($name)
+  {
     if (isset($this->bindings[$name]))
       return $this->evalBinding ($this->bindings[$name]);
     return $this->attrsObj->$name;
@@ -920,7 +871,7 @@ abstract class Component
         }
         if (is_null ($rec))
           $rec = new \EmptyIterator();
-        $v         = $dataField == '#self' ? $rec : getField ($rec, $dataField);
+        $v = $dataField == '#self' ? $rec : getField ($rec, $dataField);
     }
     foreach ($pipes as $name) {
       $pipe = $this->context->getPipe (trim ($name));
