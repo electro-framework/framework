@@ -154,11 +154,8 @@ function safeParameter ($name)
 
 function dirnameEx ($path)
 {
-  $p = strrpos ($path, '/');
-  $b = substr ($path, 0, $p);
-  if (empty($b))
-    return '';
-  return $b . '/';
+  $path = dirname($path);
+  return $path == '/' ? '' : $path;
 }
 
 function trimText ($text, $maxSize)

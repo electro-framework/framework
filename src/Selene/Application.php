@@ -447,7 +447,7 @@ class Application
   {
     $FRAMEWORK = 'vendor/selene-framework/selene-kernel/src';
     $uri       = $_SERVER['REQUEST_URI'];
-    $baseURI   = dirname ($_SERVER['SCRIPT_NAME']);
+    $baseURI   = dirnameEx ($_SERVER['SCRIPT_NAME']);
     $vuri      = substr ($uri, strlen ($baseURI) + 1) ?: '';
     if (($p = strpos ($vuri, '?')) !== false)
       $vuri = substr ($vuri, 0, $p);
