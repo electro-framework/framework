@@ -211,7 +211,7 @@ class Page extends Component
           'content'    => 'IE=EmulateIE7'
       ));*/
       $this->addTag ('title', null, $this->title);
-      $this->addTag ('base', ['href' => $application->URI . '/']);
+      $this->addTag ('base', ['href' => ($application->URI != '/' ? $application->URI : '') . '/']);
       /*
                           foreach ($application->CSS_sheets as $URI) {
                             //if ($application->resourceCaching)
