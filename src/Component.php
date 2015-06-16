@@ -17,7 +17,22 @@ use Selene\Matisse\Exceptions\ParseException;
  */
 abstract class Component
 {
-  const PARSE_PARAM_BINDING_EXP = '#\{\{ \s* (?: \! ([^.}{]*) )? \.? ( (?: [^{}]* | \{ [^{}]* \} )* ) \}\}#x';
+  /**
+   * Finds binding expressions and extracts datasource and field info.
+   * > Note: the u modifier allows unicode white space to be properly matched.
+   */
+  const PARSE_PARAM_BINDING_EXP = '#
+    \{\{\s*
+    (?:
+      ! ([\w\-]+) \.?
+    )?
+    (
+      (?:
+        [^{}]* | \{ [^{}]* \}
+      )*
+    )?
+    \s*\}\}
+  #xu';
   /**
    * An array containing the instance creation counters for each component class name.
    *
@@ -729,7 +744,7 @@ abstract class Component
         echo '</div>';
       }
     }
-    echo "<span style='color:#9ae6ef'>" . ($hasContent ? "&lt;/$tag&gt;\n" : "/&gt;\n") . "</span>";
+    echo "<span style='color:#9ae6ef'>" . ($hasContent ? "&lt;/$tag&gt;<br>" : "/&gt;<br>") . "</span>";
   }
 
   protected function setAutoId ()

@@ -32,7 +32,7 @@ class Template extends Component implements IAttributes
   const PARSE_TEMPLATE_BINDING_EXP = '#\{\{\s*@(.*?)\s*\}\}#';
 
   /** Finds binding expressions which are not template bindings. */
-  const FIND_NON_TEMPLATE_EXP = '#\{\{\s*(?!\@)#';
+  const FIND_NON_TEMPLATE_EXP = '#\{\{\s*(?=\S)[^@]#';
 
   public $allowsChildren = true;
 
@@ -191,7 +191,7 @@ class Template extends Component implements IAttributes
         if (!is_null ($component)) {
           if (isset($component->bindings)) {
             foreach ($component->bindings as $field => $exp) {
-              if (strpos ($exp, '{@') !== false) {
+              if (preg_match (self::PARSE_TEMPLATE_BINDING_EXP, $exp, $match)) {
                 //evaluate template binding expression
                 if (preg_match (self::FIND_NON_TEMPLATE_EXP, $exp)) {
                   //mixed (data/template) binding
@@ -200,7 +200,7 @@ class Template extends Component implements IAttributes
                 }
                 else {
                   if ($exp[0] != '{' || substr ($exp, -1) != '}' ||
-                      strpos ($exp, '}') < strlen ($exp) - 1
+                      strpos ($exp, '}') < strlen ($exp) - 2
                   ) {
                     //composite exp. (constant text + binding ref)
                     $value = self::evalScalarExp ($exp, $instance, $transfer_binding);
@@ -214,7 +214,7 @@ class Template extends Component implements IAttributes
                   }
                   else {
                     //simple exp. (binding ref. only}
-                    $attrName = substr ($exp, 2, -1);
+                    $attrName = $match[1];
                     if (!$instance->attrs ()->defines ($attrName)) {
                       $s = join (', ', $instance->attrs ()->getAttributeNames ());
                       throw new ComponentException($instance,
