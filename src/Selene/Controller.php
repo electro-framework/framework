@@ -563,7 +563,7 @@ class Controller
   {
     global $session, $application;
     $session->logout ();
-    $this->setRedirection (null, $application->URI);
+    $this->setRedirection (null, $application->URI ?: '/');
   }
 
   public final function wasPosted ()
