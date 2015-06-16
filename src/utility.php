@@ -52,7 +52,7 @@ function getField (&$data, $key, $default = null)
 
 function normalizeTagName ($name)
 {
-  return str_replace (' ', '', ucwords (str_replace ('-', ' ', strtolower ($name))));
+  return str_replace (' ', '', ucwords (str_replace ('-', ' ', $name)));
 }
 
 function classNameToTagName ($name)
