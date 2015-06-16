@@ -13,10 +13,10 @@ if (empty($URI)) {
   if (is_null ($id))
     throw new FatalException('No id or URI were specified');
   $filename = urlencode (Media::getOriginalFileName ($id));
-  $filepath = Media::getFileURI ($id);
+  $filepath =  $application->toFilePath (Media::getFileURI ($id));
 }
 else $filepath = $application->toFilePath ($URI);
-$filepath = $application->toFilePath ($URI);
+
 if (!file_exists ($filepath))
   throw new FileException(FileException::FILE_NOT_FOUND, "<p>File: <b>$filepath</b>");
 
