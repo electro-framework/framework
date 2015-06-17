@@ -3,13 +3,12 @@ namespace Selene\Matisse;
 use Selene\Matisse\Attributes\ComponentAttributes;
 use Selene\Matisse\Base\GenericComponent;
 use Selene\Matisse\Components\Page;
-use Selene\Matisse\Components\Parameter;
 use Selene\Matisse\Components\TemplateInstance;
 use Selene\Matisse\Exceptions\ComponentException;
-use Selene\Matisse\Exceptions\DataBindingException;
 use Selene\Matisse\Exceptions\FileIOException;
-use Selene\Matisse\Exceptions\HandlerNotFoundException;
 use Selene\Matisse\Exceptions\ParseException;
+use Selene\Matisse\Traits\DataBindingTrait;
+use Selene\Matisse\Traits\DOMNodeTrait;
 use Selene\Matisse\Traits\MarkupBuilderTrait;
 
 /**
@@ -17,49 +16,14 @@ use Selene\Matisse\Traits\MarkupBuilderTrait;
  */
 abstract class Component
 {
-  use MarkupBuilderTrait;
-  /**
-   * Finds binding expressions and extracts datasource and field info.
-   * > Note: the u modifier allows unicode white space to be properly matched.
-   */
-  const PARSE_PARAM_BINDING_EXP = '#
-    \{\{\s*
-    (?:
-      ! ([\w\-]+) \.?
-    )?
-    (
-      (?:
-        [^{}]* | \{ [^{}]* \}
-      )*
-    )?
-    \s*\}\}
-  #xu';
+  use MarkupBuilderTrait, DataBindingTrait, DOMNodeTrait;
+
   /**
    * An array containing the instance creation counters for each component class name.
    *
    * @var array
    */
   protected static $uniqueIDs = [];
-  /**
-   * Indicates if the component supports the IAttributes interface.
-   *
-   * @var boolean
-   */
-  public $supportsAttributes;
-  /**
-   * Points to the parent component in the page hierarchy.
-   * It is set to NULL if the component is the top one (a Page instance) or if it's standalone.
-   *
-   * @var Component
-   */
-  public $parent = null;
-  /**
-   * An array of child components that are either defined on the source code or
-   * generated dinamically.
-   *
-   * @var Component[]
-   */
-  public $children = null;
   /**
    * The component's PHP class name.
    *
@@ -73,46 +37,17 @@ abstract class Component
    */
   public $inactive = false;
   /**
-   * An array of attribute names and corresponding databinding expressions.
-   * Equals NULL if no bindings are defined.
-   *
-   * @var array
-   */
-  public $bindings = null;
-  /**
-   * Supplies the value for databinding expressions with no explicit data source references.
-   *
-   * @var mixed
-   */
-  public $defaultDataSource;
-  /**
-   * Set by Repeater components for supporting pagination.
-   * @var int
-   */
-  public $rowOffset = 0;
-  /**
    * Points to the root of the components tree.
    *
    * @var Page
    */
   public $page;
   /**
-   * Can this component have children?
-   * @var bool
-   */
-  public $allowsChildren = false;
-  /**
-   * The rendering context for the current request.
-   * @var Context
-   */
-  protected $context;
-  /**
-   * Set to true on a component class definition to automatically assign an ID to instances.
+   * Indicates if the component supports the IAttributes interface.
    *
-   * @see setAutoId().
-   * @var bool
+   * @var boolean
    */
-  protected $autoId = false;
+  public $supportsAttributes;
   /**
    * The component's published properties (the ones which are settable through xml attribute declarations on the source
    * markup). This property contains an object of class ComponentAttributes or of a subclass of it, depending on the
@@ -122,17 +57,29 @@ abstract class Component
    */
   protected $attrsObj;
   /**
-   * Cache for getTagName()
+   * Set to true on a component class definition to automatically assign an ID to instances.
    *
-   * @var string
+   * @see setAutoId().
+   * @var bool
    */
-  private $tagName;
+  protected $autoId = false;
+  /**
+   * The rendering context for the current request.
+   * @var Context
+   */
+  protected $context;
   /**
    * When true, forces generation of a new auto-id, event if the component already has an assigned id.
    *
    * @var bool
    */
   private $regenerateId = false;
+  /**
+   * Cache for getTagName()
+   *
+   * @var string
+   */
+  private $tagName;
 
   /**
    * Creates a new component instance and optionally sets its attributes and styles.
@@ -159,15 +106,6 @@ abstract class Component
   }
 
   /**
-   * Gets the name of the class.
-   * @return string
-   */
-  public static function ref ()
-  {
-    return get_called_class ();
-  }
-
-  /**
    * Creates a component corresponding to the specified tag and optionally sets its attributes.
    *
    * @param Context   $context
@@ -188,6 +126,7 @@ abstract class Component
   {
     if ($generic) {
       $component = new GenericComponent($context, $tagName, $attributes);
+
       return $component;
     }
     $class = $context->getClassForTag ($tagName);
@@ -228,46 +167,19 @@ abstract class Component
     $template = $context->getTemplate ($tagName);
     if (isset($template)) {
       $template->remove ();
+
       return $template;
     }
     throw new ParseException("File <b>$filename</b> does not define a template named <b>$tagName</b>.");
   }
 
   /**
-   * @param Component[] $components
-   * @param Component   $parent
-   * @return Component[]|null
+   * Gets the name of the class.
+   * @return string
    */
-  public static function cloneComponents (array $components = null, Component $parent = null)
+  public static function ref ()
   {
-    if (isset($components)) {
-      $result = [];
-      foreach ($components as $component) {
-        /** @var Component $cloned */
-        $cloned = clone $component;
-        if (isset($parent))
-          $cloned->attachTo ($parent);
-        else $cloned->detach ();
-        $result[] = $cloned;
-      }
-      return $result;
-    }
-    return null;
-  }
-
-  static function isCompositeBinding ($exp)
-  {
-    return $exp[0] != '{' || substr ($exp, -1) != '}' || strpos ($exp, '{{', 2) > 0 || strpos ($exp, '{!!', 2) > 0;
-  }
-
-  static function isBindingExpression ($exp)
-  {
-    return is_string ($exp) ? strpos ($exp, '{{') !== false || strpos ($exp, '{!!') !== false : false;
-  }
-
-  protected static function runSet (array $components = null)
-  {
-    self::renderSet ($components);
+    return get_called_class ();
   }
 
   /**
@@ -280,6 +192,11 @@ abstract class Component
     if (isset($components))
       foreach ($components as $component)
         $component->doRender ();
+  }
+
+  protected static function runSet (array $components = null)
+  {
+    self::renderSet ($components);
   }
 
   private static function throwUnknownComponent (Context $context, $tagName, Component $parent)
@@ -295,6 +212,38 @@ abstract class Component
   <th>Container component:<td><b>&lt;{$parent->getTagName()}></b>, of type <b>{$parent->className}</b>
 </table>
 ");
+  }
+
+  public function __get ($name)
+  {
+    throw new ComponentException($this, "Can't read from non existing property <b>$name</b>.");
+  }
+
+  public function __set ($name, $value)
+  {
+    throw new ComponentException($this, "Can't set non existing property <b>$name</b>.");
+  }
+
+  function __toString ()
+  {
+    return $this->inspect ();
+  }
+
+  /**
+   * Performs both the component's rendering and its children's.
+   * Do not override! Use event handlers or override render() or renderChildren().
+   * This method is called from run() or from renderChildren().
+   */
+  public final function doRender ()
+  {
+    if (!$this->inactive) {
+      $this->databind ();
+      if (!isset($this->attrsObj) || !isset($this->attrsObj->hidden) || !$this->attrsObj->hidden) {
+        $this->preRender ();
+        $this->render ();
+        $this->postRender ();
+      }
+    }
   }
 
   /**
@@ -341,201 +290,8 @@ abstract class Component
           throw new \InvalidArgumentException ("Can't output a value of type " . gettype ($o));
       }
     }
+
     return htmlentities ($o, ENT_QUOTES, 'UTF-8', false);
-  }
-
-  /**
-   * Can't be abstract because the child class may not implement IAttributes.
-   *
-   * @return ComponentAttributes
-   */
-  public function newAttributes ()
-  {
-    return null;
-  }
-
-  /**
-   * Returns name of the tag that represents the component.
-   * If the name is not set then it generates it from the class name and caches it.
-   *
-   * @return string
-   */
-  public final function getTagName ()
-  {
-    if (isset($this->tagName))
-      return $this->tagName;
-    preg_match_all ('#[A-Z][a-z]*#', $this->className, $matches, PREG_PATTERN_ORDER);
-    return $this->tagName = strtolower (implode ('-', $matches[0]));
-  }
-
-  /**
-   * Sets the name of the tag that represents the component.
-   * This is usually done by the parser, to increase the performance of getTagName().
-   *
-   * @param string $name
-   */
-  public final function setTagName ($name)
-  {
-    $this->tagName = $name;
-  }
-
-  public function __get ($name)
-  {
-    throw new ComponentException($this, "Can't read from non existing property <b>$name</b>.");
-  }
-
-  public function __set ($name, $value)
-  {
-    throw new ComponentException($this, "Can't set non existing property <b>$name</b>.");
-  }
-
-  /**
-   * Replaces the component by its contents in the parent's child list.
-   * The component itself is therefore discarded from the components tree.
-   */
-  public final function replaceByContents ()
-  {
-    $this->replaceBy ($this->children);
-  }
-
-  /**
-   * Returns the ordinal index of this component on the parent's child list.
-   *
-   * @return int|boolean
-   * @throws ComponentException
-   */
-  public function getIndex ()
-  {
-    if (!isset($this->parent))
-      throw new ComponentException($this, "The component is not attached to a parent.");
-    if (!isset($this->parent->children))
-      throw new ComponentException($this, "The parent component has no children.");
-    return array_search ($this, $this->parent->children, true);
-  }
-
-  /**
-   * Returns the ordinal index of the specified child on this component's child list.
-   *
-   * @param Component $child
-   * @return bool|int
-   */
-  public function indexOf (Component $child)
-  {
-    return array_search ($child, $this->children, true);
-  }
-
-  /**
-   * Replaces the component by the specified componentes in the parent's child list.
-   * The component itself is discarded from the components tree.
-   *
-   * @param array $components
-   * @throws ComponentException
-   */
-  public final function replaceBy (array $components = null)
-  {
-    $p = $this->getIndex ();
-    if ($p !== false) {
-      array_splice ($this->parent->children, $p, 1, $components);
-      $this->parent->attach ($components);
-    }
-    else {
-      $t = ComponentInspector::inspectSet ($this->parent->children);
-      throw new ComponentException($this,
-        "The component was not found on the parent's children.<h3>The children are:</h3><fieldset>$t</fieldset>");
-    }
-  }
-
-  /**
-   * Runs a private child component that does not belong to the hierarchy.
-   *
-   * @param Component $c
-   */
-  public final function runPrivate (Component $c)
-  {
-    $this->attach ($c);
-    $c->run ();
-  }
-
-  /**
-   * Executes the component and any relevant children.
-   * Do not override! Use event handlers or override render() or renderChildren().
-   */
-  public final function run ()
-  {
-    $this->doRender ();
-  }
-
-  public final function addChild (Component $child)
-  {
-    if (isset($child)) {
-      $this->children[] = $child;
-      $this->attach ($child);
-    }
-  }
-
-  public final function addChildren (array $children = null)
-  {
-    if (isset($children))
-      foreach ($children as $child)
-        $this->addChild ($child);
-  }
-
-  public function remove ()
-  {
-    if (isset($this->parent))
-      $this->parent->removeChild ($this);
-  }
-
-  public function removeChild (Component $child)
-  {
-    $p = $this->indexOf ($child);
-    if ($p === false)
-      throw new ComponentException($child,
-        "The component is not a child of the specified parent, so it cannot be removed.");
-    array_splice ($this->children, $p, 1);
-    $child->detach ();
-  }
-
-  public function attachTo (Component $parent = null)
-  {
-    $this->parent = $parent;
-    $this->page   = $parent->page;
-  }
-
-  /**
-   * @param Component|Component[] $childOrChildren
-   */
-  public function attach ($childOrChildren = null)
-  {
-    if (!empty($childOrChildren)) {
-      if (is_array ($childOrChildren))
-        foreach ($childOrChildren as $child)
-          /** @var Component $child */
-          $child->attachTo ($this);
-      else $childOrChildren->attachTo ($this);
-    }
-  }
-
-  public function detach ()
-  {
-    $this->parent = $this->page = null;
-  }
-
-  /**
-   * Performs both the component's rendering and its children's.
-   * Do not override! Use event handlers or override render() or renderChildren().
-   * This method is called from run() or from renderChildren().
-   */
-  public final function doRender ()
-  {
-    if (!$this->inactive) {
-      $this->databind ();
-      if (!isset($this->attrsObj) || !isset($this->attrsObj->hidden) || !$this->attrsObj->hidden) {
-        $this->preRender ();
-        $this->render ();
-        $this->postRender ();
-      }
-    }
   }
 
   /**
@@ -553,7 +309,70 @@ abstract class Component
       $this->renderChildren ();
       $this->postRender ();
     }
+
     return ob_get_clean ();
+  }
+
+  /**
+   * Returns name of the tag that represents the component.
+   * If the name is not set then it generates it from the class name and caches it.
+   *
+   * @return string
+   */
+  public final function getTagName ()
+  {
+    if (isset($this->tagName))
+      return $this->tagName;
+    preg_match_all ('#[A-Z][a-z]*#', $this->className, $matches, PREG_PATTERN_ORDER);
+
+    return $this->tagName = strtolower (implode ('-', $matches[0]));
+  }
+
+  /**
+   * Sets the name of the tag that represents the component.
+   * This is usually done by the parser, to increase the performance of getTagName().
+   *
+   * @param string $name
+   */
+  public final function setTagName ($name)
+  {
+    $this->tagName = $name;
+  }
+
+  function inspect ($deep = true)
+  {
+    return ComponentInspector::inspect ($this, $deep);
+  }
+
+  /**
+   * Indicates if either a constant value or a databinding expression were specified for the given attribute.
+   *
+   * @param string $fieldName
+   * @return boolean
+   */
+  public final function isAttributeSet ($fieldName)
+  {
+    return isset($this->attrsObj->$fieldName) || $this->isBound ($fieldName);
+  }
+
+  /**
+   * Can't be abstract because the child class may not implement IAttributes.
+   *
+   * @return ComponentAttributes
+   */
+  public function newAttributes ()
+  {
+    return null;
+  }
+
+  /**
+   * Called after the component has been created by the parsing process
+   * and all attributes and children have also been parsed.
+   * Override this to implement parsing-time behavior.
+   */
+  public function parsed ()
+  {
+    //implementation is specific to each component type.
   }
 
   /**
@@ -580,114 +399,42 @@ abstract class Component
   }
 
   /**
-   * Called after the component has been created by the parsing process
-   * and all attributes and children have also been parsed.
-   * Override this to implement parsing-time behavior.
+   * Executes the component and any relevant children.
+   * Do not override! Use event handlers or override render() or renderChildren().
    */
-  public function parsed ()
+  public final function run ()
   {
-    //implementation is specific to each component type.
-  }
-
-  public final function getChildren ($attrName)
-  {
-    if (isset($this->attrsObj->$attrName)) {
-      $p = $this->attrsObj->$attrName;
-      if ($p instanceof Parameter)
-        return $p->children;
-      throw new ComponentException($this,
-        "Can' get children of attribute <b>$attrName</b>, which has a value of type <b>" . gettype ($p) . '</b>.');
-    }
-    return null;
-  }
-
-  public final function setChildren (array $children = null, $attach = true)
-  {
-    if (isset($children)) {
-      $this->children = $children;
-      if ($attach)
-        $this->attach ($children);
-    }
-  }
-
-  public final function getClonedChildren ($attrName)
-  {
-    return self::cloneComponents ($this->getChildren ($attrName));
-  }
-
-  public final function isBound ($fieldName)
-  {
-    return isset($this->bindings) && array_key_exists ($fieldName, $this->bindings);
+    $this->doRender ();
   }
 
   /**
-   * Indicates if either a constant value or a databinding expression were specified for the given attribute.
+   * Runs a private child component that does not belong to the hierarchy.
    *
-   * @param string $fieldName
-   * @return boolean
+   * @param Component $c
    */
-  public final function isAttributeSet ($fieldName)
+  public final function runPrivate (Component $c)
   {
-    return isset($this->attrsObj->$fieldName) || $this->isBound ($fieldName);
+    $this->attach ($c);
+    $c->run ();
   }
 
-  /**
-   * Registers a data binding.
-   *
-   * @param string $attrName The name of the bound attribute.
-   * @param string $bindExp  The binding expression.
-   */
-  public final function addBinding ($attrName, $bindExp)
+  protected function getUniqueId ()
   {
-    if (!isset($this->bindings))
-      $this->bindings = [];
-    $this->bindings[$attrName] = $bindExp;
+    if (array_key_exists ($this->className, self::$uniqueIDs))
+      return ++self::$uniqueIDs[$this->className];
+    self::$uniqueIDs[$this->className] = 1;
+
+    return 1;
   }
 
-  public final function removeBinding ($attrName)
+  protected function postRender ()
   {
-    if (isset($this->bindings)) {
-      unset($this->bindings[$attrName]);
-      if (empty($this->bindings))
-        $this->bindings = null;
-    }
+    //stub
   }
 
-  function inspect ($deep = true)
+  protected function preRender ()
   {
-    return ComponentInspector::inspect($this, $deep);
-  }
-
-  function __toString ()
-  {
-    return $this->inspect ();
-  }
-
-  public function __clone ()
-  {
-    if (isset($this->attrsObj)) {
-      $this->attrsObj = clone $this->attrsObj;
-      $this->attrsObj->setComponent ($this);
-    }
-    if (isset($this->children))
-      $this->children = self::cloneComponents ($this->children, $this);
-  }
-
-  protected function setAutoId ()
-  {
-    if ($this->regenerateId || (isset($this->attrsObj) && !isset($this->attrsObj->id))) {
-      $this->regenerateId = true; // if the component is re-rendered, always generate an id from now on.
-      // Strip non alpha-numeric chars from generated name.
-      $this->attrsObj->id =
-        preg_replace ('/\W/', '', property ($this->attrsObj, 'name', strtolower ($this->className))) .
-        $this->getUniqueId ();
-    }
-    return $this->attrsObj->id;
-  }
-
-  protected final function runChildren ()
-  {
-    $this->renderChildren ();
+    //stub
   }
 
   /**
@@ -703,170 +450,22 @@ abstract class Component
     //implementation is specific to each component type.
   }
 
-  protected function preRender ()
+  protected final function runChildren ()
   {
-    //stub
+    $this->renderChildren ();
   }
 
-  protected function postRender ()
+  protected function setAutoId ()
   {
-    //stub
-  }
-
-  /**
-   * Returns the data source to be used for non qualified databinging expressions.
-   * Searches upwards on the component hierarchy.
-   *
-   * @return DataSource
-   */
-  protected function getDefaultDataSource ()
-  {
-    return isset($this->defaultDataSource)
-      ? $this->defaultDataSource
-      :
-      (isset($this->parent) ? $this->parent->getDefaultDataSource () : null);
-  }
-
-  protected function databind ()
-  {
-    if (isset($this->bindings))
-      foreach ($this->bindings as $attrName => $bindExp) {
-        $this->bindToAttribute ($attrName, $this->evalBinding ($bindExp));
-      };
-  }
-
-  protected function bindToAttribute ($name, $value)
-  {
-    if (is_object ($value))
-      $this->attrsObj->$name = $value;
-    else $this->attrsObj->set ($name, $value);
-  }
-
-  /**
-   * Returns the current value of an attribute, performing databinding if necessary.
-   * @param string $name
-   * @return mixed
-   * @throws DataBindingException
-   */
-  protected function evaluateAttr ($name)
-  {
-    if (isset($this->bindings[$name]))
-      return $this->evalBinding ($this->bindings[$name]);
-    return $this->attrsObj->$name;
-  }
-
-  protected function evalBinding ($bindExp)
-  {
-    if (!is_string ($bindExp))
-      return $bindExp;
-    try {
-      $z = 0;
-      do {
-        if (self::isCompositeBinding ($bindExp)) {
-          //composite expression
-          $bindExp = preg_replace_callback (self::PARSE_PARAM_BINDING_EXP, [$this, 'evalBindingExp'], $bindExp);
-          if (!self::isBindingExpression ($bindExp))
-            return $bindExp;
-        }
-        else {
-          //simple expression
-          preg_match (self::PARSE_PARAM_BINDING_EXP, $bindExp, $matches);
-          $bindExp = $this->evalBindingExp ($matches, true);
-          if (!self::isBindingExpression ($bindExp))
-            return $bindExp;
-        }
-        if (++$z > 10)
-          throw new DataBindingException($this,
-            "The maximum nesting depth for a data binding expression was exceeded.<p>The last evaluated expression is   <b>$bindExp</b>");
-      } while (true);
-    } catch (\InvalidArgumentException $e) {
-      throw new DataBindingException($this, "Invalid databinding expression: $bindExp\n" . $e->getMessage ());
-    }
-  }
-
-  protected function evalBindingExp ($matches, $allowFullSource = false)
-  {
-    if (empty($matches))
-      throw new \InvalidArgumentException();
-    list($full, $dataSource, $dataField) = $matches;
-    $dataSource = trim ($dataSource);
-    $dataField  = trim ($dataField);
-    $p          = strpos ($dataField, '{');
-    if ($p !== false && $p >= 0) {
-      //recursive binding expression
-      $exp = preg_replace_callback (self::PARSE_PARAM_BINDING_EXP, [$this, 'evalBindingExp'], $dataField);
-      $z   = strpos ($exp, '.');
-      if ($z !== false) {
-        $dataSource .= substr ($exp, 0, $z);
-        $dataField = substr ($exp, $z + 1);
-        return "{!$dataSource.$dataField}";
-      }
-      else
-        return empty($dataSource) ? '{' . "$exp}" : "{!$dataSource" . ($p == 0 ? '' : '.') . "$exp}";
-    }
-    if (empty($dataSource))
-      $src = $this->getDefaultDataSource ();
-    else {
-      $src = get ($this->context->dataSources, $dataSource);
-      if (!isset($src))
-        throw new DataBindingException($this, "Data source <b>$dataSource</b> is not defined.");
-    }
-    if ($dataField == '') {
-      if ($allowFullSource)
-        return $src;
-      throw new DataBindingException($this,
-        "The full data source reference <b>$full</b> cannot be used on a composite databinding expression.");
-    }
-    if (is_null ($src))
-      return null;
-    if (!method_exists ($src, 'getIterator'))
-      throw new DataBindingException($this,
-        'Data source ' . (empty($dataSource) ? '<i>default</i>' : "<b>$dataSource</b>") .
-        ' is not a valid DataSource object.');
-    $it = $src->getIterator ();
-    /** @var \Iterator $it */
-    if (!$it->valid ())
-      return null;
-    $pipes     = preg_split ('/\s*\|\s*/', $dataField);
-    $dataField = array_shift ($pipes);
-    switch ($dataField) {
-      case '#key':
-        $v = $it->key ();
-        break;
-      case '#ord':
-        $v = $it->key () + 1 + $this->rowOffset;
-        break;
-      case '#alt':
-        $v = $it->key () % 2;
-        break;
-      default:
-        $rec = $it->current ();
-        if (is_null ($rec)) {
-          $it->rewind ();
-          $rec = $it->current ();
-        }
-        if (is_null ($rec))
-          $rec = new \EmptyIterator();
-        $v = $dataField == '#self' ? $rec : getField ($rec, $dataField);
-    }
-    foreach ($pipes as $name) {
-      $pipe = $this->context->getPipe (trim ($name));
-      try {
-        $v = call_user_func ($pipe, $v, $this->context);
-      } catch (HandlerNotFoundException $e) {
-        throw new ComponentException ($this, "Pipe <b>$name</b> was not found.");
-      }
+    if ($this->regenerateId || (isset($this->attrsObj) && !isset($this->attrsObj->id))) {
+      $this->regenerateId = true; // if the component is re-rendered, always generate an id from now on.
+      // Strip non alpha-numeric chars from generated name.
+      $this->attrsObj->id =
+        preg_replace ('/\W/', '', property ($this->attrsObj, 'name', strtolower ($this->className))) .
+        $this->getUniqueId ();
     }
 
-    return $v;
-  }
-
-  protected function getUniqueId ()
-  {
-    if (array_key_exists ($this->className, self::$uniqueIDs))
-      return ++self::$uniqueIDs[$this->className];
-    self::$uniqueIDs[$this->className] = 1;
-    return 1;
+    return $this->attrsObj->id;
   }
 
 }
