@@ -421,7 +421,6 @@ class Application
       $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
       WebConsole::routes ()->withCaption ('Active Route')->withFilter ($filter, $loader->sitePage);
       WebConsole::response (['Content-Length' => round (ob_get_length () / 1024) . ' KB']);
-      $this->initDOMPanel ($loader->moduleInstance);
     }
     WebConsole::outputContent ();
   }
@@ -624,7 +623,7 @@ class Application
     }
   }
 
-  private function initDOMPanel (Controller $controller)
+  function initDOMPanel (Controller $controller)
   {
     if (isset($controller->page)) {
       $insp = $controller->page->inspect (true);

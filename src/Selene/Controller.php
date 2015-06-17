@@ -547,10 +547,11 @@ class Controller
   /**
    * Allows processing on the server side to occur and redraws the current page.
    * This is useful, for instance, for updating a form by submitting it without actually saving it.
-   * The custom processing will usually take place on the render() or the viewModel() methods, but you may also override
-   * this method; just make sure you call the inherited one.
-   * @param DataObject $data The current model object as being filled out on the form, if any.
-   * @param string $param A JQuery selector for the element that should automatically receive focus after the page reloads.
+   * The custom processing will usually take place on the render() or the viewModel() methods, but you may also
+   * override this method; just make sure you call the inherited one.
+   * @param DataObject $data  The current model object as being filled out on the form, if any.
+   * @param string     $param A JQuery selector for the element that should automatically receive focus after the page
+   *                          reloads.
    */
   function action_refresh (DataObject $data = null, $param = null)
   {
@@ -613,6 +614,8 @@ class Controller
     $ctx = $this->context;
     if (!isset($data))
       $ctx->dataSources[$name] = new DataSet ();
+    else if ($data instanceof DataSource)
+      $ctx->dataSources[$name] = $data;
     else if ((is_array ($data) && isset($data[0])) || $data instanceof PDOStatement)
       $ctx->dataSources[$name] = new DataSet($data);
     else $ctx->dataSources[$name] = new DataRecord($data);
@@ -804,9 +807,9 @@ class Controller
     if (isset($application->routingMap)) {
       if (!isset($this->moduleLoader))
         throw new ConfigException("The module for the current URI is not working properly.<br>You should check the class code.");
-      $this->sitePage          = $this->moduleLoader->sitePage;
-      $this->URIParams         = $this->sitePage->getURIParams ();
-      $this->virtualURI        = $this->moduleLoader->virtualURI;
+      $this->sitePage   = $this->moduleLoader->sitePage;
+      $this->URIParams  = $this->sitePage->getURIParams ();
+      $this->virtualURI = $this->moduleLoader->virtualURI;
     }
   }
 
@@ -990,7 +993,7 @@ class Controller
 
     $vm = $this->viewModel ();
     if ($vm) {
-      if (is_array($vm))
+      if (is_array ($vm))
         foreach ($vm as $k => $v)
           $this->setViewModel ($k, $v);
       else throw new \RuntimeException ("Invalid view model");
@@ -1125,7 +1128,10 @@ class Controller
 
   protected function parseView ($viewTemplate)
   {
+    global $application;
     $this->engine->parse ($viewTemplate, $this->context, $this->page);
+    if ($application->debugMode)
+      $application->initDOMPanel ($this);
   }
 
   /**
@@ -1150,7 +1156,7 @@ class Controller
     }
 //          $path2 = ErrorHandler::shortFileName ($path2);
     if ($errorIfNotFound) {
-      $paths = implode('', map ($dirs, function ($path) {
+      $paths = implode ('', map ($dirs, function ($path) {
         return "<li><path>$path</path>";
       }));
       throw new FatalException("View <b>$path</b> was not found.<p>Search paths:<ul>$paths</ul>");
