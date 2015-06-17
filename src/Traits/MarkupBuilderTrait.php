@@ -3,6 +3,7 @@ namespace Selene\Matisse\Traits;
 
 use Selene\Matisse\Components\Literal;
 use Selene\Matisse\Exceptions\ComponentException;
+use Selene\Matisse\Tag;
 
 trait MarkupBuilderTrait
 {

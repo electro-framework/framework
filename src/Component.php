@@ -10,12 +10,14 @@ use Selene\Matisse\Exceptions\DataBindingException;
 use Selene\Matisse\Exceptions\FileIOException;
 use Selene\Matisse\Exceptions\HandlerNotFoundException;
 use Selene\Matisse\Exceptions\ParseException;
+use Selene\Matisse\Traits\MarkupBuilderTrait;
 
 /**
  * The base class from which all components derive.
  */
 abstract class Component
 {
+  use MarkupBuilderTrait;
   /**
    * Finds binding expressions and extracts datasource and field info.
    * > Note: the u modifier allows unicode white space to be properly matched.
