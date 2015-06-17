@@ -12,12 +12,12 @@ class Parser
   const EXP_END              = '}}';
   const RAW_EXP_BEGIN        = '{!!';
   const RAW_EXP_END          = '!!}';
-  const PARSE_DATABINDINGS   = '# (?: \{\{ | \{!! ) ( .*? ) (?: \}\} | !!\} ) #x';
-  const PARSE_TAG            = '# (<) (/?) ([A-Z]\w+) \s* (.*?) (/?) (>) #sx';
-  const TRIM_LITERAL_CONTENT = '# ^ \s+ | (?<=\>) \s+ (?=\s) | (?<=\s) \s+ (?=\<) | \s+ $ #x';
-  const TRIM_LEFT_CONTENT    = '# ^ \s+ | (?<=\>) \s+ (?=\s) #x';
-  const TRIM_RIGHT_CONTENT   = '# (?<=\s) \s+ (?=\<) | \s+ $ #x';
-  const PARSE_ATTRS          = '# ([\w\-\:]+) \s* (?: = \s* ("|\') (.*?) \2 )? (\s|@) #sx'; // @ is at the end of the attrs string and it's used as a marker.
+  const PARSE_DATABINDINGS   = '# (?: \{\{ | \{!! ) ( .*? ) (?: \}\} | !!\} ) #xu';
+  const PARSE_TAG            = '# (<) (/?) ([A-Z]\w+) \s* (.*?) (/?) (>) #sxu';
+  const TRIM_LITERAL_CONTENT = '# (?<=\>) \s+ (?=\s) | (?<=\s) \s+ (?=\<) #xu';
+  const TRIM_LEFT_CONTENT    = '# (?<=\>) \s+ (?=\s) #xu';
+  const TRIM_RIGHT_CONTENT   = '# (?<=\s) \s+ (?=\<) #xu';
+  const PARSE_ATTRS          = '# ([\w\-\:]+) \s* (?: = \s* ("|\') (.*?) \2 )? (\s|@) #sxu'; // @ is at the end of the attrs string and it's used as a marker.
   const NO_TRIM              = 0;
   const TRIM_LEFT            = 1;
   const TRIM_RIGHT           = 2;

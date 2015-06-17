@@ -10,7 +10,7 @@ class DataBindingException extends MatisseException
       $i = $this->inspect ($component);
     else
       $i = '';
-    parent::__construct ("$msg\n\n$i", 'Databinding error');
+    parent::__construct ("<p>$msg</p>$i", 'Databinding error');
   }
 
 }

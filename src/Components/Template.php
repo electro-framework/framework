@@ -1,19 +1,21 @@
 <?php
 namespace Selene\Matisse\Components;
 use Selene\Matisse as m;
+use Selene\Matisse\Attributes\ComponentAttributes;
 use Selene\Matisse\AttributeType;
 use Selene\Matisse\Component;
-use Selene\Matisse\Attributes\ComponentAttributes;
 use Selene\Matisse\Exceptions\ComponentException;
 use Selene\Matisse\IAttributes;
 
 class TemplateAttributes extends ComponentAttributes
 {
+  public $defaultParam;
   public $name;
   public $param;
   public $script;
   public $stylesheet;
-  public $defaultParam;
+
+  protected function typeof_defaultParam () { return AttributeType::ID; }
 
   protected function typeof_name () { return AttributeType::ID; }
 
@@ -22,19 +24,48 @@ class TemplateAttributes extends ComponentAttributes
   protected function typeof_script () { return AttributeType::PARAMS; }
 
   protected function typeof_stylesheet () { return AttributeType::PARAMS; }
-
-  protected function typeof_defaultParam () { return AttributeType::ID; }
 }
 
 class Template extends Component implements IAttributes
 {
-  /** Finds template binding expressions. */
-  const PARSE_TEMPLATE_BINDING_EXP = '#\{\{\s*@(.*?)\s*\}\}#';
-
   /** Finds binding expressions which are not template bindings. */
-  const FIND_NON_TEMPLATE_EXP = '#\{\{\s*(?=\S)[^@]#';
+  const FIND_NON_TEMPLATE_EXP = '#\{\{\s*(?=\S)[^@]#u';
+  /** Finds template binding expressions. */
+  const PARSE_TEMPLATE_BINDING_EXP = '#\{\{\s*@(.*?)\s*\}\}#u';
 
   public $allowsChildren = true;
+
+  private static function evalScalarExp ($bindExp, TemplateInstance $instance, &$transfer_binding = null)
+  {
+    $transfer_binding = false;
+    if (self::isCompositeBinding ($bindExp))
+      return preg_replace_callback (self::PARSE_TEMPLATE_BINDING_EXP,
+        function ($args) use ($instance, $transfer_binding) {
+          return self::evalScalarRef ($args[1], $instance, $transfer_binding);
+        }, $bindExp);
+    throw new \Exception("TO DO: upgrade identifier extract formula (see source code)");
+    $bindExp = substr ($bindExp, 2, strlen ($bindExp) - 3);
+
+    return self::evalScalarRef ($bindExp, $instance, $transfer_binding);
+  }
+
+  private static function evalScalarRef ($ref, TemplateInstance $instance, &$transfer_binding)
+  {
+    $ref = m\normalizeAttributeName ($ref);
+    if (isset($instance->bindings) && array_key_exists ($ref, $instance->bindings)) {
+      $transfer_binding = true;
+
+      return $instance->bindings[$ref];
+    }
+    $value = $instance->attrs ()->$ref;
+    if (self::isBindingExpression ($value))
+      return $value;
+    $value = $instance->attrs ()->getScalar ($ref);
+    if (is_null ($value) || $value === '')
+      $value = $instance->attrs ()->getDefault ($ref);
+
+    return $value;
+  }
 
   private static function parsingtimeDatabind (Component $component, TemplateInstance $instance, $force = false)
   {
@@ -59,98 +90,6 @@ class Template extends Component implements IAttributes
     if (!empty($component->children))
       foreach ($component->children as $child)
         self::parsingtimeDatabind ($child, $instance, $force || $component instanceof Parameter);
-  }
-
-  private static function evalScalarExp ($bindExp, TemplateInstance $instance, &$transfer_binding = null)
-  {
-    $transfer_binding = false;
-    if (self::isCompositeBinding ($bindExp))
-      return preg_replace_callback (self::PARSE_TEMPLATE_BINDING_EXP,
-        function ($args) use ($instance, $transfer_binding) {
-          return self::evalScalarRef ($args[1], $instance, $transfer_binding);
-        }, $bindExp);
-    $bindExp = substr ($bindExp, 2, strlen ($bindExp) - 3);
-    return self::evalScalarRef ($bindExp, $instance, $transfer_binding);
-  }
-
-  private static function evalScalarRef ($ref, TemplateInstance $instance, &$transfer_binding)
-  {
-    $ref = m\normalizeAttributeName ($ref);
-    if (isset($instance->bindings) && array_key_exists ($ref, $instance->bindings)) {
-      $transfer_binding = true;
-      return $instance->bindings[$ref];
-    }
-    $value = $instance->attrs ()->$ref;
-    if (self::isBindingExpression ($value))
-      return $value;
-    $value = $instance->attrs ()->getScalar ($ref);
-    if (is_null ($value) || $value === '')
-      $value = $instance->attrs ()->getDefault ($ref);
-    return $value;
-  }
-
-  /**
-   * @see IAttributes::attrs()
-   * @return TemplateAttributes
-   */
-  public function attrs ()
-  {
-    return $this->attrsObj;
-  }
-
-  /**
-   * @see IAttributes::newAttributes()
-   * @return TemplateAttributes
-   */
-  public function newAttributes ()
-  {
-    return new TemplateAttributes($this);
-  }
-
-  public function parsed ()
-  {
-    $this->context->addTemplate ($this->attrs ()->name, $this);
-  }
-
-  /**
-   * Returns the template parameter with the given name.
-   * @param string $name
-   * @return Parameter
-   */
-  public function getParameter ($name)
-  {
-    $name   = m\denormalizeAttributeName ($name);
-    $params = $this->attrs ()->get ('param');
-    if (!is_null ($params))
-      foreach ($params as $param)
-        if ($param->attrs ()->name == $name)
-          return $param;
-    return null;
-  }
-
-  public function getParameterType ($name)
-  {
-    $param = $this->getParameter ($name);
-    if (isset($param)) {
-      $p = ComponentAttributes::getTypeIdOf ($param->attrs ()->type);
-      if ($p === false) {
-        $s = join ('</b>, <b>', array_slice (ComponentAttributes::$TYPE_NAMES, 1));
-        throw new ComponentException($this,
-          "The type attribute for the <b>$name</b> parameter is invalid.\nExpected values: <b>$s</b>.");
-      }
-      return $p;
-    }
-    return null;
-  }
-
-  public function getParametersNames ()
-  {
-    $params = $this->attrs ()->get ('param');
-    if (is_null ($params)) return null;
-    $names = [];
-    foreach ($params as $param)
-      $names[] = $param->attrs ()->name;
-    return $names;
   }
 
   public function apply (TemplateInstance $instance)
@@ -178,8 +117,9 @@ class Template extends Component implements IAttributes
         }
       }
     }
-    $cloned = $this->cloneComponents($this->children);
+    $cloned = $this->cloneComponents ($this->children);
     $this->applyTo ($cloned, $instance);
+
     return $cloned;
   }
 
@@ -272,5 +212,73 @@ class Template extends Component implements IAttributes
           $this->applyTo ($component->children, $instance);
         }
       }
+  }
+
+  /**
+   * @see IAttributes::attrs()
+   * @return TemplateAttributes
+   */
+  public function attrs ()
+  {
+    return $this->attrsObj;
+  }
+
+  /**
+   * Returns the template parameter with the given name.
+   * @param string $name
+   * @return Parameter
+   */
+  public function getParameter ($name)
+  {
+    $name   = m\denormalizeAttributeName ($name);
+    $params = $this->attrs ()->get ('param');
+    if (!is_null ($params))
+      foreach ($params as $param)
+        if ($param->attrs ()->name == $name)
+          return $param;
+
+    return null;
+  }
+
+  public function getParameterType ($name)
+  {
+    $param = $this->getParameter ($name);
+    if (isset($param)) {
+      $p = ComponentAttributes::getTypeIdOf ($param->attrs ()->type);
+      if ($p === false) {
+        $s = join ('</b>, <b>', array_slice (ComponentAttributes::$TYPE_NAMES, 1));
+        throw new ComponentException($this,
+          "The type attribute for the <b>$name</b> parameter is invalid.\nExpected values: <b>$s</b>.");
+      }
+
+      return $p;
+    }
+
+    return null;
+  }
+
+  public function getParametersNames ()
+  {
+    $params = $this->attrs ()->get ('param');
+    if (is_null ($params)) return null;
+    $names = [];
+    foreach ($params as $param)
+      $names[] = $param->attrs ()->name;
+
+    return $names;
+  }
+
+  /**
+   * @see IAttributes::newAttributes()
+   * @return TemplateAttributes
+   */
+  public function newAttributes ()
+  {
+    return new TemplateAttributes($this);
+  }
+
+  public function parsed ()
+  {
+    $this->context->addTemplate ($this->attrs ()->name, $this);
   }
 }
