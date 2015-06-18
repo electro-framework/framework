@@ -133,12 +133,15 @@ function database_rollback ()
   }
 }
 
-function database_get ($query, $params = null)
+/**
+ * @param string     $query
+ * @param array|null $params
+ * @return mixed|false False if query result set is empty.
+ */
+function database_get ($query, array $params = null)
 {
   $st = database_query ($query, $params);
-  if ($st)
-    return $st->fetchColumn (0);
-  return null;
+  return $st->fetchColumn (0);
 }
 
 
