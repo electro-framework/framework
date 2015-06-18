@@ -48,7 +48,7 @@ return [
     'pageSize'               => 99999,
     'pageNumberParam'        => 'p',
     'frameworkScripts'       => true,
-    'condenseLiterals'       => true,
+    'condenseLiterals'       => $_SERVER['APP_DEBUG'] != 'true',
     'compressOutput'         => $_SERVER['APP_DEBUG'] != 'true',
     'debugMode'              => $_SERVER['APP_DEBUG'] == 'true',
     'userModel'              => '',
