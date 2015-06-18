@@ -1,14 +1,14 @@
 # Matisse
 
-A component-based template engine for developing web applications in PHP.
+Matisse is a component-based template engine for developing web applications in PHP.
+
+Although Matisse is part of the Selene framework, it is a completely independent library that you can use in any project, with any framework.
 
 ## Overview
 
 Like any other template engine, Matisse generates an HTML document by combining a source (template) document with data from your domain model.
 
 Unlike most other PHP template engines that simply process text (which may happen to be HTML markup) with embedded commands written on some DSL, Matisse works with components, which are **parametrised, composable and reusable units of rendering logic and markup** that are written in XML syntax and embedded in text content (which may be plain text, HTML, XML, JSON, etc).
-
-**Although Matisse is part of the Selene framework, it is a completely independent library that you can use in any project, with any framework.**
 
 ### Templating
 
