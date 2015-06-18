@@ -8,11 +8,11 @@ Although Matisse is part of the Selene framework, it is a completely independent
 
 Like any other template engine, Matisse generates an HTML document by combining a source (template) document with data from your domain model.
 
-Unlike most other PHP template engines that simply process text (which may happen to be HTML markup) with embedded commands written on some DSL, Matisse works with components, which are **parametrised, composable and reusable units of rendering logic and markup** that are written in XML syntax and embedded in text content (which may be plain text, HTML, XML, JSON, etc).
+Unlike most other PHP template engines that simply process text (which may happen to be HTML markup) with embedded commands written on some DSL, Matisse works with components, which are **parametrised, composable and reusable units of rendering logic and markup** that are written in XML syntax and embedded in text content (which usually is HTML, but may also be plain text, XML, JSON, etc).
 
 ### Templating
 
-Templates are (usually) HTML text files where, besides static content written as common HTML tags (**always lower cased**), special tags (**beginning with a capital letter**) specify dynamic components.
+Templates are text files where, besides static content written as common HTML tags (**always lower cased**), special tags (**camel-cased and always beginning with a capital letter**) specify dynamic components.
 
 Example of a Matisse template:
 
@@ -37,25 +37,28 @@ Also on the example, notice how the HTML `<ul>` tag is only closed inside the `<
 
 > A single `Text` component can hold large spans of HTML markup.
 
-So, the real DOM (as parsed by Matisse) for the example above is:
+So, the real DOM (as parsed by Matisse) for the example above can be represented (in pseudocode, this is not valid markup) as:
 
 ```HTML
-<Text/>
-<Input/>
-<Repeat>
-	<Header/>
-	<Text/>
-	<Footer/>
-	<NoData/>
+<Text value="<h1>Some HTML text</h1><form>"/>
+<Input name="field1" value="{{ myVar }}"/>
+<Repeat for="{{ !myData }}" header="<ul>" footer="</ul>" noData="The are no items.">
+	<Text value="<li>Item {{ name }}</li>"/>
 </Repeat>
-<Text/>
+<Text value="</form>"/>
 ```
 
-Each component tag is converted into an instance of a corresponding PHP class. When the template is rendered, each component instance is responsible for generating an HTML representation of that component, together with optional (embedded or external) javascript code and stylesheet references or embedded CSS styles.
+When a template is parsed, each component tag is converted into an instance of a corresponding PHP class. When the template is rendered, each component instance is responsible for generating an HTML representation of that component, together with optional (embedded or external) javascript code and stylesheet references or embedded CSS styles.
 
-> When writing templates, while HTML markup should be written in HTML 5 syntax, component tags must be written in XML syntax. This means attribute values must be always enclosed in quotes, and tags must always be closed, even if the tag has no content (you can use the self-closing tag syntax: `<Component/>`).
+> When writing templates, while HTML markup should be written in HTML 5 syntax, component tags must be written in XML syntax. This means attribute values must be always enclosed in quotes and tags must always be closed, even if the tag has no content (you can use the self-closing tag syntax: `<Component/>`).
 
-Components can also be defined with pure markup via template files, without any PHP code. Those templates are conceptually similar to parametric macros, as they insert their markup into the host template and then they disappear, leaving just the generated markup (which may contain additional components). When the template is cached to disk for future reuse, all macro components are gone, so the cached template may have less components and/or be more performant than the original one.
+#### Macros
+
+Components can also be defined with pure markup via template files, without any PHP code. Those templates are conceptually similar to parametric macros, as when a template is being parsed, macros are "expanded" by inserting their output into the host template and then they disappear, leaving just the generated DOM (not markup, that will be generated later when the template is rendered).
+
+> When a template is cached to disk for future reuse, all macro components are gone, so the cached template may have less components and/or be more performant than the original one.
+
+### Examples
 
 A more advanced example of a Matisse template, which defines a macro component that implements a customisable panel:
 
@@ -123,7 +126,7 @@ When parsed, the template will undergo macro expansion and will be converted to 
 </div>
 ```
 
-If the following view model is defined:
+For rendering the template, we'll need a view model. For example:
 
 ```PHP
 [
