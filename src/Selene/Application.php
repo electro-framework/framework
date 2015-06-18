@@ -422,7 +422,8 @@ class Application
       WebConsole::routes ()->withCaption ('Active Route')->withFilter ($filter, $loader->sitePage);
       WebConsole::response (['Content-Length' => round (ob_get_length () / 1024) . ' KB']);
     }
-    WebConsole::outputContent ();
+    if (!$loader->moduleInstance->isWebService)
+      WebConsole::outputContent ();
   }
 
   /**

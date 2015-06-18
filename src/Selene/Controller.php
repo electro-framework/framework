@@ -365,14 +365,12 @@ class Controller
         else {
           if ($authenticate)
             $this->processView ($authenticate);
-          $this->wrapWebServiceResponse ();
           $this->redirectAndHalt ();
         }
       }
       else if (is_null ($this->redirectURI)) {
         if (!$this->viewProcessing || !$this->processView ($authenticate)) {
           $this->respond ();
-          $this->wrapWebServiceResponse ();
         }
       }
       $this->finalize ();
@@ -434,6 +432,11 @@ class Controller
   {
     header ('Content-Type: text/xml');
     echo '<?xml version="1.0" encoding="utf-8"?>';
+  }
+
+  function beginJSONResponse ()
+  {
+    header ('Content-Type: application/json');
   }
 
   function getRowOffset ()
@@ -1098,14 +1101,28 @@ class Controller
   protected function defineView ()
   {
     ob_start ();
-    $this->render ();
+    $r    = $this->render ();
     $view = ob_get_clean ();
+    if ($this->isWebService) {
+      $this->beginJSONResponse ();
+      echo json_encode ($r);
+
+      return true;
+    }
+    if (isset($r)) {
+      echo $r;
+
+      return true;
+    }
     if (strlen ($view)) {
       $this->parseView ($view);
+
       return false;
     }
     if (isset($this->moduleLoader)) {
-      $this->loadView ($this->sitePage->view, true);
+      if (isset($this->sitePage->view))
+        $this->loadView ($this->sitePage->view, true);
+
       return false;
     }
     else {
@@ -1113,6 +1130,7 @@ class Controller
       if (!count ($match))
         throw new FatalException("Invalid URI <b>$this->URI</b>");
       $path = $match[1] . $this->TEMPLATE_EXT;
+
       return !$this->loadView ($path);
     }
   }
@@ -1120,6 +1138,10 @@ class Controller
   /**
    * Allows subclasses to generate the view's markup dinamically.
    * If noting is sent to the output buffer from this method, the controller will try to load the view from metadata.
+   * @return mixed If a return value is provided, it is assumed to be web service data and it will be output instead of
+   * the output buffer content, without any further processing.
+   * Note: if `isWebService` is enabled, the return value will be always used (even if null) and it will be encoded as
+   * JSON.
    */
   protected function render ()
   {
@@ -1502,22 +1524,6 @@ class Controller
           $this->dataItem->{$presetParts[0]} = get ($this->URIParams, $field);
         }
         else $this->dataItem->{$presetParts[0]} = $presetParts[1];
-      }
-    }
-  }
-
-  /**
-   * Called when a Marker component is parsed. This gives the controller the
-   * opportunity to replace the marker with some other content.
-   * @return array Array or Object: one or more components.
-   */
-  private function wrapWebServiceResponse ()
-  {
-    if ($this->isWebService) {
-      $output = trim (ob_get_clean ());
-      if (strlen ($output)) {
-        $this->beginXMLResponse ();
-        echo $output;
       }
     }
   }
