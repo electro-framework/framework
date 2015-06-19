@@ -767,6 +767,12 @@ class Controller
         return false;
     }
     else {
+      if ($this->isWebService) {
+        http_response_code (401);
+        header ('WWW-Authenticate: Form');
+        echo "Unauthorized";
+        return true;
+      }
       // Show login form.
       $path = $application->loginView;
       $this->loadView ($path, true);
