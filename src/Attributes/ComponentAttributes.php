@@ -2,7 +2,9 @@
 namespace Selene\Matisse\Attributes;
 
 use Selene\Matisse\AttributeType;
+use Selene\Matisse\Base\Text;
 use Selene\Matisse\Component;
+use Selene\Matisse\Components\Parameter;
 use Selene\Matisse\DataSet;
 use Selene\Matisse\Exceptions\ComponentException;
 
@@ -131,9 +133,23 @@ class ComponentAttributes
       throw new ComponentException($this->component, "Invalid attribute <b>$name</b> specified.");
     if ($this->isScalar ($name))
       $this->setScalar ($name, $value);
-    else {
-      $this->$name     = $value;
-      $this->_modified = true;
+    else switch ($type = $this->getTypeOf ($name)) {
+      case AttributeType::SRC:
+        $ctx   = $this->component->context;
+        $text = Text::from ($ctx, $value);
+        if (isset($this->$name))
+          $this->$name->addChild ($text);
+        else {
+          $param = new Parameter ($ctx, $name, $type);
+          $param->attachTo ($this->component);
+          $param->addChild ($text);
+          $this->$name = $param;
+        }
+        $this->_modified = true;
+        break;
+      default:
+        $this->$name     = $value;
+        $this->_modified = true;
     }
   }
 
