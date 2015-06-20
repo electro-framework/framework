@@ -104,7 +104,7 @@ abstract class Component
    * The rendering context for the current request.
    * @var Context
    */
-  protected $context;
+  public $context;
   /**
    * Set to true on a component class definition to automatically assign an ID to instances.
    *
@@ -151,6 +151,13 @@ abstract class Component
     $this->supportsAttributes = $this instanceof IAttributes;
     if ($this->supportsAttributes) {
       $this->attrsObj = $this->newAttributes ();
+
+      // Apply presets.
+      foreach ($context->presets as $preset)
+        if (method_exists ($preset, $this->className))
+          $preset->{$this->className} ($this);
+
+      // Apply attributes.
       if ($attributes)
         foreach ($attributes as $name => $value)
           $this->attrsObj->set ($name, $value);

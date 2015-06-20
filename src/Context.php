@@ -54,6 +54,15 @@ class Context
    * @var array
    */
   private $templates = [];
+  /**
+   * A stack of presets.
+   *
+   * Each preset is an instance of a class where methods are named after tags or preset names.
+   * When components are being instantiated, if they match a tag name or preset name on any of the stacked presets,
+   * they will be passed to the corresponding methods on the presets to be transformed.
+   * @var array
+   */
+  public $presets = [];
 
   /**
    * @param array  $tags        A map of tag names to fully qualified PHP class names.
