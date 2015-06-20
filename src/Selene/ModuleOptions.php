@@ -33,6 +33,7 @@ class ModuleOptions extends Object
       'less'       => 'string',
       'config'     => 'array',
       'components' => 'array',
+      'presets'    => 'array',
     ];
   }
 
@@ -108,12 +109,14 @@ class ModuleOptions extends Object
   {
     global $application;
     foreach ($v as $section => $cfg) {
-      $appCfg                        = get ($application->config, $section, []);
-      $appCfg                        = $appCfg + $cfg;
-      $application->config[$section] = $appCfg;
       if ($section == 'main')
-        foreach ($appCfg as $k => $v)
+        foreach ($cfg as $k => $v)
           $application->$k = $v;
+      else {
+        $appCfg                        = get ($application->config, $section, []);
+        $appCfg                        = $appCfg + $cfg;
+        $application->config[$section] = $appCfg;
+      }
     }
   }
 
@@ -123,6 +126,15 @@ class ModuleOptions extends Object
   function set_components (array $v)
   {
     Application::$TAGS = array_merge (Application::$TAGS, $v);
+  }
+
+  /**
+   * @param string[] $v List of class names providing component presets.
+   */
+  function set_presets (array $v)
+  {
+    global $application;
+    $application->presets = array_merge ($v, $application->presets);
   }
 
 }

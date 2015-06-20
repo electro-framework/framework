@@ -384,7 +384,10 @@ class Application
    * @var array
    */
   public $config;
-
+  /**
+   * @var string[] A list of "preset" class names.
+   */
+  public $presets = [];
   /**
    * @var PipeHandler
    */

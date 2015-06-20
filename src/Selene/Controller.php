@@ -800,6 +800,7 @@ class Controller
     $ctx->condenseLiterals    = $application->condenseLiterals;
     $ctx->debugMode           = $application->debugMode;
     $ctx->templateDirectories = $application->templateDirectories;
+    $ctx->presets             = map ($application->presets, function ($class) { return new $class;});
     $this->page               = new Page($ctx);
   }
 
