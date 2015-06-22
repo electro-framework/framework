@@ -13,7 +13,7 @@ class TemplateAttributes extends ComponentAttributes
   public $name;
   public $param;
   public $script;
-  public $stylesheet;
+  public $style;
 
   protected function typeof_defaultParam () { return AttributeType::ID; }
 
@@ -23,7 +23,7 @@ class TemplateAttributes extends ComponentAttributes
 
   protected function typeof_script () { return AttributeType::PARAMS; }
 
-  protected function typeof_stylesheet () { return AttributeType::PARAMS; }
+  protected function typeof_style () { return AttributeType::PARAMS; }
 }
 
 class Template extends Component implements IAttributes
@@ -94,9 +94,9 @@ class Template extends Component implements IAttributes
 
   public function apply (TemplateInstance $instance)
   {
-    $stylesheets = $this->attrs ()->get ('stylesheet');
-    if (isset($stylesheets))
-      foreach ($stylesheets as $sheet) {
+    $styles = $this->attrs ()->get ('style');
+    if (isset($styles))
+      foreach ($styles as $sheet) {
         self::parsingtimeDatabind ($sheet, $instance);
         if (isset($sheet->attrs ()->src))
           $instance->page->addStylesheet ($sheet->attrs ()->src);

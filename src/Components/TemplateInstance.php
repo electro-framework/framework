@@ -11,7 +11,7 @@ class TemplateInstanceAttributes
 {
 
   public $script;
-  public $stylesheet;
+  public $style;
   /**
    * Points to the component that defines the template for these attributes.
    * @var Template
@@ -137,7 +137,7 @@ class TemplateInstanceAttributes
     return AttributeType::PARAMS;
   }
 
-  protected function typeof_stylesheet ()
+  protected function typeof_style ()
   {
     return AttributeType::PARAMS;
   }
@@ -210,9 +210,9 @@ class TemplateInstance extends Component implements IAttributes
 
   private function processParameters ()
   {
-    $stylesheets = $this->attrs ()->stylesheet;
-    if (isset($stylesheets))
-      foreach ($stylesheets as $sheet) {
+    $styles = $this->attrs ()->style;
+    if (isset($styles))
+      foreach ($styles as $sheet) {
         if (isset($sheet->attrs ()->src))
           $this->page->addStylesheet ($sheet->attrs ()->src);
         else if (!empty($sheet->children)) {
