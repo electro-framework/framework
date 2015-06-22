@@ -111,7 +111,7 @@ class ModuleOptions extends Object
     foreach ($v as $section => $cfg) {
       if ($section == 'main')
         foreach ($cfg as $k => $v)
-          $application->$k = $v;
+          if (!property($application,$k)) $application->$k = $v;
       else {
         $appCfg                        = get ($application->config, $section, []);
         $appCfg                        = $appCfg + $cfg;
