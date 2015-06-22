@@ -182,7 +182,7 @@ class TemplateInstance extends Component implements IAttributes
   public function parsed ()
   {
     $this->processParameters ();
-    $this->databind ();
+//    $this->databind ();
 
     // Move children to default parameter
 

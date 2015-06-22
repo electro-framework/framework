@@ -113,7 +113,7 @@ class Page extends Component
     @ob_clean ();
     echo '<html><head><meta http-equiv="Content-Type" content="text/html;charset=utf-8"></head><body><pre>' . $msg .
          '</pre></body></html>';
-    exit();
+    exit;
   }
 
   public function addStylesheet ($uri)
