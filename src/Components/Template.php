@@ -1,6 +1,5 @@
 <?php
 namespace Selene\Matisse\Components;
-use Selene\Matisse as m;
 use Selene\Matisse\Attributes\ComponentAttributes;
 use Selene\Matisse\AttributeType;
 use Selene\Matisse\Component;
@@ -51,7 +50,7 @@ class Template extends Component implements IAttributes
 
   private static function evalScalarRef ($ref, TemplateInstance $instance, &$transfer_binding)
   {
-    $ref = m\normalizeAttributeName ($ref);
+    $ref = normalizeAttributeName ($ref);
     if (isset($instance->bindings) && array_key_exists ($ref, $instance->bindings)) {
       $transfer_binding = true;
 
@@ -230,7 +229,7 @@ class Template extends Component implements IAttributes
    */
   public function getParameter ($name)
   {
-    $name   = m\denormalizeAttributeName ($name);
+    $name   = denormalizeAttributeName ($name);
     $params = $this->attrs ()->get ('param');
     if (!is_null ($params))
       foreach ($params as $param)
