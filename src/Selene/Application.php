@@ -412,13 +412,14 @@ class Application
     $this->setupWebConsole ();
     $this->setup ($rootDir);
     $this->initSession ();
+    $this->registerPipes ();
     if ($this->debugMode) {
+      WebConsole::config ($this);
       WebConsole::session ()
                 ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="__doAction(\'logout\')">Log out</button>')
                 ->log ($session);
     }
     $this->loadRoutes ();
-    $this->registerPipes ();
     $loader = ModuleLoader::loadAndRun ();
     if ($this->debugMode) {
       $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
@@ -609,6 +610,7 @@ class Application
     WebConsole::registerPanel ('session', new ConsolePanel ('Session', 'fa fa-user'));
     WebConsole::registerPanel ('database', new ConsolePanel ('Database', 'fa fa-database'));
     WebConsole::registerPanel ('DOM', new ConsolePanel ('DOM', 'fa fa-sitemap'));
+    WebConsole::registerPanel ('config', new ConsolePanel ('Config.', 'fa fa-cogs'));
     WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
     ErrorHandler::$appName = 'Selene Framework';
   }
@@ -654,8 +656,10 @@ class Application
   private function loadConfig ($iniPath)
   {
     $ini = @include $iniPath;
-    if ($ini)
+    if ($ini) {
       extend ($this, $ini['main']);
+      unset ($ini['main']);
+    }
     else
       throw new ConfigException("Error parsing " . ErrorHandler::shortFileName ($iniPath));
     $this->config = $ini;

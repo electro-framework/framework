@@ -109,9 +109,10 @@ class ModuleOptions extends Object
   {
     global $application;
     foreach ($v as $section => $cfg) {
-      if ($section == 'main')
+      if ($section == 'main') {
         foreach ($cfg as $k => $v)
-          if (!property($application,$k)) $application->$k = $v;
+          if (!property ($application, $k)) $application->$k = $v;
+      }
       else {
         $appCfg                        = get ($application->config, $section, []);
         $appCfg                        = $appCfg + $cfg;
