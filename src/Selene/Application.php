@@ -420,7 +420,13 @@ class Application
                 ->log ($session);
     }
     $this->loadRoutes ();
-    $loader = ModuleLoader::loadAndRun ();
+    try {
+      $loader = ModuleLoader::loadAndRun ();
+    }
+    catch (Exception $e) {
+      WebConsole::outputContent (true);
+      throw $e;
+    }
     if ($this->debugMode) {
       $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
       WebConsole::routes ()->withCaption ('Active Route')->withFilter ($filter, $loader->sitePage);
