@@ -2,6 +2,7 @@
 namespace Selene\Matisse;
 
 use Selene\Matisse\Exceptions\HandlerNotFoundException;
+use Selene\Traits\InspectionTrait;
 
 /**
  * Resolves pipe invocations to pipe implementations,
@@ -10,6 +11,9 @@ use Selene\Matisse\Exceptions\HandlerNotFoundException;
  */
 class PipeHandler
 {
+  use InspectionTrait;
+
+  static $INSPECTABLE = ['pipes'];
   /**
    * Map of pipe names to pipe implementation functions.
    *
