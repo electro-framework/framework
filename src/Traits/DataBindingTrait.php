@@ -5,7 +5,6 @@ use Selene\Matisse\DataSource;
 use Selene\Matisse\Exceptions\ComponentException;
 use Selene\Matisse\Exceptions\DataBindingException;
 use Selene\Matisse\Exceptions\HandlerNotFoundException;
-use function Selene\Matisse\getField;
 
 /**
  * Provides an API for handling data binding on a component's properties.
