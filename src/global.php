@@ -214,28 +214,37 @@ function extractP ($html)
   }
  */
 
-function fileExists ($filename)
-{
-  $r = @fopen ($filename, 'rb', true);
-  if ($r === false)
-    return false;
-  fclose ($r);
-  return true;
+if (!function_exists ('fileExists')) {
+  function fileExists ($filename)
+  {
+    $r = @fopen ($filename, 'rb', true);
+    if ($r === false)
+      return false;
+    fclose ($r);
+
+    return true;
+  }
 }
 
-function loadFile ($filename, $useIncludePath = true)
-{
-  $data = @file_get_contents ($filename, $useIncludePath);
-  if ($data)
-    return removeBOM ($data);
-  return '';
+if (!function_exists ('loadFile')) {
+  function loadFile ($filename, $useIncludePath = true)
+  {
+    $data = @file_get_contents ($filename, $useIncludePath);
+    if ($data)
+      return removeBOM ($data);
+
+    return '';
+  }
 }
 
-function removeBOM ($string)
-{
-  if (substr ($string, 0, 3) == pack ('CCC', 0xef, 0xbb, 0xbf))
-    $string = substr ($string, 3);
-  return $string;
+if (!function_exists ('removeBOM')) {
+  function removeBOM ($string)
+  {
+    if (substr ($string, 0, 3) == pack ('CCC', 0xef, 0xbb, 0xbf))
+      $string = substr ($string, 3);
+
+    return $string;
+  }
 }
 
 if (get_magic_quotes_gpc () == 1) {

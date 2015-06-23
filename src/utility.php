@@ -93,21 +93,23 @@ function toFloat ($val)
 // Objects
 //----------------------------------------------------------------------------------------
 
-/**
- * Reads a value from the given object at the specified key.
- * <br><br>
- * Unlike the usual object access operator ->, this function does not generate warnings when
- * the key is not present on the object; instead, it returns null or the specified default value.
- *
- * @param object        $obj The target object.
- * @param number|string $key The property name.
- * @param mixed         $def An optional default value.
- *
- * @return mixed
- */
-function property ($obj, $key, $def = null)
-{
-  return isset ($obj->$key) ? $obj->$key : $def;
+if (!function_exists ('property')) {
+  /**
+   * Reads a value from the given object at the specified key.
+   * <br><br>
+   * Unlike the usual object access operator ->, this function does not generate warnings when
+   * the key is not present on the object; instead, it returns null or the specified default value.
+   *
+   * @param object        $obj The target object.
+   * @param number|string $key The property name.
+   * @param mixed         $def An optional default value.
+   *
+   * @return mixed
+   */
+  function property ($obj, $key, $def = null)
+  {
+    return isset ($obj->$key) ? $obj->$key : $def;
+  }
 }
 
 /**
@@ -206,23 +208,26 @@ function extendNonEmpty ($target, $src)
 // Arrays
 //----------------------------------------------------------------------------------------
 
-/**
- * Reads a value from the given array at the specified index/key.
- * <br><br>
- * Unlike the usual array access operator [], this function does not generate warnings when
- * the key is not present on the array; instead, it returns null or a default value.
- *
- * @param array         $array The target array.
- * @param number|string $key   The list index or map key.
- * @param mixed         $def   An optional default value.
- *
- * @return mixed
- */
-function get (array $array = null, $key, $def = null)
-{
-  if (!is_array ($array))
-    return null;
-  return isset ($array[$key]) ? $array[$key] : $def;
+if (!function_exists ('get')) {
+  /**
+   * Reads a value from the given array at the specified index/key.
+   * <br><br>
+   * Unlike the usual array access operator [], this function does not generate warnings when
+   * the key is not present on the array; instead, it returns null or a default value.
+   *
+   * @param array         $array The target array.
+   * @param number|string $key   The list index or map key.
+   * @param mixed         $def   An optional default value.
+   *
+   * @return mixed
+   */
+  function get (array $array = null, $key, $def = null)
+  {
+    if (!is_array ($array))
+      return null;
+
+    return isset ($array[$key]) ? $array[$key] : $def;
+  }
 }
 
 /**
