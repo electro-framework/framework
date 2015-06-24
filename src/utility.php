@@ -689,6 +689,7 @@ function endProfiling ()
  * @param callable $wrappedCode  Code to be executed wrapped by error catching code.
  * @param callable $errorHandler Optional error-handling code.
  * @param bool     $reset        True if the error status should be cleared so that Laravel does not intercept the previous error.
+ * @return mixed   The return value from the callable argument.
  *
  * @throws ErrorException
  * @throws Exception
@@ -696,22 +697,25 @@ function endProfiling ()
 function catchErrorsOn ($wrappedCode, $errorHandler = null, $reset = true)
 {
   $prevHandler = set_error_handler (function ($errno, $errstr, $errfile, $errline) {
+    if (!error_reporting())
+      return false;
     throw new ErrorException ($errstr, $errno, 0, $errfile, $errline);
   });
 
   try {
     // Run the caller-supplied code.
-    $wrappedCode();
+    $r = $wrappedCode();
     // Restore the previous error handler.
     set_error_handler ($prevHandler);
 
+    return $r;
   } catch (Exception $e) {
     // Intercept the error that will be triggered below.
     set_error_handler (function () {
       // Force error_get_last() to be set.
       return false;
     });
-    // Clear the current error message so that Laravel does not intercept the previous error.
+    // Clear the current error message so that the framework will not intercept the previous error.
     if ($reset)
       trigger_error ("");
     // Restore the previous error handler.
@@ -719,8 +723,9 @@ function catchErrorsOn ($wrappedCode, $errorHandler = null, $reset = true)
 
     // Handle the error.
     if (isset($errorHandler))
-      $errorHandler($e);
-    else throw $e;
+      return $errorHandler($e);
+
+    throw $e;
   }
 }
 

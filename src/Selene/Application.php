@@ -397,6 +397,7 @@ class Application
   {
     if (function_exists ('database_rollback'))
       database_rollback ();
+    WebConsole::outputContent (true);
   }
 
   /**
@@ -420,13 +421,7 @@ class Application
                 ->log ($session);
     }
     $this->loadRoutes ();
-    try {
-      $loader = ModuleLoader::loadAndRun ();
-    }
-    catch (Exception $e) {
-      WebConsole::outputContent (true);
-      throw $e;
-    }
+    $loader = ModuleLoader::loadAndRun ();
     if ($this->debugMode) {
       $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
       WebConsole::routes ()->withCaption ('Active Route')->withFilter ($filter, $loader->sitePage);
