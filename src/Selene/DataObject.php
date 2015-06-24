@@ -70,6 +70,16 @@ class DataObject
                     $this->$field = date('Y-m-d');*/
   }
 
+  static function ref()
+  {
+    return get_class();
+  }
+
+  static function table()
+  {
+    return (new static)->tableName;
+  }
+
   public static function encodeDate ($date)
   {
     //return preg_replace('#(\\d{2})-(\\d{2})-(\\d{4})#','$3-$2-$1',$date);

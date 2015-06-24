@@ -8,6 +8,21 @@
 //----------------------------------------------------------------------------------------
 
 /**
+ * Use this function to evaluate any expression in a string interpolator.
+ *
+ * Ex:
+ * > `$x = "Your {$_(Static::call(1,$arg))} is ready";`
+ *
+ * @param mixed $v
+ * @return mixed
+ */
+global $_;
+$_ = function ($v)
+{
+  return $v;
+};
+
+/**
  * Checks if the specified value is not null or an empty string.
  *
  * @param mixed $exp
