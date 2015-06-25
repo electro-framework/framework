@@ -42,6 +42,7 @@ function database_open ()
   $options [PDO::ATTR_ERRMODE]            = PDO::ERRMODE_EXCEPTION;
   $options [PDO::ATTR_DEFAULT_FETCH_MODE] = PDO::FETCH_ASSOC;
   $options [PDO::ATTR_TIMEOUT]            = 5;
+  $options [PDO::ATTR_EMULATE_PREPARES]   = false; // Required so that the mysqlnd driver returns the proper field data types.
 
   try {
     $db = new PDO ($dsn, $_ENV['DB_USERNAME'], $_ENV['DB_PASSWORD'], $options);
