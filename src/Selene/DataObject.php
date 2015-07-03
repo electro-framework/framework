@@ -355,7 +355,7 @@ class DataObject
     }
     //if (!isset($cache->readQuery))
     $cache->readQuery =
-      'SELECT ' . $this->getQueryFieldNames () . " FROM $this->tableName $this->prefix WHERE $keyName=?";
+      'SELECT ' . $this->getQueryFieldNames () . " FROM $this->tableName $this->prefix WHERE $keyName=? LIMIT 1";
     $record           = database_query ($cache->readQuery, [$keyValue])->fetch (PDO::FETCH_ASSOC);
     if ($record !== false) {
       $this->loadFrom ($record);

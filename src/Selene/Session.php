@@ -41,11 +41,11 @@ class Session
     return $this->isValid = isset($this->user);
   }
 
-  public function login ($defaultLang)
+  public function login ($defaultLang, $username = '', $password = '')
   {
     global $application;
-    $username = get ($_POST, 'username');
-    $password = get ($_POST, 'password');
+    $username = $username ?: get ($_POST, 'username');
+    $password = $password ?: get ($_POST, 'password');
     if (empty($username))
       throw new SessionException(SessionException::MISSING_INFO);
     else {

@@ -717,6 +717,14 @@ class Controller
         $authenticate = !$session->validate ();
         if ($authenticate && $action)
           $this->prevPost = urlencode (serialize ($_POST));
+        else if ($this->isWebService) {
+          $username = get ($_SERVER, 'PHP_AUTH_USER');
+          $password = get ($_SERVER, 'PHP_AUTH_PW');
+          if ($username) {
+            $session->login ($application->defaultLang, $username, $password);
+            $authenticate = false;
+          }
+        }
       }
     }
     return $authenticate;
