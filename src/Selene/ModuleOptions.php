@@ -28,9 +28,7 @@ class ModuleOptions extends Object
       'public'     => 'string',
       'publish'    => 'array',
       'lang'       => 'boolean',
-      'bower'      => 'boolean',
-      'grunt'      => 'boolean',
-      'less'       => 'string',
+      'assets'     => 'array',
       'config'     => 'array',
       'components' => 'array',
       'presets'    => 'array',
@@ -83,20 +81,10 @@ class ModuleOptions extends Object
       $application->languageFolders[] = "$this->path/$application->moduleLangPath";
   }
 
-  function set_bower ($v)
-  {
-
-  }
-
-  function set_grunt ($v)
-  {
-
-  }
-
   /**
-   * @param string $v Name of the module's main LESS file to be compiled.
+   * @param string[] $v A list of relative file paths of assets published by the module.
    */
-  function set_less ($v)
+  function set_assets ($v)
   {
 
   }
