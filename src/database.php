@@ -81,6 +81,11 @@ function database_query ($query, $params = null)
 
   global /** @var PDO $db */
   $db, $application;
+  static $st;
+
+  if ($st)
+    $st->closeCursor();
+
   $showQuery = function ($dur = null) use ($query, $params, $SQL_KEYWORDS) {
     $query = trim ($query);
     WebConsole::database ('<#section|SQL QUERY>', highlightQuery ($query, $SQL_KEYWORDS, 'identifier'));
@@ -113,24 +118,24 @@ function database_query ($query, $params = null)
 
 function database_begin ()
 {
-  global $transactionDepth;
+  global $transactionDepth, $db;
   if (++$transactionDepth == 1)
-    database_query ('BEGIN');
+    $db->beginTransaction ();
 }
 
 function database_commit ()
 {
-  global $transactionDepth;
+  global $transactionDepth, $db;
   if (--$transactionDepth == 0)
-    database_query ('COMMIT');
+    $db->commit ();
 }
 
 function database_rollback ()
 {
-  global $transactionDepth;
+  global $transactionDepth, $db;
   if ($transactionDepth > 0) {
     $transactionDepth = 0;
-    database_query ('ROLLBACK');
+    $db->rollBack ();
   }
 }
 
@@ -142,7 +147,9 @@ function database_rollback ()
 function database_get ($query, array $params = null)
 {
   $st = database_query ($query, $params);
-  return $st->fetchColumn (0);
+  $v = $st->fetchColumn (0);
+  $st->closeCursor();
+  return $v;
 }
 
 
