@@ -382,7 +382,7 @@ class Controller
         }
         @ob_clean ();
       }
-      if (!($e instanceof BaseException) || $e->getStatus () == Status::FATAL) {
+      if (!($e instanceof BaseException) || $e->getStatus () == Status::FATAL || $this->isWebService) {
         throw $e;
       }
       else {
@@ -777,7 +777,7 @@ class Controller
     else {
       if ($this->isWebService) {
         http_response_code (401);
-        header ('WWW-Authenticate: Form');
+        header ('WWW-Authenticate: Basic');
         echo "Unauthorized";
         return true;
       }
