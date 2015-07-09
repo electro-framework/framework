@@ -7,7 +7,6 @@ use Impactwave\WebConsole\ErrorHandler;
 use Impactwave\WebConsole\Panels\HttpRequestPanel;
 use Impactwave\WebConsole\WebConsole;
 use Selene\Exceptions\ConfigException;
-use Selene\Exceptions\FileNotFoundException;
 use Selene\Matisse\PipeHandler;
 use Selene\Routing\RoutingMap;
 
@@ -16,29 +15,7 @@ class Application
   const INI_FILENAME         = 'application.ini.php';
   const DEFAULT_INI_FILENAME = 'application.defaults.ini.php';
 
-  public static $TAGS = [
-    'Button'      => 'Selene\Matisse\Components\Button',
-    'Calendar'    => 'Selene\Matisse\Components\Calendar',
-    'Checkbox'    => 'Selene\Matisse\Components\Checkbox',
-    'DataGrid'    => 'Selene\Matisse\Components\DataGrid',
-    'Field'       => 'Selene\Matisse\Components\Field',
-    'FileUpload'  => 'Selene\Matisse\Components\FileUpload',
-    'Head'        => 'Selene\Matisse\Components\Head',
-    'HtmlRditor'  => 'Selene\Matisse\Components\HtmlEditor',
-    'Image'       => 'Selene\Matisse\Components\Image',
-    'ImageField'  => 'Selene\Matisse\Components\ImageField',
-    'Input'       => 'Selene\Matisse\Components\Input',
-    'Label'       => 'Selene\Matisse\Components\Label',
-    'Link'        => 'Selene\Matisse\Components\Link',
-    'MainMenu'    => 'Selene\Matisse\Components\MainMenu',
-    'Model'       => 'Selene\Matisse\Components\Model',
-    'Paginator'   => 'Selene\Matisse\Components\Paginator',
-    'RadioButton' => 'Selene\Matisse\Components\Radiobutton',
-    'Selector'    => 'Selene\Matisse\Components\Selector',
-    'Tab'         => 'Selene\Matisse\Components\Tab',
-    'TabPage'     => 'Selene\Matisse\Components\TabPage',
-    'Tabs'        => 'Selene\Matisse\Components\Tabs',
-  ];
+  public static $TAGS = [];
 
   /**
    * The application name.
