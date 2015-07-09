@@ -5,7 +5,7 @@ class ModuleOptions extends Object
 {
   public $path;
 
-  function __construct ($path, array $options, callable $initializer = null)
+  function __construct ($path, array $options = null, callable $initializer = null)
   {
     $this->path = $path;
     parent::__construct ($options);

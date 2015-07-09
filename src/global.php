@@ -9,7 +9,7 @@ use Selene\Routing\Route;
 use Selene\Routing\RouteGroup;
 use Selene\Routing\SubPageRoute;
 
-function ModuleOptions ($path, array $options, callable $initializer = null)
+function ModuleOptions ($path, array $options = null, callable $initializer = null)
 {
   return new ModuleOptions($path, $options, $initializer);
 }
