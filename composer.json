@@ -21,8 +21,6 @@
     "php": ">=5.4.0",
     "vlucas/phpdotenv": "~2.0.1",
     "impactwave/php-web-console": "dev-master",
-    "selene-framework/matisse": "dev-master",
-    "selene-framework/matisse-components": "dev-master",
     "ircmaxell/password-compat": "dev-master",
     "codegyre/robo": "dev-master"
   },
