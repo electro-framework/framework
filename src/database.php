@@ -22,9 +22,9 @@ function database_open ()
   else {
 
     $dsn = "{$_ENV['DB_DRIVER']}:host={$_ENV['DB_HOST']};dbname=$database";
-    if (isset ($_ENV['DB_PORT']))
+    if (!empty ($_ENV['DB_PORT']))
       $dsn .= ";port={$_ENV['DB_PORT']}";
-    if (isset ($_ENV['DB_UNIX_SOCKET']))
+    if (!empty ($_ENV['DB_UNIX_SOCKET']))
       $dsn .= ";unix_socket={$_ENV['DB_UNIX_SOCKET']}";
 
     // Options specific to the MySQL driver.
@@ -49,8 +49,17 @@ function database_open ()
     if ($_ENV['DB_DRIVER'] == 'sqlite')
       $db->exec ('PRAGMA foreign_keys = ON;');
   } catch (PDOException $e) {
-    $e =
-      new PDOException($e->getMessage () . "\n\nDatabase: <path>$database</path>", $e->getCode ());
+    $e = new PDOException(
+      $e->getMessage ()
+      . "\n\nDatabase: <path>$database</path>" .
+      ($application->debugMode ?
+        "<p>Driver: {$_ENV['DB_DRIVER']}" .
+        "<p>Host: {$_ENV['DB_HOST']}" .
+        "<p>Username: {$_ENV['DB_USERNAME']}" .
+        "<p>Password: {$_ENV['DB_PASSWORD']}" .
+        "<p>Conn.str: $dsn"
+        : ''),
+      $e->getCode ());
     throw $e;
   }
 }
