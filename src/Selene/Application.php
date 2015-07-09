@@ -587,7 +587,7 @@ class Application
     WebConsole::registerPanel ('routes', new ConsolePanel ('Routes', 'fa fa-location-arrow'));
     WebConsole::registerPanel ('session', new ConsolePanel ('Session', 'fa fa-user'));
     WebConsole::registerPanel ('database', new ConsolePanel ('Database', 'fa fa-database'));
-    WebConsole::registerPanel ('DOM', new ConsolePanel ('DOM', 'fa fa-sitemap'));
+    //WebConsole::registerPanel ('DOM', new ConsolePanel ('DOM', 'fa fa-sitemap'));
     WebConsole::registerPanel ('config', new ConsolePanel ('Config.', 'fa fa-cogs'));
     WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
     ErrorHandler::$appName = 'Selene Framework';
@@ -609,6 +609,7 @@ class Application
 
   function initDOMPanel (Controller $controller)
   {
+    return;
     if (isset($controller->page)) {
       $insp = $controller->page->inspect (true);
       WebConsole::DOM ()->write ($insp);
