@@ -19,6 +19,5 @@
       "Selene\\Matisse\\": "src/"
     },
     "files": ["src/globals.php", "src/htmlBuilder.php"]
-  },
-  "minimum-stability": "dev"
+  }
 }
