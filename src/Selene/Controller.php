@@ -294,21 +294,18 @@ class Controller
   {
     global $application;
 
-    if (substr ($virtualURI, 0, strlen ($application->appPublicPath)) == $application->appPublicPath) {
-      http_response_code (404);
-      echo "<h1>Not Found</h1><p>The requested file <b><code>$virtualURI</code></b> is missing.</p>";
-      exit;
-    }
-
     if (!empty($application->URINotFoundURL)) {
       if (preg_match ('#^(\w\w)/#', $virtualURI, $match))
         $lang = $match[1];
       else $lang = $application->defaultLang;
       $URI = str_replace ('{lang}', $lang, $application->URINotFoundURL);
       header ('Location: ' . "$application->baseURI/$URI" . '?URL=' . $_SERVER['REQUEST_URI'], true, 303);
-      exit();
     }
-    else throw new FatalException($virtualURI ? "<b>$virtualURI</b> is not a valid URI." : 'Invalid URI.');
+    else {
+      http_response_code (404);
+      echo "<h1>Not Found</h1><p>The requested URL <code><big>$application->baseURI/<b>$virtualURI</b></big></code> was not found on this server.</p>";
+    }
+    exit;
   }
 
   /**

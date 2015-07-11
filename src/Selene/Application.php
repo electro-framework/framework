@@ -77,11 +77,6 @@ class Application
    */
   public $modulePublicPath;
   /**
-   * The application's main public (web) folder.
-   * @var string
-   */
-  public $appPublicPath;
-  /**
    * The mapped public URI of the framework's public directory.
    * @var string
    */
