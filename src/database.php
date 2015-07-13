@@ -90,10 +90,6 @@ function database_query ($query, $params = null)
 
   global /** @var PDO $db */
   $db, $application;
-  static $st;
-
-  if ($st)
-    $st->closeCursor();
 
   $showQuery = function ($dur = null) use ($query, $params, $SQL_KEYWORDS) {
     $query = trim ($query);
