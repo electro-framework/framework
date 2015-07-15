@@ -128,6 +128,8 @@ function database_query ($query, $params = null)
 function database_begin ()
 {
   global $transactionDepth, $db;
+  if (!isset($db))
+    database_open ();
   if (++$transactionDepth == 1)
     $db->beginTransaction ();
 }
