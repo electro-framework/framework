@@ -17,6 +17,7 @@ class MatisseEngine
     'If'       => 'Selene\Matisse\Components\If_',
     'Literal'  => 'Selene\Matisse\Components\Literal',
     'Apply'    => 'Selene\Matisse\Components\Apply',
+    'Head'     => 'Selene\Matisse\Components\Head',
   ];
 
   /**
