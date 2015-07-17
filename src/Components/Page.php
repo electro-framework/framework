@@ -27,6 +27,12 @@ class Page extends Component
   public $inlineScripts = [];
 
   /**
+   * Array of strings (or Parameter objects with child content) containing inline javascripts.
+   * @var array
+   */
+  public $inlineDeferredScripts = [];
+
+  /**
    * Array of strings (or Parameter objects with child content) containing inline css code.
    * @var array
    */
@@ -68,7 +74,7 @@ class Page extends Component
   {
     parent::__construct ($context);
     $this->page = $this;
-    $this->setTagName('Page');
+    $this->setTagName ('Page');
     $this->checkBrowser ();
     $this->requestURI = $_SERVER['REQUEST_URI'];
   }
@@ -116,60 +122,75 @@ class Page extends Component
     exit;
   }
 
-  public function addStylesheet ($uri)
+  public function addStylesheet ($uri, $prepend = false)
   {
     if (array_search ($uri, $this->stylesheets) === false)
-      $this->stylesheets[] = $uri;
+      if ($prepend)
+        array_unshift ($this->stylesheets, $uri);
+      else $this->stylesheets[] = $uri;
   }
 
-  public function addScript ($uri)
+  public function addScript ($uri, $prepend = false)
   {
     if (array_search ($uri, $this->scripts) === false)
-      $this->scripts[] = $uri;
+      if ($prepend)
+        array_unshift ($this->scripts, $uri);
+      else $this->scripts[] = $uri;
   }
 
   /**
    * Adds an inline script to the HEAD section of the page.
-   * @param mixed  $code Either a string or a Parameter.
-   * @param string $name An identifier for the script, to prevent duplication.
-   *                     When multiple scripts with the same name are added, only the last one is considered.
+   * @param mixed  $code    Either a string or a Parameter.
+   * @param string $name    An identifier for the script, to prevent duplication.
+   *                        When multiple scripts with the same name are added, only the last one is considered.
+   * @param bool   $prepend If true, prepend to current list instead of appending.
    */
-  public function addInlineScript ($code, $name = null)
+  public function addInlineScript ($code, $name = null, $prepend = false)
   {
     if ($code instanceof Component)
       $code->attachTo ($this);
     if (isset($name))
       $this->inlineScripts[$name] = $code;
+    else if ($prepend)
+      array_unshift ($this->inlineScripts, $code);
     else $this->inlineScripts[] = $code;
   }
 
   /**
    * Similar to addInlineScript(), but the script will only run on the document.ready event.
-   * @param mixed  $code Either a string or a Parameter.
-   * @param string $name An identifier for the script, to prevent duplication.
-   *                     When multiple scripts with the same name are added, only the last one is considered.
+   * @param mixed  $code    Either a string or a Parameter.
+   * @param string $name    An identifier for the script, to prevent duplication.
+   *                        When multiple scripts with the same name are added, only the last one is considered.
+   * @param bool   $prepend If true, prepend to current list instead of appending.
    * @see addInlineScript
    */
-  public function addInlineDeferredScript ($code, $name = null)
+  public function addInlineDeferredScript ($code, $name = null, $prepend = false)
   {
-    $code = "$(function(){\n$code\n});";
-    $this->addInlineScript ($code, $name);
+    if ($code instanceof Component)
+      $code->attachTo ($this);
+    if (isset($name))
+      $this->inlineDeferredScripts[$name] = $code;
+    else if ($prepend)
+      array_unshift ($this->inlineDeferredScripts, $code);
+    else $this->inlineDeferredScripts[] = $code;
   }
 
   /**
    * Adds an inline stylesheet to the HEAD section of the page.
-   * @param mixed  $css  Either a string or a Parameter.
-   * @param string $name An identifier for the stylesheet, to prevent duplication.
-   *                     When multiple stylesheets with the same name are added, only the last one is considered.
+   * @param mixed  $css     Either a string or a Parameter.
+   * @param string $name    An identifier for the stylesheet, to prevent duplication.
+   *                        When multiple stylesheets with the same name are added, only the last one is considered.
+   * @param bool   $prepend If true, prepend to current list instead of appending.
    */
-  public function addInlineCss ($css, $name = null)
+  public function addInlineCss ($css, $name = null, $prepend = false)
   {
     if ($css instanceof Component)
       $css->attachTo ($this);
     if (isset($name))
       $this->inlineCssStyles[$name] = $css;
-    else
-      $this->inlineCssStyles[] = $css;
+    else if ($prepend)
+      array_unshift ($this->inlineCssStyles, $css);
+    else $this->inlineCssStyles[] = $css;
   }
 
   protected function render ()
@@ -204,7 +225,7 @@ class Page extends Component
       );
       $this->beginTag ('head');
       $this->addTag ('meta', [
-        'charset' => $this->charset
+        'charset' => $this->charset,
       ]);
       /*$this->addTag('meta',array(
           'http-equiv' => 'X-UA-Compatible',
@@ -233,7 +254,7 @@ class Page extends Component
         $this->addTag ('link', [
           'rel'  => 'stylesheet',
           'type' => 'text/css',
-          'href' => $URI
+          'href' => $URI,
         ]);
       }
       if (!empty($this->inlineCssStyles)) {
@@ -245,53 +266,25 @@ class Page extends Component
         $this->addTag ('style', null, $css);
       }
 
-      if ($application->packScripts)
-        $this->packScripts ();
-      else foreach ($this->page->scripts as $URI) {
-        if (substr ($URI, 0, 4) != 'http') {
-          if (substr ($URI, 0, 1) != '/')
-            $URI = $application->toURI ($URI);
-          if ($application->resourceCaching)
-            $URI = $cacheScriptURI . $URI;
-        }
-        $this->addTag ('script', [
-          'type' => 'text/javascript',
-          'src'  => $URI
-        ]);
-      }
-      if (!empty($this->inlineScripts)) {
-        $code = '';
-        foreach ($this->inlineScripts as $item)
-          if ($item instanceof Parameter) {
-            $code .= $item->getContent ();
-          }
-          else $code .= $item;
-        $this->addTag ('script',
-          [
-            'type' => 'text/javascript'
-          ],
-          $code
-        );
-      }
       if (!empty($this->description))
         $this->addTag ('meta', [
           'name'    => 'description',
-          'content' => $this->description
+          'content' => $this->description,
         ]);
       if (!empty($this->keywords))
         $this->addTag ('meta', [
           'name'    => 'keywords',
-          'content' => $this->keywords
+          'content' => $this->keywords,
         ]);
       if (!empty($this->author))
         $this->addTag ('meta', [
           'name'    => 'author',
-          'content' => $this->author
+          'content' => $this->author,
         ]);
       if (!empty($application->favicon))
         $this->addTag ('link', [
           'rel'  => 'shortcut icon',
-          'href' => $application->favicon
+          'href' => $application->favicon,
         ]);
       if (isset($this->extraHeadTags))
         $this->setContent ($this->extraHeadTags);
@@ -309,21 +302,65 @@ HTML;
         'method'       => 'post',
         'enctype'      => $this->enableFileUpload ? 'multipart/form-data' : null,
         'autocomplete' => $this->formAutocomplete ? null : 'off',
-        'onsubmit'     => 'return Form_onSubmit()'
+        'onsubmit'     => 'return Form_onSubmit()',
       ]);
       $this->addTag ('input', [
         'type'  => 'hidden',
         'name'  => '_action',
-        'value' => property ($this, 'defaultAction')
+        'value' => property ($this, 'defaultAction'),
       ]);
 
       echo $pageContent;
 
-      $this->endTag ();
+      $this->endTag (); // form
+
+      if ($application->packScripts)
+        $this->packScripts ();
+      else foreach ($this->page->scripts as $URI) {
+        if (substr ($URI, 0, 4) != 'http') {
+          if (substr ($URI, 0, 1) != '/')
+            $URI = $application->toURI ($URI);
+          if ($application->resourceCaching)
+            $URI = $cacheScriptURI . $URI;
+        }
+        $this->addTag ('script', [
+          'type' => 'text/javascript',
+          'src'  => $URI,
+        ]);
+      }
+      if (!empty($this->inlineScripts)) {
+        $code = '';
+        foreach ($this->inlineScripts as $item)
+          if ($item instanceof Parameter) {
+            $code .= $item->getContent ();
+          }
+          else $code .= $item;
+        $this->addTag ('script',
+          [
+            'type' => 'text/javascript',
+          ],
+          $code
+        );
+      }
+      if (!empty($this->inlineDeferredScripts)) {
+        $code = '$(function(){';
+        foreach ($this->inlineDeferredScripts as $item)
+          if ($item instanceof Parameter) {
+            $code .= $item->getContent ();
+          }
+          else $code .= $item;
+        $code .= '})';
+        $this->addTag ('script',
+          [
+            'type' => 'text/javascript',
+          ],
+          $code
+        );
+      }
 
       echo $this->footer;
-      $this->endTag ();
-      $this->endTag ();
+      $this->endTag (); // body
+      $this->endTag (); // html
     }
     else $this->renderChildren ();
   }
@@ -353,7 +390,7 @@ HTML;
     }
     $this->addTag ('script', [
       'type' => 'text/javascript',
-      'src'  => $application->toURI ($uri)
+      'src'  => $application->toURI ($uri),
     ]);
   }
 
@@ -362,7 +399,7 @@ HTML;
     $apiArgs = [
       'compilation_level' => 'SIMPLE_OPTIMIZATIONS',
       'output_format'     => 'text',
-      'output_info'       => 'compiled_code'
+      'output_info'       => 'compiled_code',
     ];
     $args    = 'js_code=' . urlencode ($script);
     foreach ($apiArgs as $key => $value)
@@ -375,10 +412,11 @@ HTML;
       CURLOPT_POSTFIELDS     => $args,
       CURLOPT_RETURNTRANSFER => 1,
       CURLOPT_HEADER         => 0,
-      CURLOPT_FOLLOWLOCATION => 0
+      CURLOPT_FOLLOWLOCATION => 0,
     ]);
     $jscomp = curl_exec ($call);
     curl_close ($call);
+
     return $jscomp;
   }
 

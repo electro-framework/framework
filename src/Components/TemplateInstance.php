@@ -38,6 +38,7 @@ class TemplateInstanceAttributes
     $templateParam = $this->template->getParameter ($name);
     if (isset($templateParam->bindings) && array_key_exists ('default', $templateParam->bindings))
       return $templateParam->bindings['default'];
+
     return $this->getDefault ($name);
   }
 
@@ -59,6 +60,7 @@ class TemplateInstanceAttributes
     $v = $this->__get ($name);
     if (is_null ($v))
       return $default;
+
     return $v;
   }
 
@@ -73,8 +75,10 @@ class TemplateInstanceAttributes
       $fn = "typeof_$name";
       if (method_exists ($this, $fn))
         return $this->$fn();
+
       return null;
     }
+
     return $this->template->getParameterType ($name);
   }
 
@@ -103,6 +107,7 @@ class TemplateInstanceAttributes
     $t = $this->getTypeOf ($name);
     if (!is_null ($t))
       return ComponentAttributes::$TYPE_NAMES[$t];
+
     return null;
   }
 
@@ -116,6 +121,7 @@ class TemplateInstanceAttributes
     $param = $this->template->getParameter ($name);
     if (is_null ($param))
       throw new ComponentException($this->template, "Undefined parameter $name.");
+
     return $this->template->getParameter ($name)->attrs ()->default;
   }
 
@@ -197,7 +203,7 @@ class TemplateInstance extends Component implements IAttributes
           throw new ComponentException($this,
             "The template's default parameter <b>$def</b> can't hold content (type: " .
             ComponentAttributes::$TYPE_NAMES[$type] . ").");
-        $param                = new Parameter($this->context, ucfirst($def), $type);
+        $param                = new Parameter($this->context, ucfirst ($def), $type);
         $this->attrsObj->$def = $param;
         $param->attachTo ($this);
         $param->setChildren ($this->children, false);
@@ -210,27 +216,80 @@ class TemplateInstance extends Component implements IAttributes
 
   private function processParameters ()
   {
+    $o      = [];
     $styles = $this->attrs ()->style;
+
     if (isset($styles))
       foreach ($styles as $sheet) {
         if (isset($sheet->attrs ()->src))
-          $this->page->addStylesheet ($sheet->attrs ()->src);
-        else if (!empty($sheet->children)) {
-          $name = $sheet->attrs ()->get ('name');
-          $this->page->addInlineCss ($sheet, $name);
-        }
+          $o[] = [
+            'type' => 'sh',
+            'src'  => $sheet->attrs ()->src,
+          ];
+        else if (!empty($sheet->children))
+          $o[] = [
+            'type' => 'ish',
+            'name' => $sheet->attrs ()->get ('name'),
+            'data' => $sheet,
+          ];
       }
     $scripts = $this->attrs ()->script;
     if (isset($scripts)) {
       foreach ($scripts as $script) {
         if (isset($script->attrs ()->src))
-          $this->page->addScript ($script->attrs ()->src);
-        else if (!empty($script->children)) {
-          $name = $script->attrs ()->get ('name');
-          $this->page->addInlineScript ($script, $name);
-        }
+          $o[] = [
+            'type' => 'sc',
+            'src'  => $script->attrs ()->src,
+          ];
+        else if (!empty($script->children))
+          $o[] = [
+            'type'  => 'isc',
+            'name'  => $script->attrs ()->get ('name'),
+            'defer' => $script->attrs ()->get ('defer'),
+            'data'  => $script,
+          ];
       }
     }
+    $o = array_reverse ($o);
+    foreach ($o as $i)
+      switch ($i['type']) {
+        case 'sh':
+          $this->page->addStylesheet ($i['src'], true);
+          break;
+        case 'ish':
+          $this->page->addInlineCss ($i['data'], $i['name'], true);
+          break;
+        case 'sc':
+          $this->page->addScript ($i['src'], true);
+          break;
+        case 'isc':
+          if ($i['defer'])
+            $this->page->addInlineDeferredScript ($i['data'], $i['name'], true);
+          else $this->page->addInlineScript ($i['data'], $i['name'], true);
+          break;
+      }
+
+//    if (isset($styles))
+//      foreach ($styles as $sheet) {
+//        if (isset($sheet->attrs ()->src))
+//          $this->page->addStylesheet ($sheet->attrs ()->src);
+//        else if (!empty($sheet->children)) {
+//          $name = $sheet->attrs ()->get ('name');
+//          $this->page->addInlineCss ($sheet, $name);
+//        }
+//      }
+//    $scripts = $this->attrs ()->script;
+//    if (isset($scripts)) {
+//      foreach ($scripts as $script) {
+//        if (isset($script->attrs ()->src))
+//          $this->page->addScript ($script->attrs ()->src);
+//        else if (!empty($script->children)) {
+//          $name = $script->attrs ()->get ('name');
+//          $this->page->addInlineScript ($script, $name);
+//        }
+//      }
+//    }
+
   }
 
 }

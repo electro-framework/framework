@@ -93,29 +93,84 @@ class Template extends Component implements IAttributes
 
   public function apply (TemplateInstance $instance)
   {
-    $styles = $this->attrs ()->get ('style');
+    $o      = [];
+    $styles = $this->attrs ()->style;
     if (isset($styles))
       foreach ($styles as $sheet) {
         self::parsingtimeDatabind ($sheet, $instance);
         if (isset($sheet->attrs ()->src))
-          $instance->page->addStylesheet ($sheet->attrs ()->src);
-        else if (!empty($sheet->children)) {
-          $name = $sheet->attrs ()->get ('name');
-          $instance->page->addInlineCss ($sheet, $name);
-        }
+          $o[] = [
+            'type' => 'sh',
+            'src'  => $sheet->attrs ()->src,
+          ];
+        else if (!empty($sheet->children))
+          $o[] = [
+            'type' => 'ish',
+            'name' => $sheet->attrs ()->get ('name'),
+            'data' => $sheet,
+          ];
       }
-    $scripts = $this->attrs ()->get ('script');
+    $scripts = $this->attrs ()->script;
     if (isset($scripts)) {
       foreach ($scripts as $script) {
         self::parsingtimeDatabind ($script, $instance);
         if (isset($script->attrs ()->src))
-          $instance->page->addScript ($script->attrs ()->src);
-        else if (!empty($script->children)) {
-          $name = $script->attrs ()->get ('name');
-          $instance->page->addInlineScript ($script, $name);
-        }
+          $o[] = [
+            'type' => 'sc',
+            'src'  => $script->attrs ()->src,
+          ];
+        else if (!empty($script->children))
+          $o[] = [
+            'type' => 'isc',
+            'name' => $script->attrs ()->get ('name'),
+            'defer' => $script->attrs ()->get ('defer'),
+            'data' => $script,
+          ];
       }
     }
+    $o = array_reverse ($o);
+    foreach ($o as $i)
+      switch ($i['type']) {
+        case 'sh':
+          $instance->page->addStylesheet ($i['src'], true);
+          break;
+        case 'ish':
+          $instance->page->addInlineCss ($i['data'], $i['name'], true);
+          break;
+        case 'sc':
+          $instance->page->addScript ($i['src'], true);
+          break;
+        case 'isc':
+          if ($i['defer'])
+            $instance->page->addInlineDeferredScript ($i['data'], $i['name'], true);
+          else $instance->page->addInlineScript ($i['data'], $i['name'], true);
+          break;
+      }
+
+//    $styles = $this->attrs ()->get ('style');
+//    if (isset($styles))
+//      foreach ($styles as $sheet) {
+//        self::parsingtimeDatabind ($sheet, $instance);
+//        if (isset($sheet->attrs ()->src))
+//          $instance->page->addStylesheet ($sheet->attrs ()->src);
+//        else if (!empty($sheet->children)) {
+//          $name = $sheet->attrs ()->get ('name');
+//          $instance->page->addInlineCss ($sheet, $name);
+//        }
+//      }
+//    $scripts = $this->attrs ()->get ('script');
+//    if (isset($scripts)) {
+//      foreach ($scripts as $script) {
+//        self::parsingtimeDatabind ($script, $instance);
+//        if (isset($script->attrs ()->src))
+//          $instance->page->addScript ($script->attrs ()->src);
+//        else if (!empty($script->children)) {
+//          $name = $script->attrs ()->get ('name');
+//          $instance->page->addInlineScript ($script, $name);
+//        }
+//      }
+//    }
+
     $cloned = $this->cloneComponents ($this->children);
     $this->applyTo ($cloned, $instance);
 
