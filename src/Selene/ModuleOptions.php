@@ -32,6 +32,7 @@ class ModuleOptions extends Object
       'config'     => 'array',
       'components' => 'array',
       'presets'    => 'array',
+      'routes'     => 'array',
     ];
   }
 
@@ -124,6 +125,15 @@ class ModuleOptions extends Object
   {
     global $application;
     $application->presets = array_merge ($v, $application->presets);
+  }
+
+  /**
+   * @param array $v Optional preset routes for the module.
+   */
+  function set_routes (array $v)
+  {
+    global $application;
+    $application->routes = array_merge ($v, $application->routes);
   }
 
 }

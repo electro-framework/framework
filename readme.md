@@ -1,10 +1,9 @@
 # Selene Framework (Kernel)
 
 > Note: This repository contains the core code of the Selene framework.  
-> If you want to build an application using Selene, use one of the following seed projects:
+> If you want to build an application using Selene, use the starter project:
 > 
 > * [Starter Project](https://github.com/selene-framework/starter-project)
-> * [Selene Shell](https://github.com/selene-framework/selene-shell)
 
 ## Installation
 
