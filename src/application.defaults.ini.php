@@ -14,19 +14,28 @@ return [
     'homeIcon'               => '',
     'homeTitle'              => 'Home',
 
-    'storagePath'            => 'storage',
-    'imageArchivePath'       => 'storage/images',
-    'fileArchivePath'        => 'storage/files',
-    'cachePath'              => 'storage/cache',
-    'imagesCachePath'        => 'storage/cache/images',
-    'langPath'               => 'resources/lang',
-    'templatesPath'          => 'resources/templates',
-    'modulesPath'            => 'modules',
-    'viewPath'               => 'resources/views',
+    // These paths are relative to the root folder:
 
-    'configPath'             => 'config',
+    'storagePath'            => 'private/storage',
+    'imageArchivePath'       => 'private/storage/images',
+    'fileArchivePath'        => 'private/storage/files',
+    'cachePath'              => 'private/storage/cache',
+    'imagesCachePath'        => 'private/storage/cache/images',
+    'modulesPath'            => 'private/modules',
+    'defaultModulesPath'     => 'private/packages',
+    'configPath'             => 'private/config',
+
+    'langPath'               => 'private/resources/lang',
+    'templatesPath'          => 'private/resources/templates',
+    'viewPath'               => 'private/resources/views',
+
+    // This path is relative to the kernel's folder:
+
+    'scaffoldsPath'          => 'scaffolds',
+
+    // These paths are relative to a module's folder or they are relative URIs:
+
     'moduleLangPath'         => 'resources/lang',
-    'defaultModulesPath'     => 'vendor',
     'moduleViewsPath'        => 'resources/views',
     'moduleTemplatesPath'    => 'resources/templates',
     'modelPath'              => 'models',
@@ -40,6 +49,8 @@ return [
     'SEOFile'                => '',
 
     'autoControllerClass'    => 'Selene\Controller',
+    'tasksClass'             => 'Tasks',
+
     'loginView'              => '',
     'translation'            => false,
     'languages'              => null,

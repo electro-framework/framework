@@ -7,6 +7,7 @@ class RoutingMap
 {
   public $groups;
   public $pages;
+  public $routes = [];
   /**
    * A list of references to each named site map node, indexed by name.
    * @var array

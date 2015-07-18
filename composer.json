@@ -22,7 +22,7 @@
     "vlucas/phpdotenv": "~2.0.1",
     "impactwave/php-web-console": "~0.1.0",
     "ircmaxell/password-compat": "dev-master",
-    "codegyre/robo": "dev-master"
+    "codegyre/robo": "^0.5.3"
   },
   "autoload": {
     "psr-4": {
@@ -33,5 +33,6 @@
       "src/global.php",
       "src/database.php"
     ]
-  }
+  },
+  "bin": ["bin/selene"]
 }

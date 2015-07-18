@@ -14,6 +14,7 @@ class Application
 {
   const INI_FILENAME         = 'application.ini.php';
   const DEFAULT_INI_FILENAME = 'application.defaults.ini.php';
+  const FRAMEWORK_PATH       = 'private/packages/selene-framework/selene-kernel';
 
   public static $TAGS = [];
 
@@ -62,10 +63,17 @@ class Application
    */
   public $includePath;
   /**
-   * The path of the framework directory.
+   * The path of the framework kernel's directory.
    * @var string
    */
   public $frameworkPath;
+  /**
+   * The path of the framework's preset scaffolds's directory, relative to the kernel's directory.
+   *
+   * This is used by the task runner.
+   * @var string
+   */
+  public $scaffoldsPath;
   /**
    * The virtual URI specified after the application's base URI.
    * @var string
@@ -113,7 +121,7 @@ class Application
   public $modulesPath;
   /**
    * <p>The fallback folder name where the framework will search for modules.
-   * <p>Modules installed as Composer packages will be found there.
+   * <p>Plugin mmdules installed as Composer packages will be found there.
    * <p>Set by application.ini.php.
    * @var String
    */
@@ -135,6 +143,11 @@ class Application
    * @var string
    */
   public $loginView;
+  /**
+   * The class name of the application's robo tasks.
+   * @var string
+   */
+  public $tasksClass;
   /**
    * The FQN of the logged in user's model class.
    * @var string
@@ -165,11 +178,6 @@ class Application
    * @var Boolean True to generate the standard framework scripts.
    */
   public $frameworkScripts;
-  /**
-   * Defines the file path for the RoutingMap class, set on application.ini.php.
-   * @var String
-   */
-  public $routingMapFile;
   /**
    * Defines the file path for the Model collection or its XML description, set on application.ini.php.
    * @var String
@@ -426,7 +434,7 @@ class Application
    */
   public function setup ($rootDir)
   {
-    $FRAMEWORK = 'vendor/selene-framework/selene-kernel/src';
+    $_ = DIRECTORY_SEPARATOR;
     $uri       = $_SERVER['REQUEST_URI'];
     $baseURI   = dirnameEx ($_SERVER['SCRIPT_NAME']);
     $vuri      = substr ($uri, strlen ($baseURI) + 1) ?: '';
@@ -439,24 +447,24 @@ class Application
     $this->rootPath          = $rootDir;
     $this->URI               = $baseURI;
     $this->baseURI           = $baseURI;
-    $this->frameworkPath     = realpath ("$rootDir/$FRAMEWORK");
+    $this->frameworkPath     = realpath ("$rootDir{$_}" . self::FRAMEWORK_PATH);
     $this->VURI              = $vuri;
 
     $this->setIncludePath ();
 
     // Load default configuration.
 
-    $iniPath = $this->frameworkPath . DIRECTORY_SEPARATOR . self::DEFAULT_INI_FILENAME;
+    $iniPath = "$this->frameworkPath{$_}src{$_}" . self::DEFAULT_INI_FILENAME;
     $this->loadConfig ($iniPath);
 
     // Load application-specific configuration.
 
-    $iniPath = $this->rootPath . DIRECTORY_SEPARATOR . $this->configPath . DIRECTORY_SEPARATOR . self::INI_FILENAME;
+    $iniPath = "$this->rootPath{$_}$this->configPath{$_}" . self::INI_FILENAME;
     $this->loadConfig ($iniPath);
 
     foreach ($this->subApplications as $prefix => $path) {
       if (substr ($vuri, 0, strlen ($prefix)) == $prefix) {
-        $iniPath = $this->rootPath . DIRECTORY_SEPARATOR . $this->configPath . DIRECTORY_SEPARATOR . $path;
+        $iniPath = "$this->rootPath{$_}$this->configPath{$_}$path";
         $this->loadConfig ($iniPath);
       }
     }
@@ -471,7 +479,7 @@ class Application
     if (isset($_ENV['APP_DEFAULT_LANG']))
       $this->defaultLang = $_ENV['APP_DEFAULT_LANG'];
 
-    $this->mount ($this->frameworkURI, dirname ($this->frameworkPath) . "/$this->modulePublicPath");
+    $this->mount ($this->frameworkURI, "$this->frameworkPath{$_}$this->modulePublicPath");
   }
 
   public function setIncludePath ($extra = '')
@@ -644,19 +652,13 @@ class Application
 
   private function loadRoutes ()
   {
-    if (!empty($this->routingMapFile)) {
-      $cfg = require $this->routingMapFile;
-      $map = new RoutingMap();
-      foreach ($cfg as $k => $v)
-        $map->$k = $v;
-      $this->routingMap = $map;
-      $map->routes = array_merge ($map->routes, $this->routes);
-      $map->init ();
+    $map = $this->routingMap = new RoutingMap();
+    $map->routes = array_merge ($map->routes, $this->routes);
+    $map->init ();
 
-      if ($this->debugMode) {
-        $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
-        WebConsole::routes()->withFilter ($filter, $this->routingMap->routes);
-      }
+    if ($this->debugMode) {
+      $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
+      WebConsole::routes()->withFilter ($filter, $this->routingMap->routes);
     }
   }
 
