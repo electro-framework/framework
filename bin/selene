@@ -1,0 +1,27 @@
+#!/usr/bin/env php
+<?php
+use Robo\Config;
+use Symfony\Component\Console\Output\ConsoleOutput;
+
+$tmp = dirname (__DIR__);
+require "$tmp/autoload.php";
+
+$application = new Selene\Application();
+$application->setup (dirname (dirname ($tmp)));
+
+Config::setOutput (new ConsoleOutput());
+
+$tmp = "$application->tasksClass";
+
+if (!class_exists ($tmp)) {
+  $this->getOutput ()->writeln
+  (
+    '<error>' .
+    'Class "' . $tmp . '" needs to be loaded or ' .
+    'be able to be loaded before calling this runner!' .
+    '</error>'
+  );
+  exit(1);
+}
+// Create and run the robo cli application
+$this->createApplication ($tmp)->run ($this->prepareInput ($_SERVER['argv']));

@@ -2,6 +2,7 @@
 namespace Selene;
 use Impactwave\WebConsole\ErrorHandler;
 use Selene\Exceptions\ConfigException;
+use Selene\Routing\PageRoute;
 
 /**
  * Loads and runs modules.
@@ -123,6 +124,7 @@ class ModuleLoader
   public function load ()
   {
     global $application;
+    /** @var Controller $con */
     $con  = null;
     $auto = $this->sitePage->autoController;
     if ($auto) {
