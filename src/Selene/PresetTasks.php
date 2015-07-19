@@ -10,14 +10,15 @@ class PresetTasks extends Tasks
 {
   function __construct ()
   {
-    global $application;
+    global $application, $argc;
     if (!isset($application)) {
-//      $this->say ("Selene tasks must be run from the 'selene' command.");
-//      exit;
+      $this->say ("Selene tasks must be run from the 'selene' command.");
+      exit (1);
     }
     $NL = PHP_EOL;
     $this->getOutput ()
-         ->write ("========================{$NL}   Selene Task Runner$NL========================{$NL}Using ");
+         ->writeln ("========================{$NL}   Selene Task Runner$NL========================");
+    $this->getOutput ()->write ($argc < 2 ? "Using " : $NL);
   }
 
   /**
@@ -70,13 +71,15 @@ class PresetTasks extends Tasks
     if (!$name)
       $name = $this->ask ("Module name (vendor/name)?");
     if ($name) {
+      if (count (explode ('/', $name)) != 2)
+        $this->error ("Invalid module name.");
       $path = "$application->modulesPath/$name";
       if (file_exists ($path) || file_exists ("$application->defaultModulesPath/$name"))
-        return Result::error ($this, "Module $name already exists.");
+        $this->error ("Module $name already exists.");
       $this->_mkDir ($path);
       $this->_copyDir ("$application->frameworkPath/$application->scaffoldsPath/module", $path);
 
-      return Result::success ($this, "Module $name created.");
+      $this->say ("Module <info>$name</info> created.");
     }
   }
 
@@ -93,7 +96,7 @@ class PresetTasks extends Tasks
     $this->_deleteDir (["$application->storagePath"]);
     $this->_copyDir ("$application->frameworkPath/$application->scaffoldsPath/storage", "$application->storagePath");
 
-    return Result::success ($this, "Storage folder created.");
+    $this->say ("Storage folder created.");
   }
 
   /**
@@ -103,5 +106,20 @@ class PresetTasks extends Tasks
   function update ()
   {
     $this->yell ("Hello World!");
+  }
+
+  protected function error ($text, $length = 40)
+  {
+    if (strlen ($text) < $length - 4)
+      $length = strlen ($text) + 4;
+    $o      = $this->getOutput ();
+    $format = "<fg=white;bg=red;options=bold>%s</fg=white;bg=red;options=bold>";
+    $text   = str_pad ($text, $length, ' ', STR_PAD_BOTH);
+    $len    = strlen ($text) + 2;
+    $space  = str_repeat (' ', $len);
+    $o->writeln (sprintf ($format, $space));
+    $o->writeln (sprintf ($format, " $text "));
+    $o->writeln (sprintf ($format, $space));
+    exit (1);
   }
 }

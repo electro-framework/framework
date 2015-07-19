@@ -434,10 +434,10 @@ class Application
    */
   public function setup ($rootDir)
   {
-    $_ = DIRECTORY_SEPARATOR;
-    $uri       = $_SERVER['REQUEST_URI'];
-    $baseURI   = dirnameEx ($_SERVER['SCRIPT_NAME']);
-    $vuri      = substr ($uri, strlen ($baseURI) + 1) ?: '';
+    $_       = DIRECTORY_SEPARATOR;
+    $uri     = get ($_SERVER, 'REQUEST_URI');
+    $baseURI = dirnameEx (get ($_SERVER, 'SCRIPT_NAME'));
+    $vuri    = substr ($uri, strlen ($baseURI) + 1) ?: '';
     if (($p = strpos ($vuri, '?')) !== false)
       $vuri = substr ($vuri, 0, $p);
 
