@@ -33,6 +33,7 @@ class ModuleOptions extends Object
       'components' => 'array',
       'presets'    => 'array',
       'routes'     => 'array',
+      'tasks'      => 'string',
     ];
   }
 
@@ -134,6 +135,15 @@ class ModuleOptions extends Object
   {
     global $application;
     $application->routes = array_merge ($v, $application->routes);
+  }
+
+  /**
+   * @param string $v Name of the module's class that implements the module's tasks.
+   */
+  function set_tasks ($v)
+  {
+    global $application;
+    $application->taskClasses[] = $v;
   }
 
 }

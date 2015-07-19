@@ -376,6 +376,11 @@ class Application
    * @var array
    */
   public $routes = [];
+  /**
+   * A list of task classes from each module that provides tasks to be merged on the main robofile.
+   * @var string[]
+   */
+  public $taskClasses = [];
 
   static function exceptionHandler (Exception $e)
   {

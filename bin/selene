@@ -1,7 +1,11 @@
 #!/usr/bin/env php
 <?php
 use Robo\Config;
+use Robo\Result;
+use Robo\TaskInfo;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Application;
 
 $tmp = dirname (dirname (dirname (__DIR__)));
 require "$tmp/autoload.php";
@@ -20,14 +24,49 @@ class Runner extends \Robo\Runner
     Config::setOutput (new ConsoleOutput());
     $input = $this->prepareInput ($input ? $input : $_SERVER['argv']);
 
-    $class = "$application->tasksClass";
-    if (!class_exists ($class)) {
-      $this->getOutput ()->writeln("<error>Class '$class' was not found</error>");
-      exit(1);
+    $app = new Application('Selene Task Runner', self::VERSION);
+    $application->taskClasses[] = $application->tasksClass;
+
+    foreach ($application->taskClasses as $class) {
+      if (!class_exists ($class)) {
+        $this->getOutput ()->writeln ("<error>Task class '$class' was not found</error>");
+        exit(1);
+      }
+      $this->mergeTasks ($app, $class);
     }
-    // Create and run the robo cli application
-    $this->createApplication ($class)->run ($input);
+
+    $app->run ($input);
   }
+
+  protected function mergeTasks ($app, $className)
+  {
+    $roboTasks = new $className;
+
+    $commandNames = array_filter (get_class_methods ($className), function ($m) {
+      return !in_array ($m, ['__construct']);
+    });
+
+    $passThrough = $this->passThroughArgs;
+    foreach ($commandNames as $commandName) {
+      $command = $this->createCommand (new TaskInfo($className, $commandName));
+      $command->setCode (function (InputInterface $input) use ($roboTasks, $commandName, $passThrough) {
+        // get passthru args
+        $args = $input->getArguments ();
+        array_shift ($args);
+        if ($passThrough) {
+          $args[key (array_slice ($args, -1, 1, true))] = $passThrough;
+        }
+        $args[] = $input->getOptions ();
+
+        $res = call_user_func_array ([$roboTasks, $commandName], $args);
+        if (is_int ($res)) exit($res);
+        if (is_bool ($res)) exit($res ? 0 : 1);
+        if ($res instanceof Result) exit($res->getExitCode ());
+      });
+      $app->add ($command);
+    }
+  }
+
 }
 
 (new Runner())->execute ();

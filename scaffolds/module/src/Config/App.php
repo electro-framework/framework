@@ -1,5 +1,5 @@
 <?php
-namespace App\Config;
+namespace ___NAMESPACE___\Config;
 
 use App\Controllers\Welcome;
 
@@ -14,15 +14,15 @@ class App
       // Example route implementing a self-contained component-like controller.
 
       PageRoute ([
-        'title'      => 'Welcome',
-        'URI'        => '',           // The root URI
+        'title'      => 'Example Route 1',
+        'URI'        => 'route1',
         'controller' => Welcome::ref,
       ]),
 
       // Example route using an automatic controller and an external view.
 
       PageRoute ([
-        'title'          => 'Example Module',
+        'title'          => 'Example Route 2',
         'URI'            => 'example',
         'module'         => 'ExampleModule',
         'view'           => 'index.html',
