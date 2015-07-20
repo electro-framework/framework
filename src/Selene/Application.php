@@ -10,6 +10,10 @@ use Selene\Exceptions\ConfigException;
 use Selene\Matisse\PipeHandler;
 use Selene\Routing\RoutingMap;
 
+define ('CONSOLE_ALIGN_CENTER', STR_PAD_BOTH);
+define ('CONSOLE_ALIGN_LEFT', STR_PAD_RIGHT);
+define ('CONSOLE_ALIGN_RIGHT', STR_PAD_LEFT);
+
 class Application
 {
   const INI_FILENAME         = 'application.ini.php';
@@ -376,6 +380,16 @@ class Application
    * @var array
    */
   public $routes = [];
+  /**
+   * A list of task classes from each module that provides tasks to be merged on the main robofile.
+   * @var string[]
+   */
+  public $taskClasses = [];
+  /**
+   * This is set only when running the console Task Runner.
+   * @var \Symfony\Component\Console\Application
+   */
+  public $console;
 
   static function exceptionHandler (Exception $e)
   {
@@ -434,10 +448,10 @@ class Application
    */
   public function setup ($rootDir)
   {
-    $_ = DIRECTORY_SEPARATOR;
-    $uri       = $_SERVER['REQUEST_URI'];
-    $baseURI   = dirnameEx ($_SERVER['SCRIPT_NAME']);
-    $vuri      = substr ($uri, strlen ($baseURI) + 1) ?: '';
+    $_       = DIRECTORY_SEPARATOR;
+    $uri     = get ($_SERVER, 'REQUEST_URI');
+    $baseURI = dirnameEx (get ($_SERVER, 'SCRIPT_NAME'));
+    $vuri    = substr ($uri, strlen ($baseURI) + 1) ?: '';
     if (($p = strpos ($vuri, '?')) !== false)
       $vuri = substr ($vuri, 0, $p);
 

@@ -11,6 +11,7 @@
  * Use this function to evaluate any expression in a string interpolator.
  *
  * Ex:
+ * > global $_; // if code is inside a function
  * > `$x = "Your {$_(Static::call(1,$arg))} is ready";`
  *
  * @param mixed $v
@@ -554,6 +555,18 @@ function mb_str_pad ($str, $pad_len, $pad_str = ' ', $dir = STR_PAD_RIGHT, $enco
 function str_encodeJavasciptStr ($str, $delim = '"')
 {
   return $delim . str_replace ($delim, '\\' . $delim, str_replace ("\n", '\\n', $str)) . $delim;
+}
+
+/**
+ * Converts an hyphenated compound word into a camel-cased form.
+ *
+ * Ex: `my-long-name => myLongName`
+ * @param string $name
+ * @return string
+ */
+function dehyphenate ($name)
+{
+  return str_replace (' ', '', ucwords (str_replace ('-', ' ', $name)));
 }
 
 //----------------------------------------------------------------------------------------
