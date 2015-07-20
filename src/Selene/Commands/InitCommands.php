@@ -3,6 +3,7 @@ namespace Selene\Commands;
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
+use Selene\TaskRunner;
 use Selene\Tasks\ChmodEx;
 use Selene\Traits\CommandAPIInterface;
 
@@ -12,6 +13,13 @@ use Selene\Traits\CommandAPIInterface;
 trait InitCommands
 {
   use CommandAPIInterface;
+
+  static function runInit ()
+  {
+    $tmp = dirname(dirname(dirname(dirname(dirname(__DIR__)))));
+    require "$tmp/autoload.php";
+    (new TaskRunner ())->run (['', 'init']);
+  }
 
   /**
    * Initializes the application after installation, or reinitializes it afterwards
@@ -28,7 +36,7 @@ trait InitCommands
       $this->error ("The applicatio is already initialized");
 
     $this->clear ();
-    $this->yell ("Selene Configuration Wizard");
+    $this->banner ("Selene Configuration Wizard");
     $this->title ("Creating required files and directories...");
     $this->initStorage (['overwrite' => true]);
     $this->initConfig (['overwrite' => true]);
@@ -126,7 +134,7 @@ trait InitCommands
    */
   function initStorage ($opts = ['overwrite|o' => false])
   {
-    $target = $this->app()->storagePath;
+    $target = $this->app ()->storagePath;
     if (file_exists ($target)) {
       if (get ($opts, 'overwrite'))
         (new DeleteDir ($target))->run ();

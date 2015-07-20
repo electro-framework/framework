@@ -73,9 +73,9 @@ trait CommandAPI
     $this->getOutput ()->writeln ($text);
   }
 
-  protected function yell ($text, $width = 0)
+  protected function banner ($text, $width = 0)
   {
-    $this->box ($text, 'fg=white;bg=green;options=bold', $width);
+    $this->box ($text, 'fg=white;bg=blue', $width);
   }
 
   private function box ($text, $colors, $width = 0, $align = CONSOLE_ALIGN_CENTER)
