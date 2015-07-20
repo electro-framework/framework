@@ -1,6 +1,8 @@
 <?php
 // Preset application configuration
 
+$debug = get ($_SERVER, 'APP_DEBUG') != 'true';
+
 return [
   'main' => [
 
@@ -14,7 +16,7 @@ return [
     'homeIcon'               => '',
     'homeTitle'              => 'Home',
 
-    // These paths are relative to the root folder:
+    // These paths are relative to the root folder and may be duplicated on the starter-app's config.
 
     'storagePath'            => 'private/storage',
     'imageArchivePath'       => 'private/storage/images',
@@ -25,13 +27,12 @@ return [
     'defaultModulesPath'     => 'private/packages',
     'configPath'             => 'private/config',
 
+    // These paths are relative to the root folder:
+
     'langPath'               => 'private/resources/lang',
     'templatesPath'          => 'private/resources/templates',
     'viewPath'               => 'private/resources/views',
-
-    // This path is relative to the kernel's folder:
-
-    'scaffoldsPath'          => 'scaffolds',
+    'scaffoldsPath'          => 'private/packages/selene-framework/selene-kernel/scaffolds',
 
     // These paths are relative to a module's folder or they are relative URIs:
 
@@ -58,9 +59,9 @@ return [
     'pageSize'               => 99999,
     'pageNumberParam'        => 'p',
     'frameworkScripts'       => true,
-    'condenseLiterals'       => $_SERVER['APP_DEBUG'] != 'true',
-    'compressOutput'         => $_SERVER['APP_DEBUG'] != 'true',
-    'debugMode'              => $_SERVER['APP_DEBUG'] == 'true',
+    'condenseLiterals'       => !$debug,
+    'compressOutput'         => !$debug,
+    'debugMode'              => $debug,
     'userModel'              => '',
 
     'imageRedirection'       => false,
@@ -77,5 +78,5 @@ return [
     'autoSession'            => true,
     'isSessionRequired'      => false,
 
-  ]
+  ],
 ];

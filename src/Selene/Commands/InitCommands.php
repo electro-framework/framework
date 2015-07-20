@@ -1,64 +1,118 @@
 <?php
 namespace Selene\Commands;
+use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
 use Selene\Tasks\ChmodEx;
-use Selene\Traits\CommandAPI;
+use Selene\Traits\CommandAPIInterface;
 
 /**
  * Implmenents the Selene task runner's pre-set init:xxx commands.
  */
 trait InitCommands
 {
-  use CommandAPI;
+  use CommandAPIInterface;
 
   /**
-   * Initializes the application after installation
+   * Initializes the application after installation, or reinitializes it afterwards
    *
-   * This is automatically called after `composer install` runs.
+   * Note: this is automatically called after `composer install` runs.
+   *
+   * @param array $opts
+   * @option $overwrite|o Discards the current configuration if it already exists
    */
-  function init ()
+  function init ($opts = ['overwrite|o' => false])
   {
-    $this->initStorage ();
-    if (!file_exists ("{$this->app->baseDirectory}/.env"))
-      $this->initConfig ();
+    $envPath = "{$this->app()->baseDirectory}/.env";
+    if (file_exists ($envPath) && !get ($opts, 'overwrite'))
+      $this->error ("The applicatio is already initialized");
+
+    $this->clear ();
+    $this->yell ("Selene Configuration Wizard");
+    $this->title ("Creating required files and directories...");
+    $this->initStorage (['overwrite' => true]);
+    $this->initConfig (['overwrite' => true]);
+    $this->done ("Initialization completed successfully");
   }
 
   /**
    * Initializes the application's configuration (.env file)
+   *
    * @param array $opts
    * @option $overwrite|o Discards the current .env file if it already exists
    */
   function initConfig ($opts = ['overwrite|o' => false])
   {
-    $envPath = "{$this->app->baseDirectory}/.env";
-    if (file_exists ($envPath) && !$opts['overwrite'])
+    $envPath = "{$this->app()->baseDirectory}/.env";
+    if (file_exists ($envPath) && !get ($opts, 'overwrite'))
       $this->error (".env file already exists");
-    $this->fs ()->copy ("{$this->app->scaffoldsPath}/.env", $envPath)->run ();
+    $this->fs ()->copy ("{$this->app()->scaffoldsPath}/.env", $envPath, true)->run ();
 
-    $LANG      = $this->askDefault ("What is the application's default language? (en | pt | ...)", 'en');
-    $DB_DRIVER = $this->askDefault ("Which database are you going to use? (sqlite | mysql)", 'sqlite');
-    if ($DB_DRIVER == 'sqlite')
-      $DB_DATABASE = "../private/storage/database/db.sqlite";
-    else {
-      $DB_DATABASE = $this->ask ("Database name");
-      $DB_HOST     = $this->askDefault ("Database host domain", 'localhost');
-      $DB_USERNAME = $this->ask ("Database username");
-      $DB_PASSWORD = $this->ask ("Database password");
-      if ($this->confirm ("Do you which to set advanced database connection options?")) {
-        $DB_CHARSET     = $this->askDefault ("Database character set", 'utf8');
-        $DB_COLLATION   = $this->askDefault ("Database collation", 'utf8_unicode_ci');
-        $DB_PORT        = $this->ask ("Database port (leave empty for default)");
-        $DB_UNIX_SOCKET = $this->ask ("Database UNIX socket (leave empty for default)");
-      }
-      else {
-        $DB_CHARSET     = 'utf8';
-        $DB_COLLATION   = 'utf8_unicode_ci';
-        $DB_PORT        = '';
-        $DB_UNIX_SOCKET = '';
-      }
+    $this->title ("Configuring the application...");
+
+    $LANG = $this->askDefault ("What is the application's main language? (en | pt | ...)", 'en');
+    do {
+      $DB_DRIVER = $this->askDefault ("Which database kind are you going to use? (sqlite | mysql)", 'none');
+    } while ($DB_DRIVER != 'sqlite' && $DB_DRIVER != 'mysql' && $DB_DRIVER != 'none');
+
+    $DB_DATABASE    = '';
+    $DB_HOST        = '';
+    $DB_USERNAME    = '';
+    $DB_PASSWORD    = '';
+    $DB_CHARSET     = '';
+    $DB_COLLATION   = '';
+    $DB_PORT        = '';
+    $DB_UNIX_SOCKET = '';
+
+    switch ($DB_DRIVER) {
+      case 'sqlite':
+        $DB_DATABASE = "../private/storage/database/db.sqlite";
+        break;
+      case 'mysql':
+        $DB_DATABASE = $this->ask ("Database name");
+        if (!$DB_DATABASE) $this->comment ("Database name will be determined by MySQL from the username (if so configured)");
+        $DB_HOST     = $this->askDefault ("Database host domain", $this->env ('DB_HOST', 'localhost'));
+        $DB_USERNAME = $this->askDefault ("Database username", $this->env ('DB_USERNAME'));
+        $DB_PASSWORD = $this->askDefault ("Database password", $this->env ('DB_PASSWORD'));
+        if ($this->confirm ("Do you which to set advanced database connection options? [n]")) {
+          $DB_CHARSET     = $this->askDefault ("Database character set", 'utf8');
+          $DB_COLLATION   = $this->askDefault ("Database collation", 'utf8_unicode_ci');
+          $DB_PORT        = $this->ask ("Database port [disable]");
+          $DB_UNIX_SOCKET = $this->ask ("Database UNIX socket [disable]");
+        }
+        else {
+          $DB_CHARSET   = 'utf8';
+          $DB_COLLATION = 'utf8_unicode_ci';
+        }
+        break;
     }
-
+    $this->nl ();
+    (new Replace ($envPath))
+      ->from ([
+        '%LANG',
+        '%DB_DRIVER',
+        '%DB_DATABASE',
+        '%DB_HOST',
+        '%DB_USERNAME',
+        '%DB_PASSWORD',
+        '%DB_CHARSET',
+        '%DB_COLLATION',
+        '%DB_PORT',
+        '%DB_UNIX_SOCKET',
+      ])
+      ->to ([
+        $LANG,
+        $DB_DRIVER,
+        $DB_DATABASE,
+        $DB_HOST,
+        $DB_USERNAME,
+        $DB_PASSWORD,
+        $DB_CHARSET,
+        $DB_COLLATION,
+        $DB_PORT,
+        $DB_UNIX_SOCKET,
+      ])
+      ->run ();
   }
 
   /**
@@ -72,16 +126,23 @@ trait InitCommands
    */
   function initStorage ($opts = ['overwrite|o' => false])
   {
-    $target = $this->app->storagePath;
+    $target = $this->app()->storagePath;
     if (file_exists ($target)) {
-      if ($opts['overwrite'])
+      if (get ($opts, 'overwrite'))
         (new DeleteDir ($target))->run ();
       else $this->error ("Directory already exists");
     }
-    (new CopyDir (["{$this->app->frameworkPath}/{$this->app->scaffoldsPath}/storage" => $target]))->run ();
+    (new CopyDir (["{$this->app()->scaffoldsPath}/storage" => $target]))->run ();
     (new ChmodEx ($target))->dirs (0770)->files (0660)->run ();
 
     $this->say ("Storage directory created");
+  }
+
+  private function env ($var, $default = '')
+  {
+    $v = getenv ($var);
+
+    return $v == '' || $v[0] == '%' ? $default : $v;
   }
 
 }

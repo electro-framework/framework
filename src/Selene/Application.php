@@ -10,6 +10,10 @@ use Selene\Exceptions\ConfigException;
 use Selene\Matisse\PipeHandler;
 use Selene\Routing\RoutingMap;
 
+define ('CONSOLE_ALIGN_CENTER', STR_PAD_BOTH);
+define ('CONSOLE_ALIGN_LEFT', STR_PAD_RIGHT);
+define ('CONSOLE_ALIGN_RIGHT', STR_PAD_LEFT);
+
 class Application
 {
   const INI_FILENAME         = 'application.ini.php';
@@ -381,6 +385,11 @@ class Application
    * @var string[]
    */
   public $taskClasses = [];
+  /**
+   * This is set only when running the console Task Runner.
+   * @var \Symfony\Component\Console\Application
+   */
+  public $console;
 
   static function exceptionHandler (Exception $e)
   {

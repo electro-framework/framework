@@ -3,9 +3,9 @@
 use Robo\Config;
 use Robo\Result;
 use Robo\TaskInfo;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
-use Symfony\Component\Console\Application;
 
 $tmp = dirname (dirname (dirname (__DIR__)));
 require "$tmp/autoload.php";
@@ -18,13 +18,18 @@ class Runner extends \Robo\Runner
   public function execute ($input = null)
   {
     global $application;
+    $argv = $_SERVER['argv'];
 
     register_shutdown_function ([$this, 'shutdown']);
     set_error_handler ([$this, 'handleError']);
-    Config::setOutput (new ConsoleOutput());
-    $input = $this->prepareInput ($input ? $input : $_SERVER['argv']);
 
-    $app = new Application('Selene Task Runner', self::VERSION);
+    // Color support manual override:
+    $hasColorSupport = in_array ('--ansi', $argv) ? true : (in_array ('--no-ansi', $argv) ? false : null);
+
+    Config::setOutput (new ConsoleOutput(ConsoleOutput::VERBOSITY_NORMAL, $hasColorSupport));
+    $input = $this->prepareInput ($input ? $input : $argv);
+
+    $app                        = $application->console = new Application('Selene Task Runner', self::VERSION);
     $application->taskClasses[] = $application->tasksClass;
 
     foreach ($application->taskClasses as $class) {

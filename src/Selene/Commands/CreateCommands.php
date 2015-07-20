@@ -1,14 +1,14 @@
 <?php
 namespace Selene\Commands;
 use Robo\Task\FileSystem\CopyDir;
-use Selene\Traits\CommandAPI;
+use Selene\Traits\CommandAPIInterface;
 
 /**
  * Implmenents the Selene task runner's pre-set build commands.
  */
 trait CreateCommands
 {
-  use CommandAPI;
+  use CommandAPIInterface;
 
   /**
    * Scaffolds a new module for your application
@@ -23,12 +23,11 @@ trait CreateCommands
       if (count ($o) != 2)
         $this->error ("Invalid module name.");
       $class = ucfirst (dehyphenate ($o[1]));
-      $path  = "$this->app->modulesPath/$name";
-      if (file_exists ($path) || file_exists ("$this->app->defaultModulesPath/$name"))
+      $path  = "{$this->app()}->modulesPath/$name";
+      if (file_exists ($path) || file_exists ("{$this->app()}->defaultModulesPath/$name"))
         $this->error ("Module $name already exists.");
       $this->fs()->mkdir ($path)->run();
-      (new CopyDir ("$this->app->frameworkPath/$this->app->scaffoldsPath/module", $path))->run();
-
+      (new CopyDir ("{$this->app()}->frameworkPath/{$this->app()}->scaffoldsPath/module", $path))->run();
 
       $this->say ("Module <info>$name</info> created.");
     }

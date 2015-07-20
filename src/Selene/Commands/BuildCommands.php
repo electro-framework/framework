@@ -1,14 +1,14 @@
 <?php
 namespace Selene\Commands;
 use Robo\Task\FileSystem\CleanDir;
-use Selene\Traits\CommandAPI;
+use Selene\Traits\CommandAPIInterface;
 
 /**
  * Implmenents the Selene task runner's pre-set build commands.
  */
 trait BuildCommands
 {
-  use CommandAPI;
+  use CommandAPIInterface;
 
   /**
    * Builds the whole project, including all modules

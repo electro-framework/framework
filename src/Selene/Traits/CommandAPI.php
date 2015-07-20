@@ -3,52 +3,95 @@ namespace Selene\Traits;
 
 use Robo\Task\FileSystem\FilesystemStack;
 use Selene\Application;
-use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * @property Application $app
  */
 trait CommandAPI
 {
+  use \Robo\Common\IO;
+
+  protected function app ()
+  {
+    global $application;
+
+    return $application;
+  }
+
+  protected function clear ()
+  {
+    if ($this->getOutput ()->getFormatter ()->isDecorated ())
+      $this->write ("\033[0;0f\033[2J");
+  }
+
+  protected function comment ($text)
+  {
+    $this->say ("<comment>$text</comment>");
+  }
+
+  protected function done ($text)
+  {
+    $this->nl ();
+    $this->say ($text);
+    $this->nl ();
+  }
+
   /**
    * Prints an error message and stops execution. Use only on commands, not on tasks.
    * @param string $text  The message.
    * @param int    $width Error box width.
    */
-  abstract protected function error ($text, $width = 40);
+  protected function error ($text, $width = 0)
+  {
+    $this->box ($text, 'fg=white;bg=red', $width, CONSOLE_ALIGN_LEFT);
+    exit (1);
+  }
 
-  abstract protected function write ($text);
+  protected function fs ()
+  {
+    return new FilesystemStack;
+  }
 
-  abstract protected function writeln ($text);
+  protected function nl ()
+  {
+    $this->writeln ();
+  }
 
-  /**
-  * @return OutputInterface
-  */
-  abstract protected function getOutput();
+  protected function title ($text)
+  {
+    $this->writeln ();
+    $this->say ("<title>$text</title>" . PHP_EOL);
+  }
 
-  /**
-   * @return InputInterface
-   */
-  abstract protected function getInput();
+  protected function write ($text)
+  {
+    $this->getOutput ()->write ($text);
+  }
 
-  abstract protected function say($text);
+  protected function writeln ($text = '')
+  {
+    $this->getOutput ()->writeln ($text);
+  }
 
-  abstract protected function yell($text, $length = 40);
+  protected function yell ($text, $width = 0)
+  {
+    $this->box ($text, 'fg=white;bg=green;options=bold', $width);
+  }
 
-  abstract protected function ask($question, $hideAnswer = false);
+  private function box ($text, $colors, $width = 0, $align = CONSOLE_ALIGN_CENTER)
+  {
+    $lines = explode (PHP_EOL, $text);
+    if (!$width)
+      $width = max (array_map ('mb_strlen', $lines));
+    $format = "<$colors>%s</$colors>";
+    $space  = str_repeat (' ', $width + 4);
+    foreach ($lines as $i => $line)
+      $lines[$i] = mb_str_pad ($line, $width, ' ', $align);
 
-  abstract protected function askHidden($question);
-
-  abstract protected function askDefault($question, $default);
-
-  abstract protected function confirm($question);
-
-  abstract protected function getDialog();
-
-  /**
-   * @return FilesystemStack
-   */
-  abstract protected function fs();
+    $this->writeln (sprintf ($format, $space));
+    foreach ($lines as $line)
+      $this->writeln (sprintf ($format, "  $line  "));
+    $this->writeln (sprintf ($format, $space));
+  }
 
 }
