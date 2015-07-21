@@ -362,9 +362,8 @@ class Application
    */
   public $languageFolders = [];
   /**
-   * Extended application configuration.
-   * <p>Key 'main' has the configuration of the Application class.
-   * <p>Other keys may hold module-specific configs.
+   * Configuration settings for registered modules.
+   * Each key is that name of a module and its value is the configuration array of that module.
    * @var array
    */
   public $config;

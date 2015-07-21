@@ -22,10 +22,22 @@ trait CommandAPIInterface
 
   abstract protected function askHidden ($question);
 
-  abstract protected function banner ($text, $length = 0);
+  /**
+   * @param string $text
+   * @param int    $width 0 = autofit
+   * @return $this
+   */
+  abstract protected function banner ($text, $width = 0);
 
+  /**
+   * @return $this
+   */
   abstract protected function clear ();
 
+  /**
+   * @param string $text
+   * @return $this
+   */
   abstract protected function comment ($text);
 
   abstract protected function confirm ($question);
@@ -56,14 +68,39 @@ trait CommandAPIInterface
    */
   abstract protected function getOutput ();
 
+  /**
+   * Presents a list to the user, from which he/she must select an item.
+   * @param string   $question
+   * @param string[] $options
+   * @param int      $defaultIndex The default answer if the user just presses return. -1 = no default (empty input is
+   *                               not allowed.
+   * @return int The selected index (0 based).
+   */
+  abstract protected function menu ($question, array $options, $defaultIndex = -1);
+
+  /**
+   * @return $this
+   */
   abstract protected function nl ();
 
   abstract protected function say ($text);
 
+  /**
+   * @param string $text
+   * @return $this
+   */
   abstract protected function title ($text);
 
+  /**
+   * @param string $text
+   * @return $this
+   */
   abstract protected function write ($text);
 
+  /**
+   * @param string $text
+   * @return $this
+   */
   abstract protected function writeln ($text = '');
 
   abstract protected function yell ($text, $length = 0);

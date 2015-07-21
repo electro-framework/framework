@@ -8,7 +8,7 @@ use Selene\Tasks\ChmodEx;
 use Selene\Traits\CommandAPIInterface;
 
 /**
- * Implmenents the Selene task runner's pre-set init:xxx commands.
+ * Implements the Selene Task Runner's pre-set init:xxx commands.
  */
 trait InitCommands
 {

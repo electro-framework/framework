@@ -5,7 +5,7 @@ use Robo\Task\FileSystem\CopyDir;
 use Selene\Traits\CommandAPIInterface;
 
 /**
- * Implmenents the Selene task runner's pre-set build commands.
+ * Implements the Selene Task Runner's pre-set build commands.
  */
 trait CreateCommands
 {
@@ -13,7 +13,6 @@ trait CreateCommands
 
   /**
    * Scaffolds a new module for your application
-   * @param string $name vendorName/moduleName
    */
   function createModule ()
   {
@@ -24,8 +23,8 @@ trait CreateCommands
     list ($vendor, $module) = $o;
     $___NAMESPACE___ = ucfirst (dehyphenate ($vendor));
     $___CLASS___     = ucfirst (dehyphenate ($module));
-    $___NAMESPACE___ = $this->askDefault ("Namespace", $___NAMESPACE___);
-    $___CLASS___     = $this->askDefault ("Class name", $___CLASS___);
+    $___NAMESPACE___ = $this->askDefault ("PHP namespace for the module's classes", $___NAMESPACE___);
+    $___CLASS___     = $this->askDefault ("Name of the class that represents the module:", $___CLASS___);
 
     $path = "{$this->app()->modulesPath}/$___MODULE___";
     if (file_exists ($path) || file_exists ("{$this->app()->defaultModulesPath}/$___MODULE___"))

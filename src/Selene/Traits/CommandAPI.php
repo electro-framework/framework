@@ -18,12 +18,31 @@ trait CommandAPI
     return $application;
   }
 
+  /**
+   * @param string $text
+   * @param int    $width 0 = autofit
+   * @return $this
+   */
+  protected function banner ($text, $width = 0)
+  {
+    $this->box ($text, 'fg=white;bg=blue', $width);
+
+    return $this;
+  }
+
+  /**
+   * @return $this
+   */
   protected function clear ()
   {
     if ($this->getOutput ()->getFormatter ()->isDecorated ())
       $this->write ("\033[0;0f\033[2J");
   }
 
+  /**
+   * @param string $text
+   * @return $this
+   */
   protected function comment ($text)
   {
     $this->say ("<comment>$text</comment>");
@@ -52,30 +71,73 @@ trait CommandAPI
     return new FilesystemStack;
   }
 
+  /**
+   * Presents a list to the user, from which he/she must select an item.
+   * @param string   $question
+   * @param string[] $options
+   * @param int      $defaultIndex The default answer if the user just presses return. -1 = no default (empty input is
+   *                               not allowed.
+   * @return int The selected index (0 based).
+   */
+  protected function menu ($question, array $options, $defaultIndex = -1)
+  {
+    $this->writeln ("<question>$question</question>")->nl ();
+    foreach ($options as $i => $option) $this->writeln ("\t<info>" . ($i + 1) . ".</info> $option");
+    $this->nl ();
+    do {
+      $a = $defaultIndex < 0 ? $this->ask ('') : $this->askDefault ('', $defaultIndex + 1);
+      $i = intval ($a);
+      if ($i < 1 || $i > count ($options)) {
+        $a = '';
+        $this->say ("<error>Please select a number from the list</error>");
+      }
+    } while (!$a);
+
+    return $i - 1;
+  }
+
+  /**
+   * @return $this
+   */
   protected function nl ()
   {
     $this->writeln ();
+
+    return $this;
   }
 
+  /**
+   * @param string $text
+   * @return $this
+   */
   protected function title ($text)
   {
     $this->writeln ();
     $this->say ("<title>$text</title>" . PHP_EOL);
+
+    return $this;
   }
 
+  /**
+   * @param string $text
+   * @return $this
+   */
   protected function write ($text)
   {
     $this->getOutput ()->write ($text);
+
+    return $this;
   }
 
+  /**
+   * @param string $text
+   * @return $this
+   */
   protected function writeln ($text = '')
   {
     $this->getOutput ()->writeln ($text);
-  }
 
-  protected function banner ($text, $width = 0)
-  {
-    $this->box ($text, 'fg=white;bg=blue', $width);
+    return $this;
   }
 
   private function box ($text, $colors, $width = 0, $align = CONSOLE_ALIGN_CENTER)
