@@ -240,6 +240,17 @@ class Application
    * @var Boolean
    */
   public $globalSessions = false;
+  /**
+   * Maximum width and/or height for uploaded images.
+   * Images exceeding this dimensions are resized to fit them.
+   * @var int
+   */
+  public $originalImageMaxSize;
+  /**
+   * JPEG compression factor for resampled uploaded images.
+   * @var int
+   */
+  public $originalImageQuality;
 
   /**
    * Favorite icon URL.

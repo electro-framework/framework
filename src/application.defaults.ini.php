@@ -52,6 +52,8 @@ return [
     'compressOutput'         => $_SERVER['APP_DEBUG'] != 'true',
     'debugMode'              => $_SERVER['APP_DEBUG'] == 'true',
     'userModel'              => '',
+    'originalImageMaxSize'   => 1024,
+    'originalImageQuality'   => 95,
 
     'imageRedirection'       => false,
     'URINotFoundURL'         => false,
