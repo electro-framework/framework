@@ -1,5 +1,5 @@
 <?php
-namespace ___NAMESPACE___\Config;
+namespace ___NAMESPACE___;
 
 class ___CLASS___
 {

@@ -1,6 +1,7 @@
 <?php
 namespace Selene\Commands;
 use Robo\Task\Composer\DumpAutoload;
+use Selene\Lib\Composer;
 use Selene\Traits\CommandAPIInterface;
 
 /**
@@ -39,6 +40,46 @@ trait ModuleCommands
   {
     if ($moduleName && !strpos ($moduleName, '/'))
       $this->error ("Invalid module name");
+
+    $this->changeModules (
+      function (array $modules) use (&$moduleName) {
+        if ($moduleName) {
+          $i = array_search ($moduleName, $modules);
+          if ($i === false)
+            $this->error ("Module $moduleName is not registered");
+        }
+        else {
+          $i          = $this->menu ("Select a module to unregister:", $modules);
+          $moduleName = $modules[$i];
+        }
+        array_splice ($modules, $i, 1);
+
+        return $modules;
+      }
+    );
+
+    (new DumpAutoload())->run ();
+
+    $this->done ("Module <info>$moduleName</info> was unregistered");
+  }
+
+  /**
+   * Removes a module from the application
+   * @param string $moduleName The full name (vendor-name/module-name) of the module to be uninstalled
+   */
+  function moduleUninstall ($moduleName = null)
+  {
+    $composer = new Composer;
+    exit;
+    if ($moduleName) {
+      $path = "{$this->app()->modulesPath}/$moduleName";
+      if (!file_exists($path)) {
+        $path = "{$this->app()->defaultModulesPath}/$moduleName";
+        if (!file_exists($path))
+          $this->error ("Invalid module name");
+
+      }
+    }
 
     $this->changeModules (
       function (array $modules) use (&$moduleName) {
