@@ -25,7 +25,9 @@ abstract class Media {
   public static function insertUploadedImage($imageFieldName,$gallery = null,$sort = null,$key = null,$caption = null)
   //--------------------------------------------------------------------------
   {
-
+    global $application;
+    $ORIGINAL_IMAGE_MAX_SIZE = $application->originalImageMaxSize;
+    $ORIGINAL_IMAGE_QUALITY = $application->originalImageQuality;
 
     $fileFormFieldName = $imageFieldName.'_file';
     if (Media::isFileUploaded($fileFormFieldName)) {
@@ -43,11 +45,11 @@ abstract class Media {
       Media::allocateImage($newId,$ext,$gallery,$sort,$key,$caption);
       $image = self::createFromFile($tempFile);
       if ($image !== false) {
-        $newImage = self::clampImageSize($image,self::ORIGINAL_IMAGE_MAX_SIZE,self::ORIGINAL_IMAGE_MAX_SIZE);
+        $newImage = self::clampImageSize($image,$ORIGINAL_IMAGE_MAX_SIZE,$ORIGINAL_IMAGE_MAX_SIZE);
         if ($newImage === false)
           Media::saveUploadedImage($fileFormFieldName,$newId,$ext);
         else {
-          self::encodeAndSaveImage($newImage,$mime,self::ORIGINAL_IMAGE_QUALITY,$newId,$ext);
+          self::encodeAndSaveImage($newImage,$mime,$ORIGINAL_IMAGE_QUALITY,$newId,$ext);
           imagedestroy($newImage);
         }
         imagedestroy($image);
@@ -60,6 +62,10 @@ abstract class Media {
   public static function insertImage($filename,$gallery = null,$sort = null,$key = null,$caption = null)
   //--------------------------------------------------------------------------
   {
+    global $application;
+    $ORIGINAL_IMAGE_MAX_SIZE = $application->originalImageMaxSize;
+    $ORIGINAL_IMAGE_QUALITY = $application->originalImageQuality;
+
     Media::checkFileIsValidImage(null,$filename);
     $ext = self::getImageType($filename);
     $mime = self::mime_content_type($filename);
@@ -71,11 +77,11 @@ abstract class Media {
     Media::allocateImage($newId,$ext,$gallery,$sort,$key,$caption);
     $image = self::createFromFile($filename);
     if ($image !== false) {
-      $newImage = self::clampImageSize($image,self::ORIGINAL_IMAGE_MAX_SIZE,self::ORIGINAL_IMAGE_MAX_SIZE);
+      $newImage = self::clampImageSize($image,$ORIGINAL_IMAGE_MAX_SIZE,$ORIGINAL_IMAGE_MAX_SIZE);
       if ($newImage === false)
         Media::saveImage($filename,$newId,$ext);
       else {
-        self::encodeAndSaveImage($newImage,$mime,self::ORIGINAL_IMAGE_QUALITY,$newId,$ext);
+        self::encodeAndSaveImage($newImage,$mime,$ORIGINAL_IMAGE_QUALITY,$newId,$ext);
         imagedestroy($newImage);
       }
       imagedestroy($image);

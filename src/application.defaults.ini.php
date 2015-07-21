@@ -63,6 +63,8 @@ return [
     'compressOutput'         => !$debug,
     'debugMode'              => $debug,
     'userModel'              => '',
+    'originalImageMaxSize'   => 1024,
+    'originalImageQuality'   => 95,
 
     'imageRedirection'       => false,
     'URINotFoundURL'         => false,
