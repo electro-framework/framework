@@ -81,7 +81,7 @@ trait CommandAPI
    */
   protected function menu ($question, array $options, $defaultIndex = -1)
   {
-    $this->writeln ("<question>$question</question>")->nl ();
+    $this->nl ()->writeln ("<question>$question</question>")->nl ();
     foreach ($options as $i => $option) $this->writeln ("\t<info>" . ($i + 1) . ".</info> $option");
     $this->nl ();
     do {
