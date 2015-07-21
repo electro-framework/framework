@@ -8,7 +8,7 @@ use Selene\Tasks\ChmodEx;
 use Selene\Traits\CommandAPIInterface;
 
 /**
- * Implmenents the Selene task runner's pre-set init:xxx commands.
+ * Implements the Selene Task Runner's pre-set init:xxx commands.
  */
 trait InitCommands
 {
@@ -82,7 +82,7 @@ trait InitCommands
         $DB_HOST     = $this->askDefault ("Database host domain", $this->env ('DB_HOST', 'localhost'));
         $DB_USERNAME = $this->askDefault ("Database username", $this->env ('DB_USERNAME'));
         $DB_PASSWORD = $this->askDefault ("Database password", $this->env ('DB_PASSWORD'));
-        if ($this->confirm ("Do you which to set advanced database connection options? [n]")) {
+        if ($this->confirm ("Do you whish to set advanced database connection options? [n]")) {
           $DB_CHARSET     = $this->askDefault ("Database character set", 'utf8');
           $DB_COLLATION   = $this->askDefault ("Database collation", 'utf8_unicode_ci');
           $DB_PORT        = $this->ask ("Database port [disable]");

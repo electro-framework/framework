@@ -4,7 +4,7 @@ use Robo\Task\FileSystem\CleanDir;
 use Selene\Traits\CommandAPIInterface;
 
 /**
- * Implmenents the Selene task runner's pre-set build commands.
+ * Implements the Selene Task Runner's pre-set build commands.
  */
 trait BuildCommands
 {

@@ -1,9 +1,9 @@
 <?php
-use ___NAMESPACE___\___CLASS___;
+use ___NAMESPACE___\Config\___CLASS___;
 
 ModuleOptions (__DIR__, [
-  'templates'  => true,
-  'views'      => true,
+  'templates'  => false,
+  'views'      => false,
   'public'     => 'modules/___MODULE___',
   'routes'     => ___CLASS___::routes (),
 //  'publish'    => [],

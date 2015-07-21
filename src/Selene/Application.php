@@ -247,6 +247,17 @@ class Application
    * @var Boolean
    */
   public $globalSessions = false;
+  /**
+   * Maximum width and/or height for uploaded images.
+   * Images exceeding this dimensions are resized to fit them.
+   * @var int
+   */
+  public $originalImageMaxSize;
+  /**
+   * JPEG compression factor for resampled uploaded images.
+   * @var int
+   */
+  public $originalImageQuality;
 
   /**
    * Favorite icon URL.
@@ -362,9 +373,8 @@ class Application
    */
   public $languageFolders = [];
   /**
-   * Extended application configuration.
-   * <p>Key 'main' has the configuration of the Application class.
-   * <p>Other keys may hold module-specific configs.
+   * Configuration settings for registered modules.
+   * Each key is that name of a module and its value is the configuration array of that module.
    * @var array
    */
   public $config;
