@@ -34,6 +34,7 @@ class CoreCommands extends Tasks
   {
     $this->setColor ('title', new OutputFormatterStyle ('magenta'));
     $this->setColor ('question', new OutputFormatterStyle ('cyan'));
+    $this->setColor ('warning', new OutputFormatterStyle ('red', 'yellow'));
   }
 
   private function setColor ($name, $style)

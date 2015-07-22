@@ -44,6 +44,8 @@ trait CommandAPIInterface
 
   abstract protected function done ($text);
 
+  abstract protected function warn ($text);
+
   /**
    * Prints an error message and stops execution. Use only on commands, not on tasks.
    * @param string $text  The message.

@@ -1,7 +1,12 @@
 <?php
 namespace Selene\Commands;
 use Robo\Task\Composer\DumpAutoload;
-use Selene\Lib\Composer;
+use Robo\Task\File\Replace;
+use Robo\Task\FileSystem\CopyDir;
+use Robo\Task\FileSystem\DeleteDir;
+use Selene\Lib\ApplicationConfigHandler;
+use Selene\Lib\ComposerConfigHandler;
+use Selene\Tasks\UninstallPackageTask;
 use Selene\Traits\CommandAPIInterface;
 
 /**
@@ -22,12 +27,13 @@ trait ModuleCommands
     if (!$moduleName || !strpos ($moduleName, '/'))
       $this->error ("Invalid module name");
 
-    $this->changeModules (function (array $modules) use ($moduleName) {
-      $modules[] = $moduleName;
-      return $modules;
-    });
+    (new ApplicationConfigHandler)
+      ->changeRegisteredModules (function (array $modules) use ($moduleName) {
+        $modules[] = $moduleName;
 
-    (new DumpAutoload())->run ();
+        return $modules;
+      })
+      ->save ();
 
     $this->done ("Module <info>$moduleName</info> was registered");
   }
@@ -41,26 +47,74 @@ trait ModuleCommands
     if ($moduleName && !strpos ($moduleName, '/'))
       $this->error ("Invalid module name");
 
-    $this->changeModules (
-      function (array $modules) use (&$moduleName) {
-        if ($moduleName) {
-          $i = array_search ($moduleName, $modules);
-          if ($i === false)
-            $this->error ("Module $moduleName is not registered");
-        }
-        else {
-          $i          = $this->menu ("Select a module to unregister:", $modules);
-          $moduleName = $modules[$i];
-        }
-        array_splice ($modules, $i, 1);
+    (new ApplicationConfigHandler)
+      ->changeRegisteredModules (
+        function (array $modules) use (&$moduleName) {
+          if ($moduleName) {
+            $i = array_search ($moduleName, $modules);
+            if ($i === false)
+              $this->error ("Module $moduleName is not registered");
+          }
+          else {
+            $i          = $this->menu ("Select a module to unregister:", $modules);
+            $moduleName = $modules[$i];
+          }
+          array_splice ($modules, $i, 1);
 
-        return $modules;
-      }
-    );
+          return $modules;
+        }
+      )
+      ->save ();
 
     (new DumpAutoload())->run ();
 
     $this->done ("Module <info>$moduleName</info> was unregistered");
+  }
+
+  /**
+   * Scaffolds a new module for your application
+   * @param string $moduleName The full name (vendor-name/module-name) of the module to be created
+   */
+  function moduleCreate ($moduleName = null)
+  {
+    $___MODULE___    = $moduleName ?: $this->askDefault ("Module name", "vendor-name/module-name");
+    $___NAMESPACE___ = $this->moduleNameToNamespace ($___MODULE___);
+    $___CLASS___     = explode ('\\', $___NAMESPACE___)[1] . 'Module';
+    if (!$moduleName) {
+      $___NAMESPACE___ = $this->askDefault ("PHP namespace for the module's classes", $___NAMESPACE___);
+      $___CLASS___     = $this->askDefault ("Name of the class that represents the module:", $___CLASS___);
+    }
+
+    $path = "{$this->app()->modulesPath}/$___MODULE___";
+    if (file_exists ($path) || file_exists ("{$this->app()->defaultModulesPath}/$___MODULE___"))
+      $this->error ("Module '$___MODULE___' already exists");
+
+    (new CopyDir (["{$this->app()->scaffoldsPath}/module" => $path]))->run ();
+    $this->fs ()->rename ("$path/src/Config/___CLASS___.php", "$path/src/Config/$___CLASS___.php")->run ();
+
+    $from = [
+      '___MODULE___',
+      '___CLASS___',
+      '___NAMESPACE___',
+    ];
+    $to   = [
+      $___MODULE___,
+      $___CLASS___,
+      $___NAMESPACE___,
+    ];
+
+    (new Replace ("$path/src/$___CLASS___.php"))->from ($from)->to ($to)->run ();
+    (new Replace ("$path/bootstrap.php"))->from ($from)->to ($to)->run ();
+
+    $composerConfig                            = new ComposerConfigHandler;
+    $composerConfig->psr4 ()->$___NAMESPACE___ = 'src';
+    $composerConfig->save ();
+
+    $this->done ("Module <info>$___MODULE___</info> created");
+
+    /** @var ModuleCommands $self */
+    $self = $this;
+    $self->moduleRegister ($___MODULE___);
   }
 
   /**
@@ -69,19 +123,7 @@ trait ModuleCommands
    */
   function moduleUninstall ($moduleName = null)
   {
-    $composer = new Composer;
-    exit;
-    if ($moduleName) {
-      $path = "{$this->app()->modulesPath}/$moduleName";
-      if (!file_exists($path)) {
-        $path = "{$this->app()->defaultModulesPath}/$moduleName";
-        if (!file_exists($path))
-          $this->error ("Invalid module name");
-
-      }
-    }
-
-    $this->changeModules (
+    $this->changeRegisteredModules (
       function (array $modules) use (&$moduleName) {
         if ($moduleName) {
           $i = array_search ($moduleName, $modules);
@@ -98,38 +140,53 @@ trait ModuleCommands
       }
     );
 
-    (new DumpAutoload())->run ();
+    $config = new ComposerConfigHandler;
+    if (isset($config->data->require->$moduleName))
+      $this->uninstallPlugin ($moduleName);
+    else $this->uninstallLocalModule ($moduleName);
 
-    $this->done ("Module <info>$moduleName</info> was unregistered");
+    $this->done ("Module <info>$moduleName</info> was uninstalled");
   }
 
-  private function changeModules (callable $fn)
+  protected function uninstallLocalModule ($moduleName)
   {
-    $path = $this->app ()->configPath . "/application.ini.php";
-    $ini = file_get_contents ($path);
-    $ini = $this->config_modifyArrayProperty ($ini, 'modules', $c, $fn);
-    if (!$c)
-      $this->error ("Can't parse the configuration file. Please reformat it and make sure there is a 'modules' key");
-    file_put_contents ($path, $ini);
+    $path = "{$this->app()->modulesPath}/$moduleName";
+    if (file_exists ($path))
+      (new DeleteDir($path))->run ();
+    else $this->warn ("No module files were deleted because none were found on the <info>modules</info> directory");
+
+    $namespace = $this->moduleNameToNamespace ($moduleName);
+
+    $composerConfig = new ComposerConfigHandler;
+    unset ($composerConfig->psr4 ()->$namespace);
+    $composerConfig->save ();
   }
 
-  private function config_modifyArrayProperty ($src, $key, &$count, callable $fn)
+  protected function uninstallPlugin ($pluginName)
   {
-    return preg_replace_callback ('/^(\s*)([\'"]' . $key . '[\'"]\s*=>\s*)(\[[^]]*])/m', function ($m) use ($fn) {
-      list (, $indent, $pre, $value) = $m;
-      $arr = $fn (eval("return $value;"));
+    $path = "{$this->app()->defaultModulesPath}/$pluginName";
+    if (!file_exists ($path))
+      $this->warn ("No module files were deleted because none were found on the <info>plugins</info> directory");
 
-      return $indent . $pre . $this->formatArray ($arr, $indent);
-    }, $src, 1, $count);
+    (new UninstallPackageTask($pluginName))->run ();
   }
 
-  private function formatArray (array $arr, $indent = '')
-  {
-    $o = [];
-    foreach ($arr as $v)
-      $o[] = "$indent  " . var_export ($v, true);
+  //--------------------------------------------------------------------------------------------------------------------
 
-    return "[" . implode (",", $o) . "$indent]";
+  /**
+   * @param string $moduleName
+   * @return string
+   */
+  private function moduleNameToNamespace ($moduleName)
+  {
+    $o = explode ('/', $moduleName);
+    if (count ($o) != 2)
+      $this->error ("Invalid module name");
+    list ($vendor, $module) = $o;
+    $namespace1 = ucfirst (dehyphenate ($vendor));
+    $namespace2 = ucfirst (dehyphenate ($module));
+
+    return "$namespace1\\$namespace2";
   }
 
 }

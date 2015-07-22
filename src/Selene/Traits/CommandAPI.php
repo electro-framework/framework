@@ -11,6 +11,8 @@ trait CommandAPI
 {
   use \Robo\Common\IO;
 
+  private $warnings = [];
+
   protected function app ()
   {
     global $application;
@@ -48,11 +50,22 @@ trait CommandAPI
     $this->say ("<comment>$text</comment>");
   }
 
+  /**
+   * @param string $text
+   * @return $this
+   */
+  protected function warn ($text)
+  {
+    $this->warnings[] = "Warning: <warning>$text</warning>";
+  }
+
   protected function done ($text)
   {
     $this->nl ();
     $this->say ($text);
     $this->nl ();
+    if (!empty($this->warnings))
+      $this->writeln (implode (PHP_EOL, $this->warnings))->nl ();
   }
 
   /**
