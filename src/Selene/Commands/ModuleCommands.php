@@ -6,6 +6,7 @@ use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
 use Selene\Lib\ApplicationConfigHandler;
 use Selene\Lib\ComposerConfigHandler;
+use Selene\Lib\PackagistAPI;
 use Selene\Tasks\UninstallPackageTask;
 use Selene\Traits\CommandAPIInterface;
 
@@ -23,14 +24,13 @@ trait ModuleCommands
   function moduleRegister ($moduleName = '')
   {
     if (!$moduleName)
-      $moduleName = $this->askDEFAULT ("Module name", "vendor-name/module-name");
+      $moduleName = $this->askDefault ("Module name", "vendor-name/module-name");
     if (!$moduleName || !strpos ($moduleName, '/'))
       $this->error ("Invalid module name");
 
     (new ApplicationConfigHandler)
       ->changeRegisteredModules (function (array $modules) use ($moduleName) {
         $modules[] = $moduleName;
-
         return $modules;
       })
       ->save ();
@@ -65,8 +65,6 @@ trait ModuleCommands
         }
       )
       ->save ();
-
-    (new DumpAutoload())->run ();
 
     $this->done ("Module <info>$moduleName</info> was unregistered");
   }
@@ -112,9 +110,14 @@ trait ModuleCommands
 
     $this->done ("Module <info>$___MODULE___</info> created");
 
-    /** @var ModuleCommands $self */
-    $self = $this;
-    $self->moduleRegister ($___MODULE___);
+    $this->moduleRegister ($___MODULE___);
+  }
+
+  function moduleInstall ($moduleName = null) {
+    if (!$moduleName) {
+      $modules = (new PackagistAPI)->vendor('selene-frameword')->search();
+      print_r($modules);
+    }
   }
 
   /**
@@ -139,7 +142,6 @@ trait ModuleCommands
         return $modules;
       }
     );
-
     $config = new ComposerConfigHandler;
     if (isset($config->data->require->$moduleName))
       $this->uninstallPlugin ($moduleName);
@@ -147,6 +149,8 @@ trait ModuleCommands
 
     $this->done ("Module <info>$moduleName</info> was uninstalled");
   }
+
+  //--------------------------------------------------------------------------------------------------------------------
 
   protected function uninstallLocalModule ($moduleName)
   {

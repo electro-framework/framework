@@ -25,15 +25,16 @@ class ApplicationConfigHandler
 
   function changeRegisteredModules (callable $fn)
   {
-    $this->modifyArrayProperty ('modules', $c, $fn);
-    if (!$c)
-      throw new \RuntimeException ("Can't parse the configuration file. Please reformat it and make sure there is a 'modules' key");
+    $this->modifyArrayProperty ('modules', $fn);
+
     return $this;
   }
 
-  function modifyArrayProperty ($key, &$count, callable $fn)
+  //--------------------------------------------------------------------------------------------------------------------
+
+  private function modifyArrayProperty ($key, callable $fn)
   {
-    return preg_replace_callback ('/^(\s*)([\'"]' . $key . '[\'"]\s*=>\s*)(\[[^]]*])/m',
+    $this->data = preg_replace_callback ('/^(\s*)([\'"]' . $key . '[\'"]\s*=>\s*)(\[[^]]*])/m',
       function ($m) use ($fn) {
         list (, $indent, $pre, $value) = $m;
         $arr = $fn (eval("return $value;"));
@@ -41,6 +42,8 @@ class ApplicationConfigHandler
         return $indent . $pre . $this->formatArray ($arr, $indent);
       },
       $this->data, 1, $count);
+    if (!$count)
+      throw new \RuntimeException ("Can't parse the configuration file. Please reformat it and make sure there is a '$key' key");
   }
 
   private function formatArray (array $arr, $indent = '')
