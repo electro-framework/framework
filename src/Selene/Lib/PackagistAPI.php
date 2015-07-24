@@ -6,7 +6,7 @@ use Selene\Traits\FluentAPI;
 /**
  * An interface to packagist.org
  *
- * @method $this name (string $name) Search for packages containing the specified string in the packages's name.
+ * @method $this query (string $name) Search for packages containing the specified text in the name or description.
  * @method $this tags (string ...$tag) Search for packages containing all the specified tags.
  * @method $this type (string $type) Search for packages of the specified type.
  * @method $this vendor (string $name) Restrict the search to the specified vendor's packages.
@@ -18,10 +18,10 @@ class PackagistAPI
 
   /** @var  string */
   protected $url;
-  /** @var string */
-  private $name;
   /** @var int */
   private $page = 1;
+  /** @var string */
+  private $query;
   /** @var \StdClass */
   private $response;
   /** @var string[] */
@@ -47,7 +47,38 @@ class PackagistAPI
   {
     return (new HttpClient)
       ->get ('packages/%s.json', $package)
-      ->expectJson ();
+      ->expectJson ()
+      ->send ();
+  }
+
+  /**
+   * List all packages, with optional filtering.
+   *
+   * The filters must have been set previously, using JUST ONE of the following setters:
+   *
+   *    * `vendor()`: vendor of the package
+   *    * `type()`:   type of package
+   *
+   * @return array The results
+   */
+  function getAll ()
+  {
+    if ($this->query || $this->tags)
+      throw new \RuntimeException ("Invalid filters were specified");
+
+    $request = new HttpClient($this->url);
+    $request
+      ->get ('packages/list.json')
+      ->expectJson ()
+      ->params ([
+        'type'   => $this->type,
+        'vendor' => $this->vendor,
+        'tags'   => $this->tags,
+      ]);
+    $response = $this->response = $request->send ()->packageNames;
+    if (!$response)
+      throw new \RuntimeException ("$request->method $request->url failed");
+    return $response;
   }
 
   /**
@@ -62,27 +93,29 @@ class PackagistAPI
   /**
    * Search packages.
    *
-   * The filters must have been set previouslty, using the followin setters:
+   * The filters must have been set previouslty, using ONE OR MORE of the following setters:
    *
-   *    * `vendor()`: vendor of the package
+   *    * `query()`:  search terms
    *    * `type()`:   type of package
    *    * `tags()`:   keywords of the package
    *
    * @param bool $all When `true`, all results will be fetched.
-   *                  When `false` (default) a single page (of 15 results) will be fetched.
+   *                  When `false` (default) a single page (of 15 results) will be fetched (for query searches only).
    * @return array The results
    */
   function search ($all = false)
   {
+    if ($this->vendor)
+      throw new \RuntimeException ("Invalid filters were specified");
+
     $request = new HttpClient($this->url);
     $request
       ->get ('search.json')
       ->expectJson ()
       ->params ([
-        'q'      => $this->name ?: '',
-        'type'   => $this->type,
-        'vendor' => $this->vendor,
-        'tags'   => $this->tags,
+        'q'    => $this->query ?: '',
+        'type' => $this->type,
+        'tags' => $this->tags,
       ]);
     $o          = [];
     $this->page = 0;
@@ -93,7 +126,6 @@ class PackagistAPI
       if (!$response)
         throw new \RuntimeException ("$request->method $request->url failed");
       $o = array_merge ($o, $response->results);
-      echo $response->total;
     } while ($all && isset($response->next));
 
     return $o;

@@ -63,8 +63,8 @@ trait ModuleCommands
   function moduleInstall ($moduleName = null)
   {
     if (!$moduleName) {
-      $modules = (new PackagistAPI)->name ('knplabs')->search (true);
-//      $modules = (new PackagistAPI)->vendor('selene-framework')->search();
+//      $modules = (new PackagistAPI)->query ('knplabs')->search (true);
+      $modules = (new PackagistAPI)->vendor ('selene-framework')->getAll ();
       print_r ($modules);
     }
   }
