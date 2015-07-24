@@ -1,6 +1,6 @@
 <?php
 namespace Selene\Lib;
-use Selene\Http\HttpRequest;
+use Selene\Http\HttpClient;
 use Selene\Traits\FluentAPI;
 
 /**
@@ -45,7 +45,7 @@ class PackagistAPI
    */
   function get ($package)
   {
-    return (new HttpRequest)
+    return (new HttpClient)
       ->get ('packages/%s.json', $package)
       ->expectJson ();
   }
@@ -74,7 +74,7 @@ class PackagistAPI
    */
   function search ($all = false)
   {
-    $request = new HttpRequest($this->url);
+    $request = new HttpClient($this->url);
     $request
       ->get ('search.json')
       ->expectJson ()
