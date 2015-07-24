@@ -1,5 +1,6 @@
 <?php
 namespace Selene\Lib;
+use Selene\Http\HttpRequest;
 use Selene\Traits\FluentAPI;
 
 /**
@@ -46,7 +47,7 @@ class PackagistAPI
   {
     return (new HttpRequest)
       ->get ('packages/%s.json', $package)
-      ->asJson ();
+      ->expectJson ();
   }
 
   /**
@@ -76,19 +77,19 @@ class PackagistAPI
     $request = new HttpRequest($this->url);
     $request
       ->get ('search.json')
-      ->asJson ()
-      ->param ('q', $this->name ?: '')
-      ->param ('type', $this->type)
-      ->param ('vendor', $this->vendor);
-    foreach ($this->tags as $tag)
-      $request->param ('tags[]', $tag);
+      ->expectJson ()
+      ->params ([
+        'q'      => $this->name ?: '',
+        'type'   => $this->type,
+        'vendor' => $this->vendor,
+        'tags'   => $this->tags,
+      ]);
     $o          = [];
     $this->page = 0;
     do {
       ++$this->page;
-      $newReq = clone $request;
-      $newReq->param ('page', $this->page);
-      $response = $this->response = $newReq->send ();
+      $request->param ('page', $this->page);
+      $response = $this->response = $request->send ();
       if (!$response)
         throw new \RuntimeException ("$request->method $request->url failed");
       $o = array_merge ($o, $response->results);

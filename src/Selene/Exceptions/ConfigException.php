@@ -1,6 +1,10 @@
 <?php
 namespace Selene\Exceptions;
 
-class HttpException extends \Exception
-{
+class ConfigException extends FatalException {
+
+  public function __construct($msg) {
+    parent::__construct($msg,"Error on application configuration");
+  }
+
 }
