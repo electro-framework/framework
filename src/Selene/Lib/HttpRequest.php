@@ -4,6 +4,7 @@ use DOMDocument;
 use InvalidArgumentException;
 use RuntimeException;
 use Selene\Contracts\HttpRequestInterface;
+use Selene\Exceptions\HttpException;
 use SimpleXMLElement;
 
 /**
@@ -24,6 +25,11 @@ class HttpRequest implements HttpRequestInterface
    * If not empty, it must always end with a slash.
    */
   public $baseUrl = '';
+  /**
+   * The request payload for POST or PUT requests.
+   * @var string
+   */
+  public $body;
   /**
    * The current request's HTTP headers.
    *
@@ -78,17 +84,21 @@ class HttpRequest implements HttpRequestInterface
    * @var string
    */
   public $url;
-  /**
-   * The request payload for POST or PUT requests.
-   * @var string
-   */
-  public $body;
 
   //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * @var string The default value for the `Accept` header for further requests.
+   * If unset, no header will be generated, unless manually specified by other means.
+   */
+  private $accept;
   /**
    * @var string The current cookies as set by the remote host.
    */
   private $requestCookiesHeader;
+  /**
+   * @var callback A function to transform the response. Receives as argument the raw response text.
+   */
+  private $transform;
 
   function __construct ($baseUrl = '')
   {
@@ -163,14 +173,53 @@ class HttpRequest implements HttpRequestInterface
     ];
   }
 
+  function accept ($contentType)
+  {
+    $this->accept = $contentType;
+    return /** HttpRequestInterface */
+      $this;
+  }
+
+  function asJson ($assoc = false)
+  {
+    $this->accept ('application/json');
+    $this->transform = function ($response) use ($assoc) {
+      return json_decode ($response, $assoc);
+    };
+    return /** HttpRequestInterface */
+      $this;
+  }
+
+  function asText ()
+  {
+    $this->accept ('text/html,application/xhtml+xml;q=0.9,text/plain;q=0.8,*/*;q=0.1');
+    $this->transform = null;
+    return /** HttpRequestInterface */
+      $this;
+  }
+
+  function asXml ($fullDOM = false, $options = 0)
+  {
+    $this->accept ('application/xml');
+    $this->transform = function ($response) use ($fullDOM, $options) {
+      if ($fullDOM) {
+        $DOM = new DOMDocument;
+
+        return $DOM->loadXML ($response, $options);
+      }
+      else return new SimpleXMLElement($response);
+    };
+    return /** HttpRequestInterface */
+      $this;
+  }
+
   function baseUrl ($url)
   {
     if ($url && $url[strlen ($url) - 1] != '/')
       $url .= '/';
     $this->baseUrl = $url;
-    /** @var HttpRequestInterface $self */
-    $self = $this; // Prevent IDE from inferring $this as the return type.
-    return $self;
+    return /** HttpRequestInterface */
+      $this;
   }
 
   /**
@@ -204,7 +253,7 @@ class HttpRequest implements HttpRequestInterface
     $this->responseStatus = (int)$response['status'];
     if ($this->autoCheck && $this->responseStatus != 200) {
       $err = print_r ($response, true);
-      throw new RuntimeException($err, $this->responseStatus);
+      throw new HttpException($err, $this->responseStatus);
     }
     $this->referrer           = $url;
     $this->rawResponseHeaders = $response['responseHeaders'];
@@ -243,69 +292,38 @@ class HttpRequest implements HttpRequestInterface
     return $response['response'];
   }
 
-  function clear ()
+  function clearSession ()
   {
     unset ($this->requestCookiesHeader);
     unset ($this->referrer);
     $this->responseCookies = [];
-    /** @var HttpRequestInterface $self */
-    $self = $this; // Prevent IDE from inferring $this as the return type.
-    return $self;
+    return /** HttpRequestInterface */
+      $this;
   }
 
   function delete ($url)
   {
-    $this->method = 'DELETE';
-    $this->url    = $url;
-    /** @var HttpRequestInterface $self */
-    $self = $this; // Prevent IDE from inferring $this as the return type.
-    return $self;
+    $this->reset ()->method = 'DELETE';
+    $this->url              = func_num_args () == 1 ? $url
+      : vsprintf ($url, array_map ('urlencode', array_slice (func_get_args (), 1)));
+    return /** HttpRequestInterface */
+      $this;
   }
-
 
   function get ($url)
   {
-    $this->method = 'GET';
-    $this->url    = $url;
-    /** @var HttpRequestInterface $self */
-    $self = $this; // Prevent IDE from inferring $this as the return type.
-    return $self;
-  }
-
-  function send ($body) {
-    $this->body = $body;
-    return $this;
-  }
-
-  function go ()
-  {
-    return $this->call ($this->url, $this->method, $this->body, $this->headers);
-  }
-
-  function asText () {
-    return $this->header('Accept', 'text/html,application/xhtml+xml;q=0.9,text/plain;q=0.8,*/*;q=0.1')->go();
-  }
-
-  function asXml ($fullDOM = false, $options = 0) {
-    $r = $this->header('Accept', 'application/xml')->go();
-    if ($fullDOM) {
-      $DOM = new DOMDocument;
-      return $DOM->loadXML ($r, $options);
-    }
-    else return new SimpleXMLElement($r);
-  }
-
-  function asJson ($associative = false) {
-    $r = $this->header('Accept', 'application/json')->go();
-    return json_decode($r, $associative);
+    $this->reset ()->method = 'GET';
+    $this->url              = func_num_args () == 1 ? $url
+      : vsprintf ($url, array_map ('urlencode', array_slice (func_get_args (), 1)));
+    return /** HttpRequestInterface */
+      $this;
   }
 
   function header ($name, $value)
   {
     $this->headers[] = "$name: $value";
-    /** @var HttpRequestInterface $self */
-    $self = $this; // Prevent IDE from inferring $this as the return type.
-    return $self;
+    return /** HttpRequestInterface */
+      $this;
   }
 
   function param ($name, $value)
@@ -314,26 +332,68 @@ class HttpRequest implements HttpRequestInterface
       $value          = urlencode ($value);
       $this->params[] = "$name=$value";
     }
-    /** @var HttpRequestInterface $self */
-    $self = $this; // Prevent IDE from inferring $this as the return type.
-    return $self;
+    return /** HttpRequestInterface */
+      $this;
   }
 
   function post ($url)
   {
-    $this->method = 'POST';
-    $this->url    = $url;
-    /** @var HttpRequestInterface $self */
-    $self = $this; // Prevent IDE from inferring $this as the return type.
-    return $self;
+    $this->reset ()->method = 'POST';
+    $this->url              = func_num_args () == 1 ? $url
+      : vsprintf ($url, array_map ('urlencode', array_slice (func_get_args (), 1)));
+    return /** HttpRequestInterface */
+      $this;
   }
 
   function put ($url)
   {
-    $this->method = 'PUT';
-    $this->url    = $url;
-    /** @var HttpRequestInterface $self */
-    $self = $this; // Prevent IDE from inferring $this as the return type.
-    return $self;
+    $this->reset ()->method = 'PUT';
+    $this->url              = func_num_args () == 1 ? $url
+      : vsprintf ($url, array_map ('urlencode', array_slice (func_get_args (), 1)));
+    return /** HttpRequestInterface */
+      $this;
+  }
+
+  function send ()
+  {
+    $headers = $this->headers;
+    if (!empty($this->accept))
+      $headers[] = "Accept: $this->accept";
+    $url = $this->url;
+    if (!empty($this->params))
+      $url .= '?' . implode ('&', $this->params);
+//    var_dump ($url,$headers);
+
+    $response = $this->call ($url, $this->method, $this->body, $headers);
+    if (isset($this->transform)) {
+      $fn = $this->transform;
+      return $fn ($response);
+    }
+    else return $response;
+  }
+
+  function transform ($callback)
+  {
+    $this->transform = $callback;
+    return /** HttpRequestInterface */
+      $this;
+  }
+
+  function with ($body)
+  {
+    $this->body = $body;
+    return /** HttpRequestInterface */
+      $this;
+  }
+
+  private function reset ()
+  {
+    $this->body      = null;
+    $this->headers   = [];
+    $this->params    = [];
+    $this->transform = null;
+    $this->accept    = null;
+    return /** HttpRequestInterface */
+      $this;
   }
 }

@@ -1,6 +1,5 @@
 <?php
 namespace Selene\Commands;
-use Robo\Task\Composer\DumpAutoload;
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
@@ -16,58 +15,6 @@ use Selene\Traits\CommandAPIInterface;
 trait ModuleCommands
 {
   use CommandAPIInterface;
-
-  /**
-   * Registers a module on the application's configuration, therefore enabling it for use
-   * @param string $moduleName The full name (vendor-name/module-name) of the module to be registered
-   */
-  function moduleRegister ($moduleName = '')
-  {
-    if (!$moduleName)
-      $moduleName = $this->askDefault ("Module name", "vendor-name/module-name");
-    if (!$moduleName || !strpos ($moduleName, '/'))
-      $this->error ("Invalid module name");
-
-    (new ApplicationConfigHandler)
-      ->changeRegisteredModules (function (array $modules) use ($moduleName) {
-        $modules[] = $moduleName;
-        return $modules;
-      })
-      ->save ();
-
-    $this->done ("Module <info>$moduleName</info> was registered");
-  }
-
-  /**
-   * Removes a module from the application's configuration, therefore disabling it
-   * @param string $moduleName The full name (vendor-name/module-name) of the module to be unregistered
-   */
-  function moduleUnregister ($moduleName = null)
-  {
-    if ($moduleName && !strpos ($moduleName, '/'))
-      $this->error ("Invalid module name");
-
-    (new ApplicationConfigHandler)
-      ->changeRegisteredModules (
-        function (array $modules) use (&$moduleName) {
-          if ($moduleName) {
-            $i = array_search ($moduleName, $modules);
-            if ($i === false)
-              $this->error ("Module $moduleName is not registered");
-          }
-          else {
-            $i          = $this->menu ("Select a module to unregister:", $modules);
-            $moduleName = $modules[$i];
-          }
-          array_splice ($modules, $i, 1);
-
-          return $modules;
-        }
-      )
-      ->save ();
-
-    $this->done ("Module <info>$moduleName</info> was unregistered");
-  }
 
   /**
    * Scaffolds a new module for your application
@@ -113,11 +60,34 @@ trait ModuleCommands
     $this->moduleRegister ($___MODULE___);
   }
 
-  function moduleInstall ($moduleName = null) {
+  function moduleInstall ($moduleName = null)
+  {
     if (!$moduleName) {
-      $modules = (new PackagistAPI)->vendor('selene-frameword')->search();
-      print_r($modules);
+      $modules = (new PackagistAPI)->name ('knplabs')->search (true);
+//      $modules = (new PackagistAPI)->vendor('selene-framework')->search();
+      print_r ($modules);
     }
+  }
+
+  /**
+   * Registers a module on the application's configuration, therefore enabling it for use
+   * @param string $moduleName The full name (vendor-name/module-name) of the module to be registered
+   */
+  function moduleRegister ($moduleName = '')
+  {
+    if (!$moduleName)
+      $moduleName = $this->askDefault ("Module name", "vendor-name/module-name");
+    if (!$moduleName || !strpos ($moduleName, '/'))
+      $this->error ("Invalid module name");
+
+    (new ApplicationConfigHandler)
+      ->changeRegisteredModules (function (array $modules) use ($moduleName) {
+        $modules[] = $moduleName;
+        return $modules;
+      })
+      ->save ();
+
+    $this->done ("Module <info>$moduleName</info> was registered");
   }
 
   /**
@@ -148,6 +118,37 @@ trait ModuleCommands
     else $this->uninstallLocalModule ($moduleName);
 
     $this->done ("Module <info>$moduleName</info> was uninstalled");
+  }
+
+  /**
+   * Removes a module from the application's configuration, therefore disabling it
+   * @param string $moduleName The full name (vendor-name/module-name) of the module to be unregistered
+   */
+  function moduleUnregister ($moduleName = null)
+  {
+    if ($moduleName && !strpos ($moduleName, '/'))
+      $this->error ("Invalid module name");
+
+    (new ApplicationConfigHandler)
+      ->changeRegisteredModules (
+        function (array $modules) use (&$moduleName) {
+          if ($moduleName) {
+            $i = array_search ($moduleName, $modules);
+            if ($i === false)
+              $this->error ("Module $moduleName is not registered");
+          }
+          else {
+            $i          = $this->menu ("Select a module to unregister:", $modules);
+            $moduleName = $modules[$i];
+          }
+          array_splice ($modules, $i, 1);
+
+          return $modules;
+        }
+      )
+      ->save ();
+
+    $this->done ("Module <info>$moduleName</info> was unregistered");
   }
 
   //--------------------------------------------------------------------------------------------------------------------
