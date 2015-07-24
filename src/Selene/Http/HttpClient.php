@@ -69,6 +69,10 @@ class HttpClient implements HttpClientInterface
    */
   public $referrer;
   /**
+   * @var string
+   */
+  public $responseBody;
+  /**
    * @var array The current cookies as set by the remote host.
    */
   public $responseCookies = [];
@@ -76,6 +80,10 @@ class HttpClient implements HttpClientInterface
    * @var array The last response HTTP headers.
    */
   public $responseHeaders;
+  /**
+   * @var string
+   */
+  public $responseRawBody;
   /**
    * @var int The last response HTTP status.
    */
@@ -420,12 +428,12 @@ class HttpClient implements HttpClientInterface
     $url     = $this->url . $params;
 //    var_dump ($url, $headers);
 
-    $response = $this->call ($url, $this->method, $this->body, $headers);
+    $this->responseRawBody = $this->call ($url, $this->method, $this->body, $headers);
     if (isset($this->transform)) {
       $fn = $this->transform;
-      return $fn ($response);
+      return $this->responseBody = $fn ($this->responseRawBody);
     }
-    else return $response;
+    else return $this->responseBody = $this->responseRawBody;
   }
 
   function transform ($callback)

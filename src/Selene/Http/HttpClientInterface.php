@@ -2,7 +2,7 @@
 namespace Selene\Http;
 
 /**
- * A fluent API for building an HTTP request, sending it, receiving the response and parsing it.
+ * A fluent API for building an HTTP request, sending it and retrieving the response content.
  * @package Selene\Http
  */
 interface HttpClientInterface
@@ -118,7 +118,7 @@ interface HttpClientInterface
   /**
    * Sets the request's HTTP verb.
    *
-   * @param string $verb One of `get|put|post|delete|patch|head|options`.
+   * @param string $verb One of `get|put|post|delete|patch|head|options|connect|trace`.
    * @return HttpClientInterface
    */
   function method ($verb);
