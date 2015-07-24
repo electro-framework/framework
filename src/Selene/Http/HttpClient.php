@@ -247,8 +247,8 @@ class HttpClient implements HttpClientInterface
     }
     $this->referrer           = $url;
     $this->rawResponseHeaders = $response['responseHeaders'];
-    $i                        = strpos ($this->rawResponseHeaders, "\n");
-    $rawHeaders               = explode ("\n", substr ($this->rawResponseHeaders, $i + 1));
+    $rawHeaders               = preg_split ('/\s*$\s*/m', $this->rawResponseHeaders);
+    $rawHeaders               = array_slice ($rawHeaders, 1, -1);
     $rheaders                 = [];
     $cookies                  = [];
 
@@ -290,6 +290,7 @@ class HttpClient implements HttpClientInterface
   {
     $this->header ('Accept', 'application/json');
     $this->transform = function ($response) use ($assoc) {
+      $this->responseTypeMustBe ('application/json');
       return json_decode ($response, $assoc);
     };
     return /** HttpRequestInterface */
@@ -308,6 +309,7 @@ class HttpClient implements HttpClientInterface
   {
     $this->header ('Accept', 'application/xml');
     $this->transform = function ($response) use ($fullDOM, $options) {
+      $this->responseTypeMustBe ('application/xml');
       if ($fullDOM) {
         $DOM = new DOMDocument;
 
@@ -387,6 +389,30 @@ class HttpClient implements HttpClientInterface
       $this;
   }
 
+  /**
+   * Gets the response's content type.
+   * @return string
+   */
+  function responseType ()
+  {
+    return isset($this->responseHeaders['Content-Type']) ? $this->responseHeaders['Content-Type'] : '';
+  }
+
+  /**
+   * @param string|array $expected Expected content type(s).
+   * @throws HttpClientException If no match.
+   */
+  function responseTypeMustBe ($expected)
+  {
+    $type = $this->responseType ();
+    if (is_array ($expected)) {
+      if (in_array ($type, $expected))
+        return;
+    }
+    else if ($type != $expected)
+      throw new HttpClientException ("Unexpected content type '$type'");
+  }
+
   function send ()
   {
     $headers = static::headersMapToList ($this->headers);
@@ -442,7 +468,7 @@ class HttpClient implements HttpClientInterface
         $this->body = $body;
         break;
       default:
-        throw new \RuntimeException ("Invalid content type '$type'");
+        throw new HttpClientException ("Invalid content type '$type'");
     }
     return /** HttpRequestInterface */
       $this;
