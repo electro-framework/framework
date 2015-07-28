@@ -51,7 +51,6 @@ return [
     'SEOFile'                => '',
 
     'autoControllerClass'    => 'Selene\Controller',
-    'tasksClass'             => 'Tasks',
 
     'loginView'              => '',
     'translation'            => false,

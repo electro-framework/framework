@@ -1,7 +1,0 @@
-#!/usr/bin/env php
-<?php
-
-$tmp = dirname (dirname (dirname (__DIR__)));
-require "$tmp/autoload.php";
-
-(new Selene\TaskRunner())->run ();

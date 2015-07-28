@@ -147,11 +147,6 @@ class Application
    */
   public $loginView;
   /**
-   * The class name of the application's robo tasks.
-   * @var string
-   */
-  public $tasksClass;
-  /**
    * The FQN of the logged in user's model class.
    * @var string
    */
