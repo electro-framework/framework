@@ -2,7 +2,6 @@
 namespace Selene;
 use Robo\Tasks;
 use Selene\Commands\BuildCommands;
-use Selene\Commands\CreateCommands;
 use Selene\Commands\InitCommands;
 use Selene\Commands\ModuleCommands;
 use Selene\Traits\CommandAPI;
@@ -15,7 +14,6 @@ class CoreCommands extends Tasks
 {
   use CommandAPI;
   use InitCommands;
-  use CreateCommands;
   use BuildCommands;
   use ModuleCommands;
 
