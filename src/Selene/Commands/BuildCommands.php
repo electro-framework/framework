@@ -15,7 +15,7 @@ trait BuildCommands
    * Use this command right after cloning a project or whenever modules are added, removed or updated.
    *
    * @param array $options
-   * @option $exclude-bower|x Makes the build run faster by skipping the installation/update of front-end libraries
+   * @option $exclude-libs|x Makes the build run faster by skipping the installation/update of front-end libraries
    *         trough Bower
    */
   function build ($options = ['exclude-libs|x' => false])

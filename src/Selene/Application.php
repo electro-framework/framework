@@ -16,7 +16,6 @@ define ('CONSOLE_ALIGN_RIGHT', STR_PAD_LEFT);
 
 class Application
 {
-  const INI_FILENAME         = 'application.ini.php';
   const DEFAULT_INI_FILENAME = 'application.defaults.ini.php';
   const FRAMEWORK_PATH       = 'private/packages/selene-framework/selene-kernel';
 
@@ -258,6 +257,11 @@ class Application
    * @var int
    */
   public $originalImageQuality;
+  /**
+   * The name of the file that contains the application's configuration settings.
+   * @var string
+   */
+  public $configFilename;
 
   /**
    * Favorite icon URL.
@@ -483,7 +487,7 @@ class Application
 
     // Load application-specific configuration.
 
-    $iniPath = "$this->rootPath{$_}$this->configPath{$_}" . self::INI_FILENAME;
+    $iniPath = "$this->rootPath{$_}$this->configPath{$_}$this->configFilename";
     $this->loadConfig ($iniPath);
 
     foreach ($this->subApplications as $prefix => $path) {

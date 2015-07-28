@@ -1,5 +1,5 @@
 <?php
-use ___NAMESPACE___\Config\___CLASS___;
+use ___NAMESPACE___\___CLASS___;
 
 ModuleOptions (__DIR__, [
   'templates'  => false,

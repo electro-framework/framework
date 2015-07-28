@@ -2,7 +2,6 @@
 namespace Selene;
 use Robo\Tasks;
 use Selene\Commands\BuildCommands;
-use Selene\Commands\CreateCommands;
 use Selene\Commands\InitCommands;
 use Selene\Commands\ModuleCommands;
 use Selene\Traits\CommandAPI;
@@ -15,7 +14,6 @@ class CoreCommands extends Tasks
 {
   use CommandAPI;
   use InitCommands;
-  use CreateCommands;
   use BuildCommands;
   use ModuleCommands;
 
@@ -34,6 +32,7 @@ class CoreCommands extends Tasks
   {
     $this->setColor ('title', new OutputFormatterStyle ('magenta'));
     $this->setColor ('question', new OutputFormatterStyle ('cyan'));
+    $this->setColor ('warning', new OutputFormatterStyle ('red', 'yellow'));
   }
 
   private function setColor ($name, $style)

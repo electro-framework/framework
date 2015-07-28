@@ -11,6 +11,8 @@ trait CommandAPI
 {
   use \Robo\Common\IO;
 
+  private $warnings = [];
+
   protected function app ()
   {
     global $application;
@@ -53,6 +55,8 @@ trait CommandAPI
     $this->nl ();
     $this->say ($text);
     $this->nl ();
+    if (!empty($this->warnings))
+      $this->writeln (implode (PHP_EOL, $this->warnings))->nl ();
   }
 
   /**
@@ -77,12 +81,21 @@ trait CommandAPI
    * @param string[] $options
    * @param int      $defaultIndex The default answer if the user just presses return. -1 = no default (empty input is
    *                               not allowed.
+   * @param array    $secondColumn If specified, it contains the 2nd column for each option.
    * @return int The selected index (0 based).
    */
-  protected function menu ($question, array $options, $defaultIndex = -1)
+  protected function menu ($question, array $options, $defaultIndex = -1, array $secondColumn = null)
   {
+    $pad   = strlen (count ($options));
+    $width = max (array_map ('strlen', $options));
     $this->nl ()->writeln ("<question>$question</question>")->nl ();
-    foreach ($options as $i => $option) $this->writeln ("\t<info>" . ($i + 1) . ".</info> $option");
+    foreach ($options as $i => $option) {
+      $this->write ("\t<info>" . str_pad ($i + 1, $pad, ' ', STR_PAD_LEFT) . ".</info> ");
+      $this->writeln (isset($secondColumn)
+        ? mb_str_pad ($option, $width) . "  $secondColumn[$i]"
+        : " $option"
+      );
+    }
     $this->nl ();
     do {
       $a = $defaultIndex < 0 ? $this->ask ('') : $this->askDefault ('', $defaultIndex + 1);
@@ -116,6 +129,15 @@ trait CommandAPI
     $this->say ("<title>$text</title>" . PHP_EOL);
 
     return $this;
+  }
+
+  /**
+   * @param string $text
+   * @return $this
+   */
+  protected function warn ($text)
+  {
+    $this->warnings[] = "Warning: <warning>$text</warning>";
   }
 
   /**

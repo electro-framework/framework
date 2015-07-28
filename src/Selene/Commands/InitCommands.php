@@ -14,6 +14,10 @@ trait InitCommands
 {
   use CommandAPIInterface;
 
+  /**
+   * (private)
+   * This is called by Composer on the post-install event.
+   */
   static function runInit ()
   {
     $tmp = dirname(dirname(dirname(dirname(dirname(__DIR__)))));

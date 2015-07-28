@@ -284,7 +284,7 @@ function array_orderBy ()
 }
 
 /**
- * Estracts from an array all elements where the specified field matches the given value.
+ * Extracts from an array all elements where the specified field matches the given value.
  * Supports arrays of objects or arrays of arrays.
  *
  * @param array  $arr

@@ -44,6 +44,7 @@ return [
     'frameworkURI'           => 'framework',
     'addonsPath'             => 'framework/addons',
 
+    'configFilename'         => 'application.ini.php',
     'routingMapFile'         => '',
     'modelFile'              => '',
     'dataSourcesFile'        => '',
