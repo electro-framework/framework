@@ -6,6 +6,7 @@ use Robo\Task\FileSystem\DeleteDir;
 use Selene\Lib\ApplicationConfigHandler;
 use Selene\Lib\ComposerConfigHandler;
 use Selene\Lib\PackagistAPI;
+use Selene\Tasks\InstallPackageTask;
 use Selene\Tasks\UninstallPackageTask;
 use Selene\Traits\CommandAPIInterface;
 
@@ -55,17 +56,46 @@ trait ModuleCommands
     $composerConfig->psr4 ()->$___NAMESPACE___ = 'src';
     $composerConfig->save ();
 
-    $this->done ("Module <info>$___MODULE___</info> created");
+    $this->done ("Module <info>$___MODULE___</info> was created");
 
     $this->moduleRegister ($___MODULE___);
   }
 
-  function moduleInstall ($moduleName = null)
+  /**
+   * Installs a plugin module
+   * @param string $moduleName If not specified, a list of installable plugins will be displayed for the user
+   *                           to pick one
+   * @param array  $opts
+   * @option $stars Sort the list by stars, instead of downloads
+   */
+  function moduleInstall ($moduleName = null, $opts = ['stars' => false])
   {
     if (!$moduleName) {
 //      $modules = (new PackagistAPI)->query ('knplabs')->search (true);
-      $modules = (new PackagistAPI)->vendor ('selene-framework')->getAll ();
-      print_r ($modules);
+//      $modules = (new PackagistAPI)->vendor ('selene-framework')->getAll ();
+      $modules = (new PackagistAPI)->tags ('selene-framework', 'module')->search (true);
+      $modules = $opts['stars']
+        ? array_orderBy ($modules, 'favers', SORT_DESC, 'downloads', SORT_DESC)
+        : array_orderBy ($modules, 'downloads', SORT_DESC);
+      $starsW  = max (array_map ('strlen', array_column ($modules, 'favers')));
+      array_walk ($modules, function (&$m) use ($starsW) {
+        list ($vendor, $package) = explode ('/', $m['name']);
+        $stats = "<comment>" .
+                 str_pad ($m['downloads'], 6, ' ', STR_PAD_LEFT) . "▾  " .
+                 str_pad ($m['favers'], $starsW, ' ', STR_PAD_LEFT) . "★" .
+                 "</comment>";
+
+        $m['name']        = "<question>$vendor/</question>$package";
+        $m['description'] = "$stats  {$m['description']}";
+      });
+      $sel        = $this->menu ('Select a plugin module to install',
+        array_getColumn ($modules, 'name'), -1,
+        array_getColumn ($modules, 'description'));
+      $moduleName = $modules[$sel]['name'];
+
+      (new InstallPackageTask($moduleName))->run ();
+
+      $this->done ("Plugin <info>$moduleName</info> is now installed");
     }
   }
 

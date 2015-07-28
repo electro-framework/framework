@@ -69,7 +69,7 @@ class PackagistAPI
     $request = new HttpClient($this->url);
     $request
       ->get ('packages/list.json')
-      ->expectJson ()
+      ->expectJson (true)
       ->params ([
         'type'   => $this->type,
         'vendor' => $this->vendor,
@@ -87,7 +87,7 @@ class PackagistAPI
    */
   function hasMore ()
   {
-    return isset($this->response) && !isset($this->response->next);
+    return isset($this->response) && !isset($this->response['next']);
   }
 
   /**
@@ -111,7 +111,7 @@ class PackagistAPI
     $request = new HttpClient($this->url);
     $request
       ->get ('search.json')
-      ->expectJson ()
+      ->expectJson (true)
       ->params ([
         'q'    => $this->query ?: '',
         'type' => $this->type,
@@ -125,8 +125,8 @@ class PackagistAPI
       $response = $this->response = $request->send ();
       if (!$response)
         throw new \RuntimeException ("$request->method $request->url failed");
-      $o = array_merge ($o, $response->results);
-    } while ($all && isset($response->next));
+      $o = array_merge ($o, $response['results']);
+    } while ($all && isset($response['next']));
 
     return $o;
   }
@@ -137,7 +137,7 @@ class PackagistAPI
    */
   function totalPages ()
   {
-    return isset($this->response) ? floor (($this->response->total - 1) / 15) + 1 : 0;
+    return isset($this->response) ? floor (($this->response['total'] - 1) / 15) + 1 : 0;
   }
 
   /**
@@ -146,7 +146,7 @@ class PackagistAPI
    */
   function totalResults ()
   {
-    return isset($this->response) ? $this->response->total : 0;
+    return isset($this->response) ? $this->response['total'] : 0;
   }
 
 }

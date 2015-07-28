@@ -3,7 +3,7 @@ namespace Selene\Tasks;
 
 use Selene\Tasks\Base\ComposerTask;
 
-class InsstallPackageTask extends ComposerTask
+class InstallPackageTask extends ComposerTask
 {
   /** @var string */
   protected $package;
