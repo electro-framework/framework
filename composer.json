@@ -33,6 +33,5 @@
       "src/global.php",
       "src/database.php"
     ]
-  },
-  "bin": ["bin/selene"]
+  }
 }

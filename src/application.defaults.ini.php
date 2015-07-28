@@ -68,9 +68,6 @@ return [
 
     'imageRedirection'       => false,
     'URINotFoundURL'         => false,
-    'oldIEWarning'           => '',
-    'productionIP'           => '',
-    'googleAnalyticsAccount' => '',
 
     'packScripts'            => false,
     'packCSS'                => false,
