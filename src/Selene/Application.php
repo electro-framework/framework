@@ -147,11 +147,6 @@ class Application
    */
   public $loginView;
   /**
-   * The class name of the application's robo tasks.
-   * @var string
-   */
-  public $tasksClass;
-  /**
    * The FQN of the logged in user's model class.
    * @var string
    */
@@ -174,9 +169,6 @@ class Application
   public $enableCompression;
   public $debugMode;
   public $condenseLiterals;
-  public $packScripts;
-  public $packCSS;
-  public $resourceCaching;
   /**
    * @var Boolean True to generate the standard framework scripts.
    */
@@ -318,28 +310,6 @@ class Application
    */
   public $pageNumberParam;
 
-  /**
-   * Define a message to be displayed if the browser is IE6.
-   * If not set or empty, no message is shown.
-   * For multilingual sites, the text may be a $XXX translation code.
-   * @var string
-   */
-  public $oldIEWarning;
-
-  /**
-   * If set, this defines the public IP of the production server hosting the release website.
-   * This will be used to check if the website is running on the production webserver.
-   * @see Controller->isProductionSite
-   * @var string
-   */
-  public $productionIP;
-
-  /**
-   * Defines the Google Anallytics account ID.
-   * This is required if the GoogleAnalytics template is present on the page.
-   * @var string
-   */
-  public $googleAnalyticsAccount;
   /**
    * The homepage's breadcrumb icon class(es).
    * @var string
@@ -658,9 +628,9 @@ class Application
 
     foreach ($this->modules as $path) {
       $boot = "$path/bootstrap.php";
-      $f    = @include "$this->modulesPath/$boot";
+      $f    = includeFile ("$this->modulesPath/$boot");
       if ($f === false)
-        $f = @include "$this->defaultModulesPath/$boot";
+        $f = includeFile ("$this->defaultModulesPath/$boot");
       if ($f === false)
         throw new ConfigException("File <b>$boot</b> was not found.");
     }

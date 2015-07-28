@@ -203,54 +203,33 @@ function extractP ($html)
   return preg_match ('#<p>([\s\S]*?)</p>#', $html, $matches) ? $matches[1] : '';
 }
 
-/*
-  function propertiesToURI(array $props,$trimLeft = false,$glue = '&amp;') {
-  $uri = '';
-  foreach ($props as $k=>$v) {
-  $v = urlencode($v);
-  $uri .= "$glue$k=$v";
-  }
-  return $trimLeft ? substr($uri,strlen($glue)) :  $uri;
-  }
- */
-
-if (!function_exists ('fileExists')) {
-  function fileExists ($filename)
-  {
-    $r = @fopen ($filename, 'rb', true);
-    if ($r === false)
-      return false;
-    fclose ($r);
-
-    return true;
-  }
+function fileExists ($filename, $useIncludePath = true)
+{
+  return $useIncludePath ? boolval (stream_resolve_include_path ($filename)) : file_exists ($filename);
 }
 
+function includeFile ($filename) {
+  $path = stream_resolve_include_path ($filename);
+  return $path ? require $path : false;
+}
+
+// Already defined by Matisse
 if (!function_exists ('loadFile')) {
   function loadFile ($filename, $useIncludePath = true)
   {
-    $data = @file_get_contents ($filename, $useIncludePath);
-    if ($data)
-      return removeBOM ($data);
-
-    return '';
+    $path = $useIncludePath ? stream_resolve_include_path ($filename) : $filename;
+    return $path ? removeBOM (file_get_contents ($path)) : false;
   }
 }
 
+// Already defined by Matisse
 if (!function_exists ('removeBOM')) {
   function removeBOM ($string)
   {
     if (substr ($string, 0, 3) == pack ('CCC', 0xef, 0xbb, 0xbf))
       $string = substr ($string, 3);
-
     return $string;
   }
-}
-
-if (get_magic_quotes_gpc () == 1) {
-  $_GET     = array_map ('stripslashes', $_GET);
-  $_POST    = array_map ('stripslashes', $_POST);
-  $_REQUEST = array_map ('stripslashes', $_REQUEST);
 }
 
 function evalPHP ($code)
