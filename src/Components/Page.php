@@ -2,7 +2,6 @@
 namespace Selene\Matisse\Components;
 use Selene\Matisse\Component;
 use Selene\Matisse\Context;
-use Selene\Matisse\Exceptions\MatisseException;
 
 class Page extends Component
 {
@@ -202,12 +201,6 @@ class Page extends Component
       $this->renderChildren ();
       $pageContent = ob_get_clean ();
 
-      $cacheScriptURI = $application->toURI ('private/selene/cache.php?f=');
-
-      $oldIEWarning = !empty($application->oldIEWarning) && $this->browserIsIE6;
-      if ($oldIEWarning)
-        $this->stylesheets[] = $application->toThemeURI ('oldIEWarning.css', $application->frameworkTheme);
-
       echo $this->doctype;
       $this->beginTag ("html");
       $this->addAttribute ('class',
@@ -227,29 +220,13 @@ class Page extends Component
       $this->addTag ('meta', [
         'charset' => $this->charset,
       ]);
-      /*$this->addTag('meta',array(
-          'http-equiv' => 'X-UA-Compatible',
-          'content'    => 'IE=EmulateIE7'
-      ));*/
       $this->addTag ('title', null, $this->title);
       $this->addTag ('base', ['href' => "$application->URI/"]);
-      /*
-                          foreach ($application->CSS_sheets as $URI) {
-                            //if ($application->resourceCaching)
-                              //$URI = $cacheScriptURI.$URI;
-                            $this->addTag('link',array(
-                                'rel'   => 'stylesheet',
-                                'type'  => 'text/css',
-                                'href'  => $URI
-                            ));
-                          }
-      */
+
       foreach ($this->stylesheets as $URI) {
         if (substr ($URI, 0, 4) != 'http') {
           if (substr ($URI, 0, 1) != '/')
             $URI = $application->toURI ($URI);
-          //if ($application->resourceCaching)
-          //$URI = $cacheScriptURI.$URI;
         }
         $this->addTag ('link', [
           'rel'  => 'stylesheet',
@@ -290,11 +267,6 @@ class Page extends Component
         $this->setContent ($this->extraHeadTags);
       $this->endTag ();
       $this->beginTag ('body', $this->bodyAttrs);
-      if ($oldIEWarning)
-        $this->page->preForm .= <<<HTML
-<script>document.body.scroll='auto'</script>
-<div class="oldIEWarning">$application->oldIEWarning</div>
-HTML;
       $this->setContent ($this->preForm);
       $this->beginTag ('form', [
         'class'        => '',
@@ -314,14 +286,10 @@ HTML;
 
       $this->endTag (); // form
 
-      if ($application->packScripts)
-        $this->packScripts ();
-      else foreach ($this->page->scripts as $URI) {
+      foreach ($this->page->scripts as $URI) {
         if (substr ($URI, 0, 4) != 'http') {
           if (substr ($URI, 0, 1) != '/')
             $URI = $application->toURI ($URI);
-          if ($application->resourceCaching)
-            $URI = $cacheScriptURI . $URI;
         }
         $this->addTag ('script', [
           'type' => 'text/javascript',
@@ -363,61 +331,6 @@ HTML;
       $this->endTag (); // html
     }
     else $this->renderChildren ();
-  }
-
-  private function packScripts ()
-  {
-    global $application;
-    $filenames = '';
-    $script    = '';
-    foreach ($this->page->scripts as $URI)
-      $filenames .= $URI;
-    $filename = md5 ($filenames);
-    $uri      = "$application->cachePath/$filename.js";
-    $path     = "$application->baseDirectory/$uri";
-    if (!fileExists ($path)) {
-      $script = '';
-      foreach ($this->page->scripts as $URI) {
-        $filenames .= $URI;
-        $url       = (substr ($URI, 0, 4) == 'http') ? $URI : $application->toFilePath ($URI);
-        $newScript = file_get_contents ($url);
-        if ($newScript === false)
-          throw new MatisseException("Can't load javascript at $url");
-        $script .= $newScript;
-      }
-      $packed = $this->compressScript ($script);
-      file_put_contents ($path, $packed, FILE_TEXT);
-    }
-    $this->addTag ('script', [
-      'type' => 'text/javascript',
-      'src'  => $application->toURI ($uri),
-    ]);
-  }
-
-  private function compressScript ($script)
-  {
-    $apiArgs = [
-      'compilation_level' => 'SIMPLE_OPTIMIZATIONS',
-      'output_format'     => 'text',
-      'output_info'       => 'compiled_code',
-    ];
-    $args    = 'js_code=' . urlencode ($script);
-    foreach ($apiArgs as $key => $value)
-      $args .= '&' . $key . '=' . urlencode ($value);
-    $call = curl_init ();
-    curl_setopt_array ($call, [
-      CURLOPT_URL            =>
-        'http://closure-compiler.appspot.com/compile',
-      CURLOPT_POST           => 1,
-      CURLOPT_POSTFIELDS     => $args,
-      CURLOPT_RETURNTRANSFER => 1,
-      CURLOPT_HEADER         => 0,
-      CURLOPT_FOLLOWLOCATION => 0,
-    ]);
-    $jscomp = curl_exec ($call);
-    curl_close ($call);
-
-    return $jscomp;
   }
 
 }

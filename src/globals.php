@@ -78,26 +78,11 @@ if (!function_exists ('strJoin')) {
   }
 }
 
-if (!function_exists ('fileExists')) {
-  function fileExists ($filename)
-  {
-    $r = @fopen ($filename, 'rb', true);
-    if ($r === false)
-      return false;
-    fclose ($r);
-
-    return true;
-  }
-}
-
 if (!function_exists ('loadFile')) {
   function loadFile ($filename, $useIncludePath = true)
   {
-    $data = @file_get_contents ($filename, $useIncludePath);
-    if ($data)
-      return removeBOM ($data);
-
-    return '';
+    $path = $useIncludePath ? stream_resolve_include_path ($filename) : $filename;
+    return $path ? removeBOM (file_get_contents ($path)) : false;
   }
 }
 
@@ -106,7 +91,6 @@ if (!function_exists ('removeBOM')) {
   {
     if (substr ($string, 0, 3) == pack ('CCC', 0xef, 0xbb, 0xbf))
       $string = substr ($string, 3);
-
     return $string;
   }
 }
