@@ -7,7 +7,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * This 'trait interface' declares methods from `CommandAPI` and from the imherited `Robo\Common\IO`.
+ * This 'trait interface' declares methods from `CommandAPI` and from the inherited `Robo\Common\IO`.
  */
 trait CommandAPIInterface
 {
@@ -76,9 +76,10 @@ trait CommandAPIInterface
    * @param string[] $options
    * @param int      $defaultIndex The default answer if the user just presses return. -1 = no default (empty input is
    *                               not allowed.
+   * @param array    $secondColumn If specified, it contains the 2nd column for each option.
    * @return int The selected index (0 based).
    */
-  abstract protected function menu ($question, array $options, $defaultIndex = -1);
+  abstract protected function menu ($question, array $options, $defaultIndex = -1, array $secondColumn = null);
 
   /**
    * @return $this
