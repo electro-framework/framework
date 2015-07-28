@@ -1,6 +1,5 @@
 <?php
 namespace Selene\Lib;
-use Selene\Http\HttpClient;
 use Selene\Traits\FluentAPI;
 
 /**
@@ -45,10 +44,7 @@ class PackagistAPI
    */
   function get ($package)
   {
-    return (new HttpClient)
-      ->get ('packages/%s.json', $package)
-      ->expectJson ()
-      ->send ();
+    return $this->remote (sprintf ('packages/%s.json', $package));
   }
 
   /**
@@ -66,18 +62,14 @@ class PackagistAPI
     if ($this->query || $this->tags)
       throw new \RuntimeException ("Invalid filters were specified");
 
-    $request = new HttpClient($this->url);
-    $request
-      ->get ('packages/list.json')
-      ->expectJson (true)
-      ->params ([
+    $response = $this->response =
+      $this->remote ('packages/list.json', [
         'type'   => $this->type,
         'vendor' => $this->vendor,
         'tags'   => $this->tags,
-      ]);
-    $response = $this->response = $request->send ()->packageNames;
-    if (!$response)
-      throw new \RuntimeException ("$request->method $request->url failed");
+      ])
+      ['packageNames'];
+
     return $response;
   }
 
@@ -108,24 +100,17 @@ class PackagistAPI
     if ($this->vendor)
       throw new \RuntimeException ("Invalid filters were specified");
 
-    $request = new HttpClient($this->url);
-    $request
-      ->get ('search.json')
-      ->expectJson (true)
-      ->params ([
-        'q'    => $this->query ?: '',
-        'type' => $this->type,
-        'tags' => $this->tags,
-      ]);
     $o          = [];
     $this->page = 0;
     do {
       ++$this->page;
-      $request->param ('page', $this->page);
-      $response = $this->response = $request->send ();
-      if (!$response)
-        throw new \RuntimeException ("$request->method $request->url failed");
-      $o = array_merge ($o, $response['results']);
+      $response = $this->response = $this->remote ('search.json', [
+        'q'    => $this->query ?: '',
+        'type' => $this->type,
+        'tags' => $this->tags,
+        'page' => $this->page,
+      ]);
+      $o        = array_merge ($o, $response['results']);
     } while ($all && isset($response['next']));
 
     return $o;
@@ -147,6 +132,39 @@ class PackagistAPI
   function totalResults ()
   {
     return isset($this->response) ? $this->response['total'] : 0;
+  }
+
+  /**
+   * A minimalist API for issuing HTTP GET requests to a remote web service.
+   *
+   * It has no external dependencies.
+   *
+   * @param string     $url    Web service relative URL.
+   * @param array|null $params URL parameteres.
+   * @return mixed
+   */
+  private function remote ($url, array $params = null)
+  {
+    $url = "$this->url/$url";
+    if ($params) $url .= '?' . http_build_query ($params);
+    $opts     = [
+      'http' =>
+        [
+          'method'        => 'GET',
+          'max_redirects' => 0,
+          'ignore_errors' => true,
+        ],
+    ];
+    $context  = stream_context_create ($opts);
+    $stream   = fopen ($url, 'r', false, $context);
+    $meta     = stream_get_meta_data ($stream);
+    $response = stream_get_contents ($stream);
+    fclose ($stream);
+    $status = $meta['wrapper_data'][0];
+    if (!strpos ($status, '200'))
+      throw new \RuntimeException (sprintf ("HTTP GET %s failed.%sServer response: %s",
+        urldecode ($url), PHP_EOL, $status));
+    return json_decode ($response, true);
   }
 
 }
