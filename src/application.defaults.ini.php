@@ -32,7 +32,7 @@ return [
     'langPath'               => 'private/resources/lang',
     'templatesPath'          => 'private/resources/templates',
     'viewPath'               => 'private/resources/views',
-    'scaffoldsPath'          => 'private/packages/selene-framework/selene-kernel/scaffolds',
+    'scaffoldsPath'          => 'private/packages/selene-framework/core-tasks/scaffolds',
 
     // These paths are relative to a module's folder or they are relative URIs:
 
