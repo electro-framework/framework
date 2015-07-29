@@ -208,6 +208,11 @@ function fileExists ($filename, $useIncludePath = true)
   return $useIncludePath ? boolval (stream_resolve_include_path ($filename)) : file_exists ($filename);
 }
 
+/**
+ * Loads and executes the specified PHP file, searching for it on the 'include path'.
+ * @param string $filename
+ * @return bool|mixed
+ */
 function includeFile ($filename) {
   $path = stream_resolve_include_path ($filename);
   return $path ? require $path : false;
