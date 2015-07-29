@@ -24,7 +24,7 @@ return [
     'cachePath'              => 'private/storage/cache',
     'imagesCachePath'        => 'private/storage/cache/images',
     'modulesPath'            => 'private/modules',
-    'defaultModulesPath'     => 'private/packages',
+    'defaultModulesPath'     => 'private/plugins',
     'configPath'             => 'private/config',
 
     // These paths are relative to the root folder:
@@ -32,7 +32,6 @@ return [
     'langPath'               => 'private/resources/lang',
     'templatesPath'          => 'private/resources/templates',
     'viewPath'               => 'private/resources/views',
-    'scaffoldsPath'          => 'private/packages/selene-framework/core-tasks/scaffolds',
 
     // These paths are relative to a module's folder or they are relative URIs:
 
