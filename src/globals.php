@@ -81,8 +81,11 @@ if (!function_exists ('strJoin')) {
 if (!function_exists ('loadFile')) {
   function loadFile ($filename, $useIncludePath = true)
   {
-    $path = $useIncludePath ? stream_resolve_include_path ($filename) : $filename;
-    return $path ? removeBOM (file_get_contents ($path)) : false;
+    if ($useIncludePath) {
+      if (!($filename = stream_resolve_include_path ($filename))) return false;;
+    }
+    else if (!file_exists ($filename)) return false;
+    return removeBOM (file_get_contents ($filename));
   }
 }
 
