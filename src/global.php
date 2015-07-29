@@ -292,3 +292,31 @@ function _log ()
   $args = array_merge (['<#log>'], func_get_args ());
   return call_user_func_array ([WebConsole::$class, 'log'], $args)->showCallLocation ()->log ('</#log>');
 }
+
+/**
+ * Performs padding on strings having embedded color tags.
+ * > Ex: `"<color-name>text</color-name>"`
+ * @param string $str
+ * @param int    $width The desired minimum width, in characters.
+ * @param int    $align One of the STR_PAD_XXX constants.
+ * @return string
+ */
+function coloredStrPad ($str, $width, $align = STR_PAD_RIGHT)
+{
+  $w    = coloredStrLen ($str);
+  $rawW = mb_strlen ($str);
+  $d    = $rawW - $w;
+  return mb_str_pad ($str, $width + $d, ' ', $align);
+}
+
+/**
+ * Returns the true length of strings having embedded color tags.
+ * > Ex: `"<color-name>text</color-name>"`
+ * @param string $str
+ * @return int The string's length, in characters.
+ */
+function coloredStrLen ($str)
+{
+  return mb_strlen (preg_replace ('/<[^>]*>/u', '', $str));
+}
+
