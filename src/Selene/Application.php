@@ -71,13 +71,6 @@ class Application
    */
   public $frameworkPath;
   /**
-   * The path of the framework's preset scaffolds's directory, relative to the kernel's directory.
-   *
-   * This is used by the task runner.
-   * @var string
-   */
-  public $scaffoldsPath;
-  /**
    * The virtual URI specified after the application's base URI.
    * @var string
    */
