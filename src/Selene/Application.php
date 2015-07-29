@@ -621,11 +621,15 @@ class Application
 
     foreach ($this->modules as $path) {
       $boot = "$path/bootstrap.php";
-      $f    = includeFile ("$this->modulesPath/$boot");
-      if ($f === false)
+      if (fileExists("$this->modulesPath/$path")) {
+        // The bootstrap file is optional
+        includeFile ("$this->modulesPath/$boot");
+      }
+      else if (fileExists("$this->defaultModulesPath/$path")) {
+        // The bootstrap file is optional
         $f = includeFile ("$this->defaultModulesPath/$boot");
-      if ($f === false)
-        throw new ConfigException("File <b>$boot</b> was not found.");
+      }
+      else throw new ConfigException("Module <b>$path</b> was not found.");
     }
   }
 
