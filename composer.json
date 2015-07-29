@@ -1,6 +1,11 @@
 {
   "name": "selene-framework/matisse",
-  "description": "A component-based template engine for PHP web applications.",
+  "description": "A component-based template engine for PHP web applications",
+  "type": "selene-plugin",
+  "keywords": [
+    "plugin",
+    "selene framework"
+  ],
   "license": "MIT",
   "authors": [
     {
@@ -13,7 +18,10 @@
       "email": "claudio.silva@impactwave.com"
     }
   ],
-  "require": {},
+  "require": {
+    "selene-framework/installers": "^1.0.0",
+    "php": ">=5.4.0"
+  },
   "autoload": {
     "psr-4": {
       "Selene\\Matisse\\": "src/"
