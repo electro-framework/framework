@@ -84,11 +84,17 @@ class ModuleOptions extends Object
   }
 
   /**
-   * @param string[] $v A list of relative file paths of assets published by the module.
+   * A list of relative file paths of assets published by the module, relative to the module's public folder.
+   * The framework's build process may automatically concatenate and minify those assets for a release-grade build.
+   * @param string[] $v
    */
   function set_assets ($v)
   {
-
+    global $application;
+    if ($v)
+      $application->assets = array_merge ($application->assets, array_map (function ($path) {
+        return "$this->path/$path";
+      }, $v));
   }
 
   /**

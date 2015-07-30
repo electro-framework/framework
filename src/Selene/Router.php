@@ -28,15 +28,10 @@ class Router
     'gif'   => 'image/gif',
   ];
   /**
-   * Sitemap information for the current page.
+   * The route thar matches the current URI.
    * @var PageRoute
    */
-  public $sitePage = null;
-  /**
-   * The virtual URI following the question mark on the URL.
-   * @var string
-   */
-  public $virtualURI = '';
+  public $activeRoute = null;
   /**
    * The controller instance for the current module.
    * @var Controller
@@ -47,6 +42,11 @@ class Router
    * @var ModuleInfo
    */
   public $moduleInfo = null;
+  /**
+   * The virtual URI following the question mark on the URL.
+   * @var string
+   */
+  public $virtualURI = '';
 
   public static function route ()
   {
@@ -99,9 +99,9 @@ class Router
     $key = get ($_GET, 'key');
     if (!isset($application->routingMap))
       throw new ConfigException("No route map defined.");
-    $this->sitePage = $application->routingMap->searchFor ($this->virtualURI, $key);
-    if (is_null ($this->sitePage)) {
-      if (strpos (get($_SERVER, 'HTTP_ACCEPT'), 'text/html') !== false)
+    $this->activeRoute = $application->routingMap->searchFor ($this->virtualURI, $key);
+    if (is_null ($this->activeRoute)) {
+      if (strpos (get ($_SERVER, 'HTTP_ACCEPT'), 'text/html') !== false)
         Controller::pageNotFound ($this->virtualURI);
       else {
         header ("Content-Type: text/plain");
@@ -111,12 +111,12 @@ class Router
 
     //Setup preset parameters
 
-    $presetParams = $this->sitePage->getPresetParameters ();
+    $presetParams = $this->activeRoute->getPresetParameters ();
     $_REQUEST     = array_merge ($_REQUEST, (array)$presetParams);
     $_GET         = array_merge ($_GET, (array)$presetParams);
 
     //Setup module paths and other related info.
-    $this->moduleInfo = new ModuleInfo ($this->sitePage->module);
+    $this->moduleInfo = new ModuleInfo ($this->activeRoute->module);
     $application->setIncludePath ($this->moduleInfo->path);
   }
 
@@ -128,9 +128,9 @@ class Router
     global $application;
     /** @var Controller $con */
     $con  = null;
-    $auto = $this->sitePage->autoController;
+    $auto = $this->activeRoute->autoController;
     if ($auto) {
-      if (!empty($this->sitePage->controller))
+      if (!empty($this->activeRoute->controller))
         throw new ConfigException("<p><b>A controller should not be specified when autoController is enabled.</b>
 <p>Hint: is autoController=true being inherited?");
       $class = $application->autoControllerClass;
@@ -138,7 +138,7 @@ class Router
         $con = new $class;
     }
     else {
-      $class = $this->sitePage->controller;
+      $class = $this->activeRoute->controller;
       if (class_exists ($class))
         $con = new $class;
     }
@@ -154,7 +154,7 @@ class Router
   </table>
 ");
     }
-    $con->moduleLoader = $this;
+    $con->router = $this;
     return $con;
   }
 

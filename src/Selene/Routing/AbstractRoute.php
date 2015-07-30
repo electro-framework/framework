@@ -11,73 +11,12 @@ use Selene\Object;
 abstract class AbstractRoute extends Object
 {
   const ACTIVE = 'active';
-
-  public $name;
-  public $title;
-  public $subtitle;
   public $URI;
   public $URIAlias;
-  public $URL; //autoset if $URI is set
-  public $subnavURI;
-  public $subnavURL; //autoset if $subnavURI is set
-  public $onMenu;    // do not set a default!
-  public $routes  = null;
-  public $isIndex = false;
-  public $indexURL;      //autoset if isIndex is set
-  /**
-   * The module name for the route.
-   * <p>Inherited by all children unless overridden.
-   * @var string
-   */
-  public $module = null; // must not be an empty string.
-  /**
-   * @var Controller
-   */
-  public $controller;
-  public $autoController = false;
-  /**
-   * The type of user that can see this route.
-   * @var string
-   */
-  public $userType;
-  /**
-   * CSS class name(s) for menu icon.
-   * @var string
-   */
-  public $icon;
-  /**
-   * When set, children's inheritedPrefix will be set to inheritedPrefix + prefix.
-   * <p>Note that the route's inheritedPrefix is not affected by / related to this.
-   * <p>Inherited by all children unless overridden.
-   * @var string
-   */
-  public $prefix = '';
-
-  /** @var AbstractRoute */
-  public $parent = null; //internal use
-  public $URI_regexp;    //internal use
-  public $URIAlias_regexp;    //internal use
-  public $indexTitle;    //internal use
-  /**
-   * Indicates if the element is highlighted on the main menu.
-   * @var boolean
-   */
-  public $selected = false; //internal use
-  /**
-   * Indicates if the element matches the current URI.
-   * @var boolean
-   */
-  public $matches = false; //internal use
-  /**
-   * Automatically set to true when any sub-navigation links are available under this page.
-   * @var bool
-   */
-  public $hasSubNav = false; //internal use
-  /**
-   * When set, the real URI is $inheritedPrefix/$URI.
-   * @var string
-   */
-  public $inheritedPrefix = ''; //internal use
+  public $URIAlias_regexp;
+  public $URI_regexp;
+  public $URL;
+  public $autoController = false; //autoset if $URI is set
   /**
    * When `true`, the framework will attempt to automatically load the model object by fetching key information from
    * the URL, the route's `preset` property or from the request data.
@@ -85,11 +24,70 @@ abstract class AbstractRoute extends Object
    */
   public $autoloadModel = false;
   /**
+   * @var Controller
+   */
+  public $controller; //autoset if $subnavURI is set
+  /**
+   * Automatically set to true when any sub-navigation links are available under this page.
+   * @var bool
+   */
+  public $hasSubNav = false;    // do not set a default!
+  /**
+   * CSS class name(s) for menu icon.
+   * @var string
+   */
+  public $icon;
+  public $indexTitle;
+  public $indexURL;      //autoset if isIndex is set
+  /**
+   * When set, the real URI is $inheritedPrefix/$URI.
+   * @var string
+   */
+  public $inheritedPrefix = ''; // must not be an empty string.
+  public $isIndex         = false;
+  /**
+   * Indicates if the element matches the current URI.
+   * @var boolean
+   */
+  public $matches = false;
+  /**
    * An ordered map of titles to URIs, used to generate menu entries, if set. Otherwise, menu items are generated for
    * the subroutes.
    * @var array|null
    */
   public $menu = null;
+  /**
+   * The module name for the route.
+   * <p>Inherited by all children unless overridden.
+   * @var string
+   */
+  public $module = null;
+  public $name;
+  public $onMenu; //internal use
+  /** @var AbstractRoute */
+  public $parent = null;    //internal use
+  /**
+   * When set, children's inheritedPrefix will be set to inheritedPrefix + prefix.
+   * <p>Note that the route's inheritedPrefix is not affected by / related to this.
+   * <p>Inherited by all children unless overridden.
+   * @var string
+   */
+  public $prefix = '';    //internal use
+  public $routes = null;    //internal use
+  /**
+   * Indicates if the element is highlighted on the main menu.
+   * @var boolean
+   */
+  public $selected = false; //internal use
+  public $subnavURI; //internal use
+  public $subnavURL; //internal use
+  public $subtitle; //internal use
+  public $title;
+  /**
+   * The type of user that can see this route.
+   * @var string
+   */
+  public $userType;
 
   public function __construct (array &$init = null)
   {
@@ -116,6 +114,79 @@ abstract class AbstractRoute extends Object
     return $this;
   }
 
+  public function evalURI ($URIParams = null, $ignoreMissing = true, $URI = null)
+  {
+    if (is_null ($URIParams))
+      $URIParams = $this->getURIParams ();
+    if (is_null ($URI))
+      $URI = $this->URI;
+    try {
+      return preg_replace_callback ('!\{(.*?)}!', function ($args) use ($URIParams, $ignoreMissing) {
+        return self::fillURIParam ($args[1], $URIParams, $ignoreMissing);
+      }, $URI);
+    } catch (Exception $e) {
+      $x = print_r ($URIParams, true);
+      throw new FatalException("URI parameter value for <b>{$e->getMessage()}</b> was not found on the URI parameters:<br><pre>$x<br>URI: <b>$URI</b>");
+    }
+  }
+
+  public function getIndex ()
+  {
+    if ($this->isIndex)
+      return $this;
+    if ($this->parent instanceof AbstractRoute)
+      return $this->parent->getIndex ();
+    return null;
+  }
+
+  public function getPresetParameters ()
+  {
+    if (!empty($this->preset)) {
+      $presetParams = [];
+      $paramList    = explode ('&', $this->preset);
+      preg_match ('!' . $this->URI_regexp . '!', $_SERVER['REQUEST_URI'], $matches);
+      $URIParams = $this->getURIParams ();
+      foreach ($paramList as $x) {
+        list ($k, $v) = explode ('=', $x);
+        if ($v[0] == '{') {
+          $i = trim ($v, '{}');
+          $v = get ($matches, $i);
+          if (!isset($v))
+            $v = get ($URIParams, $i);
+          if (!isset($v))
+            throw new ConfigException("On the preset <b>$this->preset</b>, the key <b>$k</b> was not found on the URI.");
+        }
+        $presetParams[$k] = $v;
+      }
+      return $presetParams;
+    }
+    return null;
+  }
+
+  public function getSubtitle ($first = true)
+  {
+    return $this->getTitle ();
+//    if (isset($this->subtitle))
+//      return $this->subtitle;
+//    return $this->title;
+  }
+
+  public function getTitle ()
+  {
+    if (!empty($this->title))
+      return $this->title;
+    if (isset($this->controller)) {
+      /** @var Controller $ctrl */
+      $ctrl              = new $this->controller;
+      $ctrl->activeRoute = $this;
+      $this->title       = $ctrl->getTitle ();
+    }
+    return isset($this->title)
+      ? $this->title
+      : (isset($this->subtitle) ? $this->subtitle
+        : (isset($this->parent) ? $this->parent->getTitle () : ''));
+  }
+
   public function getTypes ()
   {
     return [
@@ -130,43 +201,42 @@ abstract class AbstractRoute extends Object
       'view'           => 'string',
       'controller'     => 'string',
       'autoController' => 'boolean',
-      'icon'           => 'string'
+      'icon'           => 'string',
     ];
   }
 
-  public function preinit ()
+  /**
+   * @return array
+   * @throws FatalException
+   * @global Application $application
+   */
+  public function getURIParams ()
   {
     global $application;
-
-    if (!isset($this->subnavURL)) {
-      if (isset($this->subnavURI))
-        $this->subnavURL = "$application->URI/$this->subnavURI";
-      else $this->subnavURL = 'javascript:nop()';
+    $URI    = $application->VURI;
+    $result = [];
+    $count  = preg_match ("!^$this->URI_regexp(?:$|&|/)!", urldecode ($URI), $URIValues);
+    if ($count)
+      $uriexp = $this->URI;
+    else {
+      $count = preg_match ("!^$this->URIAlias_regexp(?:$|&|/)!", urldecode ($URI), $URIValues);
+      if ($count)
+        $uriexp = $this->URIAlias;
+      else $uriexp = '';
     }
-  }
-
-  public function getTitle ()
-  {
-    if (!empty($this->title))
-      return $this->title;
-    if (isset($this->controller)) {
-      /** @var Controller $ctrl */
-      $ctrl           = new $this->controller;
-      $ctrl->sitePage = $this;
-      $this->title    = $ctrl->getTitle ();
+    if (preg_match_all ('!\{(.*?)}!', $uriexp, $matches)) {
+      foreach ($matches[1] as $i => $field)
+        if (count ($URIValues) > $i)
+          $result[$field] = get ($URIValues, $i + 1);
+        else {
+          if ($application->debugMode) {
+            $x = "URIValues:\n" . print_r ($URIValues, true);
+            $x .= "URIParams:\n" . print_r ($result, true);
+            throw new FatalException("No match found for parameter <b>$field</b> on the URI <b>$URI</b> for pattern <b>$uriexp</b><p>URI parameters found:<p><pre>$x");
+          }
+        }
     }
-    return isset($this->title)
-      ? $this->title
-      : (isset($this->subtitle) ? $this->subtitle
-        : (isset($this->parent) ? $this->parent->getTitle () : ''));
-  }
-
-  public function getSubtitle ($first = true)
-  {
-    return $this->getTitle ();
-//    if (isset($this->subtitle))
-//      return $this->subtitle;
-//    return $this->title;
+    return $result;
   }
 
   public function init ($parent)
@@ -189,7 +259,7 @@ abstract class AbstractRoute extends Object
     }
 
     if (isset($this->menu) && $this->inheritedPrefix)
-      foreach ($this->menu as $title=>&$URI)
+      foreach ($this->menu as $title => &$URI)
         $URI = "$this->inheritedPrefix/$URI";
 
     if (empty($this->indexURL)) {
@@ -228,6 +298,17 @@ abstract class AbstractRoute extends Object
     }
   }
 
+  public function preinit ()
+  {
+    global $application;
+
+    if (!isset($this->subnavURL)) {
+      if (isset($this->subnavURI))
+        $this->subnavURL = "$application->URI/$this->subnavURI";
+      else $this->subnavURL = 'javascript:nop()';
+    }
+  }
+
   public function searchFor ($URI, $options = 0)
   {
     if ($this->matchesURI ($URI)) {
@@ -243,89 +324,6 @@ abstract class AbstractRoute extends Object
           return $result;
         }
       }
-    }
-    return null;
-  }
-
-  public function getIndex ()
-  {
-    if ($this->isIndex)
-      return $this;
-    if ($this->parent instanceof AbstractRoute)
-      return $this->parent->getIndex ();
-    return null;
-  }
-
-  /**
-   * @return array
-   * @throws FatalException
-   * @global Application  $application
-   */
-  public function getURIParams ()
-  {
-    global $application;
-    $URI    = $application->VURI;
-    $result = [];
-    $count  = preg_match ("!^$this->URI_regexp(?:$|&|/)!", urldecode ($URI), $URIValues);
-    if ($count)
-      $uriexp = $this->URI;
-    else {
-      $count = preg_match ("!^$this->URIAlias_regexp(?:$|&|/)!", urldecode ($URI), $URIValues);
-      if ($count)
-        $uriexp = $this->URIAlias;
-      else $uriexp = '';
-    }
-    if (preg_match_all ('!\{(.*?)}!', $uriexp, $matches)) {
-      foreach ($matches[1] as $i => $field)
-        if (count ($URIValues) > $i)
-          $result[$field] = get ($URIValues, $i + 1);
-        else {
-          if ($application->debugMode) {
-            $x = "URIValues:\n" . print_r ($URIValues, true);
-            $x .= "URIParams:\n" . print_r ($result, true);
-            throw new FatalException("No match found for parameter <b>$field</b> on the URI <b>$URI</b> for pattern <b>$uriexp</b><p>URI parameters found:<p><pre>$x");
-          }
-        }
-    }
-    return $result;
-  }
-
-  public function evalURI ($URIParams = null, $ignoreMissing = true, $URI = null)
-  {
-    if (is_null ($URIParams))
-      $URIParams = $this->getURIParams ();
-    if (is_null ($URI))
-      $URI = $this->URI;
-    try {
-      return preg_replace_callback ('!\{(.*?)}!', function ($args) use ($URIParams, $ignoreMissing) {
-        return self::fillURIParam ($args[1], $URIParams, $ignoreMissing);
-      }, $URI);
-    } catch (Exception $e) {
-      $x = print_r ($URIParams, true);
-      throw new FatalException("URI parameter value for <b>{$e->getMessage()}</b> was not found on the URI parameters:<br><pre>$x<br>URI: <b>$URI</b>");
-    }
-  }
-
-  public function getPresetParameters ()
-  {
-    if (!empty($this->preset)) {
-      $presetParams = [];
-      $paramList    = explode ('&', $this->preset);
-      preg_match ('!' . $this->URI_regexp . '!', $_SERVER['REQUEST_URI'], $matches);
-      $URIParams = $this->getURIParams ();
-      foreach ($paramList as $x) {
-        list ($k, $v) = explode ('=', $x);
-        if ($v[0] == '{') {
-          $i = trim ($v, '{}');
-          $v = get ($matches, $i);
-          if (!isset($v))
-            $v = get ($URIParams, $i);
-          if (!isset($v))
-            throw new ConfigException("On the preset <b>$this->preset</b>, the key <b>$k</b> was not found on the URI.");
-        }
-        $presetParams[$k] = $v;
-      }
-      return $presetParams;
     }
     return null;
   }

@@ -45,9 +45,6 @@ return [
 
     'configFilename'         => 'application.ini.php',
     'routingMapFile'         => '',
-    'modelFile'              => '',
-    'dataSourcesFile'        => '',
-    'SEOFile'                => '',
 
     'autoControllerClass'    => 'Selene\Controller',
 
