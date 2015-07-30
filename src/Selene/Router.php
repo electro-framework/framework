@@ -9,7 +9,7 @@ use Selene\Routing\PageRoute;
  * It is usually used for responding to an HTTP request by instantiating the
  * corresponding controller class.
  */
-class ModuleLoader
+class Router
 {
 
   static private $MIME_TYPES = [
@@ -74,7 +74,7 @@ class ModuleLoader
 
     // Load and execute the module that corresponds to the virtual URI.
 
-    $loader = new ModuleLoader();
+    $loader = new Router();
     $loader->init ();
     $loader->moduleInstance       = $loader->load ();
     $loader->moduleInstance->lang = $lang;

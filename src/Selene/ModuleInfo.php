@@ -4,7 +4,7 @@ namespace Selene;
 use Impactwave\WebConsole\ErrorHandler;
 use Selene\Exceptions\ConfigException;
 
-class Module
+class ModuleInfo
 {
 
   /**
