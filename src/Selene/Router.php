@@ -5,9 +5,12 @@ use Selene\Exceptions\ConfigException;
 use Selene\Routing\PageRoute;
 
 /**
- * Loads and runs modules.
+ * Routes the current URI to the corresponding controller.
+ *
  * It is usually used for responding to an HTTP request by instantiating the
  * corresponding controller class.
+ *
+ * It also serves static assets from module's public directories.
  */
 class Router
 {
@@ -38,14 +41,14 @@ class Router
    * The controller instance for the current module.
    * @var Controller
    */
-  public $moduleInstance = null;
+  public $controller = null;
   /**
-   * Assorted information on the module related to this loader.
-   * @var Module
+   * Assorted information on the module related to the active controller.
+   * @var ModuleInfo
    */
   public $moduleInfo = null;
 
-  public static function loadAndRun ()
+  public static function route ()
   {
     global $application, $loader, $lang;
 
@@ -74,12 +77,11 @@ class Router
 
     // Load and execute the module that corresponds to the virtual URI.
 
-    $loader = new Router();
-    $loader->init ();
-    $loader->moduleInstance       = $loader->load ();
-    $loader->moduleInstance->lang = $lang;
-    $loader->moduleInstance->execute ();
-    return $loader;
+    $router = new Router();
+    $router->init ();
+    $router->controller       = $router->load ();
+    $router->controller->lang = $lang;
+    return $router;
   }
 
   /**
@@ -114,7 +116,7 @@ class Router
     $_GET         = array_merge ($_GET, (array)$presetParams);
 
     //Setup module paths and other related info.
-    $this->moduleInfo = new Module($this->sitePage->module);
+    $this->moduleInfo = new ModuleInfo ($this->sitePage->module);
     $application->setIncludePath ($this->moduleInfo->path);
   }
 

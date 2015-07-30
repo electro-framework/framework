@@ -396,13 +396,14 @@ class Application
                 ->log ($session);
     }
     $this->loadRoutes ();
-    $loader = ModuleLoader::loadAndRun ();
+    $router = Router::route ();
+    $router->controller->execute ();
     if ($this->debugMode) {
       $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
-      WebConsole::routes ()->withCaption ('Active Route')->withFilter ($filter, $loader->sitePage);
+      WebConsole::routes ()->withCaption ('Active Route')->withFilter ($filter, $router->sitePage);
       WebConsole::response (['Content-Length' => round (ob_get_length () / 1024) . ' KB']);
     }
-    if (!$loader->moduleInstance->isWebService)
+    if (!$router->controller->isWebService)
       WebConsole::outputContent ();
   }
 

@@ -6,7 +6,6 @@ use Selene\Application;
 use Selene\Controller;
 use Selene\Exceptions\ConfigException;
 use Selene\Exceptions\FatalException;
-use Selene\ModuleLoader;
 use Selene\Object;
 
 abstract class AbstractRoute extends Object
@@ -165,9 +164,9 @@ abstract class AbstractRoute extends Object
   public function getSubtitle ($first = true)
   {
     return $this->getTitle ();
-    if (isset($this->subtitle))
-      return $this->subtitle;
-    return $this->title;
+//    if (isset($this->subtitle))
+//      return $this->subtitle;
+//    return $this->title;
   }
 
   public function init ($parent)
@@ -261,7 +260,6 @@ abstract class AbstractRoute extends Object
    * @return array
    * @throws FatalException
    * @global Application  $application
-   * @global ModuleLoader $loader
    */
   public function getURIParams ()
   {

@@ -72,7 +72,7 @@ class DataObject
 
   static function ref()
   {
-    return get_class();
+    return get_called_class ();
   }
 
   static function table()
