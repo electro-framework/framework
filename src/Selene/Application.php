@@ -412,6 +412,16 @@ class Application
   }
 
   /**
+   * Checks if the installed module with the given name is a plugin.
+   * @param string $moduleName
+   * @return bool
+   */
+  function isPlugin ($moduleName)
+  {
+    return file_exists ("{$this->defaultModulesPath}/$moduleName");
+  }
+
+  /**
    * Returns the directory path where the specified module is installed.
    * @param string $moduleName A name in `vendor/package` format.
    * @return bool|string The path or `false` if the module is not installed.
