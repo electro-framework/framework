@@ -359,7 +359,7 @@ class Application
     WebConsole::outputContent (true);
   }
 
-  public function fromPathToURL ($path)
+  function fromPathToURL ($path)
   {
     return $this->toURL ($this->toURI ($path));
   }
@@ -370,33 +370,33 @@ class Application
    * @param String $URI The absolute URI of the original file.
    * @return String A file name.
    */
-  public function generateCacheFilename ($URI)
+  function generateCacheFilename ($URI)
   {
     $themesPath = strpos ($URI, $this->themesPath) !== false ? $this->themesPath : $this->defaultThemesPath;
     return str_replace ('/', '_', substr ($URI, strlen ($this->baseURI) + strlen ($themesPath) + 2));
   }
 
-  public function getAddonURI ($addonName)
+  function getAddonURI ($addonName)
   {
     return "$this->baseURI/$this->addonsPath/$addonName";
   }
 
-  public function getFileDownloadURI ($fileId)
+  function getFileDownloadURI ($fileId)
   {
     return "$this->frameworkURI/download?id=$fileId";
   }
 
-  public function getFileURI ($fileName)
+  function getFileURI ($fileName)
   {
     return "$this->baseURI/$this->fileArchivePath/$fileName";
   }
 
-  public function getImageDownloadURI ($fileId)
+  function getImageDownloadURI ($fileId)
   {
     return "$this->frameworkURI/image?id=$fileId";
   }
 
-  public function getImageURI ($fileName)
+  function getImageURI ($fileName)
   {
     return "$this->baseURI/$this->imageArchivePath/$fileName";
   }
@@ -412,11 +412,25 @@ class Application
   }
 
   /**
+   * Returns the directory path where the specified module is installed.
+   * @param string $moduleName A name in `vendor/package` format.
+   * @return bool|string The path or `false` if the module is not installed.
+   */
+  function modulePath ($moduleName)
+  {
+    $path = "{$this->defaultModulesPath}/$moduleName";
+    if (file_exists ($path)) return $path;
+    $path = "{$this->modulesPath}/$moduleName";
+    if (file_exists ($path)) return $path;
+    return false;
+  }
+
+  /**
    * Composer packages can call this method to expose assets on web.
    * @param string $URI
    * @param string $path
    */
-  public function mount ($URI, $path)
+  function mount ($URI, $path)
   {
     $this->mountPoints[$URI] = $path;
   }
@@ -424,7 +438,7 @@ class Application
   /**
    * @param string $rootDir
    */
-  public function run ($rootDir)
+  function run ($rootDir)
   {
     global $session;
     set_exception_handler ([get_class (), 'exceptionHandler']);
@@ -453,7 +467,7 @@ class Application
       WebConsole::outputContent ();
   }
 
-  public function setIncludePath ($extra = '')
+  function setIncludePath ($extra = '')
   {
     if (!empty($extra)) {
       $extra .= PATH_SEPARATOR;
@@ -472,7 +486,7 @@ class Application
    * @param string $rootDir
    * @throws ConfigException
    */
-  public function setup ($rootDir)
+  function setup ($rootDir)
   {
     $_       = DIRECTORY_SEPARATOR;
     $uri     = get ($_SERVER, 'REQUEST_URI');
@@ -522,7 +536,7 @@ class Application
     $this->mount ($this->frameworkURI, "$this->frameworkPath{$_}$this->modulePublicPath");
   }
 
-  public function toFilePath ($URI, &$isMapped = false)
+  function toFilePath ($URI, &$isMapped = false)
   {
     $p = strpos ($URI, '/');
     if ($p) {
@@ -542,23 +556,23 @@ class Application
     return "$this->baseDirectory/$URI";
   }
 
-  public function toRelativePath ($URI)
+  function toRelativePath ($URI)
   {
     global $application;
     return substr ($URI, strlen ($application->baseURI) + 1);
   }
 
-  public function toThemeURI ($relativeURI, Theme &$theme)
+  function toThemeURI ($relativeURI, Theme &$theme)
   {
     return "$this->baseURI/$theme->path/$relativeURI";
   }
 
-  public function toURI ($path)
+  function toURI ($path)
   {
     return "$this->baseURI/$path";
   }
 
-  public function toURL ($URI)
+  function toURL ($URI)
   {
     $port = ':' . $_SERVER['SERVER_PORT'];
     if ($port == ":80")
