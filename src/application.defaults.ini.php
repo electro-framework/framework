@@ -24,7 +24,7 @@ return [
     'cachePath'              => 'private/storage/cache',
     'imagesCachePath'        => 'private/storage/cache/images',
     'modulesPath'            => 'private/modules',
-    'defaultModulesPath'     => 'private/plugins',
+    'pluginModulesPath'      => 'private/plugins',
     'configPath'             => 'private/config',
 
     // These paths are relative to the root folder:

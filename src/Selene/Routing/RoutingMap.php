@@ -21,7 +21,7 @@ class RoutingMap
     global $application;
     $path = "$application->modulesPath/$moduleName/config/$configName.php";
     if (!fileExists ($path))
-      $path = "$application->defaultModulesPath/$moduleName/config/$configName.php";
+      $path = "$application->pluginModulesPath/$moduleName/config/$configName.php";
     $code = file_get_contents ($path, FILE_USE_INCLUDE_PATH);
     if ($code === false)
       throw new ConfigException("RoutingMap::loadConfigOf can't load <b>$configName.php</b> on module <b>$moduleName</b>.");

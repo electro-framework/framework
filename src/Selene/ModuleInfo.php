@@ -29,7 +29,7 @@ class ModuleInfo
   {
     global $application;
     $this->name  = $moduleName;
-    $defaultPath = "$application->rootPath/$application->defaultModulesPath/$moduleName";
+    $defaultPath = "$application->rootPath/$application->pluginModulesPath/$moduleName";
     $customPath  = "$application->rootPath/$application->modulesPath/$moduleName";
     if (file_exists ($customPath))
       $this->path = $customPath;

@@ -6,6 +6,7 @@
 //----------------------------------------------------------------------------------------
 // Values
 //----------------------------------------------------------------------------------------
+use Selene\Util\Query;
 
 /**
  * Use this function to evaluate any expression in a string interpolator.
@@ -18,8 +19,7 @@
  * @return mixed
  */
 global $_;
-$_ = function ($v)
-{
+$_ = function ($v) {
   return $v;
 };
 
@@ -196,7 +196,8 @@ function extend ($target, $src)
     if (is_object ($target)) {
       foreach ($src as $k => $v)
         $target->$k = $v;
-    } else throw new InvalidArgumentException('Invalid target for '.__FUNCTION__);
+    }
+    else throw new InvalidArgumentException('Invalid target for ' . __FUNCTION__);
   }
 }
 
@@ -216,7 +217,8 @@ function extendNonEmpty ($target, $src)
       foreach ($src as $k => $v)
         if (isset($v) && $v !== '')
           $target->$k = $v;
-    } else throw new InvalidArgumentException('Invalid target for '.__FUNCTION__);
+    }
+    else throw new InvalidArgumentException('Invalid target for ' . __FUNCTION__);
   }
 }
 
@@ -272,13 +274,13 @@ function array_orderBy ()
   $data = array_shift ($args);
   foreach ($args as $n => $field) {
     if (is_string ($field)) {
-      $tmp = array();
+      $tmp = [];
       foreach ($data as $key => $row)
         $tmp[$key] = $row[$field];
       $args[$n] = $tmp;
     }
   }
-  $args[] = & $data;
+  $args[] = &$data;
   call_user_func_array ('array_multisort', $args);
   return array_pop ($args);
 }
@@ -296,14 +298,15 @@ function array_orderBy ()
  */
 function array_findAll (array $arr, $fld, $val, $strict = false)
 {
-  $out = array();
+  $out = [];
   if (count ($arr)) {
     if (is_object ($arr[0])) {
       if ($strict) {
         foreach ($arr as $v)
           if ($v->$fld === $val)
             $out[] = $v;
-      } else foreach ($arr as $v)
+      }
+      else foreach ($arr as $v)
         if ($v->$fld == $val)
           $out[] = $v;
     }
@@ -312,7 +315,8 @@ function array_findAll (array $arr, $fld, $val, $strict = false)
         foreach ($arr as $v)
           if ($v[$fld] === $val)
             $out[] = $v;
-      } else foreach ($arr as $v)
+      }
+      else foreach ($arr as $v)
         if ($v[$fld] == $val)
           $out[] = $v;
     }
@@ -340,22 +344,24 @@ function array_find (array $arr, $fld, $val, $strict = false)
       if ($strict) {
         foreach ($arr as $i => $v)
           if ($v->$fld === $val)
-            return array($v, $i);
-      } else foreach ($arr as $i => $v)
+            return [$v, $i];
+      }
+      else foreach ($arr as $i => $v)
         if ($v->$fld == $val)
-          return array($v, $i);
+          return [$v, $i];
     }
     if (is_array ($arr[0])) {
       if ($strict) {
         foreach ($arr as $i => $v)
           if ($v[$fld] === $val)
-            return array($v, $i);
-      } else foreach ($arr as $i => $v)
+            return [$v, $i];
+      }
+      else foreach ($arr as $i => $v)
         if ($v[$fld] == $val)
-          return array($v, $i);
+          return [$v, $i];
     }
   }
-  return array(null, false);
+  return [null, false];
 }
 
 /**
@@ -372,7 +378,9 @@ function array_find (array $arr, $fld, $val, $strict = false)
  */
 function array_getColumn (array $array, $key)
 {
-  return empty($array) ? array() :
+  return empty($array)
+    ? []
+    :
     (is_array ($array[0])
       ? array_map (function ($e) use ($key) {
         return $e[$key];
@@ -526,14 +534,16 @@ function mb_str_pad ($str, $pad_len, $pad_str = ' ', $dir = STR_PAD_RIGHT, $enco
     $length = ($pad_len - $str_len) / 2;
     $repeat = ceil ($length / $pad_str_len);
     $result = mb_substr (str_repeat ($pad_str, $repeat), 0, floor ($length))
-      . $str
-      . mb_substr (str_repeat ($pad_str, $repeat), 0, ceil ($length));
-  } else {
+              . $str
+              . mb_substr (str_repeat ($pad_str, $repeat), 0, ceil ($length));
+  }
+  else {
     $repeat = ceil ($str_len - $pad_str_len + $pad_len);
     if ($dir == STR_PAD_RIGHT) {
       $result = $str . str_repeat ($pad_str, $repeat);
       $result = mb_substr ($result, 0, $pad_len);
-    } else if ($dir == STR_PAD_LEFT) {
+    }
+    else if ($dir == STR_PAD_LEFT) {
       $result = str_repeat ($pad_str, $repeat);
       $result =
         mb_substr ($result, 0, $pad_len - (($str_len - $pad_str_len) + $pad_str_len)) . $str;
@@ -577,10 +587,10 @@ function dehyphenate ($name)
  * Human-friendly textual descriptions for some dates.
  * For use by humanizeDate().
  */
-$HUMANIZE_DATE_STR = array(
+$HUMANIZE_DATE_STR = [
   'today'     => 'Hoje, às',
   'yesterday' => 'Ontem, às',
-);
+];
 /**
  * For the specified date, if its today or yesterday, it replaces it with a textual description.
  *
@@ -593,7 +603,8 @@ function humanizeDate ($date)
   global $HUMANIZE_DATE_STR;
   $today     = Date ('Y-m-d');
   $yesterday = Date ('Y-m-d', strtotime ("-1 days"));
-  return str_replace ($yesterday, $HUMANIZE_DATE_STR['yesterday'], str_replace ($today, $HUMANIZE_DATE_STR['today'], $date));
+  return str_replace ($yesterday, $HUMANIZE_DATE_STR['yesterday'],
+    str_replace ($today, $HUMANIZE_DATE_STR['today'], $date));
 }
 
 //----------------------------------------------------------------------------------------
@@ -615,16 +626,16 @@ function humanizeDate ($date)
 function runExternalCommand ($cmd, $input = '', $extraPath = '', array $extraEnv = null)
 {
 
-  $descriptorSpec = array(
-    0 => array("pipe", "r"), // stdin is a pipe that the child will read from
-    1 => array("pipe", "w"), // stdout is a pipe that the child will write to
-    2 => array("pipe", "w") // stderr is a pipe that the child will write to
-  );
+  $descriptorSpec = [
+    0 => ["pipe", "r"], // stdin is a pipe that the child will read from
+    1 => ["pipe", "w"], // stdout is a pipe that the child will write to
+    2 => ["pipe", "w"] // stderr is a pipe that the child will write to
+  ];
 
   if ($extraPath) {
     $path = $extraPath . PATH_SEPARATOR . $_SERVER['PATH'];
     if (!isset($extraEnv))
-      $extraEnv = array();
+      $extraEnv = [];
     $extraEnv['PATH'] = $path;
   }
 
@@ -632,7 +643,8 @@ function runExternalCommand ($cmd, $input = '', $extraPath = '', array $extraEnv
     $env = $_SERVER;
     unset($env['argv']);
     $env = array_merge ($env, $extraEnv);
-  } else $env = null;
+  }
+  else $env = null;
 
   $process = proc_open ($cmd, $descriptorSpec, $pipes, null, $env);
 
@@ -648,7 +660,7 @@ function runExternalCommand ($cmd, $input = '', $extraPath = '', array $extraEnv
 
     $return_value = proc_close ($process);
     if ($return_value)
-      throw new RuntimeException ($error ? : $output, $return_value);
+      throw new RuntimeException ($error ?: $output, $return_value);
 
     return $output;
   }
@@ -667,13 +679,95 @@ function rrmdir ($dir)
     foreach ($objects as $object) {
       if ($object != "." && $object != "..") {
         if (filetype ($dir . "/" . $object) == "dir")
-          rrmdir ($dir . "/" . $object); else unlink ($dir . "/" . $object);
+          rrmdir ($dir . "/" . $object);
+        else unlink ($dir . "/" . $object);
       }
     }
     reset ($objects);
     rmdir ($dir);
   }
 }
+
+define ('DIR_LIST_ALL', 0);
+define ('DIR_LIST_FILES', 1);
+define ('DIR_LIST_DIRECTORIES', 2);
+
+/**
+ * List files and/or directories inside the specified path.
+ *
+ * Note: the `.` and `..` directories are not returned.
+ * @param string   $path
+ * @param int      $type      One of the DIR_LIST_XXX constants.
+ * @param bool     $fullPaths When `true` returns the full path name of each file, otherwise returns the file name only.
+ * @param int|bool $sortOrder Either `false` (no sort), SORT_ASC or SORT_DESC.
+ * @return false|string[] `false` if not a valid directory.
+ */
+function dirList ($path, $type = 0, $fullPaths = false, $sortOrder = false)
+{
+  try {
+    $d = new DirectoryIterator($path);
+  } catch (Exception $e) {
+    return false;
+  }
+  $o = [];
+  foreach ($d as $file) {
+    /** @var DirectoryIterator $file */
+    if ($file->isDot ()) continue;
+    if ($type == 1 && !$file->isFile ())
+      continue;
+    if ($type == 2 && !$file->isDir ())
+      continue;
+    $o[] = $fullPaths ? $file->getPathname () : $file->getFilename ();
+  }
+  if ($sortOrder)
+    sort ($o, $sortOrder);
+  return $o;
+}
+
+/**
+ * A blend of map() and filter() for extracting information about the contents of a directory.
+ * @param string   $path Directory path.
+ * @param callable $fn   Callback invoked for each file/dir that receives a SplFileInfo object and should return the
+ *                       desired information. If no value is returned (or `null` is returned) the value will no be added
+ *                       to the result set.
+ * @return Query|false   `false` if `$path` is not a valid directory.
+ */
+function dirMap ($path, callable $fn)
+{
+  try {
+    return Query::from(new FilesystemIterator($path))->filterAndMap($fn);
+  } catch (Exception $e) {
+    return false;
+  }
+}
+
+//----------------------------------------------------------------------------------------
+// Iterators
+//----------------------------------------------------------------------------------------
+/*
+function map ($src, callable $fn)
+{
+  if (is_array ($src)) {
+    $o = [];
+    foreach ($src as $k => $v)
+      $o[] = $fn ($v, $k);
+    return $o;
+  }
+  return Query::from($src)->map($fn)->all();
+}
+
+function filter ($src, callable $fn)
+{
+  if (is_array ($src)) {
+    $o = [];
+    foreach ($src as $k => $v)
+      if ($fn ($v, $k))
+        $o[$k] = $v;
+    return $o;
+  }
+  return Query::from($src)->map($fn)->all();
+}
+*/
 
 //----------------------------------------------------------------------------------------
 // PHP Code Execution
@@ -701,7 +795,8 @@ function endProfiling ()
  *
  * @param callable $wrappedCode  Code to be executed wrapped by error catching code.
  * @param callable $errorHandler Optional error-handling code.
- * @param bool     $reset        True if the error status should be cleared so that Laravel does not intercept the previous error.
+ * @param bool     $reset        True if the error status should be cleared so that Laravel does not intercept the
+ *                               previous error.
  * @return mixed   The return value from the callable argument.
  *
  * @throws ErrorException
@@ -710,7 +805,7 @@ function endProfiling ()
 function catchErrorsOn ($wrappedCode, $errorHandler = null, $reset = true)
 {
   $prevHandler = set_error_handler (function ($errno, $errstr, $errfile, $errline) {
-    if (!error_reporting())
+    if (!error_reporting ())
       return false;
     throw new ErrorException ($errstr, $errno, 0, $errfile, $errline);
   });

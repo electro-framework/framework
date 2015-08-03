@@ -107,11 +107,11 @@ class Application
   public $defaultLang = null;
   /**
    * <p>The fallback folder name where the framework will search for modules.
-   * <p>Plugin mmdules installed as Composer packages will be found there.
+   * <p>Plugin modules installed as Composer packages will be found there.
    * <p>Set by application.ini.php.
    * @var String
    */
-  public $defaultModulesPath;
+  public $pluginModulesPath;
   /**
    * The file path of current application's directory.
    * @var string
@@ -412,30 +412,6 @@ class Application
   }
 
   /**
-   * Checks if the installed module with the given name is a plugin.
-   * @param string $moduleName
-   * @return bool
-   */
-  function isPlugin ($moduleName)
-  {
-    return file_exists ("{$this->defaultModulesPath}/$moduleName");
-  }
-
-  /**
-   * Returns the directory path where the specified module is installed.
-   * @param string $moduleName A name in `vendor/package` format.
-   * @return bool|string The path or `false` if the module is not installed.
-   */
-  function modulePath ($moduleName)
-  {
-    $path = "{$this->defaultModulesPath}/$moduleName";
-    if (file_exists ($path)) return $path;
-    $path = "{$this->modulesPath}/$moduleName";
-    if (file_exists ($path)) return $path;
-    return false;
-  }
-
-  /**
    * Composer packages can call this method to expose assets on web.
    * @param string $URI
    * @param string $path
@@ -536,7 +512,7 @@ class Application
     $this->templateDirectories[] = $this->toFilePath ($this->templatesPath);
     $this->viewsDirectories[]    = $this->toFilePath ($this->viewPath);
     $this->languageFolders[]     = $this->langPath;
-    $this->bootModules ();
+    ModulesApi::get()->bootModules ();
 
     if (empty($this->name))
       $this->name = $this->URI ? $this->URI : $_SERVER['SERVER_NAME'];
@@ -622,24 +598,6 @@ class Application
     WebConsole::registerPanel ('config', new ConsolePanel ('Config.', 'fa fa-cogs'));
     WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
     ErrorHandler::$appName = 'Selene Framework';
-  }
-
-  private function bootModules ()
-  {
-    global $application; // Used by the loaded bootstrap.php
-
-    foreach ($this->modules as $path) {
-      $boot = "$path/bootstrap.php";
-      if (fileExists ("$this->modulesPath/$path")) {
-        // The bootstrap file is optional
-        includeFile ("$this->modulesPath/$boot");
-      }
-      else if (fileExists ("$this->defaultModulesPath/$path")) {
-        // The bootstrap file is optional
-        $f = includeFile ("$this->defaultModulesPath/$boot");
-      }
-      else throw new ConfigException("Module <b>$path</b> was not found.");
-    }
   }
 
   private function loadConfig ($iniPath)

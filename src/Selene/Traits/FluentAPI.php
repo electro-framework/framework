@@ -36,7 +36,7 @@ namespace Selene\Traits;
  *   (new A)->enabled (null);  // enabled = false
  * ```
  */
-trait FluentAPI
+trait FluentApi
 {
 
   /**
