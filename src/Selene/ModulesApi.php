@@ -23,7 +23,8 @@ class ModulesApi
    */
   function bootModules ()
   {
-    var_dump(ModulesApi::get()->pluginNames());exit;
+    var_dump (ModulesApi::get ()->pluginNames ());
+    exit;
     return;
     global $application; // Used by the loaded bootstrap.php
 
@@ -116,18 +117,19 @@ class ModulesApi
    */
   function pluginNames ()
   {
-    $o    = [];
     $base = "{$this->app->baseDirectory}/{$this->app->pluginModulesPath}";
-    $r = FilesystemQuery::scanDir ($base)->onlyDirectories()->subquery(function ($v, $k) {
-      return FilesystemQuery::scanDir ($v)->onlyDirectories();
-    })->all();
+    $r    = FilesystemQuery::scanDir ($base)
+                           ->onlyDirectories ()
+                           ->expand (function ($v, $k) {
+                             echo "$v\n";
+                             return FilesystemQuery::scanDir ($v)->onlyDirectories ();
+                           })
+                           ->map (function (\SplFileInfo $f) {
+                             return $f->getPathname ();
+                           })
+                           ->all ();
     echo "\n";
-    var_dump($r);
-    exit;
-    return FilesystemQuery::scanDir ($base)->onlyDirectories()->subquery(function ($v, $k) {
-      var_dump("$k: $v");
-      return null;
-    })->all();
+    var_dump ($r);
     exit;
     $pluginsDir = dir ($base);
     foreach ($pluginsDir as $dir) {

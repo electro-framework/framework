@@ -1,7 +1,7 @@
 <?php
-namespace Selene\Util;
+namespace Selene\Iterators;
 
-class RangeIterator implements \Iterator
+class CachedIterator implements \Iterator
 {
   function __construct ($cacheKey)
   {

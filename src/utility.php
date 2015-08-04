@@ -414,33 +414,33 @@ function array_toClass (array $array, $className)
 //----------------------------------------------------------------------------------------
 
 /**
- * Transforms a callable reference into a closure, with optional pre-bound arguments.
+ * Transforms a callable reference into a closure, with optional pre-bound and/or post-bound arguments.
  *
- * The closure can be used to call the original reference via $x() syntax.
+ * The closure can be used to call the original reference via `$x()` syntax.
  *
- * @param callable $fn   A function reference, in the form of:
- *                       <ul>
- *                       <li> a Closure instance,
- *                       <li> a function name string,
- *                       <li> a "class::method" string, or
- *                       <li> an array of (className,methodName).
- *                       <li> an array of (classInstance,methodName).
- *                       </ul>
- * @param mixed ...$args If more arguments are specified, they are bound to the returned function and they will be
- *                       prepended on each call.
- *
+ * @param callable $fn       A function reference, in the form of:
+ *                           <ul>
+ *                           <li> a Closure instance,
+ *                           <li> a function name string,
+ *                           <li> a "class::method" string, or
+ *                           <li> an array of (className,methodName).
+ *                           <li> an array of (classInstance,methodName).
+ *                           </ul>
+ * @param array    $append   If specified, these arguments will be appended to the target function's arguments on each
+ *                           call.
+ *                           <p>Note: `$append` precedes `$prepend` because this is the most common case.
+ * @param array    $prepend  If specified, these arguments will be prepended to the target function's arguments on each
+ *                           call.
  * @return Closure
  */
-function fn (callable $fn)
+function fn (callable $fn, array $append = [], array $prepend = [])
 {
   if (func_num_args () == 1)
     return function () use ($fn) {
       return call_user_func_array ($fn, func_get_args ());
     };
-  $a = func_get_args ();
-  array_shift ($a);
-  return function () use ($fn, $a) {
-    return call_user_func_array ($fn, array_merge ($a, func_get_args ()));
+  return function () use ($fn, $prepend, $append) {
+    return call_user_func_array ($fn, array_merge ($prepend, func_get_args (), $append));
   };
 }
 

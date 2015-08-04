@@ -1,5 +1,5 @@
 <?php
-namespace Selene\Util;
+namespace Selene\Iterators;
 
 class RangeIterator implements \Iterator
 {
