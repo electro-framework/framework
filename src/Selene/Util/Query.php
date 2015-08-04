@@ -9,8 +9,22 @@ use Traversable;
 
 class Query implements \IteratorAggregate
 {
-  private $data;
-  private $it;
+  private static $SORT_TYPES = [
+    'asort'       => 2,
+    'arsort'      => 2,
+    'krsort'      => 2,
+    'ksort'       => 2,
+    'natcasesort' => 1,
+    'natsort'     => 1,
+    'rsort'       => 2,
+    'shuffle'     => 1,
+    'sort'        => 2,
+    'uasort'      => 3,
+    'uksort'      => 3,
+    'usort'       => 3,
+  ];
+  private        $data;
+  private        $it;
 
   /**
    * Sets the initial data/iterator.
@@ -103,7 +117,21 @@ class Query implements \IteratorAggregate
   }
 
   /**
-   * Call a function for every element in the iterator.
+   * Drops the last `$n` elements from the iteration.
+   *
+   * Note: this also materializes the data and reindexes it.
+   * @param int $n
+   * @return $this
+   */
+  function drop ($n = 1)
+  {
+    $this->pack ();
+    $this->data = array_slice ($this->data, 0, -$n);
+    return $this;
+  }
+
+  /**
+   * Calls a function for every element in the iterator.
    * @param callable $fn A callback that receives the current value and key; it can, optionally, return `false` to break
    *                     the loop.
    * @return $this
@@ -193,7 +221,8 @@ class Query implements \IteratorAggregate
   /**
    * Reindexes the current data into a series of sequential integer values, thereby eliminating discontinuous keys.
    *
-   * Note: this is faster than {@see reindex()} bit it materializes the data.
+   * Note: this is faster than {@see reindex()} bit it materializes the data. This should usually be the last operation
+   * to perform before retrieving the results.
    * @return $this
    */
   function pack ()
@@ -278,22 +307,49 @@ class Query implements \IteratorAggregate
 
   /**
    * Reindexes the current data into a series of sequential integer values, starting from the specified value,
-   * @param int $i The new starting value for the keys sequence.
+   * @param int $i  The new starting value for the keys sequence.
+   * @param int $st The incremental step.
    * @return $this
    */
-  function reindex ($i = 0)
+  function reindex ($i = 0, $st = 1)
   {
-    $this->it = new MapIterator($this->it, function ($v, &$k) use (&$i) {
-      $k = $i++;
+    $this->it = new MapIterator($this->it, function ($v, &$k) use (&$i, $st) {
+      $k = $i;
+      $i += $st;
       return $v;
     });
     return $this;
   }
 
   /**
+   * Reverses the order of iteration.
+   *
+   * Note: this method materializes the data.
+   * @param bool $preserveKeys If set to `true` numeric keys are preserved. Non-numeric keys are not affected by this
+   *                           setting and will always be preserved.
+   * @return $this
+   */
+  function reverse ($preserveKeys = false)
+  {
+    $this->pack ();
+    $this->data = array_reverse ($this->data, $preserveKeys);
+    return $this;
+  }
+
+  /**
+   * Skips the first `$n` elements from the iteration.
+   * @param int $n
+   * @return $this
+   */
+  function skip ($n = 1)
+  {
+    return $this->slice ($n);
+  }
+
+  /**
    * Limits iteration to the specified range.
-   * @param int $offset
-   * @param int $count
+   * @param int $offset Starts at 0.
+   * @param int $count  -1 = all.
    * @return $this
    */
   function slice ($offset = 0, $count = -1)
@@ -310,13 +366,44 @@ class Query implements \IteratorAggregate
    * Sorts the data by its keys.
    *
    * Note: this method materializes the data.
-   * @param int $flags One or more of the SORT_XXX constants.
+   * @param string   $type  The type of sort to perform.<br>
+   *                        One of:
+   *                        'asort' | 'arsort' | 'krsort' | 'ksort' | 'natcasesort' | 'natsort' | 'rsort' | 'shuffle' |
+   *                        'sort' | 'uasort' | 'uksort' | 'usort'
+   * @param int      $flags One or more of the SORT_XXX constants.
+   * @param callable $fn    Can only be specified for sort types beginning with letter `u` (ex: `usort`).
    * @return $this
    */
-  function sort ($flags)
+  function sort ($type = 'sort', $flags = SORT_REGULAR, callable $fn = null)
   {
+    if (!isset(self::$SORT_TYPES[$type]))
+      throw new \InvalidArgumentException("Bad sort type: $type");
+    $n          = self::$SORT_TYPES[$type];
     $this->data = $this->all ();
-    sort ($this->data, $flags);
+    switch ($n) {
+      case 1:
+        $type ($this->data);
+        break;
+      case 2:
+        $type ($this->data, $flags);
+        break;
+      case 3:
+        $type ($this->data, $fn);
+        break;
+    }
+    return $this;
+  }
+
+  /**
+   * Replaces the current data set by another.
+   * @param callable $fn A callback that receives as argument an array of the current data and returns the
+   *                     new data array.
+   * @return $this
+   */
+  function swap (callable $fn)
+  {
+    $this->pack ();
+    $this->data = $fn ($this->data);
     return $this;
   }
 
