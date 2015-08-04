@@ -164,4 +164,9 @@ class Query implements \IteratorAggregate
     $this->it = new \CallbackFilterIterator($this->it, $fn);
     return $this;
   }
+
+  function cache () {
+    $this->it = new \CachingIterator($this->it);
+  }
+
 }

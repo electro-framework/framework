@@ -414,20 +414,56 @@ function array_toClass (array $array, $className)
 //----------------------------------------------------------------------------------------
 
 /**
- * Wraps a callable reference into a closure.
+ * Transforms a callable reference into a closure, with optional pre-bound arguments.
+ *
  * The closure can be used to call the original reference via $x() syntax.
  *
- * Note: using this function to wrap Closures is redundant.
+ * @param callable $fn   A function reference, in the form of:
+ *                       <ul>
+ *                       <li> a Closure instance,
+ *                       <li> a function name string,
+ *                       <li> a "class::method" string, or
+ *                       <li> an array of (className,methodName).
+ *                       <li> an array of (classInstance,methodName).
+ *                       </ul>
+ * @param mixed ...$args If more arguments are specified, they are bound to the returned function and they will be
+ *                       prepended on each call.
  *
- * @param mixed $fn An array of (classNameOrInstance,methodName) or a "class::method" string.
- *
- * @return callable
+ * @return Closure
  */
-function fn ($fn)
+function fn (callable $fn)
 {
-  return function () use ($fn) {
-    return call_user_func ($fn);
+  if (func_num_args () == 1)
+    return function () use ($fn) {
+      return call_user_func_array ($fn, func_get_args ());
+    };
+  $a = func_get_args ();
+  array_shift ($a);
+  return function () use ($fn, $a) {
+    return call_user_func_array ($fn, array_merge ($a, func_get_args ()));
   };
+}
+
+/**
+ * Compiles and returns a lambda function defined by the given string expression.
+ *
+ * The expression is compiled only once, further calls to this function with the same argument will return a cached
+ * instance.
+ * @param string $exp An expression with the syntax: "$arg1,$arg2,... => php_expression".
+ *                    <p>The string must be delimited with single quotes.
+ *                    <p>Ex:
+ *                    <code>  f ('$x => $x+1')</code>
+ *                    <code>  f ('$a, callable $b => $a + $b()')</code>
+ * @return Closure
+ */
+function f ($exp)
+{
+  static $cache = [];
+  if (isset($cache[$exp]))
+    return $cache[$exp];
+  list ($a, $f) = explode ('=>', $exp, 2);
+
+  return $cache[$exp] = create_function ($a, "return $f;");
 }
 
 /**
@@ -445,20 +481,28 @@ function wrap ($i)
 }
 
 /**
- * Wraps the given service function with a caching decorator.
- * The original service will be invoked only once, on the first call.
+ * Wraps the given function with a caching decorator.
+ * The original function will be invoked only once, on the first call.
  * Subsequent calls return the cached value.
  *
  * @param callable $fn
  *
  * @return callable
  */
-function cached ($fn)
+function cache ($fn)
 {
   $v = null;
   return function () use ($fn, &$v) {
     return isset ($v) ? $v : $v = call_user_func ($fn);
   };
+}
+
+/**
+ * Returns a function that returns the input argument unmodified.
+ * @return Closure
+ */
+function identity () {
+  return function ($a) { return $a; };
 }
 
 //----------------------------------------------------------------------------------------
