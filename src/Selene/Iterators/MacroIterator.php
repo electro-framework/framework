@@ -1,9 +1,9 @@
 <?php
 namespace Selene\Iterators;
 
-use ArrayIterator;
 use Iterator;
 use IteratorAggregate;
+use Selene\Util\Flow;
 use Traversable;
 
 /**
@@ -17,12 +17,6 @@ class MacroIterator implements \OuterIterator
    * When not set, keys are auto-incremented integers starting at 0.
    */
   const USE_ORIGINAL_KEYS = 1;
-  /**
-   * @var int For macro iterators being iterated by other macro iterations, this indicates the recursion depth.
-   *          It will be set automatically if a MacroIterator is returned as an expansion of another MacroIterator's
-   *          item.
-   */
-  public $depth = 0;
   /** @var int */
   private $flags;
   /** @var callable */
@@ -96,24 +90,7 @@ class MacroIterator implements \OuterIterator
 
   protected function nextInner ()
   {
-    $fn = $this->fn;
-    $v  = $fn ($this->outer->current (), $this->outer->key ());
-    switch (true) {
-      case $v instanceof static:
-        $this->inner = $v;
-        $v->depth    = $this->depth + 1;
-        break;
-      case $v instanceof IteratorAggregate:
-        $this->inner = $v->getIterator ();
-        break;
-      case $v instanceof Iterator:
-        $this->inner = $v;
-        break;
-      case is_array ($v):
-        $this->inner = new ArrayIterator ($v);
-        break;
-      default:
-        throw new \InvalidArgumentException ("Invalid return type from a MacroIterator's callback.");
-    }
+    $fn          = $this->fn;
+    $this->inner = Flow::normalize ($fn ($this->outer->current (), $this->outer->key ()));
   }
 }

@@ -1,19 +1,22 @@
 <?php
 namespace Selene\Iterators;
 use IteratorIterator;
-use RecursiveIterator;
+use RecursiveIterator as RecursiveIteratorInterface;
+use Selene\Util\Flow;
 use Traversable;
 
-class CustomRecursiveIterator extends \IteratorIterator implements \RecursiveIterator
+/**
+ * A generic recursive iterator that defines the recursion via a user-defined callback function.
+ */
+class RecursiveIterator extends IteratorIterator implements RecursiveIteratorInterface
 {
   private $children;
   private $depth;
   private $fn;
-  private $p;
 
   /**
    * (PHP 5 &gt;= 5.1.0)<br/>
-   * Create an iterator from anything that is traversable
+   * Creates a recursive iterator from anything that is traversable.
    * @link http://php.net/manual/en/iteratoriterator.construct.php
    * @param Traversable $iterator
    * @param callable    $fn    A callback that receives the current node's value, key and nesting depth, and returns an
@@ -41,14 +44,12 @@ class CustomRecursiveIterator extends \IteratorIterator implements \RecursiveIte
       $this->children = null;
       return false;
     }
-    if (is_array ($r))
-      $r = new \ArrayIterator ($r);
-    else if ($r instanceof \IteratorAggregate)
-      $r = $r->getIterator ();
-    else if (!$r instanceof \Iterator)
-      throw new \InvalidArgumentException("Return value from a " . get_class () .
-                                          " callback must be an array or an instance of Traversable");
-    $this->children = new CustomRecursiveIterator($r, $fn, $this->depth + 1);
+    $this->children =
+      new \RecursiveIteratorIterator(
+        new RecursiveIterator(
+          Flow::normalize ($r), $fn, $this->depth + 1
+        )
+      );
     return true;
   }
 }

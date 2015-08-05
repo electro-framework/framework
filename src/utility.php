@@ -6,7 +6,7 @@
 //----------------------------------------------------------------------------------------
 // Values
 //----------------------------------------------------------------------------------------
-use Selene\Util\Iteration;
+use Selene\Util\Flow;
 
 /**
  * Use this function to evaluate any expression in a string interpolator.
@@ -774,12 +774,12 @@ function dirList ($path, $type = 0, $fullPaths = false, $sortOrder = false)
  * @param callable $fn   Callback invoked for each file/dir that receives a SplFileInfo object and should return the
  *                       desired information. If no value is returned (or `null` is returned) the value will no be added
  *                       to the result set.
- * @return Iteration|false   `false` if `$path` is not a valid directory.
+ * @return Flow|false   `false` if `$path` is not a valid directory.
  */
 function dirMap ($path, callable $fn)
 {
   try {
-    return Iteration::from(new FilesystemIterator($path))->filterAndMap($fn);
+    return Flow::from(new FilesystemIterator($path))->filterAndMap($fn);
   } catch (Exception $e) {
     return false;
   }
