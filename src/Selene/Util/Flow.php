@@ -14,6 +14,7 @@ use NoRewindIterator;
 use RecursiveIteratorIterator;
 use RegexIterator;
 use Selene\Iterators\CachedIterator;
+use Selene\Iterators\FunctionIterator;
 use Selene\Iterators\LoopIterator;
 use Selene\Iterators\MacroIterator;
 use Selene\Iterators\MapIterator;
@@ -22,22 +23,24 @@ use Selene\Iterators\RecursiveIterator;
 use Traversable;
 
 /**
- * Provides a fluent interface to assemble chains of iterators and other operations.
- *
- * <p>Inputs to the chain can be any kind of {@see Traversable}, i.e. native arrays, or classes implementing
- * {@see Iterator} or {@see IteratorAggregate}.
- *
- * <p>An iteration chain assembled with this builder can perform multiple transformations over a data flow without
- * storing the resulting data from intermediate steps in memory. When operating over large data sets, this mechanism
- * can be very light on memory consumption.
+ * Provides a fluent interface to assemble chains of iterators and other data processing operations.
  *
  * <p>The fluent API makes it **very easy and intuitive** to use the native SPL iterators (together with some custom
  * ones provided by this library) and the expressive syntax allows you to assemble sophisticated processing pipelines
  * in an elegant, terse and readable fashion.
  *
+ * <p>An iteration chain assembled with this builder can perform multiple transformations over a data flow without
+ * storing in memory the resulting data from intermediate steps. When operating over large data sets, this mechanism
+ * can be very light on memory consumption.
+ *
+ * <p>Inputs to the chain can be any kind of {@see Traversable}, i.e. native arrays, classes implementing
+ * {@see Iterator} or {@see IteratorAggregate}, or the result of invoking a generator function (on PHP>=5.5).
+ * Additionaly, callable inputs (ex. Closures) will be converted to {@see FunctionIterator} instances, allowing you to
+ * write generator function look-alikes on PHP<5.5.
+ *
  * <p>Note: Some operations require the iteration data to be "materialized", i.e. fully iterated and stored internally
- * as an array, before being applied. This only happens for operations that require all data to be present (ex:
- * `reverse()` or `sort()`), but the resulting data will be automatically converted back to an iterator whenever it
+ * as an array, before the operation is applied. This only happens for operations that require all data to be present
+ * (ex: `reverse()` or `sort()`), and the resulting data will be automatically converted back to an iterator whenever it
  * makes sense.
  */
 class Flow implements IteratorAggregate
@@ -108,7 +111,7 @@ class Flow implements IteratorAggregate
 
   /**
    * Converts the argument into an iterator.
-   * @param Traversable|array $t
+   * @param Traversable|array|callable $t
    * @return Iterator
    */
   static function iteratorFrom ($t)
@@ -116,13 +119,12 @@ class Flow implements IteratorAggregate
     switch (true) {
       case $t instanceof IteratorAggregate:
         return $t->getIterator ();
-        break;
       case $t instanceof Iterator:
         return $t;
-        break;
       case is_array ($t):
         return new ArrayIterator ($t);
-        break;
+      case is_callable ($t):
+        return new FunctionIterator ($t);
       default:
         throw new InvalidArgumentException ("Invalid iteration type.");
     }
