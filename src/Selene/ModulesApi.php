@@ -2,7 +2,8 @@
 namespace Selene;
 use Selene\Exceptions\ConfigException;
 use Selene\Traits\Singleton;
-use Selene\Util\FilesystemFlow;
+use Flow\FilesystemFlow;
+use SplFileInfo;
 
 /**
  * Provides an API for querying module information.
@@ -121,7 +122,7 @@ class ModulesApi
       ::from ("{$this->app->baseDirectory}/{$this->app->pluginModulesPath}")
       ->onlyDirectories ()
       ->expand (function ($dir) { return FilesystemFlow::from ($dir)->onlyDirectories (); })
-      ->map (function (\SplFileInfo $f) { return $f->getPathname (); })
+      ->map (function (SplFileInfo $f) { return $f->getPathname (); })
       ->all ();
     echo "\n";
     var_dump ($r);

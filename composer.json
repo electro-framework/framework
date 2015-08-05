@@ -21,6 +21,7 @@
     "php": ">=5.4.0",
     "vlucas/phpdotenv": "~2.0.1",
     "impactwave/php-web-console": "~0.1.0",
+    "impactwave/flow": "dev-master",
     "ircmaxell/password-compat": "dev-master",
     "codegyre/robo": "^0.5.3"
   },
