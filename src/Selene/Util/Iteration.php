@@ -1,13 +1,16 @@
 <?php
 namespace Selene\Util;
 
+use Iterator;
+use IteratorAggregate;
 use Selene\Iterators\CustomRecursiveIterator;
+use Selene\Iterators\LoopIterator;
 use Selene\Iterators\MacroIterator;
 use Selene\Iterators\MapIterator;
 use Selene\Iterators\RangeIterator;
 use Traversable;
 
-class Query implements \IteratorAggregate
+class Iteration implements IteratorAggregate
 {
   private static $SORT_TYPES = [
     'asort'       => 2,
@@ -23,24 +26,28 @@ class Query implements \IteratorAggregate
     'uksort'      => 3,
     'usort'       => 3,
   ];
-  private        $data;
-  private        $it;
+  /** @var array */
+  private $data;
+  /** @var Iterator */
+  private $it;
 
   /**
    * Sets the initial data/iterator.
-   * @param array|\Iterator $src
+   * @param array|Traversable $src
    */
   function __construct ($src)
   {
-    if ($src instanceof \Iterator)
+    if ($src instanceof Iterator)
       $this->it = $src;
+    else if ($src instanceof IteratorAggregate)
+      $this->it = $src->getIterator ();
     else if (is_array ($src))
       $this->data = $src;
     else throw new \InvalidArgumentException;
   }
 
   /**
-   * @param $src
+   * @param array|Traversable $src
    * @return static
    */
   static function from ($src)
@@ -48,9 +55,40 @@ class Query implements \IteratorAggregate
     return new static ($src);
   }
 
+  /**
+   * Creates an iteration over a generated sequence of numbers.
+   * @param int|float $from Starting value.
+   * @param int|float $to   The (inclusive) limit. May be lower than `$from` if the `$step` is negative.
+   * @param int|float $step Can be either positive or negative. If zero, an infinite sequence of constant values is
+   *                        generated.
+   * @return static
+   */
   static function range ($from, $to, $step = 1)
   {
-    return new static (new RangeIterator($from, $to, $step));
+    return new static (new RangeIterator ($from, $to, $step));
+  }
+
+  /**
+   * Concatenates the specified Traversables and iterates them in sequence.
+   */
+  static function sequence ()
+  {
+    $a = new \AppendIterator;
+    foreach (func_get_args () as $it)
+      $a->append (self::normalize ($it));
+    return new static ($a);
+  }
+
+  /**
+   * Converts the argument into an iterator.
+   * @param Traversable|array $t
+   * @return Iterator
+   */
+  private static function normalize ($t)
+  {
+    return $t instanceof IteratorAggregate
+      ? $t->getIterator ()
+      : (is_array ($t) ? new \ArrayIterator ($t) : $t);
   }
 
   /**
@@ -59,12 +97,12 @@ class Query implements \IteratorAggregate
    */
   function all ()
   {
-    return isset($this->data) ? $this->data : iterator_to_array ($this->it);
+    return isset ($this->data) ? $this->data : iterator_to_array ($this->it);
   }
 
   /**
    * Appends one or more iterators to the current one and sets a new iterator that iterates over all of them.
-   * @param \Iterator ...$args Iterators to append.
+   * @param Iterator ...$args Iterators to append.
    * @return $this
    */
   function append ()
@@ -72,7 +110,7 @@ class Query implements \IteratorAggregate
     $a = new \AppendIterator;
     $a->append ($this->it);
     foreach (func_get_args () as $it)
-      $a->append (is_array ($it) ? new \ArrayIterator ($it) : $it);
+      $a->append (self::normalize ($it));
     $this->it = $a;
     return $this;
   }
@@ -84,7 +122,8 @@ class Query implements \IteratorAggregate
    * ```
    *   Query::range (1,10)->apply ('RegexIterator', '/^1/')->all ()
    * ```
-   * @param string $iteratorClass The name of a class whose constructor receives an iterator as a first argument.
+   * @param string $iteratorClass The name of an iterator or iterator aggregate class whose constructor receives an
+   *                              iterator as a first argument.
    * @param mixed  ...$args       Additional arguments for the external iterator's constructor.
    * @return $this
    */
@@ -92,14 +131,15 @@ class Query implements \IteratorAggregate
   {
     $args     = func_get_args ();
     $args[0]  = $this->it;
-    $c        = new \ReflectionClass($iteratorClass);
-    $this->it = $c->newInstanceArgs ($args);
+    $c        = new \ReflectionClass ($iteratorClass);
+    $i        = $c->newInstanceArgs ($args);
+    $this->it = $i instanceof IteratorAggregate ? $i->getIterator () : $i;
     return $this;
   }
 
   function cache ()
   {
-    $this->it = new \CachingIterator($this->it);
+    $this->it = new \CachingIterator ($this->it);
   }
 
   /**
@@ -111,7 +151,7 @@ class Query implements \IteratorAggregate
   {
     $a = new \AppendIterator;
     foreach ($this->it as $it)
-      $a->append (is_array ($it) ? new \ArrayIterator ($it) : $it);
+      $a->append (self::normalize ($it));
     $this->it = $a;
     return $this;
   }
@@ -138,7 +178,7 @@ class Query implements \IteratorAggregate
    */
   function each (callable $fn)
   {
-    foreach ($this->getIterator () as $k => $v)
+    foreach ($this->getIterator () as $k => $v)   // note: can't use $this->it directly.
       if ($fn ($v, $k) === false) break;
     return $this;
   }
@@ -151,20 +191,20 @@ class Query implements \IteratorAggregate
    */
   function expand (callable $fn)
   {
-    $this->it = new MacroIterator($this->it, $fn);
+    $this->it = new MacroIterator ($this->it, $fn);
     return $this;
   }
 
   /**
    * (PHP 5 &gt;= 5.0.0)<br/>
-   * Retrieve an external iterator
+   * Retrieves an external iterator. This allows instances of this class to be iterated (ex. on foreach loops).
    * @link http://php.net/manual/en/iteratoraggregate.getiterator.php
    * @return Traversable An instance of an object implementing <b>Iterator</b> or
    * <b>Traversable</b>
    */
   public function getIterator ()
   {
-    if (isset($this->data)) {
+    if (isset ($this->data)) {
       $this->it = new \ArrayIterator ($this->data);
       unset ($this->data);
     }
@@ -177,7 +217,20 @@ class Query implements \IteratorAggregate
    */
   function keys ()
   {
-    $this->it = new MapIterator($this->it, function ($v, $k) { return $k; });
+    $this->it = new MapIterator ($this->it, function ($v, $k) { return $k; });
+    return $this;
+  }
+
+  /**
+   * Repeats the iteration `$n` items.
+   * <p>If `$n` > iterator count, this will have no effect.
+   * @param int $n
+   * @return $this
+   */
+  function loop ($n)
+  {
+    $this->it = new LoopIterator ($this->it);
+    $this->it->loop ($n);
     return $this;
   }
 
@@ -190,11 +243,11 @@ class Query implements \IteratorAggregate
    */
   function map (callable $fn)
   {
-    if (isset($this->data)) {
+    if (isset ($this->data)) {
       $this->it = new \ArrayIterator ($this->data);
       unset ($this->data);
     }
-    $this->it = new MapIterator($this->it, $fn);
+    $this->it = new MapIterator ($this->it, $fn);
     return $this;
   }
 
@@ -208,21 +261,38 @@ class Query implements \IteratorAggregate
    */
   function mapAndFilter (callable $fn)
   {
-    if (isset($this->data)) {
+    if (isset ($this->data)) {
       $this->it = new \ArrayIterator ($this->data);
       unset ($this->data);
     }
-    $this->it = new \CallbackFilterIterator (new MapIterator($this->it, $fn), function ($v) {
-      return isset($v);
+    $this->it = new \CallbackFilterIterator (new MapIterator ($this->it, $fn), function ($v) {
+      return isset ($v);
     });
     return $this;
   }
 
   /**
-   * Reindexes the current data into a series of sequential integer values, thereby eliminating discontinuous keys.
+   * Iterates only the first `$n` items.
+   * <p>If `$n >` iterator count or `$n < 0`, this will have no effect.
    *
-   * Note: this is faster than {@see reindex()} bit it materializes the data. This should usually be the last operation
-   * to perform before retrieving the results.
+   * Note: this method is not equivalent to `limit (0, $n)`, for it can handle any kind of keys.
+   * @param int $n How many iterations, at most.
+   * @return $this
+   */
+  function only ($n)
+  {
+    $this->it = new LoopIterator ($this->it);
+    $this->it->limit ($n);
+    return $this;
+  }
+
+  /**
+   * Materializes and reindexes the current data into a series of sequential integer keys.
+   *
+   * This is useful to extract the data as a linear array with no discontinuous keys.
+   *
+   * This is faster than {@see reindex()} bit it materializes the data. This should usually be the last
+   * operation to perform before retrieving the results.
    * @return $this
    */
   function pack ()
@@ -240,7 +310,7 @@ class Query implements \IteratorAggregate
    */
   function recursive (callable $fn)
   {
-    $this->it = new \RecursiveIteratorIterator(new CustomRecursiveIterator($this->it, $fn));
+    $this->it = new \RecursiveIteratorIterator (new CustomRecursiveIterator ($this->it, $fn));
     return $this;
   }
 
@@ -255,7 +325,7 @@ class Query implements \IteratorAggregate
   function regex ($regexp, $preg_flags = 0, $useKeys = false)
   {
     $this->it =
-      new \RegexIterator($this->it, $regexp, \RegexIterator::ALL_MATCHES, $useKeys ? \RegexIterator::USE_KEY : 0,
+      new \RegexIterator ($this->it, $regexp, \RegexIterator::ALL_MATCHES, $useKeys ? \RegexIterator::USE_KEY : 0,
         $preg_flags);
     return $this;
   }
@@ -270,7 +340,7 @@ class Query implements \IteratorAggregate
   function regexExtract ($regexp, $preg_flags = 0, $useKeys = false)
   {
     $this->it =
-      new \RegexIterator($this->it, $regexp, \RegexIterator::GET_MATCH, $useKeys ? \RegexIterator::USE_KEY : 0,
+      new \RegexIterator ($this->it, $regexp, \RegexIterator::GET_MATCH, $useKeys ? \RegexIterator::USE_KEY : 0,
         $preg_flags);
     return $this;
   }
@@ -284,7 +354,8 @@ class Query implements \IteratorAggregate
    */
   function regexMap ($regexp, $replaceWith, $useKeys = false)
   {
-    $this->it = new \RegexIterator($this->it, $regexp, \RegexIterator::REPLACE, $useKeys ? \RegexIterator::USE_KEY : 0);
+    $this->it =
+      new \RegexIterator ($this->it, $regexp, \RegexIterator::REPLACE, $useKeys ? \RegexIterator::USE_KEY : 0);
 
     $this->it->replacement = $replaceWith;
     return $this;
@@ -300,7 +371,7 @@ class Query implements \IteratorAggregate
    */
   function regexSplit ($regexp, $preg_flags = 0, $useKeys = false)
   {
-    $this->it = new \RegexIterator($this->it, $regexp, \RegexIterator::SPLIT, $useKeys ? \RegexIterator::USE_KEY : 0,
+    $this->it = new \RegexIterator ($this->it, $regexp, \RegexIterator::SPLIT, $useKeys ? \RegexIterator::USE_KEY : 0,
       $preg_flags);
     return $this;
   }
@@ -313,7 +384,7 @@ class Query implements \IteratorAggregate
    */
   function reindex ($i = 0, $st = 1)
   {
-    $this->it = new MapIterator($this->it, function ($v, &$k) use (&$i, $st) {
+    $this->it = new MapIterator ($this->it, function ($v, &$k) use (&$i, $st) {
       $k = $i;
       $i += $st;
       return $v;
@@ -354,11 +425,11 @@ class Query implements \IteratorAggregate
    */
   function slice ($offset = 0, $count = -1)
   {
-    if (isset($this->data)) {
+    if (isset ($this->data)) {
       $this->it = new \ArrayIterator ($this->data);
       unset ($this->data);
     }
-    $this->it = new \LimitIterator($this->it, $offset, $count);
+    $this->it = new \LimitIterator ($this->it, $offset, $count);
     return $this;
   }
 
@@ -376,8 +447,8 @@ class Query implements \IteratorAggregate
    */
   function sort ($type = 'sort', $flags = SORT_REGULAR, callable $fn = null)
   {
-    if (!isset(self::$SORT_TYPES[$type]))
-      throw new \InvalidArgumentException("Bad sort type: $type");
+    if (!isset (self::$SORT_TYPES[$type]))
+      throw new \InvalidArgumentException ("Bad sort type: $type");
     $n          = self::$SORT_TYPES[$type];
     $this->data = $this->all ();
     switch ($n) {
@@ -415,11 +486,11 @@ class Query implements \IteratorAggregate
    */
   function where (callable $fn)
   {
-    if (isset($this->data)) {
+    if (isset ($this->data)) {
       $this->it = new \ArrayIterator ($this->data);
       unset ($this->data);
     }
-    $this->it = new \CallbackFilterIterator($this->it, $fn);
+    $this->it = new \CallbackFilterIterator ($this->it, $fn);
     return $this;
   }
 
@@ -432,7 +503,7 @@ class Query implements \IteratorAggregate
    */
   function whereMatch ($regexp, $preg_flags = 0, $useKeys = false)
   {
-    $this->it = new \RegexIterator($this->it, $regexp, \RegexIterator::MATCH, $useKeys ? \RegexIterator::USE_KEY : 0,
+    $this->it = new \RegexIterator ($this->it, $regexp, \RegexIterator::MATCH, $useKeys ? \RegexIterator::USE_KEY : 0,
       $preg_flags);
     return $this;
   }

@@ -1,9 +1,15 @@
 <?php
 namespace Selene\Iterators;
 
+use ArrayIterator;
 use Iterator;
+use IteratorAggregate;
 use Traversable;
 
+/**
+ * An OuterIterator implementation that allows the caller to define an inner iterator to replace and expand each item
+ * of the outer iterator.
+ */
 class MacroIterator implements \OuterIterator
 {
   /**
@@ -11,6 +17,12 @@ class MacroIterator implements \OuterIterator
    * When not set, keys are auto-incremented integers starting at 0.
    */
   const USE_ORIGINAL_KEYS = 1;
+  /**
+   * @var int For macro iterators being iterated by other macro iterations, this indicates the recursion depth.
+   *          It will be set automatically if a MacroIterator is returned as an expansion of another MacroIterator's
+   *          item.
+   */
+  public $depth = 0;
   /** @var int */
   private $flags;
   /** @var callable */
@@ -23,8 +35,6 @@ class MacroIterator implements \OuterIterator
   private $outer;
 
   /**
-   * An OuterIterator implementation that allows the caller to define an inner iterator to replace and expand each item
-   * of the outer iterator.
    * @param Traversable $outer The outer iterator.
    * @param callable    $fn    A callback that receives the current outer iterator item's value and key and returns the
    *                           corresponding inner Traversable or array.
@@ -32,50 +42,27 @@ class MacroIterator implements \OuterIterator
    */
   function __construct (Traversable $outer, callable $fn, $flags = 0)
   {
-    $this->outer = $outer instanceof \IteratorAggregate ? $outer->getIterator () : $outer;
+    $this->outer = $outer instanceof IteratorAggregate ? $outer->getIterator () : $outer;
     $this->fn    = $fn;
     $this->flags = $flags;
   }
 
-  /**
-   * (PHP 5 &gt;= 5.0.0)<br/>
-   * Return the current element
-   * @link http://php.net/manual/en/iterator.current.php
-   * @return mixed
-   */
-  public function current ()
+  function current ()
   {
     return $this->inner->current ();
   }
 
-  /**
-   * (PHP 5 &gt;= 5.1.0)<br/>
-   * Returns the inner iterator for the current entry.
-   * @link http://php.net/manual/en/outeriterator.getinneriterator.php
-   * @return Iterator The inner iterator for the current entry.
-   */
-  public function getInnerIterator ()
+  function getInnerIterator ()
   {
     return $this->inner;
   }
 
-  /**
-   * (PHP 5 &gt;= 5.0.0)<br/>
-   * Return the key of the current element
-   * @link http://php.net/manual/en/iterator.key.php
-   * @return mixed
-   */
-  public function key ()
+  function key ()
   {
     return $this->flags & self::USE_ORIGINAL_KEYS ? $this->inner->key () : $this->index;
   }
 
-  /**
-   * (PHP 5 &gt;= 5.0.0)<br/>
-   * Move forward to next element
-   * @link http://php.net/manual/en/iterator.next.php
-   */
-  public function next ()
+  function next ()
   {
     ++$this->index;
     $this->inner->next ();
@@ -89,12 +76,7 @@ class MacroIterator implements \OuterIterator
     }
   }
 
-  /**
-   * (PHP 5 &gt;= 5.0.0)<br/>
-   * Rewind the Iterato to the first element
-   * @link http://php.net/manual/en/iterator.rewind.php
-   */
-  public function rewind ()
+  function rewind ()
   {
     $this->index = 0;
     $this->inner = null;
@@ -107,23 +89,31 @@ class MacroIterator implements \OuterIterator
     }
   }
 
-  /**
-   * (PHP 5 &gt;= 5.0.0)<br/>
-   * Checks if current position is valid
-   * @link http://php.net/manual/en/iterator.valid.php
-   * @return boolean `false` if there is no more data to be read.
-   */
-  public function valid ()
+  function valid ()
   {
     return $this->inner && $this->inner->valid ();
   }
 
   protected function nextInner ()
   {
-    $fn          = $this->fn;
-    $v           = $fn ($this->outer->current (), $this->outer->key ());
-    $this->inner = $v instanceof \IteratorAggregate
-      ? $v->getIterator ()
-      : (is_array ($v) ? new \ArrayIterator ($v) : $v);
+    $fn = $this->fn;
+    $v  = $fn ($this->outer->current (), $this->outer->key ());
+    switch (true) {
+      case $v instanceof static:
+        $this->inner = $v;
+        $v->depth    = $this->depth + 1;
+        break;
+      case $v instanceof IteratorAggregate:
+        $this->inner = $v->getIterator ();
+        break;
+      case $v instanceof Iterator:
+        $this->inner = $v;
+        break;
+      case is_array ($v):
+        $this->inner = new ArrayIterator ($v);
+        break;
+      default:
+        throw new \InvalidArgumentException ("Invalid return type from a MacroIterator's callback.");
+    }
   }
 }

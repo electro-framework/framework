@@ -1,73 +1,54 @@
 <?php
 namespace Selene\Iterators;
 
+/**
+ * Iterates over a generated sequence of numbers.
+ */
 class RangeIterator implements \Iterator
 {
   private $cur;
   private $from;
-  private $to;
-  private $step;
   private $key = 0;
+  private $step;
+  private $to;
 
+  /**
+   * @param int|float $from Starting value.
+   * @param int|float $to   The (inclusive) limit. May be lower than `$from` if the `$step` is negative.
+   * @param int|float $step Can be either positive or negative. If zero, an infinite sequence of constant values is
+   *                        generated.
+   */
   function __construct ($from, $to, $step = 1)
   {
-    $this->cur = $this->from = $from;
-    $this->to = $to;
+    $this->cur  = $this->from = $from;
+    $this->to   = $to;
     $this->step = $step;
   }
 
-  /**
-   * (PHP 5 &gt;= 5.0.0)<br/>
-   * Return the current element
-   * @link http://php.net/manual/en/iterator.current.php
-   * @return int
-   */
   public function current ()
   {
     return $this->cur;
   }
 
-  /**
-   * (PHP 5 &gt;= 5.0.0)<br/>
-   * Move forward to next element
-   * @link http://php.net/manual/en/iterator.next.php
-   */
-  public function next ()
-  {
-     $this->cur += $this->step;
-    ++$this->key;
-  }
-
-  /**
-   * (PHP 5 &gt;= 5.0.0)<br/>
-   * Return the key of the current element
-   * @link http://php.net/manual/en/iterator.key.php
-   * @return int
-   */
   public function key ()
   {
     return $this->key;
   }
 
-  /**
-   * (PHP 5 &gt;= 5.0.0)<br/>
-   * Checks if current position is valid
-   * @link http://php.net/manual/en/iterator.valid.php
-   * @return boolean `false` if there is no more data to be read.
-   */
-  public function valid ()
+  public function next ()
   {
-    return $this->step > 0 ? $this->cur <= $this->to : $this->cur >= $this->to;
+    $this->cur += $this->step;
+    ++$this->key;
   }
 
-  /**
-   * (PHP 5 &gt;= 5.0.0)<br/>
-   * Rewind the Iterator to the first element
-   * @link http://php.net/manual/en/iterator.rewind.php
-   */
   public function rewind ()
   {
     $this->key = 0;
     $this->cur = $this->from;
+  }
+
+  public function valid ()
+  {
+    return $this->step > 0 ? $this->cur <= $this->to : $this->cur >= $this->to;
   }
 }

@@ -2,7 +2,7 @@
 namespace Selene\Util;
 use FilesystemIterator;
 
-class FilesystemQuery extends Query
+class FilesystemIteration extends Iteration
 {
   /**
    * Creates a filesystem directory query.
@@ -11,7 +11,7 @@ class FilesystemQuery extends Query
    *                      Default = KEY_AS_PATHNAME | CURRENT_AS_FILEINFO | SKIP_DOTS
    * @return static
    */
-  static function scanDir ($path, $flags = 4096)
+  static function from ($path, $flags = 4096)
   {
     return new static (new \FilesystemIterator($path, $flags));
   }

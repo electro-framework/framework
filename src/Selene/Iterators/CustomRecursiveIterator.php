@@ -28,23 +28,11 @@ class CustomRecursiveIterator extends \IteratorIterator implements \RecursiveIte
     $this->depth = $depth;
   }
 
-  /**
-   * (PHP 5 &gt;= 5.1.0)<br/>
-   * Returns an iterator for the current entry.
-   * @link http://php.net/manual/en/recursiveiterator.getchildren.php
-   * @return RecursiveIterator An iterator for the current entry.
-   */
   public function getChildren ()
   {
     return $this->children;
   }
 
-  /**
-   * (PHP 5 &gt;= 5.1.0)<br/>
-   * Returns if an iterator can be created for the current entry.
-   * @link http://php.net/manual/en/recursiveiterator.haschildren.php
-   * @return bool true if the current entry can be iterated over, otherwise returns false.
-   */
   public function hasChildren ()
   {
     $fn = $this->fn;

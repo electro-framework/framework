@@ -2,7 +2,7 @@
 namespace Selene;
 use Selene\Exceptions\ConfigException;
 use Selene\Traits\Singleton;
-use Selene\Util\FilesystemQuery;
+use Selene\Util\FilesystemIteration;
 
 /**
  * Provides an API for querying module information.
@@ -117,17 +117,12 @@ class ModulesApi
    */
   function pluginNames ()
   {
-    $base = "{$this->app->baseDirectory}/{$this->app->pluginModulesPath}";
-    $r    = FilesystemQuery::scanDir ($base)
-                           ->onlyDirectories ()
-                           ->expand (function ($v, $k) {
-                             echo "$v\n";
-                             return FilesystemQuery::scanDir ($v)->onlyDirectories ();
-                           })
-                           ->map (function (\SplFileInfo $f) {
-                             return $f->getPathname ();
-                           })
-                           ->all ();
+    $r = FilesystemIteration
+      ::from ("{$this->app->baseDirectory}/{$this->app->pluginModulesPath}")
+      ->onlyDirectories ()
+      ->expand (function ($dir) { return FilesystemIteration::from ($dir)->onlyDirectories (); })
+      ->map (function (\SplFileInfo $f) { return $f->getPathname (); })
+      ->all ();
     echo "\n";
     var_dump ($r);
     exit;
