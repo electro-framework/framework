@@ -47,7 +47,7 @@ class RecursiveIterator extends IteratorIterator implements RecursiveIteratorInt
     $this->children =
       new \RecursiveIteratorIterator(
         new RecursiveIterator(
-          Flow::normalize ($r), $fn, $this->depth + 1
+          Flow::iteratorFrom ($r), $fn, $this->depth + 1
         )
       );
     return true;

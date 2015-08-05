@@ -67,7 +67,34 @@ class Flow implements IteratorAggregate
    */
   function __construct ($src = [])
   {
-    $this->set ($src);
+    $this->setIterator ($src);
+  }
+
+  /**
+   * Creates a Flow from a list of Traversable inputs that iterates over all of them in parallel.
+   *
+   * The generated sequence is comprised of array items where each one contains an iteration step from each one of the
+   * inputs. The key for the value from each input corresponds (by default) to the original key for the
+   * input on the original set, or it may be fetched from the `$fields` argument, if one is provided.
+   *
+   * The iteration continues until all inputs are exhausted, returning `null` fields for prematurely finished inputs.
+   *
+   * You can change these behaviours using the `$flags` argument.
+   *
+   * @param Traversable|array $inputs A list of Traversable inputs.
+   * @param array|null        $fields A list or map of key names for use on the resulting array items. If not
+   *                                  specified, the original iterator's keys will be used or numerical autoincremented
+   *                                  indexes, depending on the `$flags`.
+   * @param int               $flags  One or more of the MultipleIterator::MIT_XXX constants.
+   *                                  <p>Default: MIT_NEED_ANY | MIT_KEYS_ASSOC
+   * @return static
+   */
+  static function combine ($inputs, array $fields = null, $flags = 2)
+  {
+    $mul = new MultipleIterator($flags);
+    foreach (self::iteratorFrom ($inputs) as $k => $it)
+      $mul->attachIterator (self::iteratorFrom ($it), isset($fields) ? $fields[$k] : $k);
+    return new static ($mul);
   }
 
   /**
@@ -84,7 +111,7 @@ class Flow implements IteratorAggregate
    * @param Traversable|array $t
    * @return Iterator
    */
-  static function normalize ($t)
+  static function iteratorFrom ($t)
   {
     switch (true) {
       case $t instanceof IteratorAggregate:
@@ -123,7 +150,7 @@ class Flow implements IteratorAggregate
   {
     $a = new AppendIterator;
     foreach ($list as $it)
-      $a->append (self::normalize ($it));
+      $a->append (self::iteratorFrom ($it));
     return new static ($a);
   }
 
@@ -159,8 +186,8 @@ class Flow implements IteratorAggregate
     $a = new AppendIterator;
     $a->append ($this->getIterator ());
     foreach ($list as $it)
-      $a->append (self::normalize ($it));
-    $this->set ($a);
+      $a->append (self::iteratorFrom ($it));
+    $this->setIterator ($a);
     return $this;
   }
 
@@ -181,17 +208,17 @@ class Flow implements IteratorAggregate
     $args    = func_get_args ();
     $args[0] = $this->getIterator ();
     $c       = new \ReflectionClass ($iteratorClass);
-    $this->set ($c->newInstanceArgs ($args));
+    $this->setIterator ($c->newInstanceArgs ($args));
     return $this;
   }
 
   /**
-   * Cache the current iterator's values so that subsequent iterations will not need to invoke that iterator.
+   * Memoize the current iterator's values so that subsequent iterations will not need to iterate it again.
    * @return $this
    */
   function cache ()
   {
-    $this->set (new CachedIterator ($this->getIterator ()));
+    $this->setIterator (new CachedIterator ($this->getIterator ()));
     return $this;
   }
 
@@ -204,8 +231,8 @@ class Flow implements IteratorAggregate
   {
     $a = new AppendIterator;
     foreach ($this->getIterator () as $it)
-      $a->append (self::normalize ($it));
-    $this->set ($a);
+      $a->append (self::iteratorFrom ($it));
+    $this->setIterator ($a);
     return $this;
   }
 
@@ -244,8 +271,26 @@ class Flow implements IteratorAggregate
    */
   function expand (callable $fn)
   {
-    $this->set (new MacroIterator ($this->getIterator (), $fn));
+    $this->setIterator (new MacroIterator ($this->getIterator (), $fn));
     return $this;
+  }
+
+  /**
+   * Gets the current value from the composite iterator and iterates to the next.
+   *
+   * This is a shortcut way of reading one single data item from the iteration.
+   *
+   * @return mixed|false `false` when the iteration is finished.
+   */
+  function get ()
+  {
+    $it = $this->getIterator ();
+    if ($it->valid ()) {
+      $v = $it->current ();
+      $it->next ();
+      return $v;
+    }
+    return false;
   }
 
   /**
@@ -260,7 +305,7 @@ class Flow implements IteratorAggregate
   public function getIterator ()
   {
     if (isset ($this->data)) {
-      $this->set (new ArrayIterator ($this->data));
+      $this->setIterator (new ArrayIterator ($this->data));
       unset ($this->data);
     }
     return $this->it;
@@ -272,7 +317,7 @@ class Flow implements IteratorAggregate
    */
   function keys ()
   {
-    $this->set (new MapIterator ($this->getIterator (), function ($v, $k) { return $k; }));
+    $this->setIterator (new MapIterator ($this->getIterator (), function ($v, $k) { return $k; }));
     return $this;
   }
 
@@ -284,7 +329,7 @@ class Flow implements IteratorAggregate
    */
   function loop ($n)
   {
-    $this->set (new LoopIterator ($this->getIterator ()));
+    $this->setIterator (new LoopIterator ($this->getIterator ()));
     $this->it->loop ($n);
     return $this;
   }
@@ -298,7 +343,7 @@ class Flow implements IteratorAggregate
    */
   function map (callable $fn)
   {
-    $this->set (new MapIterator ($this->getIterator (), $fn));
+    $this->setIterator (new MapIterator ($this->getIterator (), $fn));
     return $this;
   }
 
@@ -312,7 +357,7 @@ class Flow implements IteratorAggregate
    */
   function mapAndFilter (callable $fn)
   {
-    $this->set (new CallbackFilterIterator (new MapIterator ($this->getIterator (), $fn), function ($v) {
+    $this->setIterator (new CallbackFilterIterator (new MapIterator ($this->getIterator (), $fn), function ($v) {
       return isset ($v);
     }));
     return $this;
@@ -324,7 +369,7 @@ class Flow implements IteratorAggregate
    */
   function noRewind ()
   {
-    $this->set (new NoRewindIterator($this->getIterator ()));
+    $this->setIterator (new NoRewindIterator($this->getIterator ()));
     return $this;
   }
 
@@ -338,7 +383,7 @@ class Flow implements IteratorAggregate
    */
   function only ($n)
   {
-    $this->set (new LoopIterator ($this->getIterator ()));
+    $this->setIterator (new LoopIterator ($this->getIterator ()));
     $this->it->limit ($n);
     return $this;
   }
@@ -359,33 +404,6 @@ class Flow implements IteratorAggregate
   }
 
   /**
-   * Assumes the current iterator is composed of Traversables and sets a new iterator that iterates over all of
-   * them in parallel.
-   *
-   * A sequence of array items is generated where each one contains an iteration step from each one of those
-   * inputs.
-   *
-   * On each resulting array, the key for the value of each input corresponds (by default) to the original key for the
-   * input on the original set.
-   *
-   * The iteration continues until all inputs are exhausted, returning `null` for finished inputs.
-   *
-   * You can change these behaviours using the `$flags` argument.
-   *
-   * @param int $flags One or more of the MultipleIterator::MIT_XXX constants.
-   *                   <p>Default: MIT_NEED_ANY | MIT_KEYS_ASSOC
-   * @return $this
-   */
-  function parallel ($flags = 2)
-  {
-    $mul = new MultipleIterator($flags);
-    foreach ($this->getIterator () as $k => $it)
-      $mul->attachIterator (self::normalize ($it), $k);
-    $this->set ($mul);
-    return $this;
-  }
-
-  /**
    * Wraps a recursive iterator over the current iterator.
    * @param callable $fn A callback that receives the current node's value, key and nesting depth, and returns an
    *                     array or {@see Traversable} for the node's children or `null` if the node has no
@@ -394,7 +412,7 @@ class Flow implements IteratorAggregate
    */
   function recursive (callable $fn)
   {
-    $this->set (new RecursiveIteratorIterator (new RecursiveIterator ($this->getIterator (), $fn)));
+    $this->setIterator (new RecursiveIteratorIterator (new RecursiveIterator ($this->getIterator (), $fn)));
     return $this;
   }
 
@@ -408,7 +426,7 @@ class Flow implements IteratorAggregate
    */
   function regex ($regexp, $preg_flags = 0, $useKeys = false)
   {
-    $this->set (
+    $this->setIterator (
       new RegexIterator ($this->getIterator (), $regexp, RegexIterator::ALL_MATCHES,
         $useKeys ? RegexIterator::USE_KEY : 0,
         $preg_flags)
@@ -425,7 +443,7 @@ class Flow implements IteratorAggregate
    */
   function regexExtract ($regexp, $preg_flags = 0, $useKeys = false)
   {
-    $this->set (
+    $this->setIterator (
       new RegexIterator ($this->getIterator (), $regexp, RegexIterator::GET_MATCH,
         $useKeys ? RegexIterator::USE_KEY : 0,
         $preg_flags)
@@ -442,7 +460,7 @@ class Flow implements IteratorAggregate
    */
   function regexMap ($regexp, $replaceWith, $useKeys = false)
   {
-    $this->set (
+    $this->setIterator (
       new RegexIterator ($this->getIterator (), $regexp, RegexIterator::REPLACE, $useKeys ? RegexIterator::USE_KEY : 0)
     );
     $this->it->replacement = $replaceWith;
@@ -459,7 +477,7 @@ class Flow implements IteratorAggregate
    */
   function regexSplit ($regexp, $preg_flags = 0, $useKeys = false)
   {
-    $this->set (
+    $this->setIterator (
       new RegexIterator ($this->getIterator (), $regexp, RegexIterator::SPLIT, $useKeys ? RegexIterator::USE_KEY : 0,
         $preg_flags)
     );
@@ -474,7 +492,7 @@ class Flow implements IteratorAggregate
    */
   function reindex ($i = 0, $st = 1)
   {
-    $this->set (
+    $this->setIterator (
       new MapIterator ($this->getIterator (), function ($v, &$k) use (&$i, $st) {
         $k = $i;
         $i += $st;
@@ -502,13 +520,13 @@ class Flow implements IteratorAggregate
   /**
    * Sets the internal iterator.
    *
-   * This is also used internally whenever the iterator is updated.
+   * Not recommended for external use. This is used internally to update the first iterator on the chain.
    * @param mixed $it Should be a Traversable or an array.
    * @return $this
    */
-  function set ($it)
+  function setIterator ($it)
   {
-    $this->it = self::normalize ($it);
+    $this->it = self::iteratorFrom ($it);
     return $this;
   }
 
@@ -530,7 +548,7 @@ class Flow implements IteratorAggregate
    */
   function slice ($offset = 0, $count = -1)
   {
-    $this->set (new LimitIterator ($this->getIterator (), $offset, $count));
+    $this->setIterator (new LimitIterator ($this->getIterator (), $offset, $count));
     return $this;
   }
 
@@ -587,7 +605,7 @@ class Flow implements IteratorAggregate
    */
   function where (callable $fn)
   {
-    $this->set (new CallbackFilterIterator ($this->getIterator (), $fn));
+    $this->setIterator (new CallbackFilterIterator ($this->getIterator (), $fn));
     return $this;
   }
 
@@ -600,7 +618,7 @@ class Flow implements IteratorAggregate
    */
   function whereMatch ($regexp, $preg_flags = 0, $useKeys = false)
   {
-    $this->set (new RegexIterator ($this->getIterator (), $regexp, RegexIterator::MATCH,
+    $this->setIterator (new RegexIterator ($this->getIterator (), $regexp, RegexIterator::MATCH,
       $useKeys ? RegexIterator::USE_KEY : 0, $preg_flags));
     return $this;
   }

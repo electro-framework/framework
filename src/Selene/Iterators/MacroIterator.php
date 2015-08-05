@@ -91,6 +91,6 @@ class MacroIterator implements \OuterIterator
   protected function nextInner ()
   {
     $fn          = $this->fn;
-    $this->inner = Flow::normalize ($fn ($this->outer->current (), $this->outer->key ()));
+    $this->inner = Flow::iteratorFrom ($fn ($this->outer->current (), $this->outer->key ()));
   }
 }
