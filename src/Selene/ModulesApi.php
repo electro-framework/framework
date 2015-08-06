@@ -1,8 +1,8 @@
 <?php
 namespace Selene;
+use Flow\FilesystemFlow;
 use Selene\Exceptions\ConfigException;
 use Selene\Traits\Singleton;
-use Flow\FilesystemFlow;
 use SplFileInfo;
 
 /**
@@ -24,7 +24,7 @@ class ModulesApi
    */
   function bootModules ()
   {
-    var_dump (ModulesApi::get ()->pluginNames ());
+    var_dump (ModulesApi::get ()->moduleNames());
     exit;
     return;
     global $application; // Used by the loaded bootstrap.php
@@ -62,14 +62,18 @@ class ModulesApi
    */
   function localModuleNames ()
   {
-    $o          = [];
-    $pluginsDir = dir ($this->app->modulesPath);
-    foreach ($pluginsDir as $dir) {
-      $vendorDir = dir ("{$this->app->modulesPath}/$dir");
-      foreach ($vendorDir as $subdir)
-        $o[] = "$dir/$subdir";
-    }
-    return $o;
+    return FilesystemFlow
+      ::from ("{$this->app->baseDirectory}/{$this->app->modulesPath}")
+      ->onlyDirectories ()
+      ->expand (function ($dirInfo, $path) {
+        return FilesystemFlow
+          ::from ($path)
+          ->onlyDirectories ()
+          ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
+            return $dirInfo->getFilename () . '/' . $subDirInfo->getFilename ();
+          });
+      })
+      ->all();
   }
 
   /**
@@ -118,23 +122,18 @@ class ModulesApi
    */
   function pluginNames ()
   {
-    $r = FilesystemFlow
+    return FilesystemFlow
       ::from ("{$this->app->baseDirectory}/{$this->app->pluginModulesPath}")
       ->onlyDirectories ()
-      ->expand (function ($dir) { return FilesystemFlow::from ($dir)->onlyDirectories (); })
-      ->map (function (SplFileInfo $f) { return $f->getPathname (); })
-      ->all ();
-    echo "\n";
-    var_dump ($r);
-    exit;
-    $pluginsDir = dir ($base);
-    foreach ($pluginsDir as $dir) {
-      _log ($dir);
-      $vendorDir = dir ("{$this->app->pluginModulesPath}/$dir");
-      foreach ($vendorDir as $subdir)
-        $o[] = "$dir/$subdir";
-    }
-    return $o;
+      ->expand (function ($dirInfo, $path) {
+        return FilesystemFlow
+          ::from ($path)
+          ->onlyDirectories ()
+          ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
+            return $dirInfo->getFilename () . '/' . $subDirInfo->getFilename ();
+          });
+      })
+      ->all();
   }
 
 }
