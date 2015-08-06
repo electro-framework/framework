@@ -65,9 +65,9 @@ class ModulesApi
     return FilesystemFlow
       ::from ("{$this->app->baseDirectory}/{$this->app->modulesPath}")
       ->onlyDirectories ()
-      ->expand (function ($dirInfo, $path) {
+      ->expand (function ($dirInfo) {
         return FilesystemFlow
-          ::from ($path)
+          ::from ($dirInfo)
           ->onlyDirectories ()
           ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
             return $dirInfo->getFilename () . '/' . $subDirInfo->getFilename ();
@@ -125,9 +125,9 @@ class ModulesApi
     return FilesystemFlow
       ::from ("{$this->app->baseDirectory}/{$this->app->pluginModulesPath}")
       ->onlyDirectories ()
-      ->expand (function ($dirInfo, $path) {
+      ->expand (function ($dirInfo) {
         return FilesystemFlow
-          ::from ($path)
+          ::from ($dirInfo)
           ->onlyDirectories ()
           ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
             return $dirInfo->getFilename () . '/' . $subDirInfo->getFilename ();
