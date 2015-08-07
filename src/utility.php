@@ -6,7 +6,6 @@
 //----------------------------------------------------------------------------------------
 // Values
 //----------------------------------------------------------------------------------------
-use Selene\Util\Flow;
 
 /**
  * Use this function to evaluate any expression in a string interpolator.
@@ -103,6 +102,88 @@ function toFloat ($val)
     return null;
   $val = str_replace (str_replace (',', '.', $val), ' ', '');
   return floatval ($val);
+}
+
+//----------------------------------------------------------------------------------------
+// Misc
+//----------------------------------------------------------------------------------------
+
+if (!function_exists ('getField')) {
+  /**
+   * Unified interface for retrieving a value by property from an object or by key from an array.
+   * @param mixed  $data
+   * @param string $key
+   * @param mixed  $default Value to return if the key doesn't exist.
+   * @return mixed
+   */
+  function getField ($data, $key, $default = null)
+  {
+    if (is_object ($data))
+      return property_exists($data, $key) ? $data->$key : $default;
+    if (is_array ($data))
+      return array_key_exists ($key, $data) ? $data[$key] : $default;
+
+    return $default;
+  }
+}
+
+if (!function_exists ('setField')) {
+  /**
+   * Unified interface to set a value on an object's property or at an array's key.
+   * @param mixed  $data
+   * @param string $key
+   * @param mixed  $value
+   */
+  function setField (&$data, $key, $value)
+  {
+    if (is_object ($data))
+      $data->$key = $value;
+    else if (is_array ($data))
+      $data[$key] = $value;
+  }
+}
+
+if (!function_exists ('getFieldRef')) {
+  /**
+   * Unified interface for retrieving a reference to an object's property or to an array's element.
+   *
+   * If the key doesn't exist, it is initialized to a null value.
+   * @param mixed  $data
+   * @param string $key
+   * @param mixed  $default Value to store at the specified key if that key doesn't exist.
+   * @return mixed Reference to the value.
+   */
+  function & getFieldRef (&$data, $key, $default = null)
+  {
+    if (is_object ($data)) {
+      if (!property_exists($data, $key))
+        $data->$key = $default;
+      return $data->$key;
+    }
+    if (is_array ($data)) {
+      if (!array_key_exists ($key, $data))
+        $data[$key] = $default;
+      return $data[$key];
+    }
+    throw new InvalidArgumentException ("Not an object or array");
+  }
+}
+
+function getAt ($target, $path) {
+  $segs = explode('.', $path);
+  $cur = $target;
+  foreach ($segs as $seg) {
+    if (is_null($cur = getField($cur, $seg))) break;;
+  }
+  return $cur;
+}
+
+function setAt (&$target, $path, $v, $create = []) {
+  $segs = explode('.', $path);
+  $cur =& $target;
+  foreach ($segs as $seg)
+    $cur =& getFieldRef($cur, $seg, $create);
+  $cur = $v;
 }
 
 //----------------------------------------------------------------------------------------
@@ -766,23 +847,6 @@ function dirList ($path, $type = 0, $fullPaths = false, $sortOrder = false)
   if ($sortOrder)
     sort ($o, $sortOrder);
   return $o;
-}
-
-/**
- * A blend of map() and filter() for extracting information about the contents of a directory.
- * @param string   $path Directory path.
- * @param callable $fn   Callback invoked for each file/dir that receives a SplFileInfo object and should return the
- *                       desired information. If no value is returned (or `null` is returned) the value will no be added
- *                       to the result set.
- * @return Flow|false   `false` if `$path` is not a valid directory.
- */
-function dirMap ($path, callable $fn)
-{
-  try {
-    return Flow::from(new FilesystemIterator($path))->filterAndMap($fn);
-  } catch (Exception $e) {
-    return false;
-  }
 }
 
 //----------------------------------------------------------------------------------------
