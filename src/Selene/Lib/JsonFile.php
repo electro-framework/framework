@@ -63,6 +63,13 @@ class JsonFile
   function set ($jsonPath, $value)
   {
     setAt ($this->data, $jsonPath, $value, $this->assoc);
+    return $this;
+  }
+
+  function remove ($jsonPath)
+  {
+    unsetAt ($jsonPath);
+    return $this;
   }
 
 }

@@ -182,6 +182,16 @@ function getAt ($target, $path)
   return $cur;
 }
 
+function & getRefAt ($target, $path)
+{
+  $segs = explode ('.', $path);
+  $cur  = $target;
+  foreach ($segs as $seg) {
+    if (is_null ($cur =& getFieldRef ($cur, $seg))) break;;
+  }
+  return $cur;
+}
+
 function setAt (&$target, $path, $v, $assoc = false)
 {
   $segs = explode ('.', $path);
@@ -191,7 +201,18 @@ function setAt (&$target, $path, $v, $assoc = false)
   $cur = $v;
 }
 
-
+function unsetAt ($path)
+{
+  $paths = explode ('.', $path);
+  $key   = array_pop ($paths);
+  $path  = implode ('.', $paths);
+  $v     =& $this->getRefAt ($path);
+  if (is_array ($v))
+    unset ($v[$key]);
+  else if (is_object ($v))
+    unset ($v->$key);
+  else throw new InvalidArgumentException ("Not an object or array");
+}
 
 //----------------------------------------------------------------------------------------
 // Objects
