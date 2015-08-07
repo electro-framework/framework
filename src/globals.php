@@ -57,13 +57,13 @@ if (!function_exists ('getField')) {
    * Retrieves a value by property or key from an object or an array with an unified interface.
    * @param mixed  $data
    * @param string $key
-   * @param mixed  $default
+   * @param mixed  $default Value to return if the key doesn't exist.
    * @return mixed
    */
-  function getField (&$data, $key, $default = null)
+  function getField ($data, $key, $default = null)
   {
     if (is_object ($data))
-      return isset($data->$key) ? $data->$key : $default;
+      return property_exists($data, $key) ? $data->$key : $default;
     if (is_array ($data))
       return array_key_exists ($key, $data) ? $data[$key] : $default;
 
