@@ -150,14 +150,17 @@ if (!function_exists ('getFieldRef')) {
    * If the key doesn't exist, it is initialized to a null value.
    * @param mixed  $data
    * @param string $key
-   * @param mixed  $default Value to store at the specified key if that key doesn't exist.
+   * @param mixed  $default   Value to store at the specified key if that key doesn't exist.
+   *                          Valid ony if `$createObj == false` (the default).
+   * @param bool   $createObj When true, the `$default` is ignored and a new instance of StdClass is used instead.<br>
+   *                          This avoids unnecessary object instantiations.
    * @return mixed Reference to the value.
    */
-  function & getFieldRef (&$data, $key, $default = null)
+  function & getFieldRef (&$data, $key, $default = null, $createObj = false)
   {
     if (is_object ($data)) {
-      if (!property_exists($data, $key))
-        $data->$key = $default;
+      if (!property_exists ($data, $key))
+        $data->$key = $createObj ? new StdClass : $default;
       return $data->$key;
     }
     if (is_array ($data)) {
@@ -169,22 +172,26 @@ if (!function_exists ('getFieldRef')) {
   }
 }
 
-function getAt ($target, $path) {
-  $segs = explode('.', $path);
-  $cur = $target;
+function getAt ($target, $path)
+{
+  $segs = explode ('.', $path);
+  $cur  = $target;
   foreach ($segs as $seg) {
-    if (is_null($cur = getField($cur, $seg))) break;;
+    if (is_null ($cur = getField ($cur, $seg))) break;;
   }
   return $cur;
 }
 
-function setAt (&$target, $path, $v, $create = []) {
-  $segs = explode('.', $path);
-  $cur =& $target;
+function setAt (&$target, $path, $v, $assoc = false)
+{
+  $segs = explode ('.', $path);
+  $cur  =& $target;
   foreach ($segs as $seg)
-    $cur =& getFieldRef($cur, $seg, $create);
+    $cur =& getFieldRef ($cur, $seg, [], !$assoc);
   $cur = $v;
 }
+
+
 
 //----------------------------------------------------------------------------------------
 // Objects

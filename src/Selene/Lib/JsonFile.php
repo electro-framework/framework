@@ -62,7 +62,7 @@ class JsonFile
 
   function set ($jsonPath, $value)
   {
-    setAt ($this->data, $jsonPath, $value, $this->assoc ? [] : new \StdClass);
+    setAt ($this->data, $jsonPath, $value, $this->assoc);
   }
 
 }
