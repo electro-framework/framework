@@ -2,6 +2,7 @@
 namespace Selene;
 use Flow\FilesystemFlow;
 use Selene\Exceptions\ConfigException;
+use Selene\Lib\JsonFile;
 use Selene\Traits\Singleton;
 use SplFileInfo;
 
@@ -24,16 +25,25 @@ class ModulesApi
    */
   function bootModules ()
   {
-    var_dump (ModulesApi::get ()->moduleNames());
-    exit;
-    return;
     global $application; // Used by the loaded bootstrap.php
+    $manifest = $this->getManifest ();
+    foreach ($manifest->modules as $module)
+      includeFile ("{$module->path}/bootstrap.php");
+  }
 
-    foreach ($this->pluginNames () as $plugin)
-      includeFile ("{$this->app->pluginModulesPath}/$plugin/bootstrap.php");
+  function buildManifest ()
+  {
+    return (object)[
+      'modules' => $this->get ()->modules (),
+    ];
+  }
 
-    foreach ($this->localModuleNames () as $module)
-      includeFile ("{$this->app->pluginModulesPath}/$module/bootstrap.php");
+  function getManifest ()
+  {
+    $json = new JsonFile ("{$this->app->modulesPath}/manifest.json");
+    return $json->exists ()
+      ? $json->load ()->data
+      : $json->assign ($this->buildManifest ())->save ()->data;
   }
 
   /**
@@ -60,20 +70,28 @@ class ModulesApi
    * Gets the names of all local (non-plugin) modules.
    * @return string[] Names in `vendor-name/package-name` syntax.
    */
-  function localModuleNames ()
+  function projectModuleNames ()
+  {
+    return array_getColumn ($this->projectModules (), 'name');
+  }
+
+  function projectModules ()
   {
     return FilesystemFlow
       ::from ("{$this->app->baseDirectory}/{$this->app->modulesPath}")
       ->onlyDirectories ()
-      ->expand (function ($dirInfo) {
+      ->expand (function (SplFileInfo $dirInfo) {
         return FilesystemFlow
           ::from ($dirInfo)
           ->onlyDirectories ()
           ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
-            return $dirInfo->getFilename () . '/' . $subDirInfo->getFilename ();
+            return (object)[
+              'name' => $dirInfo->getFilename () . '/' . $subDirInfo->getFilename (),
+              'path' => $subDirInfo->getPathname (),
+            ];
           });
       })
-      ->all();
+      ->all ();
   }
 
   /**
@@ -99,7 +117,33 @@ class ModulesApi
    */
   function moduleNames ()
   {
-    return array_merge ($this->localModuleNames (), $this->pluginNames ());
+    $modules = array_merge ($this->pluginNames (), $this->projectModuleNames ());
+    sort ($modules);
+    return $modules;
+  }
+
+  /**
+   * Returns information about all installed modules.
+   *
+   * Each module record defines:<dl>
+   * <dt>name <dd>The module name (vendor/package).
+   * <dt>path <dd>The full path of the module's root directory.
+   * <dt>description <dd>A short one-liner describing the module.
+   * <dt>type <dd>The type of module: Plugin | Project module.
+   * </dl>
+   * @return \StdClass[]
+   */
+  function modules ()
+  {
+    $modules = array_merge ($this->plugins (), $this->projectModules ());
+    return flow ($modules)->map (function ($module) {
+      $composerJson        = new JsonFile ("$module->path/composer.json");
+      $module->description = $composerJson->exists ()
+        ? $composerJson->load ()->get ('description')
+        : '';
+      $module->type        = $this->isPlugin ($module->name) ? 'Plugin' : 'Project module';
+      return $module;
+    })->all ();
   }
 
   /**
@@ -122,18 +166,26 @@ class ModulesApi
    */
   function pluginNames ()
   {
+    return array_getColumn ($this->plugins (), 'name');
+  }
+
+  function plugins ()
+  {
     return FilesystemFlow
       ::from ("{$this->app->baseDirectory}/{$this->app->pluginModulesPath}")
       ->onlyDirectories ()
-      ->expand (function ($dirInfo) {
+      ->expand (function (SplFileInfo $dirInfo) {
         return FilesystemFlow
           ::from ($dirInfo)
           ->onlyDirectories ()
           ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
-            return $dirInfo->getFilename () . '/' . $subDirInfo->getFilename ();
+            return (object)[
+              'name' => $dirInfo->getFilename () . '/' . $subDirInfo->getFilename (),
+              'path' => $subDirInfo->getPathname (),
+            ];
           });
       })
-      ->all();
+      ->all ();
   }
 
 }
