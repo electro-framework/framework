@@ -30,7 +30,6 @@
       "Selene\\": "src/Selene"
     },
     "files": [
-      "src/utility.php",
       "src/global.php",
       "src/database.php"
     ]

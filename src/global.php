@@ -80,18 +80,6 @@ function safeParameter ($name)
   return $v;
 }
 
-function extractP ($html)
-{
-  return preg_match ('#<p>([\s\S]*?)</p>#', $html, $matches) ? $matches[1] : '';
-}
-
-function toURISafeText ($text)
-{
-  //$text = iconv('UTF-8','ISO-8859-1//TRANSLIT',$text);
-  //$text = strtr($text,'áéíóúàèìòùãõâêôçÁÉÍÓÚÀÈÌÒÙÃÕÂÊÔÇ','aeiouaeiouaoaeocAEIOUAEIOUAOAEOC');
-  return urlencode ($text);
-}
-
 /**
  * @return ConsolePanel
  */
