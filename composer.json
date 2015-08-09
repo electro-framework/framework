@@ -20,6 +20,7 @@
   ],
   "require": {
     "selene-framework/installers": "^1.0.0",
+    "impactwave/php-kit": "dev-master",
     "php": ">=5.4.0"
   },
   "autoload": {
