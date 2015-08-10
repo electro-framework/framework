@@ -527,7 +527,7 @@ class Controller
   function getTitle ()
     // override to return the title of the current page
   {
-    return firstNonNull (
+    return coalesce (
       isset($this->activeRoute) ? $this->activeRoute->title : null,
       $this->pageTitle,
       ''
@@ -793,7 +793,7 @@ class Controller
         'locale' => explode ('|', $langDat[3]),
       ];
     }
-    $this->lang = firstNonNull ($this->lang, property ($session, 'lang'), $application->defaultLang);
+    $this->lang = coalesce ($this->lang, property ($session, 'lang'), $application->defaultLang);
     if (isset($session)) {
       if ($session->lang != $this->lang)
         $session->setLang ($this->lang);
