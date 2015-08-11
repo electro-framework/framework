@@ -2,6 +2,7 @@
 namespace Selene;
 
 use Impactwave\WebConsole\ErrorHandler;
+use PhpCode;
 use Selene\Exceptions\ConfigException;
 
 class ModuleInfo
@@ -49,7 +50,7 @@ class ModuleInfo
     $code = file_get_contents ($path, FILE_USE_INCLUDE_PATH);
     if ($code === false)
       throw new ConfigException("Can't load <b>$configName.php</b> on module <b>$this->name</b>.");
-    $val = evalPHP ($code);
+    $val = PhpCode::run ($code);
     if ($val === false)
       throw new ConfigException("Error on <b>$this->name</b>'s route-map definiton. Please check your PHP code.");
     return $val;

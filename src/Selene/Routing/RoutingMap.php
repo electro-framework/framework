@@ -1,13 +1,12 @@
 <?php
 namespace Selene\Routing;
 
+use PhpCode;
 use Selene\Exceptions\ConfigException;
 
 class RoutingMap
 {
   public $groups;
-  public $pages;
-  public $routes = [];
   /**
    * A list of references to each named site map node, indexed by name.
    * @var array
@@ -15,6 +14,8 @@ class RoutingMap
   public $namedNodes;
   /** @var bool Reserved for cascading into the children routes. */
   public $onMenu = true;
+  public $pages;
+  public $routes = [];
 
   public static function loadModule ($moduleName, $configName = 'routes')
   {
@@ -25,7 +26,7 @@ class RoutingMap
     $code = file_get_contents ($path, FILE_USE_INCLUDE_PATH);
     if ($code === false)
       throw new ConfigException("RoutingMap::loadConfigOf can't load <b>$configName.php</b> on module <b>$moduleName</b>.");
-    $val = evalPHP ($code);
+    $val = PhpCode::run ($code);
     if ($val === false)
       throw new ConfigException("Error on <b>$moduleName</b>'s routing-map definiton. Please check the PHP code.");
     return $val;
