@@ -1,6 +1,7 @@
 <?php
 namespace Selene;
 use Flow\FilesystemFlow;
+use Selene\Contracts\ConsoleIOInterface;
 use Selene\Exceptions\ConfigException;
 use Selene\Lib\JsonFile;
 use Selene\Traits\Singleton;
@@ -64,34 +65,6 @@ class ModulesApi
   function isPlugin ($moduleName)
   {
     return file_exists ("{$this->app->pluginModulesPath}/$moduleName");
-  }
-
-  /**
-   * Gets the names of all local (non-plugin) modules.
-   * @return string[] Names in `vendor-name/package-name` syntax.
-   */
-  function projectModuleNames ()
-  {
-    return array_getColumn ($this->projectModules (), 'name');
-  }
-
-  function projectModules ()
-  {
-    return FilesystemFlow
-      ::from ("{$this->app->baseDirectory}/{$this->app->modulesPath}")
-      ->onlyDirectories ()
-      ->expand (function (SplFileInfo $dirInfo) {
-        return FilesystemFlow
-          ::from ($dirInfo)
-          ->onlyDirectories ()
-          ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
-            return (object)[
-              'name' => $dirInfo->getFilename () . '/' . $subDirInfo->getFilename (),
-              'path' => $subDirInfo->getPathname (),
-            ];
-          });
-      })
-      ->all ();
   }
 
   /**
@@ -188,4 +161,53 @@ class ModulesApi
       ->all ();
   }
 
+  /**
+   * Gets the names of all local (non-plugin) modules.
+   * @return string[] Names in `vendor-name/package-name` syntax.
+   */
+  function projectModuleNames ()
+  {
+    return array_getColumn ($this->projectModules (), 'name');
+  }
+
+  function projectModules ()
+  {
+    return FilesystemFlow
+      ::from ("{$this->app->baseDirectory}/{$this->app->modulesPath}")
+      ->onlyDirectories ()
+      ->expand (function (SplFileInfo $dirInfo) {
+        return FilesystemFlow
+          ::from ($dirInfo)
+          ->onlyDirectories ()
+          ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
+            return (object)[
+              'name' => $dirInfo->getFilename () . '/' . $subDirInfo->getFilename (),
+              'path' => $subDirInfo->getPathname (),
+            ];
+          });
+      })
+      ->all ();
+  }
+
+  /**
+   * Validate the given module name or ask the user to select a module from a list of installed modules.
+   *
+   * <p>This method is available to console tasks only.
+   * @param string             $moduleName A variable reference. If empty, it will be set to the selected module name.
+   * @param ConsoleIOInterface $io         Terminal input/output.
+   */
+  function selectModule (& $moduleName, ConsoleIOInterface $io)
+  {
+    if ($moduleName) {
+      if (!strpos ($moduleName, '/'))
+        $io->error ("Invalid module name $moduleName. Correct syntax: vendor-name/package-name");
+      if (!$this->isInstalled ($moduleName))
+        $io->error ("Module $moduleName is not installed");
+    }
+    else {
+      $modules    = $this->moduleNames ();
+      $i          = $io->menu ("Select a module:", $modules);
+      $moduleName = $modules[$i];
+    }
+  }
 }
