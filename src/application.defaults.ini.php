@@ -14,7 +14,6 @@ return [
     'modules'                => [],
 
     'homeIcon'               => '',
-    'homeIcon'               => '',
     'homeTitle'              => 'Home',
 
     // These paths are relative to the root folder and may be duplicated on the starter-app's config.
@@ -65,13 +64,9 @@ return [
     'imageRedirection'       => false,
     'URINotFoundURL'         => false,
 
-    'packScripts'            => false,
-    'packCSS'                => false,
-    'resourceCaching'        => false,
-
     'globalSessions'         => false,
     'autoSession'            => true,
-    'isSessionRequired'      => false,
+    'requireLogin'           => false,
 
   ],
 ];

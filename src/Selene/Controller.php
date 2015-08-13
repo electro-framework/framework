@@ -715,7 +715,7 @@ class Controller
   {
     global $application, $session;
     $authenticate = false;
-    if (isset($session) && $application->isSessionRequired) {
+    if (isset($session) && $application->requireLogin) {
       $this->getActionAndParam ($action, $param);
       $authenticate = true;
       if ($action == 'login') {

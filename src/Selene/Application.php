@@ -183,7 +183,7 @@ class Application
    * @var string
    */
   public $includePath;
-  public $isSessionRequired;
+  public $requireLogin;
   /**
    * The path of the application's language files' folder.
    * @var string
@@ -481,7 +481,7 @@ class Application
     if (($p = strpos ($vuri, '?')) !== false)
       $vuri = substr ($vuri, 0, $p);
 
-    $this->isSessionRequired = false;
+    $this->requireLogin = false;
     $this->directory         = $rootDir;
     $this->baseDirectory     = $rootDir;
     $this->rootPath          = $rootDir;
