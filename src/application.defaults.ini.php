@@ -1,7 +1,7 @@
 <?php
 // Preset application configuration
 
-$debug = get ($_SERVER, 'APP_DEBUG') != 'true';
+$debug = get ($_SERVER, 'APP_DEBUG') == 'true';
 
 return [
   'main' => [
@@ -13,6 +13,7 @@ return [
     'subApplications'        => [],
     'modules'                => [],
 
+    'homeIcon'               => '',
     'homeIcon'               => '',
     'homeTitle'              => 'Home',
 
@@ -57,7 +58,6 @@ return [
     'frameworkScripts'       => true,
     'condenseLiterals'       => !$debug,
     'compressOutput'         => !$debug,
-    'debugMode'              => $debug,
     'userModel'              => '',
     'originalImageMaxSize'   => 1024,
     'originalImageQuality'   => 95,
