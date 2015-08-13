@@ -68,7 +68,7 @@ class JsonFile
 
   function remove ($jsonPath)
   {
-    unsetAt ($jsonPath);
+    unsetAt ($this->data, $jsonPath);
     return $this;
   }
 

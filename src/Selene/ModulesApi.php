@@ -32,19 +32,12 @@ class ModulesApi
       includeFile ("{$module->path}/bootstrap.php");
   }
 
-  function buildManifest ()
-  {
-    return (object)[
-      'modules' => $this->get ()->modules (),
-    ];
-  }
-
   function getManifest ()
   {
-    $json = new JsonFile ("{$this->app->modulesPath}/manifest.json");
+    $json = new JsonFile ($this->getManifestPath ());
     return $json->exists ()
       ? $json->load ()->data
-      : $json->assign ($this->buildManifest ())->save ()->data;
+      : $json->assign ($this->getNewManifest ())->save ()->data;
   }
 
   /**
@@ -199,8 +192,8 @@ class ModulesApi
   function selectModule (& $moduleName, ConsoleIOInterface $io)
   {
     if ($moduleName) {
-      if (!strpos ($moduleName, '/'))
-        $io->error ("Invalid module name $moduleName. Correct syntax: vendor-name/package-name");
+      if (!$this->validateModuleName ($moduleName))
+        $io->error ("Invalid module name $moduleName. Correct syntax: vendor-name/product-name");
       if (!$this->isInstalled ($moduleName))
         $io->error ("Module $moduleName is not installed");
     }
@@ -209,5 +202,37 @@ class ModulesApi
       $i          = $io->menu ("Select a module:", $modules);
       $moduleName = $modules[$i];
     }
+  }
+
+  /**
+   * Updates the manifest cache file so that it correctly states the currently installed modules.
+   * @return object The updated manifest.
+   */
+  function updateManifest ()
+  {
+    unlink ($this->getManifestPath ());
+    return $this->getManifest ();
+  }
+
+  /**
+   * Checks if the given name is a valid module name.
+   * @param string $name A module name in `vendor-name/package-name` format.
+   * @return bool `true` if the name is valid.
+   */
+  function validateModuleName ($name)
+  {
+    return (bool)preg_match ('#^[a-z0-9\-]+/[a-z0-9\-]+$#', $name);
+  }
+
+  protected function getManifestPath ()
+  {
+    return "{$this->app->modulesPath}/manifest.json";
+  }
+
+  protected function getNewManifest ()
+  {
+    return (object)[
+      'modules' => $this->get ()->modules (),
+    ];
   }
 }
