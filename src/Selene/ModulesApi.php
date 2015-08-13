@@ -78,8 +78,8 @@ class ModulesApi
     if (count ($o) != 2)
       throw new \RuntimeException ("Invalid module name");
     list ($vendor, $module) = $o;
-    $namespace1 = ucfirst (dehyphenate ($vendor));
-    $namespace2 = ucfirst (dehyphenate ($module));
+    $namespace1 = ucfirst (dehyphenate ($vendor, true));
+    $namespace2 = ucfirst (dehyphenate ($module, true));
 
     return "$namespace1\\$namespace2";
   }
