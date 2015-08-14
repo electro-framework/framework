@@ -9,7 +9,7 @@ return [
     'title'                  => '@',
     'appName'                => '',
     'homeURI'                => '',
-    'favicon'                => 'data:;base64,iVBORw0KGgo=', // Supress http request
+    'favicon'                => 'data:;base64,iVBORw0KGgo=', // Suppress http request
     'subApplications'        => [],
     'modules'                => [],
 

@@ -13,6 +13,7 @@ use Selene\Exceptions\DataModelException;
 use Selene\Exceptions\FatalException;
 use Selene\Exceptions\FileException;
 use Selene\Exceptions\FileNotFoundException;
+use Selene\Exceptions\HttpException;
 use Selene\Exceptions\SessionException;
 use Selene\Exceptions\Status;
 use Selene\Exceptions\ValidationException;
@@ -279,11 +280,7 @@ class Controller
       $URI = str_replace ('{lang}', $lang, $application->URINotFoundURL);
       header ('Location: ' . "$application->baseURI/$URI" . '?URL=' . $_SERVER['REQUEST_URI'], true, 303);
     }
-    else {
-      http_response_code (404);
-      echo "<h1>Not Found</h1><p>The requested URL <code><big>$application->baseURI/<b>$virtualURI</b></big></code> was not found on this server.</p>";
-    }
-    exit;
+    else throw new HttpException (404, "<h1>Not Found</h1><p>The requested URL <code><big>$application->baseURI/<b>$virtualURI</b></big></code> was not found on this server.</p>");
   }
 
   static function ref ()
@@ -458,6 +455,12 @@ class Controller
       }
       $this->finalize ();
     } catch (Exception $e) {
+      if ($e instanceof HttpException) {
+        @ob_get_clean();
+        http_response_code ($e->getCode());
+        echo $e->getMessage();
+        exit;
+      }
       if ($e instanceof BaseException) {
         if (isset($this->redirectURI) && $e->getStatus () != Status::FATAL) {
           $this->setStatusFromException ($e);

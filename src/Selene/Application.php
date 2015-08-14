@@ -7,6 +7,7 @@ use Impactwave\WebConsole\ErrorHandler;
 use Impactwave\WebConsole\Panels\HttpRequestPanel;
 use Impactwave\WebConsole\WebConsole;
 use Selene\Exceptions\ConfigException;
+use Selene\Exceptions\HttpException;
 use Selene\Matisse\PipeHandler;
 use Selene\Routing\RoutingMap;
 
@@ -106,13 +107,6 @@ class Application
    */
   public $defaultLang = null;
   /**
-   * <p>The fallback folder name where the framework will search for modules.
-   * <p>Plugin modules installed as Composer packages will be found there.
-   * <p>Set by application.ini.php.
-   * @var String
-   */
-  public $pluginModulesPath;
-  /**
    * The file path of current application's directory.
    * @var string
    */
@@ -129,24 +123,24 @@ class Application
    * @var string
    */
   public $frameworkPath;
-
-  /* Template related */
   /**
    * @var Boolean True to generate the standard framework scripts.
    */
   public $frameworkScripts;
+
+  /* Template related */
   /**
    * The mapped public URI of the framework's public directory.
    * @var string
    */
   public $frameworkURI;
-
-  /* Archive related */
   /**
    * Set to false to disable application-specific sessions and use a global scope.
    * @var Boolean
    */
   public $globalSessions = false;
+
+  /* Archive related */
   /**
    * The homepage's breadcrumb icon class(es).
    * @var string
@@ -157,8 +151,6 @@ class Application
    * @var string
    */
   public $homeTitle;
-
-  /* Cache related */
   /**
    * The application's entry point URI.
    *
@@ -169,21 +161,22 @@ class Application
    * @var String
    */
   public $homeURI;
-  public $imageArchivePath;
 
-  /* Page processing control settings */
+  /* Cache related */
+  public $imageArchivePath;
   /**
    * Set to true to redirect the browser to the generated thumbnail instead of streaming it.
    * @var Boolean
    */
   public $imageRedirection;
+
+  /* Page processing control settings */
   public $imagesCachePath;
   /**
    * The colon delimited list of directory paths.
    * @var string
    */
   public $includePath;
-  public $requireLogin;
   /**
    * The path of the application's language files' folder.
    * @var string
@@ -227,8 +220,6 @@ class Application
    * @var string
    */
   public $modulePublicPath;
-
-  /* Session related */
   /**
    * The relative path of the templates folder inside a module.
    * @var string
@@ -239,6 +230,8 @@ class Application
    * @var string
    */
   public $moduleViewsPath;
+
+  /* Session related */
   /**
    * A list of modules that are always bootstrapped when the framework boots.
    * <p>A `bootstrap.php` file will be executed on each registered module.
@@ -294,9 +287,17 @@ class Application
    */
   public $pipeHandler;
   /**
+   * <p>The fallback folder name where the framework will search for modules.
+   * <p>Plugin modules installed as Composer packages will be found there.
+   * <p>Set by application.ini.php.
+   * @var String
+   */
+  public $pluginModulesPath;
+  /**
    * @var string[] A list of "preset" class names.
    */
   public $presets = [];
+  public $requireLogin;
   public $rootPath;
   /**
    * @var array
@@ -442,7 +443,14 @@ class Application
                 ->log ($session);
     }
     $this->loadRoutes ();
-    $router = Router::route ();
+    try {
+      $router = Router::route ();
+    } catch (HttpException $e) {
+      @ob_get_clean ();
+      http_response_code ($e->getCode ());
+      echo $e->getMessage();
+      exit;
+    }
     $router->controller->execute ();
     if ($this->debugMode) {
       $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
@@ -481,14 +489,14 @@ class Application
     if (($p = strpos ($vuri, '?')) !== false)
       $vuri = substr ($vuri, 0, $p);
 
-    $this->requireLogin = false;
-    $this->directory         = $rootDir;
-    $this->baseDirectory     = $rootDir;
-    $this->rootPath          = $rootDir;
-    $this->URI               = $baseURI;
-    $this->baseURI           = $baseURI;
-    $this->frameworkPath     = realpath ("$rootDir{$_}" . self::FRAMEWORK_PATH);
-    $this->VURI              = $vuri;
+    $this->requireLogin  = false;
+    $this->directory     = $rootDir;
+    $this->baseDirectory = $rootDir;
+    $this->rootPath      = $rootDir;
+    $this->URI           = $baseURI;
+    $this->baseURI       = $baseURI;
+    $this->frameworkPath = realpath ("$rootDir{$_}" . self::FRAMEWORK_PATH);
+    $this->VURI          = $vuri;
 
     $this->setIncludePath ();
 
@@ -512,7 +520,7 @@ class Application
     $this->templateDirectories[] = $this->toFilePath ($this->templatesPath);
     $this->viewsDirectories[]    = $this->toFilePath ($this->viewPath);
     $this->languageFolders[]     = $this->langPath;
-    ModulesApi::get()->bootModules ();
+    ModulesApi::get ()->bootModules ();
 
     if (empty($this->name))
       $this->name = $this->URI ? $this->URI : $_SERVER['SERVER_NAME'];
