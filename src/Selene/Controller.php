@@ -31,11 +31,6 @@ ob_start ();
 class Controller
 {
   const FIND_TRANS_KEY  = '#\$([A-Z][A-Z0-9_]*)#';
-  const MSG_DELETED     = 'O registo foi apagado.';
-  const MSG_FAILED      = "Não foi possível efectuar a operação.";
-  const MSG_OK          = "A operação foi efectuada.";
-  const MSG_SUCCESS     = "A informação foi guardada.";
-  const MSG_UNSUPPORTED = "A operação não foi implementada.";
   /**
    * The i18n cached translation table.
    * @var array An array of arrays indexed by language code.
@@ -316,7 +311,7 @@ class Controller
   }
 
   /**
-   * Respondes to the standard 'delete' controller action.
+   * Responds to the standard 'delete' controller action.
    * The default procedure is to delete the object on the database.
    * Override to implement non-standard behaviour.
    * @param DataObject $data
@@ -335,7 +330,6 @@ class Controller
       $data->read ();
     }
     $data->delete ();
-    $this->setStatus (Status::INFO, self::MSG_DELETED);
     if (!$this->autoRedirect ())
       throw new FatalException("No index page defined.");
   }
@@ -1021,7 +1015,6 @@ class Controller
   protected function insertData (DataObject $data, $param = null)
   {
     $data->insert ();
-    $this->setStatus (Status::INFO, self::MSG_SUCCESS);
     if ($this->isWebService)
       echo "<pk>{$data->getPrimaryKeyValue()}</pk>";
     if (!$this->autoRedirect ())
@@ -1531,7 +1524,6 @@ class Controller
   protected function updateData (DataObject $data, $param = null)
   {
     $data->update ();
-    $this->setStatus (Status::INFO, self::MSG_SUCCESS);
     $this->autoRedirect ();
   }
 
