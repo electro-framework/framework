@@ -1,8 +1,10 @@
 <?php
 namespace Selene;
+use Exception;
 use Flow\FilesystemFlow;
 use Selene\Contracts\ConsoleIOInterface;
 use Selene\Exceptions\ConfigException;
+use Selene\Lib\ComposerConfigHandler;
 use Selene\Lib\JsonFile;
 use Selene\Traits\Singleton;
 use SplFileInfo;
@@ -27,17 +29,23 @@ class ModulesApi
   function bootModules ()
   {
     global $application; // Used by the loaded bootstrap.php
-    $manifest = $this->getManifest ();
+    $manifest = $this->manifest ();
     foreach ($manifest->modules as $module)
       includeFile ("{$module->path}/bootstrap.php");
   }
 
-  function getManifest ()
+  /**
+   * Returns the module's parsed composer.json, if it is present.
+   * @param string $moduleName vendor-name/product-name
+   * @return null|ComposerConfigHandler `null` if no composer.json is available.
+   */
+  function composerConfigOf ($moduleName)
   {
-    $json = new JsonFile ($this->getManifestPath ());
-    return $json->exists ()
-      ? $json->load ()->data
-      : $json->assign ($this->getNewManifest ())->save ()->data;
+    $path           = $this->pathOf ($moduleName);
+    $composerConfig = new ComposerConfigHandler("$path/composer.json", true);
+    if (!$composerConfig->data)
+      return null;
+    return $composerConfig;
   }
 
   /**
@@ -58,6 +66,20 @@ class ModulesApi
   function isPlugin ($moduleName)
   {
     return file_exists ("{$this->app->pluginModulesPath}/$moduleName");
+  }
+
+  /**
+   * Returns the modules registration configuration for this project.
+   * If it is already cached, the cached version is returned, otherwise the information will be regenerated
+   * and a new cache file created.
+   * @return mixed
+   */
+  function manifest ()
+  {
+    $json = new JsonFile ($this->getManifestPath ());
+    return $json->exists ()
+      ? $json->load ()->data
+      : $json->assign ($this->getNewManifest ())->save ()->data;
   }
 
   /**
@@ -110,6 +132,25 @@ class ModulesApi
       $module->type        = $this->isPlugin ($module->name) ? 'Plugin' : 'Project module';
       return $module;
     })->all ();
+  }
+
+  /**
+   * Retrieve the module's PHP namespace from its composer.json (if present).
+   * @param string $moduleName vendor-name/product-name
+   * @param string $srcPath    Outputs the source code path associated with the found namespace.
+   * @return null|string `null` if no composer.json is available.
+   * @throws Exception If the module's composer.json is not a valid module config.
+   */
+  function namespaceOf ($moduleName, & $srcPath = null)
+  {
+    $composerConfig = $this->composerConfigOf ($moduleName);
+    $decls          = $composerConfig->get ("autoload.psr-4");
+    $namespaces     = $decls ? array_keys ($decls) : [];
+    if (count ($namespaces) != 1)
+      throw new Exception ("Invalid module configuration for '$moduleName': expected a single PSR-4 namespace declaration on the module's composer.json");
+    $namespace = $namespaces [0];
+    $srcPath   = $decls[$namespace];
+    return $namespace;
   }
 
   /**
@@ -211,7 +252,7 @@ class ModulesApi
   function updateManifest ()
   {
     unlink ($this->getManifestPath ());
-    return $this->getManifest ();
+    return $this->manifest ();
   }
 
   /**
@@ -235,4 +276,5 @@ class ModulesApi
       'modules' => $this->get ()->modules (),
     ];
   }
+
 }
