@@ -1349,16 +1349,18 @@ class Controller
    */
   protected function setupModel ()
   {
-    $model = $this->model ();
-    if (isset($model)) {
-      if ($model instanceof DataObject) {
-        $this->dataItem = $model;
+    global $model, $lastModel;
+    $mod = $this->model ();
+    $model = $lastModel;
+    if (isset($mod)) {
+      if ($mod instanceof DataObject) {
+        $this->dataItem = $mod;
         $this->applyPresets ();
         if (isset($this->activeRoute) && $this->activeRoute->autoloadModel)
-          $this->standardDataInit ($model);
+          $this->standardDataInit ($mod);
         return;
       }
-      $this->modelData = $model;
+      $this->modelData = $mod;
       return;
     }
 

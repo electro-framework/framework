@@ -214,6 +214,14 @@ class DataObject
     return $this->query ();
   }
 
+  function hidrate (PDOStatement $st) {
+    global $lastModel;
+    $lastModel = $this;
+    return $st->fetchAll ();
+    //TODO: hidrate data
+    //$this->_data = $st->fetchAll (PDO::FETCH_CLASS, get_class ($this));
+  }
+
   /**
    * Returns records matching a filter.
    * @param        $condition
@@ -560,7 +568,7 @@ class DataObject
       $sortBy = " ORDER BY $sortBy";
     $fields = $this->getQueryFieldNames ();
     list ($where, $values) = $this->getFilterSQLAndValues ();
-    return database_query ("SELECT $fields FROM {$this->tableName} $this->prefix$where$sortBy", $values);
+    return $this->hidrate (database_query ("SELECT $fields FROM {$this->tableName} $this->prefix$where$sortBy", $values));
   }
 
   /**
@@ -585,7 +593,7 @@ class DataObject
       $sortBy = $this->primarySortField;
     if (!empty($sortBy))
       $sortBy = " ORDER BY $sortBy";
-    return database_query ("SELECT $fields FROM {$this->tableName} $this->prefix$where$sortBy $limit", $values);
+    return $this->hidrate (database_query ("SELECT $fields FROM {$this->tableName} $this->prefix$where$sortBy $limit", $values));
   }
 
   function getPrimaryKeyValue ()
