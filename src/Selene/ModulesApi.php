@@ -150,7 +150,7 @@ class ModulesApi
       throw new Exception ("Invalid module configuration for '$moduleName': expected a single PSR-4 namespace declaration on the module's composer.json");
     $namespace = $namespaces [0];
     $srcPath   = $decls[$namespace];
-    return $namespace;
+    return rtrim ($namespace, '\\');
   }
 
   /**
