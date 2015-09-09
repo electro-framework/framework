@@ -1,5 +1,5 @@
 <?php
-use Selene\Media;
+use Selenia\Media;
 
 /**
  * Either generates a dinamically resized image and optionally stores it in a disk cache,

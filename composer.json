@@ -1,6 +1,6 @@
 {
-  "name": "selene-framework/selene-kernel",
-  "description": "Selene Framework Kernel",
+  "name": "selenia/kernel",
+  "description": "The Selenia framework's core code",
   "license": "MIT",
   "authors": [
     {
@@ -27,7 +27,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selene\\": "src/Selene"
+      "Selenia\\": "src/Selenia"
     },
     "files": [
       "src/global.php",

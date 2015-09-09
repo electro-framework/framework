@@ -1,13 +1,13 @@
 <?php
 use Impactwave\WebConsole\ConsolePanel;
 use Impactwave\WebConsole\WebConsole;
-use Selene\ForeignKey;
-use Selene\ModuleOptions;
-use Selene\Routing\DataSourceInfo;
-use Selene\Routing\PageRoute;
-use Selene\Routing\Route;
-use Selene\Routing\RouteGroup;
-use Selene\Routing\SubPageRoute;
+use Selenia\ForeignKey;
+use Selenia\ModuleOptions;
+use Selenia\Routing\DataSourceInfo;
+use Selenia\Routing\PageRoute;
+use Selenia\Routing\Route;
+use Selenia\Routing\RouteGroup;
+use Selenia\Routing\SubPageRoute;
 
 function ModuleOptions ($path, array $options = null, callable $initializer = null)
 {

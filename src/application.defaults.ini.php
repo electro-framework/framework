@@ -46,7 +46,7 @@ return [
     'configFilename'         => 'application.ini.php',
     'routingMapFile'         => '',
 
-    'autoControllerClass'    => 'Selene\Controller',
+    'autoControllerClass'    => 'Selenia\Controller',
 
     'loginView'              => '',
     'translation'            => false,

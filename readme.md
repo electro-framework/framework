@@ -1,9 +1,7 @@
-# Selene Framework (Kernel)
+# Selenia Framework (Kernel)
 
-> Note: This repository contains the core code of the Selene framework.  
-> If you want to build an application using Selene, use the starter project:
-> 
-> * [Starter Project](https://github.com/selene-framework/starter-project)
+> Note: This repository contains the core code of the Selenia framework.  
+> If you want to build an application using Selenia, use the [Selenia Project](https://github.com/selenia-framework/selenia)
 
 ## Installation
 
@@ -13,6 +11,6 @@
 
 ## License
 
-The Selene Framework is open-source software licensed under the [MIT license](http://opensource.org/licenses/MIT).
+The Selenia framework is open-source software licensed under the [MIT license](http://opensource.org/licenses/MIT).
 
-**Selene Framework** - Copyright &copy; Impactwave, Lda.
+**Selenia framework** - Copyright &copy; Impactwave, Lda.

@@ -1,7 +1,7 @@
 <?php
-use Selene\Exceptions\FatalException;
-use Selene\Exceptions\FileException;
-use Selene\Media;
+use Selenia\Exceptions\FatalException;
+use Selenia\Exceptions\FileException;
+use Selenia\Media;
 
 $URI      = get ($_GET, 'URI');
 $filename = get ($_GET, 'name');

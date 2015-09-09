@@ -10,7 +10,7 @@ window.onload = function(){
   callListeners('onLoad',null,true);
 }
 
-function seleneReady() {
+function seleniaReady() {
   callListeners('onReady',null,true);
   if ($id('alertBox'))
     setTimeout(function () {
