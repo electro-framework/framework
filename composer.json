@@ -1,5 +1,5 @@
 {
-  "name": "selenia/matisse",
+  "name": "selenia-components/matisse",
   "description": "A component-based template engine for PHP web applications",
   "type": "selenia-plugin",
   "keywords": [
