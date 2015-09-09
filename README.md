@@ -148,4 +148,4 @@ If you are interested on knowing more about Matisse, check this Readme from time
 
 The Selenia framework is open-source software licensed under the [MIT license](http://opensource.org/licenses/MIT).
 
-**Selenia framework** - Copyright &copy; Impactwave, Lda.
+**Selenia framework** - Copyright &copy; 2015 Impactwave, Lda.
