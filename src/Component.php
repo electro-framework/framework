@@ -1,15 +1,15 @@
 <?php
-namespace Selene\Matisse;
-use Selene\Matisse\Attributes\ComponentAttributes;
-use Selene\Matisse\Base\GenericComponent;
-use Selene\Matisse\Components\Page;
-use Selene\Matisse\Components\TemplateInstance;
-use Selene\Matisse\Exceptions\ComponentException;
-use Selene\Matisse\Exceptions\FileIOException;
-use Selene\Matisse\Exceptions\ParseException;
-use Selene\Matisse\Traits\DataBindingTrait;
-use Selene\Matisse\Traits\DOMNodeTrait;
-use Selene\Matisse\Traits\MarkupBuilderTrait;
+namespace Selenia\Matisse;
+use Selenia\Matisse\Attributes\ComponentAttributes;
+use Selenia\Matisse\Base\GenericComponent;
+use Selenia\Matisse\Components\Page;
+use Selenia\Matisse\Components\TemplateInstance;
+use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Exceptions\FileIOException;
+use Selenia\Matisse\Exceptions\ParseException;
+use Selenia\Matisse\Traits\DataBindingTrait;
+use Selenia\Matisse\Traits\DOMNodeTrait;
+use Selenia\Matisse\Traits\MarkupBuilderTrait;
 
 /**
  * The base class from which all components derive.

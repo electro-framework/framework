@@ -1,10 +1,10 @@
 {
-  "name": "selene-framework/matisse",
+  "name": "selenia/matisse",
   "description": "A component-based template engine for PHP web applications",
-  "type": "selene-plugin",
+  "type": "selenia-plugin",
   "keywords": [
     "plugin",
-    "selene framework"
+    "selenia framework"
   ],
   "license": "MIT",
   "authors": [
@@ -19,13 +19,13 @@
     }
   ],
   "require": {
-    "selene-framework/installers": "^1.0.0",
-    "impactwave/php-kit": "dev-master",
+    "selenia/installers": "^1.0.0",
+    "php-kit/tools": "dev-master",
     "php": ">=5.4.0"
   },
   "autoload": {
     "psr-4": {
-      "Selene\\Matisse\\": "src/"
+      "Selenia\\Matisse\\": "src/"
     },
     "files": ["src/globals.php", "src/htmlBuilder.php"]
   }

@@ -1,6 +1,6 @@
 <?php
-namespace Selene\Matisse\Exceptions;
-use Selene\Matisse\Component;
+namespace Selenia\Matisse\Exceptions;
+use Selenia\Matisse\Component;
 
 class DataBindingException extends MatisseException
 {

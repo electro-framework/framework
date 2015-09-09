@@ -1,7 +1,7 @@
 <?php
-namespace Selene\Matisse\Components;
-use Selene\Matisse\Component;
-use Selene\Matisse\Context;
+namespace Selenia\Matisse\Components;
+use Selenia\Matisse\Component;
+use Selenia\Matisse\Context;
 
 class Page extends Component
 {

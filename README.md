@@ -140,12 +140,12 @@ This was just a very short introduction to the Matisse template engine. Matisse 
 
 Matisse is already quite functional and it's being used right now on several projects at our company.
 
-We are sorry for the current lack of documentation. We are working on it, but we are also continually improving, not only Matisse, but also the containing ecosystem comprised by the Selene framework and its modules.
+We are sorry for the current lack of documentation. We are working on it, but we are also continually improving, not only Matisse, but also the containing ecosystem comprised by the Selenia framework and its many modules.
 
 If you are interested on knowing more about Matisse, check this Readme from time to time to see if there are any news.
 
 ## License
 
-The Selene Framework is open-source software licensed under the [MIT license](http://opensource.org/licenses/MIT).
+The Selenia framework is open-source software licensed under the [MIT license](http://opensource.org/licenses/MIT).
 
-**Selene Framework** - Copyright &copy; Impactwave, Lda.
+**Selenia framework** - Copyright &copy; Impactwave, Lda.

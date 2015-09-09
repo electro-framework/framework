@@ -1,9 +1,9 @@
 <?php
-namespace Selene\Matisse\Base;
-use Selene\Matisse\AttributeType;
-use Selene\Matisse\Context;
-use Selene\Matisse\Attributes\GenericAttributes;
-use Selene\Matisse\VisualComponent;
+namespace Selenia\Matisse\Base;
+use Selenia\Matisse\AttributeType;
+use Selenia\Matisse\Context;
+use Selenia\Matisse\Attributes\GenericAttributes;
+use Selenia\Matisse\VisualComponent;
 
 class GenericComponentAttributes extends GenericAttributes
 {

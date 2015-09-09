@@ -1,5 +1,5 @@
 <?php
-namespace Selene\Matisse\Attributes;
+namespace Selenia\Matisse\Attributes;
 
 class GenericAttributes extends VisualComponentAttributes
 {

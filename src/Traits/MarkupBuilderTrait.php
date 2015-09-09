@@ -1,9 +1,9 @@
 <?php
-namespace Selene\Matisse\Traits;
+namespace Selenia\Matisse\Traits;
 
-use Selene\Matisse\Components\Literal;
-use Selene\Matisse\Exceptions\ComponentException;
-use Selene\Matisse\Tag;
+use Selenia\Matisse\Components\Literal;
+use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Tag;
 
 /**
  * Provides an API for generating structured HTML code.

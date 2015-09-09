@@ -1,5 +1,5 @@
 <?php
-namespace Selene\Matisse;
+namespace Selenia\Matisse;
 
 class AttributeType
 {

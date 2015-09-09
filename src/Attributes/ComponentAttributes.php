@@ -1,12 +1,12 @@
 <?php
-namespace Selene\Matisse\Attributes;
+namespace Selenia\Matisse\Attributes;
 
-use Selene\Matisse\AttributeType;
-use Selene\Matisse\Base\Text;
-use Selene\Matisse\Component;
-use Selene\Matisse\Components\Parameter;
-use Selene\Matisse\DataSet;
-use Selene\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\AttributeType;
+use Selenia\Matisse\Base\Text;
+use Selenia\Matisse\Component;
+use Selenia\Matisse\Components\Parameter;
+use Selenia\Matisse\DataSet;
+use Selenia\Matisse\Exceptions\ComponentException;
 
 class ComponentAttributes
 {

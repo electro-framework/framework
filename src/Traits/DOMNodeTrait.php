@@ -1,10 +1,10 @@
 <?php
-namespace Selene\Matisse\Traits;
+namespace Selenia\Matisse\Traits;
 
-use Selene\Matisse\Component;
-use Selene\Matisse\ComponentInspector;
-use Selene\Matisse\Components\Parameter;
-use Selene\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Component;
+use Selenia\Matisse\ComponentInspector;
+use Selenia\Matisse\Components\Parameter;
+use Selenia\Matisse\Exceptions\ComponentException;
 
 /**
  * Provides an API for manipulating DOM nodes on a tree of components.

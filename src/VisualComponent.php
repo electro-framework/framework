@@ -1,7 +1,7 @@
 <?php
-namespace Selene\Matisse;
+namespace Selenia\Matisse;
 
-use Selene\Matisse\Attributes\VisualComponentAttributes;
+use Selenia\Matisse\Attributes\VisualComponentAttributes;
 
 class VisualComponent extends Component implements IAttributes
 {

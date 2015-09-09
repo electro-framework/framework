@@ -1,8 +1,8 @@
 <?php
-namespace Selene\Matisse;
+namespace Selenia\Matisse;
 
-use Selene\Matisse\Exceptions\HandlerNotFoundException;
-use Selene\Traits\InspectionTrait;
+use Selenia\Matisse\Exceptions\HandlerNotFoundException;
+use Selenia\Traits\InspectionTrait;
 
 /**
  * Resolves pipe invocations to pipe implementations,

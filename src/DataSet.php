@@ -1,5 +1,5 @@
 <?php
-namespace Selene\Matisse;
+namespace Selenia\Matisse;
 
 /**
  * Wraps any iteratable object or array so that it may function as a data source.

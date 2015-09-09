@@ -1,10 +1,10 @@
 <?php
-namespace Selene\Matisse\Base;
-use Selene\Matisse\AttributeType;
-use Selene\Matisse\Component;
-use Selene\Matisse\Attributes\ComponentAttributes;
-use Selene\Matisse\Context;
-use Selene\Matisse\IAttributes;
+namespace Selenia\Matisse\Base;
+use Selenia\Matisse\AttributeType;
+use Selenia\Matisse\Component;
+use Selenia\Matisse\Attributes\ComponentAttributes;
+use Selenia\Matisse\Context;
+use Selenia\Matisse\IAttributes;
 
 class TextAttributes extends ComponentAttributes
 {

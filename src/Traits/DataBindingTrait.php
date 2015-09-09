@@ -1,10 +1,10 @@
 <?php
-namespace Selene\Matisse\Traits;
+namespace Selenia\Matisse\Traits;
 
-use Selene\Matisse\DataSource;
-use Selene\Matisse\Exceptions\ComponentException;
-use Selene\Matisse\Exceptions\DataBindingException;
-use Selene\Matisse\Exceptions\HandlerNotFoundException;
+use Selenia\Matisse\DataSource;
+use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Exceptions\DataBindingException;
+use Selenia\Matisse\Exceptions\HandlerNotFoundException;
 
 /**
  * Provides an API for handling data binding on a component's properties.

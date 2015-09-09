@@ -1,6 +1,6 @@
 <?php
-namespace Selene\Matisse;
-use Selene\Matisse\Components\Page;
+namespace Selenia\Matisse;
+use Selenia\Matisse\Components\Page;
 
 class MatisseEngine
 {
@@ -12,12 +12,12 @@ class MatisseEngine
    * @var array string => string
    */
   private static $coreTags = [
-    'Repeat'   => 'Selene\Matisse\Components\Repeat',
-    'Template' => 'Selene\Matisse\Components\Template',
-    'If'       => 'Selene\Matisse\Components\If_',
-    'Literal'  => 'Selene\Matisse\Components\Literal',
-    'Apply'    => 'Selene\Matisse\Components\Apply',
-    'Head'     => 'Selene\Matisse\Components\Head',
+    'Repeat'   => 'Selenia\Matisse\Components\Repeat',
+    'Template' => 'Selenia\Matisse\Components\Template',
+    'If'       => 'Selenia\Matisse\Components\If_',
+    'Literal'  => 'Selenia\Matisse\Components\Literal',
+    'Apply'    => 'Selenia\Matisse\Components\Apply',
+    'Head'     => 'Selenia\Matisse\Components\Head',
   ];
 
   /**
