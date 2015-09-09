@@ -1,7 +1,7 @@
 <?php
 namespace Selenia;
 use Exception;
-use Flow\FilesystemFlow;
+use PhpKit\Flow\FilesystemFlow;
 use Selenia\Contracts\ConsoleIOInterface;
 use Selenia\Exceptions\ConfigException;
 use Selenia\Lib\ComposerConfigHandler;
