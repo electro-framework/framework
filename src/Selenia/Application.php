@@ -537,6 +537,7 @@ class Application
       $head = substr ($URI, 0, $p);
       if ($head == 'modules') {
         $p    = strpos ($URI, '/', $p + 1);
+        $p    = strpos ($URI, '/', $p + 1);
         $head = substr ($URI, 0, $p);
       }
       $tail = substr ($URI, $p + 1);
