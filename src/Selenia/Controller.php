@@ -1453,7 +1453,7 @@ class Controller
             $st = $this->dataItem->{$this->modelMethod}();
           else $st =
             $this->dataItem->queryBy ($this->activeRoute->filter, $this->activeRoute->fieldNames, $this->activeRoute->sortBy);
-          $data = $st->fetchAll (PDO::FETCH_ASSOC);
+          $data = $st instanceof PDOStatement ? $st->fetchAll (PDO::FETCH_ASSOC) : $st;
           $this->paginate ($data);
           $this->interceptViewDataSet ('default', $data);
           $this->setDataSource ('', new DataSet($data), true);
