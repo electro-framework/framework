@@ -18,7 +18,6 @@ define ('CONSOLE_ALIGN_RIGHT', STR_PAD_LEFT);
 class Application
 {
   const DEFAULT_INI_FILENAME = 'application.defaults.ini.php';
-  const FRAMEWORK_PATH       = 'private/packages/selenia/kernel';
 
   public static $TAGS = [];
   /**
@@ -495,7 +494,7 @@ class Application
     $this->rootPath      = $rootDir;
     $this->URI           = $baseURI;
     $this->baseURI       = $baseURI;
-    $this->frameworkPath = realpath ("$rootDir{$_}" . self::FRAMEWORK_PATH);
+    $this->frameworkPath = updir (__DIR__, 2);
     $this->VURI          = $vuri;
 
     $this->setIncludePath ();
