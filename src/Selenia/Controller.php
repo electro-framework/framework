@@ -739,7 +739,7 @@ class Controller
         $authenticate = !$session->validate ();
         if ($authenticate && $action)
           $this->prevPost = urlencode (serialize ($_POST));
-        else if ($this->isWebService) {
+        if ($this->isWebService) {
           $username = get ($_SERVER, 'PHP_AUTH_USER');
           $password = get ($_SERVER, 'PHP_AUTH_PW');
           if ($username) {
@@ -938,7 +938,7 @@ class Controller
 
   protected function getActionAndParam (&$action, &$param)
   {
-    $action = get ($_POST, '_action', '');
+    $action = get ($_REQUEST, '_action', '');
     if (preg_match ('#(\w*):(.*)#', $action, $match)) {
       $action = $match[1];
       $param  = $match[2];
