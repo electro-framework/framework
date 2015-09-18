@@ -23,7 +23,7 @@ class Session
   static function user ()
   {
     global $session;
-    return $session->user;
+    return isset($session) ? $session->user : null;
   }
 
   /**
