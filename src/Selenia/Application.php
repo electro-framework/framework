@@ -2,10 +2,10 @@
 namespace Selenia;
 
 use Exception;
-use Impactwave\WebConsole\ConsolePanel;
-use Impactwave\WebConsole\ErrorHandler;
-use Impactwave\WebConsole\Panels\HttpRequestPanel;
-use Impactwave\WebConsole\WebConsole;
+use PhpKit\WebConsole\ConsolePanel;
+use PhpKit\WebConsole\ErrorHandler;
+use PhpKit\WebConsole\Panels\HttpRequestPanel;
+use PhpKit\WebConsole\WebConsole;
 use Selenia\Exceptions\ConfigException;
 use Selenia\Exceptions\HttpException;
 use Selenia\Matisse\PipeHandler;

@@ -1,7 +1,7 @@
 <?php
 namespace Selenia;
 
-use Impactwave\WebConsole\ErrorHandler;
+use PhpKit\WebConsole\ErrorHandler;
 use PhpCode;
 use Selenia\Exceptions\ConfigException;
 

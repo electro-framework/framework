@@ -1,6 +1,6 @@
 <?php
 namespace Selenia;
-use Impactwave\WebConsole\ErrorHandler;
+use PhpKit\WebConsole\ErrorHandler;
 use Selenia\Exceptions\ConfigException;
 use Selenia\Routing\PageRoute;
 

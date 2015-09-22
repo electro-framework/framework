@@ -1,6 +1,6 @@
 <?php
-use Impactwave\WebConsole\ConsolePanel;
-use Impactwave\WebConsole\WebConsole;
+use PhpKit\WebConsole\ConsolePanel;
+use PhpKit\WebConsole\WebConsole;
 use Selenia\ForeignKey;
 use Selenia\ModuleOptions;
 use Selenia\Routing\DataSourceInfo;

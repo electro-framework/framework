@@ -2,7 +2,7 @@
 namespace Selenia;
 
 use Exception;
-use Impactwave\WebConsole\ErrorHandler;
+use PhpKit\WebConsole\ErrorHandler;
 use PDO;
 use PDOStatement;
 use ReflectionException;

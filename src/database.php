@@ -1,5 +1,5 @@
 <?php
-use Impactwave\WebConsole\WebConsole;
+use PhpKit\WebConsole\WebConsole;
 
 $transactionDepth = 0;
 //--------------------------------------------------------------------------
