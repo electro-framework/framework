@@ -408,6 +408,7 @@ class Application
       WebConsole::DOM ()->write ($insp);
 //      $filter = function ($k, $v) { return $k !== 'parent' && $k !== 'page'; };
 //      WebConsole::DOM ()->withFilter($filter, $controller->page);
+      WebConsole::vm ()->log ($controller->context->dataSources);
     }
   }
 
@@ -520,7 +521,7 @@ class Application
 
 //    $this->templateDirectories[] = $this->toFilePath ($this->templatesPath);
 //    $this->viewsDirectories[]    = $this->toFilePath ($this->viewPath);
-    $this->languageFolders[]     = $this->langPath;
+    $this->languageFolders[] = $this->langPath;
     if (isset($_ENV['APP_DEFAULT_LANG']))
       $this->defaultLang = $_ENV['APP_DEFAULT_LANG'];
   }
@@ -596,11 +597,12 @@ class Application
     WebConsole::registerPanel ('request', new HttpRequestPanel ('Request', 'fa fa-paper-plane'));
     WebConsole::registerPanel ('response', new ConsolePanel ('Response', 'fa fa-file'));
     WebConsole::registerPanel ('routes', new ConsolePanel ('Routes', 'fa fa-location-arrow'));
-    WebConsole::registerPanel ('session', new ConsolePanel ('Session', 'fa fa-user'));
-    WebConsole::registerPanel ('database', new ConsolePanel ('Database', 'fa fa-database'));
-    WebConsole::registerPanel ('DOM', new ConsolePanel ('DOM', 'fa fa-sitemap'));
     WebConsole::registerPanel ('config', new ConsolePanel ('Config.', 'fa fa-cogs'));
-    WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
+    WebConsole::registerPanel ('session', new ConsolePanel ('Session', 'fa fa-user'));
+    WebConsole::registerPanel ('DOM', new ConsolePanel ('DOM', 'fa fa-sitemap'));
+    WebConsole::registerPanel ('vm', new ConsolePanel ('View Models', 'fa fa-table'));
+    WebConsole::registerPanel ('database', new ConsolePanel ('Database', 'fa fa-database'));
+//    WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
     ErrorHandler::$appName = 'Selenia framework';
   }
 
