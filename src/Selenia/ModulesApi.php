@@ -4,6 +4,7 @@ use Exception;
 use PhpKit\Flow\FilesystemFlow;
 use Selenia\Contracts\ConsoleIOInterface;
 use Selenia\Exceptions\ConfigException;
+use Selenia\Exceptions\FatalException;
 use Selenia\Lib\ComposerConfigHandler;
 use Selenia\Lib\JsonFile;
 use Selenia\Traits\Singleton;
@@ -31,7 +32,11 @@ class ModulesApi
     global $application; // Used by the loaded bootstrap.php
     $manifest = $this->manifest ();
     foreach ($manifest->modules as $module)
-      includeFile ("{$module->path}/bootstrap.php");
+      /** @var ModuleInfo $module */
+      if (!includeFile ("{$module->path}/bootstrap.php"))
+        if (!file_exists ($module->path))
+          throw new FatalException ("Module <b>$module->name</b> was not found at <path>$module->path</path>.
+<p>You should refresh the modules registry.");
   }
 
   /**
@@ -115,7 +120,7 @@ class ModulesApi
    *
    * Each module record defines:<dl>
    * <dt>name <dd>The module name (vendor/package).
-   * <dt>path <dd>The full path of the module's root directory.
+   * <dt>path <dd>The relative path of the module's root directory.
    * <dt>description <dd>A short one-liner describing the module.
    * <dt>type <dd>The type of module: Plugin | Project module.
    * </dl>
@@ -186,9 +191,10 @@ class ModulesApi
           ::from ($dirInfo)
           ->onlyDirectories ()
           ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
+            global $application;
             return (object)[
               'name' => $dirInfo->getFilename () . '/' . $subDirInfo->getFilename (),
-              'path' => $subDirInfo->getPathname (),
+              'path' => $application->toRelativePath ($subDirInfo->getPathname ()),
             ];
           });
       })
@@ -214,9 +220,10 @@ class ModulesApi
           ::from ($dirInfo)
           ->onlyDirectories ()
           ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
+            global $application;
             return (object)[
               'name' => $dirInfo->getFilename () . '/' . $subDirInfo->getFilename (),
-              'path' => $subDirInfo->getPathname (),
+              'path' => $application->toRelativePath ($subDirInfo->getPathname ()),
             ];
           });
       })

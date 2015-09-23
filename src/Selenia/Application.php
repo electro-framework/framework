@@ -547,10 +547,22 @@ class Application
     return "$this->baseDirectory/$URI";
   }
 
-  function toRelativePath ($URI)
+  /**
+   * Strips the base path from the given absolute path if it falls lies inside the applicatiohn.
+   * Otherwise, it returns the given path unmodified.
+   * @param string $path
+   * @return string
+   */
+  function toRelativePath ($path)
   {
-    global $application;
-    return substr ($URI, strlen ($application->baseURI) + 1);
+    if ($path) {
+      if ($path[0] == DIRECTORY_SEPARATOR) {
+        $l = strlen ($this->baseDirectory);
+        if (substr ($path, 0, $l) == $this->baseDirectory)
+          return substr ($path, $l + 1);
+      }
+    }
+    return $path;
   }
 
   function toThemeURI ($relativeURI, Theme &$theme)
