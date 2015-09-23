@@ -99,7 +99,7 @@ class If_ extends Component implements IAttributes
 
     if (isset($is)) {
       if (!isset($v)) {
-        $is = strToBool ($is);
+        $is = toBool ($is);
         $v  = true;
       }
       if ($v === $is xor $not)
@@ -116,7 +116,7 @@ class If_ extends Component implements IAttributes
     }
 
     if ($attr->isTrue) {
-      if (strToBool ($v) xor $not)
+      if (toBool ($v) xor $not)
         $this->renderChildren ();
       else $this->renderParameter ('else');
       return;
@@ -143,7 +143,7 @@ class If_ extends Component implements IAttributes
       return;
     }
 
-    if (strToBool ($v) xor $not)
+    if (toBool ($v) xor $not)
       $this->renderChildren ();
     else $this->renderParameter ('else');
   }
