@@ -38,52 +38,6 @@ class ModuleOptions extends Object
   }
 
   /**
-   * @param boolean $v Does the module contains a templates directory?
-   */
-  function set_templates ($v)
-  {
-    global $application;
-    if ($v)
-      $application->templateDirectories[] = "$this->path/$application->moduleTemplatesPath";
-  }
-
-  function set_views ($v)
-  {
-    global $application;
-    if ($v)
-      $application->viewsDirectories[] = "$this->path/$application->moduleViewsPath";
-  }
-
-  /**
-   * @param string $v Published URI for the module's public folder.
-   */
-  function set_public ($v)
-  {
-    global $application;
-    $application->mount ($v, "$this->path/$application->modulePublicPath");
-  }
-
-  /**
-   * @param array $v A map of URIs to folder paths. Paths are relative to the project's base folder.
-   */
-  function set_publish ($v)
-  {
-    global $application;
-    foreach ($v as $URI => $path)
-      $application->mount ($URI, "$application->baseDirectory/$path");
-  }
-
-  /**
-   * @param boolean $v Does the module contains a translations folder?
-   */
-  function set_lang ($v)
-  {
-    global $application;
-    if ($v)
-      $application->languageFolders[] = "$this->path/$application->moduleLangPath";
-  }
-
-  /**
    * A list of relative file paths of assets published by the module, relative to the module's public folder.
    * The framework's build process may automatically concatenate and minify those assets for a release-grade build.
    * @param string[] $v
@@ -95,6 +49,14 @@ class ModuleOptions extends Object
       $application->assets = array_merge ($application->assets, array_map (function ($path) {
         return "$this->path/$path";
       }, $v));
+  }
+
+  /**
+   * @param array $v Map of tag names to componenbt classes.
+   */
+  function set_components (array $v)
+  {
+    Application::$TAGS = array_merge (Application::$TAGS, $v);
   }
 
   /**
@@ -118,11 +80,13 @@ class ModuleOptions extends Object
   }
 
   /**
-   * @param array $v Map of tag names to componenbt classes.
+   * @param boolean $v Does the module contains a translations folder?
    */
-  function set_components (array $v)
+  function set_lang ($v)
   {
-    Application::$TAGS = array_merge (Application::$TAGS, $v);
+    global $application;
+    if ($v)
+      $application->languageFolders[] = "$this->path/$application->moduleLangPath";
   }
 
   /**
@@ -132,6 +96,25 @@ class ModuleOptions extends Object
   {
     global $application;
     $application->presets = array_merge ($v, $application->presets);
+  }
+
+  /**
+   * @param string $v Published URI for the module's public folder.
+   */
+  function set_public ($v)
+  {
+    global $application;
+    $application->mount ($v, "$this->path/$application->modulePublicPath");
+  }
+
+  /**
+   * @param array $v A map of URIs to folder paths. Paths are relative to the project's base folder.
+   */
+  function set_publish ($v)
+  {
+    global $application;
+    foreach ($v as $URI => $path)
+      $application->mount ($URI, "$application->baseDirectory/$path");
   }
 
   /**
@@ -150,6 +133,23 @@ class ModuleOptions extends Object
   {
     global $application;
     $application->taskClasses[] = $v;
+  }
+
+  /**
+   * @param boolean $v Does the module contains a templates directory?
+   */
+  function set_templates ($v)
+  {
+    global $application;
+    if ($v)
+      array_unshift ($application->templateDirectories, "$this->path/$application->moduleTemplatesPath");
+  }
+
+  function set_views ($v)
+  {
+    global $application;
+    if ($v)
+      array_unshift ($application->viewsDirectories, "$this->path/$application->moduleViewsPath");
   }
 
 }

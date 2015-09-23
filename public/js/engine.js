@@ -143,20 +143,6 @@ function preventDefault(ev) {
     ev.preventDefault();
 }
 
-function focusField(name, select) {
-  setTimeout(function(){
-    var e=document.forms[0].elements[name];
-    if(e){
-      if(e.length) e=e[1];
-      try {
-        e.focus();
-      }
-      catch(x){}
-      if (select) e.select();
-    }
-  },100);
-}
-
 function Form_onSubmit(ev)
 {
   // HTML5 native validation integration.

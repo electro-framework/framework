@@ -434,6 +434,8 @@ class Application
     $this->setupWebConsole ();
     $this->setup ($rootDir);
     $this->initSession ();
+    ModulesApi::get ()->bootModules ();
+    $this->mount ($this->frameworkURI, $this->frameworkPath . DIRECTORY_SEPARATOR . $this->modulePublicPath);
     $this->registerPipes ();
     if ($this->debugMode) {
       WebConsole::config ($this);
@@ -447,7 +449,7 @@ class Application
     } catch (HttpException $e) {
       @ob_get_clean ();
       http_response_code ($e->getCode ());
-      echo $e->getMessage();
+      echo $e->getMessage ();
       exit;
     }
     $router->controller->execute ();
@@ -516,17 +518,11 @@ class Application
       }
     }
 
-    $this->templateDirectories[] = $this->toFilePath ($this->templatesPath);
-    $this->viewsDirectories[]    = $this->toFilePath ($this->viewPath);
+//    $this->templateDirectories[] = $this->toFilePath ($this->templatesPath);
+//    $this->viewsDirectories[]    = $this->toFilePath ($this->viewPath);
     $this->languageFolders[]     = $this->langPath;
-    ModulesApi::get ()->bootModules ();
-
-    if (empty($this->name))
-      $this->name = $this->URI ? $this->URI : $_SERVER['SERVER_NAME'];
     if (isset($_ENV['APP_DEFAULT_LANG']))
       $this->defaultLang = $_ENV['APP_DEFAULT_LANG'];
-
-    $this->mount ($this->frameworkURI, "$this->frameworkPath{$_}$this->modulePublicPath");
   }
 
   function toFilePath ($URI, &$isMapped = false)

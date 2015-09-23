@@ -108,7 +108,7 @@ class DataSourceInfo extends Object
       $controller->max = ceil ($count / $this->pageSize);
     }
     else $data = $dataItem->queryBy ($this->filter, $this->fields, $this->sortBy, $this->params,
-      isset($this->limit) ? "LIMIT $this->limit" : '')->fetchAll ();
+      isset($this->limit) ? "LIMIT $this->limit" : '');
     $controller->interceptViewDataSet ($dataSourceName, $data);
     return new DataSet($data);
   }
