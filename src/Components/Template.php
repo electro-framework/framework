@@ -128,22 +128,22 @@ class Template extends Component implements IAttributes
           ];
       }
     }
-    $o = array_reverse ($o);
+    //$o = array_reverse ($o);
     foreach ($o as $i)
       switch ($i['type']) {
         case 'sh':
-          $instance->page->addStylesheet ($i['src'], true);
+          $instance->page->addStylesheet ($i['src'], false);
           break;
         case 'ish':
-          $instance->page->addInlineCss ($i['data'], $i['name'], true);
+          $instance->page->addInlineCss ($i['data'], $i['name'], false);
           break;
         case 'sc':
-          $instance->page->addScript ($i['src'], true);
+          $instance->page->addScript ($i['src'], false);
           break;
         case 'isc':
           if ($i['defer'])
-            $instance->page->addInlineDeferredScript ($i['data'], $i['name'], true);
-          else $instance->page->addInlineScript ($i['data'], $i['name'], true);
+            $instance->page->addInlineDeferredScript ($i['data'], $i['name'], false);
+          else $instance->page->addInlineScript ($i['data'], $i['name'], false);
           break;
       }
 

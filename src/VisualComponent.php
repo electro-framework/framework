@@ -66,17 +66,6 @@ class VisualComponent extends Component implements IAttributes
   protected function postRender ()
   {
     $this->endTag ();
-    $this->handleFocus ();
-  }
-
-  protected function handleFocus ()
-  {
-    if ($this->supportsAttributes && $this->attrs ()->get ('autofocus', false)) {
-      $this->beginTag ('script');
-      $this->addAttribute ('type', 'text/javascript');
-      $this->setContent ('focusField("' . $this->attrsObj->name . '",true)');
-      $this->endTag ();
-    }
   }
 
 }
