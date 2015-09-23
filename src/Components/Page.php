@@ -98,19 +98,19 @@ class Page extends Component
   public function error ($msg)
   {
     $this->statusMessage =
-      '<div class="alert alert-danger" role="alert">' . $msg . '</div>';
+      '<div id="status" class="alert alert-danger" role="alert">' . $msg . '</div>';
   }
 
   public function warning ($msg)
   {
     $this->statusMessage =
-      '<div class="alert alert-warning" role="alert">' . $msg . '</div>';
+      '<div id="status" class="alert alert-warning" role="alert">' . $msg . '</div>';
   }
 
   public function info ($msg)
   {
     $this->statusMessage =
-      '<div class="alert alert-info" role="alert">' . $msg . '</div>';
+      '<div id="status" class="alert alert-info" role="alert">' . $msg . '</div>';
   }
 
   public function fatal ($msg)

@@ -1,22 +1,24 @@
 <?php
 namespace Selenia\Matisse\Components;
+use Selenia\Matisse\Attributes\ComponentAttributes;
 use Selenia\Matisse\AttributeType;
 use Selenia\Matisse\Component;
-use Selenia\Matisse\Attributes\ComponentAttributes;
 use Selenia\Matisse\IAttributes;
 
 class IfAttributes extends ComponentAttributes
 {
-  public $the;
+  public $case;
+  public $else;
   public $is;
   public $isSet  = false;
   public $isTrue = false;
-  public $not    = false;
   public $matches;
-  public $case;          //note: doesn't work with databinding
-  public $else;
+  public $not    = false;          //note: doesn't work with databinding
+  public $the;
 
-  protected function typeof_the () { return AttributeType::TEXT; }
+  protected function typeof_case () { return AttributeType::PARAMS; }
+
+  protected function typeof_else () { return AttributeType::SRC; }
 
   protected function typeof_is () { return AttributeType::TEXT; }
 
@@ -24,13 +26,11 @@ class IfAttributes extends ComponentAttributes
 
   protected function typeof_isTrue () { return AttributeType::BOOL; }
 
-  protected function typeof_not () { return AttributeType::BOOL; }
-
   protected function typeof_matches () { return AttributeType::TEXT; }
 
-  protected function typeof_case () { return AttributeType::PARAMS; }
+  protected function typeof_not () { return AttributeType::BOOL; }
 
-  protected function typeof_else () { return AttributeType::SRC; }
+  protected function typeof_the () { return AttributeType::TEXT; }
 }
 
 /**
@@ -143,7 +143,7 @@ class If_ extends Component implements IAttributes
       return;
     }
 
-    if ($v)
+    if (strToBool ($v) xor $not)
       $this->renderChildren ();
     else $this->renderParameter ('else');
   }
