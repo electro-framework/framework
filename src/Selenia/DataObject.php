@@ -301,6 +301,7 @@ class DataObject
 
   /**
    * Loads the record with the given id into the model object.
+   * If the record is not found, the instance is not modified, which allows the insertion of a new record.
    * @param $id
    * @return $this
    * @throws DataModelException
