@@ -24,7 +24,8 @@
     "php-kit/power-primitives": "dev-master",
     "php-kit/php-web-console": "~0.1.0",
     "php-kit/flow": "dev-master",
-    "ircmaxell/password-compat": "dev-master"
+    "ircmaxell/password-compat": "dev-master",
+    "monolog/monolog": "^1.17.1"
   },
   "autoload": {
     "psr-4": {

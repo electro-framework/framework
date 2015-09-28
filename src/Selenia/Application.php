@@ -2,10 +2,12 @@
 namespace Selenia;
 
 use Exception;
+use Monolog\Logger;
 use PhpKit\WebConsole\ConsolePanel;
 use PhpKit\WebConsole\ErrorHandler;
 use PhpKit\WebConsole\Panels\HttpRequestPanel;
 use PhpKit\WebConsole\WebConsole;
+use PhpKit\WebConsole\WebConsoleLogHandler;
 use Selenia\Exceptions\ConfigException;
 use Selenia\Exceptions\HttpException;
 use Selenia\Matisse\PipeHandler;
@@ -202,6 +204,17 @@ class Application
    * @var string[]
    */
   public $languages = [];
+  /**
+   * The application's main logger.
+   * @var Logger
+   */
+  public $logger;
+  /**
+   * A list of logger handler classes to push to the logger's handlers stack.
+   * Set on application.ini
+   * @var string[]
+   */
+  public $logHandlers = [];
   /**
    * Relative file path of the view to be used for authenticating the user.
    * <p>It will be searched for on both the active module and on the application.
@@ -443,6 +456,7 @@ class Application
       WebConsole::session ()
                 ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="__doAction(\'logout\')">Log out</button>')
                 ->log ($session);
+      $this->logger->pushHandler(new WebConsoleLogHandler(WebConsole::log()));
     }
     $this->loadRoutes ();
     try {
@@ -524,6 +538,7 @@ class Application
     $this->languageFolders[] = $this->langPath;
     if (isset($_ENV['APP_DEFAULT_LANG']))
       $this->defaultLang = $_ENV['APP_DEFAULT_LANG'];
+    $this->logger = new Logger('main', $this->logHandlers);
   }
 
   function toFilePath ($URI, &$isMapped = false)
