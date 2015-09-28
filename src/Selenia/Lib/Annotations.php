@@ -42,7 +42,7 @@ class Annotations
   {
     return isset($this->annot[$tag]) ? $this->annot[$tag] : null;
   }
-  
+
   /**
    * # Reads annotations for the specified property.
    * @param string|mixed $class Fully qualified class name or an instance.
