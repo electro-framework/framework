@@ -2,6 +2,7 @@
 namespace Selenia;
 
 use Exception;
+use Monolog\Handler\HandlerInterface;
 use Monolog\Logger;
 use PhpKit\WebConsole\ConsolePanel;
 use PhpKit\WebConsole\ErrorHandler;
@@ -210,9 +211,9 @@ class Application
    */
   public $logger;
   /**
-   * A list of logger handler classes to push to the logger's handlers stack.
+   * A list of logger handler instances to push to the logger's handlers stack.
    * Set on application.ini
-   * @var string[]
+   * @var HandlerInterface[]
    */
   public $logHandlers = [];
   /**
