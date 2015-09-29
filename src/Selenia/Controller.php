@@ -2,9 +2,9 @@
 namespace Selenia;
 
 use Exception;
-use PhpKit\WebConsole\ErrorHandler;
 use PDO;
 use PDOStatement;
+use PhpKit\WebConsole\ErrorHandler;
 use ReflectionException;
 use ReflectionObject;
 use Selenia\Exceptions\BaseException;
@@ -30,7 +30,7 @@ ob_start ();
 
 class Controller
 {
-  const FIND_TRANS_KEY  = '#\$([A-Z][A-Z0-9_]*)#';
+  const FIND_TRANS_KEY = '#\$([A-Z][A-Z0-9_]*)#';
   /**
    * The i18n cached translation table.
    * @var array An array of arrays indexed by language code.
@@ -53,6 +53,11 @@ class Controller
    * This property is useful for databing with the expression {!controller.URI_noPage}.
    */
   public $URI_noPage;
+  /**
+   * Information about the route associated with this controller.
+   * @var PageRoute
+   */
+  public $activeRoute;
   /**
    * When `true`, the framework will attempt to automatically load the model object by fetching key information from
    * the URL, the route's `preset` property or from the request data.
@@ -150,12 +155,7 @@ class Controller
   /**
    * @var int Maximum number of pages.
    */
-  public $max    = 1;
-  /**
-   * The loader which has loaded this controller.
-   * @var Router
-   */
-  public $router;
+  public $max = 1;
   /**
    * The current module's folder full physical URI.
    * @var string
@@ -180,10 +180,10 @@ class Controller
    */
   public $prevPost = '';
   /**
-   * Information about the route associated with this controller.
-   * @var PageRoute
+   * The loader which has loaded this controller.
+   * @var Router
    */
-  public $activeRoute;
+  public $router;
   /**
    * Indicate if advanced XML/HTML view processing is enabled.
    * Set to false if your controller generates the response via respond().
@@ -242,7 +242,7 @@ class Controller
    * breadcrumbs.
    * @var string
    */
-  protected $pageTitle   = null;
+  protected $pageTitle = null;
   /**
    * @var string URI to redirect to when the request processing finishes.
    */
@@ -275,7 +275,8 @@ class Controller
       $URI = str_replace ('{lang}', $lang, $application->URINotFoundURL);
       header ('Location: ' . "$application->baseURI/$URI" . '?URL=' . $_SERVER['REQUEST_URI'], true, 303);
     }
-    else throw new HttpException (404, "<h1>Not Found</h1><p>The requested URL <code><big>$application->baseURI/<b>$virtualURI</b></big></code> was not found on this server.</p>");
+    else throw new HttpException (404,
+      "<h1>Not Found</h1><p>The requested URL <code><big>$application->baseURI/<b>$virtualURI</b></big></code> was not found on this server.</p>");
   }
 
   static function ref ()
@@ -450,9 +451,9 @@ class Controller
       $this->finalize ();
     } catch (Exception $e) {
       if ($e instanceof HttpException) {
-        @ob_get_clean();
-        http_response_code ($e->getCode());
-        echo $e->getMessage();
+        @ob_get_clean ();
+        http_response_code ($e->getCode ());
+        echo $e->getMessage ();
         exit;
       }
       if ($e instanceof BaseException) {
@@ -505,6 +506,16 @@ class Controller
   function getField ($field, $dataSource = null)
   {
     return $this->getDataRecord ($dataSource)[$field];
+  }
+
+  /**
+   * Returns the specified HTTP request header.
+   * @param string $name The header name. Ex: 'Content-Type'
+   * @return string|null null if the header doesn't exist.
+   */
+  function getHeader ($name)
+  {
+    return get (getallheaders (), $name);
   }
 
   final function getPageURI ()
@@ -826,9 +837,9 @@ class Controller
     if (isset($application->routingMap)) {
       if (!isset($this->router))
         throw new ConfigException("The module for the current URI is not working properly.<br>You should check the class code.");
-      $this->activeRoute   = $this->router->activeRoute;
-      $this->URIParams  = $this->activeRoute->getURIParams ();
-      $this->virtualURI = $this->router->virtualURI;
+      $this->activeRoute = $this->router->activeRoute;
+      $this->URIParams   = $this->activeRoute->getURIParams ();
+      $this->virtualURI  = $this->router->virtualURI;
     }
   }
 
@@ -856,24 +867,22 @@ class Controller
     $view = ob_get_clean ();
     if ($this->isWebService) {
       $this->beginJSONResponse ();
-      echo json_encode ($r);
-
+      if (is_null ($r))
+        http_response_code (204);
+      else echo json_encode ($r);
       return true;
     }
     if (isset($r)) {
       echo $r;
-
       return true;
     }
     if (strlen ($view)) {
       $this->parseView ($view);
-
       return false;
     }
     if (isset($this->router)) {
       if (isset($this->activeRoute->view))
         $this->loadView ($this->activeRoute->view, true);
-
       return false;
     }
     else {
@@ -881,7 +890,6 @@ class Controller
       if (!count ($match))
         throw new FatalException("Invalid URI <b>$this->URI</b>");
       $path = $match[1] . $this->TEMPLATE_EXT;
-
       return !$this->loadView ($path);
     }
   }
@@ -1350,7 +1358,7 @@ class Controller
   protected function setupModel ()
   {
     global $model, $lastModel;
-    $mod = $this->model ();
+    $mod   = $this->model ();
     $model = $lastModel;
     if (isset($mod)) {
       if ($mod instanceof DataObject) {
@@ -1452,7 +1460,8 @@ class Controller
           if ($this->modelMethod)
             $st = $this->dataItem->{$this->modelMethod}();
           else $st =
-            $this->dataItem->queryBy ($this->activeRoute->filter, $this->activeRoute->fieldNames, $this->activeRoute->sortBy);
+            $this->dataItem->queryBy ($this->activeRoute->filter, $this->activeRoute->fieldNames,
+              $this->activeRoute->sortBy);
           $data = $st instanceof PDOStatement ? $st->fetchAll (PDO::FETCH_ASSOC) : $st;
           $this->paginate ($data);
           $this->interceptViewDataSet ('default', $data);

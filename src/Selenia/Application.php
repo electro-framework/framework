@@ -206,16 +206,16 @@ class Application
    */
   public $languages = [];
   /**
-   * The application's main logger.
-   * @var Logger
-   */
-  public $logger;
-  /**
    * A list of logger handler instances to push to the logger's handlers stack.
    * Set on application.ini
    * @var HandlerInterface[]
    */
   public $logHandlers = [];
+  /**
+   * The application's main logger.
+   * @var Logger
+   */
+  public $logger;
   /**
    * Relative file path of the view to be used for authenticating the user.
    * <p>It will be searched for on both the active module and on the application.
@@ -457,7 +457,7 @@ class Application
       WebConsole::session ()
                 ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="__doAction(\'logout\')">Log out</button>')
                 ->log ($session);
-      $this->logger->pushHandler(new WebConsoleLogHandler(WebConsole::log()));
+      $this->logger->pushHandler (new WebConsoleLogHandler(WebConsole::log ()));
     }
     $this->loadRoutes ();
     try {
@@ -499,7 +499,6 @@ class Application
    */
   function setup ($rootDir)
   {
-    $_       = DIRECTORY_SEPARATOR;
     $uri     = get ($_SERVER, 'REQUEST_URI');
     $baseURI = dirnameEx (get ($_SERVER, 'SCRIPT_NAME'));
     $vuri    = substr ($uri, strlen ($baseURI) + 1) ?: '';
@@ -516,23 +515,7 @@ class Application
     $this->VURI          = $vuri;
 
     $this->setIncludePath ();
-
-    // Load default configuration.
-
-    $iniPath = "$this->frameworkPath{$_}src{$_}" . self::DEFAULT_INI_FILENAME;
-    $this->loadConfig ($iniPath);
-
-    // Load application-specific configuration.
-
-    $iniPath = "$this->rootPath{$_}$this->configPath{$_}$this->configFilename";
-    $this->loadConfig ($iniPath);
-
-    foreach ($this->subApplications as $prefix => $path) {
-      if (substr ($vuri, 0, strlen ($prefix)) == $prefix) {
-        $iniPath = "$this->rootPath{$_}$this->configPath{$_}$path";
-        $this->loadConfig ($iniPath);
-      }
-    }
+    $this->loadConfiguration ($vuri);
 
 //    $this->templateDirectories[] = $this->toFilePath ($this->templatesPath);
 //    $this->viewsDirectories[]    = $this->toFilePath ($this->viewPath);
@@ -610,6 +593,28 @@ class Application
       $session                 = get ($_SESSION, 'sessionInfo', new Session);
       $session->name           = $name;
       $_SESSION['sessionInfo'] = $session;
+    }
+  }
+
+  protected function loadConfiguration ($vuri)
+  {
+    $_ = DIRECTORY_SEPARATOR;
+
+    // Load default configuration.
+
+    $iniPath = "$this->frameworkPath{$_}src{$_}" . self::DEFAULT_INI_FILENAME;
+    $this->loadConfig ($iniPath);
+
+    // Load application-specific configuration.
+
+    $iniPath = "$this->rootPath{$_}$this->configPath{$_}$this->configFilename";
+    $this->loadConfig ($iniPath);
+
+    foreach ($this->subApplications as $prefix => $path) {
+      if (substr ($vuri, 0, strlen ($prefix)) == $prefix) {
+        $iniPath = "$this->rootPath{$_}$this->configPath{$_}$path";
+        $this->loadConfig ($iniPath);
+      }
     }
   }
 

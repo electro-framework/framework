@@ -2,6 +2,17 @@
 use PhpKit\WebConsole\WebConsole;
 
 $transactionDepth = 0;
+
+/**
+ * @return PDO
+ */
+function db () {
+  /** PDO */
+  global $db;
+  if (!isset($db)) database_open ();
+  return $db;
+}
+
 //--------------------------------------------------------------------------
 /** Do not call directly! */
 function database_open ()
@@ -88,8 +99,7 @@ function database_query ($query, $params = null)
     'ORDER BY', 'GROUP BY', 'HAVING', 'LIMIT', 'UNION'
   ];
 
-  global /** @var PDO $db */
-  $db, $application;
+  global $application;
 
   $showQuery = function ($dur = null) use ($query, $params, $SQL_KEYWORDS) {
     $query = trim ($query);
@@ -103,10 +113,8 @@ function database_query ($query, $params = null)
 
   if ($application->debugMode)
     $start = microtime (true);
-  if (!isset($db))
-    database_open ();
   try {
-    $st = $db->prepare ($query);
+    $st = db()->prepare ($query);
     $st->execute ($params);
   } catch (PDOException $e) {
     $showQuery ();
@@ -123,26 +131,24 @@ function database_query ($query, $params = null)
 
 function database_begin ()
 {
-  global $transactionDepth, $db;
-  if (!isset($db))
-    database_open ();
+  global $transactionDepth;
   if (++$transactionDepth == 1)
-    $db->beginTransaction ();
+    db()->beginTransaction ();
 }
 
 function database_commit ()
 {
-  global $transactionDepth, $db;
+  global $transactionDepth;
   if (--$transactionDepth == 0)
-    $db->commit ();
+    db()->commit ();
 }
 
 function database_rollback ()
 {
-  global $transactionDepth, $db;
+  global $transactionDepth;
   if ($transactionDepth > 0) {
     $transactionDepth = 0;
-    $db->rollBack ();
+    db()->rollBack ();
   }
 }
 
