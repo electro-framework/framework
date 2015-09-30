@@ -274,6 +274,7 @@ class Controller
       else $lang = $application->defaultLang;
       $URI = str_replace ('{lang}', $lang, $application->URINotFoundURL);
       header ('Location: ' . "$application->baseURI/$URI" . '?URL=' . $_SERVER['REQUEST_URI'], true, 303);
+      exit;
     }
     else throw new HttpException (404,
       "<h1>Not Found</h1><p>The requested URL <code><big>$application->baseURI/<b>$virtualURI</b></big></code> was not found on this server.</p>");
@@ -399,7 +400,7 @@ class Controller
    */
   final function execute ()
   {
-    global $controller;
+    global $controller, $application;
     $controller   = $this;
     $authenticate = false;
     try {
@@ -454,6 +455,8 @@ class Controller
         @ob_get_clean ();
         http_response_code ($e->getCode ());
         echo $e->getMessage ();
+        if ($application->debugMode)
+          echo "\n\nStack trace:\n" . $e->getTraceAsString() . "\n";
         exit;
       }
       if ($e instanceof BaseException) {
@@ -468,6 +471,8 @@ class Controller
           @ob_get_clean ();
           http_response_code (500);
           echo $e->getMessage ();
+          if ($application->debugMode)
+            echo "\n\nStack trace:\n" . $e->getTraceAsString() . "\n";
           exit;
         }
         throw $e;
