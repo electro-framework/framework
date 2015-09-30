@@ -48,8 +48,9 @@ class WebServiceController extends Controller
         $this->responseData = $this->handlePost ($data);
       }
       else {
-        $input              = fopen ('php://input', 'r');
+        $input              = fopen ('php://input', 'rb');
         $this->responseData = $this->handleRawPost ($input, $contentType);
+        fclose ($input);
       }
     }
 

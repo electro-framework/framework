@@ -464,6 +464,12 @@ class Controller
         @ob_clean ();
       }
       if (!($e instanceof BaseException) || $e->getStatus () == Status::FATAL || $this->isWebService) {
+        if ($this->isWebService) {
+          @ob_get_clean ();
+          http_response_code (500);
+          echo $e->getMessage ();
+          exit;
+        }
         throw $e;
       }
       else {
