@@ -280,6 +280,12 @@ class Controller
       "<h1>Not Found</h1><p>The requested URL <code><big>$application->baseURI/<b>$virtualURI</b></big></code> was not found on this server.</p>");
   }
 
+  static function redirect ($url)
+  {
+    header ('Location: ' . $url, true, 303);
+    exit();
+  }
+
   static function ref ()
   {
     return get_called_class ();
@@ -456,7 +462,7 @@ class Controller
         http_response_code ($e->getCode ());
         echo $e->getMessage ();
         if ($application->debugMode)
-          echo "\n\nStack trace:\n" . $e->getTraceAsString() . "\n";
+          echo "\n\nStack trace:\n" . $e->getTraceAsString () . "\n";
         exit;
       }
       if ($e instanceof BaseException) {
@@ -472,7 +478,7 @@ class Controller
           http_response_code (500);
           echo $e->getMessage ();
           if ($application->debugMode)
-            echo "\n\nStack trace:\n" . $e->getTraceAsString() . "\n";
+            echo "\n\nStack trace:\n" . $e->getTraceAsString () . "\n";
           exit;
         }
         throw $e;
@@ -629,19 +635,6 @@ class Controller
     }
     $ctx->dataSources[$name] = $data;
   }
-
-  /*
-    protected function createDataItem($className,$dataModuleName = '') {
-      if (!class_exists($className)) {
-        if (!$dataModuleName || !isset($this->moduleLoader))
-          throw new FatalException("Undefined data class <b>$className</b>.");
-        $moduleName = property($this->sitePage,'dataModule',$this->moduleLoader->moduleInfo->module);
-        if (!$this->moduleLoader->searchAndLoadClass($className,$dataModuleName))
-          throw new FatalException("Couldn't load data class <b>$className</b> on module <b>$dataModuleName</b>.");
-      }
-      return new $className();
-    }
-  */
 
   /**
    * Assigns the specified data to a new (or existing) data source with the
@@ -1243,17 +1236,11 @@ class Controller
     return true;
   }
 
-  protected final function redirect ($url)
-  {
-    header ('Location: ' . $url, true, 303);
-    exit();
-  }
-
   protected function redirectAndHalt ()
     // override to implement actions to be performed before a redirection takes place
   {
     if (isset($this->redirectURI))
-      $this->redirect ($this->redirectURI);
+      self::redirect ($this->redirectURI);
   }
 
   /**

@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Routing;
 
+use Selenia\Controller;
 use Selenia\Exceptions\ConfigException;
 use Selenia\Modules\Admin\Models\User;
 use Selenia\Session;
@@ -66,7 +67,7 @@ class RouteGroup extends AbstractRoute
       $this->selected = true;
       if (empty($this->defaultURI))
         throw new ConfigException("No default URI is configured for the route group matching $URI");
-      $URI = $this->defaultURI;
+      Controller::redirect($this->defaultURI);
     }
     if (isset($this->routes))
       foreach ($this->routes as $route) {
