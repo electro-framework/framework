@@ -366,10 +366,12 @@ class Application
    */
   public $viewsDirectories = [];
 
-  static function exceptionHandler (Exception $e)
+  function exceptionHandler (Exception $e)
   {
     if (function_exists ('database_rollback'))
       database_rollback ();
+    if ($this->logger)
+      $this->logger->error($e->getMessage(), ['stackTrace' => str_replace("$this->baseDirectory/", '', $e->getTraceAsString())]);
     WebConsole::outputContent (true);
   }
 
@@ -442,7 +444,7 @@ class Application
   function run ($rootDir)
   {
     global $session;
-    set_exception_handler ([get_class (), 'exceptionHandler']);
+    set_exception_handler ([$this, 'exceptionHandler']);
     $this->debugMode = $_SERVER['APP_DEBUG'] == 'true';
 
     ErrorHandler::init ($this->debugMode, $rootDir);
