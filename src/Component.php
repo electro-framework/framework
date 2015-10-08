@@ -332,7 +332,7 @@ abstract class Component
       return $this->tagName;
     preg_match_all ('#[A-Z][a-z]*#', $this->className, $matches, PREG_PATTERN_ORDER);
 
-    return $this->tagName = strtolower (implode ('-', $matches[0]));
+    return $this->tagName = ucfirst (strtolower (implode ('-', $matches[0])));
   }
 
   /**

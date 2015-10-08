@@ -21,7 +21,7 @@ class Text extends Component implements IAttributes
   {
     parent::__construct ($context, $properties);
     $this->page = $this;
-    $this->setTagName ('text');
+    $this->setTagName ('Text');
   }
 
   public static function from (Context $context, $text)

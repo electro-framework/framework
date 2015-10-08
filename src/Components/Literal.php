@@ -37,7 +37,7 @@ class Literal extends Component implements IAttributes
   {
     parent::__construct ($context, $properties);
     $this->page = $this;
-    $this->setTagName ('literal');
+    $this->setTagName ('Literal');
   }
 
   public static function from (Context $context, $text)
