@@ -404,7 +404,7 @@ class Controller
    * 1 - processRequest() - optional - performs actions requested by the client;
    * 2 - processView() - optional - generates the user interface and any relevant information to display on the client.
    */
-  final function execute ()
+  final function __invoke (Request $request, Response $response, callable $next)
   {
     global $controller, $application;
     $controller   = $this;

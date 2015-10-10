@@ -1,6 +1,7 @@
 <?php
 namespace Selenia;
 
+use Auryn\Injector;
 use Exception;
 use Monolog\Handler\HandlerInterface;
 use Monolog\Logger;
@@ -13,6 +14,8 @@ use Selenia\Exceptions\ConfigException;
 use Selenia\Exceptions\HttpException;
 use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\RoutingMap;
+use Zend\Diactoros\Response;
+use Zend\Diactoros\ServerRequestFactory;
 
 define ('CONSOLE_ALIGN_CENTER', STR_PAD_BOTH);
 define ('CONSOLE_ALIGN_LEFT', STR_PAD_RIGHT);
@@ -180,6 +183,10 @@ class Application
    */
   public $includePath;
   /**
+   * @var Injector
+   */
+  public $injector;
+  /**
    * The path of the application's language files' folder.
    * @var string
    */
@@ -222,6 +229,10 @@ class Application
    * @var string
    */
   public $loginView;
+  /**
+   * @var MiddlewareStack
+   */
+  public $middlewareStack;
   public $modelPath;
   /**
    * The relative path of the language files' folder inside a module.
@@ -233,6 +244,8 @@ class Application
    * @var string
    */
   public $modulePublicPath;
+
+  /* Session related */
   /**
    * The relative path of the templates folder inside a module.
    * @var string
@@ -243,8 +256,6 @@ class Application
    * @var string
    */
   public $moduleViewsPath;
-
-  /* Session related */
   /**
    * A list of modules that are always bootstrapped when the framework boots.
    * <p>A `bootstrap.php` file will be executed on each registered module.
@@ -371,7 +382,8 @@ class Application
     if (function_exists ('database_rollback'))
       database_rollback ();
     if ($this->logger)
-      $this->logger->error($e->getMessage(), ['stackTrace' => str_replace("$this->baseDirectory/", '', $e->getTraceAsString())]);
+      $this->logger->error ($e->getMessage (),
+        ['stackTrace' => str_replace ("$this->baseDirectory/", '', $e->getTraceAsString ())]);
     WebConsole::outputContent (true);
   }
 
@@ -450,10 +462,12 @@ class Application
     ErrorHandler::init ($this->debugMode, $rootDir);
     $this->setupWebConsole ();
     $this->setup ($rootDir);
+    $this->bootstrap ();
     $this->initSession ();
     ModulesApi::get ()->bootModules ();
     $this->mount ($this->frameworkURI, $this->frameworkPath . DIRECTORY_SEPARATOR . $this->modulePublicPath);
     $this->registerPipes ();
+    $this->registerMiddleware ();
     if ($this->debugMode) {
       WebConsole::config ($this);
       WebConsole::session ()
@@ -462,15 +476,20 @@ class Application
       $this->logger->pushHandler (new WebConsoleLogHandler(WebConsole::log ()));
     }
     $this->loadRoutes ();
-    try {
-      $router = Router::route ();
-    } catch (HttpException $e) {
-      @ob_get_clean ();
-      http_response_code ($e->getCode ());
-      echo $e->getMessage ();
-      exit;
-    }
-    $router->controller->execute ();
+
+    // Process the request.
+
+    $request  = ServerRequestFactory::fromGlobals ()->withAttribute ('VURI', $this->VURI);
+    $response = new Response;
+    $response = $this->middlewareStack->run ($request, $response);
+    if (!$response) return;
+
+    // Send back the response.
+
+    /** @var ResponseSenderInterface $sender */
+    $sender = $this->injector->make ('Selene\Contracts\ResponseSenderInterface');
+    $sender->send ($response);
+
     if ($this->debugMode) {
       $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
       WebConsole::routes ()->withCaption ('Active Route')->withFilter ($filter, $router->activeRoute);
@@ -584,6 +603,21 @@ class Application
     return "http://{$_SERVER['SERVER_NAME']}$port$URI";
   }
 
+  protected function bootstrap ()
+  {
+    $this->injector        = new Injector;
+    $this->middlewareStack = new MiddlewareStack ($this->injector);
+    $this->injector->delegate ('Psr\Http\Message\ServerRequestInterface', function () {
+      return $this->middlewareStack->getCurrentRequest ();
+    });
+    $this->injector->delegate ('Psr\Http\Message\ResponseInterface', function () {
+      return $this->middlewareStack->getCurrentResponse ();
+    });
+    $this->injector->alias ('Selenia\Http\Contracts\ResponseSenderInterface', 'Selenia\Http\ResponseSender');
+    $this->injector->share ($this);
+    $this->injector->share ($this->injector);
+  }
+
   protected function initSession ()
   {
     global $session;
@@ -618,6 +652,22 @@ class Application
         $this->loadConfig ($iniPath);
       }
     }
+  }
+
+  protected function registerMiddleware ()
+  {
+    $this->middlewareStack
+      ->add ('Selenia\Http\Middleware\CompressionMiddleware')
+      ->add ('Selenia\Http\Middleware\WebConsoleMiddleware')
+      ->add ('Selenia\Http\Middleware\SessionMiddleware')
+      ->add ('Selenia\Http\Middleware\AuthenticationMiddleware')
+      ->add ('Selenia\Http\Middleware\FileServerMiddleware')
+      ->add ('Selenia\Http\Middleware\LanguageMiddleware')
+      ->add ('Selenia\Http\Middleware\SEOMiddleware')
+      ->add ('Selenia\Http\Middleware\TranslationMiddleware')
+      ->add ('Selenia\Http\Middleware\ModulesLoaderMiddleware')
+      ->add ('Selenia\Http\Middleware\RoutingMiddleware')
+      ->add ('Selenia\Http\Middleware\URINotFoundMiddleware');
   }
 
   protected function registerPipes ()
