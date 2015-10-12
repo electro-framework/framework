@@ -9,11 +9,8 @@ trait Singleton
    */
   static function get ()
   {
-    global $application;
     static $inst;
-    if (!isset ($inst))
-      $inst = new static ($application);
-    return $inst;
+    return isset ($inst) ? $inst : $inst = new static;
   }
 
 }

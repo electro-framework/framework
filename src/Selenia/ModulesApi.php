@@ -19,9 +19,10 @@ class ModulesApi
 
   private $app;
 
-  function __construct (Application $app)
+  function __construct ()
   {
-    $this->app = $app;
+    global $application;
+    $this->app = $application;
   }
 
   /**

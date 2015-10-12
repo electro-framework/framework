@@ -45,7 +45,6 @@ trait FluentApi
    * @param $name  string
    * @param $args  array
    * @return $this
-   * @link http://php.net/manual/en/language.oop5.overloading.php#language.oop5.overloading.methods
    */
   function __call ($name, $args)
   {
