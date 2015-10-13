@@ -1,6 +1,6 @@
 {
   "name": "selenia/kernel",
-  "description": "The Selenia framework's core code",
+  "description": "The Selenia framework",
   "license": "MIT",
   "authors": [
     {
@@ -19,6 +19,9 @@
   "minimum-stability": "dev",
   "require": {
     "php": ">=5.4.0",
+    "wikimedia/composer-merge-plugin": "1.3.x-dev",
+    "selenia/installers": "^1.0.0",
+    "php-kit/composer-bower-plugin": "dev-master",
     "vlucas/phpdotenv": "~2.0.1",
     "php-kit/tools": "dev-master",
     "php-kit/power-primitives": "dev-master",
@@ -27,7 +30,11 @@
     "ircmaxell/password-compat": "dev-master",
     "monolog/monolog": "^1.17.1",
     "zendframework/zend-diactoros": "~1.1.3",
-    "rdlowrey/auryn": "~1.1.0"
+    "rdlowrey/auryn": "~1.1.0",
+    "selenia-components/matisse": "dev-master",
+    "selenia-components/task-runner": "dev-master",
+    "selenia-components/core-tasks": "dev-master",
+    "selenia-components/migrations": "dev-master"
   },
   "autoload": {
     "psr-4": {
