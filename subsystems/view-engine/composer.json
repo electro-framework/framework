@@ -22,8 +22,8 @@
       "Selenia\\Matisse\\": "Matisse/"
     },
     "files": [
-      "src/globals.php",
-      "src/htmlBuilder.php"
+      "globals.php",
+      "htmlBuilder.php"
     ]
   }
 }

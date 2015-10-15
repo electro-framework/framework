@@ -11,7 +11,6 @@ use PhpKit\WebConsole\Panels\HttpRequestPanel;
 use PhpKit\WebConsole\WebConsole;
 use PhpKit\WebConsole\WebConsoleLogHandler;
 use Selenia\Exceptions\ConfigException;
-use Selenia\Exceptions\HttpException;
 use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\RoutingMap;
 use Zend\Diactoros\Response;
@@ -23,8 +22,6 @@ define ('CONSOLE_ALIGN_RIGHT', STR_PAD_LEFT);
 
 class Application
 {
-  const DEFAULT_INI_FILENAME = 'application.defaults.ini.php';
-
   public static $TAGS = [];
   /**
    * Holds an array of SEO infomation for each site page or null;
@@ -47,12 +44,11 @@ class Application
    * @var string
    */
   public $VURI;
-  public $addonsPath;
   /**
    * The real application name.
    * @var string
    */
-  public $appName;
+  public $appName = 'Selenia framework';
   /**
    * A list of relative file paths of assets published by each module, relative to each module's public folder, in
    * order of precedence. The framework's build process may automatically concatenate and minify those assets for a
@@ -64,7 +60,10 @@ class Application
    * The class to be instantiated when creating an automatic controller.
    * @var string
    */
-  public $autoControllerClass;
+  public $autoControllerClass = 'Selenia\Controller';
+  /**
+   * @var bool
+   */
   public $autoSession = false;
   /**
    * The file path of current main application's root directory.
@@ -76,7 +75,10 @@ class Application
    * @var string
    */
   public $baseURI;
-  public $cachePath;
+  /**
+   * @var string
+   */
+  public $cachePath = 'private/storage/cache';
   public $condenseLiterals;
   /**
    * Configuration settings for registered modules.
@@ -88,12 +90,12 @@ class Application
    * The name of the file that contains the application's configuration settings.
    * @var string
    */
-  public $configFilename;
+  public $configFilename = 'application.ini.php';
   /**
    * Folder path for the configuration files.
    * @var string
    */
-  public $configPath;
+  public $configPath = 'private/config';
   /**
    * This is set only when running the console Task Runner.
    * @var \Symfony\Component\Console\Application
@@ -121,8 +123,11 @@ class Application
    * Favorite icon URL.
    * @var string
    */
-  public $favicon = '';
-  public $fileArchivePath;
+  public $favicon = 'data:;base64,iVBORw0KGgo='; // Inlined empty image to suppress http request
+  /**
+   * @var string
+   */
+  public $fileArchivePath = 'private/storage/files';
   /**
    * The path of the framework kernel's directory.
    * @var string
@@ -131,14 +136,14 @@ class Application
   /**
    * @var Boolean True to generate the standard framework scripts.
    */
-  public $frameworkScripts;
+  public $frameworkScripts = true;
 
   /* Template related */
   /**
    * The mapped public URI of the framework's public directory.
    * @var string
    */
-  public $frameworkURI;
+  public $frameworkURI = 'framework';
   /**
    * Set to false to disable application-specific sessions and use a global scope.
    * @var Boolean
@@ -150,12 +155,12 @@ class Application
    * The homepage's breadcrumb icon class(es).
    * @var string
    */
-  public $homeIcon;
+  public $homeIcon = '';
   /**
    * The homepage's breadcrumb title.
    * @var string
    */
-  public $homeTitle;
+  public $homeTitle = 'Home';
   /**
    * The application's entry point URI.
    *
@@ -165,18 +170,20 @@ class Application
    * Set by application.ini.php
    * @var String
    */
-  public $homeURI;
-
-  /* Cache related */
-  public $imageArchivePath;
+  public $homeURI = '';
+  /**
+   * @var string
+   */
+  public $imageArchivePath = 'private/storage/images';
   /**
    * Set to true to redirect the browser to the generated thumbnail instead of streaming it.
    * @var Boolean
    */
-  public $imageRedirection;
-
-  /* Page processing control settings */
-  public $imagesCachePath;
+  public $imageRedirection = false;
+  /**
+   * @var string
+   */
+  public $imagesCachePath = 'private/storage/cache/images';
   /**
    * The colon delimited list of directory paths.
    * @var string
@@ -187,10 +194,10 @@ class Application
    */
   public $injector;
   /**
-   * The path of the application's language files' folder.
+   * The path of the application's language files' folder, relative to the root folder.
    * @var string
    */
-  public $langPath;
+  public $langPath = 'private/resources/lang';
   /**
    * Search paths for module language files, in order of precedence.
    * @var array
@@ -228,47 +235,50 @@ class Application
    * <p>It will be searched for on both the active module and on the application.
    * @var string
    */
-  public $loginView;
+  public $loginView = '';
   /**
    * @var MiddlewareStack
    */
   public $middlewareStack;
-  public $modelPath;
+  /**
+   * @var string
+   */
+  public $modelPath = 'models';
   /**
    * The relative path of the language files' folder inside a module.
    * @var string
    */
-  public $moduleLangPath;
+  public $moduleLangPath = 'resources/lang';
   /**
    * The relative path of the public folder inside a module.
    * @var string
    */
-  public $modulePublicPath;
+  public $modulePublicPath = 'public';
 
   /* Session related */
   /**
    * The relative path of the templates folder inside a module.
    * @var string
    */
-  public $moduleTemplatesPath;
+  public $moduleTemplatesPath = 'resources/templates';
   /**
    * The relative path of the views folder inside a module.
    * @var string
    */
-  public $moduleViewsPath;
+  public $moduleViewsPath = 'resources/views';
   /**
    * A list of modules that are always bootstrapped when the framework boots.
    * <p>A `bootstrap.php` file will be executed on each registered module.
    * @var array
    */
-  public $modules;
+  public $modules = [];
   /**
    * The folder where the framework will search for your application-specific modules.
    * <p>If a module is not found there, it will then search on `defaultModulesPath`.
    * <p>Set by application.ini.php.
    * @var String
    */
-  public $modulesPath;
+  public $modulesPath = 'private/modules';
   /**
    * A map of mappings from virtual URIs to external folders.
    * <p>This is used to expose assets from composer packages.
@@ -289,22 +299,25 @@ class Application
    * Images exceeding this dimensions are resized to fit them.
    * @var int
    */
-  public $originalImageMaxSize;
+  public $originalImageMaxSize = 1024;
   /**
    * JPEG compression factor for resampled uploaded images.
    * @var int
    */
-  public $originalImageQuality;
+  public $originalImageQuality = 95;
   /**
    * The URL parameter name used for pagination.
    * @var string
    */
-  public $pageNumberParam;
+  public $pageNumberParam = 'p';
   /**
    * The default page size for the default data source.
    * @var number
    */
-  public $pageSize;
+  public $pageSize = 99999;
+  /**
+   * @var
+   */
   public $pageTemplate;
   /**
    * @var PipeHandler
@@ -316,12 +329,18 @@ class Application
    * <p>Set by application.ini.php.
    * @var String
    */
-  public $pluginModulesPath;
+  public $pluginModulesPath = 'private/plugins';
   /**
    * @var string[] A list of "preset" class names.
    */
   public $presets = [];
-  public $requireLogin;
+  /**
+   * @var bool
+   */
+  public $requireLogin = false;
+  /**
+   * @var string
+   */
   public $rootPath;
   /**
    * @var array
@@ -332,12 +351,15 @@ class Application
    * @var RoutingMap
    */
   public $routingMap;
-  public $storagePath;
+  /**
+   * @var string
+   */
+  public $storagePath = 'private/storage';
   /**
    * A map of URI prefixes to application configuration files.
    * @var array
    */
-  public $subApplications;
+  public $subApplications = [];
   /**
    * A list of task classes from each module that provides tasks to be merged on the main robofile.
    * @var string[]
@@ -351,12 +373,17 @@ class Application
    * @var array
    */
   public $templateDirectories = [];
-  public $templatesPath;
   /**
-   * A site name that can be used on autogenerated window titles (using the title tag).
+   * Relative to the root folder.
    * @var string
    */
-  public $title;
+  public $templatesPath = 'private/resources/templates';
+  /**
+   * A site name that can be used on auto-generated window titles (using the title tag).
+   * The symbol @ will be replaced by the current page's title.
+   * @var string
+   */
+  public $title = '@';
   /**
    * Enables output post-processing for keyword replacement.
    * Disable this if the app is not multi-language to speed-up page rendering.
@@ -368,8 +395,12 @@ class Application
    * The FQN of the logged in user's model class.
    * @var string
    */
-  public $userModel;
-  public $viewPath;
+  public $userModel = '';
+  /**
+   * Relative to the root folder.
+   * @var string
+   */
+  public $viewPath = 'private/resources/views';
   /**
    * Folders where views can be found.
    * <p>They will be search in order until the requested view is found.
@@ -402,11 +433,6 @@ class Application
   {
     $themesPath = strpos ($URI, $this->themesPath) !== false ? $this->themesPath : $this->defaultThemesPath;
     return str_replace ('/', '_', substr ($URI, strlen ($this->baseURI) + strlen ($themesPath) + 2));
-  }
-
-  function getAddonURI ($addonName)
-  {
-    return "$this->baseURI/$this->addonsPath/$addonName";
   }
 
   function getFileDownloadURI ($fileId)
@@ -457,9 +483,9 @@ class Application
   {
     global $session;
     set_exception_handler ([$this, 'exceptionHandler']);
-    $this->debugMode = $_SERVER['APP_DEBUG'] == 'true';
+    $debug = $this->debugMode = getenv('APP_DEBUG') == 'true';
 
-    ErrorHandler::init ($this->debugMode, $rootDir);
+    ErrorHandler::init ($debug, $rootDir);
     $this->setupWebConsole ();
     $this->setup ($rootDir);
     $this->bootstrap ();
@@ -468,13 +494,15 @@ class Application
     $this->mount ($this->frameworkURI, $this->frameworkPath . DIRECTORY_SEPARATOR . $this->modulePublicPath);
     $this->registerPipes ();
     $this->registerMiddleware ();
-    if ($this->debugMode) {
+    if ($debug) {
       WebConsole::config ($this);
       WebConsole::session ()
                 ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="__doAction(\'logout\')">Log out</button>')
                 ->log ($session);
       $this->logger->pushHandler (new WebConsoleLogHandler(WebConsole::log ()));
     }
+    $this->condenseLiterals = !$debug;
+    $this->compressOutput   = !$debug;
     $this->loadRoutes ();
 
     // Process the request.
@@ -490,7 +518,7 @@ class Application
     $sender = $this->injector->make ('Selene\Contracts\ResponseSenderInterface');
     $sender->send ($response);
 
-    if ($this->debugMode) {
+    if ($debug) {
       $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
       WebConsole::routes ()->withCaption ('Active Route')->withFilter ($filter, $router->activeRoute);
       WebConsole::response (['Content-Length' => round (ob_get_length () / 1024) . ' KB']);
@@ -636,11 +664,6 @@ class Application
   {
     $_ = DIRECTORY_SEPARATOR;
 
-    // Load default configuration.
-
-    $iniPath = "$this->frameworkPath{$_}src{$_}" . self::DEFAULT_INI_FILENAME;
-    $this->loadConfig ($iniPath);
-
     // Load application-specific configuration.
 
     $iniPath = "$this->rootPath{$_}$this->configPath{$_}$this->configFilename";
@@ -688,7 +711,7 @@ class Application
     WebConsole::registerPanel ('vm', new ConsolePanel ('View Models', 'fa fa-table'));
     WebConsole::registerPanel ('database', new ConsolePanel ('Database', 'fa fa-database'));
 //    WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
-    ErrorHandler::$appName = 'Selenia framework';
+    ErrorHandler::$appName = $this->appName;
   }
 
   private function loadConfig ($iniPath)
