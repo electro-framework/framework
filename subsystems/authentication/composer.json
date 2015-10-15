@@ -14,12 +14,12 @@
     }
   ],
   "require": {
-    "php": ">=7",
+    "php": ">=5.4",
     "ircmaxell/password-compat": "dev-master"
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\Authentication": "Authentication"
+      "Selenia\\Authentication\\": "Authentication"
     }
   }
 }

@@ -14,11 +14,11 @@
     }
   ],
   "require": {
-    "php": ">=7"
+    "php": ">=5.4"
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\Interfaces": "Interfaces"
+      "Selenia\\Interfaces\\": "Interfaces"
     }
   }
 }
