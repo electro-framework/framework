@@ -6,7 +6,7 @@ use Impactwave\WebConsole\WebConsole;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Selenia\Application;
-use Selenia\Subsystems\Http\Contracts\MiddlewareInterface;
+use Selenia\Interfaces\MiddlewareInterface;
 use Selenia\ModuleLoader;
 
 /**

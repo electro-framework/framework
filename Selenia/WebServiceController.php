@@ -5,6 +5,7 @@ use ReflectionException;
 use ReflectionObject;
 use Selenia\Exceptions\BaseException;
 use Selenia\Exceptions\Status;
+use Selenia\Http\Controllers\Controller;
 
 class WebServiceController extends Controller
 {

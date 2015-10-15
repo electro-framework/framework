@@ -1,9 +1,9 @@
 <?php
 namespace Selenia\Routing;
 
-use Selenia\Controller;
 use Selenia\DataObject;
 use Selenia\Exceptions\ConfigException;
+use Selenia\Http\Controllers\Controller;
 use Selenia\Matisse\DataRecord;
 use Selenia\Matisse\DataSet;
 use Selenia\Object;

@@ -3,9 +3,9 @@ namespace Selenia\Routing;
 
 use Exception;
 use Selenia\Application;
-use Selenia\Controller;
 use Selenia\Exceptions\ConfigException;
 use Selenia\Exceptions\FatalException;
+use Selenia\Http\Controllers\Controller;
 use Selenia\Object;
 
 abstract class AbstractRoute extends Object

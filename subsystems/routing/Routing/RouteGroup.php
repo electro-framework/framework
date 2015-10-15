@@ -1,8 +1,8 @@
 <?php
 namespace Selenia\Routing;
 
-use Selenia\Controller;
 use Selenia\Exceptions\ConfigException;
+use Selenia\Http\Controllers\Controller;
 use Selenia\Modules\Admin\Models\User;
 use Selenia\Session;
 

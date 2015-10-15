@@ -2,7 +2,7 @@
 namespace Selenia\Subsystems\Http\Middleware;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Selenia\Subsystems\Http\Contracts\MiddlewareInterface;
+use Selenia\Interfaces\MiddlewareInterface;
 
 /**
  * Post-processes the HTTP response to replace translation keys by the corresponding translation.

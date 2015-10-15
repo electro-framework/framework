@@ -1,10 +1,10 @@
 <?php
-namespace Selenia\Subsystems\Http\Middleware;
+namespace Selenia\Subsystems\Routing\Middleware;
 use Auryn\Injector;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Selenia\Exceptions\HttpException;
-use Selenia\Subsystems\Http\Contracts\MiddlewareInterface;
+use Selenia\Interfaces\MiddlewareInterface;
 use Selenia\ModuleLoader;
 use Selenia\Router;
 

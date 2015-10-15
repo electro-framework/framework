@@ -1,5 +1,5 @@
 <?php
-namespace Selenia;
+namespace Selenia\Http\Controllers;
 
 use Exception;
 use PDO;
@@ -7,6 +7,8 @@ use PDOStatement;
 use PhpKit\WebConsole\ErrorHandler;
 use ReflectionException;
 use ReflectionObject;
+use Selenia\Application;
+use Selenia\DataObject;
 use Selenia\Exceptions\BaseException;
 use Selenia\Exceptions\ConfigException;
 use Selenia\Exceptions\DataModelException;
@@ -24,6 +26,7 @@ use Selenia\Matisse\DataSet;
 use Selenia\Matisse\DataSource;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\MatisseEngine;
+use Selenia\Router;
 use Selenia\Routing\PageRoute;
 
 ob_start ();

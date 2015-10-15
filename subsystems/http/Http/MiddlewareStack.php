@@ -1,10 +1,10 @@
 <?php
-namespace Selenia\Subsystems\Http;
+namespace Selenia\Http;
 
 use Auryn\Injector;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Selenia\Subsystems\Http\Contracts\MiddlewareInterface;
+use Selenia\Interfaces\MiddlewareInterface;
 
 class MiddlewareStack
 {
@@ -64,7 +64,7 @@ class MiddlewareStack
         $this->currentRequest  = $request;
         $this->currentResponse = $response;
 
-        /** @var MiddlewareInterface $middleware */
+        /** @var \Selenia\Subsystems\Interfaces\MiddlewareInterface $middleware */
         $m = $it->current ();
         $it->next ();
 

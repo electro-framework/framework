@@ -1,6 +1,6 @@
 <?php
 namespace ___NAMESPACE___\Controllers;
-use Selenia\Controller;
+use Selenia\Http\Controllers\Controller;
 
 class ___CLASS___ extends Controller
 {

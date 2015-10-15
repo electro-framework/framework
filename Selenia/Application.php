@@ -11,6 +11,8 @@ use PhpKit\WebConsole\Panels\HttpRequestPanel;
 use PhpKit\WebConsole\WebConsole;
 use PhpKit\WebConsole\WebConsoleLogHandler;
 use Selenia\Exceptions\ConfigException;
+use Selenia\Http\Controllers\Controller;
+use Selenia\Http\MiddlewareStack;
 use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\RoutingMap;
 use Zend\Diactoros\Response;
@@ -289,11 +291,9 @@ class Application
   /**
    * The application name.
    * This should be composed only of alphanumeric characters. It is used as the session name.
-   * If not specified, defaults to the parent application name or, if not defined, the application path or,
-   * if it is a root application, the server name.
    * @var string
    */
-  public $name;
+  public $name = 'selenia';
   /**
    * Maximum width and/or height for uploaded images.
    * Images exceeding this dimensions are resized to fit them.
@@ -408,7 +408,10 @@ class Application
    */
   public $viewsDirectories = [];
 
-  function exceptionHandler (Exception $e)
+  /**
+   * @param \Exception|\Error $e
+   */
+  function exceptionHandler ($e)
   {
     if (function_exists ('database_rollback'))
       database_rollback ();
@@ -569,8 +572,8 @@ class Application
 //    $this->templateDirectories[] = $this->toFilePath ($this->templatesPath);
 //    $this->viewsDirectories[]    = $this->toFilePath ($this->viewPath);
     $this->languageFolders[] = $this->langPath;
-    if (isset($_ENV['APP_DEFAULT_LANG']))
-      $this->defaultLang = $_ENV['APP_DEFAULT_LANG'];
+    if (getenv('APP_DEFAULT_LANG'))
+      $this->defaultLang = getenv('APP_DEFAULT_LANG');
     $this->logger = new Logger('main', $this->logHandlers);
   }
 
