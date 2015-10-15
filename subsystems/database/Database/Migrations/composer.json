@@ -1,0 +1,32 @@
+{
+  "name": "selenia-components/migrations",
+  "description": "Selenia framework's database migrations support",
+  "type": "selenia-plugin",
+  "keywords": [
+    "plugin",
+    "selenia"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Impactwave",
+      "email": "impactwave@impactwave.com",
+      "homepage": "http://impactwave.com"
+    },
+    {
+      "name": "Cláudio Silva",
+      "email": "claudio.silva@impactwave.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.4.0",
+    "selenia/installers": "^1.0.0",
+    "selenia-components/task-runner": "dev-master",
+    "robmorgan/phinx": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "Selenia\\Migrations\\": "src"
+    }
+  }
+}

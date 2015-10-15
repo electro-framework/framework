@@ -1,0 +1,17 @@
+{
+  "name": "___MODULE___",
+  "description": "",
+  "keywords": [
+    "module",
+    "selenia framework"
+  ],
+  "license": "proprietary",
+  "autoload": {
+    "psr-4": {
+      "___PSR4_NAMESPACE___": "___MODULE_PATH___/src"
+    }
+  },
+  "require": {
+    "php": ">=5.4.0"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "selenia-subsystems/validation",
+  "description": "Selenia framework's validation subsystem",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Impactwave",
+      "email": "impactwave@impactwave.com",
+      "homepage": "http://impactwave.com"
+    },
+    {
+      "name": "Cláudio Silva",
+      "email": "claudio.silva@impactwave.com"
+    }
+  ],
+  "require": {
+    "php": ">=7"
+  },
+  "autoload": {
+    "psr-4": {
+      "Selenia\\Validation": "Validation"
+    }
+  }
+}

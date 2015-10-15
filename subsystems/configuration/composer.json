@@ -1,0 +1,25 @@
+{
+  "name": "selenia-subsystems/configuration",
+  "description": "Selenia framework's configuration subsystem",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Impactwave",
+      "email": "impactwave@impactwave.com",
+      "homepage": "http://impactwave.com"
+    },
+    {
+      "name": "Cláudio Silva",
+      "email": "claudio.silva@impactwave.com"
+    }
+  ],
+  "require": {
+    "php": ">=7",
+    "vlucas/phpdotenv": "~2.0.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Selenia\\Configuration": "Configuration"
+    }
+  }
+}

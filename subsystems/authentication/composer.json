@@ -1,0 +1,25 @@
+{
+  "name": "selenia-subsystems/authentication",
+  "description": "Selenia framework's authentication subsystem",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Impactwave",
+      "email": "impactwave@impactwave.com",
+      "homepage": "http://impactwave.com"
+    },
+    {
+      "name": "Cláudio Silva",
+      "email": "claudio.silva@impactwave.com"
+    }
+  ],
+  "require": {
+    "php": ">=7",
+    "ircmaxell/password-compat": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "Selenia\\Authentication": "Authentication"
+    }
+  }
+}

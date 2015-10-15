@@ -1,0 +1,25 @@
+{
+  "name": "selenia-subsystems/debugging",
+  "description": "Selenia framework's debugging subsystem",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Impactwave",
+      "email": "impactwave@impactwave.com",
+      "homepage": "http://impactwave.com"
+    },
+    {
+      "name": "Cláudio Silva",
+      "email": "claudio.silva@impactwave.com"
+    }
+  ],
+  "require": {
+    "php": ">=7",
+    "php-kit/php-web-console": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "Selenia\\Debugging": "Debugging"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "selenia-subsystems/task-runner",
+  "description": "Selenia framework's command-line interface",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Impactwave",
+      "email": "impactwave@impactwave.com",
+      "homepage": "http://impactwave.com"
+    },
+    {
+      "name": "Cláudio Silva",
+      "email": "claudio.silva@impactwave.com"
+    }
+  ],
+  "require": {
+    "php": ">=7",
+    "codegyre/robo": "^0.5.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "Selenia\\Console": "Console"
+    }
+  },
+  "bin": ["bin/selenia"]
+}
