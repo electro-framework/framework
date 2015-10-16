@@ -22,7 +22,7 @@
     "vlucas/phpdotenv": "~2.0.1",
     "php-kit/tools": "dev-master",
     "php-kit/power-primitives": "dev-master",
-    "php-kit/php-web-console": "~0.1.0",
+    "php-kit/php-web-console": "dev-master",
     "php-kit/flow": "dev-master",
     "ircmaxell/password-compat": "dev-master",
     "monolog/monolog": "^1.17.1"
