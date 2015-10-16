@@ -74,6 +74,16 @@ class ModulesApi
   }
 
   /**
+   * Checks if the installed module with the given name is a plugin.
+   * @param string $moduleName `vendor-name/package-name` syntax.
+   * @return bool
+   */
+  function isProjectModule ($moduleName)
+  {
+    return file_exists ("{$this->app->baseDirectory}/{$this->app->modulesPath}/$moduleName");
+  }
+
+  /**
    * Returns the modules registration configuration for this project.
    * If it is already cached, the cached version is returned, otherwise the information will be regenerated
    * and a new cache file created.
@@ -128,13 +138,13 @@ class ModulesApi
    */
   function modules ()
   {
-    $modules = array_merge ($this->plugins (), $this->projectModules ());
+    $modules = array_merge ($this->components(), $this->plugins (), $this->projectModules ());
     return flow ($modules)->map (function ($module) {
       $composerJson        = new JsonFile ("$module->path/composer.json");
       $module->description = $composerJson->exists ()
         ? $composerJson->load ()->get ('description')
         : '';
-      $module->type        = $this->isPlugin ($module->name) ? 'Plugin' : 'Project module';
+      $module->type        = $this->isPlugin ($module->name) ? 'Plugin' : ($this->isProjectModule($module->name) ? 'Project module' : 'Component');
       return $module;
     })->all ();
   }
@@ -198,6 +208,21 @@ class ModulesApi
             ];
           });
       })
+      ->all ();
+  }
+
+  function components ()
+  {
+    return FilesystemFlow
+      ::from ("{$this->app->frameworkPath}/src/components")
+      ->onlyDirectories ()
+      ->map (function (SplFileInfo $dirInfo) {
+            global $application;
+            return (object)[
+              'name' => $dirInfo->getFilename (),
+              'path' => $application->toRelativePath ($dirInfo->getPathname ()),
+            ];
+          })
       ->all ();
   }
 

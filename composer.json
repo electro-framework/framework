@@ -28,11 +28,7 @@
     "php-kit/php-web-console": "dev-master",
     "php-kit/flow": "dev-master",
     "ircmaxell/password-compat": "dev-master",
-    "monolog/monolog": "^1.17.1",
-    "selenia-components/matisse": "dev-master",
-    "selenia-components/task-runner": "dev-master",
-    "selenia-components/core-tasks": "dev-master",
-    "selenia-components/migrations": "dev-master"
+    "monolog/monolog": "^1.17.1"
   },
   "autoload": {
     "psr-4": {
