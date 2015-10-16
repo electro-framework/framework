@@ -366,7 +366,7 @@ class Application
    */
   public $viewsDirectories = [];
 
-  function exceptionHandler (Exception $e)
+  function exceptionHandler ($e)
   {
     if (function_exists ('database_rollback'))
       database_rollback ();
