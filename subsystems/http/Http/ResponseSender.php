@@ -52,7 +52,7 @@ class ResponseSender
 
     $resource = $body->detach ();
     if ($resource) {
-      stream_copy_to_stream ($resource, STDOUT);
+      stream_copy_to_stream ($resource, fopen('php://output', 'w'));
       return;
     }
 

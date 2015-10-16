@@ -1,15 +1,15 @@
 <?php
 namespace Selenia\Http;
 
-use Auryn\Injector;
-use Psr\Http\Message\RequestInterface;
+use PhpKit\WebConsole\WebConsole;
 use Psr\Http\Message\ResponseInterface;
-use Selenia\Interfaces\MiddlewareInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Interfaces\InjectorInterface;
 
 class MiddlewareStack
 {
   /**
-   * @var RequestInterface
+   * @var ServerRequestInterface
    */
   private $currentRequest;
   /**
@@ -17,7 +17,7 @@ class MiddlewareStack
    */
   private $currentResponse;
   /**
-   * @var Injector
+   * @var InjectorInterface
    */
   private $injector;
   /**
@@ -26,7 +26,7 @@ class MiddlewareStack
    */
   private $stack = [];
 
-  function __construct (Injector $injector)
+  function __construct (InjectorInterface $injector)
   {
     $this->injector = $injector;
   }
@@ -49,41 +49,44 @@ class MiddlewareStack
   }
 
   /**
-   * @param RequestInterface  $request
-   * @param ResponseInterface $response
+   * @param ServerRequestInterface $request
+   * @param ResponseInterface      $response
    * @return ResponseInterface
    */
-  function run (RequestInterface $request, ResponseInterface $response)
+  function run (ServerRequestInterface $request, ResponseInterface $response)
   {
     $it   = new \ArrayIterator($this->stack);
     $next = null;
 
-    $next = function (RequestInterface $request, ResponseInterface $response) use ($it, $request, $next) {
-      if ($it->valid ()) {
-        // Make the current state available trough the injector.
-        $this->currentRequest  = $request;
-        $this->currentResponse = $response;
+    $next =
+      function (ServerRequestInterface $request = null, ResponseInterface $response = null) use ($it, $request, &$next
+      ) {
+        if ($it->valid ()) {
+          // Save the current state and also Make it available trough the injector.
+          $request  = $this->currentRequest = $request ?: $this->currentRequest;
+          $response = $this->currentResponse = $response ?: $this->currentResponse;
 
-        /** @var \Selenia\Subsystems\Interfaces\MiddlewareInterface $middleware */
-        $m = $it->current ();
-        $it->next ();
+          /** @var \Selenia\Interfaces\MiddlewareInterface $middleware */
+          $m = $it->current ();
+          $it->next ();
 
-        // Fetch or instantiate the middleware and run it.
-        $middleware  = is_string ($m) ? $this->injector->make ($m) : $m;
-        $newResponse = $middleware ($request, $response, $next);
+          if (WebConsole::$initialized)
+            _log ($m);
 
-        // Replace the response if necessary.
-        if (isset($newResponse)) {
-          if (!$newResponse instanceof ResponseInterface)
+          // Fetch or instantiate the middleware and run it.
+          $middleware  = is_string ($m) ? $this->injector->make ($m) : $m;
+          $newResponse = $middleware ($request, $response, $next);
+
+          // Replace the response if necessary.
+          if (isset($newResponse)) {
+            if ($newResponse instanceof ResponseInterface)
+              return $newResponse;
             throw new \RuntimeException ("Response from middlware " . get_class ($middleware) .
                                          " is not a ResponseInterface implementation.");
-
-          return $newResponse;
+          }
         }
-      }
-
-      return $response;
-    };
+        return $response;
+      };
 
     return $next($request, $response);
   }

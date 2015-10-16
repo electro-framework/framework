@@ -1,16 +1,16 @@
 <?php
 namespace Selenia\Interfaces;
 
-use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 
 interface MiddlewareInterface {
 
   /**
-   * @param RequestInterface  $request
+   * @param ServerRequestInterface  $request
    * @param ResponseInterface $response
-   * @param callable          $next A function with arguments (RequestInterface $request, ResponseInterface $response).
+   * @param callable          $next A function with arguments (ServerRequestInterface $request, ResponseInterface $response).
    * @return ResponseInterface
    */
-  function __invoke (RequestInterface $request, ResponseInterface $response, callable $next);
+  function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next);
 }

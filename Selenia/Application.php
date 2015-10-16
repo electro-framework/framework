@@ -1,18 +1,16 @@
 <?php
 namespace Selenia;
 
-use Auryn\Injector;
 use Exception;
 use Monolog\Handler\HandlerInterface;
 use Monolog\Logger;
-use PhpKit\WebConsole\ConsolePanel;
 use PhpKit\WebConsole\ErrorHandler;
-use PhpKit\WebConsole\Panels\HttpRequestPanel;
 use PhpKit\WebConsole\WebConsole;
-use PhpKit\WebConsole\WebConsoleLogHandler;
+use Selenia\DependencyInjection\Injector;
 use Selenia\Exceptions\ConfigException;
 use Selenia\Http\Controllers\Controller;
 use Selenia\Http\MiddlewareStack;
+use Selenia\Interfaces\ResponseSenderInterface;
 use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\RoutingMap;
 use Zend\Diactoros\Response;
@@ -460,7 +458,7 @@ class Application
 
   function initDOMPanel (Controller $controller)
   {
-    if (isset($controller->page)) {
+    if ($this->debugMode && isset($controller->page)) {
       $insp = $controller->page->inspect (true);
       WebConsole::DOM ()->write ($insp);
 //      $filter = function ($k, $v) { return $k !== 'parent' && $k !== 'page'; };
@@ -486,10 +484,9 @@ class Application
   {
     global $session;
     set_exception_handler ([$this, 'exceptionHandler']);
-    $debug = $this->debugMode = getenv('APP_DEBUG') == 'true';
+    $debug = $this->debugMode = getenv ('APP_DEBUG') == 'true';
 
     ErrorHandler::init ($debug, $rootDir);
-    $this->setupWebConsole ();
     $this->setup ($rootDir);
     $this->bootstrap ();
     $this->initSession ();
@@ -497,16 +494,8 @@ class Application
     $this->mount ($this->frameworkURI, $this->frameworkPath . DIRECTORY_SEPARATOR . $this->modulePublicPath);
     $this->registerPipes ();
     $this->registerMiddleware ();
-    if ($debug) {
-      WebConsole::config ($this);
-      WebConsole::session ()
-                ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="__doAction(\'logout\')">Log out</button>')
-                ->log ($session);
-      $this->logger->pushHandler (new WebConsoleLogHandler(WebConsole::log ()));
-    }
     $this->condenseLiterals = !$debug;
     $this->compressOutput   = !$debug;
-    $this->loadRoutes ();
 
     // Process the request.
 
@@ -518,16 +507,8 @@ class Application
     // Send back the response.
 
     /** @var ResponseSenderInterface $sender */
-    $sender = $this->injector->make ('Selene\Contracts\ResponseSenderInterface');
+    $sender = $this->injector->make ('Selenia\Interfaces\ResponseSenderInterface');
     $sender->send ($response);
-
-    if ($debug) {
-      $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
-      WebConsole::routes ()->withCaption ('Active Route')->withFilter ($filter, $router->activeRoute);
-      WebConsole::response (['Content-Length' => round (ob_get_length () / 1024) . ' KB']);
-    }
-    if (!$router->controller->isWebService)
-      WebConsole::outputContent ();
   }
 
   function setIncludePath ($extra = '')
@@ -572,8 +553,8 @@ class Application
 //    $this->templateDirectories[] = $this->toFilePath ($this->templatesPath);
 //    $this->viewsDirectories[]    = $this->toFilePath ($this->viewPath);
     $this->languageFolders[] = $this->langPath;
-    if (getenv('APP_DEFAULT_LANG'))
-      $this->defaultLang = getenv('APP_DEFAULT_LANG');
+    if (getenv ('APP_DEFAULT_LANG'))
+      $this->defaultLang = getenv ('APP_DEFAULT_LANG');
     $this->logger = new Logger('main', $this->logHandlers);
   }
 
@@ -636,17 +617,20 @@ class Application
 
   protected function bootstrap ()
   {
-    $this->injector        = new Injector;
-    $this->middlewareStack = new MiddlewareStack ($this->injector);
+    $this->injector = new Injector;
+    $this->injector->share ($this);
     $this->injector->delegate ('Psr\Http\Message\ServerRequestInterface', function () {
       return $this->middlewareStack->getCurrentRequest ();
     });
     $this->injector->delegate ('Psr\Http\Message\ResponseInterface', function () {
       return $this->middlewareStack->getCurrentResponse ();
     });
-    $this->injector->alias ('Selenia\Http\Contracts\ResponseSenderInterface', 'Selenia\Http\ResponseSender');
-    $this->injector->share ($this);
+    $this->injector->alias ('Selenia\Interfaces\ResponseSenderInterface', 'Selenia\Http\ResponseSender');
+    $this->injector->alias ('Selenia\Interfaces\InjectorInterface', get_class ($this->injector));
     $this->injector->share ($this->injector);
+    $this->injector->alias ('Psr\Log\LoggerInterface', get_class ($this->logger));
+    $this->injector->share ($this->logger);
+    $this->middlewareStack = new MiddlewareStack ($this->injector);
   }
 
   protected function initSession ()
@@ -684,37 +668,22 @@ class Application
   {
     $this->middlewareStack
       ->add ('Selenia\Http\Middleware\CompressionMiddleware')
-      ->add ('Selenia\Http\Middleware\WebConsoleMiddleware')
-      ->add ('Selenia\Http\Middleware\SessionMiddleware')
-      ->add ('Selenia\Http\Middleware\AuthenticationMiddleware')
-      ->add ('Selenia\Http\Middleware\FileServerMiddleware')
-      ->add ('Selenia\Http\Middleware\LanguageMiddleware')
-      ->add ('Selenia\Http\Middleware\SEOMiddleware')
-      ->add ('Selenia\Http\Middleware\TranslationMiddleware')
-      ->add ('Selenia\Http\Middleware\ModulesLoaderMiddleware')
-      ->add ('Selenia\Http\Middleware\RoutingMiddleware')
-      ->add ('Selenia\Http\Middleware\URINotFoundMiddleware');
+      ->add ('Selenia\Debugging\WebConsoleMiddleware')
+      ->add ('Selenia\ErrorHandling\ErrorHandlingMiddleware')
+      ->add ('Selenia\Assembly\AssemblyMiddleware')
+      ->add ('Selenia\Sessions\SessionMiddleware')
+      ->add ('Selenia\Authentication\AuthenticationMiddleware')
+      ->add ('Selenia\FileServer\FileServerMiddleware')
+      ->add ('Selenia\Localization\LanguageMiddleware')
+      ->add ('Selenia\Localization\TranslationMiddleware')
+      ->add ('Selenia\Routing\Middleware\RoutingMiddleware')
+      ->add ('Selenia\Routing\Middleware\URINotFoundMiddleware');
   }
 
   protected function registerPipes ()
   {
     $this->pipeHandler = new PipeHandler;
     $this->pipeHandler->registerPipes (new DefaultPipes);
-  }
-
-  protected function setupWebConsole ()
-  {
-    WebConsole::init ($this->debugMode);
-    WebConsole::registerPanel ('request', new HttpRequestPanel ('Request', 'fa fa-paper-plane'));
-    WebConsole::registerPanel ('response', new ConsolePanel ('Response', 'fa fa-file'));
-    WebConsole::registerPanel ('routes', new ConsolePanel ('Routes', 'fa fa-location-arrow'));
-    WebConsole::registerPanel ('config', new ConsolePanel ('Config.', 'fa fa-cogs'));
-    WebConsole::registerPanel ('session', new ConsolePanel ('Session', 'fa fa-user'));
-    WebConsole::registerPanel ('DOM', new ConsolePanel ('DOM', 'fa fa-sitemap'));
-    WebConsole::registerPanel ('vm', new ConsolePanel ('View Models', 'fa fa-table'));
-    WebConsole::registerPanel ('database', new ConsolePanel ('Database', 'fa fa-database'));
-//    WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
-    ErrorHandler::$appName = $this->appName;
   }
 
   private function loadConfig ($iniPath)
@@ -727,18 +696,6 @@ class Application
     else
       throw new ConfigException("Error parsing " . ErrorHandler::shortFileName ($iniPath));
     $this->config = $ini;
-  }
-
-  private function loadRoutes ()
-  {
-    $map         = $this->routingMap = new RoutingMap();
-    $map->routes = array_merge ($map->routes, $this->routes);
-    $map->init ();
-
-    if ($this->debugMode) {
-      $filter = function ($k, $v) { return $k !== 'parent' || is_null ($v) ?: '...'; };
-      WebConsole::routes ()->withFilter ($filter, $this->routingMap->routes);
-    }
   }
 
 }

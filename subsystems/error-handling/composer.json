@@ -1,6 +1,6 @@
 {
-  "name": "selenia-contracts/dependency-injection",
-  "description": "Selenia framework's dependency-injection subsystem",
+  "name": "selenia-subsystems/error-handling",
+  "description": "Selenia framework's error handling subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -14,12 +14,12 @@
     }
   ],
   "require": {
-    "php": ">=7",
-    "rdlowrey/auryn": "^1.1.0"
+    "php": ">=5.4",
+    "php-kit/php-web-console": "dev-master"
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\DependencyInjection\\": "DependencyInjection"
+      "Selenia\\ErrorHandling\\": "ErrorHandling"
     }
   }
 }

@@ -3,13 +3,6 @@ namespace Selenia\Interfaces;
 
 interface InjectorInterface
 {
-  const I_BINDINGS = 1;
-  const I_DELEGATES = 2;
-  const I_PREPARES = 4;
-  const I_ALIASES = 8;
-  const I_SHARES = 16;
-  const I_ALL = 17;
-
   /**
    * Define an alias for all occurrences of a given typehint
    *
@@ -68,17 +61,6 @@ interface InjectorInterface
    * @return mixed Returns the invocation result returned from calling the generated executable
    */
   function execute ($callableOrMethodStr, array $args = []);
-
-  /**
-   * Retrieve stored data for the specified definition type
-   *
-   * Exposes introspection of existing binds/delegates/shares/etc for decoration and composition.
-   *
-   * @param string $nameFilter An optional class name filter
-   * @param int    $typeFilter A bitmask of <kbd>InjectorInterface::I_*</kbd> type constant flags
-   * @return array
-   */
-  function inspect ($nameFilter = null, $typeFilter = null);
 
   /**
    * Instantiate/provision a class instance

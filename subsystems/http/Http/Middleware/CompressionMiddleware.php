@@ -1,6 +1,6 @@
 <?php
 namespace Selenia\Http\Middleware;
-use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Selenia\Interfaces\MiddlewareInterface;
 
@@ -9,7 +9,8 @@ use Selenia\Interfaces\MiddlewareInterface;
  */
 class CompressionMiddleware implements MiddlewareInterface
 {
-  function __invoke (RequestInterface $request, ResponseInterface $response, callable $next)
+  function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
+    return $next();
   }
 }

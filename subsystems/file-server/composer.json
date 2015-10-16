@@ -1,6 +1,6 @@
 {
-  "name": "selenia-contracts/dependency-injection",
-  "description": "Selenia framework's dependency-injection subsystem",
+  "name": "selenia-subsystems/file-server",
+  "description": "Selenia framework's file server subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -14,12 +14,11 @@
     }
   ],
   "require": {
-    "php": ">=7",
-    "rdlowrey/auryn": "^1.1.0"
+    "php": ">=5.4"
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\DependencyInjection\\": "DependencyInjection"
+      "Selenia\\FileServer\\": "FileServer"
     }
   }
 }

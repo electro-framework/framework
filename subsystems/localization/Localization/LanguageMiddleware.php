@@ -1,6 +1,6 @@
 <?php
-namespace Selenia\Subsystems\Http\Middleware;
-use Psr\Http\Message\RequestInterface;
+namespace Selenia\Localization;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Selenia\Exceptions\ConfigException;
 use Selenia\Interfaces\MiddlewareInterface;
@@ -10,11 +10,11 @@ use Selenia\Interfaces\MiddlewareInterface;
  */
 class LanguageMiddleware implements MiddlewareInterface
 {
-  function __invoke (RequestInterface $request, ResponseInterface $response, callable $next)
+  function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     global $application, $session, $controller;
     if (empty($application->languages))
-      return;
+      return $next();
     $controller->languages = $application->languages;
     $controller->langInfo  = [];
     foreach ($controller->languages as $langDat) {
@@ -47,5 +47,7 @@ class LanguageMiddleware implements MiddlewareInterface
       $controller->langLabel = $controller->langInfo[$controller->lang]['label'];
       setlocale (LC_ALL, $locales);
     }
+
+    return $next();
   }
 }
