@@ -302,7 +302,7 @@ class Controller
       $folders = array_reverse ($application->languageFolders);
       foreach ($folders as $folder) {
         $path = "$folder/$lang.ini";
-        $z    = @parse_ini_file ($path);
+        $z    = file_exists($path) ? parse_ini_file ($path) : null;
         if (!empty($z)) {
           $found                    = true;
           self::$translation[$lang] = array_merge (get (self::$translation, $lang, []), $z);

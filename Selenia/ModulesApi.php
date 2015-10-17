@@ -75,6 +75,16 @@ class ModulesApi
   }
 
   /**
+   * Checks if the installed module with the given name is a plugin.
+   * @param string $moduleName `vendor-name/package-name` syntax.
+   * @return bool
+   */
+  function isProjectModule ($moduleName)
+  {
+    return file_exists ("{$this->app->baseDirectory}/{$this->app->modulesPath}/$moduleName");
+  }
+
+  /**
    * Returns the modules registration configuration for this project.
    * If it is already cached, the cached version is returned, otherwise the information will be regenerated
    * and a new cache file created.
@@ -129,13 +139,14 @@ class ModulesApi
    */
   function modules ()
   {
-    $modules = array_merge ($this->plugins (), $this->projectModules ());
+    $modules = array_merge ($this->subsystems (), $this->plugins (), $this->projectModules ());
     return flow ($modules)->map (function ($module) {
       $composerJson        = new JsonFile ("$module->path/composer.json");
       $module->description = $composerJson->exists ()
         ? $composerJson->load ()->get ('description')
         : '';
-      $module->type        = $this->isPlugin ($module->name) ? 'Plugin' : 'Project module';
+      $module->type        = $this->isPlugin ($module->name)
+        ? 'Plugin' : ($this->isProjectModule ($module->name) ? 'Project module' : 'Subsystem');
       return $module;
     })->all ();
   }
@@ -253,6 +264,23 @@ class ModulesApi
     }
   }
 
+  function subsystems ()
+  {
+    return FilesystemFlow
+      ::from ("{$this->app->frameworkPath}/subsystems")
+      ->onlyDirectories ()
+      ->mapAndFilter (function (SplFileInfo $dirInfo) {
+        $path = $dirInfo->getPathname ();
+        if (!file_exists ("$path/bootstrap.php")) return null;
+        $p = strpos ($path, 'framework/');
+        return (object)[
+          'name' => $dirInfo->getFilename (),
+          'path' => "private/packages/selenia/" . substr ($path, $p),
+        ];
+      })
+      ->pack ()->all ();
+  }
+
   /**
    * Updates the manifest cache file so that it correctly states the currently installed modules.
    * @return object The updated manifest.
@@ -284,5 +312,6 @@ class ModulesApi
       'modules' => $this->get ()->modules (),
     ];
   }
+
 
 }

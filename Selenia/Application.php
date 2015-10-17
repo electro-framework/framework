@@ -544,7 +544,7 @@ class Application
     $this->rootPath      = $rootDir;
     $this->URI           = $baseURI;
     $this->baseURI       = $baseURI;
-    $this->frameworkPath = updir (__DIR__, 2);
+    $this->frameworkPath = updir (__DIR__);
     $this->VURI          = $vuri;
 
     $this->setIncludePath ();
