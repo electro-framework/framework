@@ -1,0 +1,34 @@
+{
+  "name": "selenia-subsystems/web-server",
+  "description": "Selenia framework's web-server subsystem",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Impactwave",
+      "email": "impactwave@impactwave.com",
+      "homepage": "http://impactwave.com"
+    },
+    {
+      "name": "Cláudio Silva",
+      "email": "claudio.silva@impactwave.com"
+    }
+  ],
+  "require": {
+    "php": ">=7",
+    "selenia-subsystems/assembly": "self.version",
+    "selenia-subsystems/authentication": "self.version",
+    "selenia-subsystems/authorization": "self.version",
+    "selenia-subsystems/caching": "self.version",
+    "selenia-subsystems/configuration": "self.version",
+    "selenia-subsystems/debugging": "self.version",
+    "selenia-subsystems/http": "self.version",
+    "selenia-subsystems/routing": "self.version",
+    "selenia-subsystems/sessions": "self.version",
+    "selenia-subsystems/view-engine": "self.version"
+  },
+  "autoload": {
+    "psr-4": {
+      "Selenia\\WebServer": "WebServer"
+    }
+  }
+}
