@@ -1,13 +1,10 @@
 <?php
-namespace Selenia\TaskRunner;
+namespace Selenia\Console\TaskRunner;
 
-use Robo\Config;
-use Selenia\Contracts\ConsoleIOInterface;
+use Selenia\Console\Contracts\ConsoleIOInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterStyleInterface;
 use Symfony\Component\Console\Helper\QuestionHelper;
-use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Question\Question;

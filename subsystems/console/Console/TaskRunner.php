@@ -1,10 +1,12 @@
 <?php
-namespace Selenia;
+namespace Selenia\Console;
 use Robo\Config;
 use Robo\Result;
 use Robo\Runner;
 use Robo\TaskInfo;
-use Selenia\TaskRunner\ConsoleIO;
+use Selenia\Application;
+use Selenia\Console\TaskRunner\ConsoleIO;
+use Selenia\ModulesApi;
 use Symfony\Component\Console\Application as ConsoleApplication;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputInterface;
@@ -76,8 +78,9 @@ class TaskRunner extends Runner
   function run (array $args = null)
   {
     global $application;
-    $application = new Application();
+    $application = new Application;
     $application->setup (getcwd ());
+    ModulesApi::get ()->bootModules ();
     $this->execute ($args);
   }
 

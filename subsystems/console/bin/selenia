@@ -1,7 +1,6 @@
 #!/usr/bin/env php
 <?php
 
-$tmp = dirname (dirname (dirname (dirname (__DIR__))));
-require "$tmp/packages/autoload.php";
+require "{$_SERVER['PWD']}/private/packages/autoload.php";
 
-(new Selenia\TaskRunner())->run ();
+(new Selenia\Console\TaskRunner())->run ();

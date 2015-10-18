@@ -488,7 +488,6 @@ class Application
 
     ErrorHandler::init ($debug, $rootDir);
     $this->setup ($rootDir);
-    $this->bootstrap ();
     $this->initSession ();
     ModulesApi::get ()->bootModules ();
     $this->mount ($this->frameworkURI, $this->frameworkPath . DIRECTORY_SEPARATOR . $this->modulePublicPath);
@@ -556,6 +555,8 @@ class Application
     if (getenv ('APP_DEFAULT_LANG'))
       $this->defaultLang = getenv ('APP_DEFAULT_LANG');
     $this->logger = new Logger('main', $this->logHandlers);
+
+    $this->bootstrap ();
   }
 
   function toFilePath ($URI, &$isMapped = false)

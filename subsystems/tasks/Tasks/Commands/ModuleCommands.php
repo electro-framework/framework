@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Commands;
+namespace Selenia\Tasks\Commands;
 use PhpKit\Flow\FilesystemFlow;
 use Robo\Task\Composer\DumpAutoload;
 use Robo\Task\Composer\Update;
@@ -8,11 +8,11 @@ use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
 use Robo\Task\Vcs\GitStack;
 use Selenia\Contracts\ApplicationServiceTrait;
-use Selenia\Contracts\ConsoleIOServiceTrait;
-use Selenia\Contracts\FileSystemStackServiceTrait;
+use Selenia\Console\Contracts\ConsoleIOServiceTrait;
+use Selenia\Console\Contracts\FileSystemStackServiceTrait;
 use Selenia\Contracts\ModuleConfigServiceTrait;
 use Selenia\Exceptions\HttpException;
-use Selenia\Lib\PackagistAPI;
+use Selenia\Console\Lib\PackagistAPI;
 use Selenia\ModulesApi;
 use Selenia\Tasks\InstallPackageTask;
 use Selenia\Tasks\UninstallPackageTask;

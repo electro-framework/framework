@@ -4,7 +4,7 @@ namespace Selenia\Migrations;
 use Phinx\Console\Command;
 use Robo\Config;
 use Selenia\ModulesApi;
-use Selenia\TaskRunner\ConsoleIO;
+use Selenia\Console\TaskRunner\ConsoleIO;
 use Symfony\Component\Console\Input\ArrayInput;
 
 /**

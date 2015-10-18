@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Contracts;
+namespace Selenia\Console\Contracts;
 
 use Symfony\Component\Console\Formatter\OutputFormatterStyleInterface;
 use Symfony\Component\Console\Helper\QuestionHelper;

@@ -2,7 +2,7 @@
 namespace Selenia;
 use Exception;
 use PhpKit\Flow\FilesystemFlow;
-use Selenia\Contracts\ConsoleIOInterface;
+use Selenia\Console\Contracts\ConsoleIOInterface;
 use Selenia\Exceptions\ConfigException;
 use Selenia\Exceptions\FatalException;
 use Selenia\Lib\ComposerConfigHandler;

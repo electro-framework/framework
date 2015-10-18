@@ -1,9 +1,9 @@
 <?php
-namespace Selenia\Commands;
+namespace Selenia\Tasks\Commands;
 use Robo\Task\Bower;
 use Robo\Task\FileSystem\CleanDir;
 use Selenia\Contracts\ApplicationServiceTrait;
-use Selenia\Contracts\ConsoleIOServiceTrait;
+use Selenia\Console\Contracts\ConsoleIOServiceTrait;
 use Selenia\ModulesApi;
 
 /**
@@ -48,6 +48,7 @@ trait BuildCommands
 
   /**
    * Cleans the application-specific assets from the public_html/dist folder
+   * TODO: make public when ready
    */
   private function cleanApp ()
   {
@@ -56,6 +57,7 @@ trait BuildCommands
 
   /**
    * Cleans the front-end libraries from the public_html/lib folder
+   * TODO: make public when ready
    */
   private function cleanLibs ()
   {
@@ -64,6 +66,7 @@ trait BuildCommands
 
   /**
    * Cleans the module's assets from the public_html/modules folder
+   * TODO: make public when ready
    */
   private function cleanModules ()
   {

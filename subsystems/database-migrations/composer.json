@@ -1,11 +1,6 @@
 {
-  "name": "selenia-components/migrations",
+  "name": "selenia-subsystems/database-migrations",
   "description": "Selenia framework's database migrations support",
-  "type": "selenia-plugin",
-  "keywords": [
-    "plugin",
-    "selenia"
-  ],
   "license": "MIT",
   "authors": [
     {
@@ -20,8 +15,7 @@
   ],
   "require": {
     "php": ">=5.4.0",
-    "selenia/installers": "^1.0.0",
-    "selenia-components/task-runner": "dev-master",
+    "selenia-subsystems/console": "dev-master",
     "robmorgan/phinx": "dev-master"
   },
   "autoload": {

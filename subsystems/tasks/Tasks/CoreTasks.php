@@ -1,10 +1,10 @@
 <?php
-namespace Selenia;
+namespace Selenia\Tasks;
 use Robo\Task\FileSystem\FilesystemStack;
-use Selenia\Commands\BuildCommands;
-use Selenia\Commands\InitCommands;
-use Selenia\Commands\ModuleCommands;
-use Selenia\TaskRunner\ConsoleIO;
+use Selenia\Tasks\Commands\BuildCommands;
+use Selenia\Tasks\Commands\InitCommands;
+use Selenia\Tasks\Commands\ModuleCommands;
+use Selenia\Console\TaskRunner\ConsoleIO;
 
 /**
  * The preset Selenia console tasks configuration for Selenia's task runner.

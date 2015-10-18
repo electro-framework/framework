@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Lib;
+namespace Selenia\Console\Lib;
 
 class ApplicationConfigHandler
 {

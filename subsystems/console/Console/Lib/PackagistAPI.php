@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Lib;
+namespace Selenia\Console\Lib;
 use PhpCode;
 use RuntimeException;
 use Selenia\Exceptions\HttpException;

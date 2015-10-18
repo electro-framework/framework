@@ -1,7 +1,7 @@
 <?php
-namespace Selenia\Tasks;
+namespace Selenia\Tasks\Shared;
 
-use Selenia\Tasks\Base\ComposerTask;
+use Selenia\Tasks\Shared\Base\ComposerTask;
 
 class UninstallPackageTask extends ComposerTask
 {

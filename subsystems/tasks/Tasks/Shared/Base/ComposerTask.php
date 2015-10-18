@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Tasks\Base;
+namespace Selenia\Tasks\Shared\Base;
 use Robo\Task\Composer\Base;
 
 class ComposerTask extends Base

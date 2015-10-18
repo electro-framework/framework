@@ -1,13 +1,13 @@
 <?php
-namespace Selenia\Commands;
+namespace Selenia\Tasks\Commands;
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
 use Selenia\Contracts\ApplicationServiceTrait;
-use Selenia\Contracts\ConsoleIOServiceTrait;
-use Selenia\Contracts\FileSystemStackServiceTrait;
+use Selenia\Console\Contracts\ConsoleIOServiceTrait;
+use Selenia\Console\Contracts\FileSystemStackServiceTrait;
 use Selenia\Contracts\ModuleConfigServiceTrait;
-use Selenia\TaskRunner;
+use Selenia\Console\TaskRunner;
 use Selenia\Tasks\ChmodEx;
 
 /**
