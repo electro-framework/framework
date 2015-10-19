@@ -618,6 +618,7 @@ class Application
     });
     $this->injector->alias ('Selenia\Interfaces\ResponseSenderInterface', 'Selenia\HttpMiddleware\ResponseSender');
     $this->injector->alias ('Selenia\Interfaces\InjectorInterface', get_class ($this->injector));
+    $this->injector->alias ('Selenia\Interfaces\ResponseMakerInterface', 'Selenia\Http\ResponseMaker');
     $this->injector->share ($this->injector);
     $this->injector->alias ('Psr\Log\LoggerInterface', get_class ($this->logger));
     $this->injector->share ($this->logger);

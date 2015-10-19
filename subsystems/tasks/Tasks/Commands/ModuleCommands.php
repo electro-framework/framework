@@ -14,8 +14,8 @@ use Selenia\Contracts\ModuleConfigServiceTrait;
 use Selenia\Exceptions\HttpException;
 use Selenia\Console\Lib\PackagistAPI;
 use Selenia\ModulesApi;
-use Selenia\Tasks\InstallPackageTask;
-use Selenia\Tasks\UninstallPackageTask;
+use Selenia\Tasks\Shared\InstallPackageTask;
+use Selenia\Tasks\Shared\UninstallPackageTask;
 
 /**
  * Implements the Selenia Task Runner's pre-set build commands.

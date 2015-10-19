@@ -28,7 +28,7 @@ class HttpException extends \Exception
    * @param string $msg
    * @param string $info
    */
-  public function __construct ($statusCode = 500, $msg = '', $info)
+  public function __construct ($statusCode = 500, $msg = '', $info = '')
   {
     if (!$msg) {
       if (isset(self::$MESSAGES[$statusCode]))

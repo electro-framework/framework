@@ -76,9 +76,6 @@ class MiddlewareStack
           $m = $it->current ();
           $it->next ();
 
-          if (WebConsole::$initialized)
-            _log ($m);
-
           // Fetch or instantiate the middleware and run it.
           $middleware  = is_string ($m) ? $this->injector->make ($m) : $m;
           $newResponse = $middleware ($request, $response, $next);

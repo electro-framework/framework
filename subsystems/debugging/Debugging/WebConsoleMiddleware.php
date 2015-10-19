@@ -40,6 +40,7 @@ class WebConsoleMiddleware implements MiddlewareInterface
 //    WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
 
     $response = $next ();
+    $response->getBody()->rewind();
 
     WebConsole::request()->setRequest ($request);
     WebConsole::response()->setResponse ($response);

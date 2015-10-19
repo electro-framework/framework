@@ -8,7 +8,7 @@ use Selenia\Console\Contracts\ConsoleIOServiceTrait;
 use Selenia\Console\Contracts\FileSystemStackServiceTrait;
 use Selenia\Contracts\ModuleConfigServiceTrait;
 use Selenia\Console\TaskRunner;
-use Selenia\Tasks\ChmodEx;
+use Selenia\Tasks\Shared\ChmodEx;
 
 /**
  * Implements the Selenia Task Runner's pre-set init:xxx commands.

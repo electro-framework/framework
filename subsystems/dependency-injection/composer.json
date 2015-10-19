@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "php": ">=7",
+    "php": ">=5.4",
     "rdlowrey/auryn": "^1.1.0"
   },
   "autoload": {

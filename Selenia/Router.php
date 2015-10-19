@@ -80,8 +80,10 @@ class Router
 
     $router = new Router();
     $router->init ();
-    $router->controller       = $router->load ();
-    $router->controller->lang = $lang;
+    if (isset ($router->activeRoute)) {
+      $router->controller       = $router->load ();
+      $router->controller->lang = $lang;
+    }
     return $router;
   }
 
@@ -101,16 +103,8 @@ class Router
     if (!isset($application->routingMap))
       throw new ConfigException("No route map defined.");
     $this->activeRoute = $application->routingMap->searchFor ($this->virtualURI, $key);
-    if (is_null ($this->activeRoute)) {
-      if (strpos (get ($_SERVER, 'HTTP_ACCEPT'), 'text/html') !== false)
-        Controller::pageNotFound ($this->virtualURI);
-      else {
-        header ("Content-Type: text/plain");
-        http_response_code (404);
-        echo "Not found";
-        exit;
-      }
-    }
+    if (is_null ($this->activeRoute))
+      return;
 
     //Setup preset parameters
 
@@ -129,6 +123,10 @@ class Router
   public function load ()
   {
     global $application;
+
+    if (is_null ($this->activeRoute))
+      return;
+
     /** @var Controller $con */
     $con  = null;
     $auto = $this->activeRoute->autoController;

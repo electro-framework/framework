@@ -1,11 +1,11 @@
 <?php
-namespace Selenia;
+namespace Selenia\Http\Controllers;
 
 use ReflectionException;
 use ReflectionObject;
+use Selenia\DataObject;
 use Selenia\Exceptions\BaseException;
 use Selenia\Exceptions\Status;
-use Selenia\Http\Controllers\Controller;
 
 class WebServiceController extends Controller
 {

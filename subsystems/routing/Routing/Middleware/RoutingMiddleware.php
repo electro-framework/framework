@@ -42,7 +42,9 @@ class RoutingMiddleware implements MiddlewareInterface
       echo $e->getMessage ();
       exit;
     }
-    return $router->controller->__invoke ($request, $response, $next);
+    return isset($router->controller)
+      ? $router->controller->__invoke ($request, $response, $next)
+      : $next ();
   }
 
   private function loadRoutes ()

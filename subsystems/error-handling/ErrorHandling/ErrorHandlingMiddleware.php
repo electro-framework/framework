@@ -8,6 +8,7 @@ use Psr\Log\LoggerInterface;
 use Selenia\Application;
 use Selenia\Exceptions\HttpException;
 use Selenia\Interfaces\MiddlewareInterface;
+use Selenia\Interfaces\ResponseMakerInterface;
 
 /**
  * Handles errors that occur throughout the HTTP middleware stack.
@@ -16,11 +17,13 @@ class ErrorHandlingMiddleware implements MiddlewareInterface
 {
   private $app;
   private $logger;
+  private $responseMaker;
 
-  function __construct (Application $app, LoggerInterface $logger)
+  function __construct (Application $app, LoggerInterface $logger, ResponseMakerInterface $responseMaker)
   {
     $this->app    = $app;
     $this->logger = $logger;
+    $this->responseMaker = $responseMaker;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -35,6 +38,7 @@ class ErrorHandlingMiddleware implements MiddlewareInterface
       );
 
       if ($error instanceof HttpException) {
+        $response = $this->responseMaker->make();
         $response->getBody ()->write ("<!DOCTYPE html>
 <html>
   <head>
@@ -55,7 +59,6 @@ class ErrorHandlingMiddleware implements MiddlewareInterface
 </html>");
         return $response->withStatus ($error->getCode (), $error->getMessage ());
       }
-
       return ErrorHandler::showErrorPopup ($error, $response);
     }
   }
