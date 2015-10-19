@@ -65,5 +65,6 @@
     "branch-alias": {
       "dev-master": "2.x-dev"
     }
-  }
+  },
+  "bin": ["subsystems/console/bin/selenia"]
 }
