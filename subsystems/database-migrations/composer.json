@@ -14,8 +14,8 @@
     }
   ],
   "require": {
-    "php": ">=5.4.0",
-    "selenia-subsystems/console": "dev-master",
+    "php": ">=5.4",
+    "selenia-subsystems/console": "self.version",
     "robmorgan/phinx": "dev-master"
   },
   "autoload": {

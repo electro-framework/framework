@@ -14,17 +14,7 @@
     }
   ],
   "require": {
-    "php": ">=7",
-    "selenia-subsystems/assembly": "self.version",
-    "selenia-subsystems/authentication": "self.version",
-    "selenia-subsystems/authorization": "self.version",
-    "selenia-subsystems/caching": "self.version",
-    "selenia-subsystems/configuration": "self.version",
-    "selenia-subsystems/debugging": "self.version",
-    "selenia-subsystems/http": "self.version",
-    "selenia-subsystems/routing": "self.version",
-    "selenia-subsystems/sessions": "self.version",
-    "selenia-subsystems/view-engine": "self.version"
+    "php": ">=5.4"
   },
   "autoload": {
     "psr-4": {
