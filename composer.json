@@ -39,6 +39,7 @@
     "selenia-subsystems/event-bus": "self.version",
     "selenia-subsystems/file-server": "self.version",
     "selenia-subsystems/http": "self.version",
+    "selenia-subsystems/http-middleware": "self.version",
     "selenia-subsystems/interfaces": "self.version",
     "selenia-subsystems/localization": "self.version",
     "selenia-subsystems/logging": "self.version",

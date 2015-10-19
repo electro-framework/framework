@@ -21,10 +21,22 @@ class HttpException extends \Exception
     503 => 'Service Unavailable',
   ];
 
-  public function __construct ($statusCode = 500, $msg = '')
+  public $info = '';
+
+  /**
+   * @param int    $statusCode
+   * @param string $msg
+   * @param string $info
+   */
+  public function __construct ($statusCode = 500, $msg = '', $info)
   {
-    if (!$msg) $msg = "<h1>$statusCode " . get (self::$MESSAGES, $statusCode) . "</h1>";
+    if (!$msg) {
+      if (isset(self::$MESSAGES[$statusCode]))
+        $msg = self::$MESSAGES[$statusCode];
+      else $msg = "HTTP status code $statusCode";
+    }
     parent::__construct ($msg, $statusCode);
+    $this->info = $info;
   }
 
 }

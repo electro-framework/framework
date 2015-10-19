@@ -1,5 +1,6 @@
 <?php
 namespace Selenia\Routing\Middleware;
+use PhpKit\WebConsole\WebConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
@@ -25,8 +26,6 @@ class RoutingMiddleware implements MiddlewareInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    return $next();
-
     $this->loadRoutes ();
 
     if ($this->app->debugMode) {

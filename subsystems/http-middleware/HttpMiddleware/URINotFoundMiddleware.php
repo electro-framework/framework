@@ -1,8 +1,9 @@
 <?php
-namespace Selenia\Routing\Middleware;
+namespace Selenia\HttpMiddleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
+use Selenia\Exceptions\HttpException;
 use Selenia\Interfaces\MiddlewareInterface;
 
 /**
@@ -19,8 +20,7 @@ class URINotFoundMiddleware implements MiddlewareInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $response->getBody ()
-             ->write ("<h1>Not Found</h1><p>The requested virtual URL <code><big>{$this->app->baseURI}/<b>{$request->getAttribute('VURI')}</b></big></code> was not found on this server.</p>");
-    return $response->withStatus (404, 'Not Found');
+    throw new HttpException (404, '',
+      "The requested virtual URL <kbd><b>/{$request->getAttribute('VURI')}</b></kbd> on <kbd>{$this->app->baseURI}/</kbd> is not valid for this application.");
   }
 }

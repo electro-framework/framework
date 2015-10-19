@@ -8,8 +8,7 @@ use PhpKit\WebConsole\ErrorHandler;
 use PhpKit\WebConsole\WebConsole;
 use Selenia\DependencyInjection\Injector;
 use Selenia\Exceptions\ConfigException;
-use Selenia\Http\Controllers\Controller;
-use Selenia\Http\MiddlewareStack;
+use Selenia\HttpMiddleware\MiddlewareStack;
 use Selenia\Interfaces\ResponseSenderInterface;
 use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\RoutingMap;
@@ -456,17 +455,6 @@ class Application
     return "$this->baseURI/$this->imageArchivePath/$fileName";
   }
 
-  function initDOMPanel (Controller $controller)
-  {
-    if ($this->debugMode && isset($controller->page)) {
-      $insp = $controller->page->inspect (true);
-      WebConsole::DOM ()->write ($insp);
-//      $filter = function ($k, $v) { return $k !== 'parent' && $k !== 'page'; };
-//      WebConsole::DOM ()->withFilter($filter, $controller->page);
-      WebConsole::vm ()->log ($controller->context->dataSources);
-    }
-  }
-
   /**
    * Composer packages can call this method to expose assets on web.
    * @param string $URI
@@ -487,6 +475,8 @@ class Application
     $debug = $this->debugMode = getenv ('APP_DEBUG') == 'true';
 
     ErrorHandler::init ($debug, $rootDir);
+    ErrorHandler::$appName = $this->appName;
+    WebConsole::init ($debug);
     $this->setup ($rootDir);
     $this->initSession ();
     ModulesApi::get ()->bootModules ();
@@ -626,7 +616,7 @@ class Application
     $this->injector->delegate ('Psr\Http\Message\ResponseInterface', function () {
       return $this->middlewareStack->getCurrentResponse ();
     });
-    $this->injector->alias ('Selenia\Interfaces\ResponseSenderInterface', 'Selenia\Http\ResponseSender');
+    $this->injector->alias ('Selenia\Interfaces\ResponseSenderInterface', 'Selenia\HttpMiddleware\ResponseSender');
     $this->injector->alias ('Selenia\Interfaces\InjectorInterface', get_class ($this->injector));
     $this->injector->share ($this->injector);
     $this->injector->alias ('Psr\Log\LoggerInterface', get_class ($this->logger));
@@ -668,8 +658,8 @@ class Application
   protected function registerMiddleware ()
   {
     $this->middlewareStack
-      ->add ('Selenia\Http\Middleware\CompressionMiddleware')
-      ->add ('Selenia\Debugging\WebConsoleMiddleware')
+      ->addIf (!$this->debugMode, 'Selenia\Http\Middleware\CompressionMiddleware')
+      ->addIf ($this->debugMode, 'Selenia\Debugging\WebConsoleMiddleware')
       ->add ('Selenia\ErrorHandling\ErrorHandlingMiddleware')
       ->add ('Selenia\Assembly\AssemblyMiddleware')
       ->add ('Selenia\Sessions\SessionMiddleware')
@@ -678,7 +668,7 @@ class Application
       ->add ('Selenia\Localization\LanguageMiddleware')
       ->add ('Selenia\Localization\TranslationMiddleware')
       ->add ('Selenia\Routing\Middleware\RoutingMiddleware')
-      ->add ('Selenia\Routing\Middleware\URINotFoundMiddleware');
+      ->add ('Selenia\HttpMiddleware\URINotFoundMiddleware');
   }
 
   protected function registerPipes ()

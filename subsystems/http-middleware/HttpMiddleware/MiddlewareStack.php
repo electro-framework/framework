@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Http;
+namespace Selenia\HttpMiddleware;
 
 use PhpKit\WebConsole\WebConsole;
 use Psr\Http\Message\ResponseInterface;
@@ -34,7 +34,13 @@ class MiddlewareStack
   function add ($middlewareClass)
   {
     $this->stack[] = $middlewareClass;
+    return $this;
+  }
 
+  function addIf ($condition, $middlewareClass)
+  {
+    if ($condition)
+      $this->stack[] = $middlewareClass;
     return $this;
   }
 

@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/http",
-  "description": "Selenia framework's HTTP subsystem",
+  "name": "selenia-subsystems/http-middleware",
+  "description": "Selenia framework's HTTP middleware subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -15,11 +15,11 @@
   ],
   "require": {
     "php": ">=5.4",
-    "zendframework/zend-diactoros": "^1.1.3"
+    "zendframework/zend-stratigility": "^1.1.2"
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\Http\\": "Http"
+      "Selenia\\HttpMiddleware\\": "HttpMiddleware"
     }
   }
 }

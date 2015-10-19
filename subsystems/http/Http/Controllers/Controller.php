@@ -5,6 +5,8 @@ use Exception;
 use PDO;
 use PDOStatement;
 use PhpKit\WebConsole\ErrorHandler;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use ReflectionException;
 use ReflectionObject;
 use Selenia\Application;
@@ -28,6 +30,7 @@ use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\MatisseEngine;
 use Selenia\Router;
 use Selenia\Routing\PageRoute;
+use Zend\Diactoros\Response\HtmlResponse;
 
 ob_start ();
 
@@ -406,8 +409,14 @@ class Controller
    * Request handling has 2 phases:
    * 1 - processRequest() - optional - performs actions requested by the client;
    * 2 - processView() - optional - generates the user interface and any relevant information to display on the client.
+   *
+   * @param ServerRequestInterface $request
+   * @param ResponseInterface      $response
+   * @param callable               $next
+   * @throws BaseException
+   * @throws Exception
    */
-  final function __invoke (Request $request, Response $response, callable $next)
+  final function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     global $controller, $application;
     $controller   = $this;
@@ -459,15 +468,9 @@ class Controller
         }
       }
       $this->finalize ();
+      $content = ob_get_clean();
+      return new HtmlResponse ($content);
     } catch (Exception $e) {
-      if ($e instanceof HttpException) {
-        @ob_get_clean ();
-        http_response_code ($e->getCode ());
-        echo $e->getMessage ();
-        if ($application->debugMode)
-          echo "\n\nStack trace:\n" . $e->getTraceAsString () . "\n";
-        exit;
-      }
       if ($e instanceof BaseException) {
         if (isset($this->redirectURI) && $e->getStatus () != Status::FATAL) {
           $this->setStatusFromException ($e);
@@ -1138,10 +1141,7 @@ class Controller
 
   protected function parseView ($viewTemplate)
   {
-    global $application;
     $this->engine->parse ($viewTemplate, $this->context, $this->page);
-    if ($application->debugMode)
-      $application->initDOMPanel ($this);
   }
 
   /**
@@ -1329,8 +1329,10 @@ class Controller
     $_SESSION['isValid'] = isset($session) && $session->isValid;
     $this->setDataSource ('application', new DataRecord($application));
     $this->setDataSource ('session', new DataRecord($_SESSION));
-    $this->setDataSource ('user', new DataRecord ($session->user));
-    $this->setDataSource ('sessionInfo', new DataRecord($session));
+    if (isset($session)) {
+      $this->setDataSource ('user', new DataRecord ($session->user));
+      $this->setDataSource ('sessionInfo', new DataRecord($session));
+    }
     $this->setDataSource ('controller', new DataRecord($this));
     $this->setDataSource ('request', new DataRecord($_REQUEST));
     if (isset($this->activeRoute)) {
