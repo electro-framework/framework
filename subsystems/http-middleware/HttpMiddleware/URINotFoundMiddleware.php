@@ -20,7 +20,7 @@ class URINotFoundMiddleware implements MiddlewareInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    throw new HttpException (404, '',
-      "The requested virtual URL <kbd><b>/{$request->getAttribute('VURI')}</b></kbd> on <kbd>{$this->app->baseURI}/</kbd> is not valid for this application.");
+    throw new HttpException (404, 'Page not available',
+      "The requested web address <kbd>{$request->getUri()->getPath()}</kbd> is not valid");
   }
 }

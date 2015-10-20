@@ -1,7 +1,7 @@
 <?php
 namespace Selenia;
 use PhpKit\WebConsole\ErrorHandler;
-use Selenia\Exceptions\ConfigException;
+use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Http\Controllers\Controller;
 use Selenia\Routing\PageRoute;
 

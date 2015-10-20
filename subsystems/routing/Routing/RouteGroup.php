@@ -1,10 +1,10 @@
 <?php
 namespace Selenia\Routing;
 
-use Selenia\Exceptions\ConfigException;
+use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Http\Controllers\Controller;
 use Selenia\Modules\Admin\Models\User;
-use Selenia\Session;
+use Selenia\Sessions\Session;
 
 class RouteGroup extends AbstractRoute
 {

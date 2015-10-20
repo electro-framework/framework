@@ -3,12 +3,10 @@ namespace Selenia\Exceptions;
 
 use Selenia\Exceptions;
 
-class FatalException extends Exceptions\BaseException
+/**
+ * An exception that should not be handled/intercepted by application-level code.
+ * Instead, it should halt execution and display a message to the user.
+ */
+class FatalException extends \Exception
 {
-
-  public function __construct ($msg, $title = '')
-  {
-    parent::__construct ($msg, Exceptions\Status::FATAL, $title);
-  }
-
 }

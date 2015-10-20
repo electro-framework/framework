@@ -1,16 +1,18 @@
 <?php
-namespace Selenia;
+namespace Selenia\Sessions;
 
 use Exception;
 use Selenia\Contracts\UserInterface;
-use Selenia\Exceptions\SessionException;
+use Selenia\Exceptions\FlashType;
+use Selenia\FlashExceptions\SessionException;
+use Selenia\Interfaces\SessionInterface;
 
-class Session
+class Session implements SessionInterface
 {
-  /** @var string The session cookie name. */
-  public $name;
   public $isValid = false;
   public $lang    = null;
+  /** @var string The session cookie name. */
+  public $name;
   /** @var UserInterface|null The logged-in user or null if not logged-in. */
   public $user;
   /** @var string */
@@ -26,29 +28,25 @@ class Session
     return isset($session) ? $session->user : null;
   }
 
-  /**
-   * True if the user islogged-in.
-   * @return boolean
-   */
-  static function loggedIn ()
+  function flash ($message, $type = FlashType::WARNING, $title = '')
   {
-    global $session;
-    return (bool)$session->user;
+    $_SESSION['formStatus']  = $type;
+    $_SESSION['formMessage'] = $message;
+    $_SESSION['formTitle']   = $title;
   }
 
-  public function validate ()
+  function loggedIn ()
   {
-    return $this->isValid = isset($this->user);
+    return (bool)$this->user;
   }
 
-  public function login ($defaultLang, $username = '', $password = '')
+  function login ($username, $password)
   {
     global $application;
-    $username = $username ?: get ($_POST, 'username');
-    $password = $password ?: get ($_POST, 'password');
     if (empty($username))
       throw new SessionException(SessionException::MISSING_INFO);
     else {
+      /** @var UserInterface $user */
       $user = new $application->userModel;
       if (!$user->findByName ($username))
         throw new SessionException(SessionException::UNKNOWN_USER);
@@ -57,7 +55,6 @@ class Session
       else if (!$user->active ())
         throw new SessionException(SessionException::DISABLED);
       else {
-        $this->lang = $defaultLang;
         try {
           $user->onLogin ();
           $this->isValid      = true;
@@ -70,7 +67,7 @@ class Session
     }
   }
 
-  public function logout ()
+  function logout ()
   {
     if (isset($_COOKIE[$this->name]))
       setcookie ($this->name, '', time () - 42000, '/');
@@ -78,9 +75,30 @@ class Session
     $_SESSION['sessionInfo'] = null;
   }
 
-  public function setLang ($lang)
+  function setLang ($lang)
   {
     $this->lang = $lang;
+  }
+
+  function getFlash ()
+  {
+    if (isset($_SESSION['formStatus'])) {
+      $r = [
+        'type'    => $_SESSION['formStatus'],
+        'message' => $_SESSION['formMessage'],
+        'title'   => $_SESSION['formTitle'],
+      ];
+      unset ($_SESSION['formStatus']);
+      unset ($_SESSION['formMessage']);
+      unset ($_SESSION['formTitle']);
+      return $r;
+    }
+    return false;
+  }
+
+  function validate ()
+  {
+    return $this->isValid = isset($this->user);
   }
 
 }

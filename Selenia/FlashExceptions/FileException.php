@@ -1,9 +1,10 @@
 <?php
-namespace Selenia\Exceptions;
+namespace Selenia\FlashExceptions;
 
-use Selenia\Exceptions;
+use Selenia\Exceptions\FlashMessageException;
+use Selenia\Exceptions\FlashType;
 
-class FileException extends Exceptions\BaseException
+class FileException extends FlashMessageException
 {
   const FILE_IS_REQUIRED      = 1;
   const FILE_IS_INVALID       = 2;
@@ -25,14 +26,14 @@ class FileException extends Exceptions\BaseException
     self::FILE_NOT_FOUND        => "O ficheiro não foi encontrado."
   ];
   public static $statusLookup = [
-    self::FILE_IS_REQUIRED      => Exceptions\Status::WARNING,
-    self::FILE_IS_INVALID       => Exceptions\Status::WARNING,
-    self::CAN_NOT_SAVE_FILE     => Exceptions\Status::ERROR,
-    self::FIELD_NOT_FOUND       => Exceptions\Status::FATAL,
-    self::CAN_NOT_DELETE_FILE   => Exceptions\Status::ERROR,
-    self::CAN_NOT_SAVE_TMP_FILE => Exceptions\Status::ERROR,
-    self::FILE_TOO_BIG          => Exceptions\Status::ERROR,
-    self::FILE_NOT_FOUND        => Exceptions\Status::ERROR
+    self::FILE_IS_REQUIRED      => FlashType::WARNING,
+    self::FILE_IS_INVALID       => FlashType::WARNING,
+    self::CAN_NOT_SAVE_FILE     => FlashType::ERROR,
+    self::FIELD_NOT_FOUND       => FlashType::FATAL,
+    self::CAN_NOT_DELETE_FILE   => FlashType::ERROR,
+    self::CAN_NOT_SAVE_TMP_FILE => FlashType::ERROR,
+    self::FILE_TOO_BIG          => FlashType::ERROR,
+    self::FILE_NOT_FOUND        => FlashType::ERROR
   ];
 
   public function __construct ($code, $extra = '')

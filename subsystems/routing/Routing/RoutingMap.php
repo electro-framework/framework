@@ -2,7 +2,7 @@
 namespace Selenia\Routing;
 
 use PhpCode;
-use Selenia\Exceptions\ConfigException;
+use Selenia\Exceptions\Fatal\ConfigException;
 
 class RoutingMap
 {

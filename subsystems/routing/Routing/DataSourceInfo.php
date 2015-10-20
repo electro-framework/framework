@@ -2,7 +2,7 @@
 namespace Selenia\Routing;
 
 use Selenia\DataObject;
-use Selenia\Exceptions\ConfigException;
+use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Http\Controllers\Controller;
 use Selenia\Matisse\DataRecord;
 use Selenia\Matisse\DataSet;

@@ -22,7 +22,7 @@ class WebConsoleMiddleware implements MiddlewareInterface
 
   function __construct (Application $app, InjectorInterface $injector)
   {
-    $this->app = $app;
+    $this->app      = $app;
     $this->injector = $injector;
   }
 
@@ -40,10 +40,10 @@ class WebConsoleMiddleware implements MiddlewareInterface
 //    WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
 
     $response = $next ();
-    $response->getBody()->rewind();
+    $response->getBody ()->rewind ();
 
-    WebConsole::request()->setRequest ($request);
-    WebConsole::response()->setResponse ($response);
+    WebConsole::request ()->setRequest ($request);
+    WebConsole::response ()->setResponse ($response);
 
     WebConsole::config ($app);
 //      WebConsole::session ()
@@ -53,7 +53,7 @@ class WebConsoleMiddleware implements MiddlewareInterface
       $app->logger->pushHandler (new WebConsoleLogHandler(WebConsole::log ()));
 
     /** @var Router $router */
-    $router = $this->injector->make('Selenia\Router');
+    $router = $this->injector->make ('Selenia\Router');
     if (isset($router->controller)) {
       $insp = $router->controller->page->inspect (true);
       WebConsole::DOM ()->write ($insp);
@@ -62,6 +62,6 @@ class WebConsoleMiddleware implements MiddlewareInterface
       WebConsole::vm ()->log ($router->controller->context->dataSources);
     }
 
-    return WebConsole::outputContentViaResponse ($response);
+    return WebConsole::outputContentViaResponse ($response, true);
   }
 }

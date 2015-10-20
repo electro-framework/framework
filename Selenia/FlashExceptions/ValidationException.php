@@ -1,9 +1,10 @@
 <?php
-namespace Selenia\Exceptions;
+namespace Selenia\FlashExceptions;
 
-use Selenia\Exceptions;
+use Selenia\Exceptions\FlashMessageException;
+use Selenia\Exceptions\FlashType;
 
-class ValidationException extends Exceptions\BaseException
+class ValidationException extends FlashMessageException
 {
   const OTHER             = 0;
   const REQUIRED_FIELD    = 1;
@@ -34,9 +35,9 @@ class ValidationException extends Exceptions\BaseException
     $this->code      = $code;
     $this->fieldName = $fieldName;
     if (is_null ($msg))
-      parent::__construct (str_replace ('#', "<b>$fieldName</b>", self::$messages[$code]), Exceptions\Status::WARNING);
+      parent::__construct (str_replace ('#', "<b>$fieldName</b>", self::$messages[$code]), FlashType::WARNING);
     else
-      parent::__construct ($msg, Exceptions\Status::WARNING);
+      parent::__construct ($msg, FlashType::WARNING);
   }
 
 }

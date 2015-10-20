@@ -1,9 +1,9 @@
 <?php
 namespace Selenia;
 
-use PhpKit\WebConsole\ErrorHandler;
 use PhpCode;
-use Selenia\Exceptions\ConfigException;
+use PhpKit\WebConsole\ErrorHandler;
+use Selenia\Exceptions\Fatal\ConfigException;
 
 class ModuleInfo
 {

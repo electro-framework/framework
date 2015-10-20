@@ -1,8 +1,8 @@
 <?php
 namespace Selenia;
 
-use Selenia\Exceptions\BaseException;
-use Selenia\Exceptions\Status;
+use Selenia\Exceptions\FlashMessageException;
+use Selenia\Exceptions\FlashType;
 
 abstract class Object
 {
@@ -24,16 +24,16 @@ abstract class Object
       $types = $this->getTypes ();
     if (isset($types[$k])) {
       if ($types[$k] !== '' && gettype ($v) != $types[$k])
-        throw new BaseException("Error setting property <b>$k</b> on a <b>" . get_class ($this) .
+        throw new FlashMessageException("Error setting property <b>$k</b> on a <b>" . get_class ($this) .
                                 "</b> instance: expected <b>" . $types[$k] . "</b> but got <b>" . gettype ($v) . "</b>",
-          Status::FATAL);
+          FlashType::FATAL);
       $m = "set_$k";
       if (method_exists($this, $m))
         $this->$m ($v);
       else $this->{$k} = $v;
     }
-    else throw new BaseException("Can't set non existing property <b>$k</b> on a <b>" . get_class ($this) .
-                                 "</b> instance.", Status::FATAL);
+    else throw new FlashMessageException("Can't set non existing property <b>$k</b> on a <b>" . get_class ($this) .
+                                 "</b> instance.", FlashType::FATAL);
   }
 
   /**

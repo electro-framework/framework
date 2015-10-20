@@ -1,9 +1,10 @@
 <?php
-namespace Selenia\Exceptions;
+namespace Selenia\Exceptions\Fatal;
 
 use Selenia\Exceptions;
+use Selenia\Exceptions\FatalException;
 
-class DatabaseException extends Exceptions\BaseException
+class DatabaseException extends FatalException
 {
 
   public function __construct ($message, $code, $query, array $params = null)
@@ -21,8 +22,7 @@ class DatabaseException extends Exceptions\BaseException
     }
     else
       $p = '';
-    parent::__construct ("<h3>$message</h3><p><b>Error code</b>: $code</p><b>Query</b>:\n\n<code>$query</code>\n\n<b>Parameters</b>:\n\n$p\n",
-      Exceptions\Status::FATAL, 'Database error');
+    parent::__construct ("<h3>$message</h3><p><b>Error code</b>: $code</p><b>Query</b>:\n\n<code>$query</code>\n\n<b>Parameters</b>:\n\n$p\n");
   }
 
 }

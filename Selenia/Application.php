@@ -7,7 +7,7 @@ use Monolog\Logger;
 use PhpKit\WebConsole\ErrorHandler;
 use PhpKit\WebConsole\WebConsole;
 use Selenia\DependencyInjection\Injector;
-use Selenia\Exceptions\ConfigException;
+use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\HttpMiddleware\MiddlewareStack;
 use Selenia\Interfaces\ResponseSenderInterface;
 use Selenia\Matisse\PipeHandler;
@@ -60,10 +60,6 @@ class Application
    * @var string
    */
   public $autoControllerClass = 'Selenia\Controller';
-  /**
-   * @var bool
-   */
-  public $autoSession = false;
   /**
    * The file path of current main application's root directory.
    * @var string
@@ -406,6 +402,8 @@ class Application
   public $viewsDirectories = [];
 
   /**
+   * Last resort error handler.
+   * <p>It is only activated if an error occurs outside of the HTTP handling pipeline.
    * @param \Exception|\Error $e
    */
   function exceptionHandler ($e)
@@ -470,7 +468,6 @@ class Application
    */
   function run ($rootDir)
   {
-    global $session;
     set_exception_handler ([$this, 'exceptionHandler']);
     $debug = $this->debugMode = getenv ('APP_DEBUG') == 'true';
 
@@ -478,7 +475,6 @@ class Application
     ErrorHandler::$appName = $this->appName;
     WebConsole::init ($debug);
     $this->setup ($rootDir);
-    $this->initSession ();
     ModulesApi::get ()->bootModules ();
     $this->mount ($this->frameworkURI, $this->frameworkPath . DIRECTORY_SEPARATOR . $this->modulePublicPath);
     $this->registerPipes ();
@@ -609,34 +605,20 @@ class Application
   protected function bootstrap ()
   {
     $this->injector = new Injector;
-    $this->injector->share ($this);
-    $this->injector->delegate ('Psr\Http\Message\ServerRequestInterface', function () {
-      return $this->middlewareStack->getCurrentRequest ();
-    });
-    $this->injector->delegate ('Psr\Http\Message\ResponseInterface', function () {
-      return $this->middlewareStack->getCurrentResponse ();
-    });
-    $this->injector->alias ('Selenia\Interfaces\ResponseSenderInterface', 'Selenia\HttpMiddleware\ResponseSender');
-    $this->injector->alias ('Selenia\Interfaces\InjectorInterface', get_class ($this->injector));
-    $this->injector->alias ('Selenia\Interfaces\ResponseMakerInterface', 'Selenia\Http\ResponseMaker');
-    $this->injector->share ($this->injector);
-    $this->injector->alias ('Psr\Log\LoggerInterface', get_class ($this->logger));
-    $this->injector->share ($this->logger);
-    $this->middlewareStack = new MiddlewareStack ($this->injector);
-  }
+    $this->injector
+      ->share ($this)
+      ->delegate ('Psr\Http\Message\ServerRequestInterface', function () {
+        return $this->middlewareStack->getCurrentRequest ();
+      })
+      ->delegate ('Psr\Http\Message\ResponseInterface', function () {
+        return $this->middlewareStack->getCurrentResponse ();
+      })
+      ->alias ('Selenia\Interfaces\ResponseSenderInterface', 'Selenia\HttpMiddleware\ResponseSender')
+      ->alias ('Selenia\Interfaces\InjectorInterface', get_class ($this->injector))->share ($this->injector)
+      ->alias ('Selenia\Interfaces\ResponseMakerInterface', 'Selenia\Http\ResponseMaker')
+      ->alias ('Psr\Log\LoggerInterface', get_class ($this->logger))->share ($this->logger);
 
-  protected function initSession ()
-  {
-    global $session;
-    if (!$this->globalSessions)
-      session_name ($this->name);
-    $name = session_name ();
-    session_start ();
-    if ($this->autoSession) {
-      $session                 = get ($_SESSION, 'sessionInfo', new Session);
-      $session->name           = $name;
-      $_SESSION['sessionInfo'] = $session;
-    }
+    $this->middlewareStack = new MiddlewareStack ($this->injector);
   }
 
   protected function loadConfiguration ($vuri)

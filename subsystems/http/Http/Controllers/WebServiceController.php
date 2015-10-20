@@ -4,8 +4,8 @@ namespace Selenia\Http\Controllers;
 use ReflectionException;
 use ReflectionObject;
 use Selenia\DataObject;
-use Selenia\Exceptions\BaseException;
-use Selenia\Exceptions\Status;
+use Selenia\Exceptions\FlashMessageException;
+use Selenia\Exceptions\FlashType;
 
 class WebServiceController extends Controller
 {
@@ -61,8 +61,8 @@ class WebServiceController extends Controller
       try {
         $method = $class->getMethod ('action_' . $action);
       } catch (ReflectionException $e) {
-        throw new BaseException('Class <b>' . $class->getName () . "</b> can't handle action <b>$action</b>.",
-          Status::ERROR);
+        throw new FlashMessageException('Class <b>' . $class->getName () . "</b> can't handle action <b>$action</b>.",
+          FlashType::ERROR);
       }
       $this->responseData = $method->invoke ($this, $data, $param);
     }

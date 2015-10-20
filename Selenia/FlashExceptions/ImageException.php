@@ -1,9 +1,7 @@
 <?php
-namespace Selenia\Exceptions;
+namespace Selenia\FlashExceptions;
 
-use Selenia\Exceptions;
-
-class ImageException extends Exceptions\FileException
+class ImageException extends FileException
 {
 
   public static $messages = [
@@ -18,7 +16,7 @@ class ImageException extends Exceptions\FileException
 
   public function __construct ($code, $extra = '')
   {
-    Exceptions\BaseException::__construct (self::$messages[$code] . $extra, self::$statusLookup[$code]);
+    parent::__construct (self::$messages[$code] . $extra, self::$statusLookup[$code]);
   }
 
 }

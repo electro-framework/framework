@@ -1,8 +1,8 @@
 <?php
 namespace Selenia\Localization;
-use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Selenia\Exceptions\ConfigException;
+use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\MiddlewareInterface;
 
 /**

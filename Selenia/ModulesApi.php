@@ -3,7 +3,7 @@ namespace Selenia;
 use Exception;
 use PhpKit\Flow\FilesystemFlow;
 use Selenia\Console\Contracts\ConsoleIOInterface;
-use Selenia\Exceptions\ConfigException;
+use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Exceptions\FatalException;
 use Selenia\Lib\ComposerConfigHandler;
 use Selenia\Lib\JsonFile;

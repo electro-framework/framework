@@ -11,16 +11,16 @@ use ReflectionException;
 use ReflectionObject;
 use Selenia\Application;
 use Selenia\DataObject;
-use Selenia\Exceptions\BaseException;
-use Selenia\Exceptions\ConfigException;
-use Selenia\Exceptions\DataModelException;
+use Selenia\Exceptions\Fatal\ConfigException;
+use Selenia\Exceptions\Fatal\DataModelException;
+use Selenia\Exceptions\Fatal\FileNotFoundException;
 use Selenia\Exceptions\FatalException;
-use Selenia\Exceptions\FileException;
-use Selenia\Exceptions\FileNotFoundException;
+use Selenia\Exceptions\FlashMessageException;
+use Selenia\Exceptions\FlashType;
 use Selenia\Exceptions\HttpException;
-use Selenia\Exceptions\SessionException;
-use Selenia\Exceptions\Status;
-use Selenia\Exceptions\ValidationException;
+use Selenia\FlashExceptions\FileException;
+use Selenia\FlashExceptions\SessionException;
+use Selenia\FlashExceptions\ValidationException;
 use Selenia\Matisse\Components\Page;
 use Selenia\Matisse\Context;
 use Selenia\Matisse\DataRecord;
@@ -305,7 +305,7 @@ class Controller
       $folders = array_reverse ($application->languageFolders);
       foreach ($folders as $folder) {
         $path = "$folder/$lang.ini";
-        $z    = file_exists($path) ? parse_ini_file ($path) : null;
+        $z    = file_exists ($path) ? parse_ini_file ($path) : null;
         if (!empty($z)) {
           $found                    = true;
           self::$translation[$lang] = array_merge (get (self::$translation, $lang, []), $z);
@@ -313,8 +313,8 @@ class Controller
       }
       if (!$found) {
         $paths = array_map (function ($path) { return "<li>" . ErrorHandler::shortFileName ($path); }, $folders);
-        throw new BaseException("A translation file for language <b>$lang</b> was not found.<p>Search paths:<ul>" .
-                                implode ('', $paths) . "</ul>", Status::FATAL);
+        throw new FlashMessageException("A translation file for language <b>$lang</b> was not found.<p>Search paths:<ul>" .
+                                        implode ('', $paths) . "</ul>", FlashType::FATAL);
       }
     }
     return preg_replace_callback (self::FIND_TRANS_KEY, function ($args) use ($lang) {
@@ -322,81 +322,6 @@ class Controller
       return empty(self::$translation[$lang][$a]) ? '$' . $a
         : preg_replace ('#\r?\n#', '<br>', self::$translation[$lang][$a]);
     }, $text);
-  }
-
-  /**
-   * Responds to the standard 'delete' controller action.
-   * The default procedure is to delete the object on the database.
-   * Override to implement non-standard behaviour.
-   * @param DataObject $data
-   * @param null       $param
-   * @throws BaseException
-   * @throws DataModelException
-   * @throws Exception
-   * @throws FatalException
-   */
-  function action_delete (DataObject $data = null, $param = null)
-  {
-    if (!isset($data))
-      throw new BaseException('Can\'t delete NULL DataObject.', Status::FATAL);
-    if (!isset($data->id) && isset($param)) {
-      $data->setPrimaryKeyValue ($param);
-      $data->read ();
-    }
-    $data->delete ();
-    if (!$this->autoRedirect ())
-      throw new FatalException("No index page defined.");
-  }
-
-  function action_logout ()
-  {
-    global $session, $application;
-    $session->logout ();
-    $this->setRedirection (null, $application->URI ?: '/');
-  }
-
-  /**
-   * Allows processing on the server side to occur and redraws the current page.
-   * This is useful, for instance, for updating a form by submitting it without actually saving it.
-   * The custom processing will usually take place on the render() or the viewModel() methods, but you may also
-   * override this method; just make sure you call the inherited one.
-   * @param DataObject $data  The current model object as being filled out on the form, if any.
-   * @param string     $param A JQuery selector for the element that should automatically receive focus after the page
-   *                          reloads.
-   */
-  function action_refresh (DataObject $data = null, $param = null)
-  {
-    $this->renderOnPOST = true;
-    if ($param)
-      $this->page->addInlineDeferredScript ("$('$param').focus()");
-  }
-
-  /**
-   * Respondes to the standard 'submit' controller action.
-   * The default procedure is to either call insert() or update().
-   * Override to implement non-standard behaviour.
-   * @param DataObject $data
-   * @param null       $param
-   * @throws BaseException
-   */
-  function action_submit (DataObject $data = null, $param = null)
-  {
-    if (!isset($data))
-      throw new BaseException('Can\'t insert/update NULL DataObject.', Status::FATAL);
-    if ($data->isNew ())
-      $this->insertData ($data, $param);
-    else $this->updateData ($data, $param);
-  }
-
-  function beginJSONResponse ()
-  {
-    header ('Content-Type: application/json');
-  }
-
-  function beginXMLResponse ()
-  {
-    header ('Content-Type: text/xml');
-    echo '<?xml version="1.0" encoding="utf-8"?>';
   }
 
   /**
@@ -414,7 +339,7 @@ class Controller
    * @param ResponseInterface      $response
    * @param callable               $next
    * @return HtmlResponse
-   * @throws BaseException
+   * @throws FlashMessageException
    * @throws Exception
    */
   final function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -469,17 +394,17 @@ class Controller
         }
       }
       $this->finalize ();
-      $content = ob_get_clean();
+      $content = ob_get_clean ();
       return new HtmlResponse ($content);
     } catch (Exception $e) {
-      if ($e instanceof BaseException) {
-        if (isset($this->redirectURI) && $e->getStatus () != Status::FATAL) {
+      if ($e instanceof FlashMessageException) {
+        if (isset($this->redirectURI) && $e->getStatus () != FlashType::FATAL) {
           $this->setStatusFromException ($e);
           $this->redirectAndHalt ();
         }
         @ob_clean ();
       }
-      if (!($e instanceof BaseException) || $e->getStatus () == Status::FATAL || $this->isWebService) {
+      if (!($e instanceof FlashMessageException) || $e->getStatus () == FlashType::FATAL || $this->isWebService) {
         if ($this->isWebService) {
           @ob_get_clean ();
           http_response_code (500);
@@ -503,6 +428,81 @@ class Controller
         }
       }
     }
+  }
+
+  /**
+   * Responds to the standard 'delete' controller action.
+   * The default procedure is to delete the object on the database.
+   * Override to implement non-standard behaviour.
+   * @param DataObject $data
+   * @param null       $param
+   * @throws FlashMessageException
+   * @throws DataModelException
+   * @throws Exception
+   * @throws FatalException
+   */
+  function action_delete (DataObject $data = null, $param = null)
+  {
+    if (!isset($data))
+      throw new FlashMessageException('Can\'t delete NULL DataObject.', FlashType::FATAL);
+    if (!isset($data->id) && isset($param)) {
+      $data->setPrimaryKeyValue ($param);
+      $data->read ();
+    }
+    $data->delete ();
+    if (!$this->autoRedirect ())
+      throw new FatalException("No index page defined.");
+  }
+
+  function action_logout ()
+  {
+    global $session, $application;
+    $session->logout ();
+    $this->setRedirection (null, $application->URI ?: '/');
+  }
+
+  /**
+   * Allows processing on the server side to occur and redraws the current page.
+   * This is useful, for instance, for updating a form by submitting it without actually saving it.
+   * The custom processing will usually take place on the render() or the viewModel() methods, but you may also
+   * override this method; just make sure you call the inherited one.
+   * @param DataObject $data  The current model object as being filled out on the form, if any.
+   * @param string     $param A JQuery selector for the element that should automatically receive focus after the page
+   *                          reloads.
+   */
+  function action_refresh (DataObject $data = null, $param = null)
+  {
+    $this->renderOnPOST = true;
+    if ($param)
+      $this->page->addInlineDeferredScript ("$('$param').focus()");
+  }
+
+  /**
+   * Respondes to the standard 'submit' controller action.
+   * The default procedure is to either call insert() or update().
+   * Override to implement non-standard behaviour.
+   * @param DataObject $data
+   * @param null       $param
+   * @throws FlashMessageException
+   */
+  function action_submit (DataObject $data = null, $param = null)
+  {
+    if (!isset($data))
+      throw new FlashMessageException('Can\'t insert/update NULL DataObject.', FlashType::FATAL);
+    if ($data->isNew ())
+      $this->insertData ($data, $param);
+    else $this->updateData ($data, $param);
+  }
+
+  function beginJSONResponse ()
+  {
+    header ('Content-Type: application/json');
+  }
+
+  function beginXMLResponse ()
+  {
+    header ('Content-Type: text/xml');
+    echo '<?xml version="1.0" encoding="utf-8"?>';
   }
 
   function getDataRecord ($name = null)
@@ -751,7 +751,7 @@ class Controller
             $authenticate = false; // user is now logged in; proceed as a normal request
           else $authenticate = 'retry';
         } catch (SessionException $e) {
-          $this->setStatus (Status::WARNING, $e->getMessage ());
+          $this->setStatus (FlashType::WARNING, $e->getMessage ());
           // note: if $prevPost === false, it keeps that value instead of (erroneously) storing the login form data
           if ($action)
             $this->prevPost = isset($prevPost) ? $prevPost : urlencode (serialize ($_POST));
@@ -822,7 +822,7 @@ class Controller
         $this->lang = $application->defaultLang;
         if (isset($session))
           $session->setLang ($this->lang);
-        $this->setStatus (Status::ERROR, 'An invalid language was specified.');
+        $this->setStatus (FlashType::ERROR, 'An invalid language was specified.');
       }
       $info = get ($this->langInfo, $this->lang);
       if (!isset($info))
@@ -913,13 +913,13 @@ class Controller
       $message = array_key_exists ('formMessage', $_SESSION) ? $_SESSION['formMessage'] : null;
       if ($this->page)
         switch ($status) {
-          case Status::FATAL:
+          case FlashType::FATAL:
             $this->page->fatal ($message);
             break;
-          case Status::ERROR:
+          case FlashType::ERROR:
             $this->page->error ($message);
             break;
-          case Status::WARNING:
+          case FlashType::WARNING:
             $this->page->warning ($message);
             break;
           default:
@@ -932,7 +932,7 @@ class Controller
   /**
    * Invokes the right controller method in response to the POST request's specified action.
    * @param DataObject $data
-   * @throws BaseException
+   * @throws FlashMessageException
    * @throws FileException
    */
   protected function doFormAction (DataObject $data = null)
@@ -944,8 +944,8 @@ class Controller
     try {
       $method = $class->getMethod ('action_' . $action);
     } catch (ReflectionException $e) {
-      throw new BaseException('Class <b>' . $class->getName () . "</b> can't handle action <b>$action</b>.",
-        Status::ERROR);
+      throw new FlashMessageException('Class <b>' . $class->getName () . "</b> can't handle action <b>$action</b>.",
+        FlashType::ERROR);
     }
     $method->invoke ($this, $data, $param);
   }
@@ -1296,16 +1296,15 @@ class Controller
     else $this->redirectURI = $_SERVER['REQUEST_URI'];
   }
 
-  protected final function setStatus ($status, $msg)
+  protected final function setStatus ($type, $msg)
   {
-    $_SESSION['formStatus']  = $status;
-    $_SESSION['formMessage'] = $msg;
+    throw new FlashMessageException ($msg, $type);
   }
 
-  protected final function setStatusFromException (BaseException $e)
+  protected final function setStatusFromException (FlashMessageException $e)
   {
-    $_SESSION['formStatus'] = $e->getStatus ();
-    if ($e->getStatus () != Status::FATAL)
+    $_SESSION['formStatus'] = $e->getCode ();
+    if ($e->getCode () != FlashType::FATAL)
       $_SESSION['formMessage'] = $e->getMessage ();
     else {
       $msg = "{$e->getMessage()}\n\nOn {$e->getFile()}, line {$e->getLine()}\nStack trace:\n";

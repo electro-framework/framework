@@ -7,10 +7,10 @@ use Iterator;
 use PDO;
 use PDOStatement;
 use ReflectionObject;
-use Selenia\Exceptions\BaseException;
-use Selenia\Exceptions\DataModelException;
-use Selenia\Exceptions\Status;
-use Selenia\Exceptions\ValidationException;
+use Selenia\Exceptions\Fatal\DataModelException;
+use Selenia\Exceptions\FlashMessageException;
+use Selenia\Exceptions\FlashType;
+use Selenia\FlashExceptions\ValidationException;
 
 class QueryCache
 {
@@ -1000,7 +1000,7 @@ class DataObject
 
   protected function unsupported ()
   {
-    throw new BaseException(self::MSG_UNSUPPORTED, 0, Status::ERROR);
+    throw new FlashMessageException(self::MSG_UNSUPPORTED, 0, FlashType::ERROR);
   }
 }
 

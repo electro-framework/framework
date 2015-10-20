@@ -6,7 +6,9 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Selenia\Application;
+use Selenia\Exceptions\FlashMessageException;
 use Selenia\Exceptions\HttpException;
+use Selenia\FlashExceptions\SessionException;
 use Selenia\Interfaces\MiddlewareInterface;
 use Selenia\Interfaces\ResponseMakerInterface;
 
@@ -21,8 +23,8 @@ class ErrorHandlingMiddleware implements MiddlewareInterface
 
   function __construct (Application $app, LoggerInterface $logger, ResponseMakerInterface $responseMaker)
   {
-    $this->app    = $app;
-    $this->logger = $logger;
+    $this->app           = $app;
+    $this->logger        = $logger;
     $this->responseMaker = $responseMaker;
   }
 
@@ -38,21 +40,23 @@ class ErrorHandlingMiddleware implements MiddlewareInterface
       );
 
       if ($error instanceof HttpException) {
-        $response = $this->responseMaker->make();
+        $response = $this->responseMaker->make ();
         $response->getBody ()->write ("<!DOCTYPE html>
 <html>
   <head>
+    <title>{$error->getMessage()}</title>
     <style>
-      body {font-family:sans-serif}
-      kbd {color:#00C}
-      .panel {max-width:800px;margin:30px auto;padding:0 30px 30px;border:1px solid #DDD;background:#EEE}
+      body {font-family:sans-serif;background:#CCC}
+      kbd {color:#00C;font-size:15px;font-family:menlo,sans-serif}
+      h5 {color:#999}
+      .panel {max-width:800px;margin:50px auto;padding:0 30px 30px;background:#FFF;border-radius:10px;box-shadow:3px 3px 10px rgba(0,0,0,0.4)}
     </style>
   </head>
   <body>
     <div class='panel'>
       <h5 style='float:left'>HTTP {$error->getCode()}</h5>
       <h5 style='float:right'>$app->appName</h5>
-      <h1 style='clear:both' align=center>{$error->getMessage()}</h1><br>
+      <h1 style='clear:both' align=center>{$error->getMessage()}</h1>&nbsp;
       <p align=center>$error->info</p>
     </div>
   </body>

@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Exceptions;
 
-class Status
+class FlashType
 {
   const FATAL   = 0;
   const ERROR   = 1;

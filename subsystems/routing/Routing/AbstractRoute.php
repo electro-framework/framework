@@ -3,7 +3,7 @@ namespace Selenia\Routing;
 
 use Exception;
 use Selenia\Application;
-use Selenia\Exceptions\ConfigException;
+use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Exceptions\FatalException;
 use Selenia\Http\Controllers\Controller;
 use Selenia\Object;
