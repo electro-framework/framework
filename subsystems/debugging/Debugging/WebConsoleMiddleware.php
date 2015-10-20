@@ -62,6 +62,6 @@ class WebConsoleMiddleware implements MiddlewareInterface
       WebConsole::vm ()->log ($router->controller->context->dataSources);
     }
 
-    return WebConsole::outputContentViaResponse ($response, true);
+    return WebConsole::outputContentViaResponse ($request, $response, true);
   }
 }
