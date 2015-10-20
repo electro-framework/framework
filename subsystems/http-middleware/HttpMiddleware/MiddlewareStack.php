@@ -83,10 +83,11 @@ class MiddlewareStack
           // Replace the response if necessary.
           if (isset($newResponse)) {
             if ($newResponse instanceof ResponseInterface)
-              return $newResponse;
+              return $this->currentResponse = $newResponse;
             throw new \RuntimeException ("Response from middlware " . get_class ($middleware) .
                                          " is not a ResponseInterface implementation.");
           }
+          return $this->currentResponse;
         }
         return $response;
       };
