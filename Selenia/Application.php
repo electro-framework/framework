@@ -478,7 +478,9 @@ class Application
     ErrorHandler::$appName = $this->appName;
     WebConsole::init ($debug);
     $this->setup ($rootDir);
-    ModulesApi::get ()->bootModules ();
+    /** @var ModulesApi $moduleApi */
+    $modulesApi = $this->injector->make ('Selenia\ModulesApi');
+    $modulesApi->bootModules ();
     $this->mount ($this->frameworkURI, $this->frameworkPath . DIRECTORY_SEPARATOR . $this->modulePublicPath);
     $this->registerPipes ();
     $this->registerMiddleware ();
@@ -619,6 +621,9 @@ class Application
       ->delegate ('Selenia\Http\Redirection', function (Session $session) {
         return new Redirection($this->middlewareStack->getCurrentRequest (), new ResponseFactory, $this, $session);
       })
+      ->share ('Selenia\ModulesApi')
+      ->alias ('Selenia\Interfaces\SessionInterface', 'Selenia\Sessions\Session')
+      ->share ('Selenia\Sessions\Session')
       ->alias ('Selenia\Interfaces\ResponseSenderInterface', 'Selenia\HttpMiddleware\ResponseSender')
       ->alias ('Selenia\Interfaces\InjectorInterface', get_class ($this->injector))->share ($this->injector)
       ->alias ('Selenia\Interfaces\ResponseFactoryInterface', 'Selenia\Http\ResponseFactory')

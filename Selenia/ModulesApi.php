@@ -4,10 +4,10 @@ use Exception;
 use PhpKit\Flow\FilesystemFlow;
 use Selenia\Console\Contracts\ConsoleIOInterface;
 use Selenia\Exceptions\Fatal\ConfigException;
-use Selenia\Exceptions\FatalException;
+use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\ServiceProviderInterface;
 use Selenia\Lib\ComposerConfigHandler;
 use Selenia\Lib\JsonFile;
-use Selenia\Traits\Singleton;
 use SplFileInfo;
 
 /**
@@ -15,14 +15,19 @@ use SplFileInfo;
  */
 class ModulesApi
 {
-  use Singleton;
-
+  /**
+   * @var Application
+   */
   private $app;
+  /**
+   * @var InjectorInterface
+   */
+  private $injector;
 
-  function __construct ()
+  function __construct (InjectorInterface $injector, Application $app)
   {
-    global $application;
-    $this->app = $application;
+    $this->app      = $app;
+    $this->injector = $injector;
   }
 
   /**
@@ -30,14 +35,12 @@ class ModulesApi
    */
   function bootModules ()
   {
-    global $application; // Used by the loaded bootstrap.php
-    $manifest = $this->manifest ();
-    foreach ($manifest->modules as $module)
-      /** @var ModuleInfo $module */
-      if (!includeFile ("{$module->path}/bootstrap.php"))
-        if (!file_exists ($module->path))
-          throw new FatalException ("Module <b>$module->name</b> was not found at <path>$module->path</path>.
-<p>You should refresh the modules registry.");
+    $manifest = $this->registry ();
+    foreach ($manifest->serviceProviders as $class) {
+      /** @var ServiceProviderInterface $provider */
+      $provider = $this->injector->make ($class);
+      $provider->register ($this->injector);
+    }
   }
 
   /**
@@ -88,14 +91,19 @@ class ModulesApi
    * Returns the modules registration configuration for this project.
    * If it is already cached, the cached version is returned, otherwise the information will be regenerated
    * and a new cache file created.
-   * @return mixed
+   * @return ModulesRegistry
    */
-  function manifest ()
+  function registry ()
   {
-    $json = new JsonFile ($this->getManifestPath ());
-    return $json->exists ()
-      ? $json->load ()->data
-      : $json->assign ($this->getNewManifest ())->save ()->data;
+    $json = new JsonFile ($this->getRegistryPath ());
+    if ($json->exists ()) {
+      $registry = object_toClass ($json->load ()->data, ModulesRegistry::ref);
+    }
+    else {
+      $registry = $this->rebuildRegistry ();
+      $json->assign ($registry)->save ();
+    }
+    return $registry;
   }
 
   /**
@@ -124,31 +132,6 @@ class ModulesApi
     $modules = array_merge ($this->pluginNames (), $this->projectModuleNames ());
     sort ($modules);
     return $modules;
-  }
-
-  /**
-   * Returns information about all installed modules.
-   *
-   * Each module record defines:<dl>
-   * <dt>name <dd>The module name (vendor/package).
-   * <dt>path <dd>The relative path of the module's root directory.
-   * <dt>description <dd>A short one-liner describing the module.
-   * <dt>type <dd>The type of module: Plugin | Project module.
-   * </dl>
-   * @return \StdClass[]
-   */
-  function modules ()
-  {
-    $modules = array_merge ($this->subsystems (), $this->plugins (), $this->projectModules ());
-    return flow ($modules)->map (function ($module) {
-      $composerJson        = new JsonFile ("$module->path/composer.json");
-      $module->description = $composerJson->exists ()
-        ? $composerJson->load ()->get ('description')
-        : '';
-      $module->type        = $this->isPlugin ($module->name)
-        ? 'Plugin' : ($this->isProjectModule ($module->name) ? 'Project module' : 'Subsystem');
-      return $module;
-    })->all ();
   }
 
   /**
@@ -203,11 +186,10 @@ class ModulesApi
           ::from ($dirInfo)
           ->onlyDirectories ()
           ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
-            global $application;
-            return (object)[
+            return (new ModuleInfo)->assign ([
               'name' => $dirInfo->getFilename () . '/' . $subDirInfo->getFilename (),
-              'path' => $application->toRelativePath ($subDirInfo->getPathname ()),
-            ];
+              'path' => $this->app->toRelativePath ($subDirInfo->getPathname ()),
+            ]);
           });
       })
       ->all ();
@@ -232,11 +214,10 @@ class ModulesApi
           ::from ($dirInfo)
           ->onlyDirectories ()
           ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
-            global $application;
-            return (object)[
+            return (new ModuleInfo)->assign ([
               'name' => $dirInfo->getFilename () . '/' . $subDirInfo->getFilename (),
-              'path' => $application->toRelativePath ($subDirInfo->getPathname ()),
-            ];
+              'path' => $this->app->toRelativePath ($subDirInfo->getPathname ()),
+            ]);
           });
       })
       ->all ();
@@ -269,14 +250,13 @@ class ModulesApi
     return FilesystemFlow
       ::from ("{$this->app->frameworkPath}/subsystems")
       ->onlyDirectories ()
-      ->mapAndFilter (function (SplFileInfo $dirInfo) {
+      ->map (function (SplFileInfo $dirInfo) {
         $path = $dirInfo->getPathname ();
-        if (!file_exists ("$path/bootstrap.php")) return null;
-        $p = strpos ($path, 'framework/');
-        return (object)[
+        $p    = strpos ($path, 'framework/');
+        return (new ModuleInfo)->assign ([
           'name' => $dirInfo->getFilename (),
           'path' => "private/packages/selenia/" . substr ($path, $p),
-        ];
+        ]);
       })
       ->pack ()->all ();
   }
@@ -287,8 +267,8 @@ class ModulesApi
    */
   function updateManifest ()
   {
-    unlink ($this->getManifestPath ());
-    return $this->manifest ();
+    unlink ($this->getRegistryPath ());
+    return $this->registry ();
   }
 
   /**
@@ -301,16 +281,55 @@ class ModulesApi
     return (bool)preg_match ('#^[a-z0-9\-]+/[a-z0-9\-]+$#', $name);
   }
 
-  protected function getManifestPath ()
+  protected function getRegistryPath ()
   {
-    return "{$this->app->modulesPath}/manifest.json";
+    return "{$this->app->modulesPath}/registry.json";
   }
 
-  protected function getNewManifest ()
+  /**
+   * @return ModulesRegistry
+   */
+  protected function rebuildRegistry ()
   {
-    return (object)[
-      'modules' => $this->get ()->modules (),
-    ];
+    $registry                 = new ModulesRegistry;
+    $registry->subsystems     = $this->loadModulesMetadata ($this->subsystems ());
+    $registry->plugins        = $this->loadModulesMetadata ($this->plugins ());
+    $registry->projectModules = $this->loadModulesMetadata ($this->projectModules ());
+    /** @var ModuleInfo[] $all */
+    $all = array_merge ($registry->subsystems, $registry->plugins, $registry->projectModules);
+    foreach ($all as $module)
+      if (isset($module->serviceProvider))
+        $registry->serviceProviders[] = $module->serviceProvider;
+    return $registry;
+  }
+
+  protected function loadModuleMetadata (ModuleInfo $module)
+  {
+    $composerJson = new JsonFile ("$module->path/composer.json");
+    if ($composerJson->exists ()) {
+      $composerJson->load ();
+      $module->description = $composerJson->get ('description');
+      $namespaces          = $composerJson->get ('autoload.psr-4');
+      if ($namespaces) {
+        $firstKey     = array_keys (get_object_vars ($namespaces))[0];
+        $folder       = $namespaces->$firstKey;
+        $servicesPath = "$module->path/$folder/Services.php";
+        if (file_exists ($servicesPath))
+          $module->serviceProvider = $firstKey . 'Services';
+      }
+    }
+    else $module->description = '';
+  }
+
+  /**
+   * @param ModuleInfo[] $modules
+   * @return ModuleInfo[]
+   */
+  protected function loadModulesMetadata (array $modules)
+  {
+    foreach ($modules as $module)
+      $this->loadModuleMetadata ($module);
+    return $modules;
   }
 
 

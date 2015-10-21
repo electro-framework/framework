@@ -6,10 +6,13 @@ trait AssignableTrait
   /**
    * Loads the given data into the object, including private and protected properties.
    * @param Array $data
+   * @return $this For chaining.
    */
   function assign (array $data)
   {
-    extend ($this, $data);
+    foreach ($data as $k => $v)
+      $this->$k = $v;
+    return $this;
   }
 
   /**

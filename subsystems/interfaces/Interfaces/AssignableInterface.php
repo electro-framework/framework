@@ -6,6 +6,7 @@ interface AssignableInterface
   /**
    * Loads the given data into the object, including private and protected properties.
    * @param Array $data
+   * @return $this For chaining.
    */
   function assign (array $data);
 
