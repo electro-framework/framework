@@ -12,9 +12,9 @@ use Selenia\Http\Redirection;
 use Selenia\Http\ResponseFactory;
 use Selenia\HttpMiddleware\MiddlewareStack;
 use Selenia\Interfaces\ResponseSenderInterface;
-use Selenia\Interfaces\SessionFactoryInterface;
 use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\RoutingMap;
+use Selenia\Sessions\Session;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -616,10 +616,8 @@ class Application
 //      ->delegate ('Psr\Http\Message\ResponseInterface', function () {
 //        return $this->middlewareStack->getCurrentResponse ();
 //      })
-      ->alias ('Selenia\Interfaces\SessionFactoryInterface', 'Selenia\Sessions\SessionFactory')
-      ->delegate ('Selenia\Http\Redirection', function (SessionFactoryInterface $sessionFactory) {
-        return new Redirection($this->middlewareStack->getCurrentRequest (), new ResponseFactory, $this,
-          $sessionFactory);
+      ->delegate ('Selenia\Http\Redirection', function (Session $session) {
+        return new Redirection($this->middlewareStack->getCurrentRequest (), new ResponseFactory, $this, $session);
       })
       ->alias ('Selenia\Interfaces\ResponseSenderInterface', 'Selenia\HttpMiddleware\ResponseSender')
       ->alias ('Selenia\Interfaces\InjectorInterface', get_class ($this->injector))->share ($this->injector)

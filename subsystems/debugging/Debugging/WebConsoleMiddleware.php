@@ -10,7 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\MiddlewareInterface;
-use Selenia\Interfaces\SessionFactoryInterface;
+use Selenia\Interfaces\SessionInterface;
 use Selenia\Router;
 
 /**
@@ -20,11 +20,16 @@ class WebConsoleMiddleware implements MiddlewareInterface
 {
   private $app;
   private $injector;
+  /**
+   * @var SessionInterface
+   */
+  private $session;
 
-  function __construct (Application $app, InjectorInterface $injector)
+  function __construct (Application $app, InjectorInterface $injector, SessionInterface $session)
   {
     $this->app      = $app;
     $this->injector = $injector;
+    $this->session  = $session;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -58,11 +63,9 @@ class WebConsoleMiddleware implements MiddlewareInterface
     WebConsole::config ($app);
 
     // Session panel
-    /** @var SessionFactoryInterface $sessionFactory */
-    $sessionFactory = $this->injector->make ('Selenia\Interfaces\SessionFactoryInterface');
     WebConsole::session ()
               ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="__doAction(\'logout\')">Log out</button>')
-              ->log ($sessionFactory->get());
+              ->log ($this->session);
 
     // Routes panel
     /** @var Router $router */

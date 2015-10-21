@@ -26,35 +26,48 @@ class SessionMiddleware implements MiddlewareInterface
    * @var Redirection
    */
   private $redirection;
+  /**
+   * @var SessionInterface
+   */
+  private $session;
 
-  function __construct (Application $app, InjectorInterface $injector, Redirection $redirection)
+  function __construct (SessionInterface $session, Application $app, InjectorInterface $injector,
+                        Redirection $redirection)
   {
     $this->app         = $app;
     $this->injector    = $injector;
     $this->redirection = $redirection;
+    $this->session     = $session;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    /** @global SessionInterface $session */
-    global $session;
+    $app = $this->app;
+    $session = $this->session;
 
-    $this->injector->delegate ('Selenia\Interfaces\SessionInterface', function () {
-      global $session;
-      if ($session) return $session;
+    // Start the sessions engine.
 
-      $app = $this->app;
-      if (!$app->globalSessions)
-        session_name ($app->name);
-      $name = session_name ();
-      session_start ();
-      /** @var Session $session */
-      $session       = get ($_SESSION, '#data') ?: new Session;
-      $session->name = $name;
-      if (is_null ($session->getLang ()))
-        $session->setLang ($app->defaultLang);
-      return $_SESSION['#data'] = $session;
-    });
+    if (!$app->globalSessions)
+      session_name ($app->name);
+    $name = session_name ();
+    session_start ();
+
+    // Load the saved session (if any).
+
+    if ($savedSession = get ($_SESSION, '#data'))
+      $this->session->assign ($savedSession->export ());
+
+    // (Re)initialize some session settings.
+
+    $session->name = $name;
+    if (is_null ($session->getLang ()))
+      $session->setLang ($app->defaultLang);
+
+    // Setup current session to be saved on shutdown.
+
+    $_SESSION['#data'] = $session;
+
+    // Run the next middleware, catching any flash message exceptions.
 
     try {
       return $next();
@@ -63,4 +76,5 @@ class SessionMiddleware implements MiddlewareInterface
       return $this->redirection->refresh ();
     }
   }
+
 }

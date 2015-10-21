@@ -5,7 +5,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Selenia\Application;
 use Selenia\Interfaces\ResponseFactoryInterface;
-use Selenia\Interfaces\SessionFactoryInterface;
 use Selenia\Interfaces\SessionInterface;
 use Zend\Diactoros\Response;
 
@@ -24,25 +23,24 @@ class Redirection
    */
   private $responseFactory;
   /**
-   * @var SessionFactoryInterface
+   * @var SessionInterface
    */
-  private $sessionFactory;
+  private $session;
 
   /**
    * @param ServerRequestInterface   $request         The current request.
    * @param ResponseFactoryInterface $responseFactory A factory fpr creating new responses.
    * @param Application              $app
-   * @param SessionFactoryInterface  $sessionFactory  A factory to retieve the current session or <kbd>null</kbd> if no
-   *                                                  session is
-   *                                                  (yet) available.
+   * @param SessionInterface         $session         The current session (always available, even if session support is
+   *                                                  disabled).
    */
   function __construct (ServerRequestInterface $request, ResponseFactoryInterface $responseFactory, Application $app,
-                        SessionFactoryInterface $sessionFactory)
+                        SessionInterface $session)
   {
     $this->request         = $request;
     $this->responseFactory = $responseFactory;
     $this->app             = $app;
-    $this->sessionFactory  = $sessionFactory;
+    $this->session         = $session;
   }
 
   /**
@@ -64,10 +62,7 @@ class Redirection
    */
   function guest ($url, $status = 302)
   {
-    $session = $this->sessionFactory->get();
-    if (!$session)
-      throw new \RuntimeException("No session available");
-    $session->setPreviousUrl ($this->request->getUri ());
+    $this->session->setPreviousUrl ($this->request->getUri ());
     $url = $this->normalizeUrl ($url);
     return $this->responseFactory->make ($status, '', '', ['Location' => $url]);
   }
@@ -92,10 +87,7 @@ class Redirection
    */
   function intended ($defaultUrl = '', $status = 302)
   {
-    $session = $this->sessionFactory->get();
-    if (!$session)
-      throw new \RuntimeException("No session available");
-    $url = $session->previousUrl () ?: $this->normalizeUrl ($defaultUrl);
+    $url = $this->session->previousUrl () ?: $this->normalizeUrl ($defaultUrl);
     return $this->to ($url . $status);
   }
 

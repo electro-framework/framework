@@ -5,7 +5,7 @@ use Psr\Http\Message\UriInterface;
 use Selenia\Exceptions\FlashType;
 use Selenia\FlashExceptions\SessionException;
 
-interface SessionInterface extends \ArrayAccess
+interface SessionInterface extends \ArrayAccess, AssignableInterface
 {
   /**
    * Returns all session data, including flashed data.

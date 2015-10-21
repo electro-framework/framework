@@ -6,11 +6,12 @@ use Selenia\Contracts\UserInterface;
 use Selenia\Exceptions\FlashType;
 use Selenia\FlashExceptions\SessionException;
 use Selenia\Interfaces\SessionInterface;
+use Selenia\Traits\AssignableTrait;
 use Selenia\Traits\InspectionTrait;
 
 class Session implements SessionInterface
 {
-  use InspectionTrait;
+  use InspectionTrait, AssignableTrait;
 
   /**
    * For use with the InpectionTrait.
