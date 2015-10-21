@@ -16,5 +16,4 @@ class HttpUtil
     return strpos ($request->getHeaderLine ('Accept'), $contentType) !== false;
   }
 
-
 }

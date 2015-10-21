@@ -6,17 +6,44 @@ use Selenia\Contracts\UserInterface;
 use Selenia\Exceptions\FlashType;
 use Selenia\FlashExceptions\SessionException;
 use Selenia\Interfaces\SessionInterface;
+use Selenia\Traits\InspectionTrait;
 
 class Session implements SessionInterface
 {
+  use InspectionTrait;
+
+  /**
+   * For use with the InpectionTrait.
+   * @var array
+   */
+  private static $INSPECTABLE = ['isValid', 'lang', 'name', 'user', 'userRealName', 'data', 'prevFlash', 'newFlash'];
+
   public $isValid = false;
-  public $lang    = null;
   /** @var string The session cookie name. */
   public $name;
   /** @var UserInterface|null The logged-in user or null if not logged-in. */
   public $user;
   /** @var string */
   public $userRealName;
+
+  /** @var Array */
+  private $data;
+  /**
+   * The language code for the currently enabled language.
+   * @var string|null
+   */
+  private $lang = null;
+  /** @var Array */
+  private $newFlash;
+  /** @var Array */
+  private $prevFlash;
+
+  function __construct ()
+  {
+    $this->data      = [];
+    $this->prevFlash = [];
+    $this->newFlash  = [];
+  }
 
   /**
    * The logged-in user or null if not logged-in.
@@ -28,11 +55,96 @@ class Session implements SessionInterface
     return isset($session) ? $session->user : null;
   }
 
-  function flash ($message, $type = FlashType::WARNING, $title = '')
+  /**
+   * serialize() checks if your class has a function with the magic name __sleep.
+   * If so, that function is executed prior to any serialization.
+   * It can clean up the object and is supposed to return an array with the names of all variables of that object that
+   * should be serialized. If the method doesn't return anything then NULL is serialized and E_NOTICE is issued. The
+   * intended use of __sleep is to commit pending data or perform similar cleanup tasks. Also, the function is useful
+   * if you have very large objects which do not need to be saved completely.
+   *
+   * @return array|NULL
+   * @link http://php.net/manual/en/language.oop5.magic.php#language.oop5.magic.sleep
+   */
+  function __sleep ()
   {
-    $_SESSION['formStatus']  = $type;
-    $_SESSION['formMessage'] = $message;
-    $_SESSION['formTitle']   = $title;
+    $this->prevFlash = $this->newFlash;
+    return ['isValid', 'lang', 'name', 'user', 'userRealName', 'data', 'prevFlash'];
+  }
+
+  /**
+   * unserialize() checks for the presence of a function with the magic name __wakeup.
+   * If present, this function can reconstruct any resources that the object may have.
+   * The intended use of __wakeup is to reestablish any database connections that may have been lost during
+   * serialization and perform other reinitialization tasks.
+   *
+   * @return void
+   * @link http://php.net/manual/en/language.oop5.magic.php#language.oop5.magic.sleep
+   */
+  function __wakeup ()
+  {
+    $this->newFlash = [];
+  }
+
+  function all ()
+  {
+    return array_merge ($this->data, $this->prevFlash);
+  }
+
+  function flash ($key, $value)
+  {
+    $this->newFlash[$key] = $value;
+  }
+
+  function flashInput (array $value)
+  {
+    if (!is_array ($value))
+      throw new \InvalidArgumentException("Not an array");
+    $this->flash ('#flashInput', $value);
+  }
+
+  function flashMessage ($message, $type = FlashType::WARNING, $title = '')
+  {
+    $this->flash ('#flashMessage', compact ($message, $type, $title));
+  }
+
+  function getFlashMessage ()
+  {
+    return $this['#flashMessage'] ?: [];
+  }
+
+  function getFlashed ($name, $default = null)
+  {
+    return get ($this->prevFlash, $name, $default);
+  }
+
+  function getLang ()
+  {
+    return $this->lang;
+  }
+
+  function setLang ($lang)
+  {
+    $this->lang = $lang;
+  }
+
+  function getOldInput ($key = null, $default = null)
+  {
+    $old = $this['#flashInput'];
+    return isset($key)
+      ? ($old ?: $default)
+      : (isset($old[$key]) ? $old[$key] : $default);
+  }
+
+  function hasOldInput ($key = null)
+  {
+    $old = $this['#flashInput'];
+    return isset($old) && (is_null ($key) || array_key_exists ($key, $old));
+  }
+
+  function isFlashed ($key)
+  {
+    return array_key_exists ($key, $this->prevFlash);
   }
 
   function loggedIn ()
@@ -75,25 +187,63 @@ class Session implements SessionInterface
     $_SESSION['sessionInfo'] = null;
   }
 
-  function setLang ($lang)
+  public function offsetExists ($offset)
   {
-    $this->lang = $lang;
+    return array_key_exists ($offset, $this->prevFlash) || array_key_exists ($offset, $this->data);
   }
 
-  function getFlash ()
+  public function offsetGet ($offset)
   {
-    if (isset($_SESSION['formStatus'])) {
-      $r = [
-        'type'    => $_SESSION['formStatus'],
-        'message' => $_SESSION['formMessage'],
-        'title'   => $_SESSION['formTitle'],
-      ];
-      unset ($_SESSION['formStatus']);
-      unset ($_SESSION['formMessage']);
-      unset ($_SESSION['formTitle']);
-      return $r;
-    }
-    return false;
+    return
+      array_key_exists ($offset, $this->prevFlash)
+        ? $this->prevFlash[$offset]
+        : (
+      array_key_exists ($offset, $this->data)
+        ? $this->data[$offset]
+        : null
+      );
+  }
+
+  public function offsetSet ($offset, $value)
+  {
+    if (array_key_exists ($offset, $this->prevFlash))
+      $this->prevFlash[$offset] = $value;
+    else $this->data[$offset] = $value;
+  }
+
+  public function offsetUnset ($offset)
+  {
+    if (array_key_exists ($offset, $this->prevFlash))
+      unset ($this->prevFlash[$offset]);
+    else unset ($this->data[$offset]);
+  }
+
+  function previousUrl ()
+  {
+    return $this->getFlashed ('#previousUrl');
+  }
+
+  function reflash (array $keys = null)
+  {
+    $this->newFlash = array_merge ($this->newFlash, $keys
+      ? array_fields ($this->prevFlash, $keys)
+      : $this->prevFlash
+    );
+  }
+
+  function regenerateToken ()
+  {
+    $this['#token'] = bin2hex (openssl_random_pseudo_bytes (16));
+  }
+
+  function setPreviousUrl ($url)
+  {
+    $this->flash ('#previousUrl', strval ($url));
+  }
+
+  function token ()
+  {
+    return $this['#token'];
   }
 
   function validate ()

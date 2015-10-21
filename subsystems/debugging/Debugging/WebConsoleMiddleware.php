@@ -10,6 +10,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\MiddlewareInterface;
+use Selenia\Interfaces\SessionFactoryInterface;
 use Selenia\Router;
 
 /**
@@ -40,25 +41,41 @@ class WebConsoleMiddleware implements MiddlewareInterface
 //    WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
 
     $response = $next ();
-    $response->getBody ()->rewind ();
 
-    WebConsole::request ()->setRequest ($request);
-    WebConsole::response ()->setResponse ($response);
-
-    WebConsole::config ($app);
-//      WebConsole::session ()
-//                ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="__doAction(\'logout\')">Log out</button>')
-//                ->log ($session);
+    // Redirect logger to Inspector panel
     if (isset($app->logger))
       $app->logger->pushHandler (new WebConsoleLogHandler(WebConsole::log ()));
 
+    $response->getBody ()->rewind ();
+
+    // Request panel
+    WebConsole::request ()->setRequest ($request);
+
+    // Response panel
+    WebConsole::response ()->setResponse ($response);
+
+    // Config. panel
+    WebConsole::config ($app);
+
+    // Session panel
+    /** @var SessionFactoryInterface $sessionFactory */
+    $sessionFactory = $this->injector->make ('Selenia\Interfaces\SessionFactoryInterface');
+    WebConsole::session ()
+              ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="__doAction(\'logout\')">Log out</button>')
+              ->log ($sessionFactory->get());
+
+    // Routes panel
     /** @var Router $router */
     $router = $this->injector->make ('Selenia\Router');
     if (isset($router->controller)) {
+
+      // DOM panel
       $insp = $router->controller->page->inspect (true);
       WebConsole::DOM ()->write ($insp);
 //      $filter = function ($k, $v) { return $k !== 'parent' && $k !== 'page'; };
 //      WebConsole::DOM ()->withFilter($filter, $controller->page);
+
+      // View Models panel
       WebConsole::vm ()->log ($router->controller->context->dataSources);
     }
 

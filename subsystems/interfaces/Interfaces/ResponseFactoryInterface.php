@@ -4,7 +4,7 @@ namespace Selenia\Interfaces;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\StreamInterface;
 
-interface ResponseMakerInterface
+interface ResponseFactoryInterface
 {
 
   /**
@@ -27,11 +27,4 @@ interface ResponseMakerInterface
    */
   function makeStream ($stream = 'php://memory', $status = 200, array $headers = []);
 
-  /**
-   * Creates a new redirection HTTP response object, compatible with ResponseInterface.
-   * @param string $url  Either a full or relative URL.
-   * @param int    $code A 3xx HTTP status code.
-   * @return ResponseInterface
-   */
-  function redirectionTo ($url, $code = 302);
 }

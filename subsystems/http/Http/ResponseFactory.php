@@ -1,10 +1,10 @@
 <?php
 namespace Selenia\Http;
 
-use Selenia\Interfaces\ResponseMakerInterface;
+use Selenia\Interfaces\ResponseFactoryInterface;
 use Zend\Diactoros\Response;
 
-class ResponseMaker implements ResponseMakerInterface
+class ResponseFactory implements ResponseFactoryInterface
 {
 
   function make ($status = 200, $content = '', $contentType = 'text/html', array $headers = [])
@@ -20,11 +20,6 @@ class ResponseMaker implements ResponseMakerInterface
   function makeStream ($stream = 'php://memory', $status = 200, array $headers = [])
   {
     return new Response($stream, $status, $headers);
-  }
-
-  function redirectionTo ($url, $code = 302)
-  {
-    return $this->make ($code, '', '', ['Location' => $url]);
   }
 
 }

@@ -9,7 +9,7 @@ use Selenia\Application;
 use Selenia\Exceptions\HttpException;
 use Selenia\Http\HttpUtil;
 use Selenia\Interfaces\MiddlewareInterface;
-use Selenia\Interfaces\ResponseMakerInterface;
+use Selenia\Interfaces\ResponseFactoryInterface;
 
 /**
  * Handles errors that occur throughout the HTTP middleware stack.
@@ -20,7 +20,7 @@ class ErrorHandlingMiddleware implements MiddlewareInterface
   private $logger;
   private $responseMaker;
 
-  function __construct (Application $app, LoggerInterface $logger, ResponseMakerInterface $responseMaker)
+  function __construct (Application $app, LoggerInterface $logger, ResponseFactoryInterface $responseMaker)
   {
     $this->app           = $app;
     $this->logger        = $logger;
@@ -60,28 +60,53 @@ class ErrorHandlingMiddleware implements MiddlewareInterface
   <head>
     <title>$message</title>
     <style>
-      body {font-family:sans-serif;background:#CCC}
-      kbd {color:#00C;font-size:15px;font-family:menlo,sans-serif}
-      h5 {color:#999}
-      .panel {max-width:800px;margin:50px auto;padding:0 30px 30px;background:#FFF;border-radius:10px;box-shadow:3px 3px 10px rgba(0,0,0,0.4)}
+body {
+  font-family:sans-serif;
+  background: #eee;
+}
+kbd {
+  color:#00C;
+  font-size:15px;
+  font-family:menlo,sans-serif;
+}
+h1 {
+  clear: both;
+  padding: 30px 60px 0;
+  color: #d44;
+}
+.container {
+  text-align: center;
+}
+.panel {
+  color:#999;
+  max-width: 400px;
+  margin: 50px auto;
+  padding: 0 30px 30px;
+  background: #FFF;
+  border-radius: 15px;
+  border: 1px solid #BBB;
+  display: inline-block;
+}
     </style>
   </head>
   <body>
-    <div class='panel'>");
+    <div class='container'>
+      <div class='panel'>");
 
         if ($error instanceof HttpException)
           $body->write ("
       <h5 style='float:left'>HTTP $status</h5>
       <h5 style='float:right'>$app->appName</h5>
-      <h1 style='clear:both' align=center>$message</h1>&nbsp;
+      <h1>$message</h1>&nbsp;
       <p align=center>$error->info</p>");
 
         else $body->write ("
-      <h5 style='float:right'>$app->appName</h5>
+      <h5>$app->appName</h5>
       <h1 style='clear:both' align=center>$message</h1>&nbsp;
       <p align=center>$error->info</p>");
 
         $body->write ("
+      </div>
     </div>
   </body>
 </html>");

@@ -8,8 +8,11 @@ use PhpKit\WebConsole\ErrorHandler;
 use PhpKit\WebConsole\WebConsole;
 use Selenia\DependencyInjection\Injector;
 use Selenia\Exceptions\Fatal\ConfigException;
+use Selenia\Http\Redirection;
+use Selenia\Http\ResponseFactory;
 use Selenia\HttpMiddleware\MiddlewareStack;
 use Selenia\Interfaces\ResponseSenderInterface;
+use Selenia\Interfaces\SessionFactoryInterface;
 use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\RoutingMap;
 use Zend\Diactoros\Response;
@@ -607,15 +610,20 @@ class Application
     $this->injector = new Injector;
     $this->injector
       ->share ($this)
-      ->delegate ('Psr\Http\Message\ServerRequestInterface', function () {
-        return $this->middlewareStack->getCurrentRequest ();
-      })
-      ->delegate ('Psr\Http\Message\ResponseInterface', function () {
-        return $this->middlewareStack->getCurrentResponse ();
+//      ->delegate ('Psr\Http\Message\ServerRequestInterface', function () {
+//        return $this->middlewareStack->getCurrentRequest ();
+//      })
+//      ->delegate ('Psr\Http\Message\ResponseInterface', function () {
+//        return $this->middlewareStack->getCurrentResponse ();
+//      })
+      ->alias ('Selenia\Interfaces\SessionFactoryInterface', 'Selenia\Sessions\SessionFactory')
+      ->delegate ('Selenia\Http\Redirection', function (SessionFactoryInterface $sessionFactory) {
+        return new Redirection($this->middlewareStack->getCurrentRequest (), new ResponseFactory, $this,
+          $sessionFactory);
       })
       ->alias ('Selenia\Interfaces\ResponseSenderInterface', 'Selenia\HttpMiddleware\ResponseSender')
       ->alias ('Selenia\Interfaces\InjectorInterface', get_class ($this->injector))->share ($this->injector)
-      ->alias ('Selenia\Interfaces\ResponseMakerInterface', 'Selenia\Http\ResponseMaker')
+      ->alias ('Selenia\Interfaces\ResponseFactoryInterface', 'Selenia\Http\ResponseFactory')
       ->alias ('Psr\Log\LoggerInterface', get_class ($this->logger))->share ($this->logger);
 
     $this->middlewareStack = new MiddlewareStack ($this->injector);
