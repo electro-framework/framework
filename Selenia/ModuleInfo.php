@@ -39,6 +39,12 @@ class ModuleInfo implements AssignableInterface
    * @var string|null
    */
   public $serviceProvider;
+  /**
+   * If set, maps `$path` to the real filesystem path. This is useful when modules are symlinked and we want to display
+   * debugging paths as short paths relative to the application's root directory.
+   * @var string
+   */
+  public $realPath;
 
   /**
    * @global Application $application

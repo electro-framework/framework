@@ -21,6 +21,10 @@ define ('CONSOLE_ALIGN_RIGHT', STR_PAD_LEFT);
 
 class Application
 {
+  const FRAMEWORK_PATH = 'private/packages/selenia/framework';
+  /**
+   * @var array
+   */
   public static $TAGS = [];
   /**
    * Holds an array of SEO infomation for each site page or null;
@@ -397,6 +401,14 @@ class Application
    */
   public $viewsDirectories = [];
 
+  function boot ()
+  {
+    /** @var ModulesApi $modulesApi */
+    $modulesApi = $this->injector->make ('Selenia\ModulesApi');
+    $modulesApi->bootModules ();
+    return $modulesApi;
+  }
+
   /**
    * Last resort error handler.
    * <p>It is only activated if an error occurs outside of the HTTP handling pipeline.
@@ -459,12 +471,6 @@ class Application
     $this->mountPoints[$URI] = $path;
   }
 
-  function boot () {
-    /** @var ModulesApi $moduleApi */
-    $modulesApi = $this->injector->make ('Selenia\ModulesApi');
-    $modulesApi->bootModules ();
-  }
-
   /**
    * @param string $rootDir
    */
@@ -477,7 +483,11 @@ class Application
     ErrorHandler::$appName = $this->appName;
     WebConsole::init ($debug);
     $this->setup ($rootDir);
-    $this->boot();
+    $modulesApi = $this->boot ();
+
+    if ($debug)
+      $this->setDebugPathsMap ($modulesApi);
+
     $this->mount ($this->frameworkURI, $this->frameworkPath . DIRECTORY_SEPARATOR . $this->modulePublicPath);
     $this->registerPipes ();
     $middlewareStack        = $this->registerMiddleware ();
@@ -531,7 +541,8 @@ class Application
     $this->rootPath      = $rootDir;
     $this->URI           = $baseURI;
     $this->baseURI       = $baseURI;
-    $this->frameworkPath = updir (__DIR__);
+    $this->frameworkPath =
+      "$rootDir/" . self::FRAMEWORK_PATH; // due to eventual symlinking, we can't use dirname(__DIR__) here
     $this->VURI          = $vuri;
 
     $this->setIncludePath ();
@@ -604,15 +615,6 @@ class Application
     return "http://{$_SERVER['SERVER_NAME']}$port$URI";
   }
 
-  protected function setupInjector ()
-  {
-    $this->injector = new Injector;
-    $this->injector
-      ->share ($this)
-      ->alias ('Selenia\Interfaces\InjectorInterface', get_class ($this->injector))->share ($this->injector)
-      ->alias ('Psr\Log\LoggerInterface', get_class ($this->logger))->share ($this->logger);
-  }
-
   protected function loadConfiguration ($vuri)
   {
     $_ = DIRECTORY_SEPARATOR;
@@ -657,6 +659,15 @@ class Application
     $this->pipeHandler->registerPipes (new DefaultPipes);
   }
 
+  protected function setupInjector ()
+  {
+    $this->injector = new Injector;
+    $this->injector
+      ->share ($this)
+      ->alias ('Selenia\Interfaces\InjectorInterface', get_class ($this->injector))->share ($this->injector)
+      ->alias ('Psr\Log\LoggerInterface', get_class ($this->logger))->share ($this->logger);
+  }
+
   private function loadConfig ($iniPath)
   {
     $ini = @include $iniPath;
@@ -667,6 +678,22 @@ class Application
     else
       throw new ConfigException("Error parsing " . ErrorHandler::shortFileName ($iniPath));
     $this->config = $ini;
+  }
+
+  /**
+   * Configures path mappings for the ErrorHandler, so that links to files on symlinked directories are converted to
+   * links on the main project tree, allowing for easier editing of files on an IDE.
+   *
+   * @param ModulesApi $modulesApi
+   */
+  private function setDebugPathsMap (ModulesApi $modulesApi)
+  {
+    $rp  = realpath ($this->frameworkPath);
+    $map = $rp != $this->frameworkPath ? [
+      $rp => self::FRAMEWORK_PATH,
+    ] : [];
+    $map = array_merge ($map, $modulesApi->registry ()->getPathMappings ());
+    ErrorHandler::setPathsMap ($map);
   }
 
 }

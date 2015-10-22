@@ -24,6 +24,10 @@ class ModulesApi
    */
   private $app;
   /**
+   * @var ModulesRegistry
+   */
+  private $cachedRegistry;
+  /**
    * @var InjectorInterface
    */
   private $injector;
@@ -216,15 +220,16 @@ class ModulesApi
    */
   function registry ()
   {
-    $json = new JsonFile ($this->getRegistryPath ());
-    if ($json->exists ()) {
-      $registry = object_toClass ($json->load ()->data, ModulesRegistry::ref);
-    }
+    if ($this->cachedRegistry)
+      return $this->cachedRegistry;
+    $json = new JsonFile ($this->getRegistryPath (), true);
+    if ($json->exists ())
+      $registry = (new ModulesRegistry)->importFrom ($json->load ()->data);
     else {
       $registry = $this->rebuildRegistry ();
       $json->assign ($registry)->save ();
     }
-    return $registry;
+    return $this->cachedRegistry = $registry;
   }
 
   /**
@@ -304,6 +309,9 @@ class ModulesApi
         $servicesPath = "$module->path/$folder/$providerName.php";
         if (file_exists ($servicesPath))
           $module->serviceProvider = "$firstKey$providerName";
+        $rp = realpath ($module->path);
+        if ($rp != "{$this->app->baseDirectory}/$module->path")
+          $module->realPath = $rp;
       }
     }
     else $module->description = '';
