@@ -398,13 +398,13 @@ class Controller
       return new HtmlResponse ($content);
     } catch (Exception $e) {
       if ($e instanceof FlashMessageException) {
-        if (isset($this->redirectURI) && $e->getStatus () != FlashType::FATAL) {
+        if (isset($this->redirectURI) && $e->getCode () != FlashType::FATAL) {
           $this->setStatusFromException ($e);
           $this->redirectAndHalt ();
         }
         @ob_clean ();
       }
-      if (!($e instanceof FlashMessageException) || $e->getStatus () == FlashType::FATAL || $this->isWebService) {
+      if (!($e instanceof FlashMessageException) || $e->getCode () == FlashType::FATAL || $this->isWebService) {
         if ($this->isWebService) {
           @ob_get_clean ();
           http_response_code (500);

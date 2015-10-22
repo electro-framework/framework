@@ -59,7 +59,7 @@ class Application
    * The class to be instantiated when creating an automatic controller.
    * @var string
    */
-  public $autoControllerClass = 'Selenia\Controller';
+  public $autoControllerClass = 'Selenia\Http\Controllers\Controller';
   /**
    * The file path of current main application's root directory.
    * @var string
