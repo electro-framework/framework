@@ -1,8 +1,10 @@
 <?php
-namespace Selenia;
+namespace Selenia\Routing;
 use PhpKit\WebConsole\ErrorHandler;
 use Selenia\Exceptions\Fatal\ConfigException;
+use Selenia\Exceptions\HttpException;
 use Selenia\Http\Controllers\Controller;
+use Selenia\ModuleInfo;
 use Selenia\Routing\PageRoute;
 
 /**
@@ -49,42 +51,52 @@ class Router
    */
   public $virtualURI = '';
 
-  public static function route ()
+  public static function virtualWebServer ()
   {
-    global $application, $loader, $lang;
+    global $application;
 
     // Serve static assets exposed from packages or from the framework itself.
 
-    $URI  = $application->VURI;
-    $path = $application->toFilePath ($URI, $isMapped);
-    if ($isMapped) {
-      if (file_exists ($x = "$path.php")) {
-        require $x;
-        exit;
+    try {
+      $URI  = $application->VURI;
+      $path = $application->toFilePath ($URI, $isMapped);
+      if ($isMapped) {
+        if (file_exists ($x = "$path.php")) {
+          require $x;
+          exit;
+        }
+        $type = get (self::$MIME_TYPES, substr ($path, strrpos ($path, '.') + 1), 'application/octet-stream');
+        header ("Content-Type: $type");
+        if (!$application->debugMode) {
+          header ('Expires: ' . gmdate ('D, d M Y H:i:s \G\M\T', time () + 36000)); // add 10 hours
+          header ("Cache-Control: public, max-age=36000");
+        }
+        if (@readfile ($path) === false) {
+          header ("Content-Type: text/plain");
+          http_response_code (404);
+          echo "Not found: $path";
+        }
+        exit; // The file has been sent, so stop here.
       }
-      $type = get (self::$MIME_TYPES, substr ($path, strrpos ($path, '.') + 1), 'application/octet-stream');
-      header ("Content-Type: $type");
-      if (!$application->debugMode) {
-        header ('Expires: ' . gmdate ('D, d M Y H:i:s \G\M\T', time () + 36000)); // add 10 hours
-        header ("Cache-Control: public, max-age=36000");
-      }
-      if (@readfile ($path) === false) {
-        header ("Content-Type: text/plain");
-        http_response_code (404);
-        echo "Not found: $path";
-      }
-      exit; // The file has been sent, so stop here.
+    } catch (HttpException $e) {
+      @ob_get_clean ();
+      http_response_code ($e->getCode ());
+      echo $e->getMessage ();
+      exit;
     }
+  }
+
+  function route () {
 
     // Load and execute the module that corresponds to the virtual URI.
 
-    $router = new Router();
-    $router->init ();
-    if (isset ($router->activeRoute)) {
-      $router->controller       = $router->load ();
-      $router->controller->lang = $lang;
+    if (isset ($this->activeRoute)) {
+      global $lang;
+
+      $this->controller       = $this->load ();
+      $this->controller->lang = $lang;
     }
-    return $router;
+    return $this;
   }
 
   /**
@@ -136,12 +148,12 @@ class Router
 <p>Hint: is autoController=true being inherited?");
       $class = $application->autoControllerClass;
       if (class_exists ($class))
-        $con = new $class;
+        $con = $class;
     }
     else {
       $class = $this->activeRoute->controller;
       if (class_exists ($class))
-        $con = new $class;
+        $con = $class;
     }
     if (!$con) {
       if (!$class)

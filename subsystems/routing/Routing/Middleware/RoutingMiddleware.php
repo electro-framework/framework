@@ -7,7 +7,7 @@ use Selenia\Application;
 use Selenia\Exceptions\HttpException;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\MiddlewareInterface;
-use Selenia\Router;
+use Selenia\Routing\Router;
 use Selenia\Routing\RoutingMap;
 
 /**
@@ -33,18 +33,19 @@ class RoutingMiddleware implements MiddlewareInterface
       WebConsole::routes ()->withFilter ($filter, $this->app->routingMap->routes);
     }
 
-    try {
-      $router = Router::route ();
+      $router = new Router();
       $this->injector->share ($router);
-    } catch (HttpException $e) {
-      @ob_get_clean ();
-      http_response_code ($e->getCode ());
-      echo $e->getMessage ();
+      $router->init ();
+      Router::virtualWebServer ();
+
+    $controllerClass = $router->route ();
+    if ($controllerClass) {
+      var_dump($controllerClass);
       exit;
+      $controller = $this->injector->make ($controllerClass);
+      return $controller->__invoke ($request, $response, $next);
     }
-    return isset($router->controller)
-      ? $router->controller->__invoke ($request, $response, $next)
-      : $next ();
+    return $next ();
   }
 
   private function loadRoutes ()
