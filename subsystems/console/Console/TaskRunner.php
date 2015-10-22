@@ -6,7 +6,6 @@ use Robo\Runner;
 use Robo\TaskInfo;
 use Selenia\Application;
 use Selenia\Console\TaskRunner\ConsoleIO;
-use Selenia\ModulesApi;
 use Symfony\Component\Console\Application as ConsoleApplication;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputInterface;
@@ -36,7 +35,7 @@ class TaskRunner extends Runner
     // Color support manual override:
     $hasColorSupport = in_array ('--ansi', $argv) ? true : (in_array ('--no-ansi', $argv) ? false : null);
 
-    $input = $this->prepareInput ($args ?: $argv);
+    $input  = $this->prepareInput ($args ?: $argv);
     $output = new ConsoleOutput(ConsoleOutput::VERBOSITY_NORMAL, $hasColorSupport);
     Config::setOutput ($output);
     $this->io->setInput ($input);
@@ -80,7 +79,7 @@ class TaskRunner extends Runner
     global $application;
     $application = new Application;
     $application->setup (getcwd ());
-    ModulesApi::get ()->bootModules ();
+    $application->boot ();
     $this->execute ($args);
   }
 

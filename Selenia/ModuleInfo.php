@@ -12,7 +12,16 @@ class ModuleInfo implements AssignableInterface
   use AssignableTrait;
 
   const ref = __CLASS__;
-
+  /**
+   * An optional textual description (one line) of the module's purpose.
+   * @var string
+   */
+  public $description;
+  /**
+   * When false, the module is ignored.
+   * @var bool
+   */
+  public $enabled = true;
   /**
    * A Unique Identifier for the module.
    * Plugins and Project Modules have names with 'vendor-name/package-name' syntax.
@@ -26,16 +35,6 @@ class ModuleInfo implements AssignableInterface
    */
   public $path;
   /**
-   * An optional textual description (one line) of the module's purpose.
-   * @var string
-   */
-  public $description;
-  /**
-   * When false, the module is ignored.
-   * @var bool
-   */
-  public $enabled = true;
-  /**
    * The module's service provider class name or null if none.
    * @var string|null
    */
@@ -43,7 +42,7 @@ class ModuleInfo implements AssignableInterface
 
   /**
    * @global Application $application
-   * @param string|null       $moduleName 'vendor/name'. If specified, the module will be searched for
+   * @param string|null  $moduleName 'vendor/name'. If specified, the module will be searched for
    *                                 on the plugins path and on the project modules path,
    * @throws ConfigException
    */
@@ -77,5 +76,11 @@ class ModuleInfo implements AssignableInterface
     if ($val === false)
       throw new ConfigException("Error on <b>$this->name</b>'s route-map definiton. Please check your PHP code.");
     return $val;
+  }
+
+  function shortName ()
+  {
+    $a = explode ('/', $this->name);
+    return dehyphenate (end ($a), true);
   }
 }

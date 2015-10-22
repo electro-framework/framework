@@ -16,6 +16,10 @@ use SplFileInfo;
 class ModulesApi
 {
   /**
+   * A sprintf-compatible formatting expression, where %s = module's short name.
+   */
+  const SERVICE_PROVIDER_NAME = '%sServices';
+  /**
    * @var Application
    */
   private $app;
@@ -85,25 +89,6 @@ class ModulesApi
   function isProjectModule ($moduleName)
   {
     return file_exists ("{$this->app->baseDirectory}/{$this->app->modulesPath}/$moduleName");
-  }
-
-  /**
-   * Returns the modules registration configuration for this project.
-   * If it is already cached, the cached version is returned, otherwise the information will be regenerated
-   * and a new cache file created.
-   * @return ModulesRegistry
-   */
-  function registry ()
-  {
-    $json = new JsonFile ($this->getRegistryPath ());
-    if ($json->exists ()) {
-      $registry = object_toClass ($json->load ()->data, ModulesRegistry::ref);
-    }
-    else {
-      $registry = $this->rebuildRegistry ();
-      $json->assign ($registry)->save ();
-    }
-    return $registry;
   }
 
   /**
@@ -224,6 +209,25 @@ class ModulesApi
   }
 
   /**
+   * Returns the modules registration configuration for this project.
+   * If it is already cached, the cached version is returned, otherwise the information will be regenerated
+   * and a new cache file created.
+   * @return ModulesRegistry
+   */
+  function registry ()
+  {
+    $json = new JsonFile ($this->getRegistryPath ());
+    if ($json->exists ()) {
+      $registry = object_toClass ($json->load ()->data, ModulesRegistry::ref);
+    }
+    else {
+      $registry = $this->rebuildRegistry ();
+      $json->assign ($registry)->save ();
+    }
+    return $registry;
+  }
+
+  /**
    * Validate the given module name or ask the user to select a module from a list of installed modules.
    *
    * <p>This method is available to console tasks only.
@@ -286,6 +290,36 @@ class ModulesApi
     return "{$this->app->modulesPath}/registry.json";
   }
 
+  protected function loadModuleMetadata (ModuleInfo $module)
+  {
+    $composerJson = new JsonFile ("$module->path/composer.json");
+    if ($composerJson->exists ()) {
+      $composerJson->load ();
+      $module->description = $composerJson->get ('description');
+      $namespaces          = $composerJson->get ('autoload.psr-4');
+      if ($namespaces) {
+        $firstKey     = array_keys (get_object_vars ($namespaces))[0];
+        $folder       = $namespaces->$firstKey;
+        $providerName = sprintf (self::SERVICE_PROVIDER_NAME, $module->shortName ());
+        $servicesPath = "$module->path/$folder/$providerName.php";
+        if (file_exists ($servicesPath))
+          $module->serviceProvider = "$firstKey$providerName";
+      }
+    }
+    else $module->description = '';
+  }
+
+  /**
+   * @param ModuleInfo[] $modules
+   * @return ModuleInfo[]
+   */
+  protected function loadModulesMetadata (array $modules)
+  {
+    foreach ($modules as $module)
+      $this->loadModuleMetadata ($module);
+    return $modules;
+  }
+
   /**
    * @return ModulesRegistry
    */
@@ -301,35 +335,6 @@ class ModulesApi
       if (isset($module->serviceProvider))
         $registry->serviceProviders[] = $module->serviceProvider;
     return $registry;
-  }
-
-  protected function loadModuleMetadata (ModuleInfo $module)
-  {
-    $composerJson = new JsonFile ("$module->path/composer.json");
-    if ($composerJson->exists ()) {
-      $composerJson->load ();
-      $module->description = $composerJson->get ('description');
-      $namespaces          = $composerJson->get ('autoload.psr-4');
-      if ($namespaces) {
-        $firstKey     = array_keys (get_object_vars ($namespaces))[0];
-        $folder       = $namespaces->$firstKey;
-        $servicesPath = "$module->path/$folder/Services.php";
-        if (file_exists ($servicesPath))
-          $module->serviceProvider = $firstKey . 'Services';
-      }
-    }
-    else $module->description = '';
-  }
-
-  /**
-   * @param ModuleInfo[] $modules
-   * @return ModuleInfo[]
-   */
-  protected function loadModulesMetadata (array $modules)
-  {
-    foreach ($modules as $module)
-      $this->loadModuleMetadata ($module);
-    return $modules;
   }
 
 

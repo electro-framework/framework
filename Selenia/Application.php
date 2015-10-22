@@ -8,13 +8,10 @@ use PhpKit\WebConsole\ErrorHandler;
 use PhpKit\WebConsole\WebConsole;
 use Selenia\DependencyInjection\Injector;
 use Selenia\Exceptions\Fatal\ConfigException;
-use Selenia\Http\Redirection;
-use Selenia\Http\ResponseFactory;
-use Selenia\HttpMiddleware\MiddlewareStack;
+use Selenia\Interfaces\MiddlewareStackInterface;
 use Selenia\Interfaces\ResponseSenderInterface;
 use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\RoutingMap;
-use Selenia\Sessions\Session;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -234,10 +231,6 @@ class Application
    * @var string
    */
   public $loginView = '';
-  /**
-   * @var MiddlewareStack
-   */
-  public $middlewareStack;
   /**
    * @var string
    */
@@ -466,6 +459,12 @@ class Application
     $this->mountPoints[$URI] = $path;
   }
 
+  function boot () {
+    /** @var ModulesApi $moduleApi */
+    $modulesApi = $this->injector->make ('Selenia\ModulesApi');
+    $modulesApi->bootModules ();
+  }
+
   /**
    * @param string $rootDir
    */
@@ -478,12 +477,10 @@ class Application
     ErrorHandler::$appName = $this->appName;
     WebConsole::init ($debug);
     $this->setup ($rootDir);
-    /** @var ModulesApi $moduleApi */
-    $modulesApi = $this->injector->make ('Selenia\ModulesApi');
-    $modulesApi->bootModules ();
+    $this->boot();
     $this->mount ($this->frameworkURI, $this->frameworkPath . DIRECTORY_SEPARATOR . $this->modulePublicPath);
     $this->registerPipes ();
-    $this->registerMiddleware ();
+    $middlewareStack        = $this->registerMiddleware ();
     $this->condenseLiterals = !$debug;
     $this->compressOutput   = !$debug;
 
@@ -491,7 +488,7 @@ class Application
 
     $request  = ServerRequestFactory::fromGlobals ()->withAttribute ('VURI', $this->VURI);
     $response = new Response;
-    $response = $this->middlewareStack->run ($request, $response);
+    $response = $middlewareStack ($request, $response, null);
     if (!$response) return;
 
     // Send back the response.
@@ -547,7 +544,7 @@ class Application
       $this->defaultLang = getenv ('APP_DEFAULT_LANG');
     $this->logger = new Logger('main', $this->logHandlers);
 
-    $this->bootstrap ();
+    $this->setupInjector ();
   }
 
   function toFilePath ($URI, &$isMapped = false)
@@ -607,29 +604,13 @@ class Application
     return "http://{$_SERVER['SERVER_NAME']}$port$URI";
   }
 
-  protected function bootstrap ()
+  protected function setupInjector ()
   {
     $this->injector = new Injector;
     $this->injector
       ->share ($this)
-//      ->delegate ('Psr\Http\Message\ServerRequestInterface', function () {
-//        return $this->middlewareStack->getCurrentRequest ();
-//      })
-//      ->delegate ('Psr\Http\Message\ResponseInterface', function () {
-//        return $this->middlewareStack->getCurrentResponse ();
-//      })
-      ->delegate ('Selenia\Http\Redirection', function (Session $session) {
-        return new Redirection($this->middlewareStack->getCurrentRequest (), new ResponseFactory, $this, $session);
-      })
-      ->share ('Selenia\ModulesApi')
-      ->alias ('Selenia\Interfaces\SessionInterface', 'Selenia\Sessions\Session')
-      ->share ('Selenia\Sessions\Session')
-      ->alias ('Selenia\Interfaces\ResponseSenderInterface', 'Selenia\HttpMiddleware\ResponseSender')
       ->alias ('Selenia\Interfaces\InjectorInterface', get_class ($this->injector))->share ($this->injector)
-      ->alias ('Selenia\Interfaces\ResponseFactoryInterface', 'Selenia\Http\ResponseFactory')
       ->alias ('Psr\Log\LoggerInterface', get_class ($this->logger))->share ($this->logger);
-
-    $this->middlewareStack = new MiddlewareStack ($this->injector);
   }
 
   protected function loadConfiguration ($vuri)
@@ -649,9 +630,14 @@ class Application
     }
   }
 
+  /**
+   * @return MiddlewareStackInterface
+   * @throws \Auryn\InjectionException
+   */
   protected function registerMiddleware ()
   {
-    $this->middlewareStack
+    $stack = $this->injector->make ('Selenia\Interfaces\MiddlewareStackInterface');
+    return $stack
       ->addIf (!$this->debugMode, 'Selenia\Http\Middleware\CompressionMiddleware')
       ->addIf ($this->debugMode, 'Selenia\Debugging\WebConsoleMiddleware')
       ->add ('Selenia\ErrorHandling\ErrorHandlingMiddleware')

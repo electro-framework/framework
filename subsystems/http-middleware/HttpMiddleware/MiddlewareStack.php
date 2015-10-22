@@ -1,12 +1,13 @@
 <?php
 namespace Selenia\HttpMiddleware;
 
-use PhpKit\WebConsole\WebConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\MiddlewareInterface;
+use Selenia\Interfaces\MiddlewareStackInterface;
 
-class MiddlewareStack
+class MiddlewareStack implements MiddlewareStackInterface
 {
   /**
    * @var ServerRequestInterface
@@ -31,44 +32,22 @@ class MiddlewareStack
     $this->injector = $injector;
   }
 
-  function add ($middlewareClass)
-  {
-    $this->stack[] = $middlewareClass;
-    return $this;
-  }
-
-  function addIf ($condition, $middlewareClass)
-  {
-    if ($condition)
-      $this->stack[] = $middlewareClass;
-    return $this;
-  }
-
-  function getCurrentRequest ()
-  {
-    return $this->currentRequest;
-  }
-
-  function getCurrentResponse ()
-  {
-    return $this->currentResponse;
-  }
-
   /**
    * @param ServerRequestInterface $request
    * @param ResponseInterface      $response
+   * @param callable               $next
    * @return ResponseInterface
    */
-  function run (ServerRequestInterface $request, ResponseInterface $response)
+  function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
   {
     $it   = new \ArrayIterator($this->stack);
-    $next = null;
 
     $next =
       function (ServerRequestInterface $request = null, ResponseInterface $response = null) use ($it, $request, &$next
       ) {
         if ($it->valid ()) {
-          // Save the current state and also Make it available trough the injector.
+          // Save the current state and also make it available outside the stack.
+
           $request  = $this->currentRequest = $request ?: $this->currentRequest;
           $response = $this->currentResponse = $response ?: $this->currentResponse;
 
@@ -89,9 +68,42 @@ class MiddlewareStack
           }
           return $this->currentResponse;
         }
-        return $response;
+        return $next ? $next ($request, $response) : $response;
       };
 
-    return $next($request, $response);
+    return $next ($request, $response);
   }
+
+  /**
+   * @param string|callable|MiddlewareInterface $middleware
+   * @return $this
+   */
+  function add ($middleware)
+  {
+    $this->stack[] = $middleware;
+    return $this;
+  }
+
+  /**
+   * @param boolean                             $condition
+   * @param string|callable|MiddlewareInterface $middleware
+   * @return $this
+   */
+  function addIf ($condition, $middleware)
+  {
+    if ($condition)
+      $this->stack[] = $middleware;
+    return $this;
+  }
+
+  function getCurrentRequest ()
+  {
+    return $this->currentRequest;
+  }
+
+  function getCurrentResponse ()
+  {
+    return $this->currentResponse;
+  }
+
 }

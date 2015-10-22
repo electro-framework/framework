@@ -5,7 +5,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Exceptions\FlashMessageException;
 use Selenia\Http\Redirection;
-use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\MiddlewareInterface;
 use Selenia\Interfaces\SessionInterface;
 
@@ -19,10 +18,6 @@ class SessionMiddleware implements MiddlewareInterface
    */
   private $app;
   /**
-   * @var InjectorInterface
-   */
-  private $injector;
-  /**
    * @var Redirection
    */
   private $redirection;
@@ -31,18 +26,16 @@ class SessionMiddleware implements MiddlewareInterface
    */
   private $session;
 
-  function __construct (SessionInterface $session, Application $app, InjectorInterface $injector,
-                        Redirection $redirection)
+  function __construct (SessionInterface $session, Application $app, Redirection $redirection)
   {
     $this->app         = $app;
-    $this->injector    = $injector;
     $this->redirection = $redirection;
     $this->session     = $session;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $app = $this->app;
+    $app     = $this->app;
     $session = $this->session;
 
     // Start the sessions engine.

@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\HttpMiddleware;
+namespace Selenia\Http;
 
 use Psr\Http\Message\ResponseInterface;
 
