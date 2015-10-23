@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Localization;
 
+use Selenia\Interfaces\AssignableInterface;
 use Selenia\Traits\ConfigurationTrait;
 
 /**
@@ -9,9 +10,9 @@ use Selenia\Traits\ConfigurationTrait;
  * @method $this selectionMode (string $mode) How to automatically set the current locale.  Either 'session' or 'url'.
  * @method string getSelectionMode ()
  */
-class LocalizationConfig
+class LocalizationConfig implements AssignableInterface
 {
-  use ConfigurationTrait
+  use ConfigurationTrait;
 
   /**
    * @var string

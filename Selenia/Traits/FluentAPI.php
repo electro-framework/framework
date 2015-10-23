@@ -57,6 +57,10 @@ trait FluentApi
    */
   function __call ($name, $args)
   {
+    if (substr($name, 0, 3) == 'get' && $name[3] >= 'A' && $name[3] <= 'Z') {
+      $name = lcfirst (substr($name, 3));
+      return $this->$name;
+    }
     if (property_exists ($this, $name)) {
       if (is_array ($this->$name))
         $this->$name = $args;
@@ -77,7 +81,7 @@ trait FluentApi
       }
       return $this;
     }
-    throw new \BadMethodCallException;
+    throw new \BadMethodCallException ("$name()");
   }
 
 }

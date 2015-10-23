@@ -34,15 +34,13 @@ class LanguageMiddleware implements MiddlewareInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $config = get ($this->app->config, 'selenia/localization', []);
-    $lang = property ($this->session, 'lang', $this->app->defaultLang);
+    /** @var LocalizationConfig $config */
+    $config = $this->app->config['selenia/localization'];
+    $lang   = property ($this->session, 'lang', $this->app->defaultLang);
     $this->locale
       ->setAvailable ($this->app->languages)
-//      ->setSelectionMode ($config->getSelectionMode())
+      ->setSelectionMode ($config->getSelectionMode())
       ->setLocale ($lang);
-
-    _log ($this->locale);
-    _log ($this->locale->getAvailable ());
 
     return $next();
   }

@@ -472,7 +472,11 @@ class Application
     ErrorHandler::init ($debug, $rootDir);
     ErrorHandler::$appName = $this->appName;
     WebConsole::init ($debug);
+
     $this->setup ($rootDir);
+    // Temporarily set framework path mapping here for errors thrown during modules loading.
+    ErrorHandler::setPathsMap ($this->getMainPathMap());
+
     $modulesApi = $this->boot ();
 
     if ($debug)
@@ -678,12 +682,16 @@ class Application
    */
   private function setDebugPathsMap (ModulesApi $modulesApi)
   {
-    $rp  = realpath ($this->frameworkPath);
-    $map = $rp != $this->frameworkPath ? [
-      $rp => self::FRAMEWORK_PATH,
-    ] : [];
+    $map = $this->getMainPathMap();
     $map = array_merge ($map, $modulesApi->registry ()->getPathMappings ());
     ErrorHandler::setPathsMap ($map);
+  }
+
+  private function getMainPathMap () {
+    $rp  = realpath ($this->frameworkPath);
+    return $rp != $this->frameworkPath ? [
+      $rp => self::FRAMEWORK_PATH,
+    ] : [];
   }
 
 }

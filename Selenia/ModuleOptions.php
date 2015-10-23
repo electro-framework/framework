@@ -1,6 +1,9 @@
 <?php
 namespace Selenia;
 
+use Selenia\Exceptions\Fatal\ConfigException;
+use Selenia\Interfaces\AssignableInterface;
+
 class ModuleOptions extends Object
 {
   public $path;
@@ -14,6 +17,12 @@ class ModuleOptions extends Object
       foreach ($ini as $k => &$v)
         $this->set ($k, $v);
     }
+  }
+
+  private static function throwInvalidConfigType ($cfg)
+  {
+    throw new ConfigException(sprintf ("Unsupported configuration type: <kbd class=type>%s</kbd>",
+      (is_object ($cfg) ? get_class ($cfg) : gettype ($cfg))));
   }
 
   /**
@@ -62,6 +71,7 @@ class ModuleOptions extends Object
   /**
    * @param array $v Configuration default settings to be merged into the application config.
    *                 Settings already defined will not be changed.
+   * @throws ConfigException
    */
   function set_config ($v)
   {
@@ -72,8 +82,21 @@ class ModuleOptions extends Object
           if (!property ($application, $k)) $application->$k = $v;
       }
       else {
-        $appCfg                        = get ($application->config, $section, []);
-        $appCfg                        = $appCfg + $cfg;
+        $appCfg = get ($application->config, $section);
+        if (is_null ($appCfg)) {
+          $application->config[$section] = $cfg;
+          continue;
+        }
+        elseif (is_array ($appCfg)) {
+          if (is_array ($cfg))
+            $appCfg = $appCfg + $cfg;
+          else if ($cfg instanceof AssignableInterface)
+            $appCfg = $appCfg + $cfg->export ();
+          else self::throwInvalidConfigType ($cfg);
+        }
+        elseif ($appCfg instanceof AssignableInterface)
+          $appCfg->defaults ($cfg);
+        else self::throwInvalidConfigType ($cfg);
         $application->config[$section] = $appCfg;
       }
     }

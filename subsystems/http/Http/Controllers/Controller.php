@@ -362,7 +362,6 @@ class Controller
         $this->setRedirection ();
         $this->redirectAndHalt ();
       }
-      $this->configLanguage ();
       $this->initialize (); //custom setup
       if (!$authenticate) {
         // Normal page request (it's not a login form).
@@ -794,45 +793,6 @@ class Controller
   protected function clearStatus ()
   {
     unset($_SESSION['formStatus']);
-  }
-
-  protected function configLanguage ()
-  {
-    global $application, $session;
-    if (empty($application->languages))
-      return;
-    $this->languages = $application->languages;
-    $this->langInfo  = [];
-    foreach ($this->languages as $langDat) {
-      $langDat                     = explode (':', $langDat);
-      $this->langInfo[$langDat[0]] = [
-        'value'  => $langDat[0],
-        'ISO'    => $langDat[1],
-        'label'  => $langDat[2],
-        'locale' => explode ('|', $langDat[3]),
-      ];
-    }
-    $this->lang = coalesce ($this->lang, property ($session, 'lang'), $application->defaultLang);
-    if (isset($session)) {
-      if ($session->lang != $this->lang)
-        $session->setLang ($this->lang);
-    }
-    if (isset($this->lang)) {
-      if (!array_key_exists ($this->lang, $this->langInfo)) {
-        $this->lang = $application->defaultLang;
-        if (isset($session))
-          $session->setLang ($this->lang);
-        $this->setStatus (FlashType::ERROR, 'An invalid language was specified.');
-      }
-      $info = get ($this->langInfo, $this->lang);
-      if (!isset($info))
-        throw new ConfigException("Language <b>$this->lang</b> is not configured for this application.");
-      $locales         = $this->langInfo[$this->lang]['locale'];
-      $this->locale    = $locales[0];
-      $this->langISO   = $this->langInfo[$this->lang]['ISO'];
-      $this->langLabel = $this->langInfo[$this->lang]['label'];
-      setlocale (LC_ALL, $locales);
-    }
   }
 
   /**
