@@ -2,9 +2,10 @@
 namespace Selenia\Traits;
 
 /**
- * Provides the capability of setting class instance properties by using virtual fluent setter methods.
+ * Provides the capability of setting class instance properties by using virtual fluent setter methods,
+ * and reading those properties by `getXXX()` virtual methods.
  *
- * ### Array properties
+ * ### Setting array properties
  *
  * They should be declared with a default value of type array (even an empty one) to mark them as array properties.
  *   That way, a setter call with no arguments or with a single argument will set an array into the property.
@@ -22,7 +23,7 @@ namespace Selenia\Traits;
  *   (new A)->b (1);    // b = 1
  *   (new A)->b (1,2);  // b = [1,2]
  * ```
- * ### Other property types
+ * ### Setting other property types
  *
  * A setter class with no arguments will set the property to `true`.
  * ```
@@ -35,10 +36,18 @@ namespace Selenia\Traits;
  *   (new A)->enabled (false); // enabled = false
  *   (new A)->enabled (null);  // enabled = false
  * ```
+ *
+ * ### Reading properties
+ *
+ * Prepend `get` to the property name and capitalize the first character of that name, then append `()`.
+ *
+ * Ex:
+ * ```
+ * $a = $b->getEnabled ();
+ * ```
  */
 trait FluentApi
 {
-
   /**
    * It's triggered when invoking inaccessible methods in an object context.
    *

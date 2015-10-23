@@ -8,9 +8,9 @@ use PDO;
 use PDOStatement;
 use ReflectionObject;
 use Selenia\Exceptions\Fatal\DataModelException;
+use Selenia\Exceptions\Flash\ValidationException;
 use Selenia\Exceptions\FlashMessageException;
 use Selenia\Exceptions\FlashType;
-use Selenia\FlashExceptions\ValidationException;
 
 class QueryCache
 {

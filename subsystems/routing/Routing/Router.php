@@ -138,7 +138,7 @@ class Router
         $con = $class;
     }
     else {
-      $class = $this->activeRoute->controller;_log($this->activeRoute);
+      $class = $this->activeRoute->controller;
       if (class_exists ($class))
         $con = $class;
     }

@@ -39,11 +39,9 @@ class RoutingMiddleware implements MiddlewareInterface
 
     $controllerClass = $router->route ();
     if ($controllerClass) {
-      global $lang;
       $controller         = $this->injector->make ($controllerClass);
       $router->controller = $controller;
       $controller->router = $router;
-      $controller->lang   = $lang;
       return $controller->__invoke ($request, $response, $next);
     }
     return $next ();

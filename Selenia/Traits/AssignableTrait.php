@@ -4,6 +4,16 @@ namespace Selenia\Traits;
 trait AssignableTrait
 {
   /**
+   * Creates a new instance of the class and assign's it the supplied data.
+   * @param array $data
+   * @return $this
+   */
+  static function from (array $data)
+  {
+    return (new static)->assign ($data);
+  }
+
+  /**
    * Loads the given data into the object, including private and protected properties.
    * @param Array $data
    * @return $this For chaining.

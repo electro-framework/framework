@@ -2,8 +2,8 @@
 namespace Selenia\Interfaces;
 
 use Psr\Http\Message\UriInterface;
+use Selenia\Exceptions\Flash\SessionException;
 use Selenia\Exceptions\FlashType;
-use Selenia\FlashExceptions\SessionException;
 
 interface SessionInterface extends \ArrayAccess, AssignableInterface
 {

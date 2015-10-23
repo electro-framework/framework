@@ -1,6 +1,6 @@
 <?php
 use Selenia\Exceptions\FatalException;
-use Selenia\FlashExceptions\FileException;
+use Selenia\Exceptions\Flash\FileException;
 use Selenia\Media;
 
 $URI      = get ($_GET, 'URI');

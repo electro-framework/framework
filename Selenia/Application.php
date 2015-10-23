@@ -203,18 +203,8 @@ class Application
    */
   public $languageFolders = [];
   /**
-   * List of languages enabled on the application.
-   *
-   * <p>Each language should be specified like this: `langCode:ISOCode:langLabel:locale1|locale2`
-   *
-   * <p>Ex.
-   * ```
-   * [
-   *   'en:en-US:English:en_US|en_US.UTF-8|us',
-   *   'pt:pt-PT:Português:pt_PT|pt_PT.UTF-8|ptg',
-   *   'es:es-ES:Español:es_ES|es_ES.UTF-8|esp'
-   * ]
-   * ```
+   * List of locale names of languages enabled for this specific application.
+   * > Ex: `['en', 'pt']` or `['en-US', 'pt-PT']`
    * @var string[]
    */
   public $languages = [];

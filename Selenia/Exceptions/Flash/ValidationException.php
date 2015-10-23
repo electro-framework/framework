@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\FlashExceptions;
+namespace Selenia\Exceptions\Flash;
 
 use Selenia\Exceptions\FlashMessageException;
 use Selenia\Exceptions\FlashType;
