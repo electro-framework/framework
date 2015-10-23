@@ -4,7 +4,6 @@ use PhpKit\WebConsole\WebConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
-use Selenia\Exceptions\HttpException;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\MiddlewareInterface;
 use Selenia\Routing\Router;
@@ -33,16 +32,18 @@ class RoutingMiddleware implements MiddlewareInterface
       WebConsole::routes ()->withFilter ($filter, $this->app->routingMap->routes);
     }
 
-      $router = new Router();
-      $this->injector->share ($router);
-      $router->init ();
-      Router::virtualWebServer ();
+    $router = new Router();
+    $this->injector->share ($router);
+    $router->init ();
+    Router::virtualWebServer ();
 
     $controllerClass = $router->route ();
     if ($controllerClass) {
-      var_dump($controllerClass);
-      exit;
-      $controller = $this->injector->make ($controllerClass);
+      global $lang;
+      $controller         = $this->injector->make ($controllerClass);
+      $router->controller = $controller;
+      $controller->router = $router;
+      $controller->lang   = $lang;
       return $controller->__invoke ($request, $response, $next);
     }
     return $next ();

@@ -11,7 +11,7 @@ use Selenia\Application;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\MiddlewareInterface;
 use Selenia\Interfaces\SessionInterface;
-use Selenia\Router;
+use Selenia\Routing\Router;
 
 /**
  *
@@ -69,17 +69,20 @@ class WebConsoleMiddleware implements MiddlewareInterface
 
     // Routes panel
     /** @var Router $router */
-    $router = $this->injector->make ('Selenia\Router');
+    $router = $this->injector->make ('Selenia\Routing\Router');
     if (isset($router->controller)) {
 
       // DOM panel
-      $insp = $router->controller->page->inspect (true);
-      WebConsole::DOM ()->write ($insp);
+      if (isset($router->controller->page)) {
+        $insp = $router->controller->page->inspect (true);
+        WebConsole::DOM ()->write ($insp);
+      }
 //      $filter = function ($k, $v) { return $k !== 'parent' && $k !== 'page'; };
 //      WebConsole::DOM ()->withFilter($filter, $controller->page);
 
       // View Models panel
-      WebConsole::vm ()->log ($router->controller->context->dataSources);
+      if (isset($router->controller->context))
+        WebConsole::vm ()->log ($router->controller->context->dataSources);
     }
 
     return WebConsole::outputContentViaResponse ($request, $response, true);

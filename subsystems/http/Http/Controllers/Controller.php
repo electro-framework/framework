@@ -28,7 +28,7 @@ use Selenia\Matisse\DataSet;
 use Selenia\Matisse\DataSource;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\MatisseEngine;
-use Selenia\Router;
+use Selenia\Routing\Router;
 use Selenia\Routing\PageRoute;
 use Zend\Diactoros\Response\HtmlResponse;
 

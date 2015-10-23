@@ -86,19 +86,6 @@ class Router
     }
   }
 
-  function route () {
-
-    // Load and execute the module that corresponds to the virtual URI.
-
-    if (isset ($this->activeRoute)) {
-      global $lang;
-
-      $this->controller       = $this->load ();
-      $this->controller->lang = $lang;
-    }
-    return $this;
-  }
-
   /**
    * Initialize loader context.
    */
@@ -132,7 +119,7 @@ class Router
   /**
    * Load the module determined by the virtual URI.
    */
-  public function load ()
+  public function route ()
   {
     global $application;
 
@@ -151,7 +138,7 @@ class Router
         $con = $class;
     }
     else {
-      $class = $this->activeRoute->controller;
+      $class = $this->activeRoute->controller;_log($this->activeRoute);
       if (class_exists ($class))
         $con = $class;
     }
@@ -167,7 +154,6 @@ class Router
   </table>
 ");
     }
-    $con->router = $this;
     return $con;
   }
 
