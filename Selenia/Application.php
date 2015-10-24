@@ -644,9 +644,9 @@ class Application
       ->add ('Selenia\ErrorHandling\ErrorHandlingMiddleware')
       ->add ('Selenia\Assembly\AssemblyMiddleware')
       ->add ('Selenia\Sessions\SessionMiddleware')
+      ->add ('Selenia\Localization\LanguageMiddleware')
       ->add ('Selenia\Authentication\AuthenticationMiddleware')
       ->add ('Selenia\FileServer\FileServerMiddleware')
-      ->add ('Selenia\Localization\LanguageMiddleware')
       ->add ('Selenia\Localization\TranslationMiddleware')
       ->add ('Selenia\Routing\Middleware\RoutingMiddleware')
       ->add ('Selenia\HttpMiddleware\URINotFoundMiddleware');

@@ -1,8 +1,6 @@
 <?php
 namespace Selenia\Sessions;
 
-use Exception;
-use Selenia\Exceptions\Flash\SessionException;
 use Selenia\Exceptions\FlashType;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Interfaces\UserInterface;
@@ -44,16 +42,6 @@ class Session implements SessionInterface
     $this->data      = [];
     $this->prevFlash = [];
     $this->newFlash  = [];
-  }
-
-  /**
-   * The logged-in user or null if not logged-in.
-   * @return null|UserInterface
-   */
-  static function user ()
-  {
-    global $session;
-    return isset($session) ? $session->user : null;
   }
 
   /**
@@ -106,12 +94,12 @@ class Session implements SessionInterface
 
   function flashMessage ($message, $type = FlashType::WARNING, $title = '')
   {
-    $this->flash ('#flashMessage', compact ($message, $type, $title));
+    $this->flash ('#flashMessage', compact ('message', 'type', 'title'));
   }
 
   function getFlashMessage ()
   {
-    return $this['#flashMessage'] ?: [];
+    return $this['#flashMessage'] ?: null;
   }
 
   function getFlashed ($name, $default = null)
@@ -153,39 +141,12 @@ class Session implements SessionInterface
     return (bool)$this->user;
   }
 
-  function login ($username, $password)
-  {
-    global $application;
-    if (empty($username))
-      throw new SessionException(SessionException::MISSING_INFO);
-    else {
-      /** @var UserInterface $user */
-      $user = new $application->userModel;
-      if (!$user->findByName ($username))
-        throw new SessionException(SessionException::UNKNOWN_USER);
-      else if (!$user->verifyPassword ($password))
-        throw new SessionException(SessionException::WRONG_PASSWORD);
-      else if (!$user->active ())
-        throw new SessionException(SessionException::DISABLED);
-      else {
-        try {
-          $user->onLogin ();
-          $this->isValid      = true;
-          $this->user         = $user;
-          $this->userRealName = $user->realName ();
-        } catch (Exception $e) {
-          throw new SessionException($e->getMessage ());
-        }
-      }
-    }
-  }
-
   function logout ()
   {
     if (isset($_COOKIE[$this->name]))
       setcookie ($this->name, '', time () - 42000, '/');
     session_destroy ();
-    $_SESSION['sessionInfo'] = null;
+    $_SESSION['#data'] = null;
   }
 
   public function offsetExists ($offset)
@@ -242,9 +203,21 @@ class Session implements SessionInterface
     $this->flash ('#previousUrl', strval ($url));
   }
 
+  function setUser (UserInterface $user)
+  {
+    $this->user         = $user;
+    $this->isValid      = true;
+    $this->userRealName = $user->realName ();
+  }
+
   function token ()
   {
     return $this['#token'];
+  }
+
+  function user ()
+  {
+    return $this->user;
   }
 
   function validate ()

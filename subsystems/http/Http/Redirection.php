@@ -88,7 +88,7 @@ class Redirection
   function intended ($defaultUrl = '', $status = 302)
   {
     $url = $this->session->previousUrl () ?: $this->normalizeUrl ($defaultUrl);
-    return $this->to ($url . $status);
+    return $this->to ($url, $status);
   }
 
   /**
@@ -136,7 +136,7 @@ class Redirection
     $url = strval ($url);
     if (!$url)
       return strval ($this->request->getUri ());
-    if ($url[0] != '/')
+    if ($url[0] != '/' && substr ($url, 0, 4) != 'http')
       $url = $this->app->baseURI . "/$url";
     return $url;
   }

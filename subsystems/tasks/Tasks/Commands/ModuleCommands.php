@@ -7,12 +7,12 @@ use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
 use Robo\Task\Vcs\GitStack;
-use Selenia\Contracts\ApplicationServiceTrait;
 use Selenia\Console\Contracts\ConsoleIOServiceTrait;
 use Selenia\Console\Contracts\FileSystemStackServiceTrait;
+use Selenia\Console\Lib\PackagistAPI;
+use Selenia\Contracts\ApplicationServiceTrait;
 use Selenia\Contracts\ModuleConfigServiceTrait;
 use Selenia\Exceptions\HttpException;
-use Selenia\Console\Lib\PackagistAPI;
 use Selenia\ModulesApi;
 use Selenia\Tasks\Shared\InstallPackageTask;
 use Selenia\Tasks\Shared\UninstallPackageTask;
@@ -33,8 +33,9 @@ trait ModuleCommands
    */
   function moduleCreate ($moduleName = null)
   {
-    $io  = $this->io ();
-    $api = ModulesApi::get ();
+    $io = $this->io ();
+    /** @var ModulesApi $api */
+    $api = $this->modulesApi;
 
     $moduleName = $moduleName ?: $this->io ()->askDefault ("Module name", "vendor-name/product-name");
 
@@ -101,6 +102,8 @@ trait ModuleCommands
   function moduleInstallPlugin ($moduleName = null, $opts = ['search|s' => '', 'stars' => false])
   {
     $io = $this->io ();
+    /** @var ModulesApi $api */
+    $api = $this->modulesApi;
     if (!$moduleName) {
 
       // Search
@@ -117,8 +120,8 @@ trait ModuleCommands
       $sel        = $io->menu ('Select a plugin module to install:',
         array_getColumn ($modules, 'fname'), -1,
         array_getColumn ($modules, 'description'),
-        function ($i) use ($modules) {
-          return !ModulesApi::get ()->isInstalled ($modules[$i]['name']) ?: "That module is already installed";
+        function ($i) use ($modules, $api) {
+          return !$api->isInstalled ($modules[$i]['name']) ?: "That module is already installed";
         }
       );
       $moduleName = $modules[$sel]['name'];
@@ -152,6 +155,9 @@ trait ModuleCommands
                                   $opts = ['keep-repo|k' => false, 'search|s' => '', 'stars' => false])
   {
     $io = $this->io ();
+    /** @var ModulesApi $api */
+    $api = $this->modulesApi;
+
     if (!$moduleName) {
 
       // Search
@@ -168,8 +174,8 @@ trait ModuleCommands
       $sel        = $io->menu ('Select a template module to install:',
         array_getColumn ($modules, 'fname'), -1,
         array_getColumn ($modules, 'description'),
-        function ($i) use ($modules) {
-          return !ModulesApi::get ()->isInstalled ($modules[$i]['name'])
+        function ($i) use ($modules, $api) {
+          return !$api->isInstalled ($modules[$i]['name'])
             ?: "A module with that name already exists on this project";
         }
       );
@@ -213,24 +219,30 @@ trait ModuleCommands
   }
 
   /**
+   * Syncs the registry.json file, thereby (re)registering all currently installed modules
+   */
+  function moduleRefresh ()
+  {
+    /** @var ModulesApi $api */
+    $api = $this->modulesApi;
+
+    $api->updateManifest ();
+  }
+
+  /**
    * Removes a module from the application
    * @param string $moduleName The full name (vendor-name/module-name) of the module to be uninstalled
    */
   function moduleUninstall ($moduleName = null)
   {
-    ModulesApi::get ()->selectModule ($moduleName, $this->io ());
+    /** @var ModulesApi $api */
+    $api = $this->modulesApi;
 
-    if (ModulesApi::get ()->isPlugin ($moduleName))
+    $api->selectModule ($moduleName, $this->io ());
+
+    if ($api->isPlugin ($moduleName))
       $this->uninstallPlugin ($moduleName);
     else $this->uninstallProjectModule ($moduleName);
-  }
-
-  /**
-   * Syncs the manifest.json file, thereby (re)registering all currently installed modules
-   */
-  function moduleUpdateRegistry ()
-  {
-    ModulesApi::get ()->updateManifest ();
   }
 
   //--------------------------------------------------------------------------------------------------------------------
@@ -264,18 +276,21 @@ trait ModuleCommands
 
   //--------------------------------------------------------------------------------------------------------------------
 
-  private function dumpAutoLoad ()
-  {
-    (new DumpAutoload)->printed (false)->run ();
-  }
-
   private function composerUpdate ()
   {
     (new Update)->printed (false)->run ();
   }
 
+  private function dumpAutoLoad ()
+  {
+    (new DumpAutoload)->printed (false)->run ();
+  }
+
   private function formatModules (& $modules, $stars = false)
   {
+    /** @var ModulesApi $api */
+    $api = $this->modulesApi;
+
     // Sort list
 
     $modules = $stars
@@ -285,8 +300,8 @@ trait ModuleCommands
     // Format display
 
     $starsW = max (array_map ('strlen', array_column ($modules, 'favers')));
-    array_walk ($modules, function (&$m) use ($starsW) {
-      $i = ModulesApi::get ()->isInstalled ($m['name']);
+    array_walk ($modules, function (&$m) use ($starsW, $api) {
+      $i = $api->isInstalled ($m['name']);
       list ($vendor, $package) = explode ('/', $m['name']);
       $stats = "<comment>" .
                str_pad ($m['downloads'], 6, ' ', STR_PAD_LEFT) . "▾  " .

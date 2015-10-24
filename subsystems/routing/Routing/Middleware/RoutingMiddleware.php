@@ -4,8 +4,10 @@ use PhpKit\WebConsole\WebConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
+use Selenia\Http\Controllers\Controller;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\MiddlewareInterface;
+use Selenia\Interfaces\SessionInterface;
 use Selenia\Routing\Router;
 use Selenia\Routing\RoutingMap;
 
@@ -39,9 +41,17 @@ class RoutingMiddleware implements MiddlewareInterface
 
     $controllerClass = $router->route ();
     if ($controllerClass) {
+      /** @var Controller $controller */
       $controller         = $this->injector->make ($controllerClass);
       $router->controller = $controller;
       $controller->router = $router;
+
+      //TODO: refactor this
+      /** @var SessionInterface $session */
+      $session = $this->injector->make ('Selenia\Interfaces\SessionInterface');
+      $controller->flashMessage = $session->getFlashMessage();
+
+
       return $controller->__invoke ($request, $response, $next);
     }
     return $next ();

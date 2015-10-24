@@ -6,6 +6,7 @@ use Robo\Runner;
 use Robo\TaskInfo;
 use Selenia\Application;
 use Selenia\Console\TaskRunner\ConsoleIO;
+use Selenia\Interfaces\InjectorInterface;
 use Symfony\Component\Console\Application as ConsoleApplication;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputInterface;
@@ -17,6 +18,10 @@ class TaskRunner extends Runner
    * @var ConsoleIO
    */
   protected $io;
+  /**
+   * @var InjectorInterface
+   */
+  private $injector;
 
   function __construct ()
   {
@@ -80,6 +85,8 @@ class TaskRunner extends Runner
     $application = new Application;
     $application->setup (getcwd ());
     $application->boot ();
+    $this->injector = $application->injector;
+    $this->injector->share ($this->io);
     $this->execute ($args);
   }
 
@@ -89,7 +96,7 @@ class TaskRunner extends Runner
    */
   protected function mergeTasks ($app, $className)
   {
-    $roboTasks = new $className ($this->io);
+    $roboTasks = $this->injector->make ($className);
 
     $commandNames = array_filter (get_class_methods ($className),
       function ($m) use ($className) {
@@ -98,6 +105,7 @@ class TaskRunner extends Runner
       });
 
     $passThrough = $this->passThroughArgs;
+
     foreach ($commandNames as $commandName) {
       $command = $this->createCommand (new TaskInfo($className, $commandName));
       $command->setCode (function (InputInterface $input) use ($roboTasks, $commandName, $passThrough) {

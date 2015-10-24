@@ -2,7 +2,6 @@
 namespace Selenia\Interfaces;
 
 use Psr\Http\Message\UriInterface;
-use Selenia\Exceptions\Flash\SessionException;
 use Selenia\Exceptions\FlashType;
 
 interface SessionInterface extends \ArrayAccess, AssignableInterface
@@ -39,7 +38,7 @@ interface SessionInterface extends \ArrayAccess, AssignableInterface
 
   /**
    * Retrieves the memorized flash message (if any).
-   * @return array An array with 'type', 'message' and 'title' keys, or an empty array if no flash message exists.
+   * @return array|null An array with 'type', 'message' and 'title' keys, or <kbd>null</kbd> if no flash message exists.
    */
   function getFlashMessage ();
 
@@ -52,6 +51,12 @@ interface SessionInterface extends \ArrayAccess, AssignableInterface
    * @return mixed
    */
   function getFlashed ($name, $default = null);
+
+  /**
+   * Gets the language code for the currently logged in user.
+   * @return string|null <kbd>null</kbd> if no language is enabled.
+   */
+  function getLang ();
 
   /**
    * Get the requested item from the flashed input array, or get all input data.
@@ -84,14 +89,6 @@ interface SessionInterface extends \ArrayAccess, AssignableInterface
   function loggedIn ();
 
   /**
-   * Attempts to log in the user with the given credentials.
-   * @param string $username
-   * @param string $password
-   * @throws SessionException If the login fails.
-   */
-  function login ($username, $password);
-
-  /**
    * Logs out the user amd clears the session's data.
    */
   function logout ();
@@ -120,20 +117,26 @@ interface SessionInterface extends \ArrayAccess, AssignableInterface
   function setLang ($lang);
 
   /**
-   * Gets the language code for the currently logged in user.
-   * @return string|null <kbd>null</kbd> if no language is enabled.
-   */
-  function getLang ();
-
-  /**
    * Set the "previous" (intended) URL in the session.
    * @param string|UriInterface $url
    */
   function setPreviousUrl ($url);
 
   /**
+   * Sets the logged-in user.
+   * @param UserInterface $user
+   */
+  function setUser (UserInterface $user);
+
+  /**
    * Get the CSRF token value.
    * @return string
    */
   function token ();
+
+  /**
+   * Returns the logged-in user or `null` if not logged-in.
+   * @return null|UserInterface
+   */
+  function user ();
 }

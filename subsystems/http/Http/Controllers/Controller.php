@@ -4,19 +4,18 @@ namespace Selenia\Http\Controllers;
 use Exception;
 use PDO;
 use PDOStatement;
-use PhpKit\WebConsole\ErrorHandler;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionException;
 use ReflectionObject;
 use Selenia\Application;
+use Selenia\Authentication\AuthenticationException;
 use Selenia\DataObject;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Exceptions\Fatal\DataModelException;
 use Selenia\Exceptions\Fatal\FileNotFoundException;
 use Selenia\Exceptions\FatalException;
 use Selenia\Exceptions\Flash\FileException;
-use Selenia\Exceptions\Flash\SessionException;
 use Selenia\Exceptions\Flash\ValidationException;
 use Selenia\Exceptions\FlashMessageException;
 use Selenia\Exceptions\FlashType;
@@ -252,6 +251,10 @@ class Controller
    * @var bool
    */
   protected $renderOnPOST = false;
+  /**
+   * @var array|null
+   */
+  public $flashMessage = null;
 
   static function modPathOf ($virtualURI = '', $params = null)
   {
@@ -337,7 +340,9 @@ class Controller
           if (!$this->isWebService)
             $this->setRedirection (); //defaults to the same URI
           try {
-            $this->processRequest ();
+            $res = $this->processRequest ();
+            if ($res)
+              return $res;
             //if not a web service, the processing stops here.
           } catch (ValidationException $e) {
             $this->cancelRedirection ();
@@ -418,13 +423,6 @@ class Controller
     $data->delete ();
     if (!$this->autoRedirect ())
       throw new FatalException("No index page defined.");
-  }
-
-  function action_logout ()
-  {
-    global $session, $application;
-    $session->logout ();
-    $this->setRedirection (null, $application->URI ?: '/');
   }
 
   /**
@@ -638,7 +636,8 @@ class Controller
     global $application;
     $this->page->title = str_replace ('@', $this->getTitle (), $application->title);
     $this->page->addScript ("$application->frameworkURI/js/engine.js");
-    $this->displayStatus ();
+    if (isset($this->flashMessage))
+      $this->displayStatus ($this->flashMessage['type'], $this->flashMessage['message']);
     $this->page->defaultDataSource =& $this->context->dataSources['default'];
   }
 
@@ -716,7 +715,7 @@ class Controller
           if ($this->wasPosted ())
             $authenticate = false; // user is now logged in; proceed as a normal request
           else $authenticate = 'retry';
-        } catch (SessionException $e) {
+        } catch (AuthenticationException $e) {
           $this->setStatus (FlashType::WARNING, $e->getMessage ());
           // note: if $prevPost === false, it keeps that value instead of (erroneously) storing the login form data
           if ($action)
@@ -755,11 +754,6 @@ class Controller
   protected final function cancelRedirection ()
   {
     $this->redirectURI = null;
-  }
-
-  protected function clearStatus ()
-  {
-    unset($_SESSION['formStatus']);
   }
 
   /**
@@ -832,12 +826,9 @@ class Controller
     }
   }
 
-  protected function displayStatus ()
+  protected function displayStatus ($status, $message)
   {
-    $status = array_key_exists ('formStatus', $_SESSION) ? $_SESSION['formStatus'] : null;
     if (!is_null ($status)) {
-      $this->clearStatus ();
-      $message = array_key_exists ('formMessage', $_SESSION) ? $_SESSION['formMessage'] : null;
       if ($this->page)
         switch ($status) {
           case FlashType::FATAL:
@@ -859,6 +850,7 @@ class Controller
   /**
    * Invokes the right controller method in response to the POST request's specified action.
    * @param DataObject $data
+   * @return ResponseInterface|null
    * @throws FlashMessageException
    * @throws FileException
    */
@@ -874,7 +866,7 @@ class Controller
       throw new FlashMessageException('Class <b>' . $class->getName () . "</b> can't handle action <b>$action</b>.",
         FlashType::ERROR);
     }
-    $method->invoke ($this, $data, $param);
+    return $method->invoke ($this, $data, $param);
   }
 
   protected function finalize ()
@@ -1075,6 +1067,7 @@ class Controller
   /**
    * Responds to a POST request.
    * @param DataObject $data
+   * @return null|ResponseInterface
    */
   protected final function processForm (DataObject $data = null)
   {
@@ -1082,7 +1075,7 @@ class Controller
       $data->loadFromHttpRequest ($this->defineDataFields ());
       $this->interceptFormData ($data);
     }
-    $this->doFormAction ($data);
+    return $this->doFormAction ($data);
   }
 
   /**
@@ -1090,12 +1083,13 @@ class Controller
    * To implement standard behavior, override and make a call to $this->processForm($data),
    * where $data is the data object to be processed.
    * If you use the standard dataItem property, there is no need to override this method.
+   * @return null|ResponseInterface
    */
   protected function processRequest ()
   {
     if (isset($this->dataItem))
-      $this->processForm ($this->dataItem);
-    else $this->processForm ();
+      return $this->processForm ($this->dataItem);
+    else return $this->processForm ();
   }
 
   /**

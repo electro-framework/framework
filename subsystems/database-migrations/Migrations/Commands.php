@@ -3,8 +3,8 @@ namespace Selenia\Migrations;
 
 use Phinx\Console\Command;
 use Robo\Config;
-use Selenia\ModulesApi;
 use Selenia\Console\TaskRunner\ConsoleIO;
+use Selenia\ModulesApi;
 use Symfony\Component\Console\Input\ArrayInput;
 
 /**
@@ -16,18 +16,23 @@ class Commands
    * @var string Used internally to pass information to config.php
    */
   static $migrationsPath;
-
   /**
    * @var string Used internally to pass information to config.php
    */
   static $migrationsTable;
-
-  /** @var ConsoleIO */
+  /**
+   * @var ConsoleIO
+   */
   private $io;
+  /**
+   * @var ModulesApi
+   */
+  private $modulesApi;
 
-  function __construct (ConsoleIO $io)
+  function __construct (ConsoleIO $io, ModulesApi $modulesApi)
   {
-    $this->io = $io;
+    $this->io         = $io;
+    $this->modulesApi = $modulesApi;
   }
 
   /**
@@ -173,7 +178,10 @@ class Commands
    */
   protected function setupMigrationConfig ($moduleName)
   {
-    self::$migrationsPath  = ModulesApi::get ()->pathOf ($moduleName) . '/migrations';
+    /** @var ModulesApi $api */
+    $api = $this->modulesApi;
+
+    self::$migrationsPath  = $api->pathOf ($moduleName) . '/migrations';
     self::$migrationsTable = 'migrations_of_' . str_replace ('/', '_', dehyphenate ($moduleName));
   }
 
@@ -186,7 +194,10 @@ class Commands
    */
   private function setupModule (&$moduleName)
   {
-    ModulesApi::get ()->selectModule ($moduleName, $this->io);
+    /** @var ModulesApi $api */
+    $api = $this->modulesApi;
+
+    $api->selectModule ($moduleName, $this->io);
     $this->setupMigrationConfig ($moduleName);
   }
 

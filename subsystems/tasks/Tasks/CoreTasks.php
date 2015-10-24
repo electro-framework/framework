@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Tasks;
 use Robo\Task\FileSystem\FilesystemStack;
+use Selenia\ModulesApi;
 use Selenia\Tasks\Commands\BuildCommands;
 use Selenia\Tasks\Commands\InitCommands;
 use Selenia\Tasks\Commands\ModuleCommands;
@@ -17,10 +18,15 @@ class CoreTasks
 
   /** @var ConsoleIO */
   private $io;
+  /**
+   * @var ModulesApi
+   */
+  private $modulesApi;
 
-  function __construct (ConsoleIO $io)
+  function __construct (ConsoleIO $io, ModulesApi $modulesApi)
   {
     $this->io = $io;
+    $this->modulesApi = $modulesApi;
   }
 
   protected function app ()

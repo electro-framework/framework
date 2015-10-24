@@ -173,11 +173,12 @@ abstract class AbstractRoute extends Object
 
   public function getTitle ()
   {
+    global $application;
     if (!empty($this->title))
       return $this->title;
     if (isset($this->controller)) {
       /** @var Controller $ctrl */
-      $ctrl              = new $this->controller;
+      $ctrl              = $application->injector->make ($this->controller);
       $ctrl->activeRoute = $this;
       $this->title       = $ctrl->getTitle ();
     }

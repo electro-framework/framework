@@ -1,10 +1,10 @@
 <?php
-namespace Selenia\Exceptions\Flash;
+namespace Selenia\Authentication;
 
 use Selenia\Exceptions\FlashMessageException;
 use Selenia\Exceptions\FlashType;
 
-class SessionException extends FlashMessageException
+class AuthenticationException extends FlashMessageException
 {
   const DISABLED       = 4;
   const MISSING_INFO   = 1;
