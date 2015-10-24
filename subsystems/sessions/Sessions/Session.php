@@ -2,10 +2,10 @@
 namespace Selenia\Sessions;
 
 use Exception;
-use Selenia\Contracts\UserInterface;
 use Selenia\Exceptions\Flash\SessionException;
 use Selenia\Exceptions\FlashType;
 use Selenia\Interfaces\SessionInterface;
+use Selenia\Interfaces\UserInterface;
 use Selenia\Traits\AssignableTrait;
 use Selenia\Traits\InspectionTrait;
 

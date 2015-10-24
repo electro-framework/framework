@@ -36,12 +36,6 @@ ob_start ();
 
 class Controller
 {
-  const FIND_TRANS_KEY = '#\$([A-Z][A-Z0-9_]*)#';
-  /**
-   * The i18n cached translation table.
-   * @var array An array of arrays indexed by language code.
-   */
-  protected static $translation  = [];
   public           $TEMPLATE_EXT = '.html';
   /**
    * The current request URI.
@@ -295,33 +289,6 @@ class Controller
   static function ref ()
   {
     return get_called_class ();
-  }
-
-  static function translate ($lang, $text)
-  {
-    global $application;
-    if (!isset(self::$translation[$lang])) {
-      $found   = false;
-      $folders = array_reverse ($application->languageFolders);
-      foreach ($folders as $folder) {
-        $path = "$folder/$lang.ini";
-        $z    = file_exists ($path) ? parse_ini_file ($path) : null;
-        if (!empty($z)) {
-          $found                    = true;
-          self::$translation[$lang] = array_merge (get (self::$translation, $lang, []), $z);
-        }
-      }
-      if (!$found) {
-        $paths = array_map (function ($path) { return "<li>" . ErrorHandler::shortFileName ($path); }, $folders);
-        throw new FlashMessageException("A translation file for language <b>$lang</b> was not found.<p>Search paths:<ul>" .
-                                        implode ('', $paths) . "</ul>", FlashType::FATAL);
-      }
-    }
-    return preg_replace_callback (self::FIND_TRANS_KEY, function ($args) use ($lang) {
-      $a = $args[1];
-      return empty(self::$translation[$lang][$a]) ? '$' . $a
-        : preg_replace ('#\r?\n#', '<br>', self::$translation[$lang][$a]);
-    }, $text);
   }
 
   /**
@@ -1106,35 +1073,6 @@ class Controller
   }
 
   /**
-   * Performs post-rendering processing of the output stream, before it is sent to the client.
-   */
-  protected function postProcess ($content)
-  {
-    global $application;
-    if ($application->translation && isset($this->lang))
-      $content = self::translate ($this->lang, $content);
-    $content = $this->postProcessHook ($content);
-    if ($application->compressOutput && substr_count (get ($_SERVER, 'HTTP_ACCEPT_ENCODING', ''), 'gzip')) {
-      header ("Content-Encoding: gzip");
-      echo gzencode ($content, 1, FORCE_GZIP);
-    }
-    else {
-      echo $content;
-    }
-  }
-
-  /**
-   * Allows page controllers to perform post processing on the generated HTML output
-   * before it is sent to the browser.
-   * @param String $content The page content that will be output to the browser.
-   * @return String A replacement content.
-   */
-  protected function postProcessHook ($content)
-  {
-    return $content;
-  }
-
-  /**
    * Responds to a POST request.
    * @param DataObject $data
    */
@@ -1195,7 +1133,7 @@ class Controller
     $this->initSEO ();
     $this->setupView ();
     $output = $this->renderView ();
-    $this->postProcess ($output);
+    echo $output;
     $this->afterPageRender ();
     return true;
   }

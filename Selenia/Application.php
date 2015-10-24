@@ -78,6 +78,15 @@ class Application
    * @var string
    */
   public $cachePath = 'private/storage/cache';
+  /**
+   * Whether to compress or not the HTTP response with gzip enconding.
+   * @var bool
+   */
+  public $compressOutput = false;
+  /**
+   * Remove white space around raw markup blocks?
+   * @var boolean
+   */
   public $condenseLiterals;
   /**
    * Configuration settings for registered modules.
@@ -105,6 +114,9 @@ class Application
    * @var array
    */
   public $dataSources;
+  /**
+   * @var boolean
+   */
   public $debugMode;
   /**
    * A two letter code for default site language. NULL if i18n is disabled.
@@ -117,12 +129,15 @@ class Application
    * @var string
    */
   public $directory;
+  /**
+   * @var boolean
+   */
   public $enableCompression;
   /**
    * Favorite icon URL.
    * @var string
    */
-  public $favicon = 'data:;base64,iVBORw0KGgo='; // Inlined empty image to suppress http request
+  public $favicon = 'data:;base64,iVBORw0KGgo=';
   /**
    * @var string
    */
@@ -136,8 +151,6 @@ class Application
    * @var Boolean True to generate the standard framework scripts.
    */
   public $frameworkScripts = true;
-
-  /* Template related */
   /**
    * The mapped public URI of the framework's public directory.
    * @var string
@@ -148,8 +161,6 @@ class Application
    * @var Boolean
    */
   public $globalSessions = false;
-
-  /* Archive related */
   /**
    * The homepage's breadcrumb icon class(es).
    * @var string
@@ -239,8 +250,6 @@ class Application
    * @var string
    */
   public $modulePublicPath = 'public';
-
-  /* Session related */
   /**
    * The relative path of the templates folder inside a module.
    * @var string
@@ -298,10 +307,6 @@ class Application
    * @var number
    */
   public $pageSize = 99999;
-  /**
-   * @var
-   */
-  public $pageTemplate;
   /**
    * @var PipeHandler
    */
@@ -475,7 +480,7 @@ class Application
 
     $this->setup ($rootDir);
     // Temporarily set framework path mapping here for errors thrown during modules loading.
-    ErrorHandler::setPathsMap ($this->getMainPathMap());
+    ErrorHandler::setPathsMap ($this->getMainPathMap ());
 
     $modulesApi = $this->boot ();
 
@@ -662,6 +667,14 @@ class Application
       ->alias ('Psr\Log\LoggerInterface', get_class ($this->logger))->share ($this->logger);
   }
 
+  private function getMainPathMap ()
+  {
+    $rp = realpath ($this->frameworkPath);
+    return $rp != $this->frameworkPath ? [
+      $rp => self::FRAMEWORK_PATH,
+    ] : [];
+  }
+
   private function loadConfig ($iniPath)
   {
     $ini = @include $iniPath;
@@ -682,16 +695,9 @@ class Application
    */
   private function setDebugPathsMap (ModulesApi $modulesApi)
   {
-    $map = $this->getMainPathMap();
+    $map = $this->getMainPathMap ();
     $map = array_merge ($map, $modulesApi->registry ()->getPathMappings ());
     ErrorHandler::setPathsMap ($map);
-  }
-
-  private function getMainPathMap () {
-    $rp  = realpath ($this->frameworkPath);
-    return $rp != $this->frameworkPath ? [
-      $rp => self::FRAMEWORK_PATH,
-    ] : [];
   }
 
 }

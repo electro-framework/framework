@@ -18,6 +18,14 @@ interface ResponseFactoryInterface
   function make ($status = 200, $content = '', $contentType = 'text/html', array $headers = []);
 
   /**
+   * Creates a new stream from the specified string, for use as an HTTP response body.
+   * @param string          $content Initial body content.
+   * @param string|resource $stream  Stream identifier and/or an actual stream resource.
+   * @return StreamInterface
+   */
+  function makeBody ($content = '', $stream = 'php://memory');
+
+  /**
    * Creates a new HTTP response object, compatible with ResponseInterface.
    * @param string|resource|StreamInterface $stream  Stream identifier and/or actual stream resource
    * @param int                             $status  Status code for the response, if any.

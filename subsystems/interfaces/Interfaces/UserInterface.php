@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Contracts;
+namespace Selenia\Interfaces;
 
 interface UserInterface
 {
