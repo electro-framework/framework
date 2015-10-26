@@ -1,7 +1,7 @@
 <?php
 use PhpKit\WebConsole\ConsolePanel;
 use PhpKit\WebConsole\WebConsole;
-use Selenia\Assembly\ModuleOptions;
+use Selenia\Assembly\Traits\ModuleOptionsTrait;
 use Selenia\ForeignKey;
 use Selenia\Routing\DataSourceInfo;
 use Selenia\Routing\PageRoute;
@@ -11,7 +11,7 @@ use Selenia\Routing\SubPageRoute;
 
 function ModuleOptions ($path, array $options = null, callable $initializer = null)
 {
-  return new ModuleOptions($path, $options, $initializer);
+  return new ModuleOptionsTrait($path, $options, $initializer);
 }
 
 function RouteGroup ($init)

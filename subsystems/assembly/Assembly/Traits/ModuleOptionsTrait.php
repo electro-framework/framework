@@ -1,33 +1,24 @@
 <?php
-namespace Selenia\Assembly;
+namespace Selenia\Assembly\Traits;
 
 use Selenia\Application;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\AssignableInterface;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Object;
 
-class ModuleOptions extends Object
+trait ModuleOptionsTrait
 {
   public $path;
-  /** @var InjectorInterface */
-  public $injector;
 
-  function __construct ($path, array $options = null, callable $initializer = null)
+  /**
+   * Sets the 
+   * @param string $path
+   * @return $this
+   */
+  function path ($path)
   {
     $this->path = $path;
-    parent::__construct ($options);
-    if ($initializer) {
-      $ini = $initializer();
-      foreach ($ini as $k => &$v)
-        $this->set ($k, $v);
-    }
-  }
-
-  private static function throwInvalidConfigType ($cfg)
-  {
-    throw new ConfigException(sprintf ("Unsupported configuration type: <kbd class=type>%s</kbd>",
-      (is_object ($cfg) ? get_class ($cfg) : gettype ($cfg))));
+    return $this;
   }
 
   /**
