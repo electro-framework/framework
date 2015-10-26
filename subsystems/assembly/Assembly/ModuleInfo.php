@@ -1,12 +1,18 @@
 <?php
-namespace Selenia;
+namespace Selenia\Assembly;
 
 use PhpCode;
 use PhpKit\WebConsole\ErrorHandler;
+use Selenia\Application;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\AssignableInterface;
 use Selenia\Traits\AssignableTrait;
 
+/**
+ * Hold information about a module registration.
+ * <p>`ModulesRegistry` holds collections of instances of this class, representing all registered subsystems, plugins
+ * and project-modules.
+ */
 class ModuleInfo implements AssignableInterface
 {
   use AssignableTrait;

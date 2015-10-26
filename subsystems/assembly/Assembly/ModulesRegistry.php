@@ -1,8 +1,12 @@
 <?php
-namespace Selenia;
+namespace Selenia\Assembly;
 
 use PhpKit\Flow\Flow;
 
+/**
+ * Represents the modules' registry.
+ * It is serialized to disk to the `private/modules/registry.json` file.
+ */
 class ModulesRegistry
 {
   const ref = __CLASS__;

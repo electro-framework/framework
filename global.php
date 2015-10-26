@@ -1,8 +1,8 @@
 <?php
 use PhpKit\WebConsole\ConsolePanel;
 use PhpKit\WebConsole\WebConsole;
+use Selenia\Assembly\ModuleOptions;
 use Selenia\ForeignKey;
-use Selenia\ModuleOptions;
 use Selenia\Routing\DataSourceInfo;
 use Selenia\Routing\PageRoute;
 use Selenia\Routing\Route;

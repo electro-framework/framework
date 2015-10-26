@@ -1,12 +1,17 @@
 <?php
-namespace Selenia;
+namespace Selenia\Assembly;
 
+use Selenia\Application;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\AssignableInterface;
+use Selenia\Interfaces\InjectorInterface;
+use Selenia\Object;
 
 class ModuleOptions extends Object
 {
   public $path;
+  /** @var InjectorInterface */
+  public $injector;
 
   function __construct ($path, array $options = null, callable $initializer = null)
   {

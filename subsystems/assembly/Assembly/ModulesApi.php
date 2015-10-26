@@ -1,7 +1,8 @@
 <?php
-namespace Selenia;
+namespace Selenia\Assembly;
 use Exception;
 use PhpKit\Flow\FilesystemFlow;
+use Selenia\Application;
 use Selenia\Console\Contracts\ConsoleIOInterface;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\InjectorInterface;
@@ -15,6 +16,7 @@ use SplFileInfo;
  */
 class ModulesApi
 {
+  const ref = __CLASS__;
   /**
    * A sprintf-compatible formatting expression, where %s = module's short name.
    */

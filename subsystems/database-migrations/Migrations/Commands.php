@@ -3,8 +3,8 @@ namespace Selenia\Migrations;
 
 use Phinx\Console\Command;
 use Robo\Config;
+use Selenia\Assembly\ModulesApi;
 use Selenia\Console\TaskRunner\ConsoleIO;
-use Selenia\ModulesApi;
 use Symfony\Component\Console\Input\ArrayInput;
 
 /**

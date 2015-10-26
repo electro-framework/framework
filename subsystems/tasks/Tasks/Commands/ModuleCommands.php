@@ -7,13 +7,13 @@ use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
 use Robo\Task\Vcs\GitStack;
+use Selenia\Assembly\ModulesApi;
 use Selenia\Console\Contracts\ConsoleIOServiceTrait;
 use Selenia\Console\Contracts\FileSystemStackServiceTrait;
 use Selenia\Console\Lib\PackagistAPI;
 use Selenia\Contracts\ApplicationServiceTrait;
 use Selenia\Contracts\ModuleConfigServiceTrait;
 use Selenia\Exceptions\HttpException;
-use Selenia\ModulesApi;
 use Selenia\Tasks\Shared\InstallPackageTask;
 use Selenia\Tasks\Shared\UninstallPackageTask;
 

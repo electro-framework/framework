@@ -6,6 +6,7 @@ use Monolog\Handler\HandlerInterface;
 use Monolog\Logger;
 use PhpKit\WebConsole\ErrorHandler;
 use PhpKit\WebConsole\WebConsole;
+use Selenia\Assembly\ModulesApi;
 use Selenia\DependencyInjection\Injector;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\MiddlewareStackInterface;
@@ -399,7 +400,7 @@ class Application
   function boot ()
   {
     /** @var ModulesApi $modulesApi */
-    $modulesApi = $this->injector->make ('Selenia\ModulesApi');
+    $modulesApi = $this->injector->make (ModulesApi::ref);
     $modulesApi->bootModules ();
     return $modulesApi;
   }
@@ -642,7 +643,6 @@ class Application
       ->addIf (!$this->debugMode, 'Selenia\Http\Middleware\CompressionMiddleware')
       ->addIf ($this->debugMode, 'Selenia\Debugging\WebConsoleMiddleware')
       ->add ('Selenia\ErrorHandling\ErrorHandlingMiddleware')
-      ->add ('Selenia\Assembly\AssemblyMiddleware')
       ->add ('Selenia\Sessions\SessionMiddleware')
       ->add ('Selenia\Localization\LanguageMiddleware')
       ->add ('Selenia\Authentication\AuthenticationMiddleware')

@@ -1,11 +1,10 @@
 <?php
 namespace Selenia\Routing;
 use PhpKit\WebConsole\ErrorHandler;
+use Selenia\Assembly\ModuleInfo;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Exceptions\HttpException;
 use Selenia\Http\Controllers\Controller;
-use Selenia\ModuleInfo;
-use Selenia\Routing\PageRoute;
 
 /**
  * Routes the current URI to the corresponding controller.
