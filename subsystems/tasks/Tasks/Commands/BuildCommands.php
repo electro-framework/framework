@@ -2,7 +2,7 @@
 namespace Selenia\Tasks\Commands;
 use Robo\Task\Bower;
 use Robo\Task\FileSystem\CleanDir;
-use Selenia\Assembly\ModulesApi;
+use Selenia\Assembly\ModulesManager;
 use Selenia\Console\Contracts\ConsoleIOServiceTrait;
 use Selenia\Contracts\ApplicationServiceTrait;
 
@@ -28,7 +28,7 @@ trait BuildCommands
     // $this->cleanModules ();
     if (!$options['exclude-libs']) {
       //$this->cleanLibs ();
-      foreach (ModulesApi::get ()->modules () as $module) {
+      foreach (ModulesManager::get ()->modules () as $module) {
         $path = "$module->path/bower.json";
         if (file_exists ($path))
           copy ($path, $this->app ()->baseDirectory . '/bower.json');

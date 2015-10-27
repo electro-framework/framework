@@ -6,7 +6,7 @@ use Monolog\Handler\HandlerInterface;
 use Monolog\Logger;
 use PhpKit\WebConsole\ErrorHandler;
 use PhpKit\WebConsole\WebConsole;
-use Selenia\Assembly\ModulesApi;
+use Selenia\Assembly\ModulesManager;
 use Selenia\DependencyInjection\Injector;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\MiddlewareStackInterface;
@@ -399,8 +399,8 @@ class Application
 
   function boot ()
   {
-    /** @var ModulesApi $modulesApi */
-    $modulesApi = $this->injector->make (ModulesApi::ref);
+    /** @var ModulesManager $modulesApi */
+    $modulesApi = $this->injector->make (ModulesManager::ref);
     $modulesApi->bootModules ();
     return $modulesApi;
   }
@@ -644,6 +644,7 @@ class Application
       ->addIf ($this->debugMode, 'Selenia\Debugging\WebConsoleMiddleware')
       ->add ('Selenia\ErrorHandling\ErrorHandlingMiddleware')
       ->add ('Selenia\Sessions\SessionMiddleware')
+      ->add ('Selenia\Http\Middleware\CsrfMiddleware')
       ->add ('Selenia\Localization\LanguageMiddleware')
       ->add ('Selenia\Authentication\AuthenticationMiddleware')
       ->add ('Selenia\FileServer\FileServerMiddleware')
@@ -691,9 +692,9 @@ class Application
    * Configures path mappings for the ErrorHandler, so that links to files on symlinked directories are converted to
    * links on the main project tree, allowing for easier editing of files on an IDE.
    *
-   * @param ModulesApi $modulesApi
+   * @param ModulesManager $modulesApi
    */
-  private function setDebugPathsMap (ModulesApi $modulesApi)
+  private function setDebugPathsMap (ModulesManager $modulesApi)
   {
     $map = $this->getMainPathMap ();
     $map = array_merge ($map, $modulesApi->registry ()->getPathMappings ());

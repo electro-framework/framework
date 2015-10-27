@@ -7,7 +7,7 @@ use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
 use Robo\Task\Vcs\GitStack;
-use Selenia\Assembly\ModulesApi;
+use Selenia\Assembly\ModulesManager;
 use Selenia\Console\Contracts\ConsoleIOServiceTrait;
 use Selenia\Console\Contracts\FileSystemStackServiceTrait;
 use Selenia\Console\Lib\PackagistAPI;
@@ -34,7 +34,7 @@ trait ModuleCommands
   function moduleCreate ($moduleName = null)
   {
     $io = $this->io ();
-    /** @var ModulesApi $api */
+    /** @var ModulesManager $api */
     $api = $this->modulesApi;
 
     $moduleName = $moduleName ?: $this->io ()->askDefault ("Module name", "vendor-name/product-name");
@@ -45,7 +45,7 @@ trait ModuleCommands
       $io->error ("You can't use that name because a module named $moduleName already exists");
 
     $___MODULE___    = $moduleName;
-    $___NAMESPACE___ = ModulesApi::get ()->moduleNameToNamespace ($___MODULE___);
+    $___NAMESPACE___ = ModulesManager::get ()->moduleNameToNamespace ($___MODULE___);
     $___CLASS___     = explode ('\\', $___NAMESPACE___)[1] . 'Module';
     if (!$moduleName) {
       $___NAMESPACE___ = $io->askDefault ("PHP namespace for the module's classes", $___NAMESPACE___);
@@ -102,7 +102,7 @@ trait ModuleCommands
   function moduleInstallPlugin ($moduleName = null, $opts = ['search|s' => '', 'stars' => false])
   {
     $io = $this->io ();
-    /** @var ModulesApi $api */
+    /** @var ModulesManager $api */
     $api = $this->modulesApi;
     if (!$moduleName) {
 
@@ -155,7 +155,7 @@ trait ModuleCommands
                                   $opts = ['keep-repo|k' => false, 'search|s' => '', 'stars' => false])
   {
     $io = $this->io ();
-    /** @var ModulesApi $api */
+    /** @var ModulesManager $api */
     $api = $this->modulesApi;
 
     if (!$moduleName) {
@@ -223,7 +223,7 @@ trait ModuleCommands
    */
   function moduleRefresh ()
   {
-    /** @var ModulesApi $api */
+    /** @var ModulesManager $api */
     $api = $this->modulesApi;
 
     $api->updateManifest ();
@@ -235,7 +235,7 @@ trait ModuleCommands
    */
   function moduleUninstall ($moduleName = null)
   {
-    /** @var ModulesApi $api */
+    /** @var ModulesManager $api */
     $api = $this->modulesApi;
 
     $api->selectModule ($moduleName, $this->io ());
@@ -288,7 +288,7 @@ trait ModuleCommands
 
   private function formatModules (& $modules, $stars = false)
   {
-    /** @var ModulesApi $api */
+    /** @var ModulesManager $api */
     $api = $this->modulesApi;
 
     // Sort list

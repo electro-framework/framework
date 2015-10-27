@@ -17,6 +17,9 @@ class ModuleInfo implements AssignableInterface
 {
   use AssignableTrait;
 
+  const TYPE_PLUGIN    = 'plugin';
+  const TYPE_PRIVATE   = 'private';
+  const TYPE_SUBSYSTEM = 'subsystem';
   const ref = __CLASS__;
   /**
    * An optional textual description (one line) of the module's purpose.
@@ -41,16 +44,21 @@ class ModuleInfo implements AssignableInterface
    */
   public $path;
   /**
-   * The module's service provider class name or null if none.
-   * @var string|null
-   */
-  public $serviceProvider;
-  /**
    * If set, maps `$path` to the real filesystem path. This is useful when modules are symlinked and we want to display
    * debugging paths as short paths relative to the application's root directory.
    * @var string
    */
   public $realPath;
+  /**
+   * The module's service provider class name or null if none.
+   * @var string|null
+   */
+  public $serviceProvider;
+  /**
+   * The module type: plugin, subsystem or projectModule.
+   * @var string One of the self::TYPE constants.
+   */
+  public $type;
 
   /**
    * @global Application $application

@@ -8,16 +8,15 @@ use Selenia\Interfaces\AssignableInterface;
 class ModuleServices
 {
   const ref = __CLASS__;
-
+  /**
+   * @var Application
+   */
+  private $app;
   /**
    * Stores temporarily the module path, for use by the other setters.
    * @var string
    */
   private $path;
-  /**
-   * @var Application
-   */
-  private $app;
   /**
    * A list of callbacks to be executed after all modules have performed their configuration.
    * @var callable[]
@@ -155,6 +154,16 @@ class ModuleServices
   }
 
   /**
+   * Runs all the previously registered post config handlers.
+   * > **Reserved** for internal use by the framework.
+   */
+  function runPostConfig ()
+  {
+    foreach ($this->postConfigs as $cfg)
+      $cfg ();
+  }
+
+  /**
    * @param array $v Configuration default settings to be merged into the application config.
    *                 Settings already defined will not be changed.
    * @return $this
@@ -193,8 +202,8 @@ class ModuleServices
    * Sets the root directory of the module, from where other relative directory paths will be computed.
    * > **You do not need to call this!**
    *
-   * It is used internally by the framework, but you can also use it if you want to relocate some of the module's internal
-   * directories into non-standard locations.
+   * It is used internally by the framework, but you can also use it if you want to relocate some of the module's
+   * internal directories into non-standard locations.
    * @param string $path
    * @return $this
    */

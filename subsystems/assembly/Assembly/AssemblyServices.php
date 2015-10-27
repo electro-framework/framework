@@ -8,10 +8,13 @@ class AssemblyServices implements ServiceProviderInterface
 {
   function boot () { }
 
-  function register (InjectorInterface $injector)
+  function configure (ModuleServices $module)
   {
-    $injector->share (ModulesApi::ref);
-    $injector->share (ModuleServices::ref);
   }
 
+  function register (InjectorInterface $injector)
+  {
+    $injector->share (ModulesManager::ref);
+    $injector->share (ModuleServices::ref);
+  }
 }

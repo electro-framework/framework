@@ -3,7 +3,7 @@ namespace Selenia\Migrations;
 
 use Phinx\Console\Command;
 use Robo\Config;
-use Selenia\Assembly\ModulesApi;
+use Selenia\Assembly\ModulesManager;
 use Selenia\Console\TaskRunner\ConsoleIO;
 use Symfony\Component\Console\Input\ArrayInput;
 
@@ -25,11 +25,11 @@ class Commands
    */
   private $io;
   /**
-   * @var ModulesApi
+   * @var ModulesManager
    */
   private $modulesApi;
 
-  function __construct (ConsoleIO $io, ModulesApi $modulesApi)
+  function __construct (ConsoleIO $io, ModulesManager $modulesApi)
   {
     $this->io         = $io;
     $this->modulesApi = $modulesApi;
@@ -178,7 +178,7 @@ class Commands
    */
   protected function setupMigrationConfig ($moduleName)
   {
-    /** @var ModulesApi $api */
+    /** @var ModulesManager $api */
     $api = $this->modulesApi;
 
     self::$migrationsPath  = $api->pathOf ($moduleName) . '/migrations';
@@ -194,7 +194,7 @@ class Commands
    */
   private function setupModule (&$moduleName)
   {
-    /** @var ModulesApi $api */
+    /** @var ModulesManager $api */
     $api = $this->modulesApi;
 
     $api->selectModule ($moduleName, $this->io);
