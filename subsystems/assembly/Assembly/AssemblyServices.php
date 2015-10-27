@@ -10,7 +10,8 @@ class AssemblyServices implements ServiceProviderInterface
 
   function register (InjectorInterface $injector)
   {
-    $injector->share ('Selenia\ModulesApi');
+    $injector->share (ModulesApi::ref);
+    $injector->share (ModuleServices::ref);
   }
 
 }

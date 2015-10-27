@@ -16,11 +16,11 @@ use SplFileInfo;
  */
 class ModulesApi
 {
-  const ref = __CLASS__;
   /**
    * A sprintf-compatible formatting expression, where %s = module's short name.
    */
   const SERVICE_PROVIDER_NAME = '%sServices';
+  const ref = __CLASS__;
   /**
    * @var Application
    */
