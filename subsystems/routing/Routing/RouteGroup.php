@@ -4,7 +4,7 @@ namespace Selenia\Routing;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Http\Controllers\Controller;
 use Selenia\Modules\Admin\Models\User;
-use Selenia\Sessions\Session;
+use Selenia\Sessions\Services\Session;
 
 class RouteGroup extends AbstractRoute
 {

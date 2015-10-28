@@ -6,7 +6,7 @@ use Monolog\Handler\HandlerInterface;
 use Monolog\Logger;
 use PhpKit\WebConsole\ErrorHandler;
 use PhpKit\WebConsole\WebConsole;
-use Selenia\Core\Assembly\AssemblyServices;
+use Selenia\Core\Assembly\Config\AssemblyServices;
 use Selenia\Core\Assembly\Services\ModulesManager;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
 use Selenia\Core\DependencyInjection\Injector;
@@ -640,16 +640,16 @@ class Application
     $stack = $this->injector->make ('Selenia\Interfaces\MiddlewareStackInterface');
     return $stack
       ->addIf (!$this->debugMode, 'Selenia\Http\Middleware\CompressionMiddleware')
-      ->addIf ($this->debugMode, 'Selenia\Debugging\WebConsoleMiddleware')
-      ->add ('Selenia\ErrorHandling\ErrorHandlingMiddleware')
-      ->add ('Selenia\Sessions\SessionMiddleware')
+      ->addIf ($this->debugMode, 'Selenia\Debugging\Middleware\WebConsoleMiddleware')
+      ->add ('Selenia\ErrorHandling\Middleware\ErrorHandlingMiddleware')
+      ->add ('Selenia\Sessions\Middleware\SessionMiddleware')
       ->add ('Selenia\Http\Middleware\CsrfMiddleware')
-      ->add ('Selenia\Localization\LanguageMiddleware')
-      ->add ('Selenia\Authentication\AuthenticationMiddleware')
-      ->add ('Selenia\FileServer\FileServerMiddleware')
-      ->add ('Selenia\Localization\TranslationMiddleware')
+      ->add ('Selenia\Localization\Middleware\LanguageMiddleware')
+      ->add ('Selenia\Authentication\Middleware\AuthenticationMiddleware')
+      ->add ('Selenia\FileServer\Middleware\FileServerMiddleware')
+      ->add ('Selenia\Localization\Middleware\TranslationMiddleware')
       ->add ('Selenia\Routing\Middleware\RoutingMiddleware')
-      ->add ('Selenia\HttpMiddleware\URINotFoundMiddleware');
+      ->add ('Selenia\HttpMiddleware\Middleware\URINotFoundMiddleware');
   }
 
   protected function registerPipes ()

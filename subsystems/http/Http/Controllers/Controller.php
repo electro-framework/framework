@@ -9,7 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use ReflectionException;
 use ReflectionObject;
 use Selenia\Application;
-use Selenia\Authentication\AuthenticationException;
+use Selenia\Authentication\Exceptions\AuthenticationException;
 use Selenia\DataObject;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Exceptions\Fatal\DataModelException;

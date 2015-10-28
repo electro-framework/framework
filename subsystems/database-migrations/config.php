@@ -2,10 +2,10 @@
 
 return [
   "paths"        => [
-    "migrations" => Selenia\Migrations\Commands::$migrationsPath,
+    "migrations" => \Selenia\Migrations\Commands\Commands::$migrationsPath,
   ],
   "environments" => [
-    "default_migration_table" => Selenia\Migrations\Commands::$migrationsTable,
+    "default_migration_table" => \Selenia\Migrations\Commands\Commands::$migrationsTable,
     "default_database"        => "main",
     "main"                    => [
       "adapter"     => $_ENV['DB_DRIVER'],

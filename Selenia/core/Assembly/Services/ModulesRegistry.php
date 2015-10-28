@@ -268,10 +268,11 @@ class ModulesRegistry
       if ($namespaces) {
         $firstKey     = array_keys (get_object_vars ($namespaces))[0];
         $folder       = $namespaces->$firstKey;
-        $providerName = $module->getBootstrapperClass();
-        $servicesPath = "$module->path/$folder/$providerName.php";
+        $bootstrapper = $module->getBootstrapperClass ();
+        $filename     = str_replace ('\\', '/', $bootstrapper);
+        $servicesPath = "$module->path/$folder/$filename.php";
         if (file_exists ($servicesPath))
-          $module->bootstrapper = "$firstKey$providerName";
+          $module->bootstrapper = "$firstKey$bootstrapper";
         $rp = realpath ($module->path);
         if ($rp != "{$this->app->baseDirectory}/$module->path")
           $module->realPath = $rp;

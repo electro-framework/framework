@@ -17,7 +17,7 @@ class ModuleInfo implements AssignableInterface
   /**
    * A sprintf-compatible formatting expression, where %s = module's short name.
    */
-  const BOOTSTRAPPER_CLASS_NAME_FMT = '%sModule';
+  const BOOTSTRAPPER_CLASS_NAME_FMT = 'Config\\%sModule';
   const TYPE_PLUGIN                 = 'plugin';
   const TYPE_PRIVATE                = 'private';
   const TYPE_SUBSYSTEM              = 'subsystem';
