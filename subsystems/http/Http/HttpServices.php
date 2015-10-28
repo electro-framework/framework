@@ -6,8 +6,6 @@ use Selenia\Interfaces\ServiceProviderInterface;
 
 class HttpServices implements ServiceProviderInterface
 {
-  function boot () { }
-
   function register (InjectorInterface $injector)
   {
     $injector

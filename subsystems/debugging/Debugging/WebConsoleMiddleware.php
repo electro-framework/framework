@@ -1,5 +1,6 @@
 <?php
 namespace Selenia\Debugging;
+use Monolog\Logger;
 use PhpKit\WebConsole\ConsolePanel;
 use PhpKit\WebConsole\Panels\PSR7RequestPanel;
 use PhpKit\WebConsole\Panels\PSR7ResponsePanel;
@@ -7,6 +8,7 @@ use PhpKit\WebConsole\WebConsole;
 use PhpKit\WebConsole\WebConsoleLogHandler;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Log\LoggerInterface;
 use Selenia\Application;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\MiddlewareInterface;
@@ -18,18 +20,30 @@ use Selenia\Routing\Router;
  */
 class WebConsoleMiddleware implements MiddlewareInterface
 {
+  /**
+   * @var Application
+   */
   private $app;
+  /**
+   * @var InjectorInterface
+   */
   private $injector;
+  /**
+   * @var LoggerInterface
+   */
+  private $logger;
   /**
    * @var SessionInterface
    */
   private $session;
 
-  function __construct (Application $app, InjectorInterface $injector, SessionInterface $session)
+  function __construct (Application $app, InjectorInterface $injector, SessionInterface $session,
+                        LoggerInterface $logger)
   {
     $this->app      = $app;
     $this->injector = $injector;
     $this->session  = $session;
+    $this->logger   = $logger;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -48,8 +62,8 @@ class WebConsoleMiddleware implements MiddlewareInterface
     $response = $next ();
 
     // Redirect logger to Inspector panel
-    if (isset($app->logger))
-      $app->logger->pushHandler (new WebConsoleLogHandler(WebConsole::log ()));
+    if (isset($this->logger) && $this->logger instanceof Logger)
+      $this->logger->pushHandler (new WebConsoleLogHandler(WebConsole::log ()));
 
     $response->getBody ()->rewind ();
 

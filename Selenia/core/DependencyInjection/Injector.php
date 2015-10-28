@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\DependencyInjection;
+namespace Selenia\Core\DependencyInjection;
 
 use Auryn\Injector as Auryn;
 use Selenia\Interfaces\InjectorInterface;

@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Assembly;
+namespace Selenia\Core\Assembly;
 
 use PhpCode;
 use PhpKit\WebConsole\ErrorHandler;

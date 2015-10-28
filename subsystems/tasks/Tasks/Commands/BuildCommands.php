@@ -2,9 +2,9 @@
 namespace Selenia\Tasks\Commands;
 use Robo\Task\Bower;
 use Robo\Task\FileSystem\CleanDir;
-use Selenia\Assembly\ModulesManager;
 use Selenia\Console\Contracts\ConsoleIOServiceTrait;
 use Selenia\Contracts\ApplicationServiceTrait;
+use Selenia\Core\Assembly\Services\ModulesManager;
 
 /**
  * Implements the Selenia Task Runner's pre-set build commands.

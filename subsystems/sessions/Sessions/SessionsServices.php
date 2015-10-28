@@ -6,8 +6,6 @@ use Selenia\Interfaces\ServiceProviderInterface;
 
 class SessionsServices implements ServiceProviderInterface
 {
-  function boot () { }
-
   function register (InjectorInterface $injector)
   {
     $injector

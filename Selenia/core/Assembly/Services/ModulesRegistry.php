@@ -1,8 +1,9 @@
 <?php
-namespace Selenia\Assembly;
+namespace Selenia\Core\Assembly\Services;
 
 use PhpKit\Flow\FilesystemFlow;
 use Selenia\Application;
+use Selenia\Core\Assembly\ModuleInfo;
 use Selenia\Lib\JsonFile;
 use SplFileInfo;
 

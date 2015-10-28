@@ -7,8 +7,6 @@ use Selenia\Interfaces\ServiceProviderInterface;
 
 class HttpMiddlewareServices implements ServiceProviderInterface
 {
-  function boot () { }
-
   function register (InjectorInterface $injector)
   {
     $injector

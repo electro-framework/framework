@@ -20,7 +20,8 @@
     "php-kit/composer-bower-plugin": "dev-master",
     "php-kit/tools": "dev-master",
     "php-kit/power-primitives": "dev-master",
-    "php-kit/flow": "dev-master"
+    "php-kit/flow": "dev-master",
+    "rdlowrey/auryn": "^1.1.0"
   },
   "replace": {
     "selenia-subsystems/assembly": "self.version",

@@ -1,14 +1,13 @@
 <?php
-namespace Selenia\Assembly;
+namespace Selenia\Core\Assembly\Services;
 use Exception;
-use PhpKit\Flow\FilesystemFlow;
 use Selenia\Application;
 use Selenia\Console\Contracts\ConsoleIOInterface;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\ModuleInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
 use Selenia\Lib\ComposerConfigHandler;
-use SplFileInfo;
 
 /**
  * Provides an API for managing the application's modules.
@@ -41,38 +40,44 @@ class ModulesManager
   }
 
   /**
+   * Initializes all modules.
+   *
    * @throws ConfigException
    */
   function bootModules ()
   {
+    /** @var ModuleInterface[] $providers */
     $providers = [];
+    /** @var string[] $paths */
+    $paths     = [];
 
     // Providers registration phase
 
-    foreach ($this->registry ()->getAllModules() as $name => $module) {
-      /** @var ServiceProviderInterface $provider */
+    foreach ($this->registry ()->getAllModules () as $name => $module) {
       if ($module->enabled && $module->serviceProvider) {
-        $provider = $this->injector->make ($module->serviceProvider);
-        $provider->register ($this->injector);
-        $providers[] = [$provider, $module->path];
+        $provider = new $module->serviceProvider;
+
+        if ($provider instanceof ServiceProviderInterface)
+          $provider->register ($this->injector);
+
+        if ($provider instanceof ModuleInterface) {
+          $providers[] = $provider;
+          $paths[]     = $module->path;
+        }
       }
     }
 
     // Providers configuration phase
 
-    foreach ($providers as $r) {
-      /** @var ServiceProviderInterface $provider */
-      list ($provider, $path) = $r;
-      $this->moduleServices->setPath ($path);
+    foreach ($providers as $i => $provider) {
+      $this->moduleServices->setPath ($paths[$i]);
       $provider->configure ($this->moduleServices);
     }
     $this->moduleServices->runPostConfig ();
 
     // Providers boot phase
 
-    foreach ($providers as $r) {
-      /** @var ServiceProviderInterface $provider */
-      $provider = $r[0];
+    foreach ($providers as $provider) {
       $this->injector->execute ([$provider, 'boot']);
     }
   }
@@ -168,11 +173,11 @@ class ModulesManager
     if ($moduleName) {
       if (!$this->validateModuleName ($moduleName))
         $io->error ("Invalid module name $moduleName. Correct syntax: vendor-name/product-name");
-      if (!$this->registry()->isInstalled ($moduleName))
+      if (!$this->registry ()->isInstalled ($moduleName))
         $io->error ("Module $moduleName is not installed");
     }
     else {
-      $modules    = $this->registry()->getApplicationModules();
+      $modules    = $this->registry ()->getApplicationModules ();
       $i          = $io->menu ("Select a module:", $modules);
       $moduleName = $modules[$i];
     }

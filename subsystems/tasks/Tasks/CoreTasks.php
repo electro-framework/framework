@@ -1,8 +1,8 @@
 <?php
 namespace Selenia\Tasks;
 use Robo\Task\FileSystem\FilesystemStack;
-use Selenia\Assembly\ModulesManager;
 use Selenia\Console\TaskRunner\ConsoleIO;
+use Selenia\Core\Assembly\Services\ModulesManager;
 use Selenia\Tasks\Commands\BuildCommands;
 use Selenia\Tasks\Commands\InitCommands;
 use Selenia\Tasks\Commands\ModuleCommands;

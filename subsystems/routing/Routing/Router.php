@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Routing;
 use PhpKit\WebConsole\ErrorHandler;
-use Selenia\Assembly\ModuleInfo;
+use Selenia\Core\Assembly\ModuleInfo;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Exceptions\HttpException;
 use Selenia\Http\Controllers\Controller;

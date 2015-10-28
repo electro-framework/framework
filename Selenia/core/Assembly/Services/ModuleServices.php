@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Assembly;
+namespace Selenia\Core\Assembly\Services;
 
 use Selenia\Application;
 use Selenia\Exceptions\Fatal\ConfigException;

@@ -6,8 +6,9 @@ use Monolog\Handler\HandlerInterface;
 use Monolog\Logger;
 use PhpKit\WebConsole\ErrorHandler;
 use PhpKit\WebConsole\WebConsole;
-use Selenia\Assembly\ModulesManager;
-use Selenia\DependencyInjection\Injector;
+use Selenia\Core\Assembly\AssemblyServices;
+use Selenia\Core\Assembly\Services\ModulesManager;
+use Selenia\Core\DependencyInjection\Injector;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\MiddlewareStackInterface;
 use Selenia\Interfaces\ResponseSenderInterface;
@@ -201,7 +202,7 @@ class Application
    */
   public $includePath;
   /**
-   * @var Injector
+   * @var \Selenia\Core\DependencyInjection\Injector
    */
   public $injector;
   /**
@@ -226,11 +227,6 @@ class Application
    * @var HandlerInterface[]
    */
   public $logHandlers = [];
-  /**
-   * The application's main logger.
-   * @var Logger
-   */
-  public $logger;
   /**
    * Relative file path of the view to be used for authenticating the user.
    * <p>It will be searched for on both the active module and on the application.
@@ -396,6 +392,11 @@ class Application
    * @var array
    */
   public $viewsDirectories = [];
+  /**
+   * The application's main logger.
+   * @var Logger
+   */
+  protected $logger;
 
   function boot ()
   {
@@ -485,6 +486,8 @@ class Application
 
     $modulesApi = $this->boot ();
 
+    $this->logger = $this->injector->make ('Psr\Log\LoggerInterface');
+
     if ($debug)
       $this->setDebugPathsMap ($modulesApi);
 
@@ -553,9 +556,11 @@ class Application
     $this->languageFolders[] = $this->langPath;
     if (getenv ('APP_DEFAULT_LANG'))
       $this->defaultLang = getenv ('APP_DEFAULT_LANG');
-    $this->logger = new Logger('main', $this->logHandlers);
 
     $this->setupInjector ();
+
+    $assembly = new AssemblyServices;
+    $assembly->register ($this->injector);
   }
 
   function toFilePath ($URI, &$isMapped = false)
@@ -664,8 +669,8 @@ class Application
     $this->injector = new Injector;
     $this->injector
       ->share ($this)
-      ->alias ('Selenia\Interfaces\InjectorInterface', get_class ($this->injector))->share ($this->injector)
-      ->alias ('Psr\Log\LoggerInterface', get_class ($this->logger))->share ($this->logger);
+      ->share ($this->injector)
+      ->alias ('Selenia\Interfaces\InjectorInterface', get_class ($this->injector));
   }
 
   private function getMainPathMap ()
