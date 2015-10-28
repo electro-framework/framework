@@ -7,7 +7,7 @@ use Robo\TaskInfo;
 use Selenia\Application;
 use Selenia\Console\TaskRunner\ConsoleIO;
 use Selenia\Interfaces\InjectorInterface;
-use Symfony\Component\Console\Application as ConsoleApplication;
+use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -19,80 +19,90 @@ class TaskRunner extends Runner
    */
   protected $io;
   /**
+   * @var Application
+   */
+  private $app;
+  /**
+   * @var SymfonyConsole
+   */
+  private $console;
+  /**
    * @var InjectorInterface
    */
   private $injector;
 
-  function __construct ()
+  function __construct (ConsoleIO $io, Application $app, SymfonyConsole $console, InjectorInterface $injector)
   {
-    //TODO: inject ConsoleIO service
-    $this->io = new ConsoleIO;
+    $this->io       = $io;
+    $this->app      = $app;
+    $this->console  = $console;
+    $this->injector = $injector;
   }
 
-  function execute ($args = null)
+  /**
+   * Boots a Selenia Application and the runs the specified command.
+   * @param array|null $args
+   */
+  static function run (array $args = null)
   {
-    global $application;
+    global $application; //TODO: remove this
+
     $argv = $_SERVER['argv'];
+    $application = new Application;
+    $application->setup (getcwd ());
+    $application->boot ();
+    $injector = $application->injector;
+    $console  = new SymfonyConsole ('Selenia Task Runner', self::VERSION);
+    $io       = new ConsoleIO;
+    $args     = $args ?: $argv;
 
-    register_shutdown_function ([$this, 'shutdown']);
-    set_error_handler ([$this, 'handleError']);
+    $injector
+      ->share ($io)
+      ->share ($console);
 
+    $runner = new static ($io, $application, $console, $injector);
+    $runner->setupStandardIO($args);
+    $runner->execute ($args);
+  }
+
+  function setupStandardIO ($args) {
     // Color support manual override:
-    $hasColorSupport = in_array ('--ansi', $argv) ? true : (in_array ('--no-ansi', $argv) ? false : null);
+    $hasColorSupport = in_array ('--ansi', $args) ? true : (in_array ('--no-ansi', $args) ? false : null);
 
-    $input  = $this->prepareInput ($args ?: $argv);
+    $input  = $this->prepareInput ($args);
     $output = new ConsoleOutput(ConsoleOutput::VERBOSITY_NORMAL, $hasColorSupport);
     Config::setOutput ($output);
     $this->io->setInput ($input);
     $this->io->setOutput ($output);
+  }
 
-    $app = $application->console = new ConsoleApplication ('Selenia Task Runner', self::VERSION);
+  function execute ($args = null)
+  {
+    // Setup
 
-    $this->init ();
+    register_shutdown_function ([$this, 'shutdown']);
+    set_error_handler ([$this, 'handleError']);
+    $this->stopOnFail ();
+    $this->customizeColors ();
 
-    foreach ($application->taskClasses as $class) {
+    // Merge tasks from all registered task classes
+
+    foreach ($this->app->taskClasses as $class) {
       if (!class_exists ($class)) {
         $this->getOutput ()->writeln ("<error>Task class '$class' was not found</error>");
         exit(1);
       }
-      $this->mergeTasks ($app, $class);
+      $this->mergeTasks ($this->console, $class);
     }
 
-    $app->run ($input);
+    // Run the given command
+
+    $this->console->run ($this->io->getInput(), $this->io->getOutput());
   }
 
   /**
-   * Performs additional initialization after the application is set up, but before any tasks are merged.
-   */
-  function init ()
-  {
-    global $application;
-    if (!isset($application)) {
-      $this->say ("Selenia tasks must be run from the 'selenia' command");
-      exit (1);
-    }
-    $this->stopOnFail ();
-    $this->customizeColors ();
-  }
-
-  /**
-   * Boots an Application and the runs the specified command.
-   * @param array|null $args
-   */
-  function run (array $args = null)
-  {
-    global $application;
-    $application = new Application;
-    $application->setup (getcwd ());
-    $application->boot ();
-    $this->injector = $application->injector;
-    $this->injector->share ($this->io);
-    $this->execute ($args);
-  }
-
-  /**
-   * @param ConsoleApplication $app
-   * @param string             $className
+   * @param SymfonyConsole $app
+   * @param string         $className
    */
   protected function mergeTasks ($app, $className)
   {

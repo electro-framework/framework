@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Contracts;
+namespace Selenia\Console\Contracts;
 use Selenia\Application;
 
 /**

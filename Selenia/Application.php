@@ -8,6 +8,7 @@ use PhpKit\WebConsole\ErrorHandler;
 use PhpKit\WebConsole\WebConsole;
 use Selenia\Core\Assembly\AssemblyServices;
 use Selenia\Core\Assembly\Services\ModulesManager;
+use Selenia\Core\Assembly\Services\ModulesRegistry;
 use Selenia\Core\DependencyInjection\Injector;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\MiddlewareStackInterface;
@@ -25,9 +26,10 @@ class Application
 {
   const FRAMEWORK_PATH = 'private/packages/selenia/framework';
   /**
+   * Registered Matisse tags.
    * @var array
    */
-  public static $TAGS = [];
+  public $tags = [];
   /**
    * Holds an array of SEO infomation for each site page or null;
    * @var array
@@ -106,11 +108,6 @@ class Application
    * @var string
    */
   public $configPath = 'private/config';
-  /**
-   * This is set only when running the console Task Runner.
-   * @var \Symfony\Component\Console\Application
-   */
-  public $console;
   /**
    * Holds an array of multiple DataSourceInfo for each site page or null;
    * @var array
@@ -695,14 +692,14 @@ class Application
 
   /**
    * Configures path mappings for the ErrorHandler, so that links to files on symlinked directories are converted to
-   * links on the main project tree, allowing for easier editing of files on an IDE.
+   * links on the main project tree, allowing easier files editing on an IDE.
    *
-   * @param ModulesManager $modulesApi
+   * @param ModulesRegistry $registry
    */
-  private function setDebugPathsMap (ModulesManager $modulesApi)
+  private function setDebugPathsMap (ModulesRegistry $registry)
   {
     $map = $this->getMainPathMap ();
-    $map = array_merge ($map, $modulesApi->registry ()->getPathMappings ());
+    $map = array_merge ($map, $registry->getPathMappings ());
     ErrorHandler::setPathsMap ($map);
   }
 

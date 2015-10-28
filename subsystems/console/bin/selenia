@@ -3,4 +3,4 @@
 
 require "{$_SERVER['PWD']}/private/packages/autoload.php";
 
-(new Selenia\Console\TaskRunner())->run ();
+Selenia\Console\TaskRunner::run ();

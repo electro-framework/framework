@@ -3,8 +3,9 @@ namespace Selenia\Migrations;
 
 use Phinx\Console\Command;
 use Robo\Config;
+use Selenia\Console\Lib\ModulesUtil;
 use Selenia\Console\TaskRunner\ConsoleIO;
-use Selenia\Core\Assembly\Services\ModulesManager;
+use Selenia\Core\Assembly\Services\ModulesRegistry;
 use Symfony\Component\Console\Input\ArrayInput;
 
 /**
@@ -25,14 +26,19 @@ class Commands
    */
   private $io;
   /**
-   * @var ModulesManager
+   * @var ModulesUtil
    */
-  private $modulesApi;
+  private $modulesUtil;
+  /**
+   * @var ModulesRegistry
+   */
+  private $registry;
 
-  function __construct (ConsoleIO $io, ModulesManager $modulesApi)
+  function __construct (ConsoleIO $io, ModulesRegistry $registry, ModulesUtil $modulesUtil)
   {
     $this->io         = $io;
-    $this->modulesApi = $modulesApi;
+    $this->registry = $registry;
+    $this->modulesUtil = $modulesUtil;
   }
 
   /**
@@ -165,6 +171,9 @@ class Commands
     return $command->run ($input, $output);
   }
 
+  /**
+   * @return \Symfony\Component\Console\Application
+   */
   protected function console ()
   {
     global $application;
@@ -178,10 +187,7 @@ class Commands
    */
   protected function setupMigrationConfig ($moduleName)
   {
-    /** @var ModulesManager $api */
-    $api = $this->modulesApi;
-
-    self::$migrationsPath  = $api->pathOf ($moduleName) . '/migrations';
+    self::$migrationsPath  = $this->registry->getModule($moduleName)->path . '/migrations';
     self::$migrationsTable = 'migrations_of_' . str_replace ('/', '_', dehyphenate ($moduleName));
   }
 
@@ -194,10 +200,7 @@ class Commands
    */
   private function setupModule (&$moduleName)
   {
-    /** @var ModulesManager $api */
-    $api = $this->modulesApi;
-
-    $api->selectModule ($moduleName, $this->io);
+    $this->modulesUtil->selectModule($moduleName);
     $this->setupMigrationConfig ($moduleName);
   }
 

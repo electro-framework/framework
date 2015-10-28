@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Contracts;
+namespace Selenia\Console\Contracts;
 
 /**
  * Allows traits to access the module's configuration settings.

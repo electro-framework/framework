@@ -7,12 +7,14 @@ use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
 use Robo\Task\Vcs\GitStack;
+use Selenia\Console\Contracts\ApplicationServiceTrait;
 use Selenia\Console\Contracts\ConsoleIOServiceTrait;
 use Selenia\Console\Contracts\FileSystemStackServiceTrait;
+use Selenia\Console\Contracts\ModuleConfigServiceTrait;
+use Selenia\Console\Contracts\ModulesRegistryServiceTrait;
+use Selenia\Console\Contracts\ModulesUtilServiceTrait;
 use Selenia\Console\Lib\PackagistAPI;
-use Selenia\Contracts\ApplicationServiceTrait;
-use Selenia\Contracts\ModuleConfigServiceTrait;
-use Selenia\Core\Assembly\Services\ModulesManager;
+use Selenia\Core\Assembly\ModuleInfo;
 use Selenia\Exceptions\HttpException;
 use Selenia\Tasks\Shared\InstallPackageTask;
 use Selenia\Tasks\Shared\UninstallPackageTask;
@@ -26,6 +28,8 @@ trait ModuleCommands
   use ApplicationServiceTrait;
   use ModuleConfigServiceTrait;
   use FileSystemStackServiceTrait;
+  use ModulesUtilServiceTrait;
+  use ModulesRegistryServiceTrait;
 
   /**
    * Scaffolds a new project module
@@ -34,18 +38,16 @@ trait ModuleCommands
   function moduleCreate ($moduleName = null)
   {
     $io = $this->io ();
-    /** @var ModulesManager $api */
-    $api = $this->modulesApi;
 
     $moduleName = $moduleName ?: $this->io ()->askDefault ("Module name", "vendor-name/product-name");
 
-    if (!$api->validateModuleName ($moduleName))
+    if (!$this->modulesRegistry ()->validateModuleName ($moduleName))
       $io->error ("Invalid module name $moduleName. Correct syntax: vendor-name/product-name");
-    if ($api->isInstalled ($moduleName))
+    if ($this->modulesRegistry ()->isInstalled ($moduleName))
       $io->error ("You can't use that name because a module named $moduleName already exists");
 
     $___MODULE___    = $moduleName;
-    $___NAMESPACE___ = ModulesManager::get ()->moduleNameToNamespace ($___MODULE___);
+    $___NAMESPACE___ = ModuleInfo::moduleNameToNamespace ($___MODULE___);
     $___CLASS___     = explode ('\\', $___NAMESPACE___)[1] . 'Module';
     if (!$moduleName) {
       $___NAMESPACE___ = $io->askDefault ("PHP namespace for the module's classes", $___NAMESPACE___);
@@ -86,7 +88,7 @@ trait ModuleCommands
 
     // Register the module
 
-    $this->moduleUpdateRegistry ();
+    $this->moduleRefresh ();
 
     $io->done ("Module <info>$___MODULE___</info> was created");
   }
@@ -102,8 +104,6 @@ trait ModuleCommands
   function moduleInstallPlugin ($moduleName = null, $opts = ['search|s' => '', 'stars' => false])
   {
     $io = $this->io ();
-    /** @var ModulesManager $api */
-    $api = $this->modulesApi;
     if (!$moduleName) {
 
       // Search
@@ -120,8 +120,8 @@ trait ModuleCommands
       $sel        = $io->menu ('Select a plugin module to install:',
         array_getColumn ($modules, 'fname'), -1,
         array_getColumn ($modules, 'description'),
-        function ($i) use ($modules, $api) {
-          return !$api->isInstalled ($modules[$i]['name']) ?: "That module is already installed";
+        function ($i) use ($modules) {
+          return !$this->modulesRegistry ()->isInstalled ($modules[$i]['name']) ?: "That module is already installed";
         }
       );
       $moduleName = $modules[$sel]['name'];
@@ -133,7 +133,7 @@ trait ModuleCommands
 
     // Register the module
 
-    $this->moduleUpdateRegistry ();
+    $this->moduleRefresh ();
 
     $io->done ("Plugin <info>$moduleName</info> is now installed");
   }
@@ -155,8 +155,6 @@ trait ModuleCommands
                                   $opts = ['keep-repo|k' => false, 'search|s' => '', 'stars' => false])
   {
     $io = $this->io ();
-    /** @var ModulesManager $api */
-    $api = $this->modulesApi;
 
     if (!$moduleName) {
 
@@ -174,8 +172,8 @@ trait ModuleCommands
       $sel        = $io->menu ('Select a template module to install:',
         array_getColumn ($modules, 'fname'), -1,
         array_getColumn ($modules, 'description'),
-        function ($i) use ($modules, $api) {
-          return !$api->isInstalled ($modules[$i]['name'])
+        function ($i) use ($modules) {
+          return !$this->modulesRegistry ()->isInstalled ($modules[$i]['name'])
             ?: "A module with that name already exists on this project";
         }
       );
@@ -213,7 +211,7 @@ trait ModuleCommands
 
     // Register the module
 
-    $this->moduleUpdateRegistry ();
+    $this->moduleRefresh ();
 
     $io->done ("Template <info>$moduleName</info> is now installed on <info>$path</info>");
   }
@@ -223,10 +221,7 @@ trait ModuleCommands
    */
   function moduleRefresh ()
   {
-    /** @var ModulesManager $api */
-    $api = $this->modulesApi;
-
-    $api->updateManifest ();
+    $this->modulesRegistry ()->refresh ();
   }
 
   /**
@@ -235,12 +230,9 @@ trait ModuleCommands
    */
   function moduleUninstall ($moduleName = null)
   {
-    /** @var ModulesManager $api */
-    $api = $this->modulesApi;
+    $this->modulesUtil ()->selectModule ($moduleName);
 
-    $api->selectModule ($moduleName, $this->io ());
-
-    if ($api->isPlugin ($moduleName))
+    if ($this->modulesRegistry ()->isPlugin ($moduleName))
       $this->uninstallPlugin ($moduleName);
     else $this->uninstallProjectModule ($moduleName);
   }
@@ -251,7 +243,7 @@ trait ModuleCommands
   {
     (new UninstallPackageTask($moduleName))->printed (false)->run ();
 
-    $this->moduleUpdateRegistry ();
+    $this->moduleRefresh ();
 
     $this->io ()->done ("Plugin module <info>$moduleName</info> was uninstalled");
   }
@@ -269,7 +261,7 @@ trait ModuleCommands
 
     // Unregister the module
 
-    $this->moduleUpdateRegistry ();
+    $this->moduleRefresh ();
 
     $io->done ("Module <info>$moduleName</info> was uninstalled");
   }
@@ -288,9 +280,6 @@ trait ModuleCommands
 
   private function formatModules (& $modules, $stars = false)
   {
-    /** @var ModulesManager $api */
-    $api = $this->modulesApi;
-
     // Sort list
 
     $modules = $stars
@@ -300,8 +289,8 @@ trait ModuleCommands
     // Format display
 
     $starsW = max (array_map ('strlen', array_column ($modules, 'favers')));
-    array_walk ($modules, function (&$m) use ($starsW, $api) {
-      $i = $api->isInstalled ($m['name']);
+    array_walk ($modules, function (&$m) use ($starsW) {
+      $i = $this->modulesRegistry ()->isInstalled ($m['name']);
       list ($vendor, $package) = explode ('/', $m['name']);
       $stats = "<comment>" .
                str_pad ($m['downloads'], 6, ' ', STR_PAD_LEFT) . "▾  " .

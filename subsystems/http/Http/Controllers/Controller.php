@@ -924,7 +924,7 @@ class Controller
     $this->engine = new MatisseEngine;
     $pipeHandler  = clone $application->pipeHandler;
     $pipeHandler->registerFallbackHandler ($this);
-    $ctx                      = $this->context = $this->engine->createContext (Application::$TAGS, $pipeHandler);
+    $ctx                      = $this->context = $this->engine->createContext ($application->tags, $pipeHandler);
     $ctx->condenseLiterals    = $application->condenseLiterals;
     $ctx->debugMode           = $application->debugMode;
     $ctx->templateDirectories = $application->templateDirectories;

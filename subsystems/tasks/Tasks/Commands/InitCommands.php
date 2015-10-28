@@ -3,10 +3,10 @@ namespace Selenia\Tasks\Commands;
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
-use Selenia\Contracts\ApplicationServiceTrait;
+use Selenia\Console\Contracts\ApplicationServiceTrait;
 use Selenia\Console\Contracts\ConsoleIOServiceTrait;
 use Selenia\Console\Contracts\FileSystemStackServiceTrait;
-use Selenia\Contracts\ModuleConfigServiceTrait;
+use Selenia\Console\Contracts\ModuleConfigServiceTrait;
 use Selenia\Console\TaskRunner;
 use Selenia\Tasks\Shared\ChmodEx;
 
@@ -28,7 +28,7 @@ trait InitCommands
   {
     $tmp = dirname (dirname (dirname (dirname (dirname (__DIR__)))));
     require "$tmp/packages/autoload.php";
-    (new TaskRunner ())->run (['', 'init']);
+    TaskRunner::run (['', 'init']);
   }
 
   /**
@@ -72,7 +72,8 @@ trait InitCommands
 
     $LANG = $io->askDefault ("What is the application's main language? (en | pt | ...)", 'en');
     do {
-      $DB_DRIVER = $io->askDefault ("Which database kind are you going to use? (none | sqlite | mysql | pgsql)", 'none');
+      $DB_DRIVER =
+        $io->askDefault ("Which database kind are you going to use? (none | sqlite | mysql | pgsql)", 'none');
     } while ($DB_DRIVER != 'sqlite' && $DB_DRIVER != 'mysql' && $DB_DRIVER != 'pgsql' && $DB_DRIVER != 'none');
 
     $DB_DATABASE    = '';
@@ -109,7 +110,7 @@ trait InitCommands
       case 'pgsql':
         do {
           $DB_DATABASE = $io->ask ("Database name");
-          if (!$DB_DATABASE) $io->say("You must specify a name");
+          if (!$DB_DATABASE) $io->say ("You must specify a name");
         } while (!$DB_DATABASE);
         $DB_HOST     = $io->askDefault ("Database host domain", env ('DB_HOST', 'localhost'));
         $DB_USERNAME = $io->askDefault ("Database username", env ('DB_USERNAME'));
@@ -160,7 +161,8 @@ trait InitCommands
     if (file_exists ($target)) {
       if (get ($opts, 'overwrite'))
         (new DeleteDir ($target))->run ();
-      else $this->io ()->error ("Directory already exists. Use the -o|--overwrite option to re-create the storage directory.");
+      else $this->io ()
+                ->error ("Directory already exists. Use the -o|--overwrite option to re-create the storage directory.");
     }
     (new CopyDir (["{$this->moduleConfig('scaffoldsPath')}/storage" => $target]))->run ();
     (new ChmodEx ($target))->dirs (0770)->files (0660)->run ();

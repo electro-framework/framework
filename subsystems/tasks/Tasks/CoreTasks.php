@@ -1,8 +1,11 @@
 <?php
 namespace Selenia\Tasks;
 use Robo\Task\FileSystem\FilesystemStack;
+use Selenia\Application;
+use Selenia\Console\Lib\ModulesUtil;
 use Selenia\Console\TaskRunner\ConsoleIO;
 use Selenia\Core\Assembly\Services\ModulesManager;
+use Selenia\Core\Assembly\Services\ModulesRegistry;
 use Selenia\Tasks\Commands\BuildCommands;
 use Selenia\Tasks\Commands\InitCommands;
 use Selenia\Tasks\Commands\ModuleCommands;
@@ -15,24 +18,33 @@ class CoreTasks
   use InitCommands;
   use BuildCommands;
   use ModuleCommands;
+  /**
+   * @var Application
+   */
+  private $app;
 
   /** @var ConsoleIO */
   private $io;
   /**
-   * @var ModulesManager
+   * @var ModulesRegistry
    */
-  private $modulesApi;
+  private $modulesRegistry;
+  /**
+   * @var ModulesUtil
+   */
+  private $modulesUtil;
 
-  function __construct (ConsoleIO $io, ModulesManager $modulesApi)
+  function __construct (ConsoleIO $io, Application $app, ModulesUtil $modulesUtil, ModulesRegistry $modulesRegistry)
   {
     $this->io = $io;
-    $this->modulesApi = $modulesApi;
+    $this->modulesUtil = $modulesUtil;
+    $this->app = $app;
+    $this->modulesRegistry = $modulesRegistry;
   }
 
   protected function app ()
   {
-    global $application;
-    return $application;
+    return $this->app;
   }
 
   protected function io ()
@@ -43,6 +55,16 @@ class CoreTasks
   protected function fs ()
   {
     return new FilesystemStack;
+  }
+
+  protected function modulesRegistry ()
+  {
+    return $this->modulesRegistry;
+  }
+
+  protected function modulesUtil ()
+  {
+    return $this->modulesUtil;
   }
 
   protected function moduleConfig ($key)
