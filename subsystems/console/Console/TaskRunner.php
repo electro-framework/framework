@@ -5,7 +5,7 @@ use Robo\Result;
 use Robo\Runner;
 use Robo\TaskInfo;
 use Selenia\Application;
-use Selenia\Console\TaskRunner\ConsoleIO;
+use Selenia\Console\Services\ConsoleIO;
 use Selenia\Interfaces\InjectorInterface;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;

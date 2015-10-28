@@ -6,7 +6,7 @@ use Selenia\Application;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
 
-class LoggingServices implements ServiceProviderInterface
+class LoggingModule implements ServiceProviderInterface
 {
   function register (InjectorInterface $injector)
   {

@@ -9,6 +9,7 @@ use Selenia\Interfaces\MiddlewareStackInterface;
 
 class MiddlewareStack implements MiddlewareStackInterface
 {
+  const ref = __CLASS__;
   /**
    * @var ServerRequestInterface
    */

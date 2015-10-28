@@ -16,11 +16,7 @@ class ModulesRegistry
 {
   use InspectionTrait;
 
-  /**
-   * A sprintf-compatible formatting expression, where %s = module's short name.
-   */
-  const SERVICE_PROVIDER_NAME = '%sServices';
-  const ref                   = __CLASS__;
+  const ref = __CLASS__;
   static $INSPECTABLE = ['modules'];
   /**
    * @var Application
@@ -272,10 +268,10 @@ class ModulesRegistry
       if ($namespaces) {
         $firstKey     = array_keys (get_object_vars ($namespaces))[0];
         $folder       = $namespaces->$firstKey;
-        $providerName = sprintf (self::SERVICE_PROVIDER_NAME, $module->getShortName ());
+        $providerName = $module->getBootstrapperClass();
         $servicesPath = "$module->path/$folder/$providerName.php";
         if (file_exists ($servicesPath))
-          $module->serviceProvider = "$firstKey$providerName";
+          $module->bootstrapper = "$firstKey$providerName";
         $rp = realpath ($module->path);
         if ($rp != "{$this->app->baseDirectory}/$module->path")
           $module->realPath = $rp;

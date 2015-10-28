@@ -4,7 +4,7 @@ namespace Selenia\Http;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
 
-class HttpServices implements ServiceProviderInterface
+class HttpModule implements ServiceProviderInterface
 {
   function register (InjectorInterface $injector)
   {

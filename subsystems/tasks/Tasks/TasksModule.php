@@ -4,7 +4,7 @@ namespace Selenia\Tasks;
 use Selenia\Core\Assembly\Services\ModuleServices;
 use Selenia\Interfaces\ModuleInterface;
 
-class TasksServices implements ModuleInterface
+class TasksModule implements ModuleInterface
 {
   function boot () { }
 

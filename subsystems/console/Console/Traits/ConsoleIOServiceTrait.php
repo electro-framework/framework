@@ -1,7 +1,7 @@
 <?php
-namespace Selenia\Console\Contracts;
+namespace Selenia\Console\Traits;
 
-use Selenia\Console\TaskRunner\ConsoleIO;
+use Selenia\Console\Services\ConsoleIO;
 
 /**
  * Allows traits to access the ConsoleIO service.

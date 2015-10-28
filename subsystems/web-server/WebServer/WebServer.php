@@ -14,9 +14,9 @@ class WebServer
   private $injector;
 
   /**
-   * @param mixed $injector An <kbd>InjectorInterface</kbd>-compatible injector instance.
+   * @param InjectorInterface $injector
    */
-  function __construct ($injector)
+  function __construct (InjectorInterface $injector)
   {
     $this->injector = $injector;
   }
@@ -25,7 +25,7 @@ class WebServer
    * Runs the web server's request handler.
    * @param string $rootDir The application's root directory path.
    */
-  function run (string $rootDir)
+  function run ($rootDir)
   {
 
     $routeLoader = new RouteLoader();

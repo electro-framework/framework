@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Console\Lib;
 
-use Selenia\Console\TaskRunner\ConsoleIO;
+use Selenia\Console\Services\ConsoleIO;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
 
 /**

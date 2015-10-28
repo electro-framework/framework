@@ -59,8 +59,8 @@ class ModulesManager
     // Providers registration phase
 
     foreach ($this->modulesRegistry->getAllModules () as $name => $module) {
-      if ($module->enabled && $module->serviceProvider) {
-        $provider = new $module->serviceProvider;
+      if ($module->enabled && $module->bootstrapper) {
+        $provider = new $module->bootstrapper;
 
         if ($provider instanceof ServiceProviderInterface)
           $provider->register ($this->injector);

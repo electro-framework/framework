@@ -5,12 +5,12 @@ use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\MiddlewareStackInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
 
-class HttpMiddlewareServices implements ServiceProviderInterface
+class HttpMiddlewareModule implements ServiceProviderInterface
 {
   function register (InjectorInterface $injector)
   {
     $injector
-      ->alias ('Selenia\Interfaces\MiddlewareStackInterface', 'Selenia\HttpMiddleware\MiddlewareStack')
+      ->alias ('Selenia\Interfaces\MiddlewareStackInterface', MiddlewareStack::ref)
       ->share ('Selenia\HttpMiddleware\MiddlewareStack')
       ->delegate ('Psr\Http\Message\ServerRequestInterface', function (MiddlewareStackInterface $middlewareStack) {
         return $middlewareStack->getCurrentRequest ();

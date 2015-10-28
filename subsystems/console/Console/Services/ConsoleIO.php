@@ -1,13 +1,17 @@
 <?php
-namespace Selenia\Console\TaskRunner;
+namespace Selenia\Console\Services;
 
-use Selenia\Console\Contracts\ConsoleIOInterface;
+use Selenia\Interfaces\ConsoleIOInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterStyleInterface;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Question\Question;
+
+define ('CONSOLE_ALIGN_CENTER', STR_PAD_BOTH);
+define ('CONSOLE_ALIGN_LEFT', STR_PAD_RIGHT);
+define ('CONSOLE_ALIGN_RIGHT', STR_PAD_LEFT);
 
 /**
  * A service that provides input and output from/to the terminal

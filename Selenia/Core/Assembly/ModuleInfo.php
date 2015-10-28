@@ -14,10 +14,19 @@ class ModuleInfo implements AssignableInterface
 {
   use AssignableTrait;
 
-  const TYPE_PLUGIN    = 'plugin';
-  const TYPE_PRIVATE   = 'private';
-  const TYPE_SUBSYSTEM = 'subsystem';
-  const ref = __CLASS__;
+  /**
+   * A sprintf-compatible formatting expression, where %s = module's short name.
+   */
+  const BOOTSTRAPPER_CLASS_NAME_FMT = '%sModule';
+  const TYPE_PLUGIN                 = 'plugin';
+  const TYPE_PRIVATE                = 'private';
+  const TYPE_SUBSYSTEM              = 'subsystem';
+  const ref                         = __CLASS__;
+  /**
+   * The module's service provider class name or null if none.
+   * @var string|null
+   */
+  public $bootstrapper;
   /**
    * An optional textual description (one line) of the module's purpose.
    * @var string
@@ -47,31 +56,10 @@ class ModuleInfo implements AssignableInterface
    */
   public $realPath;
   /**
-   * The module's service provider class name or null if none.
-   * @var string|null
-   */
-  public $serviceProvider;
-  /**
    * The module type: plugin, subsystem or projectModule.
    * @var string One of the self::TYPE constants.
    */
   public $type;
-
-  function getShortName ()
-  {
-    $a = explode ('/', $this->name);
-    return dehyphenate (end ($a), true);
-  }
-
-  /**
-   * Returns the module's parsed composer.json, if it is present.
-   * @return null|ComposerConfigHandler `null` if no composer.json is available.
-   */
-  function getComposerConfig ()
-  {
-    $composerConfig = new ComposerConfigHandler("$this->path/composer.json", true);
-    return $composerConfig->data ? $composerConfig : null;
-  }
 
   /**
    * Converts a module name in `vendor-name/package-name` form to a valid PSR-4 namespace.
@@ -91,8 +79,27 @@ class ModuleInfo implements AssignableInterface
   }
 
   /**
+   * Returns this module's bootstrapper class name.
+   * @return string
+   */
+  function getBootstrapperClass ()
+  {
+    return sprintf (self::BOOTSTRAPPER_CLASS_NAME_FMT, $this->getShortName ());
+  }
+
+  /**
+   * Returns the module's parsed composer.json, if it is present.
+   * @return null|ComposerConfigHandler `null` if no composer.json is available.
+   */
+  function getComposerConfig ()
+  {
+    $composerConfig = new ComposerConfigHandler("$this->path/composer.json", true);
+    return $composerConfig->data ? $composerConfig : null;
+  }
+
+  /**
    * Retrieve the module's PHP namespace from its composer.json (if present).
-   * @param string $srcPath    The argument gets assigned the source code path associated with the found namespace.
+   * @param string $srcPath The argument gets assigned the source code path associated with the found namespace.
    * @return null|string `null` if no composer.json is available.
    * @throws \Exception If the module's composer.json is not a valid module config.
    */
@@ -106,6 +113,12 @@ class ModuleInfo implements AssignableInterface
     $namespace = $namespaces [0];
     $srcPath   = $decls[$namespace];
     return rtrim ($namespace, '\\');
+  }
+
+  function getShortName ()
+  {
+    $a = explode ('/', $this->name);
+    return dehyphenate (end ($a), true);
   }
 
 }

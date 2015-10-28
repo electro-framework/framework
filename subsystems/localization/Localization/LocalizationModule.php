@@ -6,7 +6,7 @@ use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\ModuleInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
 
-class LocalizationServices implements ServiceProviderInterface, ModuleInterface
+class LocalizationModule implements ServiceProviderInterface, ModuleInterface
 {
   function boot () { }
 
@@ -14,10 +14,8 @@ class LocalizationServices implements ServiceProviderInterface, ModuleInterface
   {
     $module
       ->setDefaultConfig ([
-        'config' => [
-          'selenia/localization' => (new LocalizationConfig)
-            ->selectionMode ('session'),
-        ],
+        'selenia/localization' => (new LocalizationConfig)
+          ->selectionMode ('session'),
       ]);
   }
 

@@ -4,16 +4,17 @@ namespace Selenia\Migrations;
 use Phinx\Console\Command;
 use Robo\Config;
 use Selenia\Console\Lib\ModulesUtil;
-use Selenia\Console\TaskRunner\ConsoleIO;
+use Selenia\Console\Services\ConsoleIO;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
-use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Application as SymfonyConsole;
+use Symfony\Component\Console\Input\ArrayInput;
 
 /**
  * Database migration commands.
  */
 class Commands
 {
+  const ref = __CLASS__;
   /**
    * @var string Used internally to pass information to config.php
    */

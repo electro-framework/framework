@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Console\Contracts;
+namespace Selenia\Console\Traits;
 
 use Robo\Task\FileSystem\FilesystemStack;
 

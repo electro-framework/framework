@@ -3,11 +3,11 @@ namespace Selenia\Tasks\Commands;
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
-use Selenia\Console\Contracts\ApplicationServiceTrait;
-use Selenia\Console\Contracts\ConsoleIOServiceTrait;
-use Selenia\Console\Contracts\FileSystemStackServiceTrait;
-use Selenia\Console\Contracts\ModuleConfigServiceTrait;
 use Selenia\Console\TaskRunner;
+use Selenia\Console\Traits\ApplicationServiceTrait;
+use Selenia\Console\Traits\ConsoleIOServiceTrait;
+use Selenia\Console\Traits\FileSystemStackServiceTrait;
+use Selenia\Console\Traits\ModuleConfigServiceTrait;
 use Selenia\Tasks\Shared\ChmodEx;
 
 /**

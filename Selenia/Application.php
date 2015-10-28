@@ -18,10 +18,6 @@ use Selenia\Routing\RoutingMap;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequestFactory;
 
-define ('CONSOLE_ALIGN_CENTER', STR_PAD_BOTH);
-define ('CONSOLE_ALIGN_LEFT', STR_PAD_RIGHT);
-define ('CONSOLE_ALIGN_RIGHT', STR_PAD_LEFT);
-
 class Application
 {
   const FRAMEWORK_PATH = 'private/packages/selenia/framework';
@@ -398,9 +394,8 @@ class Application
   function boot ()
   {
     /** @var ModulesManager $modulesApi */
-    $modulesApi = $this->injector->make (ModulesManager::ref);
-    $modulesApi->bootModules ();
-    return $modulesApi;
+    $modulesManager = $this->injector->make (ModulesManager::ref);
+    $modulesManager->bootModules ();
   }
 
   /**
@@ -481,12 +476,14 @@ class Application
     // Temporarily set framework path mapping here for errors thrown during modules loading.
     ErrorHandler::setPathsMap ($this->getMainPathMap ());
 
-    $modulesApi = $this->boot ();
+    $this->boot ();
 
     $this->logger = $this->injector->make ('Psr\Log\LoggerInterface');
+    /** @var $modulesRegistry $modulesApi */
+    $modulesRegistry = $this->injector->make (ModulesRegistry::ref);
 
     if ($debug)
-      $this->setDebugPathsMap ($modulesApi);
+      $this->setDebugPathsMap ($modulesRegistry);
 
     $this->mount ($this->frameworkURI, $this->frameworkPath . DIRECTORY_SEPARATOR . $this->modulePublicPath);
     $this->registerPipes ();
