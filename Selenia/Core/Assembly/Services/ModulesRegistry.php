@@ -38,16 +38,6 @@ class ModulesRegistry
     $this->app = $app;
   }
 
-  /**
-   * Checks if the given name is a valid module name.
-   * @param string $name A module name in `vendor-name/package-name` format.
-   * @return bool `true` if the name is valid.
-   */
-  function validateModuleName ($name)
-  {
-    return (bool)preg_match ('#^[a-z0-9\-]+/[a-z0-9\-]+$#', $name);
-  }
-
   private static function hidrateModulesList (array $data)
   {
     return map ($data, function ($o) { return array_toClass ($o, ModuleInfo::ref); });
@@ -106,7 +96,7 @@ class ModulesRegistry
 
   function getPluginNames ()
   {
-    return mapAndFilter ($this->modules,
+    return mapAndFilter (array_values ($this->modules),
       function (ModuleInfo $m) { return $m->type == ModuleInfo::TYPE_PLUGIN ? $m->name : null; });
   }
 
@@ -121,7 +111,7 @@ class ModulesRegistry
 
   function getPrivateModuleNames ()
   {
-    return mapAndFilter ($this->modules,
+    return mapAndFilter (array_values ($this->modules),
       function (ModuleInfo $m) { return $m->type == ModuleInfo::TYPE_PRIVATE ? $m->name : null; });
   }
 
@@ -136,7 +126,7 @@ class ModulesRegistry
 
   function getSubsystemNames ()
   {
-    return mapAndFilter ($this->modules,
+    return mapAndFilter (array_values ($this->modules),
       function (ModuleInfo $m) { return $m->type == ModuleInfo::TYPE_SUBSYSTEM ? $m->name : null; });
   }
 
@@ -252,6 +242,16 @@ class ModulesRegistry
   {
     $json = new JsonFile ($this->getRegistryPath (), true);
     $json->assign (['modules' => $this->modules])->save ();
+  }
+
+  /**
+   * Checks if the given name is a valid module name.
+   * @param string $name A module name in `vendor-name/package-name` format.
+   * @return bool `true` if the name is valid.
+   */
+  function validateModuleName ($name)
+  {
+    return (bool)preg_match ('#^[a-z0-9\-]+/[a-z0-9\-]+$#', $name);
   }
 
   /**

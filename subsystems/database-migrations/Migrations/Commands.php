@@ -7,6 +7,7 @@ use Selenia\Console\Lib\ModulesUtil;
 use Selenia\Console\TaskRunner\ConsoleIO;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
 use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Application as SymfonyConsole;
 
 /**
  * Database migration commands.
@@ -22,6 +23,10 @@ class Commands
    */
   static $migrationsTable;
   /**
+   * @var SymfonyConsole
+   */
+  private $console;
+  /**
    * @var ConsoleIO
    */
   private $io;
@@ -34,11 +39,12 @@ class Commands
    */
   private $registry;
 
-  function __construct (ConsoleIO $io, ModulesRegistry $registry, ModulesUtil $modulesUtil)
+  function __construct (ConsoleIO $io, ModulesRegistry $registry, ModulesUtil $modulesUtil, SymfonyConsole $console)
   {
     $this->io         = $io;
     $this->registry = $registry;
     $this->modulesUtil = $modulesUtil;
+    $this->console = $console;
   }
 
   /**
@@ -74,7 +80,7 @@ class Commands
     }
 
     $command = new Command\Create;
-    $command->setApplication ($this->console ());
+    $command->setApplication ($this->console);
     $input  = new ArrayInput(PA ([
       '--configuration' => dirname (__DIR__) . '/config.php',
       'name'            => $name,
@@ -103,7 +109,7 @@ class Commands
     $this->setupModule ($moduleName);
 
     $command = new Command\Rollback;
-    $command->setApplication ($this->console ());
+    $command->setApplication ($this->console);
     $input  = new ArrayInput(PA ([
       '--configuration' => dirname (__DIR__) . '/config.php',
       '--target'        => $options['target'],
@@ -131,7 +137,7 @@ class Commands
     $this->setupModule ($moduleName);
 
     $command = new Command\Migrate;
-    $command->setApplication ($this->console ());
+    $command->setApplication ($this->console);
     $input  = new ArrayInput(PA ([
       '--configuration' => dirname (__DIR__) . '/config.php',
       '--target'        => $options['target'],
@@ -159,7 +165,7 @@ class Commands
     $this->setupModule ($moduleName);
 
     $command = new Command\Status;
-    $command->setApplication ($this->console ());
+    $command->setApplication ($this->console);
     $input  = new ArrayInput(PA ([
       '--configuration' => dirname (__DIR__) . '/config.php',
       '--format'        => $options['format'],
@@ -169,16 +175,6 @@ class Commands
     $output = Config::get ('output');
 
     return $command->run ($input, $output);
-  }
-
-  /**
-   * @return \Symfony\Component\Console\Application
-   */
-  protected function console ()
-  {
-    global $application;
-
-    return $application->console;
   }
 
   /**
