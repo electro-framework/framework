@@ -54,6 +54,8 @@ class MatisseEngine implements ViewEngineInterface
 
   function render ($compiled, array $data = [])
   {
+    /** @var Page $compiled */
+    $compiled->context->dataSources = $data;
     return $this->matisse->render ($compiled);
   }
 }
