@@ -16,18 +16,14 @@ use Selenia\Exceptions\Fatal\DataModelException;
 use Selenia\Exceptions\Fatal\FileNotFoundException;
 use Selenia\Exceptions\FatalException;
 use Selenia\Exceptions\Flash\FileException;
-use Selenia\Exceptions\Flash\ValidationException;
 use Selenia\Exceptions\FlashMessageException;
 use Selenia\Exceptions\FlashType;
-use Selenia\Exceptions\HttpException;
-use Selenia\Matisse\Components\Page;
-use Selenia\Matisse\Context;
+use Selenia\Http\Services\Redirection;
+use Selenia\Interfaces\ResponseFactoryInterface;
 use Selenia\Matisse\DataRecord;
 use Selenia\Matisse\DataSet;
 use Selenia\Matisse\DataSource;
 use Selenia\Matisse\Exceptions\DataBindingException;
-use Selenia\Matisse\MatisseEngine;
-use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\PageRoute;
 use Selenia\Routing\Router;
 use Zend\Diactoros\Response\HtmlResponse;
@@ -36,12 +32,6 @@ ob_start ();
 
 class Controller
 {
-  public           $TEMPLATE_EXT = '.html';
-  /**
-   * The current request URI.
-   * This property is useful for databing with the expression {!controller.URI}.
-   */
-  public $URI;
   /**
    * A list of parameter names (inferred from the page definition on the sitemap)
    * and correponding values present on the current URI.
@@ -49,159 +39,56 @@ class Controller
    */
   public $URIParams;
   /**
-   * The current request URI without the page number parameters.
-   * This property is useful for databing with the expression {!controller.URI_noPage}.
-   */
-  public $URI_noPage;
-  /**
    * Information about the route associated with this controller.
    * @var PageRoute
    */
   public $activeRoute;
   /**
-   * When `true`, the framework will attempt to automatically load the model object by fetching key information from
-   * the URL, the route's `preset` property or from the request data.
-   * This setting is usually defined on routes, but if no routing is being used, it can also be set here.
-   * @var bool
+   * @var array|null
    */
-  public $autoloadModel = false;
-  /**
-   * Matisse rendering context.
-   * @var Context
-   */
-  public $context;
-  /**
-   * If $dataClass is defined, this property may hold a comma-separated list of field names used
-   * on the default query.
-   * @var string
-   */
-  public $dataFields = '';
-  /**
-   * If $dataClass is defined, this property may hold a WHERE expression for the default query.
-   * @var string
-   */
-  public $dataFilter = '';
-  /**
-   * If $dataClass is defined, the instantiated instance is stored in this property.
-   * @var DataObject
-   */
-  public $dataItem = null;
-  /**
-   * If $dataClass is defined, this property may hold an array with information about the parameters
-   * automatically supplied to the query.
-   * Each array entry is a string with a constant value or a databinding expression in the format:
-   * {!dataSourceName.dataFieldName}
-   * @var array
-   */
-  public $dataQueryParams = null;
-  /**
-   * If $dataClass is defined, this property may hold a SORT BY expression for the default query.
-   * @var string
-   */
-  public $dataSortBy = '';
-  /**
-   * If no sitemap is used, this property controls the creation of a default
-   * data source.
-   * Possible values are:
-   * <p>
-   * '' - no default datasource;<br/>
-   * 'form' - create a single record default datasource;<br/>
-   * 'grid' - create a multi-record default datasource.<br/>
-   * </p>
-   * @var String
-   */
-  public $defaultPageFormat = '';
-  /**
-   * A templating engine instance.
-   * @var MatisseEngine
-   */
-  public $engine;
-  /**
-   * Associative array of all components on the page which have an explicit ID.
-   * @var array of Component
-   */
-  public $id = [];
-  /**
-   * Set to true to handle the request in a way more adapted to XML web services.
-   * @var Boolean
-   */
-  public $isWebService = false;
-  /**
-   * A two letter code for currently active language. NULL if i18n is disabled.
-   * @var string
-   */
-  public $lang = null;
-  /**
-   * The ISO language code of the active language (ex. en-US).
-   * @var string
-   */
-  public $langISO = null;
-  /**
-   * Array of information about each enabled language.
-   * Each entry is in the format: 'langCode' => array('value'=>,'ISO'=>,'label'=>,'locale'=>)
-   * @var array
-   */
-  public $langInfo;
-  /**
-   * The human readable name of the active language (ex. English).
-   * @var string
-   */
-  public $langLabel = null;
-  /**
-   * The locale language code of the active language (ex. en_US).
-   * @var string
-   */
-  public $locale = null;
+  public $flashMessage = null;
   /**
    * @var int Maximum number of pages.
    */
   public $max = 1;
   /**
-   * The current module's folder full physical URI.
-   * @var string
+   * @var Array|Object The page's data model.
    */
-  public $moduleURI;
-  /**
-   * Points to the root of the components tree.
-   * @var Page
-   */
-  public $page;
+  public $model;
   /**
    * @var int Current page number.
    */
   public $pageNumber = 1;
-  /**
-   * @var string A & separated list of key=value pairs to initialize the dataItem.
-   */
-  public $preset = null;
-  /**
-   * Stores the POST information that was being sent before the login form appeared.
-   * @var string
-   */
-  public $prevPost = '';
   /**
    * The loader which has loaded this controller.
    * @var Router
    */
   public $router;
   /**
-   * Indicate if advanced XML/HTML view processing is enabled.
-   * Set to false if your controller generates the response via respond().
-   * @var boolean
+   * The current request URI without the page number parameters.
+   * This property is useful for databing with the expression {!controller.URI_noPage}.
+   * @var string
    */
-  public $viewProcessing = true;
+  protected $URI_noPage;
   /**
-   * @var string The virtual URI following the ? symbol on the current page's URL.
+   * If set, defines the page title. It will generate a document `<title>` and it can be used on
+   * breadcrumbs.
+   * @var string
    */
-  public $virtualURI;
+  protected $pageTitle = null;
   /**
-   * If specified on a subclass, the controller will automatically instantiate and initialize
-   * a corresponding instance on setupModel() and also setup a default data source named 'default'
-   * on setupViewModel().
-   * @see Controller::dataItem
-   * @var string The name of the class to be instantiated.
+   * If set to true, the view will be rendered on the POST request without a redirection taking place.
+   * @var bool
    */
-  protected $dataClass = null;
+  protected $renderOnPOST = false;
+  /**
+   * @var ServerRequestInterface
+   */
+  protected $request;
+  /**
+   * @var ResponseInterface
+   */
+  protected $response;
   /**
    * Specifies the URL of the index page, to where the browser should naviagate upon the
    * successful insertion / update of records.
@@ -210,88 +97,25 @@ class Controller
    */
   protected $indexPage = null;
   /**
-   * A list of languages codes for the available languages, as configured on Application.
-   * @var string
-   */
-  protected $languages;
-  /**
-   * If specified, allows a controller to simultaneously define $dataClass and $modelMethod.
-   *
-   * Syntax:
-   *
-   *       $model = 'ModelClass'
-   *       $model = 'ModelClass::modelMethod'
-   *       $model = ['ModelClass', 'modelMethod']
-   *
-   * @var string|array
-   */
-  protected $model = null;
-  /**
-   * When set, the value will be used to set the default data source for the view.
-   * @var PDOStatement|array
-   */
-  protected $modelData;
-  /**
-   * If specified on a subclass, the controller will automatically invoke the specified method on an
-   * instance of $dataClass to retrieve the default data source.
-   * @var string
-   */
-  protected $modelMethod = null;
-  /**
-   * If set, defines the page title. It will generate a document `<title>` and it can be used on
-   * breadcrumbs.
-   * @var string
-   */
-  protected $pageTitle = null;
-  /**
-   * @var string URI to redirect to when the request processing finishes.
-   */
-  protected $redirectURI = null;
-  /**
-   * If set to true, the view will be rendered on the POST request without a redirection taking place.
-   * @var bool
-   */
-  protected $renderOnPOST = false;
-  /**
-   * @var array|null
-   */
-  public $flashMessage = null;
-  /**
    * @var
    */
-  private $pipeHandler;
+  private $app;
 
-  static function modPathOf ($virtualURI = '', $params = null)
+  private $dataSources = [];
+  /**
+   * @var Redirection
+   */
+  private $redirection;
+  /**
+   * @var ResponseFactoryInterface
+   */
+  private $responseFactory;
+
+  function __construct (Application $app, ResponseFactoryInterface $responseFactory, Redirection $redirection)
   {
-    global $application;
-    if ($virtualURI == '')
-      return '.';
-    $append = (!empty($params) ? '?' . $params : '');
-    if ($virtualURI[0] == '/')
-      return "$virtualURI$append";
-    else return "$application->baseURI/$virtualURI$append";
-  }
-
-  static function pageNotFound ($virtualURI = '')
-  {
-    global $application;
-
-    if (!empty($application->URINotFoundURL)) {
-      if (preg_match ('#^(\w\w)/#', $virtualURI, $match))
-        $lang = $match[1];
-      else $lang = $application->defaultLang;
-      $URI = str_replace ('{lang}', $lang, $application->URINotFoundURL);
-      header ('Location: ' . "$application->baseURI/$URI" . '?URL=' . $_SERVER['REQUEST_URI'], true, 303);
-      exit;
-    }
-    else throw new HttpException (404,
-      "<h1>Not Found</h1><p>The requested URL <code><big>$application->baseURI/<b>$virtualURI</b></big></code> was not found on this server.</p>");
-  }
-
-  static function redirect ($url)
-  {
-    header ('Location: ' . $url, true, 303);
-    exit();
+    $this->app             = $app;
+    $this->responseFactory = $responseFactory;
+    $this->redirection = $redirection;
   }
 
   static function ref ()
@@ -301,14 +125,6 @@ class Controller
 
   /**
    * Performs the main execution sequence.
-   * Provides support for:
-   * - the standard GET/POST/redirect cycle;
-   * - exception handling;
-   * - authentication.
-   * Every page controller should call this method.
-   * Request handling has 2 phases:
-   * 1 - processRequest() - optional - performs actions requested by the client;
-   * 2 - processView() - optional - generates the user interface and any relevant information to display on the client.
    *
    * @param ServerRequestInterface $request
    * @param ResponseInterface      $response
@@ -319,115 +135,51 @@ class Controller
    */
   final function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    global $controller, $application;
-    $controller   = $this;
-    $authenticate = false;
-    try {
-      $this->URI = $_SERVER['REQUEST_URI'];
-      // remove page number parameter
-      /*
-      $this->URI_noPage = preg_replace ('#&?' . $application->pageNumberParam . '=\d*#', '', $this->URI);
-      $this->URI_noPage = preg_replace ('#\?$#', '', $this->URI_noPage);
-      */
-      $this->setupController ();
-      $this->initTemplateEngine ();
-      $this->configPage ();
-      $authenticate = $this->authenticate ();
-      if ($authenticate === 'retry') {
-        $this->setRedirection ();
-        $this->redirectAndHalt ();
-      }
-      $this->initialize (); //custom setup
-      if (!$authenticate) {
-        // Normal page request (it's not a login form).
-        $this->setupModel ();
-        if ($this->wasPosted ()) {
-          if (!$this->isWebService)
-            $this->setRedirection (); //defaults to the same URI
-          try {
-            $res = $this->processRequest ();
-            if ($res)
-              return $res;
-            //if not a web service, the processing stops here.
-          } catch (ValidationException $e) {
-            $this->cancelRedirection ();
-            throw $e;
-          }
-        }
-      }
-      if ($this->wasPosted ()) {
-        if ($this->renderOnPOST)
-          $this->processView ($authenticate);
-        else {
-          if ($authenticate)
-            $this->processView ($authenticate);
-          $this->redirectAndHalt ();
-        }
-      }
-      else if (is_null ($this->redirectURI)) {
-        if (!$this->viewProcessing || !$this->processView ($authenticate)) {
-          $this->respond ();
-        }
-      }
-      $this->finalize ();
-      $content = ob_get_clean ();
-      return new HtmlResponse ($content);
-    } catch (Exception $e) {
-      if ($e instanceof FlashMessageException) {
-        if (isset($this->redirectURI) && $e->getCode () != FlashType::FATAL) {
-          $this->setStatusFromException ($e);
-          $this->redirectAndHalt ();
-        }
-        @ob_clean ();
-      }
-      if (!($e instanceof FlashMessageException) || $e->getCode () == FlashType::FATAL || $this->isWebService) {
-        if ($this->isWebService) {
-          @ob_get_clean ();
-          http_response_code (500);
-          echo $e->getMessage ();
-          if ($application->debugMode)
-            echo "\n\nStack trace:\n" . $e->getTraceAsString () . "\n";
-          exit;
-        }
-        throw $e;
-      }
-      else {
-        $this->setStatusFromException ($e);
-        try {
-          if (!$this->processView ($authenticate)) //retry the view, this time displaying the error message
-          {
-            @ob_clean ();
-            echo "<pre>" . $e->getMessage () . "\n\n" . htmlentities ($e->getTraceAsString ()) . "</pre>";
-          }
-        } catch (Exception $e) {
-          echo "<pre>" . $e->getMessage () . "\n\n" . htmlentities ($e->getTraceAsString ()) . "</pre>";
-        }
-      }
+    $this->request  = $request;
+    $this->response = $response;
+    // remove page number parameter
+    $this->URI_noPage = preg_replace ('#&?' . $this->app->pageNumberParam . '=\d*#', '', $this->URI);
+    $this->URI_noPage = preg_replace ('#\?$#', '', $this->URI_noPage);
+
+    $this->setupController ();
+    $this->configPage ();
+    $this->initialize (); //custom setup
+    $this->setupModel ();
+    if ($request->getMethod () == 'POST') {
+      $res = $this->processRequest ();
+      if ($res)
+        return $res;
+      if (!$this->renderOnPOST)
+        return $this->redirection->refresh();
     }
+    return $this->processView ();
   }
 
   /**
    * Responds to the standard 'delete' controller action.
    * The default procedure is to delete the object on the database.
    * Override to implement non-standard behaviour.
-   * @param DataObject $data
-   * @param null       $param
+   * @param null $param
+   * @return ResponseInterface
    * @throws FlashMessageException
    * @throws DataModelException
    * @throws Exception
    * @throws FatalException
    */
-  function action_delete (DataObject $data = null, $param = null)
+  function action_delete ($param = null)
   {
     if (!isset($data))
       throw new FlashMessageException('Can\'t delete NULL DataObject.', FlashType::FATAL);
-    if (!isset($data->id) && isset($param)) {
-      $data->setPrimaryKeyValue ($param);
-      $data->read ();
+    if ($data instanceof DataObject) {
+      if (!isset($data->id) && isset($param)) {
+        $data->setPrimaryKeyValue ($param);
+        $data->read ();
+      }
+      $data->delete ();
+      return $this->autoRedirect ();
     }
-    $data->delete ();
-    if (!$this->autoRedirect ())
-      throw new FatalException("No index page defined.");
+    else throw new FlashMessageException('Can\'t automatically delete object of type ' . gettype ($data),
+      FlashType::ERROR);
   }
 
   /**
@@ -435,11 +187,10 @@ class Controller
    * This is useful, for instance, for updating a form by submitting it without actually saving it.
    * The custom processing will usually take place on the render() or the viewModel() methods, but you may also
    * override this method; just make sure you call the inherited one.
-   * @param DataObject $data  The current model object as being filled out on the form, if any.
    * @param string     $param A JQuery selector for the element that should automatically receive focus after the page
    *                          reloads.
    */
-  function action_refresh (DataObject $data = null, $param = null)
+  function action_refresh ($param = null)
   {
     $this->renderOnPOST = true;
     if ($param)
@@ -450,17 +201,21 @@ class Controller
    * Respondes to the standard 'submit' controller action.
    * The default procedure is to either call insert() or update().
    * Override to implement non-standard behaviour.
-   * @param DataObject $data
-   * @param null       $param
+   * @param null $param
    * @throws FlashMessageException
    */
-  function action_submit (DataObject $data = null, $param = null)
+  function action_submit ($param = null)
   {
+    $data = $this->model;
     if (!isset($data))
-      throw new FlashMessageException('Can\'t insert/update NULL DataObject.', FlashType::FATAL);
-    if ($data->isNew ())
-      $this->insertData ($data, $param);
-    else $this->updateData ($data, $param);
+      throw new FlashMessageException('Can\'t insert/update NULL DataObject.', FlashType::ERROR);
+    if ($data instanceof DataObject) {
+      if ($data->isNew ())
+        $this->insertData ();
+      else $this->updateData ();
+    }
+    else throw new FlashMessageException('Can\'t automatically insert/update object of type ' . gettype ($data),
+      FlashType::ERROR);
   }
 
   function beginJSONResponse ()
@@ -574,11 +329,6 @@ class Controller
     return $f ? $model : false;
   }
 
-  function markerHit ($name)
-  {
-    //Override
-  }
-
   /**
    * Returns the URI parameter with the specified name.
    * @param string $name The parameter name, as specified on the route.
@@ -603,13 +353,12 @@ class Controller
   {
     $name      = empty($name) ? 'default' : $name;
     $isDefault = $isDefault || $name == 'default';
-    $ctx       = $this->context;
     if ($isDefault) {
-      if (isset($ctx->dataSources['default']) && !$overwrite)
+      if (isset($this->dataSources['default']) && !$overwrite)
         throw new DataBindingException(null,
           "The default data source for the page has already been set.\n\nThe current default data source is:\n<pre>$name</pre>");
     }
-    $ctx->dataSources[$name] = $data;
+    $this->dataSources[$name] = $data;
   }
 
   /**
@@ -620,14 +369,13 @@ class Controller
    */
   function setViewModel ($name, $data)
   {
-    $ctx = $this->context;
     if (!isset($data))
-      $ctx->dataSources[$name] = new DataSet ();
+      $this->dataSources[$name] = new DataSet ();
     else if ($data instanceof DataSource)
-      $ctx->dataSources[$name] = $data;
+      $this->dataSources[$name] = $data;
     else if ((is_array ($data) && isset($data[0])) || $data instanceof PDOStatement)
-      $ctx->dataSources[$name] = new DataSet($data);
-    else $ctx->dataSources[$name] = new DataRecord($data);
+      $this->dataSources[$name] = new DataSet($data);
+    else $this->dataSources[$name] = new DataRecord($data);
   }
 
   /**
@@ -644,54 +392,6 @@ class Controller
     if (isset($this->flashMessage))
       $this->displayStatus ($this->flashMessage['type'], $this->flashMessage['message']);
     $this->page->defaultDataSource =& $this->context->dataSources['default'];
-  }
-
-  /**
-   * Initializes a data object for a typical GET request.
-   * It is initialized either from the database by primary key value, or
-   * initialized from values sent with the request itsef.
-   * @param DataObject $data
-   */
-  function standardDataInit (DataObject $data)
-  {
-    if (isset($data)) {
-      if (isset($this->URIParams))
-        extend ($data, $this->URIParams);
-      if ($data->isInstanceRequested ()) {
-        $data->setPrimaryKeyValue ($data->getRequestedPrimaryKeyValue ());
-        if (!$data->read ())
-          $data->initFromQueryString ();
-        return;
-      }
-      if (!$data->isNew ())
-        $data->read ();
-      $data->initFromQueryString ();
-    }
-  }
-
-  final function wasPosted ()
-  {
-    return $_SERVER['REQUEST_METHOD'] == 'POST';
-  }
-
-  protected function afterPageRender ()
-  {
-    //override
-  }
-
-  protected function applyPresets ()
-  {
-    if (isset($this->preset)) {
-      $presets = explode ('&', $this->preset);
-      foreach ($presets as $preset) {
-        $presetParts = explode ('=', $preset);
-        if ($presetParts[1][0] == '{') {
-          $field                             = substr ($presetParts[1], 1, strlen ($presetParts[1]) - 2);
-          $this->dataItem->{$presetParts[0]} = get ($this->URIParams, $field);
-        }
-        else $this->dataItem->{$presetParts[0]} = $presetParts[1];
-      }
-    }
   }
 
   /**
@@ -746,14 +446,11 @@ class Controller
 
   protected function autoRedirect ()
   {
-    if ($this->isWebService)
-      return true;
     if (isset($this->activeRoute))
-      $this->gotoModuleIndex ();
-    else if (isset($this->indexPage))
-      $this->setRedirection (null, $this->indexPage);
-    else return false;
-    return true;
+      return $this->gotoModuleIndex ();
+    if (isset($this->indexPage))
+      return $this->redirection->to($this->indexPage);
+    throw new FatalException("No index page defined.");
   }
 
   protected final function cancelRedirection ()
@@ -874,11 +571,6 @@ class Controller
     return $method->invoke ($this, $data, $param);
   }
 
-  protected function finalize ()
-  {
-    //override
-  }
-
   protected function getActionAndParam (&$action, &$param)
   {
     $action = get ($_REQUEST, '_action', '');
@@ -891,50 +583,15 @@ class Controller
 
   protected function gotoModuleIndex ()
   {
-    global $application;
     if (isset($this->activeRoute->indexURL))
-      $this->thenGoTo ($this->activeRoute->indexURL);
+      return $this->redirection->to ($this->activeRoute->indexURL);
     else {
       /** @var PageRoute $index */
       $index = $this->activeRoute->getIndex ();
       if (!$index)
-        $this->thenGoTo ($application->homeURI);
-      else $this->thenGoTo ($index->evalURI ($this->URIParams));
+        return $this->redirection->home();
+      return $this->redirection->to ($index->evalURI ($this->URIParams));
     }
-  }
-
-  /**
-   * Initializes Search Engine Optimization information for the current page.
-   * @global Application $application
-   */
-  protected function initSEO ()
-  {
-    global $application;
-    if (isset($application->routingMap)) {
-      if (isset($this->activeRoute->keywords))
-        $this->page->keywords =
-          isset($this->lang) ? get ($this->activeRoute->keywords, $this->lang, '') : $this->activeRoute->keywords;
-      if (isset($this->activeRoute->description))
-        $this->page->description =
-          isset($this->lang) ? get ($this->activeRoute->description, $this->lang, '') : $this->activeRoute->description;
-    }
-  }
-
-  /**
-   * Creates and configures an instance of the template engine.
-   */
-  protected function initTemplateEngine ()
-  {
-    global $application;
-    $this->engine = new MatisseEngine;
-    $pipeHandler  = clone $this->pipeHandler;
-    $pipeHandler->registerFallbackHandler ($this);
-    $ctx                      = $this->context = $this->engine->createContext ($application->tags, $pipeHandler);
-    $ctx->condenseLiterals    = $application->condenseLiterals;
-    $ctx->debugMode           = $application->debugMode;
-    $ctx->templateDirectories = $application->templateDirectories;
-    $ctx->presets             = map ($application->presets, function ($class) use ($application) { return $application->injector->make ($class); });
-    $this->page               = new Page($ctx);
   }
 
   /**
@@ -951,18 +608,12 @@ class Controller
    * Respondes to the standard 'submit' controller action when a primary key value is not present on the request.
    * The default procedure is to create a new record on the database.
    * Override to implement non-standard behaviour.
-   * @param DataObject $data
-   * @param null       $param
-   * @throws Exception
    */
-  protected function insertData (DataObject $data, $param = null)
+  protected function insertData ()
   {
-    $data->insert ();
-    if ($this->isWebService)
-      echo "<pk>{$data->getPrimaryKeyValue()}</pk>";
-    if (!$this->autoRedirect ())
-      $this->setRedirection ($data->primaryKeyName . '=' .
-                             DataObject::getNewPrimaryKeyValue ()); //only for standalone (non module) pages
+    $data = $this->model;
+    if ($data instanceof DataObject)
+      $data->insert ();
   }
 
   /**
@@ -1112,7 +763,7 @@ class Controller
       // Normal page rendering (not a login form).
 
       $this->setupViewModel (); //custom setup
-      $this->setViewModel ('page', $this->page);
+//      $this->setViewModel ('page', $this->page);
       if ($this->defineView ())
         return false;
     }
@@ -1178,7 +829,7 @@ class Controller
     if (!isset($data))
       $data = $this->dataItem;
     if (isset($data) && $data->isModified ())
-      $this->action_submit ($data);
+      $this->action_submit ();
   }
 
   protected final function setRedirection ($redirectArgs = null, $redirectURI = null)
@@ -1308,134 +959,16 @@ class Controller
   }
 
   /**
-   * Installs the module on the application.
-   * Performs module initialization operations, including the creation of tables
-   * on the database if they are not defined yet.
-   * This method is called only when the user manually requests an application
-   * configuration re-check.
-   */
-  protected function setupModule ()
-  {
-    //Override
-  }
-
-  /**
-   * Sets up page specific data sources for use on the processView() phase only.
-   *
-   * Models for use on the processRequest() phase should be defined on setupModel().
-   * Override to provide specific functionality.
-   * If <code>dataItem</code> is set, the default action is to create a default
-   * data source with either a single record (if the primary key has a value)
-   * or with a default list (if the primary key has no value).
-   */
-  protected function setupViewModel ()
-  {
-    global $application;
-
-    //Initialize data sources defined on the sitemap
-    if (isset($this->activeRoute)) {
-      if (isset($this->activeRoute->dataSources))
-        foreach ($this->activeRoute->dataSources as $name => $dataSourceInfo)
-          $this->setDataSource ($name, $dataSourceInfo->getData ($this, $name)); //interception is done inside getData()
-    }
-
-    $vm = $this->viewModel ();
-    if ($vm) {
-      if (is_array ($vm))
-        foreach ($vm as $k => $v)
-          $this->setViewModel ($k, $v);
-      else throw new \RuntimeException ("Invalid view model");
-    }
-
-    if (isset($this->modelData)) {
-      $this->setViewModel ('default', $this->modelData ?: null); // empty arrays are converted to null.
-      return;
-    }
-
-    $ctx              = $this->context;
-    $this->pageNumber = get ($_REQUEST, $application->pageNumberParam, 1);
-    if (isset($this->activeRoute)) {
-      if (isset($this->dataItem)) {
-        if ($this->activeRoute->format == 'grid' && $this->dataItem->isNew ()) {
-          if ($this->modelMethod)
-            $st = $this->dataItem->{$this->modelMethod}();
-          else $st =
-            $this->dataItem->queryBy ($this->activeRoute->filter, $this->activeRoute->fieldNames,
-              $this->activeRoute->sortBy);
-          $data = $st instanceof PDOStatement ? $st->fetchAll (PDO::FETCH_ASSOC) : $st;
-          $this->paginate ($data);
-          $this->interceptViewDataSet ('default', $data);
-          $this->setDataSource ('', new DataSet($data), true);
-        }
-        else {
-          $this->interceptViewDataRecord ('default', $this->dataItem);
-          $this->setDataSource ('', new DataRecord($this->dataItem), true);
-        }
-      }
-    }
-    else if (isset($this->dataItem))
-      switch ($this->defaultPageFormat) {
-        case 'grid':
-          if (isset($this->dataQueryParams)) {
-            $params = [];
-            foreach ($this->dataQueryParams as $param) {
-              if ($param[0] == '{') {
-                $tmp = explode ('.', substr ($param, 1, -1));
-                if (count ($tmp)) {
-                  $dataSource = substr ($tmp[0], 1);
-                  $dataField  = $tmp[1];
-                }
-                else {
-                  $dataSource = 'default';
-                  $dataField  = $tmp[0];
-                }
-                $ds       = get ($ctx->dataSources, $dataSource);
-                $it       = $ds->getIterator ()->current ();
-                $params[] = isset($ds) ? get ($it, $dataField) : null;
-              }
-              else $params[] = $param;
-            }
-          }
-          else $params = null;
-          if ($this->modelMethod)
-            $st = $this->dataItem->{$this->modelMethod}();
-          else $st = $this->dataItem->queryBy ($this->dataFilter, $this->dataFields, $this->dataSortBy, $params);
-          $data = $st->fetchAll (PDO::FETCH_ASSOC);
-          $this->interceptViewDataSet ('default', $data);
-          $this->paginate ($data);
-          $this->setDataSource ('', new DataSet($data));
-          break;
-        default:
-          $this->interceptViewDataRecord ('default', $this->dataItem);
-          $this->setDataSource ('', new DataRecord($this->dataItem));
-          break;
-      }
-  }
-
-  protected final function thenGoTo ($virtualURI, $redirectArgs = null)
-  {
-    $this->redirectURI = $this->modPathOf ($virtualURI, $redirectArgs);
-  }
-
-  protected final function thenGoToSelf ($redirectArgs = null)
-  {
-    //$x = explode('?',$this->URI);
-    //$args = count($x) > 1 ? $x[1] : '';
-    //$this->redirectURI = $x[0].'?'.$args.(isset($redirectArgs) ? "&$redirectArgs" : '');
-  }
-
-  /**
-   * Respondes to the standard 'submit' controller action when a primary key value is present on the request.
+   * Responds to the standard 'submit' controller action when a primary key value is present on the request.
    * The default procedure is to save the object to the database.
    * Override to implement non-standard behaviour.
-   * @param DataObject $data
-   * @param null       $param
    * @throws Exception
    */
-  protected function updateData (DataObject $data, $param = null)
+  protected function updateData ()
   {
-    $data->update ();
-    $this->autoRedirect ();
+    $data = $this->model;
+    if ($data instanceof DataObject)
+      $data->update ();
   }
 
   /**
