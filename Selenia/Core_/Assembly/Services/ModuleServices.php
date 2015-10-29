@@ -3,6 +3,7 @@ namespace Selenia\Core\Assembly\Services;
 
 use Selenia\Application;
 use Selenia\Exceptions\Fatal\ConfigException;
+use Selenia\FileServer\Services\FileServerMappings;
 use Selenia\Interfaces\AssignableInterface;
 
 class ModuleServices
@@ -12,6 +13,10 @@ class ModuleServices
    * @var Application
    */
   private $app;
+  /**
+   * @var FileServerMappings
+   */
+  private $fileServerMappings;
   /**
    * Stores temporarily the module path, for use by the other setters.
    * @var string
@@ -23,9 +28,10 @@ class ModuleServices
    */
   private $postConfigs = [];
 
-  function __construct (Application $app)
+  function __construct (Application $app, FileServerMappings $fileServerMappings)
   {
-    $this->app = $app;
+    $this->app                = $app;
+    $this->fileServerMappings = $fileServerMappings;
   }
 
   private static function throwInvalidConfigType ($cfg)
@@ -84,7 +90,7 @@ class ModuleServices
   function publishDirs ($v)
   {
     foreach ($v as $URI => $path)
-      $this->app->mount ($URI, "{$this->app->baseDirectory}/$path");
+      $this->fileServerMappings->map ($URI, "{$this->app->baseDirectory}/$path");
     return $this;
   }
 
@@ -94,7 +100,7 @@ class ModuleServices
    */
   function publishPublicDirAs ($v)
   {
-    $this->app->mount ($v, "$this->path/{$this->app->modulePublicPath}");
+    $this->fileServerMappings->map ($v, "$this->path/{$this->app->modulePublicPath}");
     return $this;
   }
 
