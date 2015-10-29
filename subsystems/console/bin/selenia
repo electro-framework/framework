@@ -1,6 +1,17 @@
 #!/usr/bin/env php
 <?php
+use Selenia\Console\TaskRunner;
+use Selenia\Core\DependencyInjection\Injector;
+
+// Start the class autoloader.
 
 require "{$_SERVER['PWD']}/private/packages/autoload.php";
 
-Selenia\Console\TaskRunner::run ();
+/*
+ * Run the framework's Console subsystem, which then runs the web application.
+ * You can customize the Dependency Injector the framework uses by changing the fist argument of
+ * the factory method invocation below.
+ */
+$runner = TaskRunner::make (new Injector);
+$runner->setupStandardIO ($_SERVER['argv']);
+$runner->execute ();

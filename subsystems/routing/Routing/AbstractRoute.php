@@ -255,7 +255,7 @@ abstract class AbstractRoute extends Object
 
     if (!isset($this->URL)) {
       if (isset($this->URI))
-        $this->URL = "$application->URI/$this->URI";
+        $this->URL = "$application->baseURI/$this->URI";
       else $this->URL = 'javascript:nop()';
     }
 
@@ -305,7 +305,7 @@ abstract class AbstractRoute extends Object
 
     if (!isset($this->subnavURL)) {
       if (isset($this->subnavURI))
-        $this->subnavURL = "$application->URI/$this->subnavURI";
+        $this->subnavURL = "$application->baseURI/$this->subnavURI";
       else $this->subnavURL = 'javascript:nop()';
     }
   }

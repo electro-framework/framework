@@ -37,7 +37,6 @@ class RoutingMiddleware implements MiddlewareInterface
     $router = new Router();
     $this->injector->share ($router);
     $router->init ();
-    Router::virtualWebServer ();
 
     $controllerClass = $router->route ();
     if ($controllerClass) {

@@ -40,43 +40,40 @@ class TaskRunner extends Runner
   }
 
   /**
-   * Boots a Selenia Application and the runs the specified command.
-   * @param array|null $args
+   * A factory for creating a runner for running a console-based Selenia application.
+   *
+   * <p>Boots a Selenia Application and creates a console command runner with a base configuration.
+   * > You'll have to configure the IO channels (ex. calling `setupStandardIO()` on the runner) before running the
+   * application.
+   * @param InjectorInterface $injector Provide your favorite dependency injector.
+   * @return static
    */
-  static function run (array $args = null)
+  static function make (InjectorInterface $injector)
   {
-    global $application; //TODO: remove this
+    global $application; //TODO: remove this when feasible
 
-    $argv = $_SERVER['argv'];
-    $application = new Application;
+    $injector
+      ->share ($injector)
+      ->alias ('Selenia\Interfaces\InjectorInterface', get_class ($injector));
+
+    $application = $injector->make (Application::ref);
     $application->setup (getcwd ());
     $application->boot ();
-    $injector = $application->injector;
-    $console  = new SymfonyConsole ('Selenia Task Runner', self::VERSION);
-    $io       = new ConsoleIO;
-    $args     = $args ?: $argv;
+    $console = new SymfonyConsole ('Selenia Task Runner', self::VERSION);
+    $io      = new ConsoleIO;
 
     $injector
       ->share ($io)
       ->share ($console);
 
-    $runner = new static ($io, $application, $console, $injector);
-    $runner->setupStandardIO($args);
-    $runner->execute ($args);
+    return new static ($io, $application, $console, $injector);
   }
 
-  function setupStandardIO ($args) {
-    // Color support manual override:
-    $hasColorSupport = in_array ('--ansi', $args) ? true : (in_array ('--no-ansi', $args) ? false : null);
-
-    $input  = $this->prepareInput ($args);
-    $output = new ConsoleOutput(ConsoleOutput::VERBOSITY_NORMAL, $hasColorSupport);
-    Config::setOutput ($output);
-    $this->io->setInput ($input);
-    $this->io->setOutput ($output);
-  }
-
-  function execute ($args = null)
+  /**
+   * Runs the console.
+   * @param InputInterface|null $input Overrides the input, if specified.
+   */
+  function execute ($input = null)
   {
     // Setup
 
@@ -97,7 +94,23 @@ class TaskRunner extends Runner
 
     // Run the given command
 
-    $this->console->run ($this->io->getInput(), $this->io->getOutput());
+    $this->console->run ($input ?: $this->io->getInput (), $this->io->getOutput ());
+  }
+
+  /**
+   * Creates the default console I/O channels.
+   * @param string[] $args
+   */
+  function setupStandardIO ($args)
+  {
+    // Color support manual override:
+    $hasColorSupport = in_array ('--ansi', $args) ? true : (in_array ('--no-ansi', $args) ? false : null);
+
+    $input  = $this->prepareInput ($args);
+    $output = new ConsoleOutput(ConsoleOutput::VERBOSITY_NORMAL, $hasColorSupport);
+    Config::setOutput ($output);
+    $this->io->setInput ($input);
+    $this->io->setOutput ($output);
   }
 
   /**

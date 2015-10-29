@@ -221,7 +221,7 @@ class Page extends Component
         'charset' => $this->charset,
       ]);
       $this->addTag ('title', null, $this->title);
-      $this->addTag ('base', ['href' => "$application->URI/"]);
+      $this->addTag ('base', ['href' => "$application->baseURI/"]);
 
       foreach ($this->stylesheets as $URI) {
         if (substr ($URI, 0, 4) != 'http') {

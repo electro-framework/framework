@@ -212,8 +212,10 @@ class ModulesRegistry
     $subsystems = $this->loadModulesMetadata ($this->scanSubsystems (), ModuleInfo::TYPE_SUBSYSTEM);
     $plugins    = $this->loadModulesMetadata ($this->scanPlugins (), ModuleInfo::TYPE_PLUGIN);
     $private    = $this->loadModulesMetadata ($this->scanPrivateModules (), ModuleInfo::TYPE_PRIVATE);
+    $main       = $this->makeMainModule ();
+    $this->loadModuleMetadata ($main);
     /** @var ModuleInfo[] $all */
-    $all = array_merge ($subsystems, $plugins, $private);
+    $all = array_merge ([$main], $subsystems, $plugins, $private);
 
     $this->modules = [];
     foreach ($all as $module)
@@ -292,6 +294,15 @@ class ModulesRegistry
       $this->loadModuleMetadata ($module);
     }
     return $modules;
+  }
+
+  private function makeMainModule ()
+  {
+    return (new ModuleInfo)->assign ([
+      'name' => 'App',
+      'path' => 'private/App',
+      'type' => ModuleInfo::TYPE_SUBSYSTEM,
+    ]);
   }
 
   private function scanPlugins ()

@@ -1,6 +1,16 @@
 <?php
 namespace Selenia\WebServer;
+use PhpKit\WebConsole\ErrorHandler;
+use PhpKit\WebConsole\WebConsole;
+use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Application;
+use Selenia\Core\Assembly\Services\ModulesRegistry;
+use Selenia\FileServer\Services\FileServerMappings;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\MiddlewareStackInterface;
+use Selenia\Interfaces\ResponseSenderInterface;
+use Zend\Diactoros\Response;
+use Zend\Diactoros\ServerRequestFactory;
 
 /**
  * Responds to an HTTP request made to the web application by loading and running all the framework subsystems required
@@ -9,16 +19,57 @@ use Selenia\Interfaces\InjectorInterface;
 class WebServer
 {
   /**
+   * @var Application
+   */
+  private $app;
+  /**
+   * @var FileServerMappings
+   */
+  private $fileServerMappings;
+  /**
    * @var InjectorInterface
    */
   private $injector;
+  /**
+   * @var MiddlewareStackInterface
+   */
+  private $middlewareStack;
+  /**
+   * @var ResponseSenderInterface
+   */
+  private $responseSender;
 
   /**
-   * @param InjectorInterface $injector
+   * @param InjectorInterface        $injector Provide your favorite dependency injector.
+   * @param MiddlewareStackInterface $middlewareStack
+   * @param ResponseSenderInterface  $responseSender
+   * @param FileServerMappings       $fileServerMappings
    */
-  function __construct (InjectorInterface $injector)
+  function __construct (InjectorInterface $injector, MiddlewareStackInterface $middlewareStack,
+                        ResponseSenderInterface $responseSender, FileServerMappings $fileServerMappings)
   {
     $this->injector = $injector;
+    $injector
+      ->share ($injector)
+      ->alias ('Selenia\Interfaces\InjectorInterface', get_class ($injector));
+    $this->fileServerMappings = $fileServerMappings;
+    $this->middlewareStack    = $middlewareStack;
+    $this->responseSender     = $responseSender;
+  }
+
+  /**
+   * Last resort error handler.
+   * <p>It is only activated if an error occurs outside of the HTTP handling pipeline.
+   * @param \Exception|\Error $e
+   */
+  function exceptionHandler ($e)
+  {
+    if (function_exists ('database_rollback'))
+      database_rollback ();
+//    if ($this->logger)
+//      $this->logger->error ($e->getMessage (),
+//        ['stackTrace' => str_replace ("{$this->app->baseDirectory}/", '', $e->getTraceAsString ())]);
+    WebConsole::outputContent (true);
   }
 
   /**
@@ -27,41 +78,82 @@ class WebServer
    */
   function run ($rootDir)
   {
+    global $application; //TODO: remove this when feasible
 
-    $routeLoader = new RouteLoader();
-    $routes      = $routeLoader->loadFromXml (CONTROLLER_ROUTES);
-    $router      = new Router($routes);
+    $application = $this->app = $this->injector->make (Application::ref);
+    $this->setupDebugging ($rootDir);
+    $application->setup ($rootDir);
 
-    $requestDetector = new RequestDetector();
-    $request         = $requestDetector->detectFromSuperglobal ($_SERVER);
+    // Temporarily set framework path mapping here for errors thrown during modules loading.
+    ErrorHandler::setPathsMap ($application->getMainPathMap ());
 
-    $requestUri    = $request->getUri ();
-    $requestMethod = strtolower ($request->getMethod ());
+    // Load bootable modules.
+    $application->boot ();
 
-    $this->injector->share ($request);
+    // Post-boot additional setup.
 
-    try {
-      if (!$controllerClass = $router->route ($requestUri, $requestMethod)) {
-        throw new NoRouteMatchException();
-      }
+    if ($application->debugMode)
+      $this->setDebugPathsMap ($this->injector->make (ModulesRegistry::ref));
 
-      $controller         = $this->injector->make ($controllerClass);
-      $callableController = [$controller, $requestMethod];
+    $this->fileServerMappings->map ($application->frameworkURI,
+      $application->frameworkPath . DIRECTORY_SEPARATOR . $application->modulePublicPath);
 
-      if (!is_callable ($callableController)) {
-        throw new MethodNotAllowedException();
-      }
-      else {
-        $callableController();
-      }
+    // Process the request.
 
-    } catch (NoRouteMatchException $e) {
-      // send 404 response
-    } catch (MethodNotAllowedException $e) {
-      // send 405 response
-    } catch (Exception $e) {
-      // send 500 response
-    }
+    $request    = ServerRequestFactory::fromGlobals ();
+    $application->baseURI = $this->getBaseUri ($request);
+    $application->VURI = $this->getVirtualUri ($request);
+    $request    = $request->withAttribute ('baseUri', $application->baseURI);
+    $request    = $request->withAttribute ('virtualUri', $application->VURI);
+    $response   = new Response;
+    $middleware = $this->middlewareStack;
+    $response   = $middleware ($request, $response, null);
+    if (!$response) return;
+
+    // Send back the response.
+
+    $this->responseSender->send ($response);
   }
 
+  private function getVirtualUri (ServerRequestInterface $request)
+  {
+    $params  = $request->getServerParams ();
+    $uri     = get ($params, 'REQUEST_URI');
+    $baseURI = $request->getAttribute('baseUri');
+    $vuri    = substr ($uri, strlen ($baseURI) + 1) ?: '';
+    if (($p = strpos ($vuri, '?')) !== false)
+      $vuri = substr ($vuri, 0, $p);
+    return $vuri;
+  }
+
+  private function getBaseUri (ServerRequestInterface $request) {
+    $params  = $request->getServerParams ();
+    return dirnameEx (get ($params, 'SCRIPT_NAME'));
+  }
+
+  /**
+   * Configures path mappings for the ErrorHandler, so that links to files on symlinked directories are converted to
+   * links on the main project tree, allowing easier files editing on an IDE.
+   *
+   * @param ModulesRegistry $registry
+   */
+  private function setDebugPathsMap (ModulesRegistry $registry)
+  {
+    $map = $this->app->getMainPathMap ();
+    $map = array_merge ($map, $registry->getPathMappings ());
+    ErrorHandler::setPathsMap ($map);
+  }
+
+  /**
+   * @param string $rootDir
+   */
+  private function setupDebugging ($rootDir)
+  {
+    set_exception_handler ([$this, 'exceptionHandler']);
+    $debug = $this->app->debugMode = getenv ('APP_DEBUG') == 'true';
+
+    ErrorHandler::init ($debug, $rootDir);
+    ErrorHandler::$appName = $this->app->appName;
+    WebConsole::init ($debug);
+  }
 }

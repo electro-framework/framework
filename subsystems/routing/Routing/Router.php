@@ -17,18 +17,6 @@ use Selenia\Http\Controllers\Controller;
 class Router
 {
 
-  static private $MIME_TYPES = [
-    'js'    => 'application/javascript',
-    'css'   => 'text/css',
-    'woff'  => 'application/font-woff',
-    'woff2' => 'application/font-woff2',
-    'ttf'   => 'font/ttf',
-    'otf'   => 'font/otf',
-    'eot'   => 'application/vnd.ms-fontobject',
-    'jpg'   => 'image/jpeg',
-    'png'   => 'image/png',
-    'gif'   => 'image/gif',
-  ];
   /**
    * The route thar matches the current URI.
    * @var PageRoute
@@ -49,41 +37,6 @@ class Router
    * @var string
    */
   public $virtualURI = '';
-
-  public static function virtualWebServer ()
-  {
-    global $application;
-
-    // Serve static assets exposed from packages or from the framework itself.
-
-    try {
-      $URI  = $application->VURI;
-      $path = $application->toFilePath ($URI, $isMapped);
-      if ($isMapped) {
-        if (file_exists ($x = "$path.php")) {
-          require $x;
-          exit;
-        }
-        $type = get (self::$MIME_TYPES, substr ($path, strrpos ($path, '.') + 1), 'application/octet-stream');
-        header ("Content-Type: $type");
-        if (!$application->debugMode) {
-          header ('Expires: ' . gmdate ('D, d M Y H:i:s \G\M\T', time () + 36000)); // add 10 hours
-          header ("Cache-Control: public, max-age=36000");
-        }
-        if (@readfile ($path) === false) {
-          header ("Content-Type: text/plain");
-          http_response_code (404);
-          echo "Not found: $path";
-        }
-        exit; // The file has been sent, so stop here.
-      }
-    } catch (HttpException $e) {
-      @ob_get_clean ();
-      http_response_code ($e->getCode ());
-      echo $e->getMessage ();
-      exit;
-    }
-  }
 
   /**
    * Initialize loader context.

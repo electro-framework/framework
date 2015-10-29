@@ -1,41 +1,24 @@
 <?php
 namespace Selenia;
 
-use Exception;
 use Monolog\Handler\HandlerInterface;
 use Monolog\Logger;
 use PhpKit\WebConsole\ErrorHandler;
-use PhpKit\WebConsole\WebConsole;
 use Selenia\Core\Assembly\Config\AssemblyServices;
 use Selenia\Core\Assembly\Services\ModulesManager;
-use Selenia\Core\Assembly\Services\ModulesRegistry;
-use Selenia\Core\DependencyInjection\Injector;
 use Selenia\Exceptions\Fatal\ConfigException;
-use Selenia\Interfaces\MiddlewareStackInterface;
-use Selenia\Interfaces\ResponseSenderInterface;
-use Selenia\Matisse\PipeHandler;
+use Selenia\Interfaces\InjectorInterface;
 use Selenia\Routing\RoutingMap;
-use Zend\Diactoros\Response;
-use Zend\Diactoros\ServerRequestFactory;
 
 class Application
 {
   const FRAMEWORK_PATH = 'private/packages/selenia/framework';
-  /**
-   * Registered Matisse tags.
-   * @var array
-   */
-  public $tags = [];
+  const ref            = __CLASS__;
   /**
    * Holds an array of SEO infomation for each site page or null;
    * @var array
    */
   public $SEOInfo;
-  /**
-   * The URI of current application's directory.
-   * @var string
-   */
-  public $URI;
   /**
    * The address of the page to be displayed when the current page URI is invalid.
    * If null an exception is thrown.
@@ -264,13 +247,6 @@ class Application
    */
   public $modulesPath = 'private/modules';
   /**
-   * A map of mappings from virtual URIs to external folders.
-   * <p>This is used to expose assets from composer packages.
-   * <p>Array of URI => physical folder path
-   * @var array
-   */
-  public $mountPoints = [];
-  /**
    * The application name.
    * This should be composed only of alphanumeric characters. It is used as the session name.
    * @var string
@@ -297,10 +273,6 @@ class Application
    * @var number
    */
   public $pageSize = 99999;
-  /**
-   * @var PipeHandler
-   */
-  public $pipeHandler;
   /**
    * <p>The fallback folder name where the framework will search for modules.
    * <p>Plugin modules installed as Composer packages will be found there.
@@ -338,6 +310,11 @@ class Application
    * @var array
    */
   public $subApplications = [];
+  /**
+   * Registered Matisse tags.
+   * @var array
+   */
+  public $tags = [];
   /**
    * A list of task classes from each module that provides tasks to be merged on the main robofile.
    * @var string[]
@@ -391,6 +368,11 @@ class Application
    */
   protected $logger;
 
+  function __construct (InjectorInterface $injector)
+  {
+    $this->injector = $injector;
+  }
+
   function boot ()
   {
     /** @var ModulesManager $modulesApi */
@@ -398,36 +380,9 @@ class Application
     $modulesManager->bootModules ();
   }
 
-  /**
-   * Last resort error handler.
-   * <p>It is only activated if an error occurs outside of the HTTP handling pipeline.
-   * @param \Exception|\Error $e
-   */
-  function exceptionHandler ($e)
-  {
-    if (function_exists ('database_rollback'))
-      database_rollback ();
-    if ($this->logger)
-      $this->logger->error ($e->getMessage (),
-        ['stackTrace' => str_replace ("$this->baseDirectory/", '', $e->getTraceAsString ())]);
-    WebConsole::outputContent (true);
-  }
-
   function fromPathToURL ($path)
   {
     return $this->toURL ($this->toURI ($path));
-  }
-
-  /**
-   * Given a theme's stylesheet or CSS URI this method returns an unique name
-   * suitable for naming a file on the cache folder.
-   * @param String $URI The absolute URI of the original file.
-   * @return String A file name.
-   */
-  function generateCacheFilename ($URI)
-  {
-    $themesPath = strpos ($URI, $this->themesPath) !== false ? $this->themesPath : $this->defaultThemesPath;
-    return str_replace ('/', '_', substr ($URI, strlen ($this->baseURI) + strlen ($themesPath) + 2));
   }
 
   function getFileDownloadURI ($fileId)
@@ -451,58 +406,15 @@ class Application
   }
 
   /**
-   * Composer packages can call this method to expose assets on web.
-   * @param string $URI
-   * @param string $path
+   * Gets an array of file path mappings for the core framework, to aid debugging symlinked directiories.
+   * @return array
    */
-  function mount ($URI, $path)
+  function getMainPathMap ()
   {
-    $this->mountPoints[$URI] = $path;
-  }
-
-  /**
-   * @param string $rootDir
-   */
-  function run ($rootDir)
-  {
-    set_exception_handler ([$this, 'exceptionHandler']);
-    $debug = $this->debugMode = getenv ('APP_DEBUG') == 'true';
-
-    ErrorHandler::init ($debug, $rootDir);
-    ErrorHandler::$appName = $this->appName;
-    WebConsole::init ($debug);
-
-    $this->setup ($rootDir);
-    // Temporarily set framework path mapping here for errors thrown during modules loading.
-    ErrorHandler::setPathsMap ($this->getMainPathMap ());
-
-    $this->boot ();
-
-    $this->logger = $this->injector->make ('Psr\Log\LoggerInterface');
-    /** @var $modulesRegistry $modulesApi */
-    $modulesRegistry = $this->injector->make (ModulesRegistry::ref);
-
-    if ($debug)
-      $this->setDebugPathsMap ($modulesRegistry);
-
-    $this->mount ($this->frameworkURI, $this->frameworkPath . DIRECTORY_SEPARATOR . $this->modulePublicPath);
-    $this->registerPipes ();
-    $middlewareStack        = $this->registerMiddleware ();
-    $this->condenseLiterals = !$debug;
-    $this->compressOutput   = !$debug;
-
-    // Process the request.
-
-    $request  = ServerRequestFactory::fromGlobals ()->withAttribute ('VURI', $this->VURI);
-    $response = new Response;
-    $response = $middlewareStack ($request, $response, null);
-    if (!$response) return;
-
-    // Send back the response.
-
-    /** @var ResponseSenderInterface $sender */
-    $sender = $this->injector->make ('Selenia\Interfaces\ResponseSenderInterface');
-    $sender->send ($response);
+    $rp = realpath ($this->frameworkPath);
+    return $rp != $this->frameworkPath ? [
+      $rp => self::FRAMEWORK_PATH,
+    ] : [];
   }
 
   function setIncludePath ($extra = '')
@@ -526,24 +438,15 @@ class Application
    */
   function setup ($rootDir)
   {
-    $uri     = get ($_SERVER, 'REQUEST_URI');
-    $baseURI = dirnameEx (get ($_SERVER, 'SCRIPT_NAME'));
-    $vuri    = substr ($uri, strlen ($baseURI) + 1) ?: '';
-    if (($p = strpos ($vuri, '?')) !== false)
-      $vuri = substr ($vuri, 0, $p);
-
     $this->requireLogin  = false;
     $this->directory     = $rootDir;
     $this->baseDirectory = $rootDir;
     $this->rootPath      = $rootDir;
-    $this->URI           = $baseURI;
-    $this->baseURI       = $baseURI;
     $this->frameworkPath =
       "$rootDir/" . self::FRAMEWORK_PATH; // due to eventual symlinking, we can't use dirname(__DIR__) here
-    $this->VURI          = $vuri;
 
     $this->setIncludePath ();
-    $this->loadConfiguration ($vuri);
+//    $this->loadConfiguration ($vuri);
 
 //    $this->templateDirectories[] = $this->toFilePath ($this->templatesPath);
 //    $this->viewsDirectories[]    = $this->toFilePath ($this->viewPath);
@@ -551,31 +454,11 @@ class Application
     if (getenv ('APP_DEFAULT_LANG'))
       $this->defaultLang = getenv ('APP_DEFAULT_LANG');
 
-    $this->setupInjector ();
+    $this->injector
+      ->share ($this);
 
     $assembly = new AssemblyServices;
     $assembly->register ($this->injector);
-  }
-
-  function toFilePath ($URI, &$isMapped = false)
-  {
-    $p = strpos ($URI, '/');
-    if ($p) {
-      $head = substr ($URI, 0, $p);
-      if ($head == 'modules') {
-        $p    = strpos ($URI, '/', $p + 1);
-        $p    = strpos ($URI, '/', $p + 1);
-        $head = substr ($URI, 0, $p);
-      }
-      $tail = substr ($URI, $p + 1);
-      if (isset($this->mountPoints[$head])) {
-        if (func_num_args () == 2)
-          $isMapped = true;
-        $path = $this->mountPoints[$head] . "/$tail";
-        return $path;
-      }
-    }
-    return "$this->baseDirectory/$URI";
   }
 
   /**
@@ -594,11 +477,6 @@ class Application
       }
     }
     return $path;
-  }
-
-  function toThemeURI ($relativeURI, Theme &$theme)
-  {
-    return "$this->baseURI/$theme->path/$relativeURI";
   }
 
   function toURI ($path)
@@ -631,50 +509,6 @@ class Application
     }
   }
 
-  /**
-   * @return MiddlewareStackInterface
-   * @throws \Auryn\InjectionException
-   */
-  protected function registerMiddleware ()
-  {
-    $stack = $this->injector->make ('Selenia\Interfaces\MiddlewareStackInterface');
-    return $stack
-      ->addIf (!$this->debugMode, 'Selenia\Http\Middleware\CompressionMiddleware')
-      ->addIf ($this->debugMode, 'Selenia\Debugging\Middleware\WebConsoleMiddleware')
-      ->add ('Selenia\ErrorHandling\Middleware\ErrorHandlingMiddleware')
-      ->add ('Selenia\Sessions\Middleware\SessionMiddleware')
-      ->add ('Selenia\Http\Middleware\CsrfMiddleware')
-      ->add ('Selenia\Localization\Middleware\LanguageMiddleware')
-      ->add ('Selenia\Authentication\Middleware\AuthenticationMiddleware')
-      ->add ('Selenia\FileServer\Middleware\FileServerMiddleware')
-      ->add ('Selenia\Localization\Middleware\TranslationMiddleware')
-      ->add ('Selenia\Routing\Middleware\RoutingMiddleware')
-      ->add ('Selenia\HttpMiddleware\Middleware\URINotFoundMiddleware');
-  }
-
-  protected function registerPipes ()
-  {
-    $this->pipeHandler = new PipeHandler;
-    $this->pipeHandler->registerPipes (new DefaultPipes);
-  }
-
-  protected function setupInjector ()
-  {
-    $this->injector = new Injector;
-    $this->injector
-      ->share ($this)
-      ->share ($this->injector)
-      ->alias ('Selenia\Interfaces\InjectorInterface', get_class ($this->injector));
-  }
-
-  private function getMainPathMap ()
-  {
-    $rp = realpath ($this->frameworkPath);
-    return $rp != $this->frameworkPath ? [
-      $rp => self::FRAMEWORK_PATH,
-    ] : [];
-  }
-
   private function loadConfig ($iniPath)
   {
     $ini = @include $iniPath;
@@ -685,19 +519,6 @@ class Application
     else
       throw new ConfigException("Error parsing " . ErrorHandler::shortFileName ($iniPath));
     $this->config = $ini;
-  }
-
-  /**
-   * Configures path mappings for the ErrorHandler, so that links to files on symlinked directories are converted to
-   * links on the main project tree, allowing easier files editing on an IDE.
-   *
-   * @param ModulesRegistry $registry
-   */
-  private function setDebugPathsMap (ModulesRegistry $registry)
-  {
-    $map = $this->getMainPathMap ();
-    $map = array_merge ($map, $registry->getPathMappings ());
-    ErrorHandler::setPathsMap ($map);
   }
 
 }

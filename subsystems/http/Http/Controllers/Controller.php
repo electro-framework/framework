@@ -264,7 +264,7 @@ class Controller
     $append = (!empty($params) ? '?' . $params : '');
     if ($virtualURI[0] == '/')
       return "$virtualURI$append";
-    else return "$application->URI/$virtualURI$append";
+    else return "$application->baseURI/$virtualURI$append";
   }
 
   static function pageNotFound ($virtualURI = '')
