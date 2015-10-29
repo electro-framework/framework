@@ -31,4 +31,5 @@ class ViewEngineModule implements ServiceProviderInterface, ModuleInterface
     $injector->share (PipeHandler::ref);
 //    $injector->share (new MatisseEngine);
   }
+
 }
