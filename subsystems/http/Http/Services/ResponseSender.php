@@ -2,8 +2,9 @@
 namespace Selenia\Http\Services;
 
 use Psr\Http\Message\ResponseInterface;
+use Selenia\Interfaces\ResponseSenderInterface;
 
-class ResponseSender
+class ResponseSender implements ResponseSenderInterface
 {
   const ref = __CLASS__;
 

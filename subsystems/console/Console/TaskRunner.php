@@ -6,6 +6,7 @@ use Robo\Runner;
 use Robo\TaskInfo;
 use Selenia\Application;
 use Selenia\Console\Services\ConsoleIO;
+use Selenia\Core\Assembly\Services\ModulesManager;
 use Selenia\Interfaces\InjectorInterface;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
@@ -52,19 +53,33 @@ class TaskRunner extends Runner
   {
     global $application; //TODO: remove this when feasible
 
+    // Create and register the foundational framework services.
+
     $injector
       ->share ($injector)
       ->alias ('Selenia\Interfaces\InjectorInterface', get_class ($injector));
 
-    $application = $injector->make (Application::ref);
+    $application = $injector
+      ->share (Application::ref)
+      ->make (Application::ref);
     $application->setup (getcwd ());
-    $application->boot ();
+
+    // Bootstrap the application's modules.
+
+    /** @var ModulesManager $modulesApi */
+    $modulesManager = $injector->make (ModulesManager::ref);
+    $modulesManager->bootModules ();
+
+    // Setup the console.
+
     $console = new SymfonyConsole ('Selenia Task Runner', self::VERSION);
     $io      = new ConsoleIO;
 
     $injector
       ->share ($io)
       ->share ($console);
+
+    // Create and execute a runnable console instance.
 
     return new static ($io, $application, $console, $injector);
   }

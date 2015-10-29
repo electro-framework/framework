@@ -373,13 +373,6 @@ class Application
     $this->injector = $injector;
   }
 
-  function boot ()
-  {
-    /** @var ModulesManager $modulesApi */
-    $modulesManager = $this->injector->make (ModulesManager::ref);
-    $modulesManager->bootModules ();
-  }
-
   function fromPathToURL ($path)
   {
     return $this->toURL ($this->toURI ($path));
@@ -453,9 +446,6 @@ class Application
     $this->languageFolders[] = $this->langPath;
     if (getenv ('APP_DEFAULT_LANG'))
       $this->defaultLang = getenv ('APP_DEFAULT_LANG');
-
-    $this->injector
-      ->share ($this);
 
     $assembly = new AssemblyServices;
     $assembly->register ($this->injector);

@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Matisse\Config;
+namespace Selenia\ViewEngine\Config;
 
 use Selenia\Application;
 use Selenia\Core\Assembly\Services\ModuleServices;
@@ -9,7 +9,7 @@ use Selenia\Interfaces\ModuleInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
 use Selenia\Matisse\PipeHandler;
 
-class MatisseModule implements ServiceProviderInterface, ModuleInterface
+class ViewEngineModule implements ServiceProviderInterface, ModuleInterface
 {
   function boot (Application $app = null, PipeHandler $pipeHandler = null)
   {

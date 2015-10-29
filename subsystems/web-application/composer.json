@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/view-engine",
-  "description": "Selenia framework's view engine subsystem",
+  "name": "selenia-subsystems/web-application",
+  "description": "Selenia framework's web application subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -9,7 +9,7 @@
       "homepage": "http://impactwave.com"
     },
     {
-      "name": "Claudio Silva",
+      "name": "Cláudio Silva",
       "email": "claudio.silva@impactwave.com"
     }
   ],
@@ -18,7 +18,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\ViewEngine\\": "ViewEngine/"
+      "Selenia\\WebApplication\\": "WebApplication"
     }
   }
 }

@@ -27,6 +27,7 @@ use Selenia\Matisse\DataSet;
 use Selenia\Matisse\DataSource;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\MatisseEngine;
+use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\PageRoute;
 use Selenia\Routing\Router;
 use Zend\Diactoros\Response\HtmlResponse;
@@ -255,6 +256,10 @@ class Controller
    * @var array|null
    */
   public $flashMessage = null;
+  /**
+   * @var
+   */
+  private $pipeHandler;
 
   static function modPathOf ($virtualURI = '', $params = null)
   {
@@ -922,7 +927,7 @@ class Controller
   {
     global $application;
     $this->engine = new MatisseEngine;
-    $pipeHandler  = clone $application->pipeHandler;
+    $pipeHandler  = clone $this->pipeHandler;
     $pipeHandler->registerFallbackHandler ($this);
     $ctx                      = $this->context = $this->engine->createContext ($application->tags, $pipeHandler);
     $ctx->condenseLiterals    = $application->condenseLiterals;
