@@ -13,7 +13,7 @@ use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
-class TaskRunner extends Runner
+class ConsoleApplication extends Runner
 {
   /**
    * @var ConsoleIO
@@ -41,7 +41,7 @@ class TaskRunner extends Runner
   }
 
   /**
-   * A factory for creating a runner for running a console-based Selenia application.
+   * A factory for creating an instance of a console-based Selenia application.
    *
    * <p>Boots a Selenia Application and creates a console command runner with a base configuration.
    * > You'll have to configure the IO channels (ex. calling `setupStandardIO()` on the runner) before running the

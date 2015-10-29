@@ -7,9 +7,9 @@ use Selenia\Exceptions\FatalException;
 class FileNotFoundException extends FatalException
 {
 
-  public function __construct ($filename)
+  public function __construct ($filename, $extra = '')
   {
-    parent::__construct ("File <b>$filename</b> was not found.");
+    parent::__construct ("File <b>$filename</b> was not found.$extra");
   }
 
 }

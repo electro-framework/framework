@@ -3,7 +3,7 @@ namespace Selenia\Tasks\Commands;
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
-use Selenia\Console\TaskRunner;
+use Selenia\Console\ConsoleApplication;
 use Selenia\Console\Traits\ApplicationServiceTrait;
 use Selenia\Console\Traits\ConsoleIOServiceTrait;
 use Selenia\Console\Traits\FileSystemStackServiceTrait;
@@ -28,7 +28,7 @@ trait InitCommands
   {
     $tmp = dirname (dirname (dirname (dirname (dirname (__DIR__)))));
     require "$tmp/packages/autoload.php";
-    TaskRunner::run (['', 'init']);
+    ConsoleApplication::run (['', 'init']);
   }
 
   /**
