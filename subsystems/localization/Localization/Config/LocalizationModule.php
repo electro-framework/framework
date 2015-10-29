@@ -9,7 +9,10 @@ use Selenia\Localization\Services\Locale;
 
 class LocalizationModule implements ServiceProviderInterface, ModuleInterface
 {
-  function boot () { }
+  function boot (LocalizationSettings $settings = null) {
+    if ($settings)
+      date_default_timezone_set ($settings);
+  }
 
   function configure (ModuleServices $module)
   {
@@ -24,4 +27,5 @@ class LocalizationModule implements ServiceProviderInterface, ModuleInterface
   {
     $injector->share (new Locale);
   }
+
 }
