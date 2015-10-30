@@ -32,8 +32,6 @@ use Selenia\ViewEngine\Engines\MatisseEngine;
 use Selenia\ViewEngine\View;
 use Zend\Diactoros\Response\HtmlResponse;
 
-ob_start ();
-
 class Controller
 {
   /**
