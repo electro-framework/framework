@@ -197,7 +197,9 @@ class Controller
     $vm = $this->viewModel ();
     if ($vm)
       array_concat ($this->dataSources, $vm);
-    return $this->processView ();
+    $response = $this->processView ();
+    $this->finalize ();
+    return $response;
   }
 
   /**
@@ -346,6 +348,8 @@ class Controller
    */
   function setViewModel ($name, $data)
   {
+    $this->dataSources[$name] = $data;
+    return;
     if (!isset($data))
       $this->dataSources[$name] = new DataSet ();
     else if ($data instanceof DataSource)
@@ -441,6 +445,13 @@ class Controller
         FlashType::ERROR);
     }
     return $method->invoke ($this, $data, $param);
+  }
+
+  /**
+   * Override to do something after the page has been rendered.
+   */
+  protected function finalize () {
+    // no op
   }
 
   protected function getActionAndParam (&$action, &$param)
@@ -598,21 +609,21 @@ class Controller
    */
   protected function setupBaseViewModel ()
   {
-    $this->setDataSource ('application', new DataRecord($this->app));
+    $this->setViewModel ('application', $this->app);
     if (isset($this->session)) {
-      $this->setDataSource ('user', new DataRecord ($this->session->user ()));
-      $this->setDataSource ('sessionInfo', new DataRecord($this->session));
+      $this->setViewModel ('user', $this->session->user ());
+      $this->setViewModel ('sessionInfo', $this->session);
     }
-    $this->setDataSource ('controller', new DataRecord($this));
-    $this->setDataSource ('request', new DataRecord($this->request->getQueryParams ()));
+    $this->setViewModel ('controller', $this);
+    $this->setViewModel ('request', $this->request->getQueryParams ());
     if (isset($this->activeRoute)) {
-      $this->setDataSource ('sitePage', new DataRecord($this->activeRoute));
-      $this->setDataSource ('config', new DataRecord($this->activeRoute->config));
+      $this->setViewModel ('sitePage', $this->activeRoute);
+      $this->setViewModel ('config', $this->activeRoute->config);
     }
     if (isset($this->router))
-      $this->setDataSource ('module', new DataRecord($this->router->moduleInfo));
-    $this->setDataSource ('languages', new DataSet(isset($this->langInfo) ? array_values ($this->langInfo) : null));
-    $this->setDataSource ("URIParams", new DataRecord($this->URIParams));
+      $this->setViewModel ('module', $this->router->moduleInfo);
+    $this->setViewModel ('languages', isset($this->langInfo) ? array_values ($this->langInfo) : null);
+    $this->setViewModel ("URIParams", $this->URIParams);
   }
 
   /**

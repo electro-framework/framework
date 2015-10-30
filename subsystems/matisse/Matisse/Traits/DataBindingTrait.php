@@ -1,10 +1,12 @@
 <?php
 namespace Selenia\Matisse\Traits;
 
+use PhpCode;
 use Selenia\Matisse\DataSource;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Exceptions\HandlerNotFoundException;
+use Selenia\Matisse\MatisseEngine;
 
 /**
  * Provides an API for handling data binding on a component's properties.
@@ -160,40 +162,85 @@ trait DataBindingTrait
       if (!isset($src))
         throw new DataBindingException($this, "Data source <b>$dataSource</b> is not defined.");
     }
+
     if ($dataField == '') {
       if ($allowFullSource)
         return $src;
       throw new DataBindingException($this,
         "The full data source reference <b>$full</b> cannot be used on a composite databinding expression.");
     }
+
+    if ($dataField[0] == '@')
+      return null;
+
     if (is_null ($src))
-      return null;
-    $it = iterator ($src);
-    /** @var \Iterator $it */
-    if (!$it->valid ())
-      return null;
+      $src = [];
+
+    // Parse pipes
+
     $pipes     = preg_split ('/\s*\|\s*/', $dataField);
     $dataField = array_shift ($pipes);
-    switch ($dataField) {
-      case '#key':
-        $v = $it->key ();
-        break;
-      case '#ord':
-        $v = $it->key () + 1 + $this->rowOffset;
-        break;
-      case '#alt':
-        $v = $it->key () % 2;
-        break;
-      default:
-        $rec = $it->current ();
-        if (is_null ($rec)) {
-          $it->rewind ();
-          $rec = $it->current ();
-        }
-        if (is_null ($rec))
-          $rec = new \EmptyIterator();
-        $v = $dataField == '#self' ? $rec : getField ($rec, $dataField);
+
+    // Virtual fields (#xxx)
+
+    if ($dataField[0] == '#') {
+      if (is_array ($src)) {
+        $v = current ($src);
+        $k = key ($src);
+      }
+      else if ($src instanceof \Traversable) {
+        $it = iterator ($src);
+        $v  = $it->current ();
+        $k  = $it->key ();
+      }
+      else throw new DataBindingException($this,
+        "Can't use virtual field $dataField on a non-iterable data source.");
+      switch ($dataField) {
+        case '#key':
+          $v = $k;
+          break;
+        case '#ord':
+          $v = $k + 1 + $this->rowOffset;
+          break;
+        case '#alt':
+          $v = $k % 2;
+          break;
+        case '#self': // $v = $v
+          break;
+        default:
+          throw new DataBindingException($this,
+            "Unsupported virtual field $dataField.");
+      }
     }
+
+    // Evaluate expression
+
+    else {
+      if ($src instanceof \Traversable) {
+        $it  = iterator ($src);
+        $src = $it->current ();
+      }
+
+      // Call a previously compiled expression or compile one now, cache it and call it.
+
+      /** @var \Closure $compiled */
+      $compiled = get (MatisseEngine::$expressions, $dataField);
+      if (!$compiled) {
+        $args = explode ('.', $dataField);
+        $exp  = '$src';
+        foreach ($args as $arg)
+          $exp = "getField($exp,'$arg')";
+        if (!PhpCode::validateExpression ($exp))
+          throw new DataBindingException($this, "Invalid expression <kbd>$dataField</kbd>.");
+        $compiled = MatisseEngine::$expressions[$dataField] = PhpCode::compile ($exp, '$src');
+      }
+      else _log ("CACHE HIT $dataSource.$dataField");
+
+      $v = $compiled ($src);
+    }
+
+    // Apply pipes to expression result
+
     foreach ($pipes as $name) {
       $pipe = $this->context->getPipe (trim ($name));
       try {

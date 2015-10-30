@@ -21,6 +21,12 @@ class MatisseEngine
   ];
 
   /**
+   * A map of databinding expressions to compiled functions.
+   * @var array [string => Closure]
+   */
+  static $expressions = [];
+
+  /**
    * @param           $markup
    * @param Context   $ctx The rendering context for the current request.
    * @param Component $parent
