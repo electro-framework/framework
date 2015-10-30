@@ -5,7 +5,6 @@ use Monolog\Handler\HandlerInterface;
 use Monolog\Logger;
 use PhpKit\WebConsole\ErrorHandler;
 use Selenia\Core\Assembly\Config\AssemblyServiceProvider;
-use Selenia\Core\Assembly\Services\ModulesManager;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Routing\RoutingMap;

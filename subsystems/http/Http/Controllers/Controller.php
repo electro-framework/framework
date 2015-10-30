@@ -9,7 +9,6 @@ use ReflectionException;
 use ReflectionObject;
 use Selenia\Application;
 use Selenia\DataObject;
-use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Exceptions\Fatal\DataModelException;
 use Selenia\Exceptions\Fatal\FileNotFoundException;
 use Selenia\Exceptions\FatalException;
@@ -45,6 +44,12 @@ class Controller
    * @var PageRoute
    */
   public $activeRoute;
+  /**
+   * The controller's data sources (view model)
+   * The 'default' data source corresponds to the **model**.
+   * @var array
+   */
+  public $dataSources = [];
   /**
    * @var array|null
    */
@@ -133,12 +138,6 @@ class Controller
    */
   protected $viewEngineClass = MatisseEngine::ref;
   /**
-   * The controller's data sources (view model)
-   * The 'default' data source corresponds to the **model**.
-   * @var array
-   */
-  public $dataSources = [];
-  /**
    * @var InjectorInterface
    */
   private $injector;
@@ -186,7 +185,6 @@ class Controller
       preg_replace ('#&?' . $this->app->pageNumberParam . '=\d*#', '', $this->request->getUri ()->getPath ());
     $this->URI_noPage = preg_replace ('#\?$#', '', $this->URI_noPage);
 
-    $this->configPage ();
     $this->initialize (); //custom setup
     $this->setupModel ();
     if ($request->getMethod () == 'POST') {
@@ -274,33 +272,6 @@ class Controller
   {
     header ('Content-Type: text/xml');
     echo '<?xml version="1.0" encoding="utf-8"?>';
-  }
-
-  function getDataRecord ($name = null)
-    //rarely overriden
-  {
-    if (is_null ($name)) {
-      $ds = property ($this->page, 'defaultDataSource');
-      if (isset($ds)) {
-        $it = $ds->getIterator ();
-        if ($it->valid ())
-          return $it->current ();
-        return null;
-      }
-      else throw new DataBindingException(null, "The default data source for the page is not defined.");
-    }
-    $ctx = $this->context;
-    if (array_key_exists ($name, $ctx->dataSources)) {
-      $it = $ctx->dataSources[$name]->getIterator ();
-      if ($it->valid ()) return $it->current ();
-      return null;
-    }
-    throw new DataBindingException(null, "Data source <b>$name</b> is not defined.");
-  }
-
-  function getField ($field, $dataSource = null)
-  {
-    return $this->getDataRecord ($dataSource)[$field];
   }
 
   function getRowOffset ()
@@ -414,23 +385,6 @@ class Controller
   }
 
   /**
-   * Initializes the current page and related info.
-   * Usually not overriden,
-   * @throws ConfigException
-   * @throws FatalException
-   * @global Application $application
-   */
-  protected function configPage ()
-  {
-    if (isset($this->app->routingMap)) {
-      if (!isset($this->router))
-        throw new ConfigException("The module for the current URI is not working properly.<br>You should check the class code.");
-      $this->activeRoute = $this->router->activeRoute;
-      $this->URIParams   = $this->activeRoute->getURIParams ();
-    }
-  }
-
-  /**
    * Defines the set of fields which will be fetched to a data object from a POST request.
    * All other values on the request will be ignored.
    * @return array If NULL all the data object's fields fields will be fetched.
@@ -520,6 +474,10 @@ class Controller
    */
   protected function initialize ()
   {
+    if (isset($this->app->routingMap)) {
+      $this->activeRoute = $this->router->activeRoute;
+      $this->URIParams   = $this->activeRoute->getURIParams ();
+    }
   }
 
   /**
@@ -542,18 +500,6 @@ class Controller
   {
     if (isset($this->URIParams)) {
       extendNonEmpty ($data, $this->URIParams);
-    }
-  }
-
-  protected function join ($masterSourceName, $slavesBaseName, $masterData, DataObject $slaveTemplate, $joinExpr,
-                           $masterKeyField = 'id')
-  {
-    if (!isset($this->dataSources[$masterSourceName]))
-      $this->setDataSource ($masterSourceName, new DataSet($masterData));
-    foreach ($masterData as &$record) {
-      $slaveData    = clone $slaveTemplate;
-      $slaveDataSet = new DataSet($slaveData->queryBy ($joinExpr, null, null, [$record[$masterKeyField]]));
-      $this->setDataSource ($slavesBaseName . $record[$masterKeyField], $slaveDataSet);
     }
   }
 
@@ -587,20 +533,6 @@ class Controller
   }
 
   /**
-   * Responds to a POST request.
-   * @param DataObject $data
-   * @return null|ResponseInterface
-   */
-  protected final function processForm (DataObject $data = null)
-  {
-    if (isset($data)) {
-      $data->loadFromHttpRequest ($this->defineDataFields ());
-      $this->interceptFormData ($data);
-    }
-    return $this->doFormAction ($data);
-  }
-
-  /**
    * Implements page specific action processing, in response to a POST request.
    * To implement standard behavior, override and make a call to $this->processForm($data),
    * where $data is the data object to be processed.
@@ -609,9 +541,7 @@ class Controller
    */
   protected function processRequest ()
   {
-    if (isset($this->dataItem))
-      return $this->processForm ($this->dataItem);
-    else return $this->processForm ();
+    return $this->processForm ($this->model);
   }
 
   /**
@@ -720,6 +650,20 @@ class Controller
   {
     //Override.
     return null;
+  }
+
+  /**
+   * Responds to a POST request.
+   * @param DataObject $data
+   * @return null|ResponseInterface
+   */
+  private function processForm (DataObject $data = null)
+  {
+    if (isset($data)) {
+      $data->loadFromHttpRequest ($this->defineDataFields ());
+      $this->interceptFormData ($data);
+    }
+    return $this->doFormAction ($data);
   }
 
 }
