@@ -375,7 +375,7 @@ class Controller
       $this->page->addScript ("{$this->app->frameworkURI}/js/engine.js");
       if (isset($this->flashMessage))
         $this->displayStatus ($this->flashMessage['type'], $this->flashMessage['message']);
-      $this->page->defaultDataSource =& getRefAt ($this->dataSources, 'default');
+      $this->page->modelDataSource =& getRefAt ($this->dataSources, 'default');
     }
   }
 

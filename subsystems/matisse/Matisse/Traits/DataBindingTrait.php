@@ -15,6 +15,7 @@ use Selenia\Matisse\MatisseEngine;
  */
 trait DataBindingTrait
 {
+  static private $MODEL_DATASOURCE_NAME = 'model';
   /**
    * Finds binding expressions and extracts datasource and field info.
    * > Note: the u modifier allows unicode white space to be properly matched.
@@ -22,7 +23,7 @@ trait DataBindingTrait
   static private $PARSE_PARAM_BINDING_EXP = '#
     \{\{\s*
     (?:
-      ! ([\w\-]+) \.?
+      % ([\w\-]+) \.?
     )?
     (
       (?:
@@ -43,7 +44,7 @@ trait DataBindingTrait
    *
    * @var mixed
    */
-  public $defaultDataSource;
+  public $modelDataSource;
   /**
    * Set by Repeater components for supporting pagination.
    * @var int
@@ -135,42 +136,45 @@ trait DataBindingTrait
   {
     if (empty($matches))
       throw new \InvalidArgumentException;
-    list($full, $dataSource, $dataField) = $matches;
-    $dataSource = trim ($dataSource);
-    $dataField  = trim ($dataField);
-    $p          = strpos ($dataField, '{');
+    list($full, $injectable, $expression) = $matches;
+    $injectable = trim ($injectable);
+    $expression = trim ($expression);
+    $p          = strpos ($expression, '{');
 
     // Recursive binding expression.
 
     if ($p !== false && $p >= 0) {
-      $exp = preg_replace_callback (self::$PARSE_PARAM_BINDING_EXP, [$this, 'evalBindingExp'], $dataField);
+      $exp = preg_replace_callback (self::$PARSE_PARAM_BINDING_EXP, [$this, 'evalBindingExp'], $expression);
       $z   = strpos ($exp, '.');
       if ($z !== false) {
-        $dataSource .= substr ($exp, 0, $z);
-        $dataField = substr ($exp, $z + 1);
+        $injectable .= substr ($exp, 0, $z);
+        $expression = substr ($exp, $z + 1);
 
-        return "{!$dataSource.$dataField}";
+        return "{{%$injectable.$expression}}";
       }
       else
-        return empty($dataSource) ? '{' . "$exp}" : "{!$dataSource" . ($p == 0 ? '' : '.') . "$exp}";
+        return empty($injectable) ? '{{' . "$exp}}" : "{{%$injectable" . ($p == 0 ? '' : '.') . "$exp}}";
     }
 
-    if (empty($dataSource))
-      $src = $this->getDefaultDataSource ();
+    // No injectable was specified:
+    if (empty($injectable))
+      $src = $this->context->viewModel;
+
+    // Use injected value as view-model.
     else {
-      $src = get ($this->context->dataSources, $dataSource);
-      if (!isset($src))
-        throw new DataBindingException($this, "Data source <b>$dataSource</b> is not defined.");
+      $fn = $this->context->injectorFn;
+      $src = $fn ($injectable);
     }
 
-    if ($dataField == '') {
+    if ($expression == '') {
       if ($allowFullSource)
         return $src;
       throw new DataBindingException($this,
         "The full data source reference <b>$full</b> cannot be used on a composite databinding expression.");
     }
 
-    if ($dataField[0] == '@')
+    // Ignore macro arguments.
+    if ($expression[0] == '@')
       return null;
 
     if (is_null ($src))
@@ -178,12 +182,12 @@ trait DataBindingTrait
 
     // Parse pipes
 
-    $pipes     = preg_split ('/\s*\|\s*/', $dataField);
-    $dataField = array_shift ($pipes);
+    $pipes      = preg_split ('/\s*\|\s*/', $expression);
+    $expression = array_shift ($pipes);
 
     // Virtual fields (#xxx)
 
-    if ($dataField[0] == '#') {
+    if ($expression[0] == '#') {
       if (is_array ($src)) {
         $v = current ($src);
         $k = key ($src);
@@ -194,8 +198,8 @@ trait DataBindingTrait
         $k  = $it->key ();
       }
       else throw new DataBindingException($this,
-        "Can't use virtual field $dataField on a non-iterable data source.");
-      switch ($dataField) {
+        "Can't use virtual field $expression on a non-iterable data source.");
+      switch ($expression) {
         case '#key':
           $v = $k;
           break;
@@ -209,7 +213,7 @@ trait DataBindingTrait
           break;
         default:
           throw new DataBindingException($this,
-            "Unsupported virtual field $dataField.");
+            "Unsupported virtual field $expression.");
       }
     }
 
@@ -221,20 +225,26 @@ trait DataBindingTrait
         $src = $it->current ();
       }
 
+      // Context-relative expression:
+      if ($expression[0] == '.') {
+        $src        = $this->getContextualModel ();
+        $expression = substr ($expression, 1);
+      }
+
       // Call a previously compiled expression or compile one now, cache it and call it.
 
       /** @var \Closure $compiled */
-      $compiled = get (MatisseEngine::$expressions, $dataField);
+      $compiled = get (MatisseEngine::$expressions, $expression);
       if (!$compiled) {
-        $args = explode ('.', $dataField);
+        $args = explode ('.', $expression);
         $exp  = '$src';
         foreach ($args as $arg)
           $exp = "getField($exp,'$arg')";
         if (!PhpCode::validateExpression ($exp))
-          throw new DataBindingException($this, "Invalid expression <kbd>$dataField</kbd>.");
-        $compiled = MatisseEngine::$expressions[$dataField] = PhpCode::compile ($exp, '$src');
+          throw new DataBindingException($this, "Invalid expression <kbd>$expression</kbd>.");
+        $compiled = MatisseEngine::$expressions[$expression] = PhpCode::compile ($exp, '$src');
       }
-      else _log ("CACHE HIT $dataSource.$dataField");
+      else _log ("CACHE HIT $injectable.$expression");
 
       $v = $compiled ($src);
     }
@@ -268,17 +278,18 @@ trait DataBindingTrait
   }
 
   /**
-   * Returns the data source to be used for non qualified databinging expressions.
+   * Returns the data source to be used for #model contextual databinging expressions.
    * Searches upwards on the component hierarchy.
    *
    * @return DataSource
    */
-  protected function getDefaultDataSource ()
+  protected function getContextualModel ()
   {
-    return isset($this->defaultDataSource)
-      ? $this->defaultDataSource
-      :
-      (isset($this->parent) ? $this->parent->getDefaultDataSource () : null);
+    if (isset($this->modelDataSource))
+      return $this->modelDataSource;
+    /** @var static $parent */
+    $parent = $this->parent;
+    return isset($parent) ? $parent->getContextualModel () : null;
   }
 
 }

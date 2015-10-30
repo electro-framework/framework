@@ -2,6 +2,7 @@
 namespace Selenia\ViewEngine\Engines;
 
 use Selenia\Application;
+use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\ViewEngineInterface;
 use Selenia\Matisse\Components\Page;
 use Selenia\Matisse\MatisseEngine as Matisse;
@@ -15,6 +16,10 @@ class MatisseEngine implements ViewEngineInterface
    */
   private $app;
   /**
+   * @var InjectorInterface
+   */
+  private $injector;
+  /**
    * @var Matisse
    */
   private $matisse;
@@ -23,11 +28,12 @@ class MatisseEngine implements ViewEngineInterface
    */
   private $pipeHandler;
 
-  function __construct (Matisse $matisse, PipeHandler $pipeHandler, Application $app)
+  function __construct (Matisse $matisse, PipeHandler $pipeHandler, Application $app, InjectorInterface $injector)
   {
     $this->matisse     = $matisse;
     $this->pipeHandler = $pipeHandler;
     $this->app         = $app;
+    $this->injector    = $injector;
   }
 
   function compile ($src)
@@ -39,13 +45,17 @@ class MatisseEngine implements ViewEngineInterface
 
     // Setup a rendering context.
 
-    $ctx                      = $this->matisse->createContext ($this->app->tags, $pipeHandler);
+    $ctx = $this->matisse->createContext ($this->app->tags, $pipeHandler);
+
     $ctx->condenseLiterals    = $this->app->condenseLiterals;
     $ctx->debugMode           = $this->app->debugMode;
     $ctx->templateDirectories = $this->app->templateDirectories;
     $ctx->presets             = map ($this->app->presets,
       function ($class) { return $this->app->injector->make ($class); });
     $ctx->templatesExt        = '.html';
+    $ctx->injectorFn          = function ($name) {
+      return $this->injector->make (ucfirst ($name));
+    };
 
     // Create a compiled template.
 
@@ -56,7 +66,7 @@ class MatisseEngine implements ViewEngineInterface
   function render ($compiled, array $data = [])
   {
     /** @var Page $compiled */
-    $compiled->context->dataSources = $data;
+    $compiled->context->viewModel = $data;
     return $this->matisse->render ($compiled);
   }
 }
