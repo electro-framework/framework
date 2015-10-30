@@ -125,7 +125,7 @@ trait DataBindingTrait
             "The maximum nesting depth for a data binding expression was exceeded.<p>The last evaluated expression is   <b>$bindExp</b>");
       } while (true);
     } catch (\InvalidArgumentException $e) {
-      throw new DataBindingException($this, "Invalid databinding expression: $bindExp\n" . $e->getMessage ());
+      throw new DataBindingException($this, "Invalid databinding expression: $bindExp\n" . $e->getMessage (), $e);
     }
   }
 
@@ -137,8 +137,10 @@ trait DataBindingTrait
     $dataSource = trim ($dataSource);
     $dataField  = trim ($dataField);
     $p          = strpos ($dataField, '{');
+
+    // Recursive binding expression.
+
     if ($p !== false && $p >= 0) {
-      //recursive binding expression
       $exp = preg_replace_callback (self::$PARSE_PARAM_BINDING_EXP, [$this, 'evalBindingExp'], $dataField);
       $z   = strpos ($exp, '.');
       if ($z !== false) {
@@ -150,6 +152,7 @@ trait DataBindingTrait
       else
         return empty($dataSource) ? '{' . "$exp}" : "{!$dataSource" . ($p == 0 ? '' : '.') . "$exp}";
     }
+
     if (empty($dataSource))
       $src = $this->getDefaultDataSource ();
     else {
