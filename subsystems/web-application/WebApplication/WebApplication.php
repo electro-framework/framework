@@ -86,6 +86,7 @@ class WebApplication
 
     /** @var WebServer $webServer */
     $webServer = $this->injector->make (WebServer::ref);
+    $webServer->setup ();
     $webServer->run ();
   }
 

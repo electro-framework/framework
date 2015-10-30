@@ -10,6 +10,7 @@ use Selenia\Interfaces\ViewInterface;
 
 class View implements ViewInterface
 {
+  const ref = __CLASS__;
   /**
    * @var Application
    */
@@ -37,10 +38,26 @@ class View implements ViewInterface
     $this->app      = $app;
   }
 
+  function getCompiledView ()
+  {
+    return $this->compiled;
+  }
+
+  function getEngine ()
+  {
+    return $this->engine;
+  }
+
+  function setEngine ($engineClass)
+  {
+    $this->engine = $this->injector->make ($engineClass);
+    return $this;
+  }
+
   function loadFromFile ($path)
   {
     $this->setEngineFromFileName ($path);
-    $src = $this->loadView($path);
+    $src = $this->loadView ($path);
     $this->loadFromString ($src);
     return $this;
   }
@@ -60,12 +77,6 @@ class View implements ViewInterface
   function render (array $data = [])
   {
     return $this->engine->render ($this->compiled, $data);
-  }
-
-  function setEngine ($engineClass)
-  {
-    $this->engine = $this->injector->make ($engineClass);
-    return $this;
   }
 
   function setEngineFromFileName ($fileName)
@@ -94,7 +105,7 @@ class View implements ViewInterface
     $paths = implode ('', map ($dirs, function ($path) {
       return "<li><path>$path</path>";
     }));
-    throw new FileNotFoundException($path,"<p>Search paths:<ul>$paths</ul>");
+    throw new FileNotFoundException($path, "<p>Search paths:<ul>$paths</ul>");
   }
 
 }

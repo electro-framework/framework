@@ -9,12 +9,16 @@ use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequestFactory;
 
 /**
- * Responds to an HTTP request made to the web application by forwarding it to a PSR-7 compliant HTTP processing pipeline
- * and sends the generated response back to the HTTP client.
+ * Responds to an HTTP request made to the web application by forwarding it to a PSR-7 compliant HTTP processing
+ * pipeline and sends the generated response back to the HTTP client.
  */
 class WebServer
 {
   const ref = __CLASS__;
+  /**
+   * @var ServerRequestInterface
+   */
+  public $request;
   /**
    * @var Application
    */
@@ -48,9 +52,24 @@ class WebServer
   }
 
   /**
-   * Runs the web server to handle an incoming HTTP request.
+   * Runs the web server to handle the incoming HTTP request.
    */
   function run ()
+  {
+    $response   = new Response;
+    $middleware = $this->middlewareStack;
+    $response   = $middleware ($this->request, $response, null);
+    if (!$response) return;
+
+    // Send back the response.
+
+    $this->responseSender->send ($response);
+  }
+
+  /**
+   * Initializes the web server and sets up the request object.
+   */
+  function setup ()
   {
     $app = $this->app;
     $this->fileServerMappings->map ($app->frameworkURI,
@@ -58,19 +77,11 @@ class WebServer
 
     // Process the request.
 
-    $request      = ServerRequestFactory::fromGlobals ();
-    $app->baseURI = $this->getBaseUri ($request);
-    $request      = $request->withAttribute ('baseUri', $app->baseURI);
-    $app->VURI    = $this->getVirtualUri ($request);
-    $request      = $request->withAttribute ('virtualUri', $app->VURI);
-    $response     = new Response;
-    $middleware   = $this->middlewareStack;
-    $response     = $middleware ($request, $response, null);
-    if (!$response) return;
-
-    // Send back the response.
-
-    $this->responseSender->send ($response);
+    $request       = ServerRequestFactory::fromGlobals ();
+    $app->baseURI  = $this->getBaseUri ($request);
+    $request       = $request->withAttribute ('baseUri', $app->baseURI);
+    $app->VURI     = $this->getVirtualUri ($request);
+    $this->request = $request->withAttribute ('virtualUri', $app->VURI);
   }
 
   private function getBaseUri (ServerRequestInterface $request)
@@ -81,7 +92,7 @@ class WebServer
 
   private function getVirtualUri (ServerRequestInterface $request)
   {
-    $uri = $request->getUri()->getPath();
+    $uri     = $request->getUri ()->getPath ();
     $baseURI = $request->getAttribute ('baseUri');
     $vuri    = substr ($uri, strlen ($baseURI) + 1) ?: '';
     return $vuri;

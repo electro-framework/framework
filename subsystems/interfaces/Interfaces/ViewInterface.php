@@ -6,6 +6,18 @@ use Selenia\Exceptions\FatalException;
 interface ViewInterface
 {
   /**
+   * Gets the previously compiled view, if any.
+   * @return mixed|null
+   */
+  function getCompiledView ();
+
+  /**
+   * Gets the active view enging instance, if any.
+   * @return ViewEngineInterface|null
+   */
+  function getEngine ();
+
+  /**
    * Loads and compiles the specified template file.
    * @param string $path
    * @return $this

@@ -21,10 +21,6 @@ class ModulesManager
    */
   private $injector;
   /**
-   * @var ModuleServices
-   */
-  private $moduleServices;
-  /**
    * @var ModulesRegistry
    */
   private $modulesRegistry;
@@ -33,14 +29,11 @@ class ModulesManager
    * @param InjectorInterface $injector
    * @param Application       $app
    * @param ModulesRegistry   $modulesRegistry
-   * @param ModuleServices    $moduleServices
    */
-  function __construct (InjectorInterface $injector, Application $app, ModulesRegistry $modulesRegistry,
-                        ModuleServices $moduleServices)
+  function __construct (InjectorInterface $injector, Application $app, ModulesRegistry $modulesRegistry)
   {
     $this->app             = $app;
     $this->injector        = $injector;
-    $this->moduleServices  = $moduleServices;
     $this->modulesRegistry = $modulesRegistry;
   }
 
@@ -74,11 +67,12 @@ class ModulesManager
 
     // Providers configuration phase
 
+    $moduleServices = $this->injector->make (ModuleServices::ref); // Warning: this MUST NOT be injected on the constructor above!
     foreach ($providers as $i => $provider) {
-      $this->moduleServices->setPath ($paths[$i]);
-      $provider->configure ($this->moduleServices);
+      $moduleServices->setPath ($paths[$i]);
+      $provider->configure ($moduleServices);
     }
-    $this->moduleServices->runPostConfig ();
+    $moduleServices->runPostConfig ();
 
     // Providers boot phase
 

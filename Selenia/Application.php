@@ -4,7 +4,7 @@ namespace Selenia;
 use Monolog\Handler\HandlerInterface;
 use Monolog\Logger;
 use PhpKit\WebConsole\ErrorHandler;
-use Selenia\Core\Assembly\Config\AssemblyServices;
+use Selenia\Core\Assembly\Config\AssemblyServiceProvider;
 use Selenia\Core\Assembly\Services\ModulesManager;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\InjectorInterface;
@@ -447,7 +447,7 @@ class Application
     if (getenv ('APP_DEFAULT_LANG'))
       $this->defaultLang = getenv ('APP_DEFAULT_LANG');
 
-    $assembly = new AssemblyServices;
+    $assembly = new AssemblyServiceProvider;
     $assembly->register ($this->injector);
   }
 

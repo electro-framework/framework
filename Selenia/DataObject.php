@@ -196,7 +196,7 @@ class DataObject
   /**
    * Returns all records from the corresponding database table.
    * An alias for {@see query()}.
-   * @return PDOStatement
+   * @return array
    */
   function all ()
   {
@@ -643,7 +643,7 @@ class DataObject
   /**
    * Executes the most common select type query for this kind of data.
    * Defauls to returning all fields from all records.
-   * @return PDOStatement
+   * @return array
    */
   function query ()
   {

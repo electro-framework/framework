@@ -2,10 +2,14 @@
 namespace Selenia\FileServer\Services;
 
 use Selenia\Application;
+use Selenia\Traits\InspectionTrait;
 
 class FileServerMappings
 {
+  use InspectionTrait;
+
   const ref = __CLASS__;
+
   static $INSPECTABLE = ['mountPoints'];
   /**
    * @var Application

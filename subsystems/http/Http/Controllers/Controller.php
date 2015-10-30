@@ -2,14 +2,12 @@
 namespace Selenia\Http\Controllers;
 
 use Exception;
-use PDO;
 use PDOStatement;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionException;
 use ReflectionObject;
 use Selenia\Application;
-use Selenia\Authentication\Exceptions\AuthenticationException;
 use Selenia\DataObject;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Exceptions\Fatal\DataModelException;
@@ -19,13 +17,19 @@ use Selenia\Exceptions\Flash\FileException;
 use Selenia\Exceptions\FlashMessageException;
 use Selenia\Exceptions\FlashType;
 use Selenia\Http\Services\Redirection;
+use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\ResponseFactoryInterface;
+use Selenia\Interfaces\SessionInterface;
+use Selenia\Interfaces\ViewInterface;
+use Selenia\Matisse\Components\Page;
 use Selenia\Matisse\DataRecord;
 use Selenia\Matisse\DataSet;
 use Selenia\Matisse\DataSource;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Routing\PageRoute;
 use Selenia\Routing\Router;
+use Selenia\ViewEngine\Engines\MatisseEngine;
+use Selenia\ViewEngine\View;
 use Zend\Diactoros\Response\HtmlResponse;
 
 ob_start ();
@@ -56,6 +60,11 @@ class Controller
    */
   public $model;
   /**
+   * It's only set when using Matisse.
+   * @var Page
+   */
+  public $page;
+  /**
    * @var int Current page number.
    */
   public $pageNumber = 1;
@@ -65,17 +74,41 @@ class Controller
    */
   public $router;
   /**
+   * An HTML fragment to display a status message or an empty string if no status message exists.
+   * @var string
+   */
+  public $statusMessage = '';
+  /**
+   * @var View
+   */
+  public $view;
+  /**
    * The current request URI without the page number parameters.
    * This property is useful for databing with the expression {!controller.URI_noPage}.
    * @var string
    */
   protected $URI_noPage;
   /**
+   * @var
+   */
+  protected $app;
+  /**
+   * Specifies the URL of the index page, to where the browser should naviagate upon the
+   * successful insertion / update of records.
+   * If not defined on a subclass then the request will redisplay the same page.
+   * @var string
+   */
+  protected $indexPage = null;
+  /**
    * If set, defines the page title. It will generate a document `<title>` and it can be used on
    * breadcrumbs.
    * @var string
    */
   protected $pageTitle = null;
+  /**
+   * @var Redirection
+   */
+  protected $redirection;
   /**
    * If set to true, the view will be rendered on the POST request without a redirection taking place.
    * @var bool
@@ -90,32 +123,41 @@ class Controller
    */
   protected $response;
   /**
-   * Specifies the URL of the index page, to where the browser should naviagate upon the
-   * successful insertion / update of records.
-   * If not defined on a subclass then the request will redisplay the same page.
-   * @var string
-   */
-  protected $indexPage = null;
-  /**
-   * @var
-   */
-  private $app;
-
-  private $dataSources = [];
-  /**
-   * @var Redirection
-   */
-  private $redirection;
-  /**
    * @var ResponseFactoryInterface
    */
-  private $responseFactory;
+  protected $responseFactory;
+  /**
+   * @var SessionInterface
+   */
+  protected $session;
+  /**
+   * @var string
+   */
+  protected $viewEngineClass = MatisseEngine::ref;
+  /**
+   * The controller's data sources (view model)
+   * The 'default' data source corresponds to the **model**.
+   * @var array
+   */
+  public $dataSources = [];
+  /**
+   * @var InjectorInterface
+   */
+  private $injector;
 
-  function __construct (Application $app, ResponseFactoryInterface $responseFactory, Redirection $redirection)
+  function __construct (InjectorInterface $injector, Application $app, ResponseFactoryInterface $responseFactory,
+                        Redirection $redirection, SessionInterface $session)
   {
+    $this->injector        = $injector;
     $this->app             = $app;
     $this->responseFactory = $responseFactory;
-    $this->redirection = $redirection;
+    $this->redirection     = $redirection;
+    $this->session         = $session;
+
+    // Inject extra dependencies into the subclass' inject method, if it exists.
+
+    if (method_exists ($this, 'inject'))
+      $injector->execute ([$this, 'inject']);
   }
 
   static function ref ()
@@ -135,13 +177,17 @@ class Controller
    */
   final function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
+    if (!$this->app)
+      throw new FatalException("Class <kbd class=type>" . get_class ($this) .
+                               "</kbd>'s constructor forgot to call <kbd>parent::__construct()</kbd>");
     $this->request  = $request;
     $this->response = $response;
+
     // remove page number parameter
-    $this->URI_noPage = preg_replace ('#&?' . $this->app->pageNumberParam . '=\d*#', '', $this->URI);
+    $this->URI_noPage =
+      preg_replace ('#&?' . $this->app->pageNumberParam . '=\d*#', '', $this->request->getUri ()->getPath ());
     $this->URI_noPage = preg_replace ('#\?$#', '', $this->URI_noPage);
 
-    $this->setupController ();
     $this->configPage ();
     $this->initialize (); //custom setup
     $this->setupModel ();
@@ -150,8 +196,11 @@ class Controller
       if ($res)
         return $res;
       if (!$this->renderOnPOST)
-        return $this->redirection->refresh();
+        return $this->redirection->refresh ();
     }
+    $vm = $this->viewModel ();
+    if ($vm)
+      array_concat ($this->dataSources, $vm);
     return $this->processView ();
   }
 
@@ -187,7 +236,7 @@ class Controller
    * This is useful, for instance, for updating a form by submitting it without actually saving it.
    * The custom processing will usually take place on the render() or the viewModel() methods, but you may also
    * override this method; just make sure you call the inherited one.
-   * @param string     $param A JQuery selector for the element that should automatically receive focus after the page
+   * @param string $param     A JQuery selector for the element that should automatically receive focus after the page
    *                          reloads.
    */
   function action_refresh ($param = null)
@@ -256,28 +305,9 @@ class Controller
     return $this->getDataRecord ($dataSource)[$field];
   }
 
-  /**
-   * Returns the specified HTTP request header.
-   * @param string $name The header name. Ex: 'Content-Type'
-   * @return string|null null if the header doesn't exist.
-   */
-  function getHeader ($name)
-  {
-    return get (getallheaders (), $name);
-  }
-
-  final function getPageURI ()
-  {
-    $uri = $_SERVER['REQUEST_URI'];
-    $i   = strpos ($uri, '?');
-    if (!$i) return $uri;
-    else return substr ($uri, 0, $i);
-  }
-
   function getRowOffset ()
   {
-    global $application;
-    return ($this->pageNumber - 1) * $application->pageSize;
+    return ($this->pageNumber - 1) * $this->app->pageSize;
   }
 
   function getTitle ()
@@ -288,28 +318,6 @@ class Controller
       $this->pageTitle,
       ''
     );
-  }
-
-  /**
-   * Perform application-specific transformation on data source data before it is
-   * stored for use on the view.
-   * @param string $dataSourceName
-   * @param mixed  $data can be an array or a DataObject
-   */
-  function interceptViewDataRecord ($dataSourceName, $data)
-  {
-    // override
-  }
-
-  /**
-   * Perform application-specific transformation on data source data before it is
-   * stored for use on the view.
-   * @param string $dataSourceName
-   * @param array  $data a sequential array of dictionary arrays
-   */
-  function interceptViewDataSet ($dataSourceName, array &$data)
-  {
-    // override
   }
 
   /**
@@ -383,65 +391,19 @@ class Controller
    * Component specific initialization can be performed here before the
    * page is rendered.
    * Override to add extra initialization.
+   * @param ViewInterface $view
    */
-  function setupView ()
+  function setupView (ViewInterface $view)
   {
-    global $application;
-    $this->page->title = str_replace ('@', $this->getTitle (), $application->title);
-    $this->page->addScript ("$application->frameworkURI/js/engine.js");
-    if (isset($this->flashMessage))
-      $this->displayStatus ($this->flashMessage['type'], $this->flashMessage['message']);
-    $this->page->defaultDataSource =& $this->context->dataSources['default'];
-  }
-
-  /**
-   * @return bool|string
-   * <li> True is a login form should be displayed.
-   * <li> False to proceed as a normal request.
-   * <li> <code>'retry'</code> to retry GET request by redirecting to same URI.
-   */
-  protected function authenticate ()
-  {
-    global $application, $session;
-    $authenticate = false;
-    if (isset($session) && $application->requireLogin) {
-      $this->getActionAndParam ($action, $param);
-      $authenticate = true;
-      if ($action == 'login') {
-        $prevPost = get ($_POST, '_prevPost');
-        try {
-          $this->login ();
-          if ($prevPost)
-            $_POST = unserialize (urldecode ($prevPost));
-          else $_POST = [];
-          $_REQUEST = array_merge ($_POST, $_GET);
-          if (empty($_POST))
-            $_SERVER['REQUEST_METHOD'] = 'GET';
-          if ($this->wasPosted ())
-            $authenticate = false; // user is now logged in; proceed as a normal request
-          else $authenticate = 'retry';
-        } catch (AuthenticationException $e) {
-          $this->setStatus (FlashType::WARNING, $e->getMessage ());
-          // note: if $prevPost === false, it keeps that value instead of (erroneously) storing the login form data
-          if ($action)
-            $this->prevPost = isset($prevPost) ? $prevPost : urlencode (serialize ($_POST));
-        }
-      }
-      else {
-        $authenticate = !$session->validate ();
-        if ($authenticate && $action)
-          $this->prevPost = urlencode (serialize ($_POST));
-        if ($this->isWebService) {
-          $username = get ($_SERVER, 'PHP_AUTH_USER');
-          $password = get ($_SERVER, 'PHP_AUTH_PW');
-          if ($username) {
-            $session->login ($application->defaultLang, $username, $password);
-            $authenticate = false;
-          }
-        }
-      }
+    $engine = $view->getEngine ();
+    if ($engine instanceof MatisseEngine) {
+      $this->page        = $view->getCompiledView ();
+      $this->page->title = str_replace ('@', $this->getTitle (), $this->app->title);
+      $this->page->addScript ("{$this->app->frameworkURI}/js/engine.js");
+      if (isset($this->flashMessage))
+        $this->displayStatus ($this->flashMessage['type'], $this->flashMessage['message']);
+      $this->page->defaultDataSource =& getRefAt ($this->dataSources, 'default');
     }
-    return $authenticate;
   }
 
   protected function autoRedirect ()
@@ -449,13 +411,8 @@ class Controller
     if (isset($this->activeRoute))
       return $this->gotoModuleIndex ();
     if (isset($this->indexPage))
-      return $this->redirection->to($this->indexPage);
+      return $this->redirection->to ($this->indexPage);
     throw new FatalException("No index page defined.");
-  }
-
-  protected final function cancelRedirection ()
-  {
-    $this->redirectURI = null;
   }
 
   /**
@@ -467,13 +424,11 @@ class Controller
    */
   protected function configPage ()
   {
-    global $application;
-    if (isset($application->routingMap)) {
+    if (isset($this->app->routingMap)) {
       if (!isset($this->router))
         throw new ConfigException("The module for the current URI is not working properly.<br>You should check the class code.");
       $this->activeRoute = $this->router->activeRoute;
       $this->URIParams   = $this->activeRoute->getURIParams ();
-      $this->virtualURI  = $this->router->virtualURI;
     }
   }
 
@@ -487,63 +442,28 @@ class Controller
     return null;
   }
 
-  /**
-   * Loads or generates the view's source markup.
-   * <p>Override to manually include the view's source markup.
-   * @return bool Usually you should return false. Return <b>true</b> to cancel additional processing beyond this point.
-   * @throws FatalException
-   * @global Application $application
-   */
-  protected function defineView ()
-  {
-    ob_start ();
-    $r    = $this->render ();
-    $view = ob_get_clean ();
-    if ($this->isWebService) {
-      $this->beginJSONResponse ();
-      if (is_null ($r))
-        http_response_code (204);
-      else echo json_encode ($r);
-      return true;
-    }
-    if (isset($r)) {
-      echo $r;
-      return true;
-    }
-    if (strlen ($view)) {
-      $this->parseView ($view);
-      return false;
-    }
-    if (isset($this->router)) {
-      if (isset($this->activeRoute->view))
-        $this->loadView ($this->activeRoute->view, true);
-      return false;
-    }
-    else {
-      preg_match ('#(\w+?)\.php#', $this->URI, $match);
-      if (!count ($match))
-        throw new FatalException("Invalid URI <b>$this->URI</b>");
-      $path = $match[1] . $this->TEMPLATE_EXT;
-      return !$this->loadView ($path);
-    }
-  }
-
   protected function displayStatus ($status, $message)
   {
     if (!is_null ($status)) {
       if ($this->page)
         switch ($status) {
           case FlashType::FATAL:
-            $this->page->fatal ($message);
-            break;
+            @ob_clean ();
+            echo '<html><head><meta http-equiv="Content-Type" content="text/html;charset=utf-8"></head><body><pre>' .
+                 $message .
+                 '</pre></body></html>';
+            exit;
           case FlashType::ERROR:
-            $this->page->error ($message);
+            $this->statusMessage =
+              '<div id="status" class="alert alert-danger" role="alert">' . $message . '</div>';
             break;
           case FlashType::WARNING:
-            $this->page->warning ($message);
+            $this->statusMessage =
+              '<div id="status" class="alert alert-warning" role="alert">' . $message . '</div>';
             break;
           default:
-            $this->page->info ($message);
+            $this->statusMessage =
+              '<div id="status" class="alert alert-info" role="alert">' . $message . '</div>';
         }
       else echo $message;
     }
@@ -589,7 +509,7 @@ class Controller
       /** @var PageRoute $index */
       $index = $this->activeRoute->getIndex ();
       if (!$index)
-        return $this->redirection->home();
+        return $this->redirection->home ();
       return $this->redirection->to ($index->evalURI ($this->URIParams));
     }
   }
@@ -630,8 +550,7 @@ class Controller
   protected function join ($masterSourceName, $slavesBaseName, $masterData, DataObject $slaveTemplate, $joinExpr,
                            $masterKeyField = 'id')
   {
-    $ctx = $this->context;
-    if (!isset($ctx->dataSources[$masterSourceName]))
+    if (!isset($this->dataSources[$masterSourceName]))
       $this->setDataSource ($masterSourceName, new DataSet($masterData));
     foreach ($masterData as &$record) {
       $slaveData    = clone $slaveTemplate;
@@ -641,55 +560,10 @@ class Controller
   }
 
   /**
-   * Attempts to load the specified view file.
-   * @param string $path
-   * @param bool   $errorIfNotFound When true an exception is thrown if the view file is not found, instead of returning
-   *                                `false`.
-   * @return bool <b>true</b> if the file was found.
-   * @throws FatalException
-   */
-  protected function loadView ($path, $errorIfNotFound = false)
-  {
-    global $application;
-    $dirs = $application->viewsDirectories;
-    foreach ($dirs as $dir) {
-      $p    = "$dir/$path";
-      $view = loadFile ($p);
-      if ($view) {
-        $this->parseView ($view);
-        return true;
-      }
-    }
-//          $path2 = ErrorHandler::shortFileName ($path2);
-    if ($errorIfNotFound) {
-      $paths = implode ('', map ($dirs, function ($path) {
-        return "<li><path>$path</path>";
-      }));
-      throw new FatalException("View <b>$path</b> was not found.<p>Search paths:<ul>$paths</ul>");
-    }
-    return false;
-  }
-
-  /**
-   * This method may be overridden to try/catch login errors.
-   * @return void
-   */
-  protected function login ()
-  {
-    global $session, $application;
-    $session->login ($application->defaultLang);
-  }
-
-  /**
    * Override to return the main model for the controller / view.
    *
    * > This model will be available on both GET and POST requests and it will also be set as the default data source
    * for the view model.
-   *
-   * <p>If not set, the model will be created by the controller by inspecting:
-   * - the model property of the current route;
-   * - the controller's model property;
-   * - the controller's dataClass and modelMethod properties.
    *
    * @return DataObject|PDOStatement|array
    */
@@ -700,10 +574,9 @@ class Controller
 
   protected function paginate (array &$data, $pageSize = 0)
   {
-    global $application;
     if (!$pageSize)
-      $pageSize = $application->pageSize;
-    $this->pageNumber = get ($_REQUEST, $application->pageNumberParam, 1);
+      $pageSize = $this->app->pageSize;
+    $this->pageNumber = get ($_REQUEST, $this->app->pageNumberParam, 1);
     $count            = count ($data);
     if ($count > $pageSize) {
       $this->max = ceil ($count / $pageSize);
@@ -713,11 +586,6 @@ class Controller
       }
       array_splice ($data, $pageSize);
     }
-  }
-
-  protected function parseView ($viewTemplate)
-  {
-    $this->engine->parse ($viewTemplate, $this->context, $this->page);
   }
 
   /**
@@ -750,98 +618,45 @@ class Controller
 
   /**
    * Performs all processing related to the view generation.
-   * @param bool $authenticate Is this a login form?
-   * @return bool False if the view rendering was interrupted..
-   * @throws FatalException
+   * @return ResponseInterface
    * @throws FileNotFoundException
    */
-  protected function processView ($authenticate = false)
+  protected function processView ()
   {
-    global $application;
-    $this->setupBaseModel ();
-    if (!$authenticate) {
-      // Normal page rendering (not a login form).
+    $this->setupBaseViewModel ();
+    // Normal page rendering (not a login form).
 
-      $this->setupViewModel (); //custom setup
-//      $this->setViewModel ('page', $this->page);
-      if ($this->defineView ())
-        return false;
+    $this->view = $this->injector->make ('Selenia\Interfaces\ViewInterface');
+    ob_start ();
+    $view    = $this->render ();
+    $content = ob_get_clean ();
+    if (!$view) {
+      /** @var ViewInterface $view */
+      $view = $this->view
+        ->setEngine ($this->viewEngineClass)
+        ->loadFromString ($content);
     }
-    else {
-      if ($this->isWebService) {
-        http_response_code (401);
-        header ('WWW-Authenticate: Basic');
-        echo "Unauthorized";
-        return true;
-      }
-      // Show login form.
-      $path = $application->loginView;
-      $this->loadView ($path, true);
-      $this->setViewModel ('page', $this->page);
-      $this->page->formAutocomplete = true;
-    }
-    $this->initSEO ();
-    $this->setupView ();
-    $output = $this->renderView ();
-    echo $output;
-    $this->afterPageRender ();
-    return true;
-  }
-
-  protected function redirectAndHalt ()
-    // override to implement actions to be performed before a redirection takes place
-  {
-    if (isset($this->redirectURI))
-      self::redirect ($this->redirectURI);
+    $this->setupView ($view);
+    /** @var ViewInterface $view */
+    $output = $view->render ($this->dataSources);
+    $this->response->getBody ()->write ($output);
+    return $this->response;
   }
 
   /**
    * Allows subclasses to generate the view's markup dinamically.
-   * If noting is sent to the output buffer from this method, the controller will try to load the view from metadata.
-   * @return mixed If a return value is provided, it is assumed to be web service data and it will be output instead of
-   * the output buffer content, without any further processing.
-   * Note: if `isWebService` is enabled, the return value will be always used (even if null) and it will be encoded as
-   * JSON.
+   * If not overriden, the default behaviour is to load the view from an external file, if one is defined on the active
+   * route. If not, no output is generated.
+   * @return ViewInterface|null If `null`, the framework assumes the content has been output to PHP's output buffer.
    */
   protected function render ()
   {
-    // Override
-  }
-
-  /**
-   * Renders the components tree.
-   */
-  protected final function renderView ()
-  {
-    return $this->engine->render ($this->page);
-  }
-
-  /**
-   * Generates a response to a GET request when viewProcessing = false.
-   */
-  protected function respond ()
-  {
-    //override if required
-  }
-
-  protected function saveData ($data = null)
-  {
-    if (!isset($data))
-      $data = $this->dataItem;
-    if (isset($data) && $data->isModified ())
-      $this->action_submit ();
-  }
-
-  protected final function setRedirection ($redirectArgs = null, $redirectURI = null)
-  {
-    if (isset($redirectURI)) {
-      if (isset($redirectArgs))
-        $this->redirectURI = $redirectURI . '?' . $redirectArgs;
-      else $this->redirectURI = $redirectURI;
+    if (isset($this->router)) {
+      if (isset($this->activeRoute->view)) {
+        return $this->view->loadFromFile ($this->activeRoute->view);
+      }
     }
-    else if (isset($redirectArgs))
-      $this->redirectURI = $this->getPageURI () . '?' . $redirectArgs;
-    else $this->redirectURI = $_SERVER['REQUEST_URI'];
+    return null;
   }
 
   protected final function setStatus ($type, $msg)
@@ -849,40 +664,19 @@ class Controller
     throw new FlashMessageException ($msg, $type);
   }
 
-  protected final function setStatusFromException (FlashMessageException $e)
-  {
-    $_SESSION['formStatus'] = $e->getCode ();
-    if ($e->getCode () != FlashType::FATAL)
-      $_SESSION['formMessage'] = $e->getMessage ();
-    else {
-      $msg = "{$e->getMessage()}\n\nOn {$e->getFile()}, line {$e->getLine()}\nStack trace:\n";
-      $msg .= preg_replace ('/#\d/', '<li>', $e->getTraceAsString ());
-      /*
-            foreach($e->getTrace() as $trace)
-            {
-                    $msg.='<li>'.$trace['function'].'()';//.implode(',',$trace['args']).')';
-                    $msg.="<br>at {$trace['file']}, line {$trace['line']}.</li>";
-            }*/
-      $_SESSION['formMessage'] = $msg;
-    }
-  }
-
   /**
    * Sets up a set of standard data sources which are available for databinding on all the application's views.
    * When overriden the parent class method should always be called.
    */
-  protected function setupBaseModel ()
+  protected function setupBaseViewModel ()
   {
-    global $application, $session;
-    $_SESSION['isValid'] = isset($session) && $session->isValid;
-    $this->setDataSource ('application', new DataRecord($application));
-    $this->setDataSource ('session', new DataRecord($_SESSION));
-    if (isset($session)) {
-      $this->setDataSource ('user', new DataRecord ($session->user));
-      $this->setDataSource ('sessionInfo', new DataRecord($session));
+    $this->setDataSource ('application', new DataRecord($this->app));
+    if (isset($this->session)) {
+      $this->setDataSource ('user', new DataRecord ($this->session->user ()));
+      $this->setDataSource ('sessionInfo', new DataRecord($this->session));
     }
     $this->setDataSource ('controller', new DataRecord($this));
-    $this->setDataSource ('request', new DataRecord($_REQUEST));
+    $this->setDataSource ('request', new DataRecord($this->request->getQueryParams ()));
     if (isset($this->activeRoute)) {
       $this->setDataSource ('sitePage', new DataRecord($this->activeRoute));
       $this->setDataSource ('config', new DataRecord($this->activeRoute->config));
@@ -893,69 +687,15 @@ class Controller
     $this->setDataSource ("URIParams", new DataRecord($this->URIParams));
   }
 
-  protected function setupController ()
-  {
-    date_default_timezone_set ('Europe/Lisbon');
-  }
-
   /**
    * Sets up a page specific data model for use on the processRequest() phase and/or on the processView() phase.
    *
    * Override this if you want to manually specify the model.
-   * - The model is saved on `$this->dataItem`.
-   * - Do not try to modify the default data source here, as it will be overridden with the value of `$this->dataItem`
-   * later on.
+   * The model is saved on `$this->model` and on the 'default' data source.
    */
   protected function setupModel ()
   {
-    global $model, $lastModel;
-    $mod   = $this->model ();
-    $model = $lastModel;
-    if (isset($mod)) {
-      if ($mod instanceof DataObject) {
-        $this->dataItem = $mod;
-        $this->applyPresets ();
-        if (isset($this->activeRoute) && $this->activeRoute->autoloadModel)
-          $this->standardDataInit ($mod);
-        return;
-      }
-      $this->modelData = $mod;
-      return;
-    }
-
-    if (isset($this->activeRoute)) {
-      $thisModel = $this->activeRoute->getModel ();
-
-      if (!empty($thisModel)) {
-        list ($this->dataClass, $this->modelMethod) = parseMethodRef ($thisModel);
-        $this->dataItem = new $this->dataClass;
-        if (!isset($this->dataItem))
-          throw new ConfigException("<p><b>Model class not found.</b>
-  <li>Class:         <b>$this->dataClass</b>
-  <li>Active module: <b>{$this->activeRoute->module}</b>
-");
-        $this->applyPresets ();
-        if ($this->activeRoute->autoloadModel)
-          $this->standardDataInit ($this->dataItem);
-        return;
-      }
-    }
-
-    if (isset($this->model))
-      list ($this->dataClass, $this->modelMethod) = parseMethodRef ($this->model);
-
-    if (isset($this->dataClass)) {
-      if (!class_exists ($this->dataClass))
-        throw new ConfigException ("Model not found: '<b>$this->dataClass</b>'<p>For controller: <b>" .
-                                   get_class ($this) . '</b>');
-      $this->dataItem = new $this->dataClass;
-    }
-
-    if (isset($this->dataItem)) {
-      $this->applyPresets ();
-      if ($this->autoloadModel)
-        $this->standardDataInit ($this->dataItem);
-    }
+    $this->dataSources['default'] = $this->model = $this->model ();
   }
 
   /**

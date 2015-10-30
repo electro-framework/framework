@@ -132,7 +132,7 @@ trait DataBindingTrait
   protected function evalBindingExp ($matches, $allowFullSource = false)
   {
     if (empty($matches))
-      throw new \InvalidArgumentException();
+      throw new \InvalidArgumentException;
     list($full, $dataSource, $dataField) = $matches;
     $dataSource = trim ($dataSource);
     $dataField  = trim ($dataField);
@@ -165,11 +165,7 @@ trait DataBindingTrait
     }
     if (is_null ($src))
       return null;
-    if (!method_exists ($src, 'getIterator'))
-      throw new DataBindingException($this,
-        'Data source ' . (empty($dataSource) ? '<i>default</i>' : "<b>$dataSource</b>") .
-        ' is not a valid DataSource object.');
-    $it = $src->getIterator ();
+    $it = iterator ($src);
     /** @var \Iterator $it */
     if (!$it->valid ())
       return null;

@@ -37,7 +37,6 @@ class Page extends Component
    */
   public $inlineCssStyles = [];
 
-  public $statusMessage    = '';
   public $autoHTML         = true;
   public $doctype          = '<!DOCTYPE HTML>';
   public $charset          = 'UTF-8';
@@ -93,32 +92,6 @@ class Page extends Component
     $this->browserIsSafari = strpos ($b, 'Safari') !== false && strpos ($b, 'Chrome') === false;
     $this->browserIsChrome = strpos ($b, 'Chrome') !== false;
     $this->clientIsWindows = strpos ($b, 'Windows') !== false;
-  }
-
-  public function error ($msg)
-  {
-    $this->statusMessage =
-      '<div id="status" class="alert alert-danger" role="alert">' . $msg . '</div>';
-  }
-
-  public function warning ($msg)
-  {
-    $this->statusMessage =
-      '<div id="status" class="alert alert-warning" role="alert">' . $msg . '</div>';
-  }
-
-  public function info ($msg)
-  {
-    $this->statusMessage =
-      '<div id="status" class="alert alert-info" role="alert">' . $msg . '</div>';
-  }
-
-  public function fatal ($msg)
-  {
-    @ob_clean ();
-    echo '<html><head><meta http-equiv="Content-Type" content="text/html;charset=utf-8"></head><body><pre>' . $msg .
-         '</pre></body></html>';
-    exit;
   }
 
   public function addStylesheet ($uri, $prepend = false)

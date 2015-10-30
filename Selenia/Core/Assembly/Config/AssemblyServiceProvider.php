@@ -8,7 +8,7 @@ use Selenia\Core\Assembly\Services\ModulesRegistry;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
 
-class AssemblyServices implements ServiceProviderInterface
+class AssemblyServiceProvider implements ServiceProviderInterface
 {
   function register (InjectorInterface $injector)
   {

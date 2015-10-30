@@ -59,11 +59,16 @@ class WebConsoleMiddleware implements MiddlewareInterface
     WebConsole::registerPanel ('database', new ConsolePanel ('Database', 'fa fa-database'));
 //    WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
 
-    $response = $next ();
-
     // Redirect logger to Inspector panel
     if (isset($this->logger) && $this->logger instanceof Logger)
       $this->logger->pushHandler (new WebConsoleLogHandler(WebConsole::log ()));
+
+    /** @var ResponseInterface $response */
+    $response = $next ();
+
+    $contentType = $response->getHeaderLine('Content-Type');
+    if ($contentType && $contentType != 'text/html')
+      return $response;
 
     $response->getBody ()->rewind ();
 
@@ -95,8 +100,7 @@ class WebConsoleMiddleware implements MiddlewareInterface
 //      WebConsole::DOM ()->withFilter($filter, $controller->page);
 
       // View Models panel
-      if (isset($router->controller->context))
-        WebConsole::vm ()->log ($router->controller->context->dataSources);
+      WebConsole::vm ()->log ($router->controller->dataSources);
     }
 
     return WebConsole::outputContentViaResponse ($request, $response, true);

@@ -75,7 +75,7 @@ class FileServerMiddleware implements MiddlewareInterface
       }
       if (!file_exists ($path))
         return $this->responseFactory->make (404, "Not found: $path", 'text/plain');
-      return $response->withBody ($this->responseFactory->makeBody ('', fopen ($path, 'rb')));
+      return $response->withBody ($this->responseFactory->makeBody ('', fopen ($path, 'rwb')));
     }
 
     return $next();

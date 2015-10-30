@@ -8,6 +8,8 @@ use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\ModuleInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
 use Selenia\Matisse\PipeHandler;
+use Selenia\ViewEngine\Engines\MatisseEngine;
+use Selenia\ViewEngine\View;
 
 class ViewEngineModule implements ServiceProviderInterface, ModuleInterface
 {
@@ -28,8 +30,12 @@ class ViewEngineModule implements ServiceProviderInterface, ModuleInterface
 
   function register (InjectorInterface $injector)
   {
-    $injector->share (PipeHandler::ref);
-//    $injector->share (new MatisseEngine);
+    $injector->share (new PipeHandler);
+//    $pipeHandler = $injector->make(PipeHandler::ref);
+    $injector->delegate ('Selenia\Interfaces\ViewInterface', function (View $view) {
+      $view->register (MatisseEngine::ref, '/\.html$/');
+      return $view;
+    });
   }
 
 }
