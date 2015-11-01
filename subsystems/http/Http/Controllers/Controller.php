@@ -25,6 +25,7 @@ use Selenia\Matisse\DataRecord;
 use Selenia\Matisse\DataSet;
 use Selenia\Matisse\DataSource;
 use Selenia\Matisse\Exceptions\DataBindingException;
+use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\PageRoute;
 use Selenia\Routing\Router;
 use Selenia\ViewEngine\Engines\MatisseEngine;
@@ -44,6 +45,10 @@ class Controller
    * @var PageRoute
    */
   public $activeRoute;
+  /**
+   * @var
+   */
+  public $app;
   /**
    * The controller's data sources (view model)
    * The 'default' data source corresponds to the **model**.
@@ -72,10 +77,18 @@ class Controller
    */
   public $pageNumber = 1;
   /**
+   * @var ServerRequestInterface
+   */
+  public $request;
+  /**
    * The loader which has loaded this controller.
    * @var Router
    */
   public $router;
+  /**
+   * @var SessionInterface
+   */
+  public $session;
   /**
    * An HTML fragment to display a status message or an empty string if no status message exists.
    * @var string
@@ -91,10 +104,6 @@ class Controller
    * @var string
    */
   protected $URI_noPage;
-  /**
-   * @var
-   */
-  protected $app;
   /**
    * Specifies the URL of the index page, to where the browser should naviagate upon the
    * successful insertion / update of records.
@@ -118,10 +127,6 @@ class Controller
    */
   protected $renderOnPOST = false;
   /**
-   * @var ServerRequestInterface
-   */
-  protected $request;
-  /**
    * @var ResponseInterface
    */
   protected $response;
@@ -129,10 +134,6 @@ class Controller
    * @var ResponseFactoryInterface
    */
   protected $responseFactory;
-  /**
-   * @var SessionInterface
-   */
-  protected $session;
   /**
    * @var string
    */
@@ -143,13 +144,14 @@ class Controller
   private $injector;
 
   function __construct (InjectorInterface $injector, Application $app, ResponseFactoryInterface $responseFactory,
-                        Redirection $redirection, SessionInterface $session)
+                        Redirection $redirection, SessionInterface $session, PipeHandler $pipeHandler)
   {
     $this->injector        = $injector;
     $this->app             = $app;
     $this->responseFactory = $responseFactory;
     $this->redirection     = $redirection;
     $this->session         = $session;
+    $pipeHandler->registerFallbackHandler ($this);
 
     // Inject extra dependencies into the subclass' inject method, if it exists.
 
@@ -194,9 +196,7 @@ class Controller
       if (!$this->renderOnPOST)
         return $this->redirection->refresh ();
     }
-    $vm = $this->viewModel ();
-    if ($vm)
-      array_concat ($this->dataSources, $vm);
+    $this->viewModel ();
     $response = $this->processView ();
     $this->finalize ();
     return $response;
@@ -245,7 +245,7 @@ class Controller
   }
 
   /**
-   * Respondes to the standard 'submit' controller action.
+   * Responds to the standard 'submit' controller action.
    * The default procedure is to either call insert() or update().
    * Override to implement non-standard behaviour.
    * @param null $param
@@ -263,17 +263,6 @@ class Controller
     }
     else throw new FlashMessageException('Can\'t automatically insert/update object of type ' . gettype ($data),
       FlashType::ERROR);
-  }
-
-  function beginJSONResponse ()
-  {
-    header ('Content-Type: application/json');
-  }
-
-  function beginXMLResponse ()
-  {
-    header ('Content-Type: text/xml');
-    echo '<?xml version="1.0" encoding="utf-8"?>';
   }
 
   function getRowOffset ()
@@ -375,7 +364,7 @@ class Controller
       $this->page->addScript ("{$this->app->frameworkURI}/js/engine.js");
       if (isset($this->flashMessage))
         $this->displayStatus ($this->flashMessage['type'], $this->flashMessage['message']);
-      $this->page->modelDataSource =& getRefAt ($this->dataSources, 'default');
+      $this->page->contextualModel = $this;
     }
   }
 
@@ -450,7 +439,8 @@ class Controller
   /**
    * Override to do something after the page has been rendered.
    */
-  protected function finalize () {
+  protected function finalize ()
+  {
     // no op
   }
 
@@ -556,33 +546,6 @@ class Controller
   }
 
   /**
-   * Performs all processing related to the view generation.
-   * @return ResponseInterface
-   * @throws FileNotFoundException
-   */
-  protected function processView ()
-  {
-    $this->setupBaseViewModel ();
-    // Normal page rendering (not a login form).
-
-    $this->view = $this->injector->make ('Selenia\Interfaces\ViewInterface');
-    ob_start ();
-    $view    = $this->render ();
-    $content = ob_get_clean ();
-    if (!$view) {
-      /** @var ViewInterface $view */
-      $view = $this->view
-        ->setEngine ($this->viewEngineClass)
-        ->loadFromString ($content);
-    }
-    $this->setupView ($view);
-    /** @var ViewInterface $view */
-    $output = $view->render ($this->dataSources);
-    $this->response->getBody ()->write ($output);
-    return $this->response;
-  }
-
-  /**
    * Allows subclasses to generate the view's markup dinamically.
    * If not overriden, the default behaviour is to load the view from an external file, if one is defined on the active
    * route. If not, no output is generated.
@@ -604,29 +567,6 @@ class Controller
   }
 
   /**
-   * Sets up a set of standard data sources which are available for databinding on all the application's views.
-   * When overriden the parent class method should always be called.
-   */
-  protected function setupBaseViewModel ()
-  {
-    $this->setViewModel ('application', $this->app);
-    if (isset($this->session)) {
-      $this->setViewModel ('user', $this->session->user ());
-      $this->setViewModel ('sessionInfo', $this->session);
-    }
-    $this->setViewModel ('controller', $this);
-    $this->setViewModel ('request', $this->request->getQueryParams ());
-    if (isset($this->activeRoute)) {
-      $this->setViewModel ('sitePage', $this->activeRoute);
-      $this->setViewModel ('config', $this->activeRoute->config);
-    }
-    if (isset($this->router))
-      $this->setViewModel ('module', $this->router->moduleInfo);
-    $this->setViewModel ('languages', isset($this->langInfo) ? array_values ($this->langInfo) : null);
-    $this->setViewModel ("URIParams", $this->URIParams);
-  }
-
-  /**
    * Sets up a page specific data model for use on the processRequest() phase and/or on the processView() phase.
    *
    * Override this if you want to manually specify the model.
@@ -634,7 +574,7 @@ class Controller
    */
   protected function setupModel ()
   {
-    $this->dataSources['default'] = $this->model = $this->model ();
+    $this->model = $this->model ();
   }
 
   /**
@@ -675,6 +615,30 @@ class Controller
       $this->interceptFormData ($data);
     }
     return $this->doFormAction ($data);
+  }
+
+  /**
+   * Performs all processing related to the view generation.
+   * @return ResponseInterface
+   * @throws FileNotFoundException
+   */
+  private function processView ()
+  {
+    $this->view = $this->injector->make ('Selenia\Interfaces\ViewInterface');
+    ob_start ();
+    $view    = $this->render ();
+    $content = ob_get_clean ();
+    if (!$view) {
+      /** @var ViewInterface $view */
+      $view = $this->view
+        ->setEngine ($this->viewEngineClass)
+        ->loadFromString ($content);
+    }
+    $this->setupView ($view);
+    /** @var ViewInterface $view */
+    $output = $view->render ($this);
+    $this->response->getBody ()->write ($output);
+    return $this->response;
   }
 
 }

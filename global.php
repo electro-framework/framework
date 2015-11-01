@@ -1,18 +1,12 @@
 <?php
 use PhpKit\WebConsole\ConsolePanel;
 use PhpKit\WebConsole\WebConsole;
-use Selenia\Core\Assembly\Services\ModuleServices;
 use Selenia\ForeignKey;
 use Selenia\Routing\DataSourceInfo;
 use Selenia\Routing\PageRoute;
 use Selenia\Routing\Route;
 use Selenia\Routing\RouteGroup;
 use Selenia\Routing\SubPageRoute;
-
-function ModuleOptions ($path, array $options = null, callable $initializer = null)
-{
-  return new ModuleServices($path, $options, $initializer);
-}
 
 function RouteGroup ($init)
 {
@@ -88,4 +82,3 @@ function _log ()
   $args = array_merge (['<#log>'], func_get_args ());
   return call_user_func_array ([WebConsole::$class, 'log'], $args)->showCallLocation ()->log ('</#log>');
 }
-

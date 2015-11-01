@@ -66,7 +66,7 @@ class WebConsoleMiddleware implements MiddlewareInterface
     /** @var ResponseInterface $response */
     $response = $next ();
 
-    $contentType = $response->getHeaderLine('Content-Type');
+    $contentType = $response->getHeaderLine ('Content-Type');
     if ($contentType && $contentType != 'text/html')
       return $response;
 
@@ -100,7 +100,7 @@ class WebConsoleMiddleware implements MiddlewareInterface
 //      WebConsole::DOM ()->withFilter($filter, $controller->page);
 
       // View Models panel
-      WebConsole::vm ()->log ($router->controller->dataSources);
+      WebConsole::vm ()->log (get_object_vars ($router->controller));
     }
 
     return WebConsole::outputContentViaResponse ($request, $response, true);

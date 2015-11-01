@@ -9,7 +9,7 @@ class ResponseFactory implements ResponseFactoryInterface
 {
   const ref = __CLASS__;
 
-  function make ($status = 200, $content = '', $contentType = 'text/html', array $headers = [])
+  function make ($status = 200, $content = '', $contentType = null, array $headers = [])
   {
     if ($contentType)
       $headers['Content-Type'] = $contentType;
@@ -24,6 +24,16 @@ class ResponseFactory implements ResponseFactoryInterface
     $s = new Stream($stream, 'wb+');
     if ($content) $s->write ($content);
     return $s;
+  }
+
+  function makeHtmlResponse ($content = '')
+  {
+    return $this->make (200, $content, 'text/html');
+  }
+
+  function makeJsonResponse ($data)
+  {
+    return $this->make (200, json_encode ($data), 'application/json');
   }
 
   function makeStream ($stream = 'php://memory', $status = 200, array $headers = [])

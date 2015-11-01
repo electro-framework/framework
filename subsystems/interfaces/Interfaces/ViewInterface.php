@@ -42,10 +42,10 @@ interface ViewInterface
 
   /**
    * Renders the previously compiled template.
-   * @param array $data The view model; optional data for use by databinding expressions on the template.
+   * @param array|object $data The view model; optional data for use by databinding expressions on the template.
    * @return string The generated output (ex: HTML).
    */
-  function render (array $data = []);
+  function render ($data = null);
 
   /**
    * Instantiates the specified engine and sets it as the active engine for the view.

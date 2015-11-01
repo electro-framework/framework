@@ -53,9 +53,9 @@ class Repeat extends Component implements IAttributes
   protected function render ()
   {
     $count = $this->attrs ()->get ('count', -1);
-    if (!is_null ($this->modelDataSource = $this->attrs ()->get ('for'))) {
+    if (!is_null ($this->contextualModel = $this->attrs ()->get ('for'))) {
       $first = true;
-      foreach ($this->modelDataSource as $v) {
+      foreach ($this->contextualModel as $v) {
         if ($first) {
           $first = false;
           $this->renderParameter ('header');

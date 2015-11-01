@@ -54,7 +54,7 @@ class MatisseEngine implements ViewEngineInterface
       function ($class) { return $this->app->injector->make ($class); });
     $ctx->templatesExt        = '.html';
     $ctx->injectorFn          = function ($name) {
-      return $this->injector->make (ucfirst ($name));
+      return $this->injector->make ($name);
     };
 
     // Create a compiled template.
@@ -63,7 +63,7 @@ class MatisseEngine implements ViewEngineInterface
     return $this->matisse->parse ($src, $ctx, $page);
   }
 
-  function render ($compiled, array $data = [])
+  function render ($compiled, $data = null)
   {
     /** @var Page $compiled */
     $compiled->context->viewModel = $data;

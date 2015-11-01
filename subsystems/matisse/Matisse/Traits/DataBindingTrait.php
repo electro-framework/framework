@@ -15,7 +15,6 @@ use Selenia\Matisse\MatisseEngine;
  */
 trait DataBindingTrait
 {
-  static private $MODEL_DATASOURCE_NAME = 'model';
   /**
    * Finds binding expressions and extracts datasource and field info.
    * > Note: the u modifier allows unicode white space to be properly matched.
@@ -23,7 +22,7 @@ trait DataBindingTrait
   static private $PARSE_PARAM_BINDING_EXP = '#
     \{\{\s*
     (?:
-      % ([\w\-]+) \.?
+      % ([\w\\\]+) \.?
     )?
     (
       (?:
@@ -44,7 +43,7 @@ trait DataBindingTrait
    *
    * @var mixed
    */
-  public $modelDataSource;
+  public $contextualModel;
   /**
    * Set by Repeater components for supporting pagination.
    * @var int
@@ -188,12 +187,13 @@ trait DataBindingTrait
     // Virtual fields (#xxx)
 
     if ($expression[0] == '#') {
-      if (is_array ($src)) {
-        $v = current ($src);
-        $k = key ($src);
+      $model = $this->getContextualModel ();
+      if (is_array ($model)) {
+        $v = current ($model);
+        $k = key ($model);
       }
-      else if ($src instanceof \Traversable) {
-        $it = iterator ($src);
+      else if ($model instanceof \Traversable) {
+        $it = iterator ($model);
         $v  = $it->current ();
         $k  = $it->key ();
       }
@@ -209,7 +209,8 @@ trait DataBindingTrait
         case '#alt':
           $v = $k % 2;
           break;
-        case '#self': // $v = $v
+        case '#self':
+          // $v = $v
           break;
         default:
           throw new DataBindingException($this,
@@ -239,13 +240,11 @@ trait DataBindingTrait
         $args = explode ('.', $expression);
         $exp  = '$src';
         foreach ($args as $arg)
-          $exp = "getField($exp,'$arg')";
+          $exp = "_g($exp,'$arg')";
         if (!PhpCode::validateExpression ($exp))
           throw new DataBindingException($this, "Invalid expression <kbd>$expression</kbd>.");
         $compiled = MatisseEngine::$expressions[$expression] = PhpCode::compile ($exp, '$src');
       }
-      else _log ("CACHE HIT $injectable.$expression");
-
       $v = $compiled ($src);
     }
 
@@ -259,7 +258,6 @@ trait DataBindingTrait
         throw new ComponentException ($this, "Pipe <b>$name</b> was not found.");
       }
     }
-
     return $v;
   }
 
@@ -285,8 +283,8 @@ trait DataBindingTrait
    */
   protected function getContextualModel ()
   {
-    if (isset($this->modelDataSource))
-      return $this->modelDataSource;
+    if (isset($this->contextualModel))
+      return $this->contextualModel;
     /** @var static $parent */
     $parent = $this->parent;
     return isset($parent) ? $parent->getContextualModel () : null;

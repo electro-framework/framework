@@ -11,10 +11,10 @@ interface ViewEngineInterface
   function compile ($src);
 
   /**
-   * @param mixed $compiled The compiled template.
-   * @param array $data The view model; optional data for use by databinding expressions on the template.
+   * @param mixed        $compiled The compiled template.
+   * @param array|object $data     The view model; optional data for use by databinding expressions on the template.
    * @return string The generated output (ex: HTML).
    */
-  function render ($compiled, array $data = []);
+  function render ($compiled, $data = null);
 
 }

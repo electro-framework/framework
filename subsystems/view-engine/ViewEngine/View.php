@@ -74,7 +74,7 @@ class View implements ViewInterface
     return $this;
   }
 
-  function render (array $data = [])
+  function render ($data = null)
   {
     return $this->engine->render ($this->compiled, $data);
   }
