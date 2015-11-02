@@ -227,9 +227,9 @@ trait DataBindingTrait
       }
 
       // Context-relative expression:
-      if ($expression[0] == '.') {
+      if ($expression[0] == '*') {
         $src        = $this->getContextualModel ();
-        $expression = substr ($expression, 1);
+        $expression = substr ($expression, 2);
       }
 
       // Call a previously compiled expression or compile one now, cache it and call it.

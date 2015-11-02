@@ -6,14 +6,20 @@ namespace Selenia;
  */
 class DefaultPipes
 {
+  private $app;
+
+  function __construct (Application $app)
+  {
+    $this->app = $app;
+  }
+
   /**
    * @param string $v
    * @return string
    */
-  function fileURL ($v)
+  function currency ($v)
   {
-    global $application;
-    return $application->getFileDownloadURI ($v);
+    return formatMoney ($v) . ' €';
   }
 
   /**
@@ -29,9 +35,27 @@ class DefaultPipes
    * @param string $v
    * @return string
    */
-  function currency ($v)
+  function fileURL ($v)
   {
-    return formatMoney ($v) . ' €';
+    return $this->app->getFileDownloadURI ($v);
+  }
+
+  /**
+   * @param mixed $v
+   * @return string
+   */
+  function json ($v)
+  {
+    return json_encode ($v, JSON_PRETTY_PRINT);
+  }
+
+  /**
+   * @param string $v
+   * @return string
+   */
+  function timePart ($v)
+  {
+    return explode (' ', $v) [1];
   }
 
 }

@@ -15,7 +15,7 @@ class ViewEngineModule implements ServiceProviderInterface, ModuleInterface
 {
   function boot (Application $app = null, PipeHandler $pipeHandler = null)
   {
-    $pipeHandler->registerPipes (new DefaultPipes);
+    $pipeHandler->registerPipes (new DefaultPipes ($app));
     $app->condenseLiterals = !$app->debugMode;
     $app->compressOutput   = !$app->debugMode;
   }

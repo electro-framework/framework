@@ -22,8 +22,8 @@ class ComponentException extends MatisseException
           ?
           "Error on <b>$component->className</b> component <b>$id</b>"
           :
-          "Error on a <b>$component->className</b> component",
-        'Component error');
+          "Error on a <b>$component->className</b> component"
+      );
     }
   }
 
