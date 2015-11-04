@@ -59,7 +59,7 @@ class ComponentInspector
                   break;
                 case AttributeType::TEXT:
                   echo "\"<span style='color:#888;white-space: pre-wrap'>" .
-                       str_replace ("\n", '&#8626;', htmlspecialchars ($v)) .
+                       str_replace ("\n", '&#8626;', htmlspecialchars (strval ($v))) .
                        '</span>"';
                   break;
                 default:

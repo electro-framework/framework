@@ -59,7 +59,9 @@ trait FluentApi
   {
     if (substr($name, 0, 3) == 'get' && $name[3] >= 'A' && $name[3] <= 'Z') {
       $name = lcfirst (substr($name, 3));
-      return $this->$name;
+      if (property_exists($this, $name))
+        return $this->$name;
+      throw new \RuntimeException ("Property '<kbd>$name</kbd>' does not exist on type <kbd class=type>".get_class($this)."</kbd>");
     }
     if (property_exists ($this, $name)) {
       if (is_array ($this->$name))

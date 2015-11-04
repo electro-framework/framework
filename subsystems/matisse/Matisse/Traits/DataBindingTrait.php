@@ -2,6 +2,8 @@
 namespace Selenia\Matisse\Traits;
 
 use PhpCode;
+use Selenia\Matisse\Attributes\ComponentAttributes;
+use Selenia\Matisse\Context;
 use Selenia\Matisse\DataSource;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\DataBindingException;
@@ -12,24 +14,27 @@ use Selenia\Matisse\MatisseEngine;
  * Provides an API for handling data binding on a component's properties.
  *
  * It's applicable to the Component class.
+ *
+ * @property Context             $context  The rendering context.
+ * @property ComponentAttributes $attrsObj The component's attributes.
  */
 trait DataBindingTrait
 {
   /**
-   * Finds binding expressions and extracts datasource and field info.
+   * Finds binding expressions and extracts information from them.
    * > Note: the u modifier allows unicode white space to be properly matched.
    */
   static private $PARSE_PARAM_BINDING_EXP = '#
-    \{\{\s*
-    (?:
-      % ([\w\\\]+) \.?
-    )?
+    ( \{ (?: \{ | !! ))
+    \s*
     (
       (?:
-        [^{}]* | \{ [^{}]* \}
+        (?! \s*\} | \s*!! )
+        .
       )*
-    )?
-    \s*\}\}
+    )
+    \s*
+    ( \}\} | !!\} )
   #xu';
   /**
    * An array of attribute names and corresponding databinding expressions.
@@ -44,11 +49,6 @@ trait DataBindingTrait
    * @var mixed
    */
   public $contextualModel;
-  /**
-   * Set by Repeater components for supporting pagination.
-   * @var int
-   */
-  public $rowOffset = 0;
 
   static function isBindingExpression ($exp)
   {
@@ -71,6 +71,41 @@ trait DataBindingTrait
     if (!isset($this->bindings))
       $this->bindings = [];
     $this->bindings[$attrName] = $bindExp;
+  }
+
+  function getCascaded ($field)
+  {
+    if (isset($this->contextualModel)) {
+      $data = $this->contextualModel;
+      if (is_array ($data)) {
+        if (array_key_exists ($field, $data))
+          return $data[$field];
+      }
+      else if (is_object ($data)) {
+        if (property_exists ($data, $field))
+          return $data->$field;
+      }
+    }
+    /** @var static $parent */
+    $parent = $this->parent;
+    return isset($parent) ? $parent->getCascaded ($field) : null;
+  }
+
+  function getField ($field)
+  {
+    $data = $this->context->viewModel;
+    if (is_array ($data)) {
+      if (array_key_exists ($field, $data))
+        return $data[$field];
+      return $this->getCascaded ($field);
+    }
+    else if (is_object ($data)) {
+      if (property_exists ($data, $field))
+        return $data->$field;
+      return $this->getCascaded ($field);
+    }
+    else throw new DataBindingException ($this,
+      "Can't get property <kbd>$field</kbd> from a value of type <kbd>" . gettype ($data) . "</kbd>");
   }
 
   public final function isBound ($fieldName)
@@ -118,7 +153,7 @@ trait DataBindingTrait
         else {
           //simple expression
           preg_match (self::$PARSE_PARAM_BINDING_EXP, $bindExp, $matches);
-          $bindExp = $this->evalBindingExp ($matches, true);
+          $bindExp = $this->evalBindingExp ($matches);
           if (!self::isBindingExpression ($bindExp))
             return $bindExp;
         }
@@ -131,122 +166,41 @@ trait DataBindingTrait
     }
   }
 
-  protected function evalBindingExp ($matches, $allowFullSource = false)
+  protected function evalBindingExp ($matches)
   {
     if (empty($matches))
       throw new \InvalidArgumentException;
-    list($full, $injectable, $expression) = $matches;
-    $injectable = trim ($injectable);
-    $expression = trim ($expression);
-    $p          = strpos ($expression, '{');
-
-    // Recursive binding expression.
-
-    if ($p !== false && $p >= 0) {
-      $exp = preg_replace_callback (self::$PARSE_PARAM_BINDING_EXP, [$this, 'evalBindingExp'], $expression);
-      $z   = strpos ($exp, '.');
-      if ($z !== false) {
-        $injectable .= substr ($exp, 0, $z);
-        $expression = substr ($exp, $z + 1);
-
-        return "{{%$injectable.$expression}}";
-      }
-      else
-        return empty($injectable) ? '{{' . "$exp}}" : "{{%$injectable" . ($p == 0 ? '' : '.') . "$exp}}";
-    }
-
-    // No injectable was specified:
-    if (empty($injectable))
-      $src = $this->context->viewModel;
-
-    // Use injected value as view-model.
-    else {
-      $fn = $this->context->injectorFn;
-      $src = $fn ($injectable);
-    }
-
-    if ($expression == '') {
-      if ($allowFullSource)
-        return $src;
+    list($full, $openDelim, $expression, $closeDelim) = $matches;
+    if ($openDelim == '{{' && $closeDelim != '}}' || $openDelim == '{!!' && $closeDelim != '!!}')
       throw new DataBindingException($this,
-        "The full data source reference <b>$full</b> cannot be used on a composite databinding expression.");
-    }
+        "Invalid databinding expression: <kbd>$full</kbd><p>Closing delimiter does not match the open delimiter.");
 
-    // Ignore macro arguments.
-    if ($expression[0] == '@')
+    if ($expression == '')
       return null;
-
-    if (is_null ($src))
-      $src = [];
 
     // Parse pipes
 
     $pipes      = preg_split ('/\s*\|\s*/', $expression);
     $expression = array_shift ($pipes);
+    $v          = null;
+    $rawOutput  = $openDelim == '{!!';
 
-    // Virtual fields (#xxx)
+    // Call a previously compiled expression or compile one now, cache it and call it.
 
-    if ($expression[0] == '#') {
-      $model = $this->getContextualModel ();
-      if (is_array ($model)) {
-        $v = current ($model);
-        $k = key ($model);
-      }
-      else if ($model instanceof \Traversable) {
-        $it = iterator ($model);
-        $v  = $it->current ();
-        $k  = $it->key ();
-      }
-      else throw new DataBindingException($this,
-        "Can't use virtual field $expression on a non-iterable data source.");
-      switch ($expression) {
-        case '#key':
-          $v = $k;
-          break;
-        case '#ord':
-          $v = $k + 1 + $this->rowOffset;
-          break;
-        case '#alt':
-          $v = $k % 2;
-          break;
-        case '#self':
-          // $v = $v
-          break;
-        default:
-          throw new DataBindingException($this,
-            "Unsupported virtual field $expression.");
-      }
-    }
-
-    // Evaluate expression
-
-    else {
-      if ($src instanceof \Traversable) {
-        $it  = iterator ($src);
-        $src = $it->current ();
-      }
-
-      // Context-relative expression:
-      if ($expression[0] == '*') {
-        $src        = $this->getContextualModel ();
-        $expression = substr ($expression, 2);
-      }
-
-      // Call a previously compiled expression or compile one now, cache it and call it.
-
-      /** @var \Closure $compiled */
-      $compiled = get (MatisseEngine::$expressions, $expression);
-      if (!$compiled) {
-        $args = explode ('.', $expression);
-        $exp  = '$src';
-        foreach ($args as $arg)
+    /** @var \Closure $compiled */
+    $compiled = get (MatisseEngine::$expressions, $expression);
+    if (!$compiled) {
+      $args = explode ('.', $expression);
+      $exp  = '';
+      foreach ($args as $i => $arg)
+        if ($i)
           $exp = "_g($exp,'$arg')";
-        if (!PhpCode::validateExpression ($exp))
-          throw new DataBindingException($this, "Invalid expression <kbd>$expression</kbd>.");
-        $compiled = MatisseEngine::$expressions[$expression] = PhpCode::compile ($exp, '$src');
-      }
-      $v = $compiled ($src);
+        else $exp = "\$this->getField('$arg')";
+      if (!PhpCode::validateExpression ($exp))
+        throw new DataBindingException($this, "Invalid expression <kbd>$expression</kbd>.");
+      $compiled = MatisseEngine::$expressions[$expression] = PhpCode::compile ($exp);
     }
+    $v = $compiled->call ($this);
 
     // Apply pipes to expression result
 
@@ -258,7 +212,10 @@ trait DataBindingTrait
         throw new ComponentException ($this, "Pipe <b>$name</b> was not found.");
       }
     }
-    return $v;
+
+    // Return the computed value
+
+    return $rawOutput || !is_scalar ($v) ? $v : e ($v);
   }
 
   /**
@@ -288,6 +245,14 @@ trait DataBindingTrait
     /** @var static $parent */
     $parent = $this->parent;
     return isset($parent) ? $parent->getContextualModel () : null;
+  }
+
+  protected function parseIteratorExp ($exp, & $idxVar, & $itVar)
+  {
+    if (!preg_match ('/^(?:(\w+):)?(\w+)$/', $exp, $m))
+      throw new ComponentException($this,
+        "Invalid value for attribute <kbd>as</kbd>.<p>Expected syntax: <kbd>'var'</kbd> or <kbd>'index:var'</kbd>");
+    list (, $idxVar, $itVar) = $m;
   }
 
 }

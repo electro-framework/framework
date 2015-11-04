@@ -7,12 +7,15 @@ use Selenia\Matisse\IAttributes;
 
 class RepeaterAttributes extends ComponentAttributes
 {
+  public $as;
   public $glue;
   public $noData;
   public $for;
   public $header;
   public $footer;
   public $count;
+
+  protected function typeof_as () { return AttributeType::TEXT; }
 
   protected function typeof_header () { return AttributeType::SRC; }
 
@@ -52,10 +55,16 @@ class Repeat extends Component implements IAttributes
 
   protected function render ()
   {
-    $count = $this->attrs ()->get ('count', -1);
-    if (!is_null ($this->contextualModel = $this->attrs ()->get ('for'))) {
+    $attr = $this->attrs ();
+    $count = $attr->get ('count', -1);
+    $this->contextualModel = [];
+    $this->parseIteratorExp ($attr->as, $idxVar, $itVar);
+    if (!is_null ($for = $attr->get ('for'))) {
       $first = true;
-      foreach ($this->contextualModel as $v) {
+      foreach ($for as $i => $v) {
+        if ($idxVar)
+          $this->contextualModel[$idxVar] = $i;
+        $this->contextualModel[$itVar] = $v;
         if ($first) {
           $first = false;
           $this->renderParameter ('header');
@@ -69,6 +78,7 @@ class Repeat extends Component implements IAttributes
     }
     if ($count > 0) {
       for ($i = 0; $i < $count; ++$i) {
+        $this->contextualModel[$idxVar] = $this->contextualModel[$itVar] = $i;
         if ($i == 0)
           $this->renderParameter ('header');
         else $this->renderParameter ('glue');

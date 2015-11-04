@@ -6,13 +6,6 @@ use Selenia\Matisse\Exceptions\FileIOException;
 class Context
 {
   /**
-   * A function that can be called to retrieve an injectable (foreign model) by name.
-   * <p>It must define a single string parameter, which is the injectable name.
-   * <p>You may provide, for instance, a wrapper of a dependency injector or service locator.
-   * @var callable
-   */
-  public $injectorFn;
-  /**
    * The view-model data for the current rendering context.
    * @var array
    */

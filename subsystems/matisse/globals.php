@@ -50,13 +50,11 @@ function _g ($data, $key, $default = null)
     if (property_exists ($data, $key)) {
       if (isset($data->$key))
         return $data->$key;
-      if (!(new ReflectionProperty($data, $key))->isPublic ()) {
-        $m = 'get' . ucfirst ($key);
-        if (is_callable ([$data, $m]))
-          return $data->$m ();
-      }
       return $default;
     }
+    $m = 'get' . ucfirst ($key);
+    if (is_callable ([$data, $m]))
+      return $data->$m ();
     if (is_callable ([$data, $key]))
       return $data->$key ();
     return $default;
