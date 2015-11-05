@@ -609,7 +609,7 @@ class DataObject
    * @param array $data The request data.
    * @param array $allowedFields A list of field names to load.
    */
-  function loadFromHttpRequest (array $data, array $allowedFields = null)
+  function safeLoadFrom (array $data, array $allowedFields = null)
   {
     if (isset($allowedFields)) {
       foreach ($allowedFields as $name)

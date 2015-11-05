@@ -10,7 +10,7 @@ use Selenia\Exceptions\FlashType;
 class WebServiceController extends Controller
 {
   public $isWebService = true;
-  public $renderOnPOST = true;
+  public $renderOnAction = true;
   public $responseData = null;
 
   /**

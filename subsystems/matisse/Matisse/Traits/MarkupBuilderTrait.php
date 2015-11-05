@@ -32,7 +32,7 @@ trait MarkupBuilderTrait
 
   protected function addAttribute ($name, $value = '')
   {
-    echo isset($value) ? (strlen ($value) ? " $name=\"$value\"" : " $name") : '';
+    echo isset($value) && $value !== false ? (strlen ($value) && $value !== true ? " $name=\"$value\"" : " $name") : '';
   }
 
   protected function addAttribute2 ($name, $value1, $value2)

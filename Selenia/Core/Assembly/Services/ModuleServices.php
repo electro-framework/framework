@@ -113,7 +113,7 @@ class ModuleServices
   function registerAssets ($v)
   {
     if ($v)
-      array_concat ($this->app->assets, array_map (function ($path) {
+      array_mergeInto ($this->app->assets, array_map (function ($path) {
         return "$this->path/$path";
       }, $v));
     return $this;
@@ -125,7 +125,7 @@ class ModuleServices
    */
   function registerComponents (array $v)
   {
-    array_concat ($this->app->tags, $v);
+    array_mergeInto ($this->app->tags, $v);
     return $this;
   }
 
@@ -135,7 +135,7 @@ class ModuleServices
    */
   function registerPresets (array $v)
   {
-    array_concat ($this->app->presets, $v);
+    array_mergeInto ($this->app->presets, $v);
     return $this;
   }
 
@@ -145,7 +145,7 @@ class ModuleServices
    */
   function registerRoutes (array $v)
   {
-    array_concat ($this->app->routes, $v);
+    array_mergeInto ($this->app->routes, $v);
     return $this;
   }
 

@@ -284,10 +284,6 @@ class Application
    */
   public $presets = [];
   /**
-   * @var bool
-   */
-  public $requireLogin = false;
-  /**
    * @var string
    */
   public $rootPath;
@@ -430,7 +426,6 @@ class Application
    */
   function setup ($rootDir)
   {
-    $this->requireLogin  = false;
     $this->directory     = $rootDir;
     $this->baseDirectory = $rootDir;
     $this->rootPath      = $rootDir;

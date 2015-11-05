@@ -21,10 +21,6 @@ use Selenia\Interfaces\ResponseFactoryInterface;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Interfaces\ViewInterface;
 use Selenia\Matisse\Components\Page;
-use Selenia\Matisse\DataRecord;
-use Selenia\Matisse\DataSet;
-use Selenia\Matisse\DataSource;
-use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\PageRoute;
 use Selenia\Routing\Router;
@@ -64,7 +60,7 @@ class Controller
    */
   public $max = 1;
   /**
-   * @var Array|Object The page's data model.
+   * @var Array|Object|DataObject The page's data model.
    */
   public $model;
   /**
@@ -125,7 +121,7 @@ class Controller
    * If set to true, the view will be rendered on the POST request without a redirection taking place.
    * @var bool
    */
-  protected $renderOnPOST = false;
+  protected $renderOnAction = false;
   /**
    * @var ResponseInterface
    */
@@ -188,13 +184,24 @@ class Controller
     $this->URI_noPage = preg_replace ('#\?$#', '', $this->URI_noPage);
 
     $this->initialize (); //custom setup
-    $this->setupModel ();
-    if ($request->getMethod () == 'POST') {
-      $res = $this->processRequest ();
-      if ($res)
+
+    $this->model = $this->model ();
+    $model       =& $this->model;
+    $this->mergeIntoModel ($model, $this->URIParams);
+    switch ($this->request->getMethod ()) {
+      case 'GET':
+        $this->mergeIntoModel ($model, $this->session->getOldInput ());
+        break;
+      /** @noinspection PhpMissingBreakStatementInspection */
+      case 'POST':
+        if ($this->request->getHeaderLine ('Content-Type') == 'application/x-www-form-urlencoded')
+          $this->mergeIntoModel ($model, $this->request->getParsedBody ());
+      default:
+        $res = $this->doFormAction ();
+        if (!$res && !$this->renderOnAction)
+          $res = $this->autoRedirect ();
+        $this->finalize ();
         return $res;
-      if (!$this->renderOnPOST)
-        return $this->autoRedirect ();
     }
     $this->viewModel ();
     $response = $this->processView ();
@@ -226,7 +233,7 @@ class Controller
       $data->delete ();
       return $this->autoRedirect ();
     }
-    else throw new FlashMessageException('Can\'t automatically delete object of type ' . gettype ($data),
+    else throw new FlashMessageException(sprintf('Can\'t automatically delete object of type <kbd>%s</kbd>', gettype ($data)),
       FlashType::ERROR);
   }
 
@@ -240,7 +247,7 @@ class Controller
    */
   function action_refresh ($param = null)
   {
-    $this->renderOnPOST = true;
+    $this->renderOnAction = true;
     if ($param)
       $this->page->addInlineDeferredScript ("$('$param').focus()");
   }
@@ -292,61 +299,10 @@ class Controller
    */
   function loadRequested (DataObject $model, $param = 'id')
   {
-    $id = $this->param ($param);
+    $id = $this->uriParam ($param);
     if (!$id) return $model;
     $f = $model->find ($id);
     return $f ? $model : false;
-  }
-
-  /**
-   * Returns the URI parameter with the specified name.
-   * @param string $name The parameter name, as specified on the route.
-   * @return string
-   */
-  function param ($name)
-  {
-    return get ($this->URIParams, $name);
-  }
-
-  /**
-   * Defines a named data source for the view.
-   * @deprecated
-   * @see setModel()
-   * @param string     $name
-   * @param DataSource $data
-   * @param boolean    $isDefault
-   * @param boolean    $overwrite
-   * @throws DataBindingException
-   */
-  function setDataSource ($name, DataSource $data, $isDefault = false, $overwrite = true)
-  {
-    $name      = empty($name) ? 'default' : $name;
-    $isDefault = $isDefault || $name == 'default';
-    if ($isDefault) {
-      if (isset($this->dataSources['default']) && !$overwrite)
-        throw new DataBindingException(null,
-          "The default data source for the page has already been set.\n\nThe current default data source is:\n<pre>$name</pre>");
-    }
-    $this->dataSources[$name] = $data;
-  }
-
-  /**
-   * Assigns the specified data to a new (or existing) data source with the
-   * specified name.
-   * @param string $name The data source name.
-   * @param mixed  $data An array, object or <i>null</i>.
-   */
-  function setViewModel ($name, $data)
-  {
-    $this->dataSources[$name] = $data;
-    return;
-    if (!isset($data))
-      $this->dataSources[$name] = new DataSet ();
-    else if ($data instanceof DataSource)
-      $this->dataSources[$name] = $data;
-    else if ((is_array ($data) && isset($data[0])) || $data instanceof PDOStatement)
-      $this->dataSources[$name] = new DataSet($data);
-    else $this->dataSources[$name] = new DataRecord($data);
   }
 
   /**
@@ -367,6 +323,16 @@ class Controller
         $this->displayStatus ($this->flashMessage['type'], $this->flashMessage['message']);
       $this->page->contextualModel = $this;
     }
+  }
+
+  /**
+   * Returns the URI parameter with the specified name.
+   * @param string $name The parameter name, as specified on the route.
+   * @return string
+   */
+  function uriParam ($name)
+  {
+    return get ($this->URIParams, $name);
   }
 
   protected function autoRedirect ()
@@ -417,12 +383,11 @@ class Controller
 
   /**
    * Invokes the right controller method in response to the POST request's specified action.
-   * @param DataObject $data
    * @return ResponseInterface|null
    * @throws FlashMessageException
    * @throws FileException
    */
-  protected function doFormAction (DataObject $data = null)
+  protected function doFormAction ()
   {
     if (count ($_POST) == 0 && count ($_FILES) == 0)
       throw new FileException(FileException::FILE_TOO_BIG, ini_get ('upload_max_filesize'));
@@ -434,7 +399,7 @@ class Controller
       throw new FlashMessageException('Class <b>' . $class->getName () . "</b> can't handle action <b>$action</b>.",
         FlashType::ERROR);
     }
-    return $method->invoke ($this, $data, $param);
+    return $method->invoke ($this, $param);
   }
 
   /**
@@ -483,33 +448,42 @@ class Controller
   }
 
   /**
-   * Respondes to the standard 'submit' controller action when a primary key value is not present on the request.
-   * The default procedure is to create a new record on the database.
-   * Override to implement non-standard behaviour.
+   * Responds to the standard 'submit' controller action when a primary key value is not present on the request.
+   * The default procedure is to create a new record on the database if the model is an ORM model.
+   * Override to implement your own saving algorithm.
+   * @param $model
+   * @throws FatalException
    */
-  protected function insertData ()
+  protected function insertData ($model)
   {
-    $data = $this->model;
-    if ($data instanceof DataObject)
-      $data->insert ();
+    if ($model instanceof DataObject)
+      $model->insert ();
+    else throw new FatalException (sprintf ("Don't know how to save a model of type <kbd class=type>%s</kbd>.<p>You should override <kbd>insertData()</kbd>.",
+      is_object($model) ? get_class($model) : gettype($model)));
   }
 
   /**
-   * Should be overridden when submitted data should be preprocessed.
-   * @param DataObject $data
+   * @param array|object|DataObject $model
+   * @param array|null              $data If `null` nothihg happens.
+   * @throws FatalException
    */
-  protected function interceptFormData (DataObject $data)
+  protected function mergeIntoModel (& $model, array $data = null)
   {
-    if (isset($this->URIParams)) {
-      extendNonEmpty ($data, $this->URIParams);
-    }
+    if (is_null ($data) || is_null ($model)) return;
+    if ($model instanceof DataObject)
+      $model->safeLoadFrom ($data, $this->defineDataFields ());
+    else if (is_array ($model))
+      array_mergeExisting ($model, array_normalizeEmptyValues ($data));
+    else if (is_object ($model))
+      extendExisting ($model, array_normalizeEmptyValues ($data));
+    else throw new FatalException (sprintf ("Can't merge data into a model of type <kbd>11%s</kbd>", gettype ($model)));
   }
 
   /**
    * Override to return the main model for the controller / view.
    *
-   * > This model will be available on both GET and POST requests and it will also be set as the default data source
-   * for the view model.
+   * > This model will be available on all request methods (GET, POST, etc) and it will also be set as the 'model' view
+   * model.
    *
    * @return DataObject|PDOStatement|array
    */
@@ -535,18 +509,6 @@ class Controller
   }
 
   /**
-   * Implements page specific action processing, in response to a POST request.
-   * To implement standard behavior, override and make a call to $this->processForm($data),
-   * where $data is the data object to be processed.
-   * If you use the standard dataItem property, there is no need to override this method.
-   * @return null|ResponseInterface
-   */
-  protected function processRequest ()
-  {
-    return $this->processForm ($this->model);
-  }
-
-  /**
    * Allows subclasses to generate the view's markup dinamically.
    * If not overriden, the default behaviour is to load the view from an external file, if one is defined on the active
    * route. If not, no output is generated.
@@ -563,64 +525,33 @@ class Controller
   }
 
   /**
-   * Sets up a page specific data model for use on the processRequest() phase and/or on the processView() phase.
-   *
-   * Override this if you want to manually specify the model.
-   * The model is saved on `$this->model`.
-   */
-  protected function setupModel ()
-  {
-    $this->model = $this->model ();
-    if ($this->request->getMethod () == 'GET') {
-      $old = $this->session->getOldInput ();
-      if (isset($old))
-        $this->model->loadFromHttpRequest ($old, $this->defineDataFields ());
-    }
-  }
-
-  /**
    * Responds to the standard 'submit' controller action when a primary key value is present on the request.
-   * The default procedure is to save the object to the database.
-   * Override to implement non-standard behaviour.
-   * @throws Exception
+   * The default procedure is to create a new record on the database if the model is an ORM model.
+   * Override to implement your own saving algorithm.
+   * @param $model
+   * @throws FatalException
    */
-  protected function updateData ()
+  protected function updateData ($model)
   {
-    $data = $this->model;
-    if ($data instanceof DataObject)
-      $data->update ();
+    if ($model instanceof DataObject)
+      $model->update ();
+    else throw new FatalException (sprintf ("Don't know how to save a model of type <kbd class=type>%s</kbd>.<p>You should override <kbd>updateData()</kbd>.",
+      is_object($model) ? get_class($model) : gettype($model)));
   }
 
   /**
-   * Override to set addition models for the controller / view.
+   * Override to set data on the controller's view model.
    *
+   * Data will usually be set on the controller instance.
+   * <p>Ex:
+   * > `$this->data = ...`
+   *
+   * <p>Note:
    * > View models are available only on GET requests.
-   *
-   * @return array|void If you return an array, the keys will be set as datasource names.
    */
   protected function viewModel ()
   {
     //Override.
-    return null;
-  }
-
-  /**
-   * Responds to a POST request.
-   * @param DataObject $model
-   * @return null|ResponseInterface
-   */
-  private function processForm (DataObject $model = null)
-  {
-    if (isset($model)) {
-      $data = $this->request->getQueryParams ();
-      if ($this->request->getMethod () == 'POST' &&
-          $this->request->getHeaderLine ('Content-Type') == 'application/x-www-form-urlencoded'
-      )
-        array_concat ($data, $this->request->getParsedBody ());
-      $model->loadFromHttpRequest ($data, $this->defineDataFields ());
-      $this->interceptFormData ($model);
-    }
-    return $this->doFormAction ($model);
   }
 
   /**
