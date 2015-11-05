@@ -93,7 +93,7 @@ class Session implements SessionInterface
     $this->flash ('#flashInput', $value);
   }
 
-  function flashMessage ($message, $type = FlashType::WARNING, $title = '')
+  function flashMessage ($message, $type = FlashType::INFO, $title = '')
   {
     $this->flash ('#flashMessage', compact ('message', 'type', 'title'));
   }
@@ -122,8 +122,8 @@ class Session implements SessionInterface
   {
     $old = $this['#flashInput'];
     return isset($key)
-      ? ($old ?: $default)
-      : (isset($old[$key]) ? $old[$key] : $default);
+      ? (isset($old[$key]) ? $old[$key] : $default)
+      : ($old ?: $default);
   }
 
   function hasOldInput ($key = null)

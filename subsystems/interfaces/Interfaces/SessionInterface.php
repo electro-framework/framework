@@ -34,7 +34,7 @@ interface SessionInterface extends \ArrayAccess, AssignableInterface
    * @param int    $type
    * @param string $title
    */
-  function flashMessage ($message, $type = FlashType::WARNING, $title = '');
+  function flashMessage ($message, $type = FlashType::INFO, $title = '');
 
   /**
    * Retrieves the memorized flash message (if any).
@@ -62,7 +62,7 @@ interface SessionInterface extends \ArrayAccess, AssignableInterface
    * Get the requested item from the flashed input array, or get all input data.
    * @param string|null $key     If not specified, an array is returned, otherwise the value of the specified key is
    *                             returned.
-   * @param mixed       $default The value to be returned if the given does not exist, or if no input is available.
+   * @param mixed       $default The value to be returned if the given key does not exist, or if no input is available.
    * @return array|mixed
    */
   function getOldInput ($key = null, $default = null);

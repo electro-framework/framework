@@ -194,7 +194,7 @@ class Controller
       if ($res)
         return $res;
       if (!$this->renderOnPOST)
-        return $this->redirection->refresh ();
+        return $this->autoRedirect ();
     }
     $this->viewModel ();
     $response = $this->processView ();
@@ -215,10 +215,11 @@ class Controller
    */
   function action_delete ($param = null)
   {
-    if (!isset($data))
-      throw new FlashMessageException('Can\'t delete NULL DataObject.', FlashType::FATAL);
+    if (!isset($this->model))
+      throw new FlashMessageException('Can\'t delete NULL DataObject.', FlashType::ERROR);
+    $data = $this->model;
     if ($data instanceof DataObject) {
-      if (!isset($data->id) && isset($param)) {
+      if (!isset($this->model->id) && isset($param)) {
         $data->setPrimaryKeyValue ($param);
         $data->read ();
       }
@@ -400,15 +401,15 @@ class Controller
             exit;
           case FlashType::ERROR:
             $this->statusMessage =
-              '<div id="status" class="alert alert-danger" role="alert">' . $message . '</div>';
+              '<div id="status" class="alert alert-danger" role="alert"><div>' . $message . '</div></div>';
             break;
           case FlashType::WARNING:
             $this->statusMessage =
-              '<div id="status" class="alert alert-warning" role="alert">' . $message . '</div>';
+              '<div id="status" class="alert alert-warning" role="alert"><div>' . $message . '</div></div>';
             break;
           default:
             $this->statusMessage =
-              '<div id="status" class="alert alert-info" role="alert">' . $message . '</div>';
+              '<div id="status" class="alert alert-info" role="alert"><div>' . $message . '</div></div>';
         }
       else echo $message;
     }
@@ -494,7 +495,7 @@ class Controller
   }
 
   /**
-   * Should be overriden when submitted data should be preprocessed.
+   * Should be overridden when submitted data should be preprocessed.
    * @param DataObject $data
    */
   protected function interceptFormData (DataObject $data)
@@ -561,20 +562,20 @@ class Controller
     return null;
   }
 
-  protected final function setStatus ($type, $msg)
-  {
-    throw new FlashMessageException ($msg, $type);
-  }
-
   /**
    * Sets up a page specific data model for use on the processRequest() phase and/or on the processView() phase.
    *
    * Override this if you want to manually specify the model.
-   * The model is saved on `$this->model` and on the 'default' data source.
+   * The model is saved on `$this->model`.
    */
   protected function setupModel ()
   {
     $this->model = $this->model ();
+    if ($this->request->getMethod () == 'GET') {
+      $old = $this->session->getOldInput ();
+      if (isset($old))
+        $this->model->loadFromHttpRequest ($old, $this->defineDataFields ());
+    }
   }
 
   /**
@@ -605,16 +606,21 @@ class Controller
 
   /**
    * Responds to a POST request.
-   * @param DataObject $data
+   * @param DataObject $model
    * @return null|ResponseInterface
    */
-  private function processForm (DataObject $data = null)
+  private function processForm (DataObject $model = null)
   {
-    if (isset($data)) {
-      $data->loadFromHttpRequest ($this->defineDataFields ());
-      $this->interceptFormData ($data);
+    if (isset($model)) {
+      $data = $this->request->getQueryParams ();
+      if ($this->request->getMethod () == 'POST' &&
+          $this->request->getHeaderLine ('Content-Type') == 'application/x-www-form-urlencoded'
+      )
+        array_concat ($data, $this->request->getParsedBody ());
+      $model->loadFromHttpRequest ($data, $this->defineDataFields ());
+      $this->interceptFormData ($model);
     }
-    return $this->doFormAction ($data);
+    return $this->doFormAction ($model);
   }
 
   /**

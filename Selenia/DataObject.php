@@ -606,18 +606,19 @@ class DataObject
    * Nonexisting fields on the request will not be stored, except if they are boolean fields
    * (ex. from checkbox HTML fields).
    * The loaded values will be escaped to avoid SQL injection. HTML content is not modified.
+   * @param array $data The request data.
    * @param array $allowedFields A list of field names to load.
    */
-  function loadFromHttpRequest (array $allowedFields = null)
+  function loadFromHttpRequest (array $data, array $allowedFields = null)
   {
     if (isset($allowedFields)) {
       foreach ($allowedFields as $name)
-        if (array_key_exists ($name, $_REQUEST))
-          $this->setPropertyFromFieldValue ($name, $_REQUEST[$name]);
+        if (array_key_exists ($name, $data))
+          $this->setPropertyFromFieldValue ($name, $data[$name]);
     }
     else foreach ($this->fieldNames as $name)
-      if (array_key_exists ($name, $_REQUEST))
-        $this->setPropertyFromFieldValue ($name, $_REQUEST[$name]);
+      if (array_key_exists ($name, $data))
+        $this->setPropertyFromFieldValue ($name, $data[$name]);
       else if ($this->isBoolean ($name))
         $this->setPropertyFromFieldValue ($name, 0);
   }

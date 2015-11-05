@@ -66,6 +66,11 @@ class SessionMiddleware implements MiddlewareInterface
       return $next();
     } catch (FlashMessageException $flash) {
       $session->flashMessage ($flash->getMessage (), $flash->getCode (), $flash->title);
+
+      $post = $request->getParsedBody ();
+      if (is_array($post))
+        $session->flashInput ($post);
+
       return $this->redirection->refresh ();
     }
   }
