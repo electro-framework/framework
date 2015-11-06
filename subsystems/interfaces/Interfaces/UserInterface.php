@@ -8,27 +8,27 @@ interface UserInterface
    *
    * Users with this role have access to all application features plus application design/building features.
    */
-  const USER_ROLE_DEVELOPER = 'developer';
+  const USER_ROLE_DEVELOPER = 3;
   /**
    * The administration role.
    *
    * Uses with this role can access all application features.
    * This is the most common role for backend administration users (usually the developer's clients).
    */
-  const USER_ROLE_ADMIN = 'admin';
+  const USER_ROLE_ADMIN = 2;
   /**
    * A standard user role.
    *
    * Users with this role have access to a restricted set of features.
    * This is the common role for the end-users of your app (excluding your client).
    */
-  const USER_ROLE_STANDARD = 'standard';
+  const USER_ROLE_STANDARD = 1;
   /**
    * A guest (anonymous) user role.
    *
    * Users with this role are not authenticated and they have access only to a very restricted set of features.
    */
-  const USER_ROLE_GUEST = 'guest';
+  const USER_ROLE_GUEST = 0;
 
   /**
    * Finds the user record searching by the username (which may or may not be the primary key).
