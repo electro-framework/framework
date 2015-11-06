@@ -41,7 +41,7 @@ class LanguageMiddleware implements MiddlewareInterface
     $lang   = property ($this->session, 'lang', $this->app->defaultLang);
     $this->locale
       ->setAvailable ($this->app->languages)
-      ->setSelectionMode ($config->getSelectionMode())
+      ->setSelectionMode ($config->selectionMode())
       ->setLocale ($lang);
 
     return $next();

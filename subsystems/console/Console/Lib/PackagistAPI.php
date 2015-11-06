@@ -3,7 +3,7 @@ namespace Selenia\Console\Lib;
 use PhpCode;
 use RuntimeException;
 use Selenia\Exceptions\HttpException;
-use Selenia\Traits\FluentApi;
+use Selenia\Traits\FluentTrait;
 
 /**
  * An interface to packagist.org
@@ -16,7 +16,7 @@ use Selenia\Traits\FluentApi;
  */
 class PackagistAPI
 {
-  use FluentApi;
+  use FluentTrait;
 
   /** @var  string */
   protected $url;

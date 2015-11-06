@@ -3,6 +3,6 @@ namespace Selenia\Traits;
 
 trait ConfigurationTrait
 {
-  use FluentApi, AssignableTrait, InspectionTrait;
+  use FluentTrait, AssignableTrait, InspectionTrait;
 
 }

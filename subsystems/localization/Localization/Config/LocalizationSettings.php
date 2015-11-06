@@ -7,10 +7,8 @@ use Selenia\Traits\ConfigurationTrait;
 /**
  * Configuration settings for the Localization module.
  *
- * @method $this selectionMode (string $mode) How to automatically set the current locale.  Either 'session' or 'url'.
- * @method $this timeZone (string $name) If set, sets the currently active timezone. Ex: 'Europe/Lisbon'
- * @method string getSelectionMode ()
- * @method string|null getTimeZone ()
+ * @method $this|string selectionMode (string $mode = null) How to automatically set the current locale: `session|url`.
+ * @method $this|string timeZone (string $name = null) If set, sets the currently active timezone. Ex: 'Europe/Lisbon'
  */
 class LocalizationSettings implements AssignableInterface
 {
