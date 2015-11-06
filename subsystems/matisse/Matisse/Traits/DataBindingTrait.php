@@ -91,7 +91,28 @@ trait DataBindingTrait
     return isset($parent) ? $parent->getCascaded ($field) : null;
   }
 
-  function getField ($field)
+  public final function isBound ($fieldName)
+  {
+    return isset($this->bindings) && array_key_exists ($fieldName, $this->bindings);
+  }
+
+  public final function removeBinding ($attrName)
+  {
+    if (isset($this->bindings)) {
+      unset($this->bindings[$attrName]);
+      if (empty($this->bindings))
+        $this->bindings = null;
+    }
+  }
+
+  /**
+   * Gets a field from the current data-binding context.
+   * > This is reserverd for internal use by compiled data-binding expressions.
+   * @param string $field
+   * @return mixed
+   * @throws DataBindingException
+   */
+  protected function _f ($field)
   {
     $data = $this->context->viewModel;
     if (is_array ($data)) {
@@ -106,20 +127,6 @@ trait DataBindingTrait
     }
     else throw new DataBindingException ($this,
       "Can't get property <kbd>$field</kbd> from a value of type <kbd>" . gettype ($data) . "</kbd>");
-  }
-
-  public final function isBound ($fieldName)
-  {
-    return isset($this->bindings) && array_key_exists ($fieldName, $this->bindings);
-  }
-
-  public final function removeBinding ($attrName)
-  {
-    if (isset($this->bindings)) {
-      unset($this->bindings[$attrName]);
-      if (empty($this->bindings))
-        $this->bindings = null;
-    }
   }
 
   protected function bindToAttribute ($name, $value)
@@ -166,58 +173,6 @@ trait DataBindingTrait
     }
   }
 
-  protected function evalBindingExp ($matches)
-  {
-    if (empty($matches))
-      throw new \InvalidArgumentException;
-    list($full, $openDelim, $expression, $closeDelim) = $matches;
-    if ($openDelim == '{{' && $closeDelim != '}}' || $openDelim == '{!!' && $closeDelim != '!!}')
-      throw new DataBindingException($this,
-        "Invalid databinding expression: <kbd>$full</kbd><p>Closing delimiter does not match the open delimiter.");
-
-    if ($expression == '')
-      return null;
-
-    // Parse pipes
-
-    $pipes      = preg_split ('/\s*\|\s*/', $expression);
-    $expression = array_shift ($pipes);
-    $v          = null;
-    $rawOutput  = $openDelim == '{!!';
-
-    // Call a previously compiled expression or compile one now, cache it and call it.
-
-    /** @var \Closure $compiled */
-    $compiled = get (MatisseEngine::$expressions, $expression);
-    if (!$compiled) {
-      $args = explode ('.', $expression);
-      $exp  = '';
-      foreach ($args as $i => $arg)
-        if ($i)
-          $exp = "_g($exp,'$arg')";
-        else $exp = "\$this->getField('$arg')";
-      if (!PhpCode::validateExpression ($exp))
-        throw new DataBindingException($this, "Invalid expression <kbd>$expression</kbd>.");
-      $compiled = MatisseEngine::$expressions[$expression] = PhpCode::compile ($exp);
-    }
-    $v = $compiled->call ($this);
-
-    // Apply pipes to expression result
-
-    foreach ($pipes as $name) {
-      $pipe = $this->context->getPipe (trim ($name));
-      try {
-        $v = call_user_func ($pipe, $v, $this->context);
-      } catch (HandlerNotFoundException $e) {
-        throw new ComponentException ($this, "Pipe <b>$name</b> was not found.");
-      }
-    }
-
-    // Return the computed value
-
-    return $rawOutput || !is_scalar ($v) ? $v : e ($v);
-  }
-
   /**
    * Returns the current value of an attribute, performing databinding if necessary.
    * @param string $name
@@ -253,6 +208,86 @@ trait DataBindingTrait
       throw new ComponentException($this,
         "Invalid value for attribute <kbd>as</kbd>.<p>Expected syntax: <kbd>'var'</kbd> or <kbd>'index:var'</kbd>");
     list (, $idxVar, $itVar) = $m;
+  }
+
+  private function compileExpression ($expression)
+  {
+    $exp = PA (preg_split ('/ (?= \|\| | && ) /xu', $expression))
+      ->map (function ($x) { return trim ($x); })
+      ->map (function ($x) {
+        return str_beginsWith ($x, '||') || str_beginsWith ($x, '&&')
+          ? substr ($x, 0, 2) . $this->compileSubexpression (trim (substr ($x, 2)))
+          : $this->compileSubexpression ($x);
+      })->join ();
+
+    return PhpCode::compile ($exp);
+  }
+
+  private function compileSubexpression ($expression)
+  {
+    {
+      $exp  = $not = '';
+      $segs = explode ('.', $expression);
+      foreach ($segs as $i => $seg)
+        if ($i)
+          $exp = "_g($exp,'$seg')";
+        else {
+          if ($seg[0] == '!') {
+            $not = '!';
+            $seg = substr ($seg, 1);
+          }
+          $exp = "\$this->_f('$seg')";
+        }
+      $exp = "$not$exp";
+      if (!PhpCode::validateExpression ($exp))
+        throw new DataBindingException($this, "Invalid expression <kbd>$expression</kbd>.");
+
+      return $exp;
+    }
+
+  }
+
+  private function evalBindingExp ($matches)
+  {
+    if (empty($matches))
+      throw new \InvalidArgumentException;
+    list($full, $openDelim, $expression, $closeDelim) = $matches;
+    if ($openDelim == '{{' && $closeDelim != '}}' || $openDelim == '{!!' && $closeDelim != '!!}')
+      throw new DataBindingException($this,
+        "Invalid databinding expression: <kbd>$full</kbd><p>Closing delimiter does not match the open delimiter.");
+
+    if ($expression == '')
+      return null;
+
+    // Parse pipes
+
+    $pipes      = preg_split ('/\s*(?<!\|)\|(?!\|)\s*/', $expression);
+    $expression = array_shift ($pipes);
+    $v          = null;
+    $rawOutput  = $openDelim == '{!!';
+
+    // Call a previously compiled expression or compile one now, cache it and call it.
+
+    /** @var \Closure $compiled */
+    $compiled = get (MatisseEngine::$expressions, $expression);
+    if (!$compiled)
+      $compiled = MatisseEngine::$expressions[$expression] = $this->compileExpression ($expression);
+    $v = $compiled->call ($this);
+
+    // Apply pipes to expression result
+
+    foreach ($pipes as $name) {
+      $pipe = $this->context->getPipe (trim ($name));
+      try {
+        $v = call_user_func ($pipe, $v, $this->context);
+      } catch (HandlerNotFoundException $e) {
+        throw new ComponentException ($this, "Pipe <b>$name</b> was not found.");
+      }
+    }
+
+    // Return the computed value
+
+    return $rawOutput || !is_scalar ($v) ? $v : e ($v);
   }
 
 }

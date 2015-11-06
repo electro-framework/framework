@@ -43,7 +43,7 @@ class WebServiceController extends Controller
 
     if (!$action) {
       $contentType = $this->getHeader ('Content-Type');
-      if (str_begins_with ($contentType, 'application/json')) {
+      if (str_beginsWith ($contentType, 'application/json')) {
         $input              = file_get_contents ('php://input', FILE_TEXT);
         $data               = json_decode ($input, true);
         $this->responseData = $this->handlePost ($data);
