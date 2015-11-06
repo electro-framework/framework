@@ -50,6 +50,8 @@ function _g ($data, $key, $default = null)
     if (property_exists ($data, $key)) {
       if (isset($data->$key))
         return $data->$key;
+      if (method_exists($data, '__call'))
+        return $data->$key ();
       return $default;
     }
     if (is_callable ([$data, $key]))

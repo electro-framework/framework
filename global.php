@@ -85,6 +85,10 @@ function _log ()
 
 function trace () {
   echo "<pre>";
+  ob_start();
   call_user_func_array('var_dump', func_get_args());
-  exit;
+  echo preg_replace_callback('/^(\s*)\["?"(.*?)"?\]=>\n\s*/m', function ($m) {
+    list (, $space, $prop) = $m;
+    return $space . str_pad("$prop:", 30, ' ');
+  }, ob_get_clean());
 }

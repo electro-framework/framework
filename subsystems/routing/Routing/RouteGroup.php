@@ -67,7 +67,9 @@ class RouteGroup extends AbstractRoute
       $this->selected = true;
       if (empty($this->defaultURI))
         throw new ConfigException("No default URI is configured for the route group matching $URI");
-      Controller::redirect($this->defaultURI);
+      if ($this->defaultURI == $URI)
+        throw new ConfigException("Can't redirect to the same URL");
+      return $this->searchFor ($this->defaultURI);
     }
     if (isset($this->routes))
       foreach ($this->routes as $route) {

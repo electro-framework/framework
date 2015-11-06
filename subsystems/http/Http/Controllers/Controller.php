@@ -266,11 +266,12 @@ class Controller
       throw new FlashMessageException('Can\'t insert/update NULL DataObject.', FlashType::ERROR);
     if ($data instanceof DataObject) {
       if ($data->isNew ())
-        $this->insertData ();
-      else $this->updateData ();
+        $this->insertData ($data);
+      else $this->updateData ($data);
     }
     else throw new FlashMessageException('Can\'t automatically insert/update object of type ' . gettype ($data),
       FlashType::ERROR);
+    // No return value means: auto-redirect
   }
 
   function getRowOffset ()

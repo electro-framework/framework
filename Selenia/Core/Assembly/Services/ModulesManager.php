@@ -65,19 +65,26 @@ class ModulesManager
       }
     }
 
-    // Providers configuration phase
+    // Module configuration phase
 
-    $moduleServices = $this->injector->make (ModuleServices::ref); // Warning: this MUST NOT be injected on the constructor above!
+    // Warning: this MUST NOT be injected on the constructor above!
+    // This is a shared service.
+    $moduleServices = $this->injector->make (ModuleServices::ref);
+
     foreach ($providers as $i => $provider) {
       $moduleServices->setPath ($paths[$i]);
-      $provider->configure ($moduleServices);
+      $fn = [$provider, 'configure'];
+      if (is_callable($fn))
+        $this->injector->execute($fn);
     }
     $moduleServices->runPostConfig ();
 
     // Providers boot phase
 
     foreach ($providers as $provider) {
-      $this->injector->execute ([$provider, 'boot']);
+      $fn = [$provider, 'boot'];
+      if (is_callable($fn))
+        $this->injector->execute($fn);
     }
   }
 
