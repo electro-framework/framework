@@ -320,8 +320,9 @@ class Controller
       $this->page        = $view->getCompiledView ();
       $this->page->title = str_replace ('@', $this->getTitle (), $this->app->title);
       $this->page->addScript ("{$this->app->frameworkURI}/js/engine.js");
-      if (isset($this->flashMessage))
-        $this->displayStatus ($this->flashMessage['type'], $this->flashMessage['message']);
+      $flashMessage = $this->session->getFlashMessage();
+      if ($flashMessage)
+        $this->displayStatus ($flashMessage['type'], $flashMessage['message']);
       $this->page->contextualModel = $this;
     }
   }

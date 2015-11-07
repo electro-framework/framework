@@ -45,12 +45,6 @@ class RoutingMiddleware implements MiddlewareInterface
       $router->controller = $controller;
       $controller->router = $router;
 
-      //TODO: refactor this
-      /** @var SessionInterface $session */
-      $session = $this->injector->make ('Selenia\Interfaces\SessionInterface');
-      $controller->flashMessage = $session->getFlashMessage();
-
-
       return $controller->__invoke ($request, $response, $next);
     }
     return $next ();
