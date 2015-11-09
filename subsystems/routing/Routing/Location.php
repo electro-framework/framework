@@ -26,7 +26,7 @@ class Location
   /** @var string|callable */
   private $controller;
   /** @var string */
-  private $icon;
+  private $menuIcon;
   /** @var bool|callable */
   private $menuItem = false;
   /** @var string|callable */
@@ -38,11 +38,13 @@ class Location
   /** @var array maps HTTP verbs to request handlers. Keys are uppercase verbs and values are callables or class names. */
   private $on = [];
   /** @var string */
-  private $renders;
+  private $redirect;
   /** @var boolean */
   private $target;
   /** @var string|callable */
   private $title;
+  /** @var string|callable */
+  private $view;
   /** @var array */
   private $viewModel;
   /** @var boolean */
@@ -88,17 +90,6 @@ class Location
   }
 
   /**
-   * CSS class list defining an icon for the page on the main menu.
-   * @param mixed $icon
-   * @return $this
-   */
-  function icon ($icon)
-  {
-    $this->icon = $icon;
-    return $this;
-  }
-
-  /**
    * Indicates whether the location is part of the currently matched route.
    */
   function isActive ()
@@ -112,6 +103,17 @@ class Location
   function isTarget ()
   {
     return $this->target;
+  }
+
+  /**
+   * Defines an icon for the corresponding menu item.
+   * @param mixed $selectors CSS class list (space-separated)
+   * @return $this
+   */
+  function menuIcon ($selectors)
+  {
+    $this->menuIcon = $selectors;
+    return $this;
   }
 
   /**
@@ -196,15 +198,13 @@ class Location
   }
 
   /**
-   * A view template to be rendered when the route matches.
-   * <p>This applies only to controllers based on {@see PageController}.
-   * <p>When used with `autocontroller(true)`, it allows you to render a page without creating a controller class.
-   * @param string $renders
+   * Defines the URL or location name for an automatic redirection if the current URL matches this location.
+   * @param string $location It can be an absolute or relative URL, or a location name (prefixed with @).
    * @return $this
    */
-  function renders ($renders)
+  function redirectsTo ($location)
   {
-    $this->renders = $renders;
+    $this->redirect = $location;
     return $this;
   }
 
@@ -218,6 +218,20 @@ class Location
   function title ($title)
   {
     $this->title = $title;
+    return $this;
+  }
+
+  /**
+   * A view template to be rendered when the route matches.
+   * <p>This applies only to controllers based on {@see PageController}.
+   * <p>When used with `autocontroller(true)`, it allows you to render a page without creating a controller class.
+   * @param string|callable $view When a string, specifies a relative path to an external template file; when a
+   *                              callable, it should return the rendered view as a string.
+   * @return $this
+   */
+  function view ($view)
+  {
+    $this->view = $view;
     return $this;
   }
 
