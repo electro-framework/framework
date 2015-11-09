@@ -4,7 +4,7 @@ use PhpKit\WebConsole\WebConsole;
 use Selenia\ForeignKey;
 use Selenia\Routing\DataSourceInfo;
 use Selenia\Routing\PageRoute;
-use Selenia\Routing\Route;
+use Selenia\Routing\Location;
 use Selenia\Routing\RouteGroup;
 use Selenia\Routing\SubPageRoute;
 
@@ -25,7 +25,7 @@ function SubPageRoute (array $init)
 
 function Route (array $init)
 {
-  return new Route($init);
+  return new Location($init);
 }
 
 function ForeignKey (array $init)
