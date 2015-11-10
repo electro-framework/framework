@@ -11,6 +11,11 @@ use Selenia\Exceptions\FatalException;
  */
 trait InspectionTrait
 {
+  /**
+   * **Note:** __debugInfo is a native PHP "magic" method.
+   * @return array
+   * @throws FatalException
+   */
   function __debugInfo ()
   {
     if (isset (static::$INSPECTABLE)) {

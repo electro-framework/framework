@@ -5,6 +5,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Exceptions\FlashMessageException;
 use Selenia\Http\Services\Redirection;
+use Selenia\Interfaces\AssignableInterface;
 use Selenia\Interfaces\MiddlewareInterface;
 use Selenia\Interfaces\SessionInterface;
 
@@ -47,8 +48,9 @@ class SessionMiddleware implements MiddlewareInterface
 
     // Load the saved session (if any).
 
+    /** @var AssignableInterface $savedSession */
     if ($savedSession = get ($_SESSION, '#data'))
-      $this->session->assign ($savedSession->export ());
+      $this->session->_assign ($savedSession->_export ());
 
     // (Re)initialize some session settings.
 

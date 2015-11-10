@@ -192,11 +192,11 @@ class ModuleServices
           if (is_array ($cfg))
             $appCfg = $appCfg + $cfg;
           else if ($cfg instanceof AssignableInterface)
-            $appCfg = $appCfg + $cfg->export ();
+            $appCfg = $appCfg + $cfg->_export ();
           else self::throwInvalidConfigType ($cfg);
         }
         elseif ($appCfg instanceof AssignableInterface)
-          $appCfg->defaults ($cfg);
+          $appCfg->_defaults ($cfg);
         else self::throwInvalidConfigType ($cfg);
         $this->app->config[$section] = $appCfg;
       }

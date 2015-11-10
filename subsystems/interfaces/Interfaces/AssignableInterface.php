@@ -11,24 +11,24 @@ interface AssignableInterface
    * Loads the given data (object or array) into the object, overriding existing values.
    * > Note: this supports setting properties with any kind of visibility.
    *
-   * @param Array|AssignableInterface $data
+   * @param array|AssignableInterface $data
    * @return $this For chaining.
    */
-  function assign ($data);
+  function _assign ($data);
 
   /**
    * Loads the given data (object or array) into the object, but only for those properties that are not already set on it.
    * > Note: this supports setting properties with any kind of visibility.
    *
-   * @param Array|AssignableInterface $data
+   * @param array|AssignableInterface $data
    * @return $this For chaining.
    */
-  function defaults ($data);
+  function _defaults ($data);
 
   /**
    * Exports all of object's properties, including private and protected ones.
    * @return array
    */
-  function export ();
+  function _export ();
 
 }

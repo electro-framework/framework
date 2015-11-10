@@ -12,22 +12,22 @@ trait AssignableTrait
    * @param array $data
    * @return $this
    */
-  static function from (array $data)
+  static function _from (array $data)
   {
-    return (new static)->assign ($data);
+    return (new static)->_assign ($data);
   }
 
   /**
    * Loads the given data (object or array) into the object, overriding existing values.
    * > Note: this supports setting properties with any kind of visibility.
    *
-   * @param Array|AssignableInterface $data
+   * @param array|AssignableInterface $data
    * @return $this For chaining.
    */
-  function assign ($data)
+  function _assign ($data)
   {
     if ($data instanceof AssignableInterface)
-      $data = $data->export ();
+      $data = $data->_export ();
     foreach ($data as $k => $v)
       $this->$k = $v;
     return $this;
@@ -38,13 +38,13 @@ trait AssignableTrait
    * it.
    * > Note: this supports setting properties with any kind of visibility.
    *
-   * @param Array|AssignableInterface $data
+   * @param array|AssignableInterface $data
    * @return $this For chaining.
    */
-  function defaults ($data)
+  function _defaults ($data)
   {
     if ($data instanceof AssignableInterface)
-      $data = $data->export ();
+      $data = $data->_export ();
     foreach ($data as $k => $v)
       if (!isset($this->$k))
         $this->$k = $v;
@@ -55,7 +55,7 @@ trait AssignableTrait
    * Exports all of object's properties, including private and protected ones.
    * @return array
    */
-  function export ()
+  function _export ()
   {
     return get_object_vars ($this);
   }
