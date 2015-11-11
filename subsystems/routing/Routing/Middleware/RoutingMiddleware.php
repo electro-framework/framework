@@ -4,12 +4,9 @@ use PhpKit\WebConsole\WebConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
-use Selenia\Http\Controllers\Controller;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\MiddlewareInterface;
-use Selenia\Interfaces\SessionInterface;
 use Selenia\Routing\Router;
-use Selenia\Routing\RoutingMap;
 
 /**
  *
@@ -36,25 +33,17 @@ class RoutingMiddleware implements MiddlewareInterface
 
     $router = new Router();
     $this->injector->share ($router);
-    $router->init ();
 
-    $controllerClass = $router->route ();
-    if ($controllerClass) {
-      /** @var Controller $controller */
-      $controller         = $this->injector->make ($controllerClass);
-      $router->controller = $controller;
-      $controller->router = $router;
-
-      return $controller->__invoke ($request, $response, $next);
-    }
-    return $next ();
-  }
-
-  private function loadRoutes ()
-  {
-    $map         = $this->app->routingMap = new RoutingMap;
-    $map->routes = array_merge ($map->routes, $this->app->routes);
-    $map->init ();
+    return $router->route () ?: $next ();
   }
 
 }
+
+//if ($response) {
+//  /** @var PageComponent $controller */
+//  $controller         = $this->injector->make ($controllerClass);
+//  $router->controller = $controller;
+//  $controller->router = $router;
+//
+//  return $controller->__invoke ($request, $response, $next);
+//}

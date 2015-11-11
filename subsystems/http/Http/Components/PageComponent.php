@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Http\Controllers;
+namespace Selenia\Http\Components;
 
 use Exception;
 use PDOStatement;
@@ -15,21 +15,32 @@ use Selenia\Exceptions\FatalException;
 use Selenia\Exceptions\Flash\FileException;
 use Selenia\Exceptions\FlashMessageException;
 use Selenia\Exceptions\FlashType;
-use Selenia\Http\Services\Redirection;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\RedirectionInterface;
 use Selenia\Interfaces\ResponseFactoryInterface;
+use Selenia\Interfaces\RoutableInterface;
+use Selenia\Interfaces\RouterInterface;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Interfaces\ViewInterface;
 use Selenia\Matisse\Components\Page;
 use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\PageRoute;
 use Selenia\Routing\Router;
+use Selenia\Traits\RefTrait;
 use Selenia\ViewEngine\Engines\MatisseEngine;
 use Selenia\ViewEngine\View;
 use Zend\Diactoros\Response\HtmlResponse;
 
-class Controller
+/**
+ * The base class for components that are web pages.
+ *
+ * ### Notes:
+ * - subclasses that define an inject() method will have that methoc called and dependency-injected upon instantiation.
+ */
+class PageComponent implements RoutableInterface
 {
+  use RefTrait;
+
   /**
    * A list of parameter names (inferred from the page definition on the sitemap)
    * and correponding values present on the current URI.
@@ -60,7 +71,7 @@ class Controller
    */
   public $max = 1;
   /**
-   * @var Array|Object|DataObject The page's data model.
+   * @var array|Object|DataObject The page's data model.
    */
   public $model;
   /**
@@ -114,7 +125,7 @@ class Controller
    */
   protected $pageTitle = null;
   /**
-   * @var Redirection
+   * @var RedirectionInterface
    */
   protected $redirection;
   /**
@@ -140,7 +151,7 @@ class Controller
   private $injector;
 
   function __construct (InjectorInterface $injector, Application $app, ResponseFactoryInterface $responseFactory,
-                        Redirection $redirection, SessionInterface $session, PipeHandler $pipeHandler)
+                        RedirectionInterface $redirection, SessionInterface $session, PipeHandler $pipeHandler)
   {
     $this->injector        = $injector;
     $this->app             = $app;
@@ -155,58 +166,13 @@ class Controller
       $injector->execute ([$this, 'inject']);
   }
 
-  static function ref ()
-  {
-    return get_called_class ();
-  }
-
   /**
-   * Performs the main execution sequence.
-   *
-   * @param ServerRequestInterface $request
-   * @param ResponseInterface      $response
-   * @param callable               $next
-   * @return HtmlResponse
-   * @throws FlashMessageException
-   * @throws Exception
+   * @param RouterInterface $router
+   * @return ResponseInterface|false
    */
-  function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
+  function __invoke (RouterInterface $router)
   {
-    if (!$this->app)
-      throw new FatalException("Class <kbd class=type>" . get_class ($this) .
-                               "</kbd>'s constructor forgot to call <kbd>parent::__construct()</kbd>");
-    $this->request  = $request;
-    $this->response = $response;
-
-    // remove page number parameter
-    $this->URI_noPage =
-      preg_replace ('#&?' . $this->app->pageNumberParam . '=\d*#', '', $this->request->getUri ()->getPath ());
-    $this->URI_noPage = preg_replace ('#\?$#', '', $this->URI_noPage);
-
-    $this->initialize (); //custom setup
-
-    $this->model = $this->model ();
-    $model       =& $this->model;
-    $this->mergeIntoModel ($model, $this->URIParams);
-    switch ($this->request->getMethod ()) {
-      case 'GET':
-        $this->mergeIntoModel ($model, $this->session->getOldInput ());
-        break;
-      /** @noinspection PhpMissingBreakStatementInspection */
-      case 'POST':
-        if ($this->request->getHeaderLine ('Content-Type') == 'application/x-www-form-urlencoded')
-          $this->mergeIntoModel ($model, $this->request->getParsedBody ());
-      default:
-        $res = $this->doFormAction ();
-        if (!$res && !$this->renderOnAction)
-          $res = $this->autoRedirect ();
-        $this->finalize ();
-        return $res;
-    }
-    $this->viewModel ();
-    $response = $this->processView ();
-    $this->finalize ();
-    return $response;
+    return $this->handle ($router);
   }
 
   /**
@@ -233,7 +199,8 @@ class Controller
       $data->delete ();
       return $this->autoRedirect ();
     }
-    else throw new FlashMessageException(sprintf('Can\'t automatically delete object of type <kbd>%s</kbd>', gettype ($data)),
+    else throw new FlashMessageException(sprintf ('Can\'t automatically delete object of type <kbd>%s</kbd>',
+      gettype ($data)),
       FlashType::ERROR);
   }
 
@@ -290,6 +257,19 @@ class Controller
   }
 
   /**
+   * Runs the component's logic when the route matches the component's location.
+   *
+   * @param RouterInterface $router
+   * @return ResponseInterface|false Returns the generated response, or <kbd>false</kbd> if it didn't handle the
+   *                                 request.
+   * @throws FatalException
+   */
+  function handle (RouterInterface $router)
+  {
+    return $router->onTarget ('*', [$this, 'run']);
+  }
+
+  /**
    * Loads the record with the id specified on from the request URI into the model object.
    *
    * If the URI parameter is empty, the model is returned unmodified.
@@ -307,6 +287,54 @@ class Controller
   }
 
   /**
+   * Performs the main execution sequence.
+   *
+   * @param RouterInterface $router
+   * @return HtmlResponse
+   * @throws FatalException
+   * @throws FileException
+   * @throws FlashMessageException
+   */
+  function run (RouterInterface $router)
+  {
+    if (!$this->app)
+      throw new FatalException("Class <kbd class=type>" . get_class ($this) .
+                               "</kbd>'s constructor forgot to call <kbd>parent::__construct()</kbd>");
+    $this->request  = $router->request ();
+    $this->response = $router->response ();
+
+    // remove page number parameter
+    $this->URI_noPage =
+      preg_replace ('#&?' . $this->app->pageNumberParam . '=\d*#', '', $this->request->getUri ()->getPath ());
+    $this->URI_noPage = preg_replace ('#\?$#', '', $this->URI_noPage);
+
+    $this->initialize (); //custom setup
+
+    $this->model = $this->model ();
+    $model       =& $this->model;
+    $this->mergeIntoModel ($model, $this->URIParams);
+    switch ($this->request->getMethod ()) {
+      case 'GET':
+        $this->mergeIntoModel ($model, $this->session->getOldInput ());
+        break;
+      /** @noinspection PhpMissingBreakStatementInspection */
+      case 'POST':
+        if ($this->request->getHeaderLine ('Content-Type') == 'application/x-www-form-urlencoded')
+          $this->mergeIntoModel ($model, $this->request->getParsedBody ());
+      default:
+        $res = $this->doFormAction ();
+        if (!$res && !$this->renderOnAction)
+          $res = $this->autoRedirect ();
+        $this->finalize ();
+        return $res;
+    }
+    $this->viewModel ();
+    $response = $this->processView ();
+    $this->finalize ();
+    return $response;
+  }
+
+  /**
    * Allows access to the components tree generated by the parsing process.
    * Component specific initialization can be performed here before the
    * page is rendered.
@@ -320,7 +348,7 @@ class Controller
       $this->page        = $view->getCompiledView ();
       $this->page->title = str_replace ('@', $this->getTitle (), $this->app->title);
       $this->page->addScript ("{$this->app->frameworkURI}/js/engine.js");
-      $flashMessage = $this->session->getFlashMessage();
+      $flashMessage = $this->session->getFlashMessage ();
       if ($flashMessage)
         $this->displayStatus ($flashMessage['type'], $flashMessage['message']);
       $this->page->contextualModel = $this;
@@ -461,7 +489,7 @@ class Controller
     if ($model instanceof DataObject)
       $model->insert ();
     else throw new FatalException (sprintf ("Don't know how to save a model of type <kbd class=type>%s</kbd>.<p>You should override <kbd>insertData()</kbd>.",
-      is_object($model) ? get_class($model) : gettype($model)));
+      is_object ($model) ? get_class ($model) : gettype ($model)));
   }
 
   /**
@@ -538,7 +566,7 @@ class Controller
     if ($model instanceof DataObject)
       $model->update ();
     else throw new FatalException (sprintf ("Don't know how to save a model of type <kbd class=type>%s</kbd>.<p>You should override <kbd>updateData()</kbd>.",
-      is_object($model) ? get_class($model) : gettype($model)));
+      is_object ($model) ? get_class ($model) : gettype ($model)));
   }
 
   /**

@@ -4,19 +4,13 @@ namespace Selenia\Http\Services;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Selenia\Application;
+use Selenia\Interfaces\RedirectionInterface;
 use Selenia\Interfaces\ResponseFactoryInterface;
 use Selenia\Interfaces\SessionInterface;
 use Zend\Diactoros\Response;
 
-/**
- * Creates an HTTP redirection response.
- *
- * > This service is not shared.
- */
-class Redirection
+class Redirection implements RedirectionInterface
 {
-  const ref = __CLASS__;
-
   /**
    * @var Application
    */
@@ -50,23 +44,11 @@ class Redirection
     $this->session         = $session;
   }
 
-  /**
-   * Creates a new redirection response to the previous location.
-   * <p>If the previous location is not know, it redirects to the current URL.
-   * @param int $status
-   * @return \Psr\Http\Message\ResponseInterface
-   */
   function back ($status = 302)
   {
     return $this->to ($this->request->getHeaderLine ('Referer') ?: $this->request->getUri (), $status);
   }
 
-  /**
-   * Creates a new redirection response, while saving the current URL in the session.
-   * @param string|UriInterface $url    A relative or an absolute URL. If empty, it is equivalent to the current URL.
-   * @param int                 $status HTTP status code.
-   * @return \Psr\Http\Message\ResponseInterface
-   */
   function guest ($url, $status = 302)
   {
     $this->session->setPreviousUrl ($this->request->getUri ());
@@ -74,59 +56,28 @@ class Redirection
     return $this->responseFactory->make ($status, '', '', ['Location' => $url]);
   }
 
-  /**
-   * Creates a new redirection response to the application's root URL.
-   * @param int $status
-   * @return \Psr\Http\Message\ResponseInterface
-   */
   function home ($status = 302)
   {
     return $this->to ($this->app->baseURI, $status);
   }
 
-  /**
-   * Creates a new redirection response to the previously intended location, which is the one set previously by calling
-   * `guest()`.
-   * @param string|UriInterface $defaultUrl A relative or an absolute URL to be used when a saved URL is not found on
-   *                                        the session. If empty, it is equivalent to the current URL.
-   * @param int                 $status     HTTP status code.
-   * @return \Psr\Http\Message\ResponseInterface
-   */
   function intended ($defaultUrl = '', $status = 302)
   {
     $url = $this->session->previousUrl () ?: $this->normalizeUrl ($defaultUrl);
     return $this->to ($url, $status);
   }
 
-  /**
-   * Creates a new redirection response to the current URL.
-   * @param int $status
-   * @return \Psr\Http\Message\ResponseInterface
-   */
   function refresh ($status = 302)
   {
     return $this->to ($this->request->getUri (), $status);
   }
 
-  /**
-   * Creates a new redirection response to the given secure (https) URL.
-   * @param string|UriInterface $url    A relative or an absolute URL. If empty, it is equivalent to the current URL.
-   *                                    The protocol part is always replaced by 'https'.
-   * @param int                 $status HTTP status code.
-   * @return \Psr\Http\Message\ResponseInterface
-   */
   function secure ($url, $status = 302)
   {
     $url = str_replace ('http://', 'https://', $this->normalizeUrl ($url));
     return $this->responseFactory->make ($status, '', '', ['Location' => $url]);
   }
 
-  /**
-   * Creates a new redirection response to the given URL.
-   * @param string|UriInterface $url    A relative or an absolute URL. If empty, it is equivalent to the current URL.
-   * @param int                 $status HTTP status code.
-   * @return \Psr\Http\Message\ResponseInterface
-   */
   function to ($url, $status = 302)
   {
     $url = $this->normalizeUrl ($url);

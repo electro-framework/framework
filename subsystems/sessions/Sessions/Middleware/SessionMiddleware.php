@@ -7,6 +7,7 @@ use Selenia\Exceptions\FlashMessageException;
 use Selenia\Http\Services\Redirection;
 use Selenia\Interfaces\AssignableInterface;
 use Selenia\Interfaces\MiddlewareInterface;
+use Selenia\Interfaces\RedirectionInterface;
 use Selenia\Interfaces\SessionInterface;
 
 /**
@@ -19,7 +20,7 @@ class SessionMiddleware implements MiddlewareInterface
    */
   private $app;
   /**
-   * @var Redirection
+   * @var RedirectionInterface
    */
   private $redirection;
   /**
@@ -27,7 +28,7 @@ class SessionMiddleware implements MiddlewareInterface
    */
   private $session;
 
-  function __construct (SessionInterface $session, Application $app, Redirection $redirection)
+  function __construct (SessionInterface $session, Application $app, RedirectionInterface $redirection)
   {
     $this->app         = $app;
     $this->redirection = $redirection;

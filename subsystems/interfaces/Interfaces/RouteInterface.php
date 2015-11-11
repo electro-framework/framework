@@ -1,52 +1,58 @@
 <?php
 namespace Selenia\Interfaces;
 
-use Psr\Http\Message\ResponseInterface;
-
+/**
+ * Represents the route that is being traversed as the current request's virtual URL is being routed.
+ */
 interface RouteInterface
 {
   /**
    * The current location (URL segment).
    * > Ex: `'users'`
+   *
+   * <p>**Note:** Routes always begin with `''`, which corresponds to the start (root) location.
+   *
    * @return string
    */
   function location ();
 
   /**
-   * Tries to match the current location to one of a set of constant locations and, if a match is found, invokes the
-   * corresponding handler.
-   * <p>Handlers must have a RouterInterface callable signature and should return a new or modified HTTP response. If a
-   * handler decides to not handle a request, it may invoke the `$next` argument and route matching will proceed..
+   * Proceed to the next location.
    *
-   * @param array $locations A map of literal location strings to handler callables.
-   * @return $this
+   * @return RouteInterface|false A new RouteInterface instance who's current location has been moved to the next
+   *                              location on that route. <code>false</code> if the current location is already the
+   *                              last one.
    */
-  function map (array $locations);
+  function next ();
 
   /**
-   * @param callable $run
-   * @return $this
+   * A map of URL parameters collected so far along the route.
+   * > Ex: <code>['bookId' => 3, 'authorId' => 9]</code>
+   *
+   * @return string[]
    */
-  function matches (callable $run);
+  function params ();
 
   /**
-   * @param string $name
-   * @param string $handler
-   * @return $this
-   */
-  function param ($name, $handler);
-
-  /**
-   * The full virtual URL.
-   * > Ex: `'/admin/users/3'`
+   * The full virtual URL up to the current location, inclusive.
+   * > Ex: `'admin/users/3'`
+   *
    * @return string
    */
   function path ();
 
   /**
+   * The remaining path, starting after the current location.
+   * > Ex: `'users/4'`
    *
-   * @param ResponseInterface $response
-   * @return ResponseInterface
+   * @return string Empty string if the current location is the last on the route.
    */
-  function next (ResponseInterface $response = null);
+  function tail ();
+
+  /**
+   * Is the current location the last location on the route?
+   * @return bool
+   */
+  function target ();
+
 }

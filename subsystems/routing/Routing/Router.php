@@ -1,113 +1,116 @@
 <?php
 namespace Selenia\Routing;
-use PhpKit\WebConsole\ErrorHandler;
-use Selenia\Core\Assembly\ModuleInfo;
-use Selenia\Exceptions\Fatal\ConfigException;
-use Selenia\Exceptions\HttpException;
-use Selenia\Http\Controllers\Controller;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Interfaces\RedirectionInterface;
+use Selenia\Interfaces\RouteInterface;
+use Selenia\Interfaces\RouterInterface;
 
 /**
- * Routes the current URI to the corresponding controller.
- *
- * It is usually used for responding to an HTTP request by instantiating the
- * corresponding controller class.
- *
- * It also serves static assets from module's public directories.
+ * Routes the current URL to a matching request handler
  */
-class Router
+class Router implements RouterInterface
 {
+  /**
+   * @var RedirectionInterface
+   */
+  private $redirection;
+  /**
+   * @var ServerRequestInterface
+   */
+  private $request;
+  /**
+   * @var ResponseInterface
+   */
+  private $response;
+  /**
+   * @var RouteInterface
+   */
+  private $route;
 
   /**
-   * The route thar matches the current URI.
-   * @var PageRoute
+   * Router constructor.
+   * @param ServerRequestInterface $request
+   * @param ResponseInterface      $response
+   * @param RouteInterface         $route
+   * @param RedirectionInterface   $redirection
    */
-  public $activeRoute = null;
-  /**
-   * The controller instance for the current module.
-   * @var Controller
-   */
-  public $controller = null;
-  /**
-   * Assorted information on the module related to the active controller.
-   * @var ModuleInfo
-   */
-  public $moduleInfo = null;
-  /**
-   * The virtual URI following the question mark on the URL.
-   * @var string
-   */
-  public $virtualURI = '';
-
-  /**
-   * Initialize loader context.
-   */
-  public function init ()
+  public function __construct (ServerRequestInterface $request, ResponseInterface $response, RouteInterface $route,
+                               RedirectionInterface $redirection)
   {
-    global $application;
-
-    //Find PageRoute info
-
-    $this->virtualURI = $application->VURI;
-    if ($this->virtualURI == '')
-      $this->virtualURI = $application->homeURI;
-    $key = get ($_GET, 'key');
-    if (!isset($application->routingMap))
-      throw new ConfigException("No route map defined.");
-    $this->activeRoute = $application->routingMap->searchFor ($this->virtualURI, $key);
-    if (is_null ($this->activeRoute))
-      return;
-
-    //Setup preset parameters
-
-    $presetParams = $this->activeRoute->getPresetParameters ();
-    $_REQUEST     = array_merge ($_REQUEST, (array)$presetParams);
-    $_GET         = array_merge ($_GET, (array)$presetParams);
-
-    //Setup module paths and other related info.
-    $this->moduleInfo = new ModuleInfo ($this->activeRoute->module);
-    $application->setIncludePath ($this->moduleInfo->path);
+    $this->route       = $route;
+    $this->request     = $request;
+    $this->response    = $response;
+    $this->redirection = $redirection;
   }
 
-  /**
-   * Load the module determined by the virtual URI.
-   */
-  public function route ()
+  function dispatch (array $map)
   {
-    global $application;
-
-    if (is_null ($this->activeRoute))
-      return;
-
-    /** @var Controller $con */
-    $con  = null;
-    $auto = $this->activeRoute->autoController;
-    if ($auto) {
-      if (!empty($this->activeRoute->controller))
-        throw new ConfigException("<p><b>A controller should not be specified when autoController is enabled.</b>
-<p>Hint: is autoController=true being inherited?");
-      $class = $application->autoControllerClass;
-      if (class_exists ($class))
-        $con = $class;
-    }
-    else {
-      $class = $this->activeRoute->controller;
-      if (class_exists ($class))
-        $con = $class;
-    }
-    if (!$con) {
-      if (!$class)
-        $class = "null";
-      $auto = $auto ? 'enabled' : 'disabled';
-      throw new ConfigException("<p><b>Controller not found.</b></p>
-  <table>
-  <tr><th>Class:                  <td>$class
-  <tr><th>Additional search path: <td>" . ErrorHandler::shortFileName ($this->moduleInfo->path) . "
-  <tr><th>Auto-controller:        <td><i>$auto</i> for this URL
-  </table>
-");
-    }
-    return $con;
+    $location = $this->route->location ();
+    return isset($map[$location]) ? $map[$location] ($this) : false;
   }
 
+  function match ($pattern, callable $routable)
+  {
+    list ($match, $param) = explode (':', "$pattern:");
+    $location = '';
+    // If $match is empty, performs wildcard matching.
+    if ($match) {
+      $location = $this->route->location ();
+      // Regular expression matching.
+      if ($match[0] == '/') {
+        if (!preg_match ($match, $location, $m))
+          return false;
+        // Use the capture group value, if one is defined on the regexp.
+        else if (count ($m) > 1)
+          $location = $m[1];
+      }
+      // Literal matching.
+      else if ($match != $location)
+        return false;
+    }
+    // Save the route paramenter, if required.
+    if ($param)
+      $this->route->params () [$param] = $location;
+    // The match succeeded, so call the routable.
+    return $routable ($this);
+  }
+
+  function next (ResponseInterface $response = null)
+  {
+    return new static ($this->request, $response ?: $this->response, $this->route->next (), $this->redirection);
+  }
+
+  function on ($methods, callable $routable)
+  {
+    if ($methods != '*' && strpos ($methods, $this->request->getMethod ()) === false)
+      return false;
+    return $routable ($this);
+  }
+
+  function onTarget ($methods, callable $routable)
+  {
+    return $this->route->target () ? $this->on ($methods, $routable) : false;
+  }
+
+  function redirection ()
+  {
+    return $this->redirection;
+  }
+
+  function request ()
+  {
+    return $this->request;
+  }
+
+  function response ()
+  {
+    return $this->response;
+  }
+
+  function route ()
+  {
+    return $this->route;
+  }
 }
 

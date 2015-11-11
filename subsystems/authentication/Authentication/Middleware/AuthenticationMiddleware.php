@@ -6,6 +6,7 @@ use Selenia\Application;
 use Selenia\Authentication\Exceptions\AuthenticationException;
 use Selenia\Http\Services\Redirection;
 use Selenia\Interfaces\MiddlewareInterface;
+use Selenia\Interfaces\RedirectionInterface;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Interfaces\UserInterface;
 
@@ -16,12 +17,12 @@ class AuthenticationMiddleware implements MiddlewareInterface
 {
   private $app;
   /**
-   * @var Redirection
+   * @var RedirectionInterface
    */
   private $redirection;
   private $session;
 
-  function __construct (Application $app, SessionInterface $session, Redirection $redirection)
+  function __construct (Application $app, SessionInterface $session, RedirectionInterface $redirection)
   {
     $this->session     = $session;
     $this->app         = $app;

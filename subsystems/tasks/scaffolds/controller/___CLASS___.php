@@ -1,8 +1,8 @@
 <?php
 namespace ___NAMESPACE___\Controllers;
-use Selenia\Http\Controllers\Controller;
+use Selenia\Http\Components\PageComponent;
 
-class ___CLASS___ extends Controller
+class ___CLASS___ extends PageComponent
 {
   const ref = __CLASS__;
 
