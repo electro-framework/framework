@@ -64,7 +64,7 @@ class MiddlewareStack implements MiddlewareStackInterface
           if (isset($newResponse)) {
             if ($newResponse instanceof ResponseInterface)
               return $this->currentResponse = $newResponse;
-            throw new \RuntimeException ("Response from middlware " . get_class ($middleware) .
+            throw new \RuntimeException ("Response from middleware " . get_class ($middleware) .
                                          " is not a ResponseInterface implementation.");
           }
           return $this->currentResponse;

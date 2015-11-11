@@ -14,8 +14,7 @@
     }
   ],
   "require": {
-    "php": ">=5.4",
-    "zendframework/zend-stratigility": "^1.1.2"
+    "php": ">=5.4"
   },
   "autoload": {
     "psr-4": {

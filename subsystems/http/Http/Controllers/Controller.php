@@ -170,7 +170,7 @@ class Controller
    * @throws FlashMessageException
    * @throws Exception
    */
-  final function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
+  function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     if (!$this->app)
       throw new FatalException("Class <kbd class=type>" . get_class ($this) .
