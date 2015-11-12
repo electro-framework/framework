@@ -15,9 +15,11 @@ interface RouterInterface
   /**
    * Invokes the callable whose key matches the next location and returns its response, or returns false if no match
    * occurred.
-   * @param callable[] $map A <kbd>[string => callable]</kbd> map.
-   *                        <p>Each callable should have a <kbd>RouterInterface</kbd> signature:
-   *                        <code>ResponseInterface|false (RouterInterface $router)</code>
+   * @param array $map A <kbd>[string => callable|string]</kbd> map.
+   *                   <p>Each callable should have a <kbd>RouterInterface</kbd> signature:
+   *                   <code>ResponseInterface|false (RouterInterface $router)</code>
+   *                   If mapping to a string, it should be the name of an invokable class, which will be instantiated
+   *                   trough dependency injection.
    * @return ResponseInterface|false
    */
   function dispatch (array $map);
@@ -34,24 +36,30 @@ interface RouterInterface
    * <dd>Matches anything.
    * <br>&nbsp;
    *
-   * <dt><b><kbd>/regexp/modifiers</kbd></b>
-   * <dd>Matches a regular expression.
-   * <br>&nbsp;
-   *
    * <dt><b><kbd>literal</kbd></b>
    * <dd>Matches the given literal string.
+   * <br>Ex: <kbd>'users'</kbd>
    * <br>&nbsp;
    *
-   * <dt><b><kbd>:param</kbd></b>
+   * <dt><b><kbd>{param}</kbd></b>
    * <dd>Matches anything and saves it as a named route parameter.
+   * <br>Ex: <kbd>'{userId}'</kbd>
    * <br>&nbsp;
    *
-   * <dt><b><kbd>/regexp/modifiers:param</kbd></b>
+   * <dt><b><kbd>/regexp/modifiers</kbd></b>
+   * <dd>Matches a regular expression.
+   * <br>Ex: <kbd>'/^user\d+$/i'</kbd>
+   * <br>&nbsp;
+   *
+   * <dt><b><kbd>{param:/regexp/modifiers}</kbd></b>
    * <dd>Matches a regular expression and saves capture #0 (or #1 if defined) and saves it as a named route parameter.
+   * <br>On the following example, userId = extracted numeric value (\d+):
+   * <br><kbd>'{userId:/^user(\d+)$/}'</kbd>
    * <br>&nbsp;
    *
-   * <dt><b><kbd>literal:param</kbd></b>
+   * <dt><b><kbd>{param:literal}</kbd></b>
    * <dd>Matches the given literal string and saves it as a named route parameter.
+   * <br>Ex: <kbd>'{userId:none}'</kbd>
    * <br>&nbsp;
    *
    * </dl>
@@ -60,12 +68,38 @@ interface RouterInterface
    * - The routable will be called only if the next location matches the expression.
    * - The location value is stored as a named route parameter only when the routable is invoked.
    *
-   * @param string   $pattern
-   * @param callable $routable A callback with a <kbd>RouterInterface</kbd> signature: <code>ResponseInterface|false
-   *                           (RouterInterface $router)</code>
-   * @return ResponseInterface|false <kbd>false</kbd> if no match.
+   * @param string               $methods  A pipe-delimited list of HTTP methods, or <kbd>'*'</kbd> to match any
+   *                                       method.
+   *                                       <p>Ex: <kbd>'GET|POST'</kbd>
+   *                                       <p>Some valid verbs: <kbd>GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS</kbd>
+   * @param string               $pattern  As explained above.
+   * @param callable|string|null $routable A callback with a <kbd>RouterInterface</kbd> signature:
+   *                                       <code>ResponseInterface|false (RouterInterface $router)</code>
+   *                                       If a string, it should be the name of an invokable class, which will be
+   *                                       instantiated trough dependency injection.
+   *                                       If <kbd>null</kbd>, this method will return either <kbd>true|false</kbd>.
+   * @return ResponseInterface|bool        <kbd>false</kbd> if no match.
+   *                                       <p>If there's a match, it returns either
+   *                                       <kbd>true|ResponseInterface</kbd>, depending on the absence/presence of the
+   *                                       <kbd>$routable</kbd> argument.
    */
-  function match ($pattern, callable $routable);
+  function match ($methods, $pattern, callable $routable = null);
+
+  /**
+   * Invokes a routable if the remaining URL path starting from the current location matches a given path.
+   * <p>The routable will receive a router instance whose route begins **after** the matched path.
+   * > This is used internally by the routing middleware when matching registered module routers, after the main router
+   * fails to match anything.
+   * >> Ex:
+   * >> <p>A module may register a router for the `'admin/stats'` prefix. When matching `'admin/stats/demo/1'`, the
+   * module will be invoked with a route whose current location is `'demo'`.
+   * @param string          $path     Ex: <kbd>'admin/users'</kbd> is equivalent to the
+   *                                  <kbd>'/^admin\/users(?=\/|$)/'</kbd> regexp.
+   * @param callable|string $routable If a string, it should be the name of an invokable class, which will be
+   *                                  instantiated trough dependency injection.
+   * @return RouteInterface|false     <kbd>false</kbd> if no match.
+   */
+  function matchPrefix ($path, $routable);
 
   /**
    * Advance the route's current location to the next one.
@@ -78,26 +112,29 @@ interface RouterInterface
 
   /**
    * Invokes a routable if the request matches a list of HTTP methods.
-   * @param string   $methods A pipe-delimited list of HTTP methods, or <kbd>'*'</kbd> to match any method.
-   *                          <p>Ex: <kbd>'GET|POST'</kbd>
-   *                          <p>Some valid verbs: <kbd>GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS</kbd>
-   * @param callable $routable
-   * @return mixed
+   * @param string          $methods  A pipe-delimited list of HTTP methods, or <kbd>'*'</kbd> to match any method.
+   *                                  <p>Ex: <kbd>'GET|POST'</kbd>
+   *                                  <p>Some valid verbs: <kbd>GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS</kbd>
+   * @param callable|string $routable If a string, it should be the name of an invokable class, which will be
+   *                                  instantiated trough dependency injection.
+   * @return $this
    */
-  function on ($methods, callable $routable);
+  function on ($methods, $routable);
 
   /**
-   * Invokes a routable if:
-   * - the current route location is the last one (the route target/destination)
+   * Invokes a routable (or returns `true` if none is given) if both:
+   * - the current route location is the last one (the route target/destination),
    * - the request matches the specified list of HTTP methods.
    *
-   * @param string   $methods A pipe-delimited list of HTTP methods, or <kbd>'*'</kbd> to match any method.
-   *                          <p>Ex: <kbd>'GET|POST'</kbd>
-   *                          <p>Some valid verbs: <kbd>GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS</kbd>
-   * @param callable $routable
-   * @return mixed
+   * @param string               $methods  A pipe-delimited list of HTTP methods, or <kbd>'*'</kbd> to match any method.
+   *                                       <p>Ex: <kbd>'GET|POST'</kbd>
+   *                                       <p>Some valid verbs: <kbd>GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS</kbd>
+   * @param callable|string|null $routable If a string, it should be the name of an invokable class, which will be
+   *                                       instantiated trough dependency injection.
+   *                                       <p>If <kbd>null</kbd>, this method will return either <kbd>true|false</kbd>.
+   * @return $this
    */
-  function onTarget ($methods, callable $routable);
+  function onTarget ($methods, callable $routable = null);
 
   /**
    * Creates a new redirection HTTP response.

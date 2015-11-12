@@ -34,20 +34,40 @@ interface RouteInterface
   function params ();
 
   /**
-   * The full virtual URL up to the current location, inclusive.
-   * > Ex: `'admin/users/3'`
+   * The virtual URL up to the current location, inclusive.
+   * > Ex: on `'authors/4/books/7'`:
+   * <br>if `location = '4'`, `path = 'authors/4'`.
    *
    * @return string
    */
   function path ();
 
   /**
+   * The virtual URL up to the current location, but not including it.
+   * > Ex: on `'authors/4/books/7'`:
+   * <br>if `location = '4'`, `prefix = 'authors'`.
+   *
+   * @return string
+   */
+  function prefix ();
+
+  /**
    * The remaining path, starting after the current location.
-   * > Ex: `'users/4'`
+   * > Ex: on `'authors/4/books/7'`:
+   * <br>if `location = '4'`, `tail = 'books/7'`.
    *
    * @return string Empty string if the current location is the last on the route.
    */
   function tail ();
+
+  /**
+   * The remaining path, starting on the current location.
+   * > Ex: on `'authors/4/books/7'`:
+   * <br>if `location = '4'`, `tail = '4/books/7'`.
+   *
+   * @return string Empty string if the current location is beyond the route or the route is empty.
+   */
+  function remaining ();
 
   /**
    * Is the current location the last location on the route?

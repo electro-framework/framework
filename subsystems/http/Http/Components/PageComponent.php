@@ -166,13 +166,9 @@ class PageComponent implements RoutableInterface
       $injector->execute ([$this, 'inject']);
   }
 
-  /**
-   * @param RouterInterface $router
-   * @return ResponseInterface|false
-   */
   function __invoke (RouterInterface $router)
   {
-    return $this->handle ($router);
+    return $router->onTarget ('*', [$this, 'run']);
   }
 
   /**
@@ -254,19 +250,6 @@ class PageComponent implements RoutableInterface
       $this->pageTitle,
       ''
     );
-  }
-
-  /**
-   * Runs the component's logic when the route matches the component's location.
-   *
-   * @param RouterInterface $router
-   * @return ResponseInterface|false Returns the generated response, or <kbd>false</kbd> if it didn't handle the
-   *                                 request.
-   * @throws FatalException
-   */
-  function handle (RouterInterface $router)
-  {
-    return $router->onTarget ('*', [$this, 'run']);
   }
 
   /**

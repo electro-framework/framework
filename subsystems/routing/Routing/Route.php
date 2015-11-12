@@ -7,19 +7,21 @@ class Route implements RouteInterface
 {
   /** @var string */
   private $location;
-  /** @var string[] */
-  private $locations;
   /** @var array */
   private $params;
   /** @var string */
   private $path;
+  /** @var string */
+  private $prefix;
+  /** @var string */
+  private $tail;
 
   public function __construct ($virtualUrlPath, $prevPath = '', array $params = [])
   {
-    $this->path      = $prevPath ? "$prevPath/$virtualUrlPath" : $virtualUrlPath;
-    $this->locations = explode ('/', $virtualUrlPath);
-    $this->location  = array_shift ($this->locations);
-    $this->params    = $params;
+    list ($this->location, $this->tail) = array_merge (explode ('/', $virtualUrlPath, 2), ['']);
+    $this->prefix = $prevPath;
+    $this->path   = $prevPath ? "$prevPath/$virtualUrlPath" : $this->location;
+    $this->params = $params;
   }
 
   function location ()
@@ -29,7 +31,7 @@ class Route implements RouteInterface
 
   function next ()
   {
-    return new static ($this->tail (), $this->path, $this->params);
+    return new static ($this->tail, $this->path, $this->params);
   }
 
   function params ()
@@ -37,18 +39,28 @@ class Route implements RouteInterface
     return $this->params;
   }
 
+  function prefix ()
+  {
+    return $this->prefix;
+  }
+
   function path ()
   {
     return $this->path;
   }
 
+  function remaining ()
+  {
+    return rtrim ("$this->location/$this->tail", '/');
+  }
+
   function tail ()
   {
-    return implode ('/', $this->locations);
+    return $this->tail;
   }
 
   function target ()
   {
-    return !count ($this->locations);
+    return !strlen ($this->tail);
   }
 }
