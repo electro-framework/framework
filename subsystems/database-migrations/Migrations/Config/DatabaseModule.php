@@ -11,7 +11,7 @@ class DatabaseModule implements ModuleInterface
 
   function configure (ModuleServices $module)
   {
-    $module->registerTasksFromClass (Commands::ref);
+    $module->registerTasksFromClass (Commands::class);
   }
 
 }

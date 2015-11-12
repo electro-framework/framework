@@ -10,7 +10,6 @@ use Selenia\Matisse\PipeHandler;
 
 class MatisseEngine implements ViewEngineInterface
 {
-  const ref = __CLASS__;
   /**
    * @var Application
    */

@@ -18,7 +18,6 @@ class CoreTasks
   use BuildCommands;
   use ModuleCommands;
 
-  const ref = __CLASS__;
   /**
    * @var Application
    */

@@ -12,7 +12,7 @@ class TasksModule implements ModuleInterface
   function configure (ModuleServices $module)
   {
     $module
-      ->registerTasksFromClass (CoreTasks::ref)
+      ->registerTasksFromClass (CoreTasks::class)
       ->setDefaultConfig ([
         'core-tasks' => [
           /**

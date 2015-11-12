@@ -144,7 +144,7 @@ class PageComponent implements RoutableInterface
   /**
    * @var string
    */
-  protected $viewEngineClass = MatisseEngine::ref;
+  protected $viewEngineClass = MatisseEngine::class;
   /**
    * @var InjectorInterface
    */

@@ -9,7 +9,6 @@ use Selenia\Interfaces\MiddlewareStackInterface;
 
 class MiddlewareStack implements MiddlewareStackInterface
 {
-  const ref = __CLASS__;
   /**
    * @var ServerRequestInterface
    */
@@ -57,7 +56,7 @@ class MiddlewareStack implements MiddlewareStackInterface
           $it->next ();
 
           // Fetch or instantiate the middleware and run it.
-          $middleware  = is_string ($m) ? $this->injector->make ($m) : $m;
+          $middleware  = is_string ($m) && !is_callable ($m) ? $this->injector->make ($m) : $m;
           $newResponse = $middleware ($request, $response, $next);
 
           // Replace the response if necessary.

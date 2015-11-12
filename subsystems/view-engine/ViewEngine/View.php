@@ -10,7 +10,6 @@ use Selenia\Interfaces\ViewInterface;
 
 class View implements ViewInterface
 {
-  const ref = __CLASS__;
   /**
    * @var Application
    */

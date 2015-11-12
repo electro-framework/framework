@@ -181,15 +181,6 @@ abstract class Component
   }
 
   /**
-   * Gets the name of the class.
-   * @return string
-   */
-  public static function ref ()
-  {
-    return get_called_class ();
-  }
-
-  /**
    * Renders a set of components.
    *
    * @param Component[] $components The set of components to be rendered.

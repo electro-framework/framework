@@ -40,6 +40,12 @@ function DataSourceInfo (array $init)
 
 //------------------------------------------------------------------------------------------------------------------------
 
+function meta (callable $fn, array $data) {
+  return function () use ($fn, $data) {
+
+  };
+}
+
 /**
  * @param string|array $ref Either a 'Class::method' string or a ['Class', 'Method'] array.
  * @return array A ['Class', 'Method'] array.

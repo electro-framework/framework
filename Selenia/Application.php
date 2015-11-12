@@ -252,6 +252,12 @@ class Application
    */
   public $name = 'selenia';
   /**
+   * A list of registered navigation providers on the application.
+   * <p>An array of callables with signature: <kbd>array ()</kbd>
+   * @var callable[]
+   */
+  public $navigationProviders = [];
+  /**
    * Maximum width and/or height for uploaded images.
    * Images exceeding this dimensions are resized to fit them.
    * @var int
@@ -288,9 +294,11 @@ class Application
    */
   public $rootPath;
   /**
+   * A list of registered routers on the application.
+   * <p>An array of <kbd>string|RouterInterface</kbd>
    * @var array
    */
-  public $routes = [];
+  public $routers = [];
   /**
    * The application'a routing map.
    * @var RoutingMap

@@ -7,8 +7,6 @@ use Zend\Diactoros\Stream;
 
 class ResponseFactory implements ResponseFactoryInterface
 {
-  const ref = __CLASS__;
-
   function make ($status = 200, $content = '', $contentType = null, array $headers = [])
   {
     if ($contentType)

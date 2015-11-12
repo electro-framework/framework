@@ -7,19 +7,38 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * A service that assists in routing an HTTP request to one or more request handlers.
  * <p>A handler (also called a *routable*) may generate an HTTP response and/or route to other handlers.
- * <p>The request will traverse a graph of interconnected handlers, until a full HTTP response is generated.
- * > **Note:** A *routable* is a callable that implements the `RoutableInterface` call signature.
+ * <p>The request will traverse a graph of interconnected handlers, until a full HTTP response is generated or the
+ * graph is exhausted.
+ *
+ * ### Notes
+ * - Instances implementing this interface **MUST** be immutable objects.
+ * - `next()` creates new instances.
+ * - A *routable* is a callable that implements the `RoutableInterface` call signature.
+ *
+ * ### Routables
+ *
+ * On methods of this interface, a parameter of routable type is a <kbd>callable|string|array</kbd>.
+ * <p>On a call, the supplied argument is interpreted as follows:
+ *
+ * ##### callable
+ * Callables can be invokable objects, methods or functions that have a <kbd>RouterInterface</kbd>-compatible signature:
+ * <code>ResponseInterface|false (RouterInterface $router)</code>
+ *
+ * If mapping to a string, it should be the name of an invokable class, which will be instantiated
+ * trough dependency injection.
+ * If an array with 2 elements, being the second one an array, is given, it is interpreted as
+ * following:
+ * - The first argument is interpreted as being a routable class name or class instance.
+ * - The second argument is setter-injection map; a map of property values to inject on that
+ * existing/new instance. This allows you to configure the routable instance before it is invoked.
  */
 interface RouterInterface
 {
   /**
    * Invokes the callable whose key matches the next location and returns its response, or returns false if no match
    * occurred.
-   * @param array $map A <kbd>[string => callable|string]</kbd> map.
-   *                   <p>Each callable should have a <kbd>RouterInterface</kbd> signature:
-   *                   <code>ResponseInterface|false (RouterInterface $router)</code>
-   *                   If mapping to a string, it should be the name of an invokable class, which will be instantiated
-   *                   trough dependency injection.
+   * @param array $map A <kbd>[string => routable]</kbd> map.
+   *
    * @return ResponseInterface|false
    */
   function dispatch (array $map);
@@ -102,6 +121,23 @@ interface RouterInterface
   function matchPrefix ($path, $routable);
 
   /**
+   * Passes the request trough a middleware stack.
+   *
+   * <p>The argument to this method can be of the following types:
+   * - A callable (string|array|function) - it should be a `MiddlewareStackInterface|MiddlewareInterface` instance or a
+   * function that has a compatible call signature.
+   * - An array; this method will internally create a `MiddlewareStack` from that array.
+   * - A class name; it will be instantiated using dependency injection.
+   * - `null`; no operation - useful when using a conditional expression as argument.
+   *
+   * @param MiddlewareInterface|string|array|null $middleware If an array, its elements can be
+   *                                                          <kbd>string|callable</kbd>.
+   *                                                          <p>If a string, it must be a callable or a class name.
+   * @return $this
+   */
+  function middleware ($middleware);
+
+  /**
    * Advance the route's current location to the next one.
    * <p>If the route is already at the end, further matches will all fail.
    * @param ResponseInterface $response If provided, the given response will be used as the current response from this
@@ -134,11 +170,13 @@ interface RouterInterface
    *                                       <p>If <kbd>null</kbd>, this method will return either <kbd>true|false</kbd>.
    * @return $this
    */
-  function onTarget ($methods, callable $routable = null);
+  function onTarget ($methods, $routable = null);
 
   /**
    * Creates a new redirection HTTP response.
-   * @return RedirectionInterface;
+   *
+   * <p>This is a convenience method that saves you from having to inject the redirection service on routers.
+   * @return RedirectionInterface
    */
   function redirection ();
 

@@ -10,6 +10,6 @@ class FileServerModule implements ServiceProviderInterface
   function register (InjectorInterface $injector)
   {
     $injector
-      ->share ($injector->make(FileServerMappings::ref));
+      ->share ($injector->make(FileServerMappings::class));
   }
 }

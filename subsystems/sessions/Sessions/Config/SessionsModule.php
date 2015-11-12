@@ -10,8 +10,8 @@ class SessionsModule implements ServiceProviderInterface
   function register (InjectorInterface $injector)
   {
     $injector
-      ->alias ('Selenia\Interfaces\SessionInterface', Session::ref)
-      ->share (Session::ref);
+      ->alias ('Selenia\Interfaces\SessionInterface', Session::class)
+      ->share (Session::class);
   }
 
 }

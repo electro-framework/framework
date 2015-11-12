@@ -14,7 +14,6 @@ use Zend\Diactoros\ServerRequestFactory;
  */
 class WebServer
 {
-  const ref = __CLASS__;
   /**
    * @var ServerRequestInterface
    */

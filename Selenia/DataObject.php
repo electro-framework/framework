@@ -137,11 +137,6 @@ class DataObject
     return date ('Y-m-d', strtotime ('-1 day', strtotime ($date)));
   }
 
-  static function ref ()
-  {
-    return get_called_class ();
-  }
-
   public static function serializePropertiesToXML (array $data, array $fields, $tag = 'e')
   {
     $output = "<$tag>";

@@ -8,8 +8,6 @@ class FileServerMappings
 {
   use InspectionTrait;
 
-  const ref = __CLASS__;
-
   static $INSPECTABLE = ['mountPoints'];
   /**
    * @var Application

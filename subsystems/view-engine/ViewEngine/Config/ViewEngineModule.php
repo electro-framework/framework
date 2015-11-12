@@ -31,9 +31,9 @@ class ViewEngineModule implements ServiceProviderInterface, ModuleInterface
   function register (InjectorInterface $injector)
   {
     $injector->share (new PipeHandler);
-//    $pipeHandler = $injector->make(PipeHandler::ref);
+//    $pipeHandler = $injector->make(PipeHandler::class);
     $injector->delegate ('Selenia\Interfaces\ViewInterface', function (View $view) {
-      $view->register (MatisseEngine::ref, '/\.html$/');
+      $view->register (MatisseEngine::class, '/\.html$/');
       return $view;
     });
   }

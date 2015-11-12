@@ -5,10 +5,11 @@ use Selenia\Application;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\FileServer\Services\FileServerMappings;
 use Selenia\Interfaces\AssignableInterface;
+use Selenia\Interfaces\NavigationInterface;
+use Selenia\Interfaces\RouterInterface;
 
 class ModuleServices
 {
-  const ref = __CLASS__;
   /**
    * @var Application
    */
@@ -120,7 +121,7 @@ class ModuleServices
   }
 
   /**
-   * @param array $v Map of tag names to componenbt classes.
+   * @param array $v Map of tag names to component classes.
    * @return $this
    */
   function registerComponents (array $v)
@@ -140,12 +141,25 @@ class ModuleServices
   }
 
   /**
-   * @param array $v Optional preset routes for the module.
+   * Registers a router on the application.
+   * @param string|RouterInterface $router
    * @return $this
    */
-  function registerRoutes (array $v)
+  function registerRouter ($router)
   {
-    array_mergeInto ($this->app->routes, $v);
+    $this->app->routers[] = $router;
+    return $this;
+  }
+
+  /**
+   * Registers a navigation provider on the application.
+   * @param callable $provider A callable with signature: <kbd>array ()</kbd> that should return a map of
+   *                           <kbd>[string => NavigationInterface]</kbd>
+   * @return $this
+   */
+  function provideNavigation (callable $provider)
+  {
+    $this->app->navigationProviders[] = $provider;
     return $this;
   }
 

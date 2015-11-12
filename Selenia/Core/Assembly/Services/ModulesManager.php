@@ -11,7 +11,6 @@ use Selenia\Interfaces\ServiceProviderInterface;
  */
 class ModulesManager
 {
-  const ref = __CLASS__;
   /**
    * @var Application
    */
@@ -69,7 +68,7 @@ class ModulesManager
 
     // Warning: this MUST NOT be injected on the constructor above!
     // This is a shared service.
-    $moduleServices = $this->injector->make (ModuleServices::ref);
+    $moduleServices = $this->injector->make (ModuleServices::class);
 
     foreach ($providers as $i => $provider) {
       $moduleServices->setPath ($paths[$i]);

@@ -13,10 +13,10 @@ class AssemblyServiceProvider implements ServiceProviderInterface
   function register (InjectorInterface $injector)
   {
     $injector
-      ->share (ModulesManager::ref)
-      ->share (ModuleServices::ref)
-      ->share (ModulesRegistry::ref)
-      ->delegate (ModulesRegistry::ref, function (Application $app) {
+      ->share (ModulesManager::class)
+      ->share (ModuleServices::class)
+      ->share (ModulesRegistry::class)
+      ->delegate (ModulesRegistry::class, function (Application $app) {
         $registry = new ModulesRegistry ($app);
         $registry->load ();
         return $registry;

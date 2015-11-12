@@ -13,8 +13,6 @@ class PipeHandler
 {
   use InspectionTrait;
 
-  const ref = __CLASS__;
-
   static $INSPECTABLE = ['pipes'];
   /**
    * If not match for a pipe is found on the map of registered pipes, a call will be made on the fallback handler

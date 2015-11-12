@@ -11,7 +11,6 @@ class Session implements SessionInterface
 {
   use InspectionTrait, AssignableTrait;
 
-  const ref = __CLASS__;
   /**
    * For use with the InpectionTrait.
    * @var array

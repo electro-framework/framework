@@ -11,8 +11,8 @@ class HttpModule implements ServiceProviderInterface
   function register (InjectorInterface $injector)
   {
     $injector
-      ->alias ('Selenia\Interfaces\ResponseFactoryInterface', ResponseFactory::ref)
-      ->alias ('Selenia\Interfaces\ResponseSenderInterface', ResponseSender::ref);
+      ->alias ('Selenia\Interfaces\ResponseFactoryInterface', ResponseFactory::class)
+      ->alias ('Selenia\Interfaces\ResponseSenderInterface', ResponseSender::class);
   }
 
 }

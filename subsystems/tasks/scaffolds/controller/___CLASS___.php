@@ -4,8 +4,6 @@ use Selenia\Http\Components\PageComponent;
 
 class ___CLASS___ extends PageComponent
 {
-  const ref = __CLASS__;
-
   protected function model ()
   {
     // TODO: Return a model for the 'default' data source

@@ -14,7 +14,6 @@ use Symfony\Component\Console\Input\ArrayInput;
  */
 class Commands
 {
-  const ref = __CLASS__;
   /**
    * @var string Used internally to pass information to config.php
    */

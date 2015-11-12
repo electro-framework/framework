@@ -6,8 +6,6 @@ use Selenia\Interfaces\ResponseSenderInterface;
 
 class ResponseSender implements ResponseSenderInterface
 {
-  const ref = __CLASS__;
-
   protected $bufferSize;
   protected $outputStream;
 

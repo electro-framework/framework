@@ -63,8 +63,8 @@ class WebApplication
     // Create and register the foundational framework services.
 
     $application = $this->app = $this->injector
-      ->share (Application::ref)
-      ->make (Application::ref);
+      ->share (Application::class)
+      ->make (Application::class);
     $application->setup ($rootDir);
 
     // Pre-assembly setup.
@@ -76,16 +76,16 @@ class WebApplication
     // Bootstrap the application's modules.
 
     /** @var ModulesManager $modulesApi */
-    $modulesManager = $this->injector->make (ModulesManager::ref);
+    $modulesManager = $this->injector->make (ModulesManager::class);
     $modulesManager->bootModules ();
 
     // Post-assembly additional setup.
 
     if ($application->debugMode)
-      $this->setDebugPathsMap ($this->injector->make (ModulesRegistry::ref));
+      $this->setDebugPathsMap ($this->injector->make (ModulesRegistry::class));
 
     /** @var WebServer $webServer */
-    $webServer = $this->injector->make (WebServer::ref);
+    $webServer = $this->injector->make (WebServer::class);
     $webServer->setup ();
     $webServer->run ();
   }

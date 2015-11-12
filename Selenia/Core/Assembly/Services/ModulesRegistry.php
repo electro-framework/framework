@@ -16,7 +16,6 @@ class ModulesRegistry
 {
   use InspectionTrait;
 
-  const ref = __CLASS__;
   static $INSPECTABLE = ['modules'];
   /**
    * @var Application
@@ -36,7 +35,7 @@ class ModulesRegistry
 
   private static function hidrateModulesList (array $data)
   {
-    return map ($data, function ($o) { return array_toClass ($o, ModuleInfo::ref); });
+    return map ($data, function ($o) { return array_toClass ($o, ModuleInfo::class); });
   }
 
   function getAllModuleNames ()

@@ -2,7 +2,12 @@
 namespace Selenia\Interfaces;
 
 /**
- * Represents the route that is being traversed as the current request's virtual URL is being routed.
+ * The route that is being traversed as the current request's virtual URL is being routed.
+ *
+ * ### Notes
+ * - Instances implementing this interface **MUST** be immutable objects.
+ * - New instances are created for each location as the request is being routed.
+ * - `next()` creates new instances.
  */
 interface RouteInterface
 {

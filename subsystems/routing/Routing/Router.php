@@ -3,6 +3,7 @@ namespace Selenia\Routing;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\MiddlewareStackInterface;
 use Selenia\Interfaces\RedirectionInterface;
 use Selenia\Interfaces\RouteInterface;
 use Selenia\Interfaces\RouterInterface;
@@ -110,6 +111,31 @@ class Router implements RouterInterface
     return false;
   }
 
+  function middleware ($middleware)
+  {
+    if (isset ($middleware)) {
+      if (is_array ($middleware)) {
+        $stack = $this->injector->make (MiddlewareStackInterface::class);
+        /** @var MiddlewareStackInterface $stack */
+        $stack->add ($middleware);
+        $middleware = $stack;
+      }
+      else if (!is_callable ($middleware)) {
+        if (is_string ($middleware))
+          $middleware = $this->injector->make ($middleware);
+        else throw new \InvalidArgumentException ("Invalid middleware type: " . gettype ($middleware));
+      }
+      $response = $middleware ($this->request, $this->response,
+        function (ServerRequestInterface $request = null, ResponseInterface $response = null) {
+          if ($request) $this->request = $request;
+          if ($response) $this->response = $response;
+        }
+      );
+      if ($response) $this->response = $response;
+    }
+    return $this;
+  }
+
   function next (ResponseInterface $response = null)
   {
     return $this->make ($this->route->next ());
@@ -120,7 +146,7 @@ class Router implements RouterInterface
     return $this->matchesMethods ($methods) ? $this->exec ($routable) : false;
   }
 
-  function onTarget ($methods, callable $routable = null)
+  function onTarget ($methods, $routable = null)
   {
     return $this->route->target () ? ($routable ? $this->on ($methods, $routable) : false) : false;
   }
@@ -151,11 +177,16 @@ class Router implements RouterInterface
    */
   private function exec ($routable)
   {
-    if (is_callable ($routable)) {
-      if (class_exists ($routable))
+    $setterMap = null;
+    if (!is_callable ($routable)) {
+      if (is_array($routable) && isset($routable[1]) && is_array($routable[1]))
+        list ($routable, $setterMap) = $routable;
+      else if (class_exists ($routable))
         $routable = $this->injector->make ($routable);
       else throw new \RuntimeException ("Invalid routable reference: <kbd>$routable</kbd>");
     }
+    if ($setterMap)
+      extend ($routable, $setterMap);
     return $routable ($this);
   }
 
@@ -173,5 +204,6 @@ class Router implements RouterInterface
   {
     return $methods == '*' || in_array ($this->request->getMethod (), explode ('|', $methods));
   }
+
 }
 
