@@ -13,6 +13,8 @@ use Selenia\Interfaces\RouterInterface;
  */
 class Router implements RouterInterface
 {
+  /** @var Router This is used by the injector */
+  static $current;
   /**
    * @var InjectorInterface
    */
@@ -141,14 +143,14 @@ class Router implements RouterInterface
     return $this->make ($this->route->next ());
   }
 
-  function on ($methods, $routable)
+  function onTraverse ($methods, $routable)
   {
     return $this->matchesMethods ($methods) ? $this->exec ($routable) : false;
   }
 
-  function onTarget ($methods, $routable = null)
+  function on ($methods, $routable = null)
   {
-    return $this->route->target () ? ($routable ? $this->on ($methods, $routable) : false) : false;
+    return $this->route->target () ? ($routable ? $this->onTraverse ($methods, $routable) : false) : false;
   }
 
   function redirection ()
@@ -178,28 +180,21 @@ class Router implements RouterInterface
    */
   private function exec ($routable)
   {
-    /** @var array $setterMap */
-    $setterMap = null;
-    /** @var callable $setupFn */
-    $setupFn = null;
-
+    self::$current = $this;
     if (!is_callable ($routable)) {
-      if (is_array ($routable) && count ($routable) == 2) {
-        if (is_array ($routable[1]))
-          list ($routable, $setterMap) = $routable;
-        elseif (is_callable ($routable[1]))
-          list ($routable, $setupFn) = $routable;
-      }
-      else if (class_exists ($routable))
+      if (class_exists ($routable))
         $routable = $this->injector->make ($routable);
-      else throw new \RuntimeException ("Invalid routable reference: <kbd>$routable</kbd>");
+      if (!is_callable ($routable))
+        throw new \RuntimeException (sprintf ("Invalid routable reference: <kbd>%s</kbd>",
+          var_export ($routable, true)));
     }
-
-    if ($setupFn)
-      $setupFn ($routable);
-    elseif ($setterMap)
-      extend ($routable, $setterMap);
-    return $routable ($this);
+    $r = $this->injector->execute ($routable);
+    if (!$r || $r instanceof ResponseInterface)
+      return $r;
+    if (is_callable ($r))
+      return $this->injector->execute ($r);
+    throw new \RuntimeException (sprintf ("Invalid return type from routable: <kbd>%s</kbd>",
+      typeOf ($routable)));
   }
 
   /**

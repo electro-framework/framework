@@ -17,29 +17,23 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * ### Routables
  *
- * On methods of this interface, a parameter of routable type is a <kbd>callable|string|array</kbd>.
- * <p>On a call, the supplied argument is interpreted as follows:
- *
- * ##### callable
- * Callables can be invokable objects, methods or functions that have a <kbd>RouterInterface</kbd>-compatible
- * signature:
+ * On methods of this interface, a parameter of routable type is a `callable` that can be invokable classe, object,
+ * method or function. It will be dependency-injected when invoked.
+ * <p>Usually it will have a <kbd>RouterInterface</kbd>-compatible signature:
  * <code>ResponseInterface|false (RouterInterface $router)</code>
+ * > **Note:** when being invoked by the router, if a function lists `RouterInterface` as an argument, it will be
+ * injected with the **current** router instance.
  *
- * ##### string
- * The name of an invokable class, which will be instantiated trough dependency injection.
+ * > **Note:** when instantiating an invokable class, its constructor will also be dependency-injected.
  *
- * ##### array
- * If an array with 2 elements, it is interpreted as following:
- * - If it is a callable reference, it is invoked.
- * - Otherwhise, the first argument is interpreted as being a routable class name or class instance.
- * - The second argument is either:
- *     - **An array**
- *       <p>A setter-injection map; a map of property values to inject on that
- *       existing/new instance. This allows you to configure the routable instance before it is invoked for routing.
- *     - **A callable**
- *       <p>A function that receives as argument the new instance. It will be called to configure the routable instance
- *       before it is invoked for routing.
- * If the array doesn't match any of the cases above, an exception is thrown.
+ * ### Configuring routables
+ *
+ * Sometimes you may wish to configure a routable class instance before invoking it (ex. configuring a controller
+ * or a component). In that case, you may supply a configuration function instead of the target routable.
+ * <p>The setup function can request any required dependency trough its parameters. One of those parameters should
+ * usually be an instance of the desired routable class.
+ * <p>The setup function **MUST** return the configured routable instance. The router will then invoke it passing
+ * itself as the sole argument.
  */
 interface RouterInterface
 {
@@ -164,7 +158,7 @@ interface RouterInterface
    *                                  instantiated trough dependency injection.
    * @return $this
    */
-  function on ($methods, $routable);
+  function onTraverse ($methods, $routable);
 
   /**
    * Invokes a routable (or returns `true` if none is given) if both:
@@ -179,7 +173,7 @@ interface RouterInterface
    *                                       <p>If <kbd>null</kbd>, this method will return either <kbd>true|false</kbd>.
    * @return $this
    */
-  function onTarget ($methods, $routable = null);
+  function on ($methods, $routable = null);
 
   /**
    * Creates a new redirection HTTP response.
