@@ -106,6 +106,11 @@ class PageComponent implements RoutableInterface
    */
   public $view;
   /**
+   * Set this to automatically load a view from the specified external template.
+   * @var string
+   */
+  public $templateUrl;
+  /**
    * The current request URI without the page number parameters.
    * This property is useful for databing with the expression {!controller.URI_noPage}.
    * @var string
@@ -168,7 +173,7 @@ class PageComponent implements RoutableInterface
 
   function __invoke (RouterInterface $router)
   {
-    return $router->onTarget ('*', [$this, 'run']);
+    return $router->on ('*', [$this, 'run']);
   }
 
   /**

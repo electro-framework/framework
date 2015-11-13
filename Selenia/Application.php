@@ -203,12 +203,6 @@ class Application
    */
   public $logHandlers = [];
   /**
-   * Relative file path of the view to be used for authenticating the user.
-   * <p>It will be searched for on both the active module and on the application.
-   * @var string
-   */
-  public $loginView = '';
-  /**
    * @var string
    */
   public $modelPath = 'models';
@@ -351,9 +345,9 @@ class Application
   public $translation = false;
   /**
    * The FQN of the logged in user's model class.
-   * @var string
+   * @var string|null
    */
-  public $userModel = '';
+  public $userModel = null;
   /**
    * Relative to the root folder.
    * @var string
