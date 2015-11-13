@@ -21,16 +21,25 @@ use Psr\Http\Message\ServerRequestInterface;
  * <p>On a call, the supplied argument is interpreted as follows:
  *
  * ##### callable
- * Callables can be invokable objects, methods or functions that have a <kbd>RouterInterface</kbd>-compatible signature:
+ * Callables can be invokable objects, methods or functions that have a <kbd>RouterInterface</kbd>-compatible
+ * signature:
  * <code>ResponseInterface|false (RouterInterface $router)</code>
  *
- * If mapping to a string, it should be the name of an invokable class, which will be instantiated
- * trough dependency injection.
- * If an array with 2 elements, being the second one an array, is given, it is interpreted as
- * following:
- * - The first argument is interpreted as being a routable class name or class instance.
- * - The second argument is setter-injection map; a map of property values to inject on that
- * existing/new instance. This allows you to configure the routable instance before it is invoked.
+ * ##### string
+ * The name of an invokable class, which will be instantiated trough dependency injection.
+ *
+ * ##### array
+ * If an array with 2 elements, it is interpreted as following:
+ * - If it is a callable reference, it is invoked.
+ * - Otherwhise, the first argument is interpreted as being a routable class name or class instance.
+ * - The second argument is either:
+ *     - **An array**
+ *       <p>A setter-injection map; a map of property values to inject on that
+ *       existing/new instance. This allows you to configure the routable instance before it is invoked for routing.
+ *     - **A callable**
+ *       <p>A function that receives as argument the new instance. It will be called to configure the routable instance
+ *       before it is invoked for routing.
+ * If the array doesn't match any of the cases above, an exception is thrown.
  */
 interface RouterInterface
 {

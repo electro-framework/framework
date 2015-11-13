@@ -172,24 +172,42 @@ class Router implements RouterInterface
   }
 
   /**
+   * Parses and executes a routable reference.
    * @param callable|string $routable
    * @return ResponseInterface|false
    */
   private function exec ($routable)
   {
+    /** @var array $setterMap */
     $setterMap = null;
+    /** @var callable $setupFn */
+    $setupFn = null;
+
     if (!is_callable ($routable)) {
-      if (is_array($routable) && isset($routable[1]) && is_array($routable[1]))
-        list ($routable, $setterMap) = $routable;
+      if (is_array ($routable) && count ($routable) == 2) {
+        if (is_array ($routable[1]))
+          list ($routable, $setterMap) = $routable;
+        elseif (is_callable ($routable[1]))
+          list ($routable, $setupFn) = $routable;
+      }
       else if (class_exists ($routable))
         $routable = $this->injector->make ($routable);
       else throw new \RuntimeException ("Invalid routable reference: <kbd>$routable</kbd>");
     }
-    if ($setterMap)
+
+    if ($setupFn)
+      $setupFn ($routable);
+    elseif ($setterMap)
       extend ($routable, $setterMap);
     return $routable ($this);
   }
 
+  /**
+   * Clones the instance.
+   * @param RouteInterface         $route
+   * @param ResponseInterface|null $response
+   * @return static
+   */
   private function make (RouteInterface $route, ResponseInterface $response = null)
   {
     return new static ($this->request, $response ?: $this->response, $route, $this->redirection,
