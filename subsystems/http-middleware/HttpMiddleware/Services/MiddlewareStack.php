@@ -3,9 +3,9 @@ namespace Selenia\HttpMiddleware\Services;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Interfaces\Http\MiddlewareInterface;
+use Selenia\Interfaces\Http\MiddlewareStackInterface;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\MiddlewareInterface;
-use Selenia\Interfaces\MiddlewareStackInterface;
 
 class MiddlewareStack implements MiddlewareStackInterface
 {
@@ -51,7 +51,7 @@ class MiddlewareStack implements MiddlewareStackInterface
           $request  = $this->currentRequest = $request ?: $this->currentRequest;
           $response = $this->currentResponse = $response ?: $this->currentResponse;
 
-          /** @var \Selenia\Interfaces\MiddlewareInterface $middleware */
+          /** @var \Selenia\Interfaces\Http\MiddlewareInterface $middleware */
           $m = $it->current ();
           $it->next ();
 

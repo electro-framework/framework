@@ -2,11 +2,11 @@
 namespace Selenia\Routing;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Interfaces\Http\MiddlewareStackInterface;
+use Selenia\Interfaces\Http\RedirectionInterface;
+use Selenia\Interfaces\Http\RouteInterface;
+use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\MiddlewareStackInterface;
-use Selenia\Interfaces\RedirectionInterface;
-use Selenia\Interfaces\RouteInterface;
-use Selenia\Interfaces\RouterInterface;
 
 /**
  * Routes the current URL to a matching request handler

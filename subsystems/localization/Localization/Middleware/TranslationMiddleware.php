@@ -6,8 +6,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Exceptions\FlashType;
-use Selenia\Interfaces\MiddlewareInterface;
-use Selenia\Interfaces\ResponseFactoryInterface;
+use Selenia\Interfaces\Http\MiddlewareInterface;
+use Selenia\Interfaces\Http\ResponseFactoryInterface;
 use Selenia\Localization\Services\Locale;
 
 /**

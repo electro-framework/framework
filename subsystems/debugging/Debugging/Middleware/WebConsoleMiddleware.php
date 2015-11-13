@@ -10,8 +10,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Selenia\Application;
+use Selenia\Interfaces\Http\MiddlewareInterface;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\MiddlewareInterface;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Routing\Router;
 

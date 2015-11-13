@@ -4,7 +4,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Exceptions\HttpException;
-use Selenia\Interfaces\MiddlewareInterface;
+use Selenia\Interfaces\Http\MiddlewareInterface;
 
 /**
  *

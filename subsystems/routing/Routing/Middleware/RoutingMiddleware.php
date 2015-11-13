@@ -4,8 +4,8 @@ use PhpKit\WebConsole\WebConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
+use Selenia\Interfaces\Http\MiddlewareInterface;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\MiddlewareInterface;
 use Selenia\Routing\Router;
 
 /**

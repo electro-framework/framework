@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Routing;
 
-use Selenia\Interfaces\RouteInterface;
+use Selenia\Interfaces\Http\RouteInterface;
 
 class Route implements RouteInterface
 {

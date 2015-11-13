@@ -4,8 +4,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Authentication\Exceptions\AuthenticationException;
-use Selenia\Interfaces\MiddlewareInterface;
-use Selenia\Interfaces\RedirectionInterface;
+use Selenia\Interfaces\Http\MiddlewareInterface;
+use Selenia\Interfaces\Http\RedirectionInterface;
 use Selenia\Interfaces\SessionInterface;
 
 /**

@@ -5,8 +5,7 @@ use Selenia\Application;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\FileServer\Services\FileServerMappings;
 use Selenia\Interfaces\AssignableInterface;
-use Selenia\Interfaces\NavigationInterface;
-use Selenia\Interfaces\RouterInterface;
+use Selenia\Interfaces\Http\RouterInterface;
 
 class ModuleServices
 {

@@ -3,8 +3,8 @@ namespace Selenia\WebServer;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\FileServer\Services\FileServerMappings;
-use Selenia\Interfaces\MiddlewareStackInterface;
-use Selenia\Interfaces\ResponseSenderInterface;
+use Selenia\Interfaces\Http\MiddlewareStackInterface;
+use Selenia\Interfaces\Http\ResponseSenderInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequestFactory;
 

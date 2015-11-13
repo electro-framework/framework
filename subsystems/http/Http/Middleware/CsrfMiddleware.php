@@ -2,7 +2,7 @@
 namespace Selenia\Http\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Interfaces\MiddlewareInterface;
+use Selenia\Interfaces\Http\MiddlewareInterface;
 
 /**
  * Verifies CSRF tokens for form POST requests.

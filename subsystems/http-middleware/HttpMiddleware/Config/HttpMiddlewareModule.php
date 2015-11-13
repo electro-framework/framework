@@ -2,8 +2,8 @@
 namespace Selenia\HttpMiddleware\Config;
 
 use Selenia\HttpMiddleware\Services\MiddlewareStack;
+use Selenia\Interfaces\Http\MiddlewareStackInterface;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\MiddlewareStackInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
 
 /**

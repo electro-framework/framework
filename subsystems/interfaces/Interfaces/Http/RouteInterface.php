@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Interfaces;
+namespace Selenia\Interfaces\Http;
 
 /**
  * The route that is being traversed as the current request's virtual URL is being routed.

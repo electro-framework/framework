@@ -4,7 +4,7 @@ namespace Selenia\Localization\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
-use Selenia\Interfaces\MiddlewareInterface;
+use Selenia\Interfaces\Http\MiddlewareInterface;
 use Selenia\Localization\Config\LocalizationSettings;
 use Selenia\Localization\Services\Locale;
 use Selenia\Sessions\Services\Session;

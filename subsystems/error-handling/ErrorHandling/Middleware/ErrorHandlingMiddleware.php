@@ -8,8 +8,8 @@ use Psr\Log\LoggerInterface;
 use Selenia\Application;
 use Selenia\Exceptions\HttpException;
 use Selenia\Http\HttpUtil;
-use Selenia\Interfaces\MiddlewareInterface;
-use Selenia\Interfaces\ResponseFactoryInterface;
+use Selenia\Interfaces\Http\MiddlewareInterface;
+use Selenia\Interfaces\Http\ResponseFactoryInterface;
 
 /**
  * Handles errors that occur throughout the HTTP middleware stack.

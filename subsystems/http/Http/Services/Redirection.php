@@ -4,8 +4,8 @@ namespace Selenia\Http\Services;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 use Selenia\Application;
-use Selenia\Interfaces\RedirectionInterface;
-use Selenia\Interfaces\ResponseFactoryInterface;
+use Selenia\Interfaces\Http\RedirectionInterface;
+use Selenia\Interfaces\Http\ResponseFactoryInterface;
 use Selenia\Interfaces\SessionInterface;
 use Zend\Diactoros\Response;
 

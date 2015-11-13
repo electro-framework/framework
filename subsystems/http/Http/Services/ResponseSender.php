@@ -2,7 +2,7 @@
 namespace Selenia\Http\Services;
 
 use Psr\Http\Message\ResponseInterface;
-use Selenia\Interfaces\ResponseSenderInterface;
+use Selenia\Interfaces\Http\ResponseSenderInterface;
 
 class ResponseSender implements ResponseSenderInterface
 {

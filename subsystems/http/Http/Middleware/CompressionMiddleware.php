@@ -2,8 +2,8 @@
 namespace Selenia\Http\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Interfaces\MiddlewareInterface;
-use Selenia\Interfaces\ResponseFactoryInterface;
+use Selenia\Interfaces\Http\MiddlewareInterface;
+use Selenia\Interfaces\Http\ResponseFactoryInterface;
 
 /**
  * Applies gzip compression to the HTTP response.

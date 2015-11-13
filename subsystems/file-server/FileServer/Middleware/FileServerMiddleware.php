@@ -4,8 +4,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\FileServer\Services\FileServerMappings;
-use Selenia\Interfaces\MiddlewareInterface;
-use Selenia\Interfaces\ResponseFactoryInterface;
+use Selenia\Interfaces\Http\MiddlewareInterface;
+use Selenia\Interfaces\Http\ResponseFactoryInterface;
 
 /**
  * Serves static assets on virtual URLs exposed from packages or from the framework itself.
