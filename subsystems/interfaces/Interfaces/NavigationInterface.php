@@ -14,13 +14,15 @@ interface NavigationInterface
   function enabled ($enabled = null);
 
   /**
-   * @param string $icon
+   * The menu item's icon.
+   * @param string $icon A space-separated list of CSS class selectors. Ex: 'fa fa-home'
    * @return $this|string
    */
   function icon ($icon = null);
 
   /**
-   * @param NavigationInterface[] $next
+   * Defines this location's children locations.
+   * @param NavigationInterface[] $next An array of <kbd>[string => NavigationInterface]</kbd>
    * @return $this|NavigationInterface[]
    */
   function next (array $next);
@@ -39,6 +41,8 @@ interface NavigationInterface
 
   /**
    * The relative URL path for the location this Navigation refers to.
+   * <p>You do not usually need to set this property as it is automatically set from the keys of the array
+   * that holds the Naviations. Nevertheless, you may also set this to a completely different URL.
    *
    * > Ex: `'admin/users'`
    *

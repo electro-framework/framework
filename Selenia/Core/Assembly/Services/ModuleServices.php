@@ -154,7 +154,7 @@ class ModuleServices
   /**
    * Registers a navigation provider on the application.
    * @param callable $provider A callable with signature: <kbd>array ()</kbd> that should return a map of
-   *                           <kbd>[string => NavigationInterface]</kbd>
+   *                           <kbd>[string => callable|callable|NavigationProviderInterface]</kbd>
    * @return $this
    */
   function provideNavigation (callable $provider)
