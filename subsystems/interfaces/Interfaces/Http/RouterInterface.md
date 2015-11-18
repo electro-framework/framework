@@ -1,25 +1,36 @@
 # RouterInterface
 
 A service that assists in routing an HTTP request to one or more request handlers.
-<p>A handler (also called a *routable*) may generate an HTTP response and/or route to other handlers.
+<p>A handler may generate an HTTP response and/or route to other handlers.
 <p>The request will traverse a tree of interconnected handlers, until a full HTTP response is generated or the
 tree traversal is completed.
 
 > Note that not all nodes on the tree will be visited, as most routes will not match the request's URL.
 
+If the handler tree is exhausted, the router sends the request to the next handler on the application's main
+request handling pipeline.
+
+### A short introduction to Selenia's HTTP handling concepts
+
 Selenia's router has some unique features that set it apart from most other routers out there.  
 
-For instance, it is a **hierarchical** router, while most other routers are linear ones.
+For instance, it is a **hierarchical** router, while most other routers are linear ones.  
+It also allows multiple handlers to handle a request, each one generating a part of the response. This enables advanced
+features like *composite responses* and **Turboload** navigation.
 
-### Middleware
+To understand the way the router works, it's important to know the main concepts behind the framework's HTTP request
+handling. We'll shortly outline them here before proceeding to the details of the routing process. 
 
-HTTP middleware is a central concept on Selenia's routing.
+#### Request Handlers
 
-All routable elements on a routing graph are either route mappings, middleware or factories that produce middleware.
+Request handlers are a central concept on Selenia's routing (and general HTTP processing).
 
-#### What is middleware?
+All routable elements on a routing tree are either route mappings, request handlers or factories that produce handlers.
 
-On most frameworks, middleware is used for implementing any logic you might stick between the request/response life cycle that's not necessarily part of your application logic.
+##### What is a Request Handler?
+
+On many modern frameworks, **middleware** is used for implementing any logic you might stick between the request/response
+life cycle that's not necessarily part of your application logic.
 
 For example:
 
@@ -32,45 +43,69 @@ For example:
 - Compressing the response
 - Anything else related to the request/response lifecycle
 
-Selenia expands the traditional middleware concept by making your application logic (Controllers or Components) also be
-implemented as middleware.
+Selenia expands the traditional middleware concept by making your application logic (Controllers or Components) to also be
+implemented as middleware-compatible functions (or callable objects).
 
-So, **on Selenia, middleware is a broad concept the applies to anything that processes HTTP requests and generates/modifies
+So, on Selenia, **Request Handlers are a broad concept the applies to anything that processes HTTP requests and generates/modifies
 HTTP responses**.
+
+##### What is the relation between Request Handlers and Middleware?
+
+Request handlers and 100% compatible with PSR-7-compatible middleware.
+
+- You can use existing PSR-7-compatible middleware from other projects or frameworks on your Selenia application.
+- You can use Selenia middleware on projects based on other frameworks (or even with no framework at all) as long as they
+are PSR-7-compatible.
+
+Nevertheless, on Selenia, request handlers are used on broader context than traditional middleware is.
+They can be used to implement middleware, of course, but they are also used to implement routers, controllers and
+components.
+
+So, unlinke middleware (which only implement *concerns* or *aspects*), request handlers are also used to implement
+application-specific logic.
 
 You can assemble middlewares into a **middleware stack**, which is a set of concentric middleware layers.
 
-**A middleware stack is not a queue**; each middleware is implemented as a decorator pattern: it wraps around the next
-middleware on the stack and interceps HTTP requests and responses that flow in and out of it.
+##### Composing Request Handlers (the Handler Pipeline)
 
-If a middleware does not specifically invoke the next one, that and all subsequent middlewares will never be invoked; the current middleware's
-response will start immediately moving backwards to the outer layers.
-When the first layer is reached, the response will be sent to the HTTP client (usually the web browser).
+Traditional middleware is implemented as a decorator pattern: it wraps around the next middleware on a stack and
+interceps HTTP requests and responses that flow in and out of it.
 
-On Selenia, middlewares are responsible for providing all the application logic and all HTTP-related logic.
+Request handlers are composed in a **handler pipeline**.
+
+Both the request and the response flow from handler to handler on the pipeline until a response is fully generated.
+At that point, the response starts moving backwards on the pipeline, evenutally being modified along the way, until the
+start of the pipeline is reached, at which point it will be sent to the HTTP client (usually the web browser).
+
+If the request reaches the pipeline's end without a complete response being generated, the last handler will usually
+just send back an `HTTP 404 Not Found` response.
+
+To make the request and the response advance on the pipeline, each handler **MUST** call the next handler directly, by 
+invoking the `$next` argument (the third parameter of a standard/common middleware signature).
+
+If a handler does not specifically invoke the next one, that next handler and all subsequent handlers will not be invoked
+for the current request, and the current handler's response (either the function's return value or the function's response
+argument) will start immediately moving backwards the path travelled previously trough the pipeline.
 
 #### The router middleware
 
-Selenia has a main, application-level, middleware stack. At a specific point on that stack, there is a **router middleware**.
+Selenia has a main, application-level, request handling pipeline. At a specific point on that pipeline, there is a
+**routing middleware handler**, also known as a **router**.
 
-The router middleware makes the request/response flow into a parallel tree-like structure of routes, comprised of patterns
-and routable elements (where most of them are also middleware).
+The router makes the request/response flow into a parallel tree-like structure of routes, comprised of patterns
+and routable elements (where most of them are also request handlers). This will be explained further ahead.
 
-If the request is not handled on that routing tree, it proceeds to the next middleware on the main stack, which usually just sends
-back a `404 Not Found` response.
+You can picture this as a tree-like structure whose root is attached to a point in the linear request handling
+pipeline. The request/response must flow trought that tree before returning to the main pipeline, where it may resume
+traveling forward (if there is no complete response to send back) or it may turn back and send the generated response
+backwards for eventual further processing and output to the HTTP client.
 
 Now, let's talk about routing.
 
-### Routes
-
-A route is defined by calling the router's `route()` method and passing it a routable as argument.
-
-A routable can handle a single route or multiple routes.
-
 ### Routables
 
-A routable is a term that designates a set of types that are allowed to be used as routing destinations and that are
-interpreted in a type-specific way by the router.
+A routable is a term that designates a set of types that are allowed to be used as routing nodes in a routing tree,
+trough whom the request will travel, and that are interpreted in a type-specific way by the router.
 
 A given routable can be one of these concrete types:
 
@@ -80,7 +115,23 @@ A given routable can be one of these concrete types:
 - a `callable` (object, method or function)
 - a *generator* function
 
-Each of these types are interpreted by the router as explained below.
+Each of these types are interpreted by the router as explained further below.
+
+### Routes
+
+> **Route:** a rule for contitionally sending the request to a routable that branches from the current handler pipeline.
+
+A route is implemented as a routable that is comprised of a routing pattern and an associated target routable (which may,
+in turn, connect to other routables in a tree-like structure).
+
+The branching depends on applying the pattern to the current request URL path.
+
+> If a routable handles the request irrespective of its URL, it is called a **middleware** and not a route.
+
+A route is defined by either calling the router's `route()` method and passing it an iterable routable as argument, or 
+indirectly as a child of another routable, somewhere on a hierarchy of interconnected routes.
+
+### Routable Types
 
 #### Iterable routables
 
@@ -148,7 +199,6 @@ So, the iteration order for the keys is:
 **Important:** integer keys are never matched against the request's URL; their corresponding routables
 **always run**.
 
-
 ##### Middleware
 
 The example above highlights a major feature of Selenia's router: **you can mix routables with keys and routables without
@@ -156,9 +206,15 @@ keys**, and they'll be executed in order.
 
 As keyless routables always run, they are ideal for implementing traditional **middleware** (like filters, loggers, etc.).
 
-A middleware must implement `MiddlewareInterface` or a compatible call signature.
+> In fact, an **iterable routable** is quite like a **handler pipeline**, but keys have special meaning because they are
+interpreted by a router, while a handler pipeline just blindly calls the next handler whenever a handler calls `$next()`. 
 
-#### Routables implementing `MiddlewareInterface` or a compatible callable
+If a middleware performs its own routing, it can be considered a **route**.
+
+#### Routables implementing `RequestHandlerInterface` or a compatible callable
+
+A request handler must, of course, implement `RequestHandlerInterface` or a compatible call signature, which is, also,
+middleware-compatible.
 
 If a name of a class is given, the router will instantiate that class via dependency-injection
 and then invoke it as middleware.
@@ -183,7 +239,7 @@ You can also type hint the parameters:
 
     function (ServerRequestInterface $request, ResponseInterface $response, callable $next) {}
 
-###### Example of routes with middleware routables
+###### Example of routes with request handler routables
 
     $router->route (
       [
@@ -201,15 +257,15 @@ You can also type hint the parameters:
       ]
     );
 
-##### Middleware execution flow
+##### Request handlers' execution flow
 
-Middlewares are executed sequentally, but only if each middleware calls the provided "next" argument.
+Handlers (or middleware) are executed sequentally, but only if each Handlers calls the provided "next" argument.
 
-When a middleare does not call the "next" argument, the router immediately returns the response to the previous
+When a Handler does not call the "next" argument, the router immediately returns the response to the previous
 route/middleware (even if the curent middleware returns nothing).
 
-Inside a middlware function, the router instance is mutated to reflect the current request and response at the point.
-So, you don't nned to call 
+Inside a Handler function, the router instance is mutated to reflect the current request and response at the point.
+So, you don't need to call `$router->with()`, you can just `use ($router)` on the Handler function.
 
 #### Factory routables
 
@@ -217,19 +273,28 @@ Factories can have any number of arguments and they are dependency-injected when
 
 You can use them for:
 
-- instantiating an object that implements `MiddlewareInterface` but that needs
+- instantiating an object that implements `RequestHandlerInterface` but that needs
 additional configuration to be performed on it before it is invoked;
 - instantiating a factory that needs configuration for creating the actual routable instance.
 
 To make the router recognize a function as being a factory, you must wrap it in a `factory()` decorator.
-
-###### Example
 
     $router->route (
       [
         'user/@id' => factory (function (UserPage $page) {
           $page->someProperty = value;
           return $page;
+        })
+      ]
+    );
+
+If you do not whish to use the `factory()` global shortcut function, you may instead directly instantiate an instance of
+the `RoutableFactory` class.
+
+    $router->route (
+      [
+        'user/@id' => new FactoryRoutable (function (UserPage $page) {
+          ...
         })
       ]
     );
@@ -242,45 +307,49 @@ If the returned routable is, again, a configurable router, the process is repeat
 
 If the factory returns nothing (or null), execution proceeds to the next route.
 
-This is different from the behaviour of middleware, which when it returns nothing, it's the same as returning
+This is different from standard the behaviour of handlers, which when they returns nothing, it's equivalent to returning
 the current response. You can't have that here, as factories are not middleare and they do not receive a response instance.
 
-This behaviour also allows you to simply run a factory to setup something before matching some additional routes.
-
+This modified behaviour also allows you to simply run a factory to setup something before matching some additional routes.
 
 ### Handling requests
 
-On a middleware where you whish to perform routing, before using the router you must call the `for()` method,
+On a middleware where you whish to perform routing, before using the router you must call the `with()` method,
 passing it the current request, the current response and the "next" handler.
 
-`for()` will return a new `RouterInterface` instance configured to the given paramenters.  
-You may then call `route()` on it to perform the routing.
+`with()` will return a the same `RouterInterface` instance, but configured to the given parameters, while pushing the
+previous context to stack, from where it can recover it when backtracking from the current routing depth.
+
+You may then call `route()` on the router to perform the routing.
 
 ###### Example
 
     function ($request, $response, $next) {
       return $router
-        ->for ($request, $response, $next)
+        ->with ($request, $response, $next)
         ->route (...);
     }
     
 > **Note:** most other examples on this documentation ommit this setup code, and begin with `$router->route(...)`.
  This is just for the sake of brevity.
 
-A middleware or routable should do one of the following:
+A handler (middleware or routable) should do one of the following:
 
 - return a new Response object
 - add to the content of the current Response object and return it
 - return nothing (it's the same as returning the current Response)
 - return the result of calling the "next" argument
 
-A routable should call "next" if it decides to NOT handle the request or if it wants to delegate that handling to
-another routable **at the same depth or above** but still capture the generated response and, eventually, modify it. It
-operates in the same fashion as standard middleware.
+A handler should call "next" if it decides to NOT handle the request or if it wants to delegate that handling to
+another handler **at the same depth or above it** but still capture the generated response and, eventually, modify it.
+
+Up to this point, it operates in the same fashion as standard middleware.
+
+But routables can also perform sub-routing of the request, by invoking again the router on their request instance.
 
 #### Handling sub-routes
 
-On the other hand, if a routable is not the final routing destination and it needs to delegate processing to sub-routes,
+If a routable is not the final routing destination and it needs to delegate processing to sub-routes,
 it should return the result of invoking the router again for the desired sub-routes.
 
 ###### Example
@@ -323,6 +392,16 @@ For the path `user/37/records`:
       ]
     );
 
+#### Handling errors
+
+Exceptions thrown from a handler will backtrace through the routing tree and throught the handler pipeline until a handler
+catches them with a `try catch` block surrounding its "next" call.
+
+If a handler catches an exception, it can either re-throw it to be catched by a previous handler, or convert it to an
+HTTP response that travels back the pipeline.
+
+> Exception handlers **SHOULD NEVER** suppress exceptions and resume executing the handler pipeline. 
+
 ### Route patterns
 
 Any iterable that exposes a set of keys and values is interpreted as a routing table.  
@@ -336,7 +415,7 @@ for that; you can simply define a routable that checks those elements using plai
 
 A route pattern has the following syntax:
 
-`[methods:][*|literal|@param]...`
+`[methods:][ ][*|literal|@param]...`
 
 > **Grammar**
 
