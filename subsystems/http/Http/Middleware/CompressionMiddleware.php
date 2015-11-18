@@ -2,13 +2,13 @@
 namespace Selenia\Http\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Interfaces\Http\MiddlewareInterface;
+use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\ResponseFactoryInterface;
 
 /**
  * Applies gzip compression to the HTTP response.
  */
-class CompressionMiddleware implements MiddlewareInterface
+class CompressionMiddleware implements RequestHandlerInterface
 {
   function __construct (ResponseFactoryInterface $responseFactory)
   {

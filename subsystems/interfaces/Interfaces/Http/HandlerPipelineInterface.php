@@ -4,20 +4,20 @@ namespace Selenia\Interfaces\Http;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-interface MiddlewareStackInterface extends MiddlewareInterface
+interface HandlerPipelineInterface extends RequestHandlerInterface
 {
   /**
-   * @param string|callable|MiddlewareInterface $middleware
+   * @param string|callable|RequestHandlerInterface $handler
    * @return $this
    */
-  function add ($middleware);
+  function add ($handler);
 
   /**
-   * @param boolean                             $condition
-   * @param string|callable|MiddlewareInterface $middleware
+   * @param boolean                                 $condition
+   * @param string|callable|RequestHandlerInterface $handler
    * @return $this
    */
-  function addIf ($condition, $middleware);
+  function addIf ($condition, $handler);
 
   /**
    * @return ServerRequestInterface

@@ -10,7 +10,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Selenia\Application;
-use Selenia\Interfaces\Http\MiddlewareInterface;
+use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Routing\Router;
@@ -18,7 +18,7 @@ use Selenia\Routing\Router;
 /**
  *
  */
-class WebConsoleMiddleware implements MiddlewareInterface
+class WebConsoleMiddleware implements RequestHandlerInterface
 {
   /**
    * @var Application

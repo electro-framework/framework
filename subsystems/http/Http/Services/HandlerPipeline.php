@@ -1,13 +1,13 @@
 <?php
-namespace Selenia\HttpMiddleware\Services;
+namespace Selenia\Http\Services;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Interfaces\Http\MiddlewareInterface;
-use Selenia\Interfaces\Http\MiddlewareStackInterface;
+use Selenia\Interfaces\Http\HandlerPipelineInterface;
+use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\InjectorInterface;
 
-class MiddlewareStack implements MiddlewareStackInterface
+class HandlerPipeline implements HandlerPipelineInterface
 {
   /**
    * @var ServerRequestInterface
@@ -51,7 +51,7 @@ class MiddlewareStack implements MiddlewareStackInterface
           $request  = $this->currentRequest = $request ?: $this->currentRequest;
           $response = $this->currentResponse = $response ?: $this->currentResponse;
 
-          /** @var \Selenia\Interfaces\Http\MiddlewareInterface $middleware */
+          /** @var \Selenia\Interfaces\Http\RequestHandlerInterface $middleware */
           $m = $it->current ();
           $it->next ();
 
@@ -75,7 +75,7 @@ class MiddlewareStack implements MiddlewareStackInterface
   }
 
   /**
-   * @param string|callable|MiddlewareInterface $middleware
+   * @param string|callable|RequestHandlerInterface $middleware
    * @return $this
    */
   function add ($middleware)
@@ -85,8 +85,8 @@ class MiddlewareStack implements MiddlewareStackInterface
   }
 
   /**
-   * @param boolean                             $condition
-   * @param string|callable|MiddlewareInterface $middleware
+   * @param boolean                                 $condition
+   * @param string|callable|RequestHandlerInterface $middleware
    * @return $this
    */
   function addIf ($condition, $middleware)

@@ -1,10 +1,10 @@
 <?php
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Interfaces\Http\MiddlewareInterface;
+use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Routing\RouterBase;
 
-class BranchRouter extends RouterBase implements MiddlewareInterface
+class BranchRouter extends RouterBase implements RequestHandlerInterface
 {
   public function __construct (array $branches) {
     $this->branches = $branches;

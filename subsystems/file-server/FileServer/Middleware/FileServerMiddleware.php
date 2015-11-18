@@ -4,13 +4,13 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\FileServer\Services\FileServerMappings;
-use Selenia\Interfaces\Http\MiddlewareInterface;
+use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\ResponseFactoryInterface;
 
 /**
  * Serves static assets on virtual URLs exposed from packages or from the framework itself.
  */
-class FileServerMiddleware implements MiddlewareInterface
+class FileServerMiddleware implements RequestHandlerInterface
 {
   static private $MIME_TYPES = [
     'js'    => 'application/javascript',

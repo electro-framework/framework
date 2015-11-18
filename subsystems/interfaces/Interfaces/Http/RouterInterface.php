@@ -5,28 +5,32 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * A service that assists in routing an HTTP request to one or more request handlers.
- * <p>A handler (also called a *routable*) may generate an HTTP response and/or route to other handlers.
- * <p>The request will traverse a graph of interconnected handlers, until a full HTTP response is generated or the
- * graph is exhausted.
- *
- * ### Notes
- * - Instances implementing this interface **MUST** be immutable objects.
- * - `for()` creates new instances.
+A service that assists in routing an HTTP request to one or more request handlers.
+<p>A handler may generate an HTTP response and/or route to other handlers.
+<p>The request will traverse a tree of interconnected handlers, until a full HTTP response is generated or the
+tree traversal is completed.
+
+> Note that not all nodes on the tree will be visited, as most routes will not match the request's URL.
+
+If the handler tree is exhausted, the router sends the request to the next handler on the application's main
+request handling pipeline.
  */
 interface RouterInterface
 {
-  function for (ServerRequestInterface $request = null, ResponseInterface $response = null, callable $next = null);
-
-  function route ($routable);
+  /**
+   * Sets the current context for routing.
+   * @param ServerRequestInterface|null $request
+   * @param ResponseInterface|null      $response
+   * @param callable|null               $next
+   * @return $this
+   */
+  function with (ServerRequestInterface $request = null, ResponseInterface $response = null, callable $next = null);
 
   /**
-   * Creates a new redirection HTTP response.
-   *
-   * <p>This is a convenience method that saves you from having to inject the redirection service on routers.
-   * @return RedirectionInterface
+   * @param \Traversable|array|string|callable $routable
+   * @return ResponseInterface|null
    */
-  function redirection ();
+  function route ($routable);
 
   /**
    * The HTTP request being routed.
@@ -44,9 +48,8 @@ interface RouterInterface
   function response ();
 
   /**
-   * The target route for this router instance.
-   * @return RouteInterface
+   * The current "next" callable that resumes routing on the previous level.
+   * @return callable
    */
-  function route ();
-
+  function next ();
 }

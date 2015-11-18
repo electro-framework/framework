@@ -2,12 +2,12 @@
 namespace Selenia\Http\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Interfaces\Http\MiddlewareInterface;
+use Selenia\Interfaces\Http\RequestHandlerInterface;
 
 /**
  * Verifies CSRF tokens for form POST requests.
  */
-class CsrfMiddleware implements MiddlewareInterface
+class CsrfMiddleware implements RequestHandlerInterface
 {
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {

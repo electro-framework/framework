@@ -1,15 +1,15 @@
 <?php
-namespace Selenia\HttpMiddleware\Middleware;
+namespace Selenia\Http\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Exceptions\HttpException;
-use Selenia\Interfaces\Http\MiddlewareInterface;
+use Selenia\Interfaces\Http\RequestHandlerInterface;
 
 /**
  *
  */
-class URINotFoundMiddleware implements MiddlewareInterface
+class URINotFoundMiddleware implements RequestHandlerInterface
 {
   private $app;
 

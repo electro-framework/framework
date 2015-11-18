@@ -5,14 +5,14 @@ use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Exceptions\FlashMessageException;
 use Selenia\Interfaces\AssignableInterface;
-use Selenia\Interfaces\Http\MiddlewareInterface;
+use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\RedirectionInterface;
 use Selenia\Interfaces\SessionInterface;
 
 /**
  *
  */
-class SessionMiddleware implements MiddlewareInterface
+class SessionMiddleware implements RequestHandlerInterface
 {
   /**
    * @var Application

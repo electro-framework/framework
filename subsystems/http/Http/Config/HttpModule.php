@@ -1,18 +1,37 @@
 <?php
 namespace Selenia\Http\Config;
 
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Http\Services\HandlerPipeline;
 use Selenia\Http\Services\ResponseFactory;
 use Selenia\Http\Services\ResponseSender;
+use Selenia\Interfaces\Http\HandlerPipelineInterface;
+use Selenia\Interfaces\Http\ResponseFactoryInterface;
+use Selenia\Interfaces\Http\ResponseSenderInterface;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
+use Zend\Diactoros\Response;
+use Zend\Diactoros\ServerRequest;
 
+/**
+ * ### Notes:
+ *
+ * - `ServerRequestInterface` and `ResponseInterface` instances are not shared, and injecting them always yields new
+ *   pristine instances.
+ *   > **Note:** when cloning `ResponseInterface` instances, never forget to also clone their `body` streams.
+ * - Injected `HandlerPipelineInterface` instances are not shared.
+ */
 class HttpModule implements ServiceProviderInterface
 {
   function register (InjectorInterface $injector)
   {
     $injector
-      ->alias ('Selenia\Interfaces\ResponseFactoryInterface', ResponseFactory::class)
-      ->alias ('Selenia\Interfaces\ResponseSenderInterface', ResponseSender::class);
+      ->alias (ResponseFactoryInterface::class, ResponseFactory::class)
+      ->alias (ResponseSenderInterface::class, ResponseSender::class)
+      ->alias (ServerRequestInterface::class, ServerRequest::class)
+      ->alias (ResponseInterface::class, Response::class)
+      ->alias (HandlerPipelineInterface::class, HandlerPipeline::class);
   }
 
 }

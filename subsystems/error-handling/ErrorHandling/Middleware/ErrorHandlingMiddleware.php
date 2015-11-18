@@ -8,13 +8,13 @@ use Psr\Log\LoggerInterface;
 use Selenia\Application;
 use Selenia\Exceptions\HttpException;
 use Selenia\Http\HttpUtil;
-use Selenia\Interfaces\Http\MiddlewareInterface;
+use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\ResponseFactoryInterface;
 
 /**
  * Handles errors that occur throughout the HTTP middleware stack.
  */
-class ErrorHandlingMiddleware implements MiddlewareInterface
+class ErrorHandlingMiddleware implements RequestHandlerInterface
 {
   private $app;
   private $logger;

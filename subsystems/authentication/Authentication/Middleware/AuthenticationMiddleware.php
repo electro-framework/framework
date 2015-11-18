@@ -4,14 +4,14 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Authentication\Exceptions\AuthenticationException;
-use Selenia\Interfaces\Http\MiddlewareInterface;
+use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\RedirectionInterface;
 use Selenia\Interfaces\SessionInterface;
 
 /**
  *
  */
-class AuthenticationMiddleware implements MiddlewareInterface
+class AuthenticationMiddleware implements RequestHandlerInterface
 {
   private $app;
   /**

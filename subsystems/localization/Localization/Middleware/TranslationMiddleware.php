@@ -6,14 +6,14 @@ use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Exceptions\FlashType;
-use Selenia\Interfaces\Http\MiddlewareInterface;
+use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\ResponseFactoryInterface;
 use Selenia\Localization\Services\Locale;
 
 /**
  * Post-processes the HTTP response to replace translation keys by the corresponding translation.
  */
-class TranslationMiddleware implements MiddlewareInterface
+class TranslationMiddleware implements RequestHandlerInterface
 {
   const FIND_TRANS_KEY = '#\$([A-Z][A-Z0-9_]*)#';
   /**

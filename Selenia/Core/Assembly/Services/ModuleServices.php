@@ -7,6 +7,10 @@ use Selenia\FileServer\Services\FileServerMappings;
 use Selenia\Interfaces\AssignableInterface;
 use Selenia\Interfaces\Http\RouterInterface;
 
+/**
+ * Allows a module to notify the framework of which standard framework-specific services it provides (like routing,
+ * navigation, translations, etc.).
+ */
 class ModuleServices
 {
   /**

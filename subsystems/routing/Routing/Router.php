@@ -2,220 +2,120 @@
 namespace Selenia\Routing;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Interfaces\Http\MiddlewareStackInterface;
-use Selenia\Interfaces\Http\RedirectionInterface;
 use Selenia\Interfaces\Http\RouteInterface;
 use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
 
 /**
- * Routes the current URL to a matching request handler
+ * A service that assists in routing an HTTP request to one or more request handlers.
  */
 class Router implements RouterInterface
 {
-  /** @var Router This is used by the injector */
-  static $current;
   /**
    * @var InjectorInterface
    */
   private $injector;
-  /**
-   * @var RedirectionInterface
-   */
-  private $redirection;
-  /**
-   * @var ServerRequestInterface
-   */
-  private $request;
-  /**
-   * @var ResponseInterface
-   */
-  private $response;
-  /**
-   * @var RouteInterface
-   */
-  private $route;
 
-  /**
-   * Router constructor.
-   * @param ServerRequestInterface $request
-   * @param ResponseInterface      $response
-   * @param RouteInterface         $route
-   * @param RedirectionInterface   $redirection
-   * @param InjectorInterface      $injector
-   */
-  public function __construct (ServerRequestInterface $request, ResponseInterface $response, RouteInterface $route,
-                               RedirectionInterface $redirection, InjectorInterface $injector)
+  private $stack = [];
+
+  public function __construct (InjectorInterface $injector)
   {
-    $this->route       = $route;
-    $this->request     = $request;
-    $this->response    = $response;
-    $this->redirection = $redirection;
-    $this->injector    = $injector;
+    $this->injector = $injector;
   }
 
-  function dispatch (array $map)
+  function next ()
   {
-    $location = $this->route->location ();
-    return isset($map[$location]) ? $this->exec ($map[$location]) : false;
-  }
-
-  function match ($methods, $pattern, callable $routable = null)
-  {
-    if (!$this->matchesMethods ($methods))
-      return false;
-
-    // If $match is empty, performs wildcard matching.
-    if ($pattern) {
-      $location = $this->route->location ();
-
-      // If a parameter definition is specified.
-      if ($pattern[0] == '{') {
-        $pattern = substr ($pattern, 1, -1);;
-        list ($param, $match) = explode (':', "$pattern:");
-      }
-      else {
-        $param = '';
-        $match = $pattern;
-      }
-
-      // Regular expression matching.
-      if ($match[0] == '/') {
-        if (!preg_match ($match, $location, $m))
-          return false;
-        // Use the capture group value, if one is defined on the regexp.
-        else if (count ($m) > 1)
-          $location = $m[1];
-      }
-      // Literal matching.
-      else if ($match != $location)
-        return false;
-
-      // Save the route paramenter, if required.
-      if ($param)
-        $this->route->params () [$param] = $location;
-    }
-    // The match succeeded, so call the routable or return `true` if none.
-    return !$routable ?: $this->exec ($routable);
-  }
-
-  function matchPrefix ($path, $routable)
-  {
-    $path      = preg_quote ($path);
-    $remaining = $this->route->remaining ();
-    if (preg_match ("/^$path(?=\\/|$)/", $remaining)) {
-      $this->exec ($routable,
-        $this->make (new Route (substr ($remaining, strlen ($path) + 1), $this->route->prefix () . "/$path",
-            $this->route->params ())
-        )
-      );
-    }
-    return false;
-  }
-
-  function middleware ($middleware)
-  {
-    if (isset ($middleware)) {
-      if (is_array ($middleware)) {
-        $stack = $this->injector->make (MiddlewareStackInterface::class);
-        /** @var MiddlewareStackInterface $stack */
-        $stack->add ($middleware);
-        $middleware = $stack;
-      }
-      else if (!is_callable ($middleware)) {
-        if (is_string ($middleware))
-          $middleware = $this->injector->make ($middleware);
-        else throw new \InvalidArgumentException ("Invalid middleware type: " . gettype ($middleware));
-      }
-      $response = $middleware ($this->request, $this->response,
-        function (ServerRequestInterface $request = null, ResponseInterface $response = null) {
-          if ($request) $this->request = $request;
-          if ($response) $this->response = $response;
-        }
-      );
-      if ($response) $this->response = $response;
-    }
-    return $this;
-  }
-
-  function next (ResponseInterface $response = null)
-  {
-    return $this->make ($this->route->next ());
-  }
-
-  function onTraverse ($methods, $routable)
-  {
-    return $this->matchesMethods ($methods) ? $this->exec ($routable) : false;
-  }
-
-  function on ($methods, $routable = null)
-  {
-    return $this->route->target () ? ($routable ? $this->onTraverse ($methods, $routable) : false) : false;
-  }
-
-  function redirection ()
-  {
-    return $this->redirection;
+    return $this->stack ? $this->stack[0][2] : null;
   }
 
   function request ()
   {
-    return $this->request;
+    return $this->stack ? $this->stack[0][0] : null;
   }
 
   function response ()
   {
-    return $this->response;
+    return $this->stack ? $this->stack[0][1] : null;
   }
 
-  function route ()
+  function route ($routable)
   {
-    return $this->route;
-  }
+    if (is_callable ($routable)) {
+      if ($routable instanceof FactoryRoutable)
+        $response = $this->route ($routable ($this->injector));
 
-  /**
-   * Parses and executes a routable reference.
-   * @param callable|string $routable
-   * @return ResponseInterface|false
-   */
-  private function exec ($routable)
-  {
-    self::$current = $this;
-    if (!is_callable ($routable)) {
-      if (class_exists ($routable))
-        $routable = $this->injector->make ($routable);
-      if (!is_callable ($routable))
-        throw new \RuntimeException (sprintf ("Invalid routable reference: <kbd>%s</kbd>",
-          var_export ($routable, true)));
+      else $response = $routable ($this->request (), $this->response (), $this/* ??? */);
     }
-    $r = $this->injector->execute ($routable);
-    if (!$r || $r instanceof ResponseInterface)
-      return $r;
-    if (is_callable ($r))
-      return $this->injector->execute ($r);
-    throw new \RuntimeException (sprintf ("Invalid return type from routable: <kbd>%s</kbd>",
-      typeOf ($routable)));
+    else {
+      if ($routable instanceof \IteratorAggregate)
+        $routable = $routable->getIterator ();
+
+      else if (is_array ($routable))
+        $routable = new \ArrayIterator($routable);
+
+      if ($routable instanceof \Iterator)
+        $response = $this->iterateHandlers ($routable, $this->request (), $this->response (), $this->next ()/* ??? */);
+
+      elseif (is_string ($routable)) {
+        $routable = $this->injector->make ($routable);
+        if (is_callable ($routable))
+          $response = $routable ();
+        else throw new \RuntimeException (sprintf ("Instances of class <kbd class=class>%s</kbd> are not routable.",
+          getType ($routable)));
+      }
+
+      else throw new \RuntimeException (sprintf ("Invalid routable type <kbd class=type>%s</kbd>",
+        getType ($routable)));
+    }
+    $this->backtrack ();
+    return $response ?: $this->response ();
   }
 
-  /**
-   * Clones the instance.
-   * @param RouteInterface         $route
-   * @param ResponseInterface|null $response
-   * @return static
-   */
-  private function make (RouteInterface $route, ResponseInterface $response = null)
+  function with (ServerRequestInterface $request = null, ResponseInterface $response = null, callable $next = null)
   {
-    return new static ($this->request, $response ?: $this->response, $route, $this->redirection,
-      $this->injector);
+    $this->stack[] = [$request ?: $this->request (), $response ?: $this->response (), $next ?: $this->next ()];
+    return $this;
   }
 
-  /**
-   * @param string $methods
-   * @return bool
-   */
-  private function matchesMethods ($methods)
+  private function backtrack ()
   {
-    return $methods == '*' || in_array ($this->request->getMethod (), explode ('|', $methods));
+    if (!array_pop ($this->stack))
+      throw new \RuntimeException ("The router can't backtrack to a previous context, because there is none.");
+  }
+
+  private function iterateHandlers (\Iterator $it, ServerRequestInterface $request, ResponseInterface $response,
+                                    callable $next = null)
+  {
+    $next =
+      function (ServerRequestInterface $request = null, ResponseInterface $response = null) use ($it, $request, &$next
+      ) {
+        if ($it->valid ()) {
+          // Save the current state and also make it available outside the stack.
+
+          $request  = $this->currentRequest = $request ?: $this->currentRequest;
+          $response = $this->currentResponse = $response ?: $this->currentResponse;
+
+          /** @var \Selenia\Interfaces\Http\RequestHandlerInterface $middleware */
+          $m = $it->current ();
+          $it->next ();
+
+          // Fetch or instantiate the middleware and run it.
+          $middleware  = is_string ($m) && !is_callable ($m) ? $this->injector->make ($m) : $m;
+          $newResponse = $middleware ($request, $response, $next);
+
+          // Replace the response if necessary.
+          if (isset($newResponse)) {
+            if ($newResponse instanceof ResponseInterface)
+              return $this->currentResponse = $newResponse;
+            throw new \RuntimeException ("Response from middleware " . get_class ($middleware) .
+                                         " is not a ResponseInterface implementation.");
+          }
+          return $this->currentResponse;
+        }
+        return $next ? $next ($request, $response) : $response;
+      };
+
+    return $next ($request, $response);
   }
 
 }
