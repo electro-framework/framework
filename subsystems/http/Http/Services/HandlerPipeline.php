@@ -42,9 +42,9 @@ class HandlerPipeline implements HandlerPipelineInterface
   {
     $it   = new \ArrayIterator($this->stack);
 
-    $next =
-      function (ServerRequestInterface $request = null, ResponseInterface $response = null) use ($it, $request, &$next
-      ) {
+    $iterate =
+      function (ServerRequestInterface $request = null, ResponseInterface $response = null) use ($it, $request, &$iterate,
+      $next) {
         if ($it->valid ()) {
           // Save the current state and also make it available outside the stack.
 
@@ -57,7 +57,7 @@ class HandlerPipeline implements HandlerPipelineInterface
 
           // Fetch or instantiate the middleware and run it.
           $middleware  = is_string ($m) && !is_callable ($m) ? $this->injector->make ($m) : $m;
-          $newResponse = $middleware ($request, $response, $next);
+          $newResponse = $middleware ($request, $response, $iterate);
 
           // Replace the response if necessary.
           if (isset($newResponse)) {
@@ -71,7 +71,7 @@ class HandlerPipeline implements HandlerPipelineInterface
         return $next ? $next ($request, $response) : $response;
       };
 
-    return $next ($request, $response);
+    return $iterate ($request, $response);
   }
 
   /**

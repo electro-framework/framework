@@ -31,6 +31,12 @@ class RoutingMiddleware implements RequestHandlerInterface
 
     $router = $this->injector->make (RouterInterface::class);
 
+    // requestTarget is used for routing, so strip any URL parameters from it.
+    $path = $request->getRequestTarget ();
+    $p    = strpos ($path, '?');
+    if ($p !== false)
+      $request = $request->withRequestTarget (substr ($path, 0, $p));
+
     return $router
       ->with ($request, $response, $next)
       ->route ($this->app->routers[]);
