@@ -3,7 +3,7 @@ namespace Selenia\WebServer;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\FileServer\Services\FileServerMappings;
-use Selenia\Interfaces\Http\HandlerPipelineInterface;
+use Selenia\Interfaces\Http\RequestHandlerPipelineInterface;
 use Selenia\Interfaces\Http\ResponseSenderInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequestFactory;
@@ -27,7 +27,7 @@ class WebServer
    */
   private $fileServerMappings;
   /**
-   * @var HandlerPipelineInterface
+   * @var RequestHandlerPipelineInterface
    */
   private $middlewareStack;
   /**
@@ -36,12 +36,12 @@ class WebServer
   private $responseSender;
 
   /**
-   * @param Application              $app
-   * @param HandlerPipelineInterface $middlewareStack
-   * @param ResponseSenderInterface  $responseSender
-   * @param FileServerMappings       $fileServerMappings
+   * @param Application                     $app
+   * @param RequestHandlerPipelineInterface $middlewareStack
+   * @param ResponseSenderInterface         $responseSender
+   * @param FileServerMappings              $fileServerMappings
    */
-  function __construct (Application $app, HandlerPipelineInterface $middlewareStack,
+  function __construct (Application $app, RequestHandlerPipelineInterface $middlewareStack,
                         ResponseSenderInterface $responseSender, FileServerMappings $fileServerMappings)
   {
     $this->app                = $app;

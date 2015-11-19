@@ -3,10 +3,10 @@ namespace Selenia\Http\Config;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Http\Services\HandlerPipeline;
+use Selenia\Http\Services\RequestHandlerPipeline;
 use Selenia\Http\Services\ResponseFactory;
 use Selenia\Http\Services\ResponseSender;
-use Selenia\Interfaces\Http\HandlerPipelineInterface;
+use Selenia\Interfaces\Http\RequestHandlerPipelineInterface;
 use Selenia\Interfaces\Http\ResponseFactoryInterface;
 use Selenia\Interfaces\Http\ResponseSenderInterface;
 use Selenia\Interfaces\InjectorInterface;
@@ -31,7 +31,7 @@ class HttpModule implements ServiceProviderInterface
       ->alias (ResponseSenderInterface::class, ResponseSender::class)
       ->alias (ServerRequestInterface::class, ServerRequest::class)
       ->alias (ResponseInterface::class, Response::class)
-      ->alias (HandlerPipelineInterface::class, HandlerPipeline::class);
+      ->alias (RequestHandlerPipelineInterface::class, RequestHandlerPipeline::class);
   }
 
 }

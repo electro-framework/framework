@@ -17,7 +17,7 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * > **Note:** instances implementing this interface **MUST** be immutable.
  */
-interface RouterInterface
+interface RouterInterface extends RequestHandlerPipelineInterface
 {
   /**
    * @param \Traversable|array|string|callable $routable

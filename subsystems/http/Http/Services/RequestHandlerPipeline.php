@@ -3,11 +3,11 @@ namespace Selenia\Http\Services;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Interfaces\Http\HandlerPipelineInterface;
+use Selenia\Interfaces\Http\RequestHandlerPipelineInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\InjectorInterface;
 
-class HandlerPipeline implements HandlerPipelineInterface
+class RequestHandlerPipeline implements RequestHandlerPipelineInterface
 {
   /**
    * @var ServerRequestInterface

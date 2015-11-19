@@ -2,7 +2,7 @@
 namespace Selenia\Routing;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Interfaces\Http\HandlerPipelineInterface;
+use Selenia\Interfaces\Http\RequestHandlerPipelineInterface;
 use Selenia\Interfaces\Http\RedirectionInterface;
 use Selenia\Interfaces\Http\RouteInterface;
 use Selenia\Interfaces\Http\RouterInterface;
@@ -117,8 +117,8 @@ class OldRouter implements RouterInterface
   {
     if (isset ($middleware)) {
       if (is_array ($middleware)) {
-        $stack = $this->injector->make (HandlerPipelineInterface::class);
-        /** @var HandlerPipelineInterface $stack */
+        $stack = $this->injector->make (RequestHandlerPipelineInterface::class);
+        /** @var RequestHandlerPipelineInterface $stack */
         $stack->add ($middleware);
         $middleware = $stack;
       }
