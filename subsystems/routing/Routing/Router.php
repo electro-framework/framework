@@ -2,8 +2,10 @@
 namespace Selenia\Routing;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\RouteMatcherInterface;
 
 /**
  * A service that assists in routing an HTTP request to one or more request handlers.
@@ -13,9 +15,22 @@ use Selenia\Interfaces\InjectorInterface;
 class Router implements RouterInterface
 {
   /**
+   * @var bool When false, the iteration keys of the pipeline elements are ignored; when true, they are used as routing
+   *           patterns.
+   */
+  public $routingEnabled = true;
+  /**
+   * @var array|\Traversable
+   */
+  private $handlers;
+  /**
    * @var InjectorInterface
    */
   private $injector;
+  /**
+   * @var RouteMatcherInterface
+   */
+  private $matcher;
   /**
    * @var callable
    */
@@ -29,15 +44,88 @@ class Router implements RouterInterface
    */
   private $response;
 
-  public function __construct (InjectorInterface $injector, ServerRequestInterface $request,
-                               ResponseInterface $response, callable $next)
+  public function __construct (InjectorInterface $injector, RouteMatcherInterface $matcher)
   {
     $this->injector = $injector;
+    $this->matcher  = $matcher;
+  }
+
+  /**
+   * @param ServerRequestInterface $request
+   * @param ResponseInterface      $response
+   * @param callable               $next A function with arguments
+   *                                     <kbd>(ServerRequestInterface $request = null,
+   *                                     ResponseInterface $response = null)</bkd>
+   * @return ResponseInterface
+   */
+  function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
+  {
     $this->request  = $request;
     $this->response = $response;
     $this->next     = $next;
+    if (empty($this->handlers))
+      return $next ();
+    return $this->route ($this->handlers);
   }
 
+  /**
+   * Adds a request handler to the pipeline.
+   * @param string|callable|RequestHandlerInterface $handler The request handler to be added to the pipeline.
+   * @param string|int|null                         $key     An ordinal index or an arbitrary identifier to associate
+   *                                                         with the given handler.
+   *                                                         <p>If not specified, an auto-incrementing integer index
+   *                                                         will be assigned.
+   *                                                         <p>If an integer is specified, it may cause the handler to
+   *                                                         overwrite an existing handler at the same ordinal position
+   *                                                         on the pipeline.
+   *                                                         <p>String keys allow you to insert new handlers after a
+   *                                                         specific one.
+   *                                                         <p>Some RequestHandlerPipelineInterface implementations
+   *                                                         may use the key for other purposes (ex. route matching
+   *                                                         patterns).
+   * @param string|int|null                         $after   Insert after an existing handler that lies at the given
+   *                                                         index, or that has the given key. When null, it is
+   *                                                         appended.
+   * @return $this
+   */
+  function add ($handler, $key = null, $after = null)
+  {
+    if (empty($this->handlers))
+      $this->handlers = [];
+    else if (!is_array ($this->handlers))
+      $this->handlers = iterator_to_array ($this->handlers);
+    $this->handlers = array_insertAfter ($this->handlers, $after, $handler, $key);
+    return $this;
+  }
+
+  function set ($handlers)
+  {
+    if (!is_iterable ($handlers))
+      $handlers = [$handlers];
+    $this->handlers = $handlers;
+    return $this;
+  }
+
+  function with ($handlers)
+  {
+    if (!is_iterable ($handlers))
+      $handlers = [$handlers];
+    if (empty($this->handlers)) {
+      $this->handlers = $handlers;
+      return $this;
+    }
+    $class = get_class ($this);
+    /** @var static $new */
+    $new = new $class ($this->injector, $this->matcher);
+    return $new->with ($handlers);
+  }
+
+  /**
+   * Performs the actual routing.
+   *
+   * @param mixed $routable
+   * @return ResponseInterface
+   */
   function route ($routable)
   {
     if (is_callable ($routable)) {
@@ -70,12 +158,6 @@ class Router implements RouterInterface
     return $response ?: $this->response;
   }
 
-  function with (ServerRequestInterface $request = null, ResponseInterface $response = null, callable $next = null)
-  {
-    $class = get_class ($this);
-    return new $class($this->injector, $request ?: $this->request, $response ?: $this->response, $next ?: $this->next);
-  }
-
   private function iterateHandlers (\Iterator $it)
   {
     $first           = true;
@@ -94,11 +176,14 @@ class Router implements RouterInterface
           $handler = $it->current ();
           $pattern = $it->key ();
 
-          if (!is_int ($pattern)) {
-            if ($this->match ($pattern, $request->getRequestTarget (), $newPath))
+          if (!$this->routingEnabled && !is_int ($pattern)) {
+            if ($this->matcher->match ($pattern, $prevPath = $request->getRequestTarget (), $newPath))
               $newResponse = $this
-                ->with ($request->withRequestTarget ($newPath), $response, $callNextHandler)
-                ->route ($handler);
+                ->with ($handler)
+                ->__invoke
+                ($prevPath != $newPath ? $request->withRequestTarget ($newPath) : $request,
+                  $response, $callNextHandler);
+            else return ($next = $this->next) ? $next () : $response;
           }
           else $newResponse = $this->route ($handler);
 
@@ -118,11 +203,6 @@ class Router implements RouterInterface
 
     $it->rewind ();
     return $callNextHandler ();
-  }
-
-  private function match ($pattern, $getRequestTarget, &$newPath)
-  {
-
   }
 
 }

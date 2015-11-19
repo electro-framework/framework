@@ -1,9 +1,6 @@
 <?php
 namespace Selenia\Interfaces\Http;
 
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-
 /**
  * A service that assists in routing an HTTP request to one or more request handlers.
  * <p>A handler may generate an HTTP response and/or route to other handlers.
@@ -12,26 +9,13 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * > Note that not all nodes on the tree will be visited, as most routes will not match the request's URL.
  *
- * If the handler tree is exhausted, the router sends the request to the next handler on the application's main
- * request handling pipeline.
+ * If the handler tree is exhausted, the router sends the request to the next handler that was passed to it upon
+ * invocation.
  *
- * > **Note:** instances implementing this interface **MUST** be immutable.
+ * > **Note:** internally, both this interface and the RequestHandlerPipelineInterface are implemented by the same
+ * class. But that is just an implementation detail. When injecting instances of both interfaces, you'll still get
+ * different behaviour from both.
  */
 interface RouterInterface extends RequestHandlerPipelineInterface
 {
-  /**
-   * @param \Traversable|array|string|callable $routable
-   * @return ResponseInterface|null
-   */
-  function route ($routable);
-
-  /**
-   * Returns a new router instance with a new context for routing.
-   * @param ServerRequestInterface|null $request
-   * @param ResponseInterface|null      $response
-   * @param callable|null               $next
-   * @return $this
-   */
-  function with (ServerRequestInterface $request = null, ResponseInterface $response = null, callable $next = null);
-
 }

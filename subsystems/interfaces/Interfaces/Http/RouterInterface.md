@@ -415,7 +415,11 @@ for that; you can simply define a routable that checks those elements using plai
 
 A route pattern has the following syntax:
 
-`[methods:][ ][*|literal|@param]...`
+`[methods:][ ]*`
+
+or
+
+`[methods:][ ][literal|@param][/...]`
 
 > **Grammar**
 
@@ -423,15 +427,15 @@ A route pattern has the following syntax:
 
 > `|` separates alternatives
 
-> `...` indicates a repetition of the last element
+> `...` indicates a repetition of the previous element
 
 > all other characters are themselves or define a label for a character sequence (ex: `param`).
 
 - `method` can be one or more of `GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS` or any other HTTP method.
   If not specified, it maches any method. To specify more than one, separate them with `|`.
 
-- `*` matches any path. If not specified, it only macthes an empty path, which means either the path is the root path
-`/` or the path segment matched by the previous pattern is the final one on the URL.
+- `*` matches any path. If not specified and the remaing pattern is empty, the pattern only macthes an empty path, which
+means either the path is the root path `/` or the path segment matched by the previous pattern is the final one on the URL.
 
 - `literal` is any literal text. You can use any character excluding the ones reserved for pattern matching.
   You may also use `/` for matching multiple segments.
