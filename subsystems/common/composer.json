@@ -1,6 +1,6 @@
 {
-  "name": "selenia-contracts/interfaces",
-  "description": "Selenia framework's interfaces",
+  "name": "selenia-subsystems/interfaces",
+  "description": "Selenia framework's interfaces, exceptions and traits that are used by other subsystems",
   "license": "MIT",
   "authors": [
     {
@@ -18,7 +18,9 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\Interfaces\\": "Interfaces"
+      "Selenia\\Exceptions\\": "Exceptions",
+      "Selenia\\Interfaces\\": "Interfaces",
+      "Selenia\\Traits\\": "Traits"
     }
   }
 }
