@@ -4,8 +4,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Authentication\Exceptions\AuthenticationException;
-use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\RedirectionInterface;
+use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\SessionInterface;
 
 /**
@@ -29,14 +29,19 @@ class AuthenticationMiddleware implements RequestHandlerInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    if ($request->getMethod () == 'POST') {
-      $post   = $request->getParsedBody ();
-      $action = get ($post, '_action');
-      switch ($action) {
-        case 'logout':
-          $this->session->logout ();
-          return $this->redirection->home ();
-      }
+    switch ($request->getMethod ()) {
+      case 'GET':
+        if (!$this->session->loggedIn ())
+          return $this->redirection->to ('login/login');
+        break;
+      case 'POST':
+        $post   = $request->getParsedBody ();
+        $action = get ($post, '_action');
+        switch ($action) {
+          case 'logout':
+            $this->session->logout ();
+            return $this->redirection->home ();
+        }
     }
 
     return $next();

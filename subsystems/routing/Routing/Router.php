@@ -1,5 +1,6 @@
 <?php
 namespace Selenia\Routing;
+use PhpKit\WebConsole\WebConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
@@ -92,7 +93,7 @@ class Router implements RouterInterface
       if ($routable instanceof FactoryRoutable)
         $response = $this->route ($routable ($this->injector), $request, $response, $next);
 
-      else $response = $routable ($request, $response, $next);
+      else $response = $this->callHandler ($routable, $request, $response, $next);
     }
     else {
       if ($routable instanceof \IteratorAggregate)
@@ -108,7 +109,7 @@ class Router implements RouterInterface
         $routable = $this->injector->make ($routable);
 
         if (is_callable ($routable))
-          $response = $routable ($request, $response, $next);
+          $response = $this->callHandler ($routable, $request, $response, $next);
 
         else throw new \RuntimeException (sprintf ("Instances of class <kbd class=class>%s</kbd> are not routable.",
           getType ($routable)));
@@ -117,6 +118,33 @@ class Router implements RouterInterface
         getType ($routable)));
     }
     return $response;
+  }
+
+  /**
+   * Invokes a handler.
+   *
+   * <p>The router does not call the handlers directly; instead, it does it trough this method, so that calls can be
+   * intercepted and logged.
+   *
+   * @param callable               $handler
+   * @param ServerRequestInterface $request
+   * @param ResponseInterface      $response
+   * @param callable               $next
+   * @return ResponseInterface
+   */
+  private function callHandler ($handler, $request, $response, $next)
+  {
+    static $c = 1;
+    $log = WebConsole::hasPanel ('routingLog');
+    if ($log) {
+      WebConsole::routingLog ()
+                ->write (sprintf ("<#i|__rowHeader><span>%d</span><#type>%s</#type></#i>", $c++, typeOf ($handler)));
+//      $this->logResponse ($response);
+    }
+    $r = $handler ($request, $response, $next);
+    if ($r && $log)
+      $this->logResponse ($r);
+    return $r;
   }
 
   /**
@@ -171,6 +199,20 @@ class Router implements RouterInterface
 
     $it->rewind ();
     return $callNextHandler ();
+  }
+
+  /**
+   * @param ResponseInterface $r
+   */
+  private function logResponse ($r)
+  {
+    $h   = map ($r->getHeaders (), function ($v) { return implode ('<br>', $v); });
+    $out = [
+      'Status'  => $r->getStatusCode () . ' ' . $r->getReasonPhrase (),
+      'Headers' => $h,
+      'Size'    => $r->getBody ()->getSize (),
+    ];
+    WebConsole::routingLog ()->write ('<#indent>')->simpleTable ($out, 'Resulting response')->write ('</#indent>');
   }
 
 }
