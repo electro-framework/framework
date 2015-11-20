@@ -5,8 +5,8 @@ use Selenia\Application;
 use Selenia\Exceptions\Fatal\FileNotFoundException;
 use Selenia\Exceptions\FatalException;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\ViewEngineInterface;
-use Selenia\Interfaces\ViewInterface;
+use Selenia\Interfaces\Views\ViewEngineInterface;
+use Selenia\Interfaces\Views\ViewInterface;
 
 class View implements ViewInterface
 {

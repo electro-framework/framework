@@ -2,9 +2,9 @@
 namespace Selenia\Routing;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Interfaces\Http\RouteMatcherInterface;
 use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\RouteMatcherInterface;
 use Selenia\Traits\InspectionTrait;
 
 /**

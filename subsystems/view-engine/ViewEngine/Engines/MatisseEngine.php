@@ -3,7 +3,7 @@ namespace Selenia\ViewEngine\Engines;
 
 use Selenia\Application;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\ViewEngineInterface;
+use Selenia\Interfaces\Views\ViewEngineInterface;
 use Selenia\Matisse\Components\Page;
 use Selenia\Matisse\MatisseEngine as Matisse;
 use Selenia\Matisse\PipeHandler;

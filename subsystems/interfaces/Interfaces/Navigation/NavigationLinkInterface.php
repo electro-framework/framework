@@ -1,7 +1,7 @@
 <?php
-namespace Selenia\Interfaces;
+namespace Selenia\Interfaces\Navigation;
 
-interface NavigationInterface
+interface NavigationLinkInterface
 {
   /**
    * Are links to this location enabled?
@@ -22,8 +22,8 @@ interface NavigationInterface
 
   /**
    * Defines this location's children locations.
-   * @param NavigationInterface[] $next An array of <kbd>[string => NavigationInterface]</kbd>
-   * @return $this|NavigationInterface[]
+   * @param NavigationLinkInterface[] $next An array of <kbd>[string => NavigationLinkInterface]</kbd>
+   * @return $this|NavigationLinkInterface[]
    */
   function next (array $next);
 

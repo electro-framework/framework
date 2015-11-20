@@ -20,7 +20,7 @@ use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\ResponseFactoryInterface;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\SessionInterface;
-use Selenia\Interfaces\ViewInterface;
+use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\Matisse\Components\Page;
 use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\Router;

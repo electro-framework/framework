@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Interfaces;
+namespace Selenia\Interfaces\Views;
 
 use Selenia\Exceptions\FatalException;
 

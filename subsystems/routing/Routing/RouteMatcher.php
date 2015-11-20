@@ -2,7 +2,7 @@
 namespace Selenia\Routing;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Exceptions\Fatal\ConfigException;
-use Selenia\Interfaces\RouteMatcherInterface;
+use Selenia\Interfaces\Http\RouteMatcherInterface;
 
 /**
  * Implements Selenia's standard flavour of the the DSL route pattern matching syntax.

@@ -1,9 +1,9 @@
 <?php
-namespace Selenia\Routing;
+namespace Selenia\Routing\Navigation;
 
-use Selenia\Interfaces\NavigationInterface;
+use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 
-class Navigation implements NavigationInterface
+class NavigationLink implements NavigationLinkInterface
 {
   private $enabled;
   private $icon;
