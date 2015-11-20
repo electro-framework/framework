@@ -3,10 +3,12 @@ namespace Selenia\Interfaces\Http;
 
 /**
  * A pipeline of request handlers.
- * <p>By invoking an instance that implements this interface, the pipeline is executed and a response may be generated
- * for a given request.
- * <p>There are no methods to retrieve the content of the pipeline; this is by design.
- * > **Note:** instances are not immutable, but calling `with()` may return a new instance.
+ *
+ * <p>By invoking the instance, the pipeline is executed and a response for the given request should be generated.
+ *
+ * > There are no methods to retrieve the content of the pipeline; this is by design.
+ *
+ * > <p>**Note:** instances are not immutable, but if you need immutability, calling `with()` returns a new instance.
  */
 interface RequestHandlerPipelineInterface extends RequestHandlerInterface
 {
@@ -34,6 +36,7 @@ interface RequestHandlerPipelineInterface extends RequestHandlerInterface
 
   /**
    * Sets the pipeline to the given one.
+   * <p>This method mutates the object.
    *
    * @param mixed $handlers An array, Traversable, callable or class name. If the argument is a handler, it's equivalent
    *                        to creating a pipeline with a single handler (but it may not be implemented as such).
@@ -42,9 +45,7 @@ interface RequestHandlerPipelineInterface extends RequestHandlerInterface
   function set ($handlers);
 
   /**
-   * Creates a new instance of this class with the given pipeline.
-   * > **Note:** a call to this method when the current pipeline is empty will return the same instance
-   * (micro-optimization).
+   * Creates a new instance of the same class with the given pipeline.
    *
    * @param mixed $handlers An array, Traversable, callable or class name. If the argument is a handler, it's equivalent
    *                        to creating a pipeline with a single handler (but it may not be implemented as such).

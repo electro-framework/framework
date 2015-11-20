@@ -16,17 +16,14 @@ use Selenia\Exceptions\Flash\FileException;
 use Selenia\Exceptions\FlashMessageException;
 use Selenia\Exceptions\FlashType;
 use Selenia\Interfaces\Http\RedirectionInterface;
+use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\ResponseFactoryInterface;
-use Selenia\Interfaces\Http\RoutableInterface;
-use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Interfaces\ViewInterface;
 use Selenia\Matisse\Components\Page;
 use Selenia\Matisse\PipeHandler;
-use Selenia\Routing\PageRoute;
 use Selenia\Routing\Router;
-use Selenia\Traits\RefTrait;
 use Selenia\ViewEngine\Engines\MatisseEngine;
 use Selenia\ViewEngine\View;
 use Zend\Diactoros\Response\HtmlResponse;
@@ -37,10 +34,8 @@ use Zend\Diactoros\Response\HtmlResponse;
  * ### Notes:
  * - subclasses that define an inject() method will have that methoc called and dependency-injected upon instantiation.
  */
-class PageComponent implements RoutableInterface
+class PageComponent implements RequestHandlerInterface
 {
-  use RefTrait;
-
   /**
    * A list of parameter names (inferred from the page definition on the sitemap)
    * and correponding values present on the current URI.
@@ -102,14 +97,14 @@ class PageComponent implements RoutableInterface
    */
   public $statusMessage = '';
   /**
-   * @var View
-   */
-  public $view;
-  /**
    * Set this to automatically load a view from the specified external template.
    * @var string
    */
   public $templateUrl;
+  /**
+   * @var View
+   */
+  public $view;
   /**
    * The current request URI without the page number parameters.
    * This property is useful for databing with the expression {!controller.URI_noPage}.
@@ -154,6 +149,11 @@ class PageComponent implements RoutableInterface
    * @var InjectorInterface
    */
   private $injector;
+  /**
+   * Values to be automatically merged into the view model.
+   * @var array
+   */
+  private $presets = [];
 
   function __construct (InjectorInterface $injector, Application $app, ResponseFactoryInterface $responseFactory,
                         RedirectionInterface $redirection, SessionInterface $session, PipeHandler $pipeHandler)
@@ -171,9 +171,55 @@ class PageComponent implements RoutableInterface
       $injector->execute ([$this, 'inject']);
   }
 
-  function __invoke (RouterInterface $router)
+  /**
+   * Performs the main execution sequence.
+   *
+   * @param ServerRequestInterface $request
+   * @param ResponseInterface      $response
+   * @param callable               $next
+   * @return HtmlResponse
+   * @throws FatalException
+   * @throws FileException
+   * @throws FlashMessageException
+   */
+  function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    return $router->on ('*', [$this, 'run']);
+    if (!$this->app)
+      throw new FatalException("Class <kbd class=type>" . get_class ($this) .
+                               "</kbd>'s constructor forgot to call <kbd>parent::__construct()</kbd>");
+    $this->request  = $request;
+    $this->response = $response;
+
+    // remove page number parameter
+    $this->URI_noPage =
+      preg_replace ('#&?' . $this->app->pageNumberParam . '=\d*#', '', $this->request->getUri ()->getPath ());
+    $this->URI_noPage = preg_replace ('#\?$#', '', $this->URI_noPage);
+
+    $this->initialize (); //custom setup
+
+    $this->model = $this->model ();
+    $model       =& $this->model;
+    $this->mergeIntoModel ($model, $request->getAttributes ());
+    switch ($this->request->getMethod ()) {
+      case 'GET':
+        if ($model) array_mergeInto ($model, $this->presets);
+        $this->mergeIntoModel ($model, $this->session->getOldInput ());
+        break;
+      /** @noinspection PhpMissingBreakStatementInspection */
+      case 'POST':
+        if ($this->request->getHeaderLine ('Content-Type') == 'application/x-www-form-urlencoded')
+          $this->mergeIntoModel ($model, $this->request->getParsedBody ());
+      default:
+        $res = $this->doFormAction ();
+        if (!$res && !$this->renderOnAction)
+          $res = $this->autoRedirect ();
+        $this->finalize ();
+        return $res;
+    }
+    $this->viewModel ();
+    $response = $this->processView ();
+    $this->finalize ();
+    return $response;
   }
 
   /**
@@ -275,51 +321,12 @@ class PageComponent implements RoutableInterface
   }
 
   /**
-   * Performs the main execution sequence.
-   *
-   * @param RouterInterface $router
-   * @return HtmlResponse
-   * @throws FatalException
-   * @throws FileException
-   * @throws FlashMessageException
+   * Merges data into the view model.
+   * @param array $data
    */
-  function run (RouterInterface $router)
+  function preset (array $data)
   {
-    if (!$this->app)
-      throw new FatalException("Class <kbd class=type>" . get_class ($this) .
-                               "</kbd>'s constructor forgot to call <kbd>parent::__construct()</kbd>");
-    $this->request  = $router->request ();
-    $this->response = $router->response ();
-
-    // remove page number parameter
-    $this->URI_noPage =
-      preg_replace ('#&?' . $this->app->pageNumberParam . '=\d*#', '', $this->request->getUri ()->getPath ());
-    $this->URI_noPage = preg_replace ('#\?$#', '', $this->URI_noPage);
-
-    $this->initialize (); //custom setup
-
-    $this->model = $this->model ();
-    $model       =& $this->model;
-    $this->mergeIntoModel ($model, $this->URIParams);
-    switch ($this->request->getMethod ()) {
-      case 'GET':
-        $this->mergeIntoModel ($model, $this->session->getOldInput ());
-        break;
-      /** @noinspection PhpMissingBreakStatementInspection */
-      case 'POST':
-        if ($this->request->getHeaderLine ('Content-Type') == 'application/x-www-form-urlencoded')
-          $this->mergeIntoModel ($model, $this->request->getParsedBody ());
-      default:
-        $res = $this->doFormAction ();
-        if (!$res && !$this->renderOnAction)
-          $res = $this->autoRedirect ();
-        $this->finalize ();
-        return $res;
-    }
-    $this->viewModel ();
-    $response = $this->processView ();
-    $this->finalize ();
-    return $response;
+    $this->presets = $data;
   }
 
   /**
@@ -528,17 +535,14 @@ class PageComponent implements RoutableInterface
 
   /**
    * Allows subclasses to generate the view's markup dinamically.
-   * If not overriden, the default behaviour is to load the view from an external file, if one is defined on the active
-   * route. If not, no output is generated.
+   * If not overriden, the default behaviour is to load the view from an external file, if one is defined on
+   * `templateUrl`. If not, no output is generated.
    * @return ViewInterface|null If `null`, the framework assumes the content has been output to PHP's output buffer.
    */
   protected function render ()
   {
-    if (isset($this->router)) {
-      if (isset($this->activeRoute->view)) {
-        return $this->view->loadFromFile ($this->activeRoute->view);
-      }
-    }
+    if ($this->templateUrl)
+      return $this->view->loadFromFile ($this->templateUrl);
     return null;
   }
 

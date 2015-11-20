@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Sessions\Config;
+namespace Selenia\Routing\Config;
 
 use Selenia\Interfaces\Http\RequestHandlerPipelineInterface;
 use Selenia\Interfaces\Http\RouterInterface;
@@ -15,7 +15,9 @@ class RoutingModule implements ServiceProviderInterface
   {
     $injector
       ->alias (RouterInterface::class, Router::class)
+      // The application's middleware pipeline:
       ->alias (RequestHandlerPipelineInterface::class, Router::class)
+      ->share (RequestHandlerPipelineInterface::class)
       ->prepare (RequestHandlerPipelineInterface::class, function (Router $router) {
         $router->routingEnabled = false;
       })

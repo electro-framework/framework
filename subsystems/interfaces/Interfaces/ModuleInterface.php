@@ -2,9 +2,9 @@
 namespace Selenia\Interfaces;
 
 /**
- * Denotes a class that can provide module configuration and bootstrapping.
+ * Marks a class as being able to provide module configuration and bootstrapping.
  *
- * > The methods expected for interface are not declared on the interface itself, because:
+ * > The methods expected for this interface are not declared on the interface itself, as:
  * > - they are optional;
  * > - their signature is variable.
  *

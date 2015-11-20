@@ -52,6 +52,7 @@ class ErrorHandlingMiddleware implements RequestHandlerInterface
       // The message is assumed to be a plain, one-line string (no formatting)
       $message = $error->getMessage ();
       $status  = $error->getCode ();
+      $info = property($error, 'info');
 
       if (HttpUtil::clientAccepts ($request, 'text/html')) {
         $response = $response->withHeader ('Content-Type', 'text/html');
@@ -98,12 +99,12 @@ h1 {
       <h5 style='float:left'>HTTP $status</h5>
       <h5 style='float:right'>$app->appName</h5>
       <h1>$message</h1>&nbsp;
-      <p align=center>$error->info</p>");
+      <p align=center>$info</p>");
 
         else $body->write ("
       <h5>$app->appName</h5>
       <h1 style='clear:both' align=center>$message</h1>&nbsp;
-      <p align=center>$error->info</p>");
+      <p align=center>$info</p>");
 
         $body->write ("
       </div>
@@ -124,7 +125,7 @@ h1 {
         $body->write ("<?xml version=\"1.0\"?><error><code>$status</code><message>$message</message></error>");
       }
 
-      return $response->withStatus ($status, $message);
+      return $response->withStatus ($error instanceof HttpException ? $status : 500, $message);
     }
   }
 

@@ -2,6 +2,7 @@
 namespace Selenia\WebServer;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
+use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\FileServer\Services\FileServerMappings;
 use Selenia\Interfaces\Http\RequestHandlerPipelineInterface;
 use Selenia\Interfaces\Http\ResponseSenderInterface;
@@ -57,7 +58,10 @@ class WebServer
   {
     $response   = new Response;
     $middleware = $this->middlewareStack;
-    $response   = $middleware ($this->request, $response, null);
+    $response   = $middleware ($this->request, $response, function () {
+      throw new ConfigException ("The HTTP request was not handled by any request handler. This should not happen.
+<p>Please check the application's middleware configuration.");
+    });
     if (!$response) return;
 
     // Send back the response.

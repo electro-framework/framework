@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Routing;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Exceptions\FatalException;
+use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\RouteMatcherInterface;
 
 /**
@@ -9,43 +9,53 @@ use Selenia\Interfaces\RouteMatcherInterface;
  */
 class RouteMatcher implements RouteMatcherInterface
 {
-  const SYNTAX = '/^ ([a-z\|]:\s*)? (( \* | @\w+ | [\w\-] | \/ ) (?= $ | \/))* $/ix';
+  const SYNTAX = '/^ ([A-Z\|]+:\s*)? ( \* | (?: [\w\-@\/]* ) ) $/x';
 
-  function match ($pattern, ServerRequestInterface &$request)
+  function match ($pattern, ServerRequestInterface $request, ServerRequestInterface &$modifiedRequest)
   {
-    $path = $request->getRequestTarget ();
+    $modifiedRequest = $request;
+    $path            = $request->getRequestTarget ();
+    _log ("MATCHING PATTERN '$pattern' to PATH '$path'");
 
     if (!preg_match (self::SYNTAX, $pattern, $m))
-      throw new FatalException (sprintf ("Invalid route pattern matching expression: <kbd>%s</kbd>", $pattern));
+      throw new ConfigException (sprintf ("Invalid route pattern matching expression: <kbd>%s</kbd>", $pattern));
 
+    array_push ($m, '', '');
     list ($all, $methods, $pathPattern) = $m;
+    _log ("PARSED", $m);
 
-    if (!$this->matchesMethods (rtrim ($methods, ' :')))
+    if ($methods && !in_array ($request->getMethod (), explode ('|', rtrim ($methods, ' :'))))
       return false;
 
+    _log ("Method matched");
+
     // If $pathPattern is empty, it matches only if $path is also empty.
-    if (!$pathPattern)
-      return $path === '';
+    if (!$pathPattern) {
+      _log (!strlen ($path) ? "MATCHED!" : "NOT MATCHED", "'$path'", strlen ($path));
+      return !strlen ($path);
+    }
 
     // The asterisk matches any path.
     if ($pathPattern == '*')
       return true;
 
-    $compiledPattern = preg_replace ('/@(\w+)/', '(?P<$1>[^/]*)', $pathPattern);
+    $compiledPattern = preg_replace ('/@(\w+)/', '(?<$1>[^/]*)', $pathPattern);
 
-    $match = preg_match ("#^$compiledPattern(?:/|$)#", $path, $m, PREG_OFFSET_CAPTURE);
+    if (!preg_match ("#^$compiledPattern(?<_next>/|$)#", $path, $m, PREG_OFFSET_CAPTURE))
+      return false;
 
-    _log($match);
-    return false;
-  }
+    _log ("PATH MATCH", $m);
 
-  /**
-   * @param string $methods
-   * @return bool
-   */
-  private function matchesMethods ($methods)
-  {
-    return !$methods || in_array ($this->request->getMethod (), explode ('|', $methods));
+    $newPath = substr ($path, $m['_next'][1] + 1);
+    if ($path != $newPath)
+      $request = $request->withRequestTarget ($newPath);
+
+    foreach ($m as $k => $v)
+      if (is_string ($k) && $k[0] != '_')
+        $request = $request->withAttribute ('@' . $k, $v[0]);
+    _log ("new path: $newPath, attrs:", $request->getAttributes ());
+    $modifiedRequest = $request;
+    return true;
   }
 
 }

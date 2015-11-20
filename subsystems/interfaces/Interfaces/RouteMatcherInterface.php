@@ -18,12 +18,14 @@ interface RouteMatcherInterface
    * The new request object also provides all the route parameter defined on the pattern as request attributes with
    * names prefixed by `@`.
    *
-   * @param string                 $pattern The route matching pattern. See the routing documentation for details about
-   *                                        the DSL syntax.
-   * @param ServerRequestInterface $request (input/output parameter) The HTTP request whose URL will be matched against
-   *                                        the given pattern. It also outputs the new request object, if changes to the
-   *                                        original are performed.
+   * @param string                 $pattern         The route matching pattern. See the routing documentation for
+   *                                                details about the DSL syntax.
+   * @param ServerRequestInterface $request         The HTTP request whose URL will be matched against the given
+   *                                                pattern.
+   * @param ServerRequestInterface $modifiedRequest (output parameter) outputs the new request object, if changes to
+   *                                                the
+   *                                                original are performed, otherwise it outputs the original request.
    * @return bool true if the pattern matches the path.
    */
-  function match ($pattern, ServerRequestInterface &$request);
+  function match ($pattern, ServerRequestInterface $request, ServerRequestInterface &$modifiedRequest);
 }

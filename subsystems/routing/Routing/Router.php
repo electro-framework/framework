@@ -5,6 +5,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\RouteMatcherInterface;
+use Selenia\Traits\InspectionTrait;
 
 /**
  * A service that assists in routing an HTTP request to one or more request handlers.
@@ -13,6 +14,9 @@ use Selenia\Interfaces\RouteMatcherInterface;
  */
 class Router implements RouterInterface
 {
+  use InspectionTrait;
+
+  static public $INSPECTABLE = ['routingEnabled', 'handlers'];
   /**
    * @var bool When false, the iteration keys of the pipeline elements are ignored;
    * when true (the default), they are used as routing patterns.
@@ -30,18 +34,6 @@ class Router implements RouterInterface
    * @var RouteMatcherInterface
    */
   private $matcher;
-  /**
-   * @var callable
-   */
-  private $next;
-  /**
-   * @var ServerRequestInterface
-   */
-  private $request;
-  /**
-   * @var ResponseInterface
-   */
-  private $response;
 
   public function __construct (InjectorInterface $injector, RouteMatcherInterface $matcher)
   {
@@ -51,12 +43,7 @@ class Router implements RouterInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $this->request  = $request;
-    $this->response = $response;
-    $this->next     = $next;
-    if (empty($this->handlers))
-      return $next ();
-    return $this->route ($this->handlers);
+    return empty($this->handlers) ? $next () : $this->route ($this->handlers, $request, $response, $next);
   }
 
   function add ($handler, $key = null, $after = null)
@@ -81,29 +68,32 @@ class Router implements RouterInterface
   {
     if (!is_iterable ($handlers))
       $handlers = [$handlers];
-    if (empty($this->handlers)) {
-      $this->handlers = $handlers;
-      return $this;
-    }
     $class = get_class ($this);
     /** @var static $new */
     $new = new $class ($this->injector, $this->matcher);
-    return $new->with ($handlers);
+    return $new->set ($handlers);
   }
 
   /**
    * Performs the actual routing.
    *
-   * @param mixed $routable
+   * @param mixed                  $routable
+   * @param ServerRequestInterface $request
+   * @param ResponseInterface      $response
+   * @param callable               $next
    * @return ResponseInterface
    */
-  function route ($routable)
+  function route ($routable, ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
+    _log ("ROUTE", $routable);
+    if (is_null ($routable))
+      return $next ();
+
     if (is_callable ($routable)) {
       if ($routable instanceof FactoryRoutable)
-        $response = $this->route ($routable ($this->injector));
+        $response = $this->route ($routable ($this->injector), $request, $response, $next);
 
-      else $response = $routable ($this->request, $this->response, $this->next /* ??? */);
+      else $response = $routable ($request, $response, $next);
     }
     else {
       if ($routable instanceof \IteratorAggregate)
@@ -113,69 +103,72 @@ class Router implements RouterInterface
         $routable = new \ArrayIterator($routable);
 
       if ($routable instanceof \Iterator)
-        $response = $this->iterateHandlers ($routable);
+        $response = $this->iterateHandlers ($routable, $request, $response, $next);
 
       elseif (is_string ($routable)) {
         $routable = $this->injector->make ($routable);
+
         if (is_callable ($routable))
-          $response = $routable ();
+          $response = $routable ($request, $response, $next);
+
         else throw new \RuntimeException (sprintf ("Instances of class <kbd class=class>%s</kbd> are not routable.",
           getType ($routable)));
       }
-
-      else throw new \RuntimeException (sprintf ("Invalid routable type <kbd class=type>%s</kbd>",
+      else throw new \RuntimeException (sprintf ("Invalid routable type <kbd class=type>%s</kbd>.",
         getType ($routable)));
     }
-    return $response ?: $this->response;
+    return $response;
   }
 
   /**
    * Iterates the handler pipeline while each handler calls its `$next` argument, otherwise, it returns the HTTP
    * response.
-   * @param \Iterator $it
+   * @param \Iterator              $it
+   * @param ServerRequestInterface $currentRequest
+   * @param ResponseInterface      $currentResponse
+   * @param callable               $originalNext
    * @return ResponseInterface
    */
-  private function iterateHandlers (\Iterator $it)
+  private function iterateHandlers (\Iterator $it, ServerRequestInterface $currentRequest,
+                                    ResponseInterface $currentResponse, callable $originalNext)
   {
     $first           = true;
     $callNextHandler =
       function (ServerRequestInterface $request = null, ResponseInterface $response = null) use (
-        $it, &$callNextHandler, &$first
+        $it, &$callNextHandler, &$first, &$currentRequest, &$currentResponse, $originalNext
       ) {
         if ($first) $first = false;
         else $it->next ();
         if ($it->valid ()) {
-          // Save the current state and also make it available outside the stack.
+          $request  = $currentRequest = $request ?: $currentRequest;
+          $response = $currentResponse = $response ?: $currentResponse;
 
-          $request  = $this->request = $request ?: $this->request;
-          $response = $this->response = $response ?: $this->response;
-
-          $handler = $it->current ();
-          $pattern = $it->key ();
+          $routable = $it->current ();
+          $pattern  = $it->key ();
 
           if (!$this->routingEnabled && !is_int ($pattern)) {
-            if ($this->matcher->match ($pattern, $prevPath = $request->getRequestTarget (), $newPath))
-              $newResponse = $this
-                ->with ($handler)
-                ->__invoke
-                ($prevPath != $newPath ? $request->withRequestTarget ($newPath) : $request,
-                  $response, $callNextHandler);
-            else return ($next = $this->next) ? $next () : $response;
+
+            // Route matching:
+
+            if (!$this->matcher->match ($pattern, $request, $request))
+              return $callNextHandler ();
+            else if ($request !== $currentRequest) _log("REQUEST CHANGED");
           }
-          else $newResponse = $this->route ($handler);
+          $newResponse = $this->route ($routable, $request, $response, $callNextHandler);
 
           // Replace the response if necessary.
           if (isset($newResponse)) {
             if ($newResponse instanceof ResponseInterface)
-              return $this->response = $newResponse;
+              return $newResponse;
 
             throw new \RuntimeException (sprintf (
               "Response from request handler <kbd class=type>%s</kbd> is not a ResponseInterface implementation.",
-              typeOf ($handler)));
+              typeOf ($routable)));
           }
-          return $this->response;
+          return $currentResponse;
         }
-        return ($next = $this->next) ? $next ($request, $response) : $response;
+        // Iteration ended.
+        return $originalNext ($request, $response);
       };
 
     $it->rewind ();

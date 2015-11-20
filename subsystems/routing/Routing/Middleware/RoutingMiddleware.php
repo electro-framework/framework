@@ -29,17 +29,14 @@ class RoutingMiddleware implements RequestHandlerInterface
       WebConsole::routes ()->withFilter ($filter, $this->app->routers);
     }
 
+    /** @var RouterInterface $router */
     $router = $this->injector->make (RouterInterface::class);
 
-    // requestTarget is used for routing, so strip any URL parameters from it.
-    $path = $request->getRequestTarget ();
-    $p    = strpos ($path, '?');
-    if ($p !== false)
-      $request = $request->withRequestTarget (substr ($path, 0, $p));
+    $request = $request->withRequestTarget ($request->getAttribute('virtualUri'));
 
     return $router
-      ->with ($request, $response, $next)
-      ->route ($this->app->routers[]);
+      ->set ($this->app->routers)
+      ->__invoke ($request, $response, $next);
   }
 
 }
