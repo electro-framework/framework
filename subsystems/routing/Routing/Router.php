@@ -85,7 +85,6 @@ class Router implements RouterInterface
    */
   function route ($routable, ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    _log ("ROUTE", $routable);
     if (is_null ($routable))
       return $next ();
 
@@ -152,7 +151,6 @@ class Router implements RouterInterface
 
             if (!$this->matcher->match ($pattern, $request, $request))
               return $callNextHandler ();
-            else if ($request !== $currentRequest) _log("REQUEST CHANGED");
           }
           $newResponse = $this->route ($routable, $request, $response, $callNextHandler);
 
