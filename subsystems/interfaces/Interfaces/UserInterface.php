@@ -1,6 +1,9 @@
 <?php
 namespace Selenia\Interfaces;
 
+/**
+ * Represents the currently logged-in user.
+ */
 interface UserInterface
 {
   /**

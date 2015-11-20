@@ -3,6 +3,12 @@ namespace Selenia\Interfaces;
 
 use Selenia\Exceptions\FatalException;
 
+/**
+ * The View service generates markup for displaying Graphical User Interfaces and web documents on web browsers.
+ *
+ * <p>It provides view template loading, compiling, caching and dynamic generation (rendering) capabilities.
+ * <p>It can handle multiple templating engines via a single unified interface.
+ */
 interface ViewInterface
 {
   /**

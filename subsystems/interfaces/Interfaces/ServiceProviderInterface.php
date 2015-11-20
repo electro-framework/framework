@@ -2,7 +2,7 @@
 namespace Selenia\Interfaces;
 
 /**
- * Denotes a class that can perform service registrations.
+ * Indicates to the framework that a class can perform service registrations.
  */
 interface ServiceProviderInterface
 {

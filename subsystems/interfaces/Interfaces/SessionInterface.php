@@ -4,6 +4,9 @@ namespace Selenia\Interfaces;
 use Psr\Http\Message\UriInterface;
 use Selenia\Exceptions\FlashType;
 
+/**
+ * A service that provides access to the current session.
+ */
 interface SessionInterface extends \ArrayAccess, AssignableInterface
 {
   /**

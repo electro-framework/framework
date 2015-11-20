@@ -1,6 +1,8 @@
 <?php
 namespace Selenia\Sessions\Config;
 
+use Selenia\Interfaces\Http\RequestHandlerPipelineInterface;
+use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\RouteMatcherInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
@@ -12,8 +14,10 @@ class RoutingModule implements ServiceProviderInterface
   function register (InjectorInterface $injector)
   {
     $injector
-      ->delegate ('Selenia\Interfaces\RouterInterface', function () {
-        return Router::$current;
+      ->alias (RouterInterface::class, Router::class)
+      ->alias (RequestHandlerPipelineInterface::class, Router::class)
+      ->prepare (RequestHandlerPipelineInterface::class, function (Router $router) {
+        $router->routingEnabled = false;
       })
       ->alias (RouteMatcherInterface::class, RouteMatcher::class);
   }

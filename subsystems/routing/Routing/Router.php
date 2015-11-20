@@ -2,7 +2,6 @@
 namespace Selenia\Routing;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\RouteMatcherInterface;
@@ -15,8 +14,8 @@ use Selenia\Interfaces\RouteMatcherInterface;
 class Router implements RouterInterface
 {
   /**
-   * @var bool When false, the iteration keys of the pipeline elements are ignored; when true, they are used as routing
-   *           patterns.
+   * @var bool When false, the iteration keys of the pipeline elements are ignored;
+   * when true (the default), they are used as routing patterns.
    */
   public $routingEnabled = true;
   /**
@@ -50,14 +49,6 @@ class Router implements RouterInterface
     $this->matcher  = $matcher;
   }
 
-  /**
-   * @param ServerRequestInterface $request
-   * @param ResponseInterface      $response
-   * @param callable               $next A function with arguments
-   *                                     <kbd>(ServerRequestInterface $request = null,
-   *                                     ResponseInterface $response = null)</bkd>
-   * @return ResponseInterface
-   */
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     $this->request  = $request;
@@ -68,26 +59,6 @@ class Router implements RouterInterface
     return $this->route ($this->handlers);
   }
 
-  /**
-   * Adds a request handler to the pipeline.
-   * @param string|callable|RequestHandlerInterface $handler The request handler to be added to the pipeline.
-   * @param string|int|null                         $key     An ordinal index or an arbitrary identifier to associate
-   *                                                         with the given handler.
-   *                                                         <p>If not specified, an auto-incrementing integer index
-   *                                                         will be assigned.
-   *                                                         <p>If an integer is specified, it may cause the handler to
-   *                                                         overwrite an existing handler at the same ordinal position
-   *                                                         on the pipeline.
-   *                                                         <p>String keys allow you to insert new handlers after a
-   *                                                         specific one.
-   *                                                         <p>Some RequestHandlerPipelineInterface implementations
-   *                                                         may use the key for other purposes (ex. route matching
-   *                                                         patterns).
-   * @param string|int|null                         $after   Insert after an existing handler that lies at the given
-   *                                                         index, or that has the given key. When null, it is
-   *                                                         appended.
-   * @return $this
-   */
   function add ($handler, $key = null, $after = null)
   {
     if (empty($this->handlers))
@@ -158,6 +129,12 @@ class Router implements RouterInterface
     return $response ?: $this->response;
   }
 
+  /**
+   * Iterates the handler pipeline while each handler calls its `$next` argument, otherwise, it returns the HTTP
+   * response.
+   * @param \Iterator $it
+   * @return ResponseInterface
+   */
   private function iterateHandlers (\Iterator $it)
   {
     $first           = true;
