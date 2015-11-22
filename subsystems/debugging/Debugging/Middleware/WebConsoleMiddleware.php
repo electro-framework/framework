@@ -49,14 +49,14 @@ class WebConsoleMiddleware implements RequestHandlerInterface
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     $app = $this->app;
-    DebugConsole::registerLogger ('request', new PSR7RequestLogger ('Request', 'fa fa-paper-plane'));
-    DebugConsole::registerLogger ('response', new PSR7ResponseLogger ('Response', 'fa fa-file'));
-    DebugConsole::registerLogger ('routes', new ConsoleLogger ('Routes', 'fa fa-location-arrow'));
-    DebugConsole::registerLogger ('config', new ConsoleLogger ('Config.', 'fa fa-cogs'));
-    DebugConsole::registerLogger ('session', new ConsoleLogger ('Session', 'fa fa-user'));
-    DebugConsole::registerLogger ('DOM', new ConsoleLogger ('DOM', 'fa fa-sitemap'));
-    DebugConsole::registerLogger ('vm', new ConsoleLogger ('View Models', 'fa fa-table'));
-    DebugConsole::registerLogger ('database', new ConsoleLogger ('Database', 'fa fa-database'));
+    DebugConsole::registerPanel ('request', new PSR7RequestLogger ('Request', 'fa fa-paper-plane'));
+    DebugConsole::registerPanel ('response', new PSR7ResponseLogger ('Response', 'fa fa-file'));
+    DebugConsole::registerPanel ('routes', new ConsoleLogger ('Routes', 'fa fa-location-arrow'));
+    DebugConsole::registerPanel ('config', new ConsoleLogger ('Config.', 'fa fa-cogs'));
+    DebugConsole::registerPanel ('session', new ConsoleLogger ('Session', 'fa fa-user'));
+    DebugConsole::registerPanel ('DOM', new ConsoleLogger ('DOM', 'fa fa-sitemap'));
+    DebugConsole::registerPanel ('vm', new ConsoleLogger ('View Models', 'fa fa-table'));
+    DebugConsole::registerPanel ('database', new ConsoleLogger ('Database', 'fa fa-database'));
 //    WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
 
     // Redirect logger to Inspector panel

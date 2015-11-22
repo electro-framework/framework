@@ -31,13 +31,13 @@ class RoutingMiddleware implements RequestHandlerInterface
         return sprintf ('<#i|__rowHeader><span>%d</span><#type>%s</#type></#i>', $i, get_class ($r));
       }));
 
-      DebugConsole::logger('routes')
-                  ->write ("<#section|Registered root routers>$rootR</#section><#section|Routables invoked while routing>");
+//      DebugConsole::logger('routes')
+//                  ->write ("<#section|Registered root routers>$rootR</#section><#section|Routables invoked while routing>");
 
       // Note: it is safe to not register this hidden panel.
       $routingLog           = new ConsoleLogger;
       $routingLog->hasPanel = false;
-      DebugConsole::registerLogger ('routingLog', $routingLog);
+//      DebugConsole::registerLogger ('routingLog', $routingLog);
     }
 
     /** @var RouterInterface $router */
@@ -50,7 +50,8 @@ class RoutingMiddleware implements RequestHandlerInterface
       ->set ($this->app->routers)
       ->__invoke ($request, $response, $next);
 
-    DebugConsole::logger('routes')->write (DebugConsole::logger('routingLog')->getContent () . "</#section>");
+//    DebugConsole::logger('routes')->write (DebugConsole::logger('routingLog')->getContent () . "</#section>");
+//    DebugConsole::logger('routes')->write ("</#section>");
 
     return $res;
   }

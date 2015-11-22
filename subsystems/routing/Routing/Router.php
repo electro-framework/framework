@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Routing;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
+use PhpKit\WebConsole\Loggers\ConsoleLogger;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
@@ -31,6 +32,10 @@ class Router implements RouterInterface
    * @var InjectorInterface
    */
   private $injector;
+  /**
+   * @var ConsoleLogger
+   */
+  private $logger;
   /**
    * @var RouteMatcherInterface
    */
@@ -150,20 +155,27 @@ class Router implements RouterInterface
     static $c = 1;
     $log = DebugConsole::hasLogger ('routingLog');
     if ($log) {
-      DebugConsole::logger ('routingLog')
+      $this->logger = DebugConsole::logger ('routingLog');
+      $this->logger
                   ->write (sprintf ("<#i|__rowHeader><span>%d</span><#type>%s</#type></#i>", $c++, typeOf ($handler)));
 //      $this->logResponse ($response);
     }
 
     $newResponse = $handler ($request, $response, $next);
     $log         = DebugConsole::hasLogger ('routingLog'); // it may have changed.
+    if ($log)
+      $this->logger = DebugConsole::logger ('routingLog');
     if ($newResponse) {
       if ($newResponse !== $response) {
-        $this->logResponse ($response);
-        $this->logResponse ($newResponse);
-        $this->response = $newResponse;
-        if ($log)
+        if ($log) {
+          $this->logger->write ('<#header>OLD Response</#header>');
+          $this->logResponse ($response);
+          $this->logger->write ('<#header>NEW Response</#header>');
           $this->logResponse ($newResponse);
+        }
+        $this->response = $newResponse;
+//        if ($log)
+//          $this->logResponse ($newResponse);
       }
       // Replace the response if necessary.
       if (!$newResponse instanceof ResponseInterface)
@@ -224,15 +236,21 @@ class Router implements RouterInterface
    */
   private function logResponse ($r)
   {
+    static $uid = 1;
+    if (!isset($r->uid))
+      $r->uid = $uid++;
 //    WebConsole::routingLog ()->write("YES!!!");return;
     $h   = map ($r->getHeaders (), function ($v) { return implode ('<br>', $v); });
+    $r->getBody()->rewind();
+    $c = preg_replace('#^[\s\S]*<body.*?>([\s\S]*)</body>[\s\S]*$#','$1',$r->getBody()->getContents());
     $out = [
-      '#id'     => DebugConsole::objectId ($r),
+      '#id'     => $r->uid, //DebugConsole::objectId ($r),
       'Status'  => $r->getStatusCode () . ' ' . $r->getReasonPhrase (),
       'Headers' => $h,
       'Size'    => $r->getBody ()->getSize (),
+      'Body content'=> substr($c,0,1000).'...'
     ];
-    DebugConsole::logger ('routes')->write ('<#indent>')->simpleTable ($out, 'Resulting response')->write ('</#indent>');
+    $this->logger->write ('<#indent>')->simpleTable ($out, 'Resulting response')->write ('</#indent>');
   }
 
 }
