@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\WebApplication;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
+use PhpKit\WebConsole\DebugConsole\DebugConsoleSettings;
 use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 use Selenia\Application;
 use Selenia\Core\Assembly\Services\ModulesManager;
@@ -114,7 +115,10 @@ class WebApplication
     ErrorConsole::init ($debug, $rootDir);
     ErrorConsole::setAppName ($this->app->appName);
 
-    DebugConsole::init ($debug);
+    $settings = new DebugConsoleSettings;
+    $settings->defaultPanelTitle = 'Inspector';
+    $settings->defaultPanelIcon = 'fa fa-search';
+    DebugConsole::init ($debug, $settings);
   }
 
 }
