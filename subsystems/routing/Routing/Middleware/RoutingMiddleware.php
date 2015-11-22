@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Routing\Middleware;
-use PhpKit\WebConsole\ConsolePanel;
-use PhpKit\WebConsole\WebConsole;
+use PhpKit\WebConsole\DebugConsole\DebugConsole;
+use PhpKit\WebConsole\Loggers\ConsoleLogger;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
@@ -31,23 +31,26 @@ class RoutingMiddleware implements RequestHandlerInterface
         return sprintf ('<#i|__rowHeader><span>%d</span><#type>%s</#type></#i>', $i, get_class ($r));
       }));
 
-      WebConsole::routes ()
-                ->write ("<#section|Registered root routers>$rootR</#section><#section|Routables invoked while routing>");
+      DebugConsole::logger('routes')
+                  ->write ("<#section|Registered root routers>$rootR</#section><#section|Routables invoked while routing>");
+
+      // Note: it is safe to not register this hidden panel.
+      $routingLog           = new ConsoleLogger;
+      $routingLog->hasPanel = false;
+      DebugConsole::registerLogger ('routingLog', $routingLog);
     }
-    $routingLog          = new ConsolePanel;
-    $routingLog->visible = false;
-    WebConsole::registerPanel ('routingLog', $routingLog);
 
     /** @var RouterInterface $router */
     $router = $this->injector->make (RouterInterface::class);
 
+    /** @var ServerRequestInterface $request */
     $request = $request->withRequestTarget ($request->getAttribute ('virtualUri'));
 
     $res = $router
       ->set ($this->app->routers)
       ->__invoke ($request, $response, $next);
 
-    WebConsole::routes ()->write (WebConsole::routingLog ()->getContent () . "</#section>");
+    DebugConsole::logger('routes')->write (DebugConsole::logger('routingLog')->getContent () . "</#section>");
 
     return $res;
   }

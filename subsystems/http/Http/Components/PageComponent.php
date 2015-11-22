@@ -37,18 +37,7 @@ use Zend\Diactoros\Response\HtmlResponse;
 class PageComponent implements RequestHandlerInterface
 {
   /**
-   * A list of parameter names (inferred from the page definition on the sitemap)
-   * and correponding values present on the current URI.
-   * @var array
-   */
-  public $URIParams;
-  /**
-   * Information about the route associated with this controller.
-   * @var PageRoute
-   */
-  public $activeRoute;
-  /**
-   * @var
+   * @var Application
    */
   public $app;
   /**
@@ -297,7 +286,7 @@ class PageComponent implements RequestHandlerInterface
     // override to return the title of the current page
   {
     return coalesce (
-      isset($this->activeRoute) ? $this->activeRoute->title : null,
+//      isset($this->activeRoute) ? $this->activeRoute->title : null,
       $this->pageTitle,
       ''
     );
@@ -314,7 +303,7 @@ class PageComponent implements RequestHandlerInterface
    */
   function loadRequested (DataObject $model, $param = 'id')
   {
-    $id = $this->uriParam ($param);
+    $id = $this->request->getAttribute("@$param");
     if (!$id) return $model;
     $f = $model->find ($id);
     return $f ? $model : false;
@@ -350,22 +339,18 @@ class PageComponent implements RequestHandlerInterface
     }
   }
 
-  /**
-   * Returns the URI parameter with the specified name.
-   * @param string $name The parameter name, as specified on the route.
-   * @return string
-   */
-  function uriParam ($name)
-  {
-    return get ($this->URIParams, $name);
-  }
-
   protected function autoRedirect ()
   {
-    if (isset($this->activeRoute))
-      return $this->gotoModuleIndex ();
+    //TODO: redirect to index page
+
     if (isset($this->indexPage))
       return $this->redirection->to ($this->indexPage);
+
+//    $index = $this->activeRoute->getIndex ();
+//    if (!$index)
+//      return $this->redirection->home ();
+//    return $this->redirection->to ($index->evalURI ($this->URIParams));
+
     throw new FatalException("No index page defined.");
   }
 
@@ -445,19 +430,6 @@ class PageComponent implements RequestHandlerInterface
     else $param = null;
   }
 
-  protected function gotoModuleIndex ()
-  {
-    if (isset($this->activeRoute->indexURL))
-      return $this->redirection->to ($this->activeRoute->indexURL);
-    else {
-      /** @var PageRoute $index */
-      $index = $this->activeRoute->getIndex ();
-      if (!$index)
-        return $this->redirection->home ();
-      return $this->redirection->to ($index->evalURI ($this->URIParams));
-    }
-  }
-
   /**
    * Initializes the controller.
    * Override to implement initialization code that should run before all other processing on the controller.
@@ -466,10 +438,6 @@ class PageComponent implements RequestHandlerInterface
    */
   protected function initialize ()
   {
-    if (isset($this->app->routingMap)) {
-      $this->activeRoute = $this->router->activeRoute;
-      $this->URIParams   = $this->activeRoute->getURIParams ();
-    }
   }
 
   /**

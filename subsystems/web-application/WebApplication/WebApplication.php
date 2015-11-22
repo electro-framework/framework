@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\WebApplication;
-use PhpKit\WebConsole\ErrorHandler;
-use PhpKit\WebConsole\WebConsole;
+use PhpKit\WebConsole\DebugConsole\DebugConsole;
+use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 use Selenia\Application;
 use Selenia\Core\Assembly\Services\ModulesManager;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
@@ -49,7 +49,7 @@ class WebApplication
 //    if ($this->logger)
 //      $this->logger->error ($e->getMessage (),
 //        ['stackTrace' => str_replace ("{$this->app->baseDirectory}/", '', $e->getTraceAsString ())]);
-    WebConsole::outputContent (true);
+    DebugConsole::outputContent (true);
   }
 
   /**
@@ -71,7 +71,7 @@ class WebApplication
 
     $this->setupDebugging ($rootDir);
     // Temporarily set framework path mapping here for errors thrown during modules loading.
-    ErrorHandler::setPathsMap ($application->getMainPathMap ());
+    ErrorConsole::setPathsMap ($application->getMainPathMap ());
 
     // Bootstrap the application's modules.
 
@@ -100,7 +100,7 @@ class WebApplication
   {
     $map = $this->app->getMainPathMap ();
     $map = array_merge ($map, $registry->getPathMappings ());
-    ErrorHandler::setPathsMap ($map);
+    ErrorConsole::setPathsMap ($map);
   }
 
   /**
@@ -111,9 +111,10 @@ class WebApplication
     set_exception_handler ([$this, 'exceptionHandler']);
     $debug = $this->app->debugMode = getenv ('APP_DEBUG') == 'true';
 
-    ErrorHandler::init ($debug, $rootDir);
-    ErrorHandler::$appName = $this->app->appName;
-    WebConsole::init ($debug);
+    ErrorConsole::init ($debug, $rootDir);
+    ErrorConsole::setAppName ($this->app->appName);
+
+    DebugConsole::init ($debug);
   }
 
 }

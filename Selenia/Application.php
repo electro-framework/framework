@@ -2,12 +2,10 @@
 namespace Selenia;
 
 use Monolog\Handler\HandlerInterface;
-use Monolog\Logger;
-use PhpKit\WebConsole\ErrorHandler;
+use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 use Selenia\Core\Assembly\Config\AssemblyServiceProvider;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Routing\RoutingMap;
 
 class Application
 {
@@ -294,11 +292,6 @@ class Application
    */
   public $routers = [];
   /**
-   * The application'a routing map.
-   * @var RoutingMap
-   */
-  public $routingMap;
-  /**
    * @var string
    */
   public $storagePath = 'private/storage';
@@ -359,11 +352,6 @@ class Application
    * @var array
    */
   public $viewsDirectories = [];
-  /**
-   * The application's main logger.
-   * @var Logger
-   */
-  protected $logger;
 
   function __construct (InjectorInterface $injector)
   {
@@ -503,7 +491,7 @@ class Application
       unset ($ini['main']);
     }
     else
-      throw new ConfigException("Error parsing " . ErrorHandler::shortFileName ($iniPath));
+      throw new ConfigException("Error parsing " . ErrorConsole::shortFileName ($iniPath));
     $this->config = $ini;
   }
 

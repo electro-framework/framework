@@ -1,6 +1,6 @@
 <?php
-use PhpKit\WebConsole\ConsolePanel;
-use PhpKit\WebConsole\WebConsole;
+use PhpKit\WebConsole\DebugConsole\DebugConsole;
+use PhpKit\WebConsole\Loggers\ConsoleLogger;
 use Selenia\Routing\FactoryRoutable;
 
 
@@ -29,14 +29,22 @@ function safeParameter ($name)
 }
 
 /**
- * @return ConsolePanel
+ * A shortcut that displays a formatted representation of the given arguments to the 'Inspector' panel on the Debug
+ * Console.
+ * <p>This is useful mainly for debugging.
+ * @return ConsoleLogger
  */
 function _log ()
 {
-  $args = array_merge (['<#log>'], func_get_args ());
-  return call_user_func_array ([WebConsole::$class, 'log'], $args)->showCallLocation ()->log ('</#log>');
+  $args   = array_merge (['<#log><#i>'], func_get_args ());
+  $logger = DebugConsole::defaultLogger ();
+  return call_user_func_array ([$logger, 'inspect'], $args)->showCallLocation ()->inspect ('</#i></#log>');
 }
 
+/**
+ * Displays a formatted representation of the given arguments to the browser, clearing any existing output.
+ * <p>This is useful for debugging.
+ */
 function trace ()
 {
   echo "<pre>";

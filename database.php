@@ -1,5 +1,5 @@
 <?php
-use PhpKit\WebConsole\WebConsole;
+use PhpKit\WebConsole\DebugConsole\DebugConsole;
 
 $transactionDepth = 0;
 
@@ -78,7 +78,7 @@ function database_open ()
 function highlightQuery ($msg, array $keywords, $baseStyle)
 {
   $msg = preg_replace ("#`[^`]*`#", '<span class=dbcolumn>$0</span>', $msg);
-  $msg = WebConsole::highlight ($msg, $keywords, $baseStyle);
+  $msg = DebugConsole::highlight ($msg, $keywords, $baseStyle);
   return "<#i>$msg</#i>";
 }
 
@@ -103,12 +103,12 @@ function database_query ($query, $params = null)
 
   $showQuery = function ($dur = null) use ($query, $params, $SQL_KEYWORDS) {
     $query = trim ($query);
-    WebConsole::database ('<#section|SQL QUERY>', highlightQuery ($query, $SQL_KEYWORDS, 'identifier'));
+    DebugConsole::logger ('database')->inspect ('<#section|SQL QUERY>', highlightQuery ($query, $SQL_KEYWORDS, 'identifier'));
     if (!empty($params))
-      WebConsole::database ("<#header>Parameters</#header>", $params);
+      DebugConsole::logger ('database')->inspect ("<#header>Parameters</#header>", $params);
     if (isset($dur))
-      WebConsole::database ("<#footer>Query took <b>$dur</b> seconds.</#footer>");
-    WebConsole::database ('</#section>');
+      DebugConsole::logger ('database')->inspect ("<#footer>Query took <b>$dur</b> seconds.</#footer>");
+    DebugConsole::logger ('database')->inspect ('</#section>');
   };
 
   if ($application->debugMode)
@@ -118,8 +118,8 @@ function database_query ($query, $params = null)
     $st->execute ($params);
   } catch (PDOException $e) {
     $showQuery ();
-    WebConsole::database ('<#footer><#alert>Query failed!</#alert></#footer>');
-    WebConsole::throwErrorWithLog ($e);
+    DebugConsole::logger ('database')->inspect ('<#footer><#alert>Query failed!</#alert></#footer>');
+    DebugConsole::throwErrorWithLog ($e);
   }
   if ($application->debugMode) {
     $end = microtime (true);

@@ -1,6 +1,6 @@
 <?php
 namespace Selenia\Routing;
-use PhpKit\WebConsole\WebConsole;
+use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
@@ -35,6 +35,17 @@ class Router implements RouterInterface
    * @var RouteMatcherInterface
    */
   private $matcher;
+  /**
+   * The current request; updated as the router calls request handlers.
+   * > This is used for debugging only.
+   * @var ServerRequestInterface
+   */
+  private $request;
+  /**
+   * The current response; updated as the router calls request handlers.
+   * @var ResponseInterface
+   */
+  private $response;
 
   public function __construct (InjectorInterface $injector, RouteMatcherInterface $matcher)
   {
@@ -44,6 +55,8 @@ class Router implements RouterInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
+    $this->request  = $request;
+    $this->response = $response;
     return empty($this->handlers) ? $next () : $this->route ($this->handlers, $request, $response, $next);
   }
 
@@ -124,7 +137,7 @@ class Router implements RouterInterface
    * Invokes a handler.
    *
    * <p>The router does not call the handlers directly; instead, it does it trough this method, so that calls can be
-   * intercepted and logged.
+   * intercepted, validated and logged.
    *
    * @param callable               $handler
    * @param ServerRequestInterface $request
@@ -135,40 +148,56 @@ class Router implements RouterInterface
   private function callHandler ($handler, $request, $response, $next)
   {
     static $c = 1;
-    $log = WebConsole::hasPanel ('routingLog');
+    $log = DebugConsole::hasLogger ('routingLog');
     if ($log) {
-      WebConsole::routingLog ()
-                ->write (sprintf ("<#i|__rowHeader><span>%d</span><#type>%s</#type></#i>", $c++, typeOf ($handler)));
+      DebugConsole::logger ('routingLog')
+                  ->write (sprintf ("<#i|__rowHeader><span>%d</span><#type>%s</#type></#i>", $c++, typeOf ($handler)));
 //      $this->logResponse ($response);
     }
-    $r = $handler ($request, $response, $next);
-    if ($r && $log)
-      $this->logResponse ($r);
-    return $r;
+
+    $newResponse = $handler ($request, $response, $next);
+    $log         = DebugConsole::hasLogger ('routingLog'); // it may have changed.
+    if ($newResponse) {
+      if ($newResponse !== $response) {
+        $this->logResponse ($response);
+        $this->logResponse ($newResponse);
+        $this->response = $newResponse;
+        if ($log)
+          $this->logResponse ($newResponse);
+      }
+      // Replace the response if necessary.
+      if (!$newResponse instanceof ResponseInterface)
+        throw new \RuntimeException (sprintf (
+          "Response from request handler <kbd class=type>%s</kbd> is not a <kbd class=type>ResponseInterface</kbd> implementation.",
+          typeOf ($handler)));
+    }
+    else $newResponse = $this->response;
+    return $newResponse;
   }
 
   /**
    * Iterates the handler pipeline while each handler calls its `$next` argument, otherwise, it returns the HTTP
    * response.
    * @param \Iterator              $it
-   * @param ServerRequestInterface $currentRequest
-   * @param ResponseInterface      $currentResponse
-   * @param callable               $originalNext
+   * @param ServerRequestInterface $requestBeforeIter
+   * @param ResponseInterface      $responseBeforeIter
+   * @param callable               $nextHandlerBeforeIter
    * @return ResponseInterface
    */
-  private function iterateHandlers (\Iterator $it, ServerRequestInterface $currentRequest,
-                                    ResponseInterface $currentResponse, callable $originalNext)
+  private function iterateHandlers (\Iterator $it, ServerRequestInterface $requestBeforeIter,
+                                    ResponseInterface $responseBeforeIter, callable $nextHandlerBeforeIter)
   {
     $first           = true;
     $callNextHandler =
       function (ServerRequestInterface $request = null, ResponseInterface $response = null) use (
-        $it, &$callNextHandler, &$first, &$currentRequest, &$currentResponse, $originalNext
+        $it, &$callNextHandler, &$first, $nextHandlerBeforeIter
       ) {
+        $request  = $this->request = ($request ?: $this->request);
+        $response = $this->response = ($response ?: $this->response);
+
         if ($first) $first = false;
         else $it->next ();
         if ($it->valid ()) {
-          $request  = $currentRequest = $request ?: $currentRequest;
-          $response = $currentResponse = $response ?: $currentResponse;
 
           $routable = $it->current ();
           $pattern  = $it->key ();
@@ -180,25 +209,14 @@ class Router implements RouterInterface
             if (!$this->matcher->match ($pattern, $request, $request))
               return $callNextHandler ();
           }
-          $newResponse = $this->route ($routable, $request, $response, $callNextHandler);
-
-          // Replace the response if necessary.
-          if (isset($newResponse)) {
-            if ($newResponse instanceof ResponseInterface)
-              return $newResponse;
-
-            throw new \RuntimeException (sprintf (
-              "Response from request handler <kbd class=type>%s</kbd> is not a ResponseInterface implementation.",
-              typeOf ($routable)));
-          }
-          return $currentResponse;
+          return $this->route ($routable, $request, $response, $callNextHandler);
         }
         // Iteration ended.
-        return $originalNext ($request, $response);
+        return $nextHandlerBeforeIter ($request, $response);
       };
 
     $it->rewind ();
-    return $callNextHandler ();
+    return $callNextHandler ($requestBeforeIter, $responseBeforeIter);
   }
 
   /**
@@ -206,13 +224,15 @@ class Router implements RouterInterface
    */
   private function logResponse ($r)
   {
+//    WebConsole::routingLog ()->write("YES!!!");return;
     $h   = map ($r->getHeaders (), function ($v) { return implode ('<br>', $v); });
     $out = [
+      '#id'     => DebugConsole::objectId ($r),
       'Status'  => $r->getStatusCode () . ' ' . $r->getReasonPhrase (),
       'Headers' => $h,
       'Size'    => $r->getBody ()->getSize (),
     ];
-    WebConsole::routingLog ()->write ('<#indent>')->simpleTable ($out, 'Resulting response')->write ('</#indent>');
+    DebugConsole::logger ('routes')->write ('<#indent>')->simpleTable ($out, 'Resulting response')->write ('</#indent>');
   }
 
 }

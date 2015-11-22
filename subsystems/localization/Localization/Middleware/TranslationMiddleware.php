@@ -1,6 +1,6 @@
 <?php
 namespace Selenia\Localization\Middleware;
-use PhpKit\WebConsole\ErrorHandler;
+use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
@@ -65,7 +65,7 @@ class TranslationMiddleware implements RequestHandlerInterface
         }
       }
       if (!$found) {
-        $paths = array_map (function ($path) { return "<li>" . ErrorHandler::shortFileName ($path); }, $folders);
+        $paths = array_map (function ($path) { return "<li>" . ErrorConsole::shortFileName ($path); }, $folders);
         throw new ConfigException("A translation file for language <b>$lang</b> was not found.<p>Search paths:<ul>" .
                                   implode ('', $paths) . "</ul>", FlashType::FATAL);
       }

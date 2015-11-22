@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\ErrorHandling\Middleware;
 
-use PhpKit\WebConsole\ErrorHandler;
+use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
@@ -35,13 +35,16 @@ class ErrorHandlingMiddleware implements RequestHandlerInterface
       $app = $this->app;
 
       $this->logger->error ($error->getMessage (),
-        ['stackTrace' => str_replace ("$app->baseDirectory/", '', $error->getTraceAsString ())]
+        [
+          'exception' => $error, // PSR-3-compliant property
+          'stackTrace' => str_replace ("$app->baseDirectory/", '', $error->getTraceAsString ())
+        ]
       );
 
       // On debug mode, a debugging error popup is displayed for HTML responses.
 
       if ($app->debugMode && HttpUtil::clientAccepts ($request, 'text/html'))
-        return ErrorHandler::showErrorPopup ($error, $response);
+        return ErrorConsole::display ($error, $response);
 
       // Otherwise, exceptions are shown as a panel (for HTML responses) or they are encoded
       // into one of the supported output formats.
@@ -52,7 +55,7 @@ class ErrorHandlingMiddleware implements RequestHandlerInterface
       // The message is assumed to be a plain, one-line string (no formatting)
       $message = $error->getMessage ();
       $status  = $error->getCode ();
-      $info = property($error, 'info');
+      $info    = property ($error, 'info');
 
       if (HttpUtil::clientAccepts ($request, 'text/html')) {
         $response = $response->withHeader ('Content-Type', 'text/html');
