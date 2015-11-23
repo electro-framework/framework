@@ -1,12 +1,12 @@
 <?php
 namespace Selenia\Routing;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
-use PhpKit\WebConsole\Loggers\ConsoleLogger;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
 use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Routing\Services\RoutingLogger;
 use Selenia\Traits\InspectionTrait;
 
 /**
@@ -33,10 +33,6 @@ class Router implements RouterInterface
    */
   private $injector;
   /**
-   * @var ConsoleLogger
-   */
-  private $logger;
-  /**
    * @var RouteMatcherInterface
    */
   private $matcher;
@@ -51,17 +47,28 @@ class Router implements RouterInterface
    * @var ResponseInterface
    */
   private $response;
+  /**
+   * @var RoutingLogger
+   */
+  private $routingLogger;
+  /**
+   * @var int|null
+   */
+  private $size;
 
-  public function __construct (InjectorInterface $injector, RouteMatcherInterface $matcher)
+  public function __construct (InjectorInterface $injector, RouteMatcherInterface $matcher,
+                               RoutingLogger $routingLogger)
   {
-    $this->injector = $injector;
-    $this->matcher  = $matcher;
+    $this->injector      = $injector;
+    $this->matcher       = $matcher;
+    $this->routingLogger = $routingLogger;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $this->request  = $request;
+    //$this->request  = $request;
     $this->response = $response;
+    $this->size     = $response->getBody ()->getSize ();
     return empty($this->handlers) ? $next () : $this->route ($this->handlers, $request, $response, $next);
   }
 
@@ -108,9 +115,10 @@ class Router implements RouterInterface
       return $next ();
 
     if (is_callable ($routable)) {
-      if ($routable instanceof FactoryRoutable)
+      if ($routable instanceof FactoryRoutable) {
+        $this->routingLogger->write ("<#i|__rowHeader>Factory routable invoked</#i>");
         $response = $this->route ($routable ($this->injector), $request, $response, $next);
-
+      }
       else $response = $this->callHandler ($routable, $request, $response, $next);
     }
     else {
@@ -152,39 +160,35 @@ class Router implements RouterInterface
    */
   private function callHandler ($handler, $request, $response, $next)
   {
-    static $c = 1;
-    $log = DebugConsole::hasLogger ('routingLog');
-    if ($log) {
-      $this->logger = DebugConsole::logger ('routingLog');
-      $this->logger
-                  ->write (sprintf ("<#i|__rowHeader><span>%d</span><#type>%s</#type></#i>", $c++, typeOf ($handler)));
-//      $this->logResponse ($response);
+    $this->routingLogger
+      ->write (sprintf ("<#i|__rowHeader><#type>%s</#type></#i>", typeOf ($handler)));
+
+    if ($request && $request != $this->request)
+      $this->logRequest ($request, 'Receives a new Request object!!!');
+
+    $response = $handler ($request, $response, $next) ?: $response;
+
+    if (!$response instanceof ResponseInterface)
+      throw new \RuntimeException (sprintf (
+        "Response from request handler <kbd class=type>%s</kbd> is not a <kbd class=type>ResponseInterface</kbd> implementation.",
+        typeOf ($handler)));
+
+    $this->routingLogger->write ("<#i|__rowHeader>Return from ")->typeName ($handler)->write ('</#i>');
+
+    if ($response !== $this->response) {
+      $this->logResponse ($response, 'New Response object');
+      $this->response = $response;
+      $this->size     = $response->getBody ()->getSize ();
+    }
+    else {
+      $newSize = $response->getBody ()->getSize ();
+      if ($newSize != $this->size) {
+        $this->logResponse ($response, 'Response body was modified');
+        $this->size = $newSize;
+      }
     }
 
-    $newResponse = $handler ($request, $response, $next);
-    $log         = DebugConsole::hasLogger ('routingLog'); // it may have changed.
-    if ($log)
-      $this->logger = DebugConsole::logger ('routingLog');
-    if ($newResponse) {
-      if ($newResponse !== $response) {
-        if ($log) {
-          $this->logger->write ('<#header>OLD Response</#header>');
-          $this->logResponse ($response);
-          $this->logger->write ('<#header>NEW Response</#header>');
-          $this->logResponse ($newResponse);
-        }
-        $this->response = $newResponse;
-//        if ($log)
-//          $this->logResponse ($newResponse);
-      }
-      // Replace the response if necessary.
-      if (!$newResponse instanceof ResponseInterface)
-        throw new \RuntimeException (sprintf (
-          "Response from request handler <kbd class=type>%s</kbd> is not a <kbd class=type>ResponseInterface</kbd> implementation.",
-          typeOf ($handler)));
-    }
-    else $newResponse = $this->response;
-    return $newResponse;
+    return $response;
   }
 
   /**
@@ -199,11 +203,16 @@ class Router implements RouterInterface
   private function iterateHandlers (\Iterator $it, ServerRequestInterface $requestBeforeIter,
                                     ResponseInterface $responseBeforeIter, callable $nextHandlerBeforeIter)
   {
+    $this->routingLogger->write ("<#i|__rowHeader>Routes iteration...</#i>");
+
     $first           = true;
     $callNextHandler =
       function (ServerRequestInterface $request = null, ResponseInterface $response = null) use (
         $it, &$callNextHandler, &$first, $nextHandlerBeforeIter
       ) {
+        if ($request && $request != $this->request)
+          $this->logRequest ($request, $this->request ? 'New Request object' : 'Initial Request object');
+
         $request  = $this->request = ($request ?: $this->request);
         $response = $this->response = ($response ?: $this->response);
 
@@ -218,8 +227,10 @@ class Router implements RouterInterface
 
             // Route matching:
 
-            if (!$this->matcher->match ($pattern, $request, $request))
+            if (!$this->matcher->match ($pattern, $request, $request)) {
+              $this->routingLogger->write ("<#i|__rowHeader>Route pattern match: <b class=keyword>'$pattern'</b></#i>");
               return $callNextHandler ();
+            }
           }
           return $this->route ($routable, $request, $response, $callNextHandler);
         }
@@ -232,25 +243,54 @@ class Router implements RouterInterface
   }
 
   /**
-   * @param ResponseInterface $r
+   * @param ServerRequestInterface $r
+   * @param                        $title
    */
-  private function logResponse ($r)
+  private function logRequest ($r, $title)
   {
-    static $uid = 1;
-    if (!isset($r->uid))
-      $r->uid = $uid++;
-//    WebConsole::routingLog ()->write("YES!!!");return;
-    $h   = map ($r->getHeaders (), function ($v) { return implode ('<br>', $v); });
-    $r->getBody()->rewind();
-    $c = preg_replace('#^[\s\S]*<body.*?>([\s\S]*)</body>[\s\S]*$#','$1',$r->getBody()->getContents());
+    $showAll = !$this->request;
+//    $r->getBody ()->rewind ();
+    /*    $c   = preg_replace ('#^[\s\S]*<body.*?>([\s\S]*)</body>[\s\S]*$#', '$1', $r->getBody ()->getContents ());
+    */
     $out = [
-      '#id'     => $r->uid, //DebugConsole::objectId ($r),
+      '#id' => DebugConsole::objectId ($r),
+    ];
+    if ($showAll || $r->getHeaders () != $this->request->getHeaders ())
+      $out['Headers'] = map ($r->getHeaders (), function ($v) { return implode ('<br>', $v); });
+    if ($showAll || $r->getAttributes () != $this->request->getAttributes ())
+      $out['Attributes'] = $r->getAttributes ();
+    if ($showAll || $r->getRequestTarget () != $this->request->getRequestTarget ())
+      $out['Request target'] = $r->getRequestTarget ();
+    if ($showAll || $r->getBody ()->getSize () != $this->size)
+      $out['Size'] = $r->getBody ()->getSize ();
+
+    $this->routingLogger
+      ->write ('<#indent>')
+      ->simpleTable ($out, $title)
+      ->write ('</#indent>');
+  }
+
+  /**
+   * @param ResponseInterface $r
+   * @param                   $title
+   */
+  private function logResponse ($r, $title)
+  {
+    $h = map ($r->getHeaders (), function ($v) { return implode ('<br>', $v); });
+//    $r->getBody ()->rewind ();
+    /*    $c   = preg_replace ('#^[\s\S]*<body.*?>([\s\S]*)</body>[\s\S]*$#', '$1', $r->getBody ()->getContents ());
+    */
+    $out = [
+      '#id'     => DebugConsole::objectId ($r),
       'Status'  => $r->getStatusCode () . ' ' . $r->getReasonPhrase (),
       'Headers' => $h,
       'Size'    => $r->getBody ()->getSize (),
-      'Body content'=> substr($c,0,1000).'...'
+      //      'Body content' => substr ($c, 0, 1000) . '...',
     ];
-    $this->logger->write ('<#indent>')->simpleTable ($out, 'Resulting response')->write ('</#indent>');
+    $this->routingLogger
+      ->write ('<#indent>')
+      ->simpleTable ($out, $title)
+      ->write ('</#indent>');
   }
 
 }

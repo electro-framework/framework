@@ -12,6 +12,7 @@ use Selenia\Routing\Navigation\Navigation;
 use Selenia\Routing\Navigation\NavigationLink;
 use Selenia\Routing\RouteMatcher;
 use Selenia\Routing\Router;
+use Selenia\Routing\Services\RoutingLogger;
 
 class RoutingModule implements ServiceProviderInterface
 {
@@ -21,6 +22,7 @@ class RoutingModule implements ServiceProviderInterface
       // Routing:
       ->alias (RouterInterface::class, Router::class)
       ->alias (RouteMatcherInterface::class, RouteMatcher::class)
+      ->share (RoutingLogger::class)
       // The application's middleware pipeline:
       ->alias (RequestHandlerPipelineInterface::class, Router::class)
       ->share (RequestHandlerPipelineInterface::class)

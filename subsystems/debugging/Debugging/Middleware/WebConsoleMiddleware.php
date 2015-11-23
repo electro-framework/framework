@@ -14,6 +14,7 @@ use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Routing\Router;
+use Selenia\Routing\Services\RoutingLogger;
 
 /**
  *
@@ -51,7 +52,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     $app = $this->app;
     DebugConsole::registerPanel ('request', new PSR7RequestLogger ('Request', 'fa fa-paper-plane'));
     DebugConsole::registerPanel ('response', new PSR7ResponseLogger ('Response', 'fa fa-file'));
-    DebugConsole::registerPanel ('routes', new ConsoleLogger ('Routes', 'fa fa-location-arrow'));
+    DebugConsole::registerPanel ('routes', new ConsoleLogger ('Routing', 'fa fa-location-arrow'));
     DebugConsole::registerPanel ('config', new ConsoleLogger ('Config.', 'fa fa-cogs'));
     DebugConsole::registerPanel ('session', new ConsoleLogger ('Session', 'fa fa-user'));
     DebugConsole::registerPanel ('DOM', new ConsoleLogger ('DOM', 'fa fa-sitemap'));
@@ -103,6 +104,10 @@ class WebConsoleMiddleware implements RequestHandlerInterface
       // View Models panel
       DebugConsole::logger ('vm')->inspect (get_object_vars ($router->controller));
     }
+
+    DebugConsole::logger ('routes')
+      ->write ($this->injector->make(RoutingLogger::class)->getContent ())
+      ->write ("<#i|__rowHeader><i>(later steps can't be traced)</i></#i>");
 
     return DebugConsole::outputContentViaResponse ($request, $response, true);
   }

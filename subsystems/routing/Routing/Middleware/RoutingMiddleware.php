@@ -8,6 +8,7 @@ use Selenia\Application;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Routing\Services\RoutingLogger;
 
 /**
  *
@@ -16,11 +17,22 @@ class RoutingMiddleware implements RequestHandlerInterface
 {
   private $app;
   private $injector;
+  /**
+   * @var RouterInterface
+   */
+  private $router;
+  /**
+   * @var RoutingLogger
+   */
+  private $routingLogger;
 
-  function __construct (Application $app, InjectorInterface $injector)
+  function __construct (RouterInterface $router, Application $app, InjectorInterface $injector,
+                        RoutingLogger $routingLogger)
   {
-    $this->app      = $app;
-    $this->injector = $injector;
+    $this->router        = $router;
+    $this->app           = $app;
+    $this->injector      = $injector;
+    $this->routingLogger = $routingLogger;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -28,30 +40,22 @@ class RoutingMiddleware implements RequestHandlerInterface
     if ($this->app->debugMode) {
       $rootR = implode ('', map ($this->app->routers, function ($r, $i) {
         ++$i;
-        return sprintf ('<#i|__rowHeader><span>%d</span><#type>%s</#type></#i>', $i, get_class ($r));
+        return sprintf ('<#i|__rowHeader><#type>%s</#type></#i>', get_class ($r));
       }));
 
-//      DebugConsole::logger('routes')
-//                  ->write ("<#section|Registered root routers>$rootR</#section><#section|Routables invoked while routing>");
-
-      // Note: it is safe to not register this hidden panel.
-      $routingLog           = new ConsoleLogger;
-      $routingLog->hasPanel = false;
-//      DebugConsole::registerLogger ('routingLog', $routingLog);
+      DebugConsole::logger ('routes')
+                  ->write ("<#section|Registered root routers>$rootR</#section>" .
+                           "<#section|Routables invoked while routing>" .
+                           "<#i|__rowHeader><i>(previous steps can't be traced)</i></#i>");
     }
-
-    /** @var RouterInterface $router */
-    $router = $this->injector->make (RouterInterface::class);
 
     /** @var ServerRequestInterface $request */
     $request = $request->withRequestTarget ($request->getAttribute ('virtualUri'));
-
-    $res = $router
+    $res = $this->router
       ->set ($this->app->routers)
       ->__invoke ($request, $response, $next);
 
-//    DebugConsole::logger('routes')->write (DebugConsole::logger('routingLog')->getContent () . "</#section>");
-//    DebugConsole::logger('routes')->write ("</#section>");
+    DebugConsole::logger ('routes')->write ($this->routingLogger->getContent () . "</#section>");
 
     return $res;
   }
