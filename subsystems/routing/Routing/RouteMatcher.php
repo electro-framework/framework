@@ -40,7 +40,7 @@ class RouteMatcher implements RouteMatcherInterface
 
     $newPath = substr ($path, $m['_next'][1] + 1);
     if ($path != $newPath)
-      $request = $request->withRequestTarget ($newPath);
+      $request = $request->withRequestTarget ($newPath === false ? '' : $newPath);
 
     foreach ($m as $k => $v)
       if (is_string ($k) && $k[0] != '_')

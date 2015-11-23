@@ -140,10 +140,10 @@ class Router implements RouterInterface
         if (is_callable ($routable))
           $response = $this->callHandler ($routable, $request, $response, $next);
 
-        else throw new \RuntimeException (sprintf ("Instances of class <kbd class=class>%s</kbd> are not routable.",
+        else throw new \RuntimeException (sprintf ("Instances of class <span class=class>%s</span> are not routable.",
           getType ($routable)));
       }
-      else throw new \RuntimeException (sprintf ("Invalid routable type <kbd class=type>%s</kbd>.",
+      else throw new \RuntimeException (sprintf ("Invalid routable type <span class=type>%s</span>.",
         getType ($routable)));
     }
 
@@ -173,7 +173,7 @@ class Router implements RouterInterface
       ->write (sprintf ("<#i|__rowHeader>Call <#type>%s</#type></#i>", typeOf ($handler)));
 
     if ($request && $request != $this->request)
-      $this->logRequest ($request, sprintf ('with a new <kbd class=__type title="%s">request</kbd> object:',
+      $this->logRequest ($request, sprintf ('with a new <span class=__type title="%s">request</span> object:',
         typeOf ($request)
       ));
 
@@ -183,13 +183,13 @@ class Router implements RouterInterface
 
     if (!$response)
       throw new \RuntimeException (sprintf (
-        "Request handler <kbd class=__type>%s</kbd> did not return a response.",
+        "Request handler <span class=__type>%s</span> did not return a response.",
         ConsoleLogger::getType ($handler)
       ));
 
     if (!$response instanceof ResponseInterface)
       throw new \RuntimeException (sprintf (
-        "Response from request handler <kbd class=__type>%s</kbd> is not a <kbd class=type>ResponseInterface</kbd> implementation.",
+        "Response from request handler <span class=__type>%s</span> is not a <span class=type>ResponseInterface</span> implementation.",
         ConsoleLogger::getType ($handler)
       ));
 
@@ -200,7 +200,7 @@ class Router implements RouterInterface
 
     if ($response !== $this->response) {
       $this->logResponse ($response,
-        sprintf ('with a new <kbd class=__type title="%s">response</kbd> object:',
+        sprintf ('with a new <span class=__type title="%s">response</span> object:',
           typeOf ($response)
         )
       );
@@ -210,7 +210,7 @@ class Router implements RouterInterface
     else {
       $newSize = $response->getBody ()->getSize ();
       if ($newSize != $this->size) {
-        $this->logResponse ($response, 'Response body was modified:');
+        $this->logResponse ($response, 'with a modified response body:');
         $this->size = $newSize;
       }
     }
@@ -237,7 +237,7 @@ class Router implements RouterInterface
         $it, &$callNextHandler, &$first, $nextHandlerBeforeIter
       ) {
         if ($request && $request != $this->request)
-          $this->logRequest ($request, $this->request ? 'New Request object' : 'Initial Request object');
+          $this->logRequest ($request, $this->request ? '**New Request object' : 'Initial Request object');
 
         $request  = $this->request = ($request ?: $this->request);
         $response = $this->response = ($response ?: $this->response);
@@ -287,7 +287,7 @@ class Router implements RouterInterface
     $this->routingLogger->write ("<#i|__rowHeader>Begin pipeline</#i>");
     if ($requestBeforeIter && $requestBeforeIter != $this->request) {
       $this->logRequest ($requestBeforeIter,
-        sprintf ('with %s <kbd class=__type title="%s">request</kbd> object:',
+        sprintf ('with %s <span class=__type title="%s">request</span> object:',
           $this->request ? 'a new' : 'the initial',
           typeOf ($requestBeforeIter))
       );
