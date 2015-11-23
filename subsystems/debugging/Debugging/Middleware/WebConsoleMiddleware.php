@@ -107,7 +107,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 
     DebugConsole::logger ('routes')
       ->write ($this->injector->make(RoutingLogger::class)->getContent ())
-      ->write ("<#i|__rowHeader><i>(later steps can't be traced)</i></#i>");
+      ->write ("<#i|__rowHeader><i>(later middlewares are omitted because they can't be traced)</i></#i>");
 
     return DebugConsole::outputContentViaResponse ($request, $response, true);
   }

@@ -272,7 +272,9 @@ trait DataBindingTrait
     $compiled = get (MatisseEngine::$expressions, $expression);
     if (!$compiled)
       $compiled = MatisseEngine::$expressions[$expression] = $this->compileExpression ($expression);
-    $v = $compiled->call ($this);
+    // Compatible with PHP < 7
+    $c = \Closure::bind($compiled, $this, $this);
+    $v = $c ();
 
     // Apply pipes to expression result
 

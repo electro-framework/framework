@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Routing;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
+use PhpKit\WebConsole\Loggers\ConsoleLogger;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
@@ -114,6 +115,8 @@ class Router implements RouterInterface
     if (is_null ($routable))
       return $next ();
 
+    //$this->routingLogger->write ("<div class='indent'>"); // <#indent> was not used because it isn't reentrant.
+
     if (is_callable ($routable)) {
       if ($routable instanceof FactoryRoutable) {
         $this->routingLogger->write ("<#i|__rowHeader>Factory routable invoked</#i>");
@@ -125,7 +128,7 @@ class Router implements RouterInterface
       if ($routable instanceof \IteratorAggregate)
         $routable = $routable->getIterator ();
 
-      else if (is_array ($routable))
+      elseif (is_array ($routable))
         $routable = new \ArrayIterator($routable);
 
       if ($routable instanceof \Iterator)
@@ -143,6 +146,9 @@ class Router implements RouterInterface
       else throw new \RuntimeException (sprintf ("Invalid routable type <kbd class=type>%s</kbd>.",
         getType ($routable)));
     }
+
+    //$this->routingLogger->write ("</div>");
+
     return $response;
   }
 
@@ -160,33 +166,55 @@ class Router implements RouterInterface
    */
   private function callHandler ($handler, $request, $response, $next)
   {
+    //-----------------------------------------------------------------------------------------------
+    // DEBUG
+    //-----------------------------------------------------------------------------------------------
     $this->routingLogger
-      ->write (sprintf ("<#i|__rowHeader><#type>%s</#type></#i>", typeOf ($handler)));
+      ->write (sprintf ("<#i|__rowHeader>Call <#type>%s</#type></#i>", typeOf ($handler)));
 
     if ($request && $request != $this->request)
-      $this->logRequest ($request, 'Receives a new Request object!!!');
+      $this->logRequest ($request, sprintf ('with a new <kbd class=__type title="%s">request</kbd> object:',
+        typeOf ($request)
+      ));
 
-    $response = $handler ($request, $response, $next) ?: $response;
+    //-----------------------------------------------------------------------------------------------
+
+    $response = $handler ($request, $response, $next);
+
+    if (!$response)
+      throw new \RuntimeException (sprintf (
+        "Request handler <kbd class=__type>%s</kbd> did not return a response.",
+        ConsoleLogger::getType ($handler)
+      ));
 
     if (!$response instanceof ResponseInterface)
       throw new \RuntimeException (sprintf (
-        "Response from request handler <kbd class=type>%s</kbd> is not a <kbd class=type>ResponseInterface</kbd> implementation.",
-        typeOf ($handler)));
+        "Response from request handler <kbd class=__type>%s</kbd> is not a <kbd class=type>ResponseInterface</kbd> implementation.",
+        ConsoleLogger::getType ($handler)
+      ));
 
+    //-----------------------------------------------------------------------------------------------
+    // DEBUG
+    //-----------------------------------------------------------------------------------------------
     $this->routingLogger->write ("<#i|__rowHeader>Return from ")->typeName ($handler)->write ('</#i>');
 
     if ($response !== $this->response) {
-      $this->logResponse ($response, 'New Response object');
+      $this->logResponse ($response,
+        sprintf ('with a new <kbd class=__type title="%s">response</kbd> object:',
+          typeOf ($response)
+        )
+      );
       $this->response = $response;
       $this->size     = $response->getBody ()->getSize ();
     }
     else {
       $newSize = $response->getBody ()->getSize ();
       if ($newSize != $this->size) {
-        $this->logResponse ($response, 'Response body was modified');
+        $this->logResponse ($response, 'Response body was modified:');
         $this->size = $newSize;
       }
     }
+    //-----------------------------------------------------------------------------------------------
 
     return $response;
   }
@@ -203,8 +231,6 @@ class Router implements RouterInterface
   private function iterateHandlers (\Iterator $it, ServerRequestInterface $requestBeforeIter,
                                     ResponseInterface $responseBeforeIter, callable $nextHandlerBeforeIter)
   {
-    $this->routingLogger->write ("<#i|__rowHeader>Routes iteration...</#i>");
-
     $first           = true;
     $callNextHandler =
       function (ServerRequestInterface $request = null, ResponseInterface $response = null) use (
@@ -227,19 +253,59 @@ class Router implements RouterInterface
 
             // Route matching:
 
-            if (!$this->matcher->match ($pattern, $request, $request)) {
-              $this->routingLogger->write ("<#i|__rowHeader>Route pattern match: <b class=keyword>'$pattern'</b></#i>");
+            if (!$this->matcher->match ($pattern, $request, $request))
               return $callNextHandler ();
-            }
+
+            //-----------------------------------------------------------------------------------------------
+            // DEBUG
+            //-----------------------------------------------------------------------------------------------
+            $this->routingLogger->write ("<#i|__rowHeader>Route pattern <b class=keyword>'$pattern'</b> matches request target <b class=keyword>'{$this->request->getRequestTarget()}'</b></#i>");
+            //-----------------------------------------------------------------------------------------------
+            // Proceed to handler invocation.
           }
+
+          // Else, a middleware unconditional invocation will be performed.
+
           return $this->route ($routable, $request, $response, $callNextHandler);
         }
         // Iteration ended.
+
+        //-----------------------------------------------------------------------------------------------
+        // DEBUG
+        //-----------------------------------------------------------------------------------------------
+        $this->routingLogger->write ("</div><#i|__rowHeader>Pipeline ended</#i>");
+        //-----------------------------------------------------------------------------------------------
+
         return $nextHandlerBeforeIter ($request, $response);
       };
 
     $it->rewind ();
-    return $callNextHandler ($requestBeforeIter, $responseBeforeIter);
+
+    //-----------------------------------------------------------------------------------------------
+    // DEBUG
+    //-----------------------------------------------------------------------------------------------
+    $this->routingLogger->write ("<#i|__rowHeader>Begin pipeline</#i>");
+    if ($requestBeforeIter && $requestBeforeIter != $this->request) {
+      $this->logRequest ($requestBeforeIter,
+        sprintf ('with %s <kbd class=__type title="%s">request</kbd> object:',
+          $this->request ? 'a new' : 'the initial',
+          typeOf ($requestBeforeIter))
+      );
+      $this->request = $requestBeforeIter;
+    }
+    $this->routingLogger->write ("<div class='indent'>"); // <#indent> was not used because it isn't reentrant.
+    //-----------------------------------------------------------------------------------------------
+
+    $r = $callNextHandler ($requestBeforeIter, $responseBeforeIter);
+
+    //-----------------------------------------------------------------------------------------------
+    // DEBUG
+    //-----------------------------------------------------------------------------------------------
+    $this->routingLogger->write ("</div>");
+    $this->routingLogger->write ("<#i|__rowHeader>Exit pipeline</#i>");
+    //-----------------------------------------------------------------------------------------------
+
+    return $r;
   }
 
   /**
@@ -265,9 +331,9 @@ class Router implements RouterInterface
       $out['Size'] = $r->getBody ()->getSize ();
 
     $this->routingLogger
-      ->write ('<#indent>')
+      ->write ("<div class='indent'>")
       ->simpleTable ($out, $title)
-      ->write ('</#indent>');
+      ->write ('</div>');
   }
 
   /**
@@ -288,9 +354,9 @@ class Router implements RouterInterface
       //      'Body content' => substr ($c, 0, 1000) . '...',
     ];
     $this->routingLogger
-      ->write ('<#indent>')
+      ->write ('<div class=\'indent\'>')
       ->simpleTable ($out, $title)
-      ->write ('</#indent>');
+      ->write ('</div>');
   }
 
 }

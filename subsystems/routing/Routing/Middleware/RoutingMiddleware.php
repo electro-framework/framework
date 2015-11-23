@@ -46,7 +46,7 @@ class RoutingMiddleware implements RequestHandlerInterface
       DebugConsole::logger ('routes')
                   ->write ("<#section|Registered root routers>$rootR</#section>" .
                            "<#section|Routables invoked while routing>" .
-                           "<#i|__rowHeader><i>(previous steps can't be traced)</i></#i>");
+                           "<#i|__rowHeader><i>(previous middlewares are omitted because they can't be traced)</i></#i>");
     }
 
     /** @var ServerRequestInterface $request */
