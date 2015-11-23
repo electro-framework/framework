@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "php": ">=7",
+    "php": ">=5.6",
     "wikimedia/composer-merge-plugin": "dev-master",
     "selenia/installers": "^1.0.0",
     "php-kit/composer-bower-plugin": "dev-master",
