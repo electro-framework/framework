@@ -1,7 +1,6 @@
 <?php
 namespace Selenia\Routing\Middleware;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
-use PhpKit\WebConsole\Loggers\ConsoleLogger;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
@@ -51,7 +50,7 @@ class RoutingMiddleware implements RequestHandlerInterface
 
     /** @var ServerRequestInterface $request */
     $request = $request->withRequestTarget ($request->getAttribute ('virtualUri'));
-    $res = $this->router
+    $res     = $this->router
       ->set ($this->app->routers)
       ->__invoke ($request, $response, $next);
 
