@@ -1,6 +1,4 @@
 <?php
-use PhpKit\WebConsole\DebugConsole\DebugConsole;
-use PhpKit\WebConsole\Loggers\ConsoleLogger;
 use Selenia\Routing\FactoryRoutable;
 
 
@@ -29,28 +27,16 @@ function safeParameter ($name)
 }
 
 /**
- * A shortcut that displays a formatted representation of the given arguments to the 'Inspector' panel on the Debug
- * Console.
- * <p>This is useful mainly for debugging.
- * @return ConsoleLogger
- */
-function _log ()
-{
-  $args   = array_merge (['<#log><#i>'], func_get_args ());
-  $logger = DebugConsole::defaultLogger ();
-  return call_user_func_array ([$logger, 'inspect'], $args)->showCallLocation ()->inspect ('</#i></#log>');
-}
-
-/**
- * Displays a formatted representation of the given arguments to the browser, clearing any existing output.
+ * Outputs a formatted representation of the given arguments to the browser, clearing any existing output.
  * <p>This is useful for debugging.
  */
-function trace ()
+function dump ()
 {
   echo "<pre>";
   ob_start ();
   call_user_func_array ('var_dump', func_get_args ());
-  echo preg_replace_callback ('/^(\s*)\["?"(.*?)"?\]=>\n\s*/m', function ($m) {
+  // Applies formatting if XDEBUG is not installed
+  echo preg_replace_callback ('/^(\s*)\["?(.*?)"?\]=>\n\s*/m', function ($m) {
     list (, $space, $prop) = $m;
     return $space . str_pad ("$prop:", 30, ' ');
   }, ob_get_clean ());
