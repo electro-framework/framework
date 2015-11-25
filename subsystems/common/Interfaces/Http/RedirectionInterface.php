@@ -1,5 +1,6 @@
 <?php
 namespace Selenia\Interfaces\Http;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
 
 
@@ -17,6 +18,15 @@ interface RedirectionInterface
    * @return \Psr\Http\Message\ResponseInterface
    */
   function back ($status = 302);
+
+  /**
+   * Attaches a server request object to this instance, for use on subsequent generated redirection responses.
+   * > You MUST set a request object before using most other methods of this class.
+   *
+   * @param ServerRequestInterface $request
+   * @return $this Self, for chaining.
+   */
+  function setRequest (ServerRequestInterface $request);
 
   /**
    * Creates a new redirection response, while saving the current URL in the session.

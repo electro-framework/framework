@@ -178,6 +178,7 @@ class PageComponent implements RequestHandlerInterface
                                "</kbd>'s constructor forgot to call <kbd>parent::__construct()</kbd>");
     $this->request  = $request;
     $this->response = $response;
+    $this->redirection->setRequest ($request);
 
     // remove page number parameter
     $this->URI_noPage =
@@ -303,7 +304,7 @@ class PageComponent implements RequestHandlerInterface
    */
   function loadRequested (DataObject $model, $param = 'id')
   {
-    $id = $this->request->getAttribute("@$param");
+    $id = $this->request->getAttribute ("@$param");
     if (!$id) return $model;
     $f = $model->find ($id);
     return $f ? $model : false;
@@ -434,7 +435,6 @@ class PageComponent implements RequestHandlerInterface
    * Initializes the controller.
    * Override to implement initialization code that should run before all other processing on the controller.
    * Make sure to always call the parent function.
-   * @global Application $application
    */
   protected function initialize ()
   {

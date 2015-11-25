@@ -19,17 +19,24 @@ class RoutingModule implements ServiceProviderInterface
   function register (InjectorInterface $injector)
   {
     $injector
+      //
       // Routing:
+      //
       ->alias (RouterInterface::class, Router::class)
       ->alias (RouteMatcherInterface::class, RouteMatcher::class)
       ->share (RoutingLogger::class)
+      //
       // The application's middleware pipeline:
+      //
       ->alias (RequestHandlerPipelineInterface::class, Router::class)
       ->share (RequestHandlerPipelineInterface::class)
       ->prepare (RequestHandlerPipelineInterface::class, function (Router $router) {
+        // Disable the routing capability for request handlers on the application's middleware pipeline.
         $router->routingEnabled = false;
       })
+      //
       // Navigation:
+      //
       ->alias (NavigationInterface::class, Navigation::class)
       ->alias (NavigationLinkInterface::class, NavigationLink::class);
   }

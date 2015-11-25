@@ -29,10 +29,12 @@ class AuthenticationMiddleware implements RequestHandlerInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
+    $this->redirection->setRequest ($request);
+
     switch ($request->getMethod ()) {
       case 'GET':
         if (!$this->session->loggedIn ())
-          return $this->redirection->to ('login/login');
+          return $this->redirection->guest ($this->app->loginFormUrl);
         break;
       case 'POST':
         $post   = $request->getParsedBody ();

@@ -3,18 +3,16 @@ namespace Selenia\Http\Services;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
-use Selenia\Application;
 use Selenia\Interfaces\Http\RedirectionInterface;
 use Selenia\Interfaces\Http\ResponseFactoryInterface;
 use Selenia\Interfaces\SessionInterface;
 use Zend\Diactoros\Response;
 
+/**
+ * **Note:** this class assumes a `baseURI` attribute exists on the given ServerRequestInterface instance.
+ */
 class Redirection implements RedirectionInterface
 {
-  /**
-   * @var Application
-   */
-  private $app;
   /**
    * @var ServerRequestInterface
    */
@@ -29,28 +27,30 @@ class Redirection implements RedirectionInterface
   private $session;
 
   /**
-   * @param ServerRequestInterface   $request         The current request.
    * @param ResponseFactoryInterface $responseFactory A factory fpr creating new responses.
-   * @param Application              $app
    * @param SessionInterface         $session         The current session (always available, even if session support is
    *                                                  disabled).
    */
-  function __construct (ServerRequestInterface $request, ResponseFactoryInterface $responseFactory, Application $app,
-                        SessionInterface $session)
+  function __construct (ResponseFactoryInterface $responseFactory, SessionInterface $session)
   {
-    $this->request         = $request;
     $this->responseFactory = $responseFactory;
-    $this->app             = $app;
     $this->session         = $session;
   }
 
   function back ($status = 302)
   {
+    $this->validate ();
     return $this->to ($this->request->getHeaderLine ('Referer') ?: $this->request->getUri (), $status);
+  }
+
+  function setRequest (ServerRequestInterface $request)
+  {
+    $this->request = $request;
   }
 
   function guest ($url, $status = 302)
   {
+    $this->validate ();
     $this->session->setPreviousUrl ($this->request->getUri ());
     $url = $this->normalizeUrl ($url);
     return $this->responseFactory->make ($status, '', '', ['Location' => $url]);
@@ -58,7 +58,8 @@ class Redirection implements RedirectionInterface
 
   function home ($status = 302)
   {
-    return $this->to ($this->app->baseURI, $status);
+    $this->validate ();
+    return $this->to ($this->request->getAttribute ('baseUri'), $status);
   }
 
   function intended ($defaultUrl = '', $status = 302)
@@ -69,6 +70,7 @@ class Redirection implements RedirectionInterface
 
   function refresh ($status = 302)
   {
+    $this->validate ();
     return $this->to ($this->request->getUri (), $status);
   }
 
@@ -95,8 +97,14 @@ class Redirection implements RedirectionInterface
     if (!$url)
       return strval ($this->request->getUri ());
     if ($url[0] != '/' && substr ($url, 0, 4) != 'http')
-      $url = $this->app->baseURI . "/$url";
+      $url = $this->request->getAttribute ('baseUri') . "/$url";
     return $url;
+  }
+
+  protected function validate ()
+  {
+    if (!$this->request)
+      throw new \BadMethodCallException ("A <kbd class=type>ServerRequestInterface</kbd> instance is not set on the <kbd class=type>Redirection</kbd> instance.");
   }
 
 }

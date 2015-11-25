@@ -188,9 +188,14 @@ class Session implements SessionInterface
   function reflash (array $keys = null)
   {
     $this->newFlash = array_merge ($this->newFlash, $keys
-      ? array_fields ($this->prevFlash, $keys)
+      ? array_only ($this->prevFlash, $keys)
       : $this->prevFlash
     );
+  }
+
+  function reflashPreviousUrl ()
+  {
+    $this->reflash (['#previousUrl']);
   }
 
   function regenerateToken ()

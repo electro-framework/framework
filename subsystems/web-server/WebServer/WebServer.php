@@ -83,8 +83,7 @@ class WebServer
     $request       = ServerRequestFactory::fromGlobals ();
     $app->baseURI  = $this->getBaseUri ($request);
     $request       = $request->withAttribute ('baseUri', $app->baseURI);
-    $app->VURI     = $this->getVirtualUri ($request);
-    $this->request = $request->withAttribute ('virtualUri', $app->VURI);
+    $this->request = $request->withAttribute ('virtualUri', $this->getVirtualUri ($request));
   }
 
   private function getBaseUri (ServerRequestInterface $request)

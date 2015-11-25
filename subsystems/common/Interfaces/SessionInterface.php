@@ -109,6 +109,11 @@ interface SessionInterface extends \ArrayAccess, AssignableInterface
   function reflash (array $keys = null);
 
   /**
+   * Keep the previous URL memorized for an additional request.
+   */
+  function reflashPreviousUrl ();
+
+  /**
    * Regenerate the CSRF token value.
    */
   function regenerateToken ();

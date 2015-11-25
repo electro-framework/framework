@@ -10,23 +10,6 @@ use Selenia\Interfaces\InjectorInterface;
 class Application
 {
   const FRAMEWORK_PATH = 'private/packages/selenia/framework';
-  const ref            = __CLASS__;
-  /**
-   * Holds an array of SEO infomation for each site page or null;
-   * @var array
-   */
-  public $SEOInfo;
-  /**
-   * The address of the page to be displayed when the current page URI is invalid.
-   * If null an exception is thrown.
-   * @var string
-   */
-  public $URINotFoundURL = null;
-  /**
-   * The virtual URI specified after the application's base URI.
-   * @var string
-   */
-  public $VURI;
   /**
    * The real application name.
    * @var string
@@ -200,6 +183,11 @@ class Application
    * @var HandlerInterface[]
    */
   public $logHandlers = [];
+  /**
+   * The relative URL of the login form page.
+   * @var string
+   */
+  public $loginFormUrl = 'login/login';
   /**
    * @var string
    */

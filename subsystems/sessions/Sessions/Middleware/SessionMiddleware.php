@@ -5,8 +5,8 @@ use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Exceptions\FlashMessageException;
 use Selenia\Interfaces\AssignableInterface;
-use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\RedirectionInterface;
+use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\SessionInterface;
 
 /**
@@ -38,6 +38,7 @@ class SessionMiddleware implements RequestHandlerInterface
   {
     $app     = $this->app;
     $session = $this->session;
+    $this->redirection->setRequest ($request);
 
     // Start the sessions engine.
 
@@ -70,7 +71,7 @@ class SessionMiddleware implements RequestHandlerInterface
       $session->flashMessage ($flash->getMessage (), $flash->getCode (), $flash->title);
 
       $post = $request->getParsedBody ();
-      if (is_array($post))
+      if (is_array ($post))
         $session->flashInput ($post);
 
       return $this->redirection->refresh ();
