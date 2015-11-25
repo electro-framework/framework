@@ -5,7 +5,10 @@ use Selenia\Application;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\FileServer\Services\FileServerMappings;
 use Selenia\Interfaces\AssignableInterface;
-use Selenia\Interfaces\Http\RouterInterface;
+use Selenia\Interfaces\Http\MainRouterInterface;
+use Selenia\Interfaces\Http\RequestHandlerInterface;
+use Selenia\Interfaces\InjectorInterface;
+use Selenia\Routing\Middleware\RoutingMiddleware;
 
 /**
  * Allows a module to notify the framework of which standard framework-specific services it provides (like routing,
@@ -22,6 +25,10 @@ class ModuleServices
    */
   private $fileServerMappings;
   /**
+   * @var InjectorInterface
+   */
+  private $injector;
+  /**
    * Stores temporarily the module path, for use by the other setters.
    * @var string
    */
@@ -32,10 +39,11 @@ class ModuleServices
    */
   private $postConfigs = [];
 
-  function __construct (Application $app, FileServerMappings $fileServerMappings)
+  function __construct (Application $app, FileServerMappings $fileServerMappings, InjectorInterface $injector)
   {
     $this->app                = $app;
     $this->fileServerMappings = $fileServerMappings;
+    $this->injector           = $injector;
   }
 
   private static function throwInvalidConfigType ($cfg)
@@ -52,6 +60,18 @@ class ModuleServices
   function onPostConfig (callable $fn)
   {
     $this->postConfigs[] = $fn;
+  }
+
+  /**
+   * Registers a navigation provider on the application.
+   * @param callable $provider A callable with signature: <kbd>array ()</kbd> that should return a map of
+   *                           <kbd>[string => callable|callable|NavigationProviderInterface]</kbd>
+   * @return $this
+   */
+  function provideNavigation (callable $provider)
+  {
+    $this->app->navigationProviders[] = $provider;
+    return $this;
   }
 
   /**
@@ -145,24 +165,34 @@ class ModuleServices
 
   /**
    * Registers a router on the application.
-   * @param string|RouterInterface $router
+   *
+   * > **Note:** both `RouterInterface` and `RequestHandlerPipelineInterface` are compatible with
+   * `RequestHandlerInterface`.
+   *
+   * @param string|callable|RequestHandlerInterface $handler A request handler instance or class name.
+   * @param string|int|null                         $key     An ordinal index or an arbitrary identifier to associate
+   *                                                         with the given handler.
+   *                                                         <p>If not specified, an auto-incrementing integer index
+   *                                                         will be assigned.
+   *                                                         <p>If an integer is specified, it may cause the handler to
+   *                                                         overwrite an existing handler at the same ordinal position
+   *                                                         on the pipeline.
+   *                                                         <p>String keys allow you to insert new handlers after a
+   *                                                         specific one.
+   *                                                         <p>Some RequestHandlerPipelineInterface implementations
+   *                                                         may use the key for other purposes (ex. route matching
+   *                                                         patterns).
+   * @param string|int|null                         $after   Insert after an existing handler that lies at the given
+   *                                                         index, or that has the given key. When null, it is
+   *                                                         appended.
    * @return $this
    */
-  function registerRouter ($router)
+  function registerRouter ($handler, $key = null, $after = null)
   {
-    $this->app->routers[] = $router;
-    return $this;
-  }
-
-  /**
-   * Registers a navigation provider on the application.
-   * @param callable $provider A callable with signature: <kbd>array ()</kbd> that should return a map of
-   *                           <kbd>[string => callable|callable|NavigationProviderInterface]</kbd>
-   * @return $this
-   */
-  function provideNavigation (callable $provider)
-  {
-    $this->app->navigationProviders[] = $provider;
+    // $outer is not injected becaus it's retrieval must be postponed until after the routing module loads.
+    /** @var RoutingMiddleware $router */
+    $router = $this->injector->make (MainRouterInterface::class);
+    $router->add ($handler, $key, $after);
     return $this;
   }
 

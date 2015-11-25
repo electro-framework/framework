@@ -64,6 +64,7 @@ class Redirection implements RedirectionInterface
 
   function intended ($defaultUrl = '', $status = 302)
   {
+    $this->validate ();
     $url = $this->session->previousUrl () ?: $this->normalizeUrl ($defaultUrl);
     return $this->to ($url, $status);
   }
@@ -76,12 +77,14 @@ class Redirection implements RedirectionInterface
 
   function secure ($url, $status = 302)
   {
+    $this->validate ();
     $url = str_replace ('http://', 'https://', $this->normalizeUrl ($url));
     return $this->responseFactory->make ($status, '', '', ['Location' => $url]);
   }
 
   function to ($url, $status = 302)
   {
+    $this->validate ();
     $url = $this->normalizeUrl ($url);
     return $this->responseFactory->make ($status, '', '', ['Location' => $url]);
   }
@@ -104,7 +107,7 @@ class Redirection implements RedirectionInterface
   protected function validate ()
   {
     if (!$this->request)
-      throw new \BadMethodCallException ("A <kbd class=type>ServerRequestInterface</kbd> instance is not set on the <kbd class=type>Redirection</kbd> instance.");
+      throw new \BadMethodCallException ("No <kbd class=type>ServerRequestInterface</kbd> instance was set on the <kbd class=type>Redirection</kbd> instance.");
   }
 
 }

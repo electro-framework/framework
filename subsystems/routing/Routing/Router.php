@@ -26,6 +26,26 @@ class Router implements RouterInterface
    */
   public $routingEnabled = true;
   /**
+   * **Note:** used by RoutingMiddleware
+   * @var bool
+   */
+  protected $debugMode;
+  /**
+   * **Note:** used by RoutingMiddleware
+   * @var array|\Traversable
+   */
+  protected $handlers;
+  /**
+   * **Note:** used by RoutingMiddleware
+   * @var InjectorInterface
+   */
+  protected $injector;
+  /**
+   * **Note:** used by RoutingMiddleware
+   * @var RoutingLogger
+   */
+  protected $routingLogger;
+  /**
    * The current request; updated as the router calls request handlers.
    * > This is used for debugging only.
    * @var ServerRequestInterface
@@ -49,28 +69,17 @@ class Router implements RouterInterface
    */
   private $currentResponseSize = 0;
   /**
-   * @var array|\Traversable
-   */
-  private $handlers;
-  /**
-   * @var InjectorInterface
-   */
-  private $injector;
-  /**
    * @var RouteMatcherInterface
    */
   private $matcher;
-  /**
-   * @var RoutingLogger
-   */
-  private $routingLogger;
 
   public function __construct (InjectorInterface $injector, RouteMatcherInterface $matcher,
-                               RoutingLogger $routingLogger)
+                               RoutingLogger $routingLogger, $debugMode)
   {
     $this->injector      = $injector;
     $this->matcher       = $matcher;
     $this->routingLogger = $routingLogger;
+    $this->debugMode     = $debugMode;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -254,13 +263,17 @@ class Router implements RouterInterface
 
           $routable = $it->current ();
           $pattern  = $it->key ();
+          $this->routingLogger->write ("ITERATE")->inspect ($pattern,$this->routingEnabled,$routable);
 
-          if (!$this->routingEnabled && !is_int ($pattern)) {
+          if ($this->routingEnabled && !is_int ($pattern)) {
 
             // Route matching:
 
-            if (!$this->matcher->match ($pattern, $request, $request))
-              return $callNextHandler ();
+            if (!$this->matcher->match ($pattern, $request, $request)) // note: $request may be modified.
+            {
+              $this->routingLogger->write ("NO MATCH $pattern");
+              return $callNextHandler ($request);
+            }
 
             //-----------------------------------------------------------------------------------------------
             // DEBUG

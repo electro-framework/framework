@@ -12,7 +12,24 @@ use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\ResponseFactoryInterface;
 
 /**
- * Handles errors that occur throughout the HTTP middleware stack.
+ * Handles errors that occur throughout the HTTP middleware pipeline.
+ *
+ * <p>Exceptions / errors that are thrown further the pipeline will be catched here and transformed into normal HTTP responses
+ * that will resume travelling the pipeline from this point backwards.
+ *
+ * <p>**Note:** every request handler that follows this one on the pipeline should wrap it's request handling/forwarding
+ * code in a `try/finally` block if it really needs to do something after the request is handled/delegated (ex. finishing
+ * an open tag on the debug console), otherwise that code may not execute if an exception is thrown or an error occurs.
+ *
+ * <p>Ex:
+ *
+ *       $logger->log ("<div>");
+ *       try {
+ *         return $next ();
+ *       }
+ *       finally {
+ *         $logger->log ("</div>");
+ *       }
  */
 class ErrorHandlingMiddleware implements RequestHandlerInterface
 {

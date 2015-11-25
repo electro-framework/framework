@@ -15,7 +15,7 @@ interface RouteMatcherInterface
    * > The new path may equals the original path if the pattern matches the initial location itself, and not a
    * sub-location.
    *
-   * The new request object also provides all the route parameter defined on the pattern as request attributes with
+   * The new request object also provides all the route parameters defined on the pattern as request attributes with
    * names prefixed by `@`.
    *
    * @param string                 $pattern         The route matching pattern. See the routing documentation for
@@ -23,8 +23,8 @@ interface RouteMatcherInterface
    * @param ServerRequestInterface $request         The HTTP request whose URL will be matched against the given
    *                                                pattern.
    * @param ServerRequestInterface $modifiedRequest (output parameter) outputs the new request object, if changes to
-   *                                                the
-   *                                                original are performed, otherwise it outputs the original request.
+   *                                                the original are performed, otherwise it outputs the original
+   *                                                request.
    * @return bool true if the pattern matches the path.
    */
   function match ($pattern, ServerRequestInterface $request, ServerRequestInterface &$modifiedRequest);

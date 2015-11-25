@@ -111,6 +111,7 @@ class WebApplication
   {
     set_exception_handler ([$this, 'exceptionHandler']);
     $debug = $this->app->debugMode = getenv ('APP_DEBUG') == 'true';
+    $this->injector->defineParam('debugMode', $debug);
 
     ErrorConsole::init ($debug, $rootDir);
     ErrorConsole::setAppName ($this->app->appName);

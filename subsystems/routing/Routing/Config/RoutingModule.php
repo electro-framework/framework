@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Routing\Config;
 
+use Selenia\Interfaces\Http\MainRouterInterface;
 use Selenia\Interfaces\Http\RequestHandlerPipelineInterface;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
 use Selenia\Interfaces\Http\RouterInterface;
@@ -8,6 +9,7 @@ use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
+use Selenia\Routing\Middleware\RoutingMiddleware;
 use Selenia\Routing\Navigation\Navigation;
 use Selenia\Routing\Navigation\NavigationLink;
 use Selenia\Routing\RouteMatcher;
@@ -20,22 +22,28 @@ class RoutingModule implements ServiceProviderInterface
   {
     $injector
       //
-      // Routing:
+      // Routing
       //
       ->alias (RouterInterface::class, Router::class)
       ->alias (RouteMatcherInterface::class, RouteMatcher::class)
       ->share (RoutingLogger::class)
       //
-      // The application's middleware pipeline:
+      // The main router
+      // (inject it to add routes to it)
+      //
+      ->alias (MainRouterInterface::class, RoutingMiddleware::class)
+      ->share (MainRouterInterface::class)
+      //
+      // The application's middleware pipeline
       //
       ->alias (RequestHandlerPipelineInterface::class, Router::class)
-      ->share (RequestHandlerPipelineInterface::class)
+//      ->share (RequestHandlerPipelineInterface::class)
       ->prepare (RequestHandlerPipelineInterface::class, function (Router $router) {
-        // Disable the routing capability for request handlers on the application's middleware pipeline.
+        // Disable the routing capability for request handlers for middleware-only pipelines.
         $router->routingEnabled = false;
       })
       //
-      // Navigation:
+      // Navigation
       //
       ->alias (NavigationInterface::class, Navigation::class)
       ->alias (NavigationLinkInterface::class, NavigationLink::class);

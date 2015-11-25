@@ -274,12 +274,6 @@ class Application
    */
   public $rootPath;
   /**
-   * A list of registered routers on the application.
-   * <p>An array of <kbd>string|RouterInterface</kbd>
-   * @var array
-   */
-  public $routers = [];
-  /**
    * @var string
    */
   public $storagePath = 'private/storage';
