@@ -146,7 +146,7 @@ abstract class Media {
   public static function getImageExt($id)
   //--------------------------------------------------------------------------
   {
-    return database_query('SELECT ext FROM Images WHERE id=?',[$id])->fetchColumn();
+    return database_query('SELECT ext FROM images WHERE id=?',[$id])->fetchColumn();
   }
   //--------------------------------------------------------------------------
   public static function deleteImage($id)
@@ -155,7 +155,7 @@ abstract class Media {
     if (!empty($id)) {
       $ext = self::getImageExt($id);
       $path = self::getImagePath($id,$ext);
-      database_query('DELETE FROM Images WHERE id=?',[$id]);
+      database_query('DELETE FROM images WHERE id=?',[$id]);
       if (file_exists($path)) {
         if (!@unlink($path))
           throw new ImageException(ImageException::CAN_NOT_DELETE_FILE,$path);
@@ -229,7 +229,7 @@ abstract class Media {
   //--------------------------------------------------------------------------
   {
     database_query(
-      'UPDATE Images SET gallery=?,sort=?,`key`=?,caption=? WHERE id=?',
+      'UPDATE images SET gallery=?,sort=?,`key`=?,caption=? WHERE id=?',
       [
         $gallery,
         $sort,
@@ -244,11 +244,11 @@ abstract class Media {
   //--------------------------------------------------------------------------
   {
     if (is_null($sort)) {
-      $maxsort = database_get("SELECT IFNULL((SELECT MAX(sort) FROM Images WHERE gallery=? AND `key` IS NULL),-1)+1",[$gallery]);
+      $maxsort = database_get("SELECT IFNULL((SELECT MAX(sort) FROM images WHERE gallery=? AND `key` IS NULL),-1)+1",[$gallery]);
 
       if (is_null($key))
         database_query(
-          'INSERT INTO Images (id,ext,gallery,sort,`key`,caption)
+          'INSERT INTO images (id,ext,gallery,sort,`key`,caption)
            VALUES (?,?,?,?,?,?)',
           [
             $id,
@@ -260,7 +260,7 @@ abstract class Media {
           ]
         );
       else database_query(
-          'INSERT INTO Images (id,ext,gallery,sort,`key`,caption)
+          'INSERT INTO images (id,ext,gallery,sort,`key`,caption)
            VALUES (?,?,?,?,?,?)',
           [
             $id,
@@ -274,7 +274,7 @@ abstract class Media {
         );
     }
     else database_query(
-      'INSERT INTO Images (id,ext,gallery,sort,`key`,caption)
+      'INSERT INTO images (id,ext,gallery,sort,`key`,caption)
        VALUES (?,?,?,?,?,?)',
       [
         $id,
