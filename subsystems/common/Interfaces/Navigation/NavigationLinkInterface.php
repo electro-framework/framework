@@ -16,18 +16,6 @@ interface NavigationLinkInterface
   function enabled ($enabled = null);
 
   /**
-   * Returns a set of registered IDs for the link's subtree.
-   *
-   * <p>It includes IDs from children and from the Link itself (if any).
-   *
-   * > <p>This is called automatically by {@see next()} on each child as it's being added to the
-   * container.
-   *
-   * @return NavigationLinkInterface[] A map of ID => NavigationLinkInterface
-   */
-  function getIds ();
-
-  /**
    * The menu item's icon.
    *
    * @param string $icon A space-separated list of CSS class selectors. Ex: 'fa fa-home'

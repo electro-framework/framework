@@ -8,7 +8,7 @@ use Selenia\Interfaces\AssignableInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\Shared\RootRouterInterface;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Routing\Middleware\RoutingMiddleware;
+use Selenia\Interfaces\Navigation\NavigationProviderInterface;
 
 /**
  * Allows a module to notify the framework of which standard framework-specific services it provides (like routing,
@@ -64,12 +64,12 @@ class ModuleServices
 
   /**
    * Registers a navigation provider on the application.
-   * @param callable $provider A callable with signature: <kbd>array ()</kbd> that should return a map of
-   *                           <kbd>[string => callable|callable|NavigationProviderInterface]</kbd>
+   * @param NavigationProviderInterface $provider A class instance that provides a means to obtain a NavigationInterface
    * @return $this
    */
-  function provideNavigation (callable $provider)
+  function provideNavigation (NavigationProviderInterface $provider)
   {
+//    inspect ($this->getNavigation ($app->injector->make (NavigationInterface::class)));
     $this->app->navigationProviders[] = $provider;
     return $this;
   }
@@ -166,7 +166,7 @@ class ModuleServices
   /**
    * Registers a router on the application.
    *
-   * > **Note:** both `RouterInterface` and `RequestHandlerPipelineInterface` are compatible with
+   * > **Note:** both `RouterInterface` and `MiddlewareStackInterface` are compatible with
    * `RequestHandlerInterface`.
    *
    * @param string|callable|RequestHandlerInterface $handler A request handler instance or class name.
@@ -179,7 +179,7 @@ class ModuleServices
    *                                                         on the pipeline.
    *                                                         <p>String keys allow you to insert new handlers after a
    *                                                         specific one.
-   *                                                         <p>Some RequestHandlerPipelineInterface implementations
+   *                                                         <p>Some MiddlewareStackInterface implementations
    *                                                         may use the key for other purposes (ex. route matching
    *                                                         patterns).
    * @param string|int|null                         $after   Insert after an existing handler that lies at the given

@@ -2,13 +2,14 @@
 namespace Selenia\Interfaces\Navigation;
 
 /**
- * A service that assists in generating a menu or breadcrumb navigation for the application.
+ * Marks a class as being able to provide navigation information for the application.
  */
 interface NavigationProviderInterface
 {
   /**
+   * Returns a navigation tree, with a single root node (ex: the Home page).
    * @param NavigationInterface $navigation
-   * @return array
+   * @return NavigationLinkInterface
    */
   function getNavigation (NavigationInterface $navigation);
 }

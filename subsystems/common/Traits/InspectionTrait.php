@@ -8,6 +8,9 @@ use Selenia\Exceptions\FatalException;
  *
  * The static `$INSPECTABLE` property, if present on the class, specifies a list of properties (public, private or
  * protected) to be exposed.<br> If not present, all properties are exposed.
+ *
+ * > **Note:** you do not need to implement any interface to make use of this trait.
+ * Just add `use InspectionTrait` to a class and it will work.
  */
 trait InspectionTrait
 {

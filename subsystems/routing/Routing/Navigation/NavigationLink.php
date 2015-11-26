@@ -11,8 +11,11 @@ class NavigationLink implements NavigationLinkInterface
   private $enabled = false;
   private $icon;
   private $id;
-  /** @var NavigationLinkInterface[] */
-  private $ids     = [];
+  /**
+   * Note: this will be assigned a reference to an array on a {@see NavigationInterface} instance.
+   * @var NavigationLinkInterface[]
+   */
+  public  $ids;
   private $next    = [];
   private $title;
   private $url;
@@ -23,11 +26,6 @@ class NavigationLink implements NavigationLinkInterface
     if (is_null ($enabled)) return $this->enabled;
     $this->enabled = $enabled;
     return $this;
-  }
-
-  function getIds ()
-  {
-    return $this->ids;
   }
 
   function icon ($icon = null)

@@ -28,7 +28,7 @@ interface MiddlewareStackInterface extends RequestHandlerInterface
    *                                                         on the pipeline.
    *                                                         <p>String keys allow you to insert new handlers after a
    *                                                         specific one.
-   *                                                         <p>Some RequestHandlerPipelineInterface implementations
+   *                                                         <p>Some MiddlewareStackInterface implementations
    *                                                         may use the key for other purposes (ex. route matching
    *                                                         patterns).
    * @param string|int|null                         $after   Insert after an existing handler that lies at the given
