@@ -2,44 +2,75 @@
 namespace Selenia\Routing\Navigation;
 
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
+use Selenia\Traits\InspectionTrait;
 
 class NavigationLink implements NavigationLinkInterface
 {
-  private $enabled;
+  use InspectionTrait;
+
+  private $enabled = false;
   private $icon;
-  private $next;
+  private $id;
+  /** @var NavigationLinkInterface[] */
+  private $ids     = [];
+  private $next    = [];
   private $title;
   private $url;
-  private $visible;
+  private $visible = true;
 
   function enabled ($enabled = null)
   {
-    return isset($enabled) ? $this->enabled = $enabled : $this->enabled;
+    if (is_null ($enabled)) return $this->enabled;
+    $this->enabled = $enabled;
+    return $this;
+  }
+
+  function getIds ()
+  {
+    return $this->ids;
   }
 
   function icon ($icon = null)
   {
-    return isset($icon) ? $this->icon = $icon : $this->icon;
+    if (is_null ($icon)) return $this->icon;
+    $this->icon = $icon;
+    return $this;
+  }
+
+  function id ($id = null)
+  {
+    if (is_null ($id)) return $this->id;
+    $this->id = $id;
+    return $this->ids[$id] = $this;
   }
 
   function next (array $next)
   {
-    return isset($next) ? $this->next = $next : $this->next;
+    $this->next = $next;
+    /** @var NavigationLinkInterface $o */
+    foreach ($next as $o)
+      array_mergeInto ($this->ids, $o->getIds ());
+    return $this;
   }
 
   function title ($title = null)
   {
-    return isset($title) ? $this->title = $title : $this->title;
+    if (is_null ($title)) return $this->title;
+    $this->title = $title;
+    return $this;
   }
 
   function url ($url = null)
   {
-    return isset($url) ? $this->url = $url : $this->url;
+    if (is_null ($url)) return $this->url;
+    $this->url = $url;
+    return $this;
   }
 
   function visible ($visible = null)
   {
-    return isset($visible) ? $this->visible = $visible : $this->visible;
+    if (is_null ($visible)) return $this->visible;
+    $this->visible;
+    return $this;
   }
-
 }

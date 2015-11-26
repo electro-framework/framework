@@ -1,6 +1,8 @@
 <?php
 namespace Selenia\Interfaces\Navigation;
 
+use Selenia\Exceptions\Fatal\ConfigException;
+
 interface NavigationLinkInterface
 {
   /**
@@ -14,16 +16,41 @@ interface NavigationLinkInterface
   function enabled ($enabled = null);
 
   /**
+   * Returns a set of registered IDs for the link's subtree.
+   *
+   * <p>It includes IDs from children and from the Link itself (if any).
+   *
+   * > <p>This is called automatically by {@see next()} on each child as it's being added to the
+   * container.
+   *
+   * @return NavigationLinkInterface[] A map of ID => NavigationLinkInterface
+   */
+  function getIds ();
+
+  /**
    * The menu item's icon.
+   *
    * @param string $icon A space-separated list of CSS class selectors. Ex: 'fa fa-home'
    * @return $this|string
    */
   function icon ($icon = null);
 
   /**
+   * A unique name that identifies the link.
+   *
+   * <p>The id allows you to reference the link elsewhere, for instance, when generating URLs for it.
+   *
+   * @param string $id
+   * @return $this|string
+   */
+  function id ($id = null);
+
+  /**
    * Defines this location's children locations.
+   *
    * @param NavigationLinkInterface[] $next An array of <kbd>[string => NavigationLinkInterface]</kbd>
    * @return $this|NavigationLinkInterface[]
+   * @throws ConfigException If any child has a duplicate ID on the current navigation tree.
    */
   function next (array $next);
 
@@ -41,6 +68,7 @@ interface NavigationLinkInterface
 
   /**
    * The relative URL path for the location this Navigation refers to.
+   *
    * <p>You do not usually need to set this property as it is automatically set from the keys of the array
    * that holds the Naviations. Nevertheless, you may also set this to a completely different URL.
    *
@@ -60,4 +88,5 @@ interface NavigationLinkInterface
    * @return $this|bool
    */
   function visible ($visible = null);
+
 }
