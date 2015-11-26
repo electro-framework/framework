@@ -1,5 +1,7 @@
 <?php
-namespace Selenia\Interfaces\Http;
+namespace Selenia\Interfaces\Http\Shared;
+
+use Selenia\Interfaces\Http\RouterInterface;
 
 /**
  * Represents the application's main/root HTTP request router.
@@ -13,7 +15,7 @@ namespace Selenia\Interfaces\Http;
  * > ```
  * class MyModule
  * {
- *   function configure (MainRouterInterface $router)
+ *   function configure (RootRouterInterface $router)
  *   {
  *     $myRoutesOrRouterOrMiddleware = ...
  *     $router->add ($myRoutesOrRouterOrMiddleware);
@@ -21,6 +23,6 @@ namespace Selenia\Interfaces\Http;
  * }
  * > ```
  */
-interface MainRouterInterface extends RouterInterface
+interface RootRouterInterface extends RouterInterface
 {
 }

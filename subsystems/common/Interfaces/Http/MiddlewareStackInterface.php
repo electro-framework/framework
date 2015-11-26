@@ -9,8 +9,12 @@ namespace Selenia\Interfaces\Http;
  * > There are no methods to retrieve the content of the pipeline; this is by design.
  *
  * > <p>**Note:** instances are not immutable, but if you need immutability, calling `with()` returns a new instance.
+ *
+ * > **Note:** internally, both this interface and RouterInterface are implemented by the same class.
+ * But that is just an implementation detail. When injecting instances of both interfaces, you'll still get
+ * different behaviour from both.
  */
-interface RequestHandlerPipelineInterface extends RequestHandlerInterface
+interface MiddlewareStackInterface extends RequestHandlerInterface
 {
   /**
    * Adds a request handler to the pipeline.

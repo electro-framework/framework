@@ -4,8 +4,9 @@ use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\FileServer\Services\FileServerMappings;
-use Selenia\Interfaces\Http\RequestHandlerPipelineInterface;
+use Selenia\Interfaces\Http\MiddlewareStackInterface;
 use Selenia\Interfaces\Http\ResponseSenderInterface;
+use Selenia\Interfaces\Http\Shared\RootMiddlewareStackInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -28,7 +29,7 @@ class WebServer
    */
   private $fileServerMappings;
   /**
-   * @var RequestHandlerPipelineInterface
+   * @var MiddlewareStackInterface
    */
   private $middlewareStack;
   /**
@@ -37,18 +38,18 @@ class WebServer
   private $responseSender;
 
   /**
-   * @param Application                     $app
-   * @param RequestHandlerPipelineInterface $middlewareStack
-   * @param ResponseSenderInterface         $responseSender
-   * @param FileServerMappings              $fileServerMappings
+   * @param Application                  $app
+   * @param RootMiddlewareStackInterface $middlewareStack
+   * @param ResponseSenderInterface      $responseSender
+   * @param FileServerMappings           $fileServerMappings
    */
-  function __construct (Application $app, RequestHandlerPipelineInterface $middlewareStack,
+  function __construct (Application $app, RootMiddlewareStackInterface $middlewareStack,
                         ResponseSenderInterface $responseSender, FileServerMappings $fileServerMappings)
   {
     $this->app                = $app;
     $this->fileServerMappings = $fileServerMappings;
     $this->middlewareStack    = $middlewareStack;
-    $this->responseSender     = $responseSender;
+    $this->responseSender = $responseSender;
   }
 
   /**

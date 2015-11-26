@@ -12,10 +12,10 @@ namespace Selenia\Interfaces\Http;
  * If the handler tree is exhausted, the router sends the request to the next handler that was passed to it upon
  * invocation.
  *
- * > **Note:** internally, both this interface and the RequestHandlerPipelineInterface are implemented by the same
- * class. But that is just an implementation detail. When injecting instances of both interfaces, you'll still get
+ * > **Note:** internally, both this interface and MiddlewareStackInterface are implemented by the same class.
+ * But that is just an implementation detail. When injecting instances of both interfaces, you'll still get
  * different behaviour from both.
  */
-interface RouterInterface extends RequestHandlerPipelineInterface
+interface RouterInterface extends MiddlewareStackInterface
 {
 }

@@ -1,15 +1,17 @@
 <?php
 namespace Selenia\Routing\Config;
 
-use Selenia\Interfaces\Http\MainRouterInterface;
-use Selenia\Interfaces\Http\RequestHandlerPipelineInterface;
+use Selenia\Interfaces\Http\MiddlewareStackInterface;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
 use Selenia\Interfaces\Http\RouterInterface;
+use Selenia\Interfaces\Http\Shared\RootMiddlewareStackInterface;
+use Selenia\Interfaces\Http\Shared\RootRouterInterface;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
 use Selenia\Routing\Middleware\RoutingMiddleware;
+use Selenia\Routing\MiddlewareStack;
 use Selenia\Routing\Navigation\Navigation;
 use Selenia\Routing\Navigation\NavigationLink;
 use Selenia\Routing\RouteMatcher;
@@ -25,23 +27,20 @@ class RoutingModule implements ServiceProviderInterface
       // Routing
       //
       ->alias (RouterInterface::class, Router::class)
+      ->alias (MiddlewareStackInterface::class, MiddlewareStack::class)
       ->alias (RouteMatcherInterface::class, RouteMatcher::class)
       ->share (RoutingLogger::class)
       //
-      // The main router
+      // The application's root/main router
       // (inject it to add routes to it)
       //
-      ->alias (MainRouterInterface::class, RoutingMiddleware::class)
-      ->share (MainRouterInterface::class)
+      ->share (RootRouterInterface::class)
+      ->alias (RootRouterInterface::class, RoutingMiddleware::class)
       //
-      // The application's middleware pipeline
+      // The application's root/main middleware stack
       //
-      ->alias (RequestHandlerPipelineInterface::class, Router::class)
-//      ->share (RequestHandlerPipelineInterface::class)
-      ->prepare (RequestHandlerPipelineInterface::class, function (Router $router) {
-        // Disable the routing capability for request handlers for middleware-only pipelines.
-        $router->routingEnabled = false;
-      })
+      ->share (RootMiddlewareStackInterface::class)
+      ->alias (RootMiddlewareStackInterface::class, MiddlewareStack::class)
       //
       // Navigation
       //
