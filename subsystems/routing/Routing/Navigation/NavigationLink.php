@@ -8,18 +8,29 @@ class NavigationLink implements NavigationLinkInterface
 {
   use InspectionTrait;
 
-  private $enabled = false;
-  private $icon;
-  private $id;
+  /**
+   * @var bool
+   */
+  public $group = false;
   /**
    * Note: this will be assigned a reference to an array on a {@see NavigationInterface} instance.
    * @var NavigationLinkInterface[]
    */
-  public  $ids;
-  private $next    = [];
-  private $title;
-  private $url;
-  private $visible = true;
+  public $ids;
+  /**
+   * Note: this is public so that a {@see NavigationInterface} instance can set it when building the navigation.
+   * The URL is not available at the time of the link's creation and it will only become available later.
+   * @var string
+   */
+  public $url = '';
+
+  private $enabled              = false;
+  private $icon                 = '';
+  private $id                   = '';
+  private $links                = [];
+  private $title                = '';
+  private $visible              = true;
+  private $visibleIfUnavailable = false;
 
   function enabled ($enabled = null)
   {
@@ -38,16 +49,22 @@ class NavigationLink implements NavigationLinkInterface
   function id ($id = null)
   {
     if (is_null ($id)) return $this->id;
+    if (isset($this->id))
+      throw new \InvalidArgumentException ("Duplicate link ID.");
     $this->id = $id;
     return $this->ids[$id] = $this;
   }
 
-  function next (array $next)
+  function isGroup ()
   {
-    $this->next = $next;
-    /** @var NavigationLinkInterface $o */
-    foreach ($next as $o)
-      array_mergeInto ($this->ids, $o->getIds ());
+    return $this->group;
+  }
+
+  function links ($navigationMap)
+  {
+    if (!is_iterable($navigationMap))
+      throw new \InvalidArgumentException ("The argument must be iterable.");
+    $this->links = $navigationMap;
     return $this;
   }
 
@@ -58,11 +75,9 @@ class NavigationLink implements NavigationLinkInterface
     return $this;
   }
 
-  function url ($url = null)
+  function url ()
   {
-    if (is_null ($url)) return $this->url;
-    $this->url = $url;
-    return $this;
+    return $this->url;
   }
 
   function visible ($visible = null)
@@ -71,4 +86,12 @@ class NavigationLink implements NavigationLinkInterface
     $this->visible;
     return $this;
   }
+
+  function visibleIfUnavailable ($visible = null)
+  {
+    if (is_null ($visible)) return $this->visibleIfUnavailable;
+    $this->visibleIfUnavailable;
+    return $this;
+  }
+
 }

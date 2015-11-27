@@ -1,6 +1,8 @@
 <?php
 namespace Selenia\Routing\Navigation;
 
+use PhpKit\Flow\Flow;
+use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Traits\InspectionTrait;
@@ -12,35 +14,42 @@ class Navigation implements NavigationInterface
 
   private $ids = [];
   /**
-   * @var NavigationLinkInterface
+   * @var NavigationLinkInterface[]
    */
-  private $tree;
+  private $map = [];
+  /**
+   * Array of iterables. An iterable, on this context, is {@see NavigationLinkInterface}[] | {@see \Traversable} |
+   * `callable`.
+   * @var array
+   */
+  private $maps = [];
 
-  function link ()
+  function add ($navigationMap)
   {
-    $link = new NavigationLink;
-    $link->ids =& $this->ids;
-    return $link;
-  }
-
-  function mount (NavigationLinkInterface $link)
-  {
+    if (!is_iterable ($navigationMap))
+      throw new \InvalidArgumentException ("The argument must be iterable.");
+    $this->maps[] = $navigationMap;
     return $this;
   }
 
   function buildPath ($url)
   {
-    // TODO: Implement buildPath() method.
+    // TODO: Implement method.
   }
 
-  function currentPath (SplObjectStorage $path = null)
+  function currentTrail (SplObjectStorage $path = null)
   {
-    // TODO: Implement currentPath() method.
+    // TODO: Implement method.
   }
 
   function getIds ()
   {
     return $this->ids;
+  }
+
+  function getIterator ()
+  {
+    return Flow::from ($this->maps)->recursiveUnfold (identity ())->getIterator ();
   }
 
   /**
@@ -51,4 +60,28 @@ class Navigation implements NavigationInterface
   {
     // TODO: Implement getTree() method.
   }
+
+  function group ()
+  {
+    $link        = $this->link ();
+    $link->group = true;
+    return $link;
+  }
+
+  function link ()
+  {
+    $link      = new NavigationLink;
+    $link->ids =& $this->ids;
+    return $link;
+  }
+
+  function buildMenu ()
+  {
+    foreach ($this->getIterator () as $k => $v) {
+      if (!is_string ($k))
+        throw new ConfigException ("Navigation maps must only contain string keys.");
+
+    }
+  }
+
 }
