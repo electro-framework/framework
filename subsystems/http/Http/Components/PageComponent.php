@@ -23,7 +23,7 @@ use Selenia\Interfaces\SessionInterface;
 use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\Matisse\Components\Page;
 use Selenia\Matisse\PipeHandler;
-use Selenia\Routing\Router;
+use Selenia\Routing\Services\Router;
 use Selenia\ViewEngine\Engines\MatisseEngine;
 use Selenia\ViewEngine\View;
 use Zend\Diactoros\Response\HtmlResponse;

@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Routing;
+namespace Selenia\Routing\Services;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\Http\RouteMatcherInterface;

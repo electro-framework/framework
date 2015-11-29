@@ -1,5 +1,5 @@
 <?php
-use Selenia\Routing\FactoryRoutable;
+use Selenia\Routing\Lib\FactoryRoutable;
 
 
 function factory (callable $fn)

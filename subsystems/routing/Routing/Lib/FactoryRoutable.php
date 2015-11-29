@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Routing;
+namespace Selenia\Routing\Lib;
 
 use Selenia\Interfaces\InjectorInterface;
 
