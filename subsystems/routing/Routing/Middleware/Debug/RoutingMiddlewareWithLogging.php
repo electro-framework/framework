@@ -24,8 +24,8 @@ class RoutingMiddlewareWithLogging extends MiddlewareStackWithLogging
       : '<#i><i>empty</i></#i>';
 
     DebugConsole::logger ('routes')
-                ->write ("<#section|Router pipeline's content>$rootR</#section>" .
-                         "<#section|Application's middleware pipeline run history>" .
+                ->write ("<#section|REGISTERED ROUTERS>$rootR</#section>" .
+                         "<#section|APPLICATION MIDDLEWARE STACK'S RUN HISTORY>" .
                          "<#i|__rowHeader><i>(previous middlewares are omitted because they can't be traced)</i></#i>");
 
     try {

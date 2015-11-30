@@ -54,6 +54,11 @@ class BaseRouterWithLogging extends BaseRouter
                                RoutingLogger $routingLogger, $debugMode)
   {
     parent::__construct ($matcher, $injector);
+
+    // Uncomment the following line if you want to see the routing log when the app crashes without the Debug Console
+    // being displayed:
+//    $routingLogger = new DirectOutputLogger();
+
     $this->routingLogger = $routingLogger;
     $this->debugMode     = $debugMode;
   }
@@ -93,7 +98,9 @@ class BaseRouterWithLogging extends BaseRouter
     if ($handler instanceof $this)
       $handler->setPreviousContext ($this->currentRequest, $this->currentResponse);
 
+
     $response = parent::callHandler ($handler, $request, $response, $next);
+
 
     $this->routingLogger->write ("<#i|__rowHeader>Return from ")->typeName ($handler)->write ('</#i>');
 
@@ -155,16 +162,15 @@ class BaseRouterWithLogging extends BaseRouter
     if ($request && $request != $this->currentRequest)
       throw new \RuntimeException ('NOT SUPPOSED TO HAPPEN?');
 
-    $finalResponse = parent::iteration_step ($key, $routable, $request, $response, $nextIteration);
-
-    return $finalResponse;
+    return parent::iteration_step ($key, $routable, $request, $response, $nextIteration);
   }
 
   protected function iteration_stepMatchRoute ($key, $routable, ServerRequestInterface $request,
                                                ResponseInterface $response, callable $nextIteration)
   {
-    $this->routingLogger->write ("<#i|__rowHeader>Route pattern <b class=keyword>'$key'</b> matches request target
-        <b class=keyword>'{$this->currentRequest->getRequestTarget()}'</b></#i>");
+    $this->routingLogger->write ("<#i|__rowHeader>Route pattern <b class=keyword>'$key'</b> matches request target <b class=keyword>'{$this->currentRequest->getRequestTarget()}'</b></#i>");
+
+    return parent::iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
   }
 
   protected function iteration_stop (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -174,7 +180,7 @@ class BaseRouterWithLogging extends BaseRouter
     return parent::iteration_stop ($request, $response, $next);
   }
 
-  function runFactory (FactoryRoutable $factory)
+  protected function runFactory (FactoryRoutable $factory)
   {
     $this->routingLogger->write ("<#i|__rowHeader>Factory routable invoked</#i>");
     return parent::runFactory ($factory);
@@ -190,7 +196,7 @@ class BaseRouterWithLogging extends BaseRouter
    */
   function setPreviousContext (ServerRequestInterface $prevRequest, ResponseInterface $prevResponse)
   {
-    $this->routingLogger->write ("<#i|__rowHeader>Set Context</#i>");
+    $this->routingLogger->write ("<#i|__rowHeader>Set debugging context</#i>");
     $this->currentRequest  = $prevRequest;
     $this->currentResponse = $prevResponse;
   }

@@ -20,6 +20,10 @@ class FactoryRoutable
     $this->fn = $factoryFn;
   }
 
+  /**
+   * @param InjectorInterface $injector
+   * @return mixed A routable instance.
+   */
   function __invoke (InjectorInterface $injector)
   {
     return $injector->execute ($this->fn);

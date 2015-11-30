@@ -126,16 +126,13 @@ abstract class BaseRouter implements RouterInterface
     return $response;
   }
 
-  function runFactory (FactoryRoutable $factory)
-  {
-    return $factory ($this->injector);
-  }
-
   /**
    * Invokes a handler.
    *
-   * <p>The router does not call the handlers directly; instead, it does it trough this method, so that calls can be
+   * <p>The router does not call handlers directly; instead, it does it trough this method, so that calls can be
    * intercepted, validated and logged.
+   *
+   * > This also works as a router extension point.
    *
    * @param callable               $handler
    * @param ServerRequestInterface $request
@@ -164,8 +161,10 @@ abstract class BaseRouter implements RouterInterface
   }
 
   /**
-   * Iterates the handler pipeline while each handler calls its `$next` argument, otherwise, it returns the HTTP
+   * Begins iterating the handler pipeline while each handler calls its `$next` argument, otherwise, it returns the HTTP
    * response.
+   * > This also works as a router extension point.
+   *
    * @param Iterator               $it
    * @param ServerRequestInterface $currentRequest
    * @param ResponseInterface      $currentResponse
@@ -178,9 +177,7 @@ abstract class BaseRouter implements RouterInterface
     $first                = true;
     $nextIterationClosure =
       function (ServerRequestInterface $request = null, ResponseInterface $response = null, $first = false)
-      use (
-        $it, &$nextIterationClosure, &$first, $nextHandlerAfterIteration, &$currentRequest, &$currentResponse
-      ) {
+      use ($it, &$nextIterationClosure, $nextHandlerAfterIteration, &$currentRequest, &$currentResponse) {
         $request  = $currentRequest = ($request ?: $currentRequest);
         $response = $currentResponse = ($response ?: $currentResponse);
         if ($first) $it->rewind ();
@@ -194,6 +191,17 @@ abstract class BaseRouter implements RouterInterface
     return $nextIterationClosure ($currentRequest, $currentResponse, true);
   }
 
+  /**
+   * Invoked when a route iteration step takes place.
+   * > This also works as a router extension point.
+   *
+   * @param string                      $key
+   * @param mixed                       $routable
+   * @param ServerRequestInterface|null $request
+   * @param ResponseInterface|null      $response
+   * @param callable                    $nextIteration
+   * @return ResponseInterface
+   */
   protected function iteration_step ($key, $routable, ServerRequestInterface $request = null,
                                      ResponseInterface $response = null, callable $nextIteration)
   {
@@ -202,28 +210,71 @@ abstract class BaseRouter implements RouterInterface
       if (!$this->matcher->match ($key, $request, $request)) // note: $request may be modified.
         return $nextIteration ($request);
 
-      return $this->iteration_stepMatchMiddleware ($key, $routable, $request, $response, $nextIteration);
+      return $this->iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
     }
     // Else, a middleware unconditional invocation will be performed.
-    return $this->iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
+    return $this->iteration_stepMatchMiddleware ($key, $routable, $request, $response, $nextIteration);
   }
 
+  /**
+   * Invoked when a route iteration step matches a middleware.
+   * > The main purpose of this method is to provide a router extension point.
+   *
+   * @param string                 $key
+   * @param mixed                  $routable
+   * @param ServerRequestInterface $request
+   * @param ResponseInterface      $response
+   * @param callable               $nextIteration
+   * @return ResponseInterface
+   */
   protected function iteration_stepMatchMiddleware ($key, $routable, ServerRequestInterface $request,
                                                     ResponseInterface $response, callable $nextIteration)
   {
     return $this->route ($routable, $request, $response, $nextIteration);
   }
 
+  /**
+   * Invoked when a route iteration step matches a route.
+   * > The main purpose of this method is to provide a router extension point.
+   *
+   * @param string                 $key
+   * @param mixed                  $routable
+   * @param ServerRequestInterface $request
+   * @param ResponseInterface      $response
+   * @param callable               $nextIteration
+   * @return ResponseInterface
+   */
   protected function iteration_stepMatchRoute ($key, $routable, ServerRequestInterface $request,
                                                ResponseInterface $response, callable $nextIteration)
   {
     return $this->route ($routable, $request, $response, $nextIteration);
   }
 
+  /**
+   * Invoked when route iteration ended without a final response being generated.
+   * > The main purpose of this method is to provide a router extension point.
+   *
+   * @param ServerRequestInterface $request
+   * @param ResponseInterface      $response
+   * @param callable               $next
+   * @return ResponseInterface
+   */
   protected function iteration_stop (ServerRequestInterface $request, ResponseInterface $response,
                                      callable $next)
   {
     return $next ($request, $response);
+  }
+
+  /**
+   * Runs a given factory routable.
+   * > The main purpose of this method is to provide a router extension point.
+   *
+   * @param FactoryRoutable $factory
+   * @return mixed A routable instance.
+   */
+  protected function runFactory (FactoryRoutable $factory)
+  {
+    return $factory ($this->injector);
   }
 
 }

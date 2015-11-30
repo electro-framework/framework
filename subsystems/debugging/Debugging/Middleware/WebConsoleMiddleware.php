@@ -90,20 +90,20 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 
     // Routes panel
     /** @var Router $router */
-    $router = $this->injector->make ('Selenia\Routing\Router');
-    if (isset($router->controller)) {
-
-      // DOM panel
-      if (isset($router->controller->page)) {
-        $insp = $router->controller->page->inspect (true);
-        DebugConsole::logger ('DOM')->write ($insp);
-      }
+//    $router = $this->injector->make ('Selenia\Routing\Router');
+//    if (isset($router->controller)) {
+//
+//      // DOM panel
+//      if (isset($router->controller->page)) {
+//        $insp = $router->controller->page->inspect (true);
+//        DebugConsole::logger ('DOM')->write ($insp);
+//      }
 //      $filter = function ($k, $v) { return $k !== 'parent' && $k !== 'page'; };
 //      WebConsole::DOM ()->withFilter($filter, $controller->page);
-
-      // View Models panel
-      DebugConsole::logger ('vm')->inspect (get_object_vars ($router->controller));
-    }
+//
+//      // View Models panel
+//      DebugConsole::logger ('vm')->inspect (get_object_vars ($router->controller));
+//    }
 
     DebugConsole::logger ('routes')
       ->write ($this->injector->make(RoutingLogger::class)->getContent ())
