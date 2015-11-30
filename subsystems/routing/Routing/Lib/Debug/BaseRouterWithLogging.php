@@ -19,6 +19,29 @@ use Selenia\Routing\Services\RoutingLogger;
 class BaseRouterWithLogging extends BaseRouter
 {
   /**
+   * The current request; updated as the router calls request handlers.
+   * > This is used for debugging only.
+   * @var ServerRequestInterface
+   */
+  static private $currentRequest;
+  /**
+   * The current request body size; updated as the router calls request handlers.
+   * > This is used for debugging only.
+   * @var int
+   */
+  static private $currentRequestSize = 0;
+  /**
+   * The current response; updated as the router calls request handlers.
+   * @var ResponseInterface
+   */
+  static private $currentResponse;
+  /**
+   * The current response body size; updated as the router calls request handlers.
+   * > This is used for debugging only.
+   * @var int
+   */
+  static private $currentResponseSize = 0;
+  /**
    * @var bool
    */
   protected $debugMode;
@@ -26,29 +49,6 @@ class BaseRouterWithLogging extends BaseRouter
    * @var RoutingLogger
    */
   protected $routingLogger;
-  /**
-   * The current request; updated as the router calls request handlers.
-   * > This is used for debugging only.
-   * @var ServerRequestInterface
-   */
-  private $currentRequest;
-  /**
-   * The current request body size; updated as the router calls request handlers.
-   * > This is used for debugging only.
-   * @var int
-   */
-  private $currentRequestSize = 0;
-  /**
-   * The current response; updated as the router calls request handlers.
-   * @var ResponseInterface
-   */
-  private $currentResponse;
-  /**
-   * The current response body size; updated as the router calls request handlers.
-   * > This is used for debugging only.
-   * @var int
-   */
-  private $currentResponseSize = 0;
 
   public function __construct (InjectorInterface $injector, RouteMatcherInterface $matcher,
                                RoutingLogger $routingLogger, $debugMode)
@@ -67,8 +67,8 @@ class BaseRouterWithLogging extends BaseRouter
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     $this->routingLogger->write ("<#i|__rowHeader>Enter new Router</#i>");
-    $this->currentRequestSize  = $request->getBody ()->getSize ();
-    $this->currentResponseSize = $response->getBody ()->getSize ();
+    self::$currentRequestSize  = $request->getBody ()->getSize ();
+    self::$currentResponseSize = $response->getBody ()->getSize ();
     try {
       return parent::__invoke ($request, $response, $next);
     }
@@ -85,20 +85,17 @@ class BaseRouterWithLogging extends BaseRouter
     $this->routingLogger
       ->write ("<#i|__rowHeader>Call ")->typeName ($handler)->write ("</#i>");
 
-    if ($request && $request != $this->currentRequest) {
+    if ($request && $request != self::$currentRequest) {
       $this->logRequest ($request, sprintf ('with a new %s object:', Debug::getType ($request)));
-      $this->currentRequest     = $request;
-      $this->currentRequestSize = $request->getBody ()->getSize ();
+      self::$currentRequest     = $request;
+      self::$currentRequestSize = $request->getBody ()->getSize ();
     }
 
-    if ($response && $response != $this->currentResponse) {
+    if ($response && $response != self::$currentResponse) {
       $this->logRequest ($request, sprintf ('with a new %s object:', Debug::getType ($response)));
-      $this->currentResponse     = $response;
-      $this->currentResponseSize = $response->getBody ()->getSize ();
+      self::$currentResponse     = $response;
+      self::$currentResponseSize = $response->getBody ()->getSize ();
     }
-
-    if ($handler instanceof $this)
-      $handler->setPreviousContext ($this->currentRequest, $this->currentResponse);
 
 
     $response = parent::callHandler ($handler, $request, $response, $next);
@@ -106,16 +103,16 @@ class BaseRouterWithLogging extends BaseRouter
 
     $this->routingLogger->write ("<#i|__rowHeader>Return from ")->typeName ($handler)->write ('</#i>');
 
-    if ($response !== $this->currentResponse) {
+    if ($response !== self::$currentResponse) {
       $this->logResponse ($response, sprintf ('with a new %s object:', Debug::getType ($response)));
-      $this->currentResponse     = $response;
-      $this->currentResponseSize = $response->getBody ()->getSize ();
+      self::$currentResponse     = $response;
+      self::$currentResponseSize = $response->getBody ()->getSize ();
     }
     else {
       $newSize = $response->getBody ()->getSize ();
-      if ($newSize != $this->currentResponseSize) {
+      if ($newSize != self::$currentResponseSize) {
         $this->logResponse ($response, sprintf ('with a modified %s body:', Debug::getType ($response)));
-        $this->currentResponseSize = $newSize;
+        self::$currentResponseSize = $newSize;
       }
     }
 
@@ -128,42 +125,45 @@ class BaseRouterWithLogging extends BaseRouter
   {
     $this->routingLogger->write ("<#i|__rowHeader>Begin pipeline</#i>");
 
-    if ($currentRequest && $currentRequest != $this->currentRequest) {
+    if ($currentRequest && $currentRequest != self::$currentRequest) {
       $this->logRequest ($currentRequest,
         sprintf ('with %s %s object:',
-          $this->currentRequest ? 'a new' : 'the initial',
+          self::$currentRequest ? 'a new' : 'the initial',
           Debug::getType ($currentRequest))
       );
-      $this->currentRequest     = $currentRequest;
-      $this->currentRequestSize = $currentRequest->getBody ()->getSize ();
+      self::$currentRequest     = $currentRequest;
+      self::$currentRequestSize = $currentRequest->getBody ()->getSize ();
     }
 
-    if ($currentResponse && $currentResponse != $this->currentResponse) {
+    if ($currentResponse && $currentResponse != self::$currentResponse) {
       $this->logResponse ($currentResponse,
         sprintf ('with %s %s object:',
-          $this->currentResponse ? 'a new' : 'the initial',
+          self::$currentResponse ? 'a new' : 'the initial',
           Debug::getType ($currentResponse))
       );
-      $this->currentResponse     = $currentResponse;
-      $this->currentResponseSize = $currentResponse->getBody ()->getSize ();
+      self::$currentResponse     = $currentResponse;
+      self::$currentResponseSize = $currentResponse->getBody ()->getSize ();
     }
 
     $this->routingLogger->write ("<div class='indent'>");
 
-    $finalResponse = parent::iteration_start ($it, $currentRequest, $currentResponse,
-      $nextHandlerAfterIteration);
+    try {
+      $finalResponse = parent::iteration_start ($it, $currentRequest, $currentResponse,
+        $nextHandlerAfterIteration);
 
-    $this->routingLogger->write ("</div>");
-    $this->routingLogger->write ("<#i|__rowHeader>Exit pipeline</#i>");
-
-    return $finalResponse;
+      return $finalResponse;
+    }
+    finally {
+      $this->routingLogger->write ("</div>");
+      $this->routingLogger->write ("<#i|__rowHeader>Exit pipeline!!</#i>");
+    }
   }
 
 
   protected function iteration_step ($key, $routable, ServerRequestInterface $request = null,
                                      ResponseInterface $response = null, callable $nextIteration)
   {
-    if ($request && $request != $this->currentRequest)
+    if ($request && $request != self::$currentRequest)
       throw new \RuntimeException ('NOT SUPPOSED TO HAPPEN?');
 
     return parent::iteration_step ($key, $routable, $request, $response, $nextIteration);
@@ -173,7 +173,9 @@ class BaseRouterWithLogging extends BaseRouter
   protected function iteration_stepMatchRoute ($key, $routable, ServerRequestInterface $request,
                                                ResponseInterface $response, callable $nextIteration)
   {
-    $this->routingLogger->write ("<#i|__rowHeader>Route pattern <b class=keyword>'$key'</b> matches request target <b class=keyword>'{$this->currentRequest->getRequestTarget()}'</b></#i>");
+    $this->routingLogger->write (sprintf ("<#i|__rowHeader>Route pattern <b class=keyword>'$key'</b> matches request target " .
+                                          "<b class=keyword>'%s'</b></#i>",
+      self::$currentRequest->getRequestTarget ()));
 
     return parent::iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
   }
@@ -194,36 +196,21 @@ class BaseRouterWithLogging extends BaseRouter
   }
 
   /**
-   * Provides the router with information about the previous routing context.
-   *
-   * <p>The purpose is to provide enhanced debugging information on the Debug Console.
-   *
-   * @param ServerRequestInterface $prevRequest
-   * @param ResponseInterface      $prevResponse
-   */
-  function setPreviousContext (ServerRequestInterface $prevRequest, ResponseInterface $prevResponse)
-  {
-    $this->routingLogger->write ("<#i|__rowHeader>Set debugging context</#i>");
-    $this->currentRequest  = $prevRequest;
-    $this->currentResponse = $prevResponse;
-  }
-
-  /**
    * @param ServerRequestInterface $r
    * @param                        $title
    */
   private function logRequest ($r, $title)
   {
-    $showAll = !$this->currentRequest;
+    $showAll = !self::$currentRequest;
     $icon    = $showAll ? '' : '<sup>*</sup>';
     $out     = [];
-    if ($showAll || $r->getHeaders () != $this->currentRequest->getHeaders ())
+    if ($showAll || $r->getHeaders () != self::$currentRequest->getHeaders ())
       $out['Headers' . $icon] = map ($r->getHeaders (), function ($v) { return implode ('<br>', $v); });
-    if ($showAll || $r->getAttributes () != $this->currentRequest->getAttributes ())
+    if ($showAll || $r->getAttributes () != self::$currentRequest->getAttributes ())
       $out['Attributes' . $icon] = $r->getAttributes ();
-    if ($showAll || $r->getRequestTarget () != $this->currentRequest->getRequestTarget ())
+    if ($showAll || $r->getRequestTarget () != self::$currentRequest->getRequestTarget ())
       $out['Request target' . $icon] = $r->getRequestTarget ();
-    if ($showAll || $r->getBody ()->getSize () != $this->currentRequestSize)
+    if ($showAll || $r->getBody ()->getSize () != self::$currentRequestSize)
       $out['Size' . $icon] = $r->getBody ()->getSize ();
 
     $this->routingLogger
@@ -238,15 +225,15 @@ class BaseRouterWithLogging extends BaseRouter
    */
   private function logResponse ($r, $title)
   {
-    $showAll = !$this->currentResponse;
+    $showAll = !self::$currentResponse;
     $icon    = $showAll ? '' : '<sup>*</sup>';
     $out     = [];
-    if ($showAll || $r->getStatusCode () != $this->currentResponse->getStatusCode ())
+    if ($showAll || $r->getStatusCode () != self::$currentResponse->getStatusCode ())
       $out['Status' . $icon] = $r->getStatusCode () . ' ' . $r->getReasonPhrase ();
     $h = $r->getHeaders ();
-    if ($showAll || $h != $this->currentResponse->getHeaders ())
+    if ($showAll || $h != self::$currentResponse->getHeaders ())
       $out['Headers' . $icon] = map ($h, function ($v) { return implode ('<br>', $v); });
-    if ($showAll || $r->getBody ()->getSize () != $this->currentResponseSize)
+    if ($showAll || $r->getBody ()->getSize () != self::$currentResponseSize)
       $out['Size' . $icon] = $r->getBody ()->getSize ();
 
     $this->routingLogger
