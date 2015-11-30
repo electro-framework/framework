@@ -5,8 +5,8 @@ use Selenia\Application;
 use Selenia\Interfaces\Http\MiddlewareStackInterface;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
 use Selenia\Interfaces\Http\RouterInterface;
-use Selenia\Interfaces\Http\Shared\RootMiddlewareStackInterface;
-use Selenia\Interfaces\Http\Shared\RootRouterInterface;
+use Selenia\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
+use Selenia\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
@@ -16,7 +16,7 @@ use Selenia\Routing\Navigation\Navigation;
 use Selenia\Routing\Navigation\NavigationLink;
 use Selenia\Routing\Services\Debug\MiddlewareStackWithLogging;
 use Selenia\Routing\Services\Debug\RouterWithLogging;
-use Selenia\Routing\Services\Debug\RoutingMiddlewareWithLogging;
+use Selenia\Routing\Middleware\Debug\RoutingMiddlewareWithLogging;
 use Selenia\Routing\Services\MiddlewareStack;
 use Selenia\Routing\Services\RouteMatcher;
 use Selenia\Routing\Services\Router;
@@ -31,22 +31,27 @@ class RoutingModule implements ServiceProviderInterface
     $debugMode = $app->debugMode;
     $injector
       //
-      // Routing
+      // Routing / Middleware classes
       //
-      ->alias (RouterInterface::class, $debugMode ? RouterWithLogging::class : Router::class)
-      ->alias (MiddlewareStackInterface::class, $debugMode ? MiddlewareStackWithLogging::class : MiddlewareStack::class)
+      ->alias (RouterInterface::class,
+        $debugMode ? RouterWithLogging::class : Router::class)
+
+      ->alias (MiddlewareStackInterface::class,
+        $debugMode ? MiddlewareStackWithLogging::class : MiddlewareStack::class)
+
       ->alias (RouteMatcherInterface::class, RouteMatcher::class)
       //
       // The application's root/main router
       // (inject it to add routes to it)
       //
-      ->share (RootRouterInterface::class)
-      ->alias (RootRouterInterface::class, $debugMode ? RoutingMiddlewareWithLogging::class : RoutingMiddleware::class)
+      ->share (ApplicationRouterInterface::class)
+      ->alias (ApplicationRouterInterface::class,
+        $debugMode ? RoutingMiddlewareWithLogging::class : RoutingMiddleware::class)
       //
       // The application's root/main middleware stack
       //
-      ->share (RootMiddlewareStackInterface::class)
-      ->alias (RootMiddlewareStackInterface::class,
+      ->share (ApplicationMiddlewareInterface::class)
+      ->alias (ApplicationMiddlewareInterface::class,
         $debugMode ? MiddlewareStackWithLogging::class : MiddlewareStack::class)
       //
       // Navigation

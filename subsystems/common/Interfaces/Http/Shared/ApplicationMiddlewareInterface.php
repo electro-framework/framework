@@ -21,6 +21,6 @@ use Selenia\Interfaces\Http\MiddlewareStackInterface;
  * }
  * > ```
  */
-interface RootMiddlewareStackInterface extends MiddlewareStackInterface
+interface ApplicationMiddlewareInterface extends MiddlewareStackInterface
 {
 }

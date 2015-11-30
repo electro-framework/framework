@@ -6,7 +6,7 @@ use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\FileServer\Services\FileServerMappings;
 use Selenia\Interfaces\AssignableInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Interfaces\Http\Shared\RootRouterInterface;
+use Selenia\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\Navigation\NavigationProviderInterface;
 
@@ -190,8 +190,8 @@ class ModuleServices
   function registerRouter ($handler, $key = null, $after = null)
   {
     // $router is not injected because it's retrieval must be postponed until after the routing module loads.
-    /** @var RootRouterInterface $router */
-    $router = $this->injector->make (RootRouterInterface::class);
+    /** @var ApplicationRouterInterface $router */
+    $router = $this->injector->make (ApplicationRouterInterface::class);
     $router->add ($handler, $key, $after);
     return $this;
   }

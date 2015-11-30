@@ -61,6 +61,24 @@ abstract class BaseRouter implements RouterInterface
     return $this;
   }
 
+  function set ($handlers)
+  {
+    if (!is_iterable ($handlers))
+      $handlers = [$handlers];
+    $this->handlers = $handlers;
+    return $this;
+  }
+
+  function with ($handlers)
+  {
+    if (!is_iterable ($handlers))
+      $handlers = [$handlers];
+    $class = get_class ($this);
+    /** @var static $new */
+    $new = new $class ($this->injector, $this->matcher);
+    return $new->set ($handlers);
+  }
+
   /**
    * Performs the actual routing.
    *
@@ -77,7 +95,7 @@ abstract class BaseRouter implements RouterInterface
 
     if (is_callable ($routable)) {
       if ($routable instanceof FactoryRoutable) {
-        $instance = $this->runFactory($routable);
+        $instance = $this->runFactory ($routable);
         return $this->route ($instance, $request, $response, $next);
       }
       else $response = $this->callHandler ($routable, $request, $response, $next);
@@ -108,26 +126,9 @@ abstract class BaseRouter implements RouterInterface
     return $response;
   }
 
-  function runFactory (FactoryRoutable $factory) {
+  function runFactory (FactoryRoutable $factory)
+  {
     return $factory ($this->injector);
-  }
-
-  function set ($handlers)
-  {
-    if (!is_iterable ($handlers))
-      $handlers = [$handlers];
-    $this->handlers = $handlers;
-    return $this;
-  }
-
-  function with ($handlers)
-  {
-    if (!is_iterable ($handlers))
-      $handlers = [$handlers];
-    $class = get_class ($this);
-    /** @var static $new */
-    $new = new $class ($this->injector, $this->matcher);
-    return $new->set ($handlers);
   }
 
   /**
@@ -142,7 +143,8 @@ abstract class BaseRouter implements RouterInterface
    * @param callable               $next
    * @return ResponseInterface
    */
-  protected function callHandler ($handler, $request, $response, $next)
+  protected function callHandler (callable $handler, ServerRequestInterface $request, ResponseInterface $response,
+                                  callable $next)
   {
     $response = $handler ($request, $response, $next);
 

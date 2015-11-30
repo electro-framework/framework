@@ -1,9 +1,11 @@
 <?php
-namespace Selenia\Routing\Services\Debug;
+namespace Selenia\Routing\Middleware\Debug;
 
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Interfaces\Http\Shared\ApplicationRouterInterface;
+use Selenia\Routing\Services\Debug\MiddlewareStackWithLogging;
 
 /**
  * Performs the application's HTTP request routing.
@@ -11,6 +13,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * <p>{@see MainRouterInterface} is usually an injection alias of this class.
  */
 class RoutingMiddlewareWithLogging extends MiddlewareStackWithLogging
+  implements ApplicationRouterInterface /* for call-signature compatibility */
 {
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {

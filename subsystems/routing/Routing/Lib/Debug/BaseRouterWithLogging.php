@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Routing\Services\Debug;
+namespace Selenia\Routing\Lib\Debug;
 
 use Iterator;
 use PhpKit\WebConsole\Lib\Debug;
@@ -8,6 +8,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
 use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Routing\Lib\BaseRouter;
 use Selenia\Routing\Lib\FactoryRoutable;
 use Selenia\Routing\Services\RoutingLogger;
 
@@ -15,7 +16,7 @@ use Selenia\Routing\Services\RoutingLogger;
  * Provides the inspection aspect of a RouterInterface implementation.
  * @property RouterInterface $decorated
  */
-trait RouterLoggingAspect
+class BaseRouterWithLogging extends BaseRouter
 {
   /**
    * @var bool
@@ -70,28 +71,7 @@ trait RouterLoggingAspect
     }
   }
 
-  function runFactory (FactoryRoutable $factory)
-  {
-    $this->routingLogger->write ("<#i|__rowHeader>Factory routable invoked</#i>");
-    return parent::runFactory ($factory);
-  }
-
-  /**
-   * Provides the router with information about the previous routing context.
-   *
-   * <p>The purpose is to provide enhanced debugging information on the Debug Console.
-   *
-   * @param ServerRequestInterface $prevRequest
-   * @param ResponseInterface      $prevResponse
-   */
-  function setPreviousContext (ServerRequestInterface $prevRequest, ResponseInterface $prevResponse)
-  {
-    $this->routingLogger->write ("<#i|__rowHeader>Set Context</#i>");
-    $this->currentRequest  = $prevRequest;
-    $this->currentResponse = $prevResponse;
-  }
-
-  protected function callHandler ($handler, ServerRequestInterface $request, ResponseInterface $response,
+  protected function callHandler (callable $handler, ServerRequestInterface $request, ResponseInterface $response,
                                   callable $next)
   {
     /** Router $this */
@@ -192,6 +172,27 @@ trait RouterLoggingAspect
     $this->routingLogger->write ("</div><#i|__rowHeader>Pipeline ended</#i>");
 
     return parent::iteration_stop ($request, $response, $next);
+  }
+
+  function runFactory (FactoryRoutable $factory)
+  {
+    $this->routingLogger->write ("<#i|__rowHeader>Factory routable invoked</#i>");
+    return parent::runFactory ($factory);
+  }
+
+  /**
+   * Provides the router with information about the previous routing context.
+   *
+   * <p>The purpose is to provide enhanced debugging information on the Debug Console.
+   *
+   * @param ServerRequestInterface $prevRequest
+   * @param ResponseInterface      $prevResponse
+   */
+  function setPreviousContext (ServerRequestInterface $prevRequest, ResponseInterface $prevResponse)
+  {
+    $this->routingLogger->write ("<#i|__rowHeader>Set Context</#i>");
+    $this->currentRequest  = $prevRequest;
+    $this->currentResponse = $prevResponse;
   }
 
   /**

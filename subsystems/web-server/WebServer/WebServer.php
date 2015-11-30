@@ -6,7 +6,7 @@ use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\FileServer\Services\FileServerMappings;
 use Selenia\Interfaces\Http\MiddlewareStackInterface;
 use Selenia\Interfaces\Http\ResponseSenderInterface;
-use Selenia\Interfaces\Http\Shared\RootMiddlewareStackInterface;
+use Selenia\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -38,12 +38,12 @@ class WebServer
   private $responseSender;
 
   /**
-   * @param Application                  $app
-   * @param RootMiddlewareStackInterface $middlewareStack
-   * @param ResponseSenderInterface      $responseSender
-   * @param FileServerMappings           $fileServerMappings
+   * @param Application                    $app
+   * @param ApplicationMiddlewareInterface $middlewareStack
+   * @param ResponseSenderInterface        $responseSender
+   * @param FileServerMappings             $fileServerMappings
    */
-  function __construct (Application $app, RootMiddlewareStackInterface $middlewareStack,
+  function __construct (Application $app, ApplicationMiddlewareInterface $middlewareStack,
                         ResponseSenderInterface $responseSender, FileServerMappings $fileServerMappings)
   {
     $this->app                = $app;

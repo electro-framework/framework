@@ -3,6 +3,7 @@ namespace Selenia\Routing\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Selenia\Routing\Services\MiddlewareStack;
 
 /**
@@ -11,6 +12,7 @@ use Selenia\Routing\Services\MiddlewareStack;
  * <p>{@see MainRouterInterface} is usually an injection alias of this class.
  */
 class RoutingMiddleware extends MiddlewareStack
+  implements ApplicationRouterInterface /* for call-signature compatibility */
 {
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {

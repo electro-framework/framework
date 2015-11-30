@@ -23,6 +23,6 @@ use Selenia\Interfaces\Http\RouterInterface;
  * }
  * > ```
  */
-interface RootRouterInterface extends RouterInterface
+interface ApplicationRouterInterface extends RouterInterface
 {
 }
