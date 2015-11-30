@@ -63,6 +63,7 @@ class BaseRouterWithLogging extends BaseRouter
     $this->debugMode     = $debugMode;
   }
 
+
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     $this->routingLogger->write ("<#i|__rowHeader>Enter new Router</#i>");
@@ -75,6 +76,7 @@ class BaseRouterWithLogging extends BaseRouter
       $this->routingLogger->write ("<#i|__rowHeader>Exit Router</#i>");
     }
   }
+
 
   protected function callHandler (callable $handler, ServerRequestInterface $request, ResponseInterface $response,
                                   callable $next)
@@ -120,6 +122,7 @@ class BaseRouterWithLogging extends BaseRouter
     return $response;
   }
 
+
   protected function iteration_start (\Iterator $it, ServerRequestInterface $currentRequest,
                                       ResponseInterface $currentResponse, callable $nextHandlerAfterIteration)
   {
@@ -156,6 +159,7 @@ class BaseRouterWithLogging extends BaseRouter
     return $finalResponse;
   }
 
+
   protected function iteration_step ($key, $routable, ServerRequestInterface $request = null,
                                      ResponseInterface $response = null, callable $nextIteration)
   {
@@ -165,6 +169,7 @@ class BaseRouterWithLogging extends BaseRouter
     return parent::iteration_step ($key, $routable, $request, $response, $nextIteration);
   }
 
+
   protected function iteration_stepMatchRoute ($key, $routable, ServerRequestInterface $request,
                                                ResponseInterface $response, callable $nextIteration)
   {
@@ -173,12 +178,14 @@ class BaseRouterWithLogging extends BaseRouter
     return parent::iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
   }
 
+
   protected function iteration_stop (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     $this->routingLogger->write ("</div><#i|__rowHeader>Pipeline ended</#i>");
 
     return parent::iteration_stop ($request, $response, $next);
   }
+
 
   protected function runFactory (FactoryRoutable $factory)
   {

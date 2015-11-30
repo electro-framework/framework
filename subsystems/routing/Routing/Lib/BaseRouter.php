@@ -174,12 +174,13 @@ abstract class BaseRouter implements RouterInterface
   protected function iteration_start (Iterator $it, ServerRequestInterface $currentRequest,
                                       ResponseInterface $currentResponse, callable $nextHandlerAfterIteration)
   {
-    $first                = true;
     $nextIterationClosure =
       function (ServerRequestInterface $request = null, ResponseInterface $response = null, $first = false)
       use ($it, &$nextIterationClosure, $nextHandlerAfterIteration, &$currentRequest, &$currentResponse) {
+
         $request  = $currentRequest = ($request ?: $currentRequest);
         $response = $currentResponse = ($response ?: $currentResponse);
+
         if ($first) $it->rewind ();
         else $it->next ();
 

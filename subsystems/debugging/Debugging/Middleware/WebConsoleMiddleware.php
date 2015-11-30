@@ -63,7 +63,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     // Redirect logger to Inspector panel
     if (isset($this->logger))
       if ($this->logger instanceof Logger)
-        $this->logger->pushHandler (new WebConsoleMonologHandler(getenv('DEBUG_LEVEL') || Logger::DEBUG));
+        $this->logger->pushHandler (new WebConsoleMonologHandler(getenv ('DEBUG_LEVEL') || Logger::DEBUG));
 
     /** @var ResponseInterface $response */
     $response = $next ();
@@ -106,8 +106,9 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 //    }
 
     DebugConsole::logger ('routes')
-      ->write ($this->injector->make(RoutingLogger::class)->getContent ())
-      ->write ("<#i|__rowHeader><i>(later middlewares are omitted because they can't be traced)</i></#i>");
+                ->write ($this->injector->make (RoutingLogger::class)->getContent ())
+                ->write ("<#i|__rowHeader>Return from ")->typeName ($this)->write ("</#i>")
+                ->write ("<#i|__rowHeader>End of routing log <i>(log entries from this point on can't be displayed)</i></#i>");
 
     return DebugConsole::outputContentViaResponse ($request, $response, true);
   }
