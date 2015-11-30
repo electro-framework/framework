@@ -105,10 +105,10 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 //      DebugConsole::logger ('vm')->inspect (get_object_vars ($router->controller));
 //    }
 
-    DebugConsole::logger ('routes')
-                ->write ($this->injector->make (RoutingLogger::class)->getContent ())
-                ->write ("<#i|__rowHeader>Return from ")->typeName ($this)->write ("</#i>")
-                ->write ("<#i|__rowHeader>End of routing log <i>(log entries from this point on can't be displayed)</i></#i>");
+//    DebugConsole::logger ('routes')
+//                ->write ($this->injector->make (RoutingLogger::class)->getContent ())
+//                ->write ("<#i|__rowHeader>Return from ")->typeName ($this)->write ("</#i>")
+//                ->write ("<#i|__rowHeader>End of routing log <i>(log entries from this point on can't be displayed)</i></#i>");
 
     return DebugConsole::outputContentViaResponse ($request, $response, true);
   }

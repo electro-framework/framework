@@ -34,7 +34,10 @@ class RoutingMiddlewareWithLogging extends MiddlewareStackWithLogging
       $res = parent::__invoke ($request, $response, $next);
     }
     finally {
-      DebugConsole::logger ('routes')->write ($this->routingLogger->getContent () . "</#section>");
+      DebugConsole::logger ('routes')->write ("</#section>");
+echo $this->routingLogger->render ();
+      exit;
+//      DebugConsole::logger ('routes')->write ($this->routingLogger->render ())->write("</#section>");
     }
     return $res;
   }
