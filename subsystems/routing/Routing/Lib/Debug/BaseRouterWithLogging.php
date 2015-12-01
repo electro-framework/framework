@@ -145,7 +145,7 @@ class BaseRouterWithLogging extends BaseRouter
       self::$currentResponseSize = $currentResponse->getBody ()->getSize ();
     }
 
-    $this->routingLogger->write ("<div class='indent'>");
+    $this->routingLogger->write ("[@indent]");
 
     try {
       $finalResponse = parent::iteration_start ($it, $currentRequest, $currentResponse,
@@ -154,8 +154,8 @@ class BaseRouterWithLogging extends BaseRouter
       return $finalResponse;
     }
     finally {
-      $this->routingLogger->write ("</div>");
-      $this->routingLogger->write ("<#i|__rowHeader>Exit pipeline!!</#i>");
+      $this->routingLogger->write ("[@/indent]");
+      $this->routingLogger->write ("<#i|__rowHeader>Exit pipeline</#i>");
     }
   }
 

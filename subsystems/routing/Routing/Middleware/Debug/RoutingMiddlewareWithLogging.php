@@ -32,12 +32,16 @@ class RoutingMiddlewareWithLogging extends MiddlewareStackWithLogging
       $request = $request->withRequestTarget ($request->getAttribute ('virtualUri'));
 
       $res = parent::__invoke ($request, $response, $next);
+
     }
     finally {
-      DebugConsole::logger ('routes')->write ("</#section>");
-echo $this->routingLogger->render ();
-      exit;
-//      DebugConsole::logger ('routes')->write ($this->routingLogger->render ())->write("</#section>");
+      ob_clean();
+//echo $this->routingLogger->getContent ();
+//echo $this->routingLogger->render ();
+//      exit;
+      DebugConsole::logger ('routes')
+                  ->write ($this->routingLogger->getContent ())
+                  ->write ("</#section>");
     }
     return $res;
   }
