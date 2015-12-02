@@ -17,15 +17,6 @@ class RoutingMiddlewareWithLogging extends MiddlewareStackWithLogging
 {
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $rootR = $this->handlers
-      ? implode ('', map ($this->handlers, function ($r) {
-        return sprintf ('<#i|__rowHeader><#type>%s</#type></#i>', typeOf ($r));
-      }))
-      : '<#i><i>empty</i></#i>';
-
-    DebugConsole::logger ('routes')
-                ->write ("<#section|REGISTERED ROUTERS>$rootR</#section>" .
-                         "<#section|APPLICATION MIDDLEWARE STACK'S RUN HISTORY>");
 
     try {
       /** @var ServerRequestInterface $request */
@@ -35,13 +26,12 @@ class RoutingMiddlewareWithLogging extends MiddlewareStackWithLogging
 
     }
     finally {
-      ob_clean();
 //echo $this->routingLogger->getContent ();
 //echo $this->routingLogger->render ();
 //      exit;
-      DebugConsole::logger ('routes')
-                  ->write ($this->routingLogger->getContent ())
-                  ->write ("</#section>");
+//      DebugConsole::logger ('routes')
+//                  ->write ($this->routingLogger->getContent ())
+//                  ->write ("</#section>");
     }
     return $res;
   }

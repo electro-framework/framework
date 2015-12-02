@@ -118,6 +118,7 @@ class BaseRouterWithLogging extends BaseRouter
 
     return $response;
   }
+  static $c = 0;
 
 
   protected function iteration_start (\Iterator $it, ServerRequestInterface $currentRequest,
@@ -145,7 +146,9 @@ class BaseRouterWithLogging extends BaseRouter
       self::$currentResponseSize = $currentResponse->getBody ()->getSize ();
     }
 
-    $this->routingLogger->write ("[@indent]");
+    ++self::$c;
+    $n = self::$c;
+    $this->routingLogger->write ("<#indent>");
 
     try {
       $finalResponse = parent::iteration_start ($it, $currentRequest, $currentResponse,
@@ -154,7 +157,7 @@ class BaseRouterWithLogging extends BaseRouter
       return $finalResponse;
     }
     finally {
-      $this->routingLogger->write ("[@/indent]");
+      $this->routingLogger->write ("</#indent>");
       $this->routingLogger->write ("<#i|__rowHeader>Exit pipeline</#i>");
     }
   }
@@ -183,7 +186,7 @@ class BaseRouterWithLogging extends BaseRouter
 
   protected function iteration_stop (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $this->routingLogger->write ("</div><#i|__rowHeader>Pipeline ended</#i>");
+    $this->routingLogger->write ("<#i|__rowHeader>Pipeline ended</#i>");
 
     return parent::iteration_stop ($request, $response, $next);
   }
