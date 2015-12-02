@@ -3,7 +3,7 @@ namespace Selenia\Http\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
-use Selenia\Exceptions\HttpException;
+use Selenia\Http\HttpUtil;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 
 /**
@@ -25,6 +25,6 @@ class URINotFoundMiddleware implements RequestHandlerInterface
     $l    = strlen ($base);
     if ($l && substr ($path, 0, $l) == $base)
       $path = substr ($path, $l);
-    throw new HttpException (404, "Invalid URL", "Virtual URL: <kbd>$path</kbd>");
+    return HttpUtil::send ($response, 404, "Invalid URL", "Virtual URL: <kbd>$path</kbd>");
   }
 }
