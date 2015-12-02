@@ -130,8 +130,8 @@ class WebConsoleMiddleware implements RequestHandlerInterface
                          "<#section|APPLICATION MIDDLEWARE STACK &nbsp;┊&nbsp; RUN HISTORY>")
                 ->write ($log)
                 ->write ("<#row>Return from ")->typeName ($this)->write ("</#row>")
-                ->write ("</#indent>")
                 ->write ("<#row><i>(log entries from this point on can't be displayed)</i></#row>")
+                ->write ("</#indent>")
                 ->write ("<#row>Exit stack 1</#row>")
                 ->write ("<#row>End of routing log</#row>")
                 ->write ("</#section>");

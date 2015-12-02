@@ -5,6 +5,8 @@ use Iterator;
 use PhpKit\WebConsole\Lib\Debug;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Exceptions\HttpException;
+use Selenia\Interfaces\Http\ErrorRendererInterface;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
 use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
@@ -19,7 +21,8 @@ abstract class BaseRouter implements RouterInterface
 {
   use InspectionTrait;
 
-  static public $INSPECTABLE = ['routingEnabled', 'handlers'];
+  static public  $INSPECTABLE  = ['routingEnabled', 'handlers'];
+  static private $stackCounter = 0;
   /**
    * @var bool When false, the iteration keys of the pipeline elements are ignored;
    * when true (the default), they are used as routing patterns.
@@ -35,19 +38,27 @@ abstract class BaseRouter implements RouterInterface
    * @var InjectorInterface
    */
   protected $injector;
-
+  /**
+   * For use by logging/debugging decorators.
+   * @var int
+   */
   protected $stackId;
+  /**
+   * @var ErrorRendererInterface
+   */
+  private $errorRenderer;
   /**
    * @var RouteMatcherInterface
    */
   private $matcher;
 
-  static private $stackCounter = 0;
-
-  public function __construct (RouteMatcherInterface $matcher, InjectorInterface $injector)
+  public function __construct (RouteMatcherInterface $matcher,
+                               ErrorRendererInterface $errorRenderer,
+                               InjectorInterface $injector)
   {
-    $this->matcher  = $matcher;
-    $this->injector = $injector;
+    $this->matcher       = $matcher;
+    $this->injector      = $injector;
+    $this->errorRenderer = $errorRenderer;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -147,7 +158,13 @@ abstract class BaseRouter implements RouterInterface
   protected function callHandler (callable $handler, ServerRequestInterface $request, ResponseInterface $response,
                                   callable $next)
   {
-    $response = $handler ($request, $response, $next);
+    try {
+      $response = $handler ($request, $response, $next);
+    }
+    catch (HttpException $error) {
+      // Convert HTTP exceptions to normal responses
+      return $this->errorRenderer->render ($request, $error);
+    }
 
     if (!$response)
       throw new \RuntimeException (sprintf (
@@ -173,7 +190,7 @@ abstract class BaseRouter implements RouterInterface
    * @param ServerRequestInterface $currentRequest
    * @param ResponseInterface      $currentResponse
    * @param callable               $nextHandlerAfterIteration
-   * @param int                    $stackId
+   * @param int                    $stackId For use by logging/debuggin decorators.
    * @return ResponseInterface
    */
   protected function iteration_start (Iterator $it, ServerRequestInterface $currentRequest,
@@ -190,7 +207,7 @@ abstract class BaseRouter implements RouterInterface
         if ($first) $it->rewind ();
         else $it->next ();
 
-        $this->stackId = $stackId;
+        $this->stackId = $stackId; // for use on iteration_step() and iteration_stop()
 
         return $it->valid ()
           ? $this->iteration_step ($it->key (), $it->current (), $request, $response, $nextIterationClosure)

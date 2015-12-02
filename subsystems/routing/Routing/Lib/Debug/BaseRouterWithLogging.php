@@ -5,6 +5,7 @@ use Iterator;
 use PhpKit\WebConsole\Lib\Debug;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Interfaces\Http\ErrorRendererInterface;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
 use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
@@ -56,10 +57,12 @@ class BaseRouterWithLogging extends BaseRouter
    */
   protected $routingLogger;
 
-  public function __construct (InjectorInterface $injector, RouteMatcherInterface $matcher,
+  public function __construct (InjectorInterface $injector,
+                               RouteMatcherInterface $matcher,
+                               ErrorRendererInterface $errorRenderer,
                                RoutingLogger $routingLogger, $debugMode)
   {
-    parent::__construct ($matcher, $injector);
+    parent::__construct ($matcher, $errorRenderer, $injector);
 
     // Uncomment the following line if you want to see the routing log when the app crashes without the Debug Console
     // being displayed:
@@ -159,17 +162,16 @@ class BaseRouterWithLogging extends BaseRouter
 
       return $finalResponse;
     }
+    catch (\Throwable $e) {
+      $this->unwind ($e);
+    }
     catch (\Exception $e) {
-      $this->routingLogger->writef ("<#row>%sUnwinding the stack...</#row>",
-        self::$unwinding ? '' : '<span class=__alert>' . Debug::getType ($e) . '</span> ');
-      self::$unwinding = true;
-      throw $e;
+      $this->unwind ($e);
     }
     finally {
       $this->routingLogger->writef ("</#indent><#row>Exit stack %d</#row>", $stackId);
     }
   }
-
 
   protected function iteration_step ($key, $routable, ServerRequestInterface $request = null,
                                      ResponseInterface $response = null, callable $nextIteration)
@@ -179,7 +181,6 @@ class BaseRouterWithLogging extends BaseRouter
 
     return parent::iteration_step ($key, $routable, $request, $response, $nextIteration);
   }
-
 
   protected function iteration_stepMatchRoute ($key, $routable, ServerRequestInterface $request,
                                                ResponseInterface $response, callable $nextIteration)
@@ -191,14 +192,12 @@ class BaseRouterWithLogging extends BaseRouter
     return parent::iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
   }
 
-
   protected function iteration_stop (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     $this->routingLogger->writef ("<#row>End of stack %d</#row>", $this->stackId);
 
     return parent::iteration_stop ($request, $response, $next);
   }
-
 
   protected function runFactory (FactoryRoutable $factory)
   {
@@ -251,6 +250,14 @@ class BaseRouterWithLogging extends BaseRouter
       ->write ('<div class=\'indent\'>')
       ->simpleTable ($out, $title)
       ->write ('</div>');
+  }
+
+  private function unwind ($e)
+  {
+    $this->routingLogger->writef ("<#row>%sUnwinding the stack...</#row>",
+      self::$unwinding ? '' : '<span class=__alert>' . Debug::getType ($e) . '</span> ');
+    self::$unwinding = true;
+    throw $e;
   }
 
 }

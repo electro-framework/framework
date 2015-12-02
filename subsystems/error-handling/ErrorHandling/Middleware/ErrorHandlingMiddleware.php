@@ -8,18 +8,20 @@ use Psr\Log\LoggerInterface;
 use Selenia\Application;
 use Selenia\Exceptions\HttpException;
 use Selenia\Http\HttpUtil;
+use Selenia\Interfaces\Http\ErrorRendererInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Interfaces\Http\ResponseFactoryInterface;
 
 /**
- * Handles errors that occur throughout the HTTP middleware pipeline.
+ * Handles errors that occur throughout the HTTP request handling pipeline.
  *
- * <p>Exceptions / errors that are thrown further the pipeline will be catched here and transformed into normal HTTP responses
- * that will resume travelling the pipeline from this point backwards.
+ * <p>Exceptions / errors that are thrown further the pipeline will be catched here and transformed into normal HTTP
+ * responses that will resume travelling the pipeline from this point backwards.
  *
- * <p>**Note:** every request handler that follows this one on the pipeline should wrap it's request handling/forwarding
- * code in a `try/finally` block if it really needs to do something after the request is handled/delegated (ex. finishing
- * an open tag on the debug console), otherwise that code may not execute if an exception is thrown or an error occurs.
+ * <p>**Note:** every request handler that follows this one on the pipeline should wrap it's request
+ * handling/forwarding
+ * code in a `try/finally` block if it really needs to do something after the request is handled/delegated (ex.
+ * finishing an open tag on the debug console), otherwise that code may not execute if an exception is thrown or an
+ * error occurs.
  *
  * <p>Ex:
  *
@@ -33,119 +35,44 @@ use Selenia\Interfaces\Http\ResponseFactoryInterface;
  */
 class ErrorHandlingMiddleware implements RequestHandlerInterface
 {
+  /**
+   * @var Application
+   */
   private $app;
+  /**
+   * @var ErrorRendererInterface
+   */
+  private $errorRenderer;
+  /**
+   * @var LoggerInterface
+   */
   private $logger;
-  private $responseMaker;
 
-  function __construct (Application $app, LoggerInterface $logger, ResponseFactoryInterface $responseMaker)
+  function __construct (LoggerInterface $logger, ErrorRendererInterface $errorRenderer, Application $app)
   {
-    $this->app           = $app;
     $this->logger        = $logger;
-    $this->responseMaker = $responseMaker;
+    $this->errorRenderer = $errorRenderer;
+    $this->app           = $app;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     try {
       return $next();
-    } catch (\Exception $error) {
+    }
+    catch (\Exception $error) {
       $app = $this->app;
+
+      // First, start by logging the error to the application logger.
 
       $this->logger->error ($error->getMessage (),
         [
-          'exception' => $error, // PSR-3-compliant property
-          'stackTrace' => str_replace ("$app->baseDirectory/", '', $error->getTraceAsString ())
+          'exception'  => $error, // PSR-3-compliant property
+          'stackTrace' => str_replace ("$app->baseDirectory/", '', $error->getTraceAsString ()),
         ]
       );
 
-      // On debug mode, a debugging error popup is displayed for HTML responses.
-
-      if ($app->debugMode && HttpUtil::clientAccepts ($request, 'text/html'))
-        return ErrorConsole::display ($error, $response);
-
-      // Otherwise, exceptions are shown as a panel (for HTML responses) or they are encoded
-      // into one of the supported output formats.
-
-      $response = $this->responseMaker->makeStream ();
-      $body     = $response->getBody ();
-
-      // The message is assumed to be a plain, one-line string (no formatting)
-      $message = $error->getMessage ();
-      $status  = $error->getCode ();
-      $info    = property ($error, 'info');
-
-      if (HttpUtil::clientAccepts ($request, 'text/html')) {
-        $response = $response->withHeader ('Content-Type', 'text/html');
-        $body->write ("<!DOCTYPE html>
-<html>
-  <head>
-    <title>$message</title>
-    <style>
-body {
-  font-family:sans-serif;
-  background: #eee;
-}
-kbd {
-  color:#00C;
-  font-size:15px;
-  font-family:menlo,sans-serif;
-}
-h1 {
-  clear: both;
-  padding: 30px 60px 0;
-  color: #d44;
-}
-.container {
-  text-align: center;
-}
-.panel {
-  color:#999;
-  max-width: 400px;
-  margin: 50px auto;
-  padding: 0 30px 30px;
-  background: #FFF;
-  border-radius: 15px;
-  border: 1px solid #BBB;
-  display: inline-block;
-}
-    </style>
-  </head>
-  <body>
-    <div class='container'>
-      <div class='panel'>");
-
-        if ($error instanceof HttpException)
-          $body->write ("
-      <h5 style='float:left'>HTTP $status</h5>
-      <h5 style='float:right'>$app->appName</h5>
-      <h1>$message</h1>&nbsp;
-      <p align=center>$info</p>");
-
-        else $body->write ("
-      <h5>$app->appName</h5>
-      <h1 style='clear:both' align=center>$message</h1>&nbsp;
-      <p align=center>$info</p>");
-
-        $body->write ("
-      </div>
-    </div>
-  </body>
-</html>");
-      }
-      else if (HttpUtil::clientAccepts ($request, 'text/plain') || self::clientAccepts ($request, '*/*')) {
-        $response = $response->withHeader ('Content-Type', 'text/plain');
-        $body->write ($message);
-      }
-      else if (HttpUtil::clientAccepts ($request, 'application/json')) {
-        $response = $response->withHeader ('Content-Type', 'application/json');
-        $body->write (json_encode (['error' => ['code' => $status, 'message' => $message]]));
-      }
-      else if (HttpUtil::clientAccepts ($request, 'application/xml')) {
-        $response = $response->withHeader ('Content-Type', 'application/xml');
-        $body->write ("<?xml version=\"1.0\"?><error><code>$status</code><message>$message</message></error>");
-      }
-
-      return $response->withStatus ($error instanceof HttpException ? $status : 500, $message);
+      return $this->errorRenderer->render($request, $error);
     }
   }
 

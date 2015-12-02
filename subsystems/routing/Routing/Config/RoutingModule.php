@@ -16,7 +16,6 @@ use Selenia\Routing\Navigation\Navigation;
 use Selenia\Routing\Navigation\NavigationLink;
 use Selenia\Routing\Services\Debug\MiddlewareStackWithLogging;
 use Selenia\Routing\Services\Debug\RouterWithLogging;
-use Selenia\Routing\Middleware\Debug\RoutingMiddlewareWithLogging;
 use Selenia\Routing\Services\MiddlewareStack;
 use Selenia\Routing\Services\RouteMatcher;
 use Selenia\Routing\Services\Router;
@@ -35,18 +34,15 @@ class RoutingModule implements ServiceProviderInterface
       //
       ->alias (RouterInterface::class,
         $debugMode ? RouterWithLogging::class : Router::class)
-
       ->alias (MiddlewareStackInterface::class,
         $debugMode ? MiddlewareStackWithLogging::class : MiddlewareStack::class)
-
       ->alias (RouteMatcherInterface::class, RouteMatcher::class)
       //
       // The application's root/main router
       // (inject it to add routes to it)
       //
       ->share (ApplicationRouterInterface::class)
-      ->alias (ApplicationRouterInterface::class,
-        $debugMode ? RoutingMiddlewareWithLogging::class : RoutingMiddleware::class)
+      ->alias (ApplicationRouterInterface::class, RoutingMiddleware::class)
       //
       // The application's root/main middleware stack
       //

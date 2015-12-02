@@ -20,7 +20,11 @@ class URINotFoundMiddleware implements RequestHandlerInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    throw new HttpException (404, 'Page not available',
-      "The requested web address <kbd>{$request->getUri()->getPath()}</kbd> is not valid");
+    $path = $request->getUri ()->getPath ();
+    $base = $request->getAttribute ('baseUri', '');
+    $l    = strlen ($base);
+    if ($l && substr ($path, 0, $l) == $base)
+      $path = substr ($path, $l);
+    throw new HttpException (404, "Invalid URL", "Virtual URL: <kbd>$path</kbd>");
   }
 }
