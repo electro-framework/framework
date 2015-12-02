@@ -115,12 +115,12 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 
     $rootR = $handlers
       ? implode ('', map ($handlers, function ($r) {
-        return sprintf ('<#i|__rowHeader><#type>%s</#type></#i>', is_string($r) ? $r : typeOf ($r));
+        return sprintf ('<#row><#type>%s</#type></#row>', is_string ($r) ? $r : typeOf ($r));
       }))
       : '<#i><i>empty</i></#i>';
 
     $logger = $this->injector->make (RoutingLogger::class);
-    $log = $logger->getContent ();
+    $log    = $logger->getContent ();
 //    echo $log;exit;
 
 //    DebugConsole::logger ('routes')
@@ -129,9 +129,11 @@ class WebConsoleMiddleware implements RequestHandlerInterface
                 ->write ("<#section|REGISTERED ROUTERS>$rootR</#section>" .
                          "<#section|APPLICATION MIDDLEWARE STACK &nbsp;┊&nbsp; RUN HISTORY>")
                 ->write ($log)
-                ->write ("<#i|__rowHeader>Return from ")->typeName ($this)->write ("</#i>")
+                ->write ("<#row>Return from ")->typeName ($this)->write ("</#row>")
                 ->write ("</#indent>")
-                ->write ("<#i|__rowHeader>End of routing log <i>(log entries from this point on can't be displayed)</i></#i>")
+                ->write ("<#row><i>(log entries from this point on can't be displayed)</i></#row>")
+                ->write ("<#row>Exit stack 1</#row>")
+                ->write ("<#row>End of routing log</#row>")
                 ->write ("</#section>");
 
     return DebugConsole::outputContentViaResponse ($request, $response, true);

@@ -35,10 +35,14 @@ abstract class BaseRouter implements RouterInterface
    * @var InjectorInterface
    */
   protected $injector;
+
+  protected $stackId;
   /**
    * @var RouteMatcherInterface
    */
   private $matcher;
+
+  static private $stackCounter = 0;
 
   public function __construct (RouteMatcherInterface $matcher, InjectorInterface $injector)
   {
@@ -108,7 +112,7 @@ abstract class BaseRouter implements RouterInterface
         $routable = new \ArrayIterator($routable);
 
       if ($routable instanceof Iterator)
-        $response = $this->iteration_start ($routable, $request, $response, $next);
+        $response = $this->iteration_start ($routable, $request, $response, $next, ++self::$stackCounter);
 
       elseif (is_string ($routable)) {
         $routable = $this->injector->make ($routable);
@@ -169,20 +173,24 @@ abstract class BaseRouter implements RouterInterface
    * @param ServerRequestInterface $currentRequest
    * @param ResponseInterface      $currentResponse
    * @param callable               $nextHandlerAfterIteration
+   * @param int                    $stackId
    * @return ResponseInterface
    */
   protected function iteration_start (Iterator $it, ServerRequestInterface $currentRequest,
-                                      ResponseInterface $currentResponse, callable $nextHandlerAfterIteration)
+                                      ResponseInterface $currentResponse, callable $nextHandlerAfterIteration,
+                                      $stackId)
   {
     $nextIterationClosure =
       function (ServerRequestInterface $request = null, ResponseInterface $response = null, $first = false)
-      use ($it, &$nextIterationClosure, $nextHandlerAfterIteration, &$currentRequest, &$currentResponse) {
+      use ($it, &$nextIterationClosure, $nextHandlerAfterIteration, &$currentRequest, &$currentResponse, $stackId) {
 
         $request  = $currentRequest = ($request ?: $currentRequest);
         $response = $currentResponse = ($response ?: $currentResponse);
 
         if ($first) $it->rewind ();
         else $it->next ();
+
+        $this->stackId = $stackId;
 
         return $it->valid ()
           ? $this->iteration_step ($it->key (), $it->current (), $request, $response, $nextIterationClosure)

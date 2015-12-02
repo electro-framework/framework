@@ -42,6 +42,12 @@ class BaseRouterWithLogging extends BaseRouter
    */
   static private $currentResponseSize = 0;
   /**
+   * Are we currently unwinding the handler stacks due to a thrown exception?
+   * @var bool
+   */
+  static private $unwinding = false;
+
+  /**
    * @var bool
    */
   protected $debugMode;
@@ -66,14 +72,14 @@ class BaseRouterWithLogging extends BaseRouter
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $this->routingLogger->write ("<#i|__rowHeader>Enter new Router</#i>");
+    $this->routingLogger->write ("<#row>Enter new Router</#row>");
     self::$currentRequestSize  = $request->getBody ()->getSize ();
     self::$currentResponseSize = $response->getBody ()->getSize ();
     try {
       return parent::__invoke ($request, $response, $next);
     }
     finally {
-      $this->routingLogger->write ("<#i|__rowHeader>Exit Router</#i>");
+      $this->routingLogger->writef ("<#row>Exit %s</#row>", Debug::getType ($this));
     }
   }
 
@@ -83,7 +89,7 @@ class BaseRouterWithLogging extends BaseRouter
   {
     /** Router $this */
     $this->routingLogger
-      ->write ("<#i|__rowHeader>Call ")->typeName ($handler)->write ("</#i>");
+      ->writef ("<#row>Call %s</#row>", Debug::getType ($handler));
 
     if ($request && $request != self::$currentRequest) {
       $this->logRequest ($request, sprintf ('with a new %s object:', Debug::getType ($request)));
@@ -101,7 +107,7 @@ class BaseRouterWithLogging extends BaseRouter
     $response = parent::callHandler ($handler, $request, $response, $next);
 
 
-    $this->routingLogger->write ("<#i|__rowHeader>Return from ")->typeName ($handler)->write ('</#i>');
+    $this->routingLogger->writef ("<#row>Return from %s</#row>", Debug::getType ($handler));
 
     if ($response !== self::$currentResponse) {
       $this->logResponse ($response, sprintf ('with a new %s object:', Debug::getType ($response)));
@@ -118,13 +124,12 @@ class BaseRouterWithLogging extends BaseRouter
 
     return $response;
   }
-  static $c = 0;
-
 
   protected function iteration_start (\Iterator $it, ServerRequestInterface $currentRequest,
-                                      ResponseInterface $currentResponse, callable $nextHandlerAfterIteration)
+                                      ResponseInterface $currentResponse, callable $nextHandlerAfterIteration,
+                                      $stackId)
   {
-    $this->routingLogger->write ("<#i|__rowHeader>Begin stack</#i>");
+    $this->routingLogger->writef ("<#row>Begin stack %d</#row>", $stackId);
 
     if ($currentRequest && $currentRequest != self::$currentRequest) {
       $this->logRequest ($currentRequest,
@@ -146,19 +151,22 @@ class BaseRouterWithLogging extends BaseRouter
       self::$currentResponseSize = $currentResponse->getBody ()->getSize ();
     }
 
-    ++self::$c;
-    $n = self::$c;
     $this->routingLogger->write ("<#indent>");
 
     try {
       $finalResponse = parent::iteration_start ($it, $currentRequest, $currentResponse,
-        $nextHandlerAfterIteration);
+        $nextHandlerAfterIteration, $stackId);
 
       return $finalResponse;
     }
+    catch (\Exception $e) {
+      $this->routingLogger->writef ("<#row>%sUnwinding the stack...</#row>",
+        self::$unwinding ? '' : '<span class=__alert>' . Debug::getType ($e) . '</span> ');
+      self::$unwinding = true;
+      throw $e;
+    }
     finally {
-      $this->routingLogger->write ("</#indent>");
-      $this->routingLogger->write ("<#i|__rowHeader>Exit stack</#i>");
+      $this->routingLogger->writef ("</#indent><#row>Exit stack %d</#row>", $stackId);
     }
   }
 
@@ -176,8 +184,8 @@ class BaseRouterWithLogging extends BaseRouter
   protected function iteration_stepMatchRoute ($key, $routable, ServerRequestInterface $request,
                                                ResponseInterface $response, callable $nextIteration)
   {
-    $this->routingLogger->write (sprintf ("<#i|__rowHeader>Route pattern <b class=keyword>'$key'</b> matches request target " .
-                                          "<b class=keyword>'%s'</b></#i>",
+    $this->routingLogger->write (sprintf ("<#row>Route pattern <b class=keyword>'$key'</b> matches request target " .
+                                          "<b class=keyword>'%s'</b></#row>",
       self::$currentRequest->getRequestTarget ()));
 
     return parent::iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
@@ -186,7 +194,7 @@ class BaseRouterWithLogging extends BaseRouter
 
   protected function iteration_stop (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $this->routingLogger->write ("<#i|__rowHeader>Stack ended</#i>");
+    $this->routingLogger->writef ("<#row>End of stack %d</#row>", $this->stackId);
 
     return parent::iteration_stop ($request, $response, $next);
   }
@@ -194,7 +202,7 @@ class BaseRouterWithLogging extends BaseRouter
 
   protected function runFactory (FactoryRoutable $factory)
   {
-    $this->routingLogger->write ("<#i|__rowHeader>Factory routable invoked</#i>");
+    $this->routingLogger->write ("<#row>Factory routable invoked</#row>");
     return parent::runFactory ($factory);
   }
 
