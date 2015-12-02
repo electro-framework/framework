@@ -124,7 +124,7 @@ class BaseRouterWithLogging extends BaseRouter
   protected function iteration_start (\Iterator $it, ServerRequestInterface $currentRequest,
                                       ResponseInterface $currentResponse, callable $nextHandlerAfterIteration)
   {
-    $this->routingLogger->write ("<#i|__rowHeader>Begin pipeline</#i>");
+    $this->routingLogger->write ("<#i|__rowHeader>Begin stack</#i>");
 
     if ($currentRequest && $currentRequest != self::$currentRequest) {
       $this->logRequest ($currentRequest,
@@ -158,7 +158,7 @@ class BaseRouterWithLogging extends BaseRouter
     }
     finally {
       $this->routingLogger->write ("</#indent>");
-      $this->routingLogger->write ("<#i|__rowHeader>Exit pipeline</#i>");
+      $this->routingLogger->write ("<#i|__rowHeader>Exit stack</#i>");
     }
   }
 
@@ -186,7 +186,7 @@ class BaseRouterWithLogging extends BaseRouter
 
   protected function iteration_stop (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $this->routingLogger->write ("<#i|__rowHeader>Pipeline ended</#i>");
+    $this->routingLogger->write ("<#i|__rowHeader>Stack ended</#i>");
 
     return parent::iteration_stop ($request, $response, $next);
   }

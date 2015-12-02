@@ -125,14 +125,14 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 
 //    DebugConsole::logger ('routes')
 //                ->write ("<#section|REGISTERED ROUTERS>$rootR</#section>");
-    echo DebugConsole::logger ('routes')
+    DebugConsole::logger ('routes')
                 ->write ("<#section|REGISTERED ROUTERS>$rootR</#section>" .
-                         "<#section|APPLICATION MIDDLEWARE STACK'S RUN HISTORY>")
+                         "<#section|APPLICATION MIDDLEWARE STACK &nbsp;┊&nbsp; RUN HISTORY>")
                 ->write ($log)
                 ->write ("<#i|__rowHeader>Return from ")->typeName ($this)->write ("</#i>")
                 ->write ("</#indent>")
                 ->write ("<#i|__rowHeader>End of routing log <i>(log entries from this point on can't be displayed)</i></#i>")
-                ->write ("</#section>")->render();exit;
+                ->write ("</#section>");
 
     return DebugConsole::outputContentViaResponse ($request, $response, true);
   }
