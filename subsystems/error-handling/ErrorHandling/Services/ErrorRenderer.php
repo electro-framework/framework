@@ -1,13 +1,7 @@
 <?php
 namespace Selenia\ErrorHandling\Services;
 
-use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
-use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Application;
-use Selenia\Exceptions\HttpException;
-use Selenia\Http\HttpUtil;
-use Selenia\Interfaces\Http\ErrorRendererInterface;
-use Selenia\Interfaces\Http\ResponseFactoryInterface;
+use PhpKit\WebConsole\ErrorConsole\ErrorConsole;use Psr\Http\Message\ResponseInterface;use Psr\Http\Message\ServerRequestInterface;use Selenia\Application;use Selenia\Exceptions\HttpException;use Selenia\Http\Lib\Http;use Selenia\Interfaces\Http\ErrorRendererInterface;use Selenia\Interfaces\Http\ResponseFactoryInterface;
 
 /**
  * Renders an error HTTP response into a format supported by the client.
@@ -23,51 +17,57 @@ function __construct (Application $app, ResponseFactoryInterface $responseFactor
   $this->responseFactory = $responseFactory;
 }
 
-function render (ServerRequestInterface $request, $error)
+function render (ServerRequestInterface $request, ResponseInterface $response, $error = null)
 {
   $app = $this->app;
 
-  // Now, create an HTTP response.
+  if ($error) {
 
-  $response = $this->responseFactory->makeStream ('php://memory',
-    $error instanceof HttpException ? $error->getCode () : 500);
+    // On debug mode, a debugging error popup is displayed for Exceptions/Errors.
 
-  // On debug mode, a debugging error popup is displayed for HTML responses.
+    if ($app->debugMode && Http::clientAccepts ($request, 'text/html'))
+      return ErrorConsole::display ($error, $this->responseFactory->makeHtmlResponse ());
 
-  $status = $error instanceof HttpException ? $error->getCode () : 0;
-  if ($app->debugMode
-      && HttpUtil::clientAccepts ($request, 'text/html')
-      && (!$status || $status != 404)
-  )
-    return ErrorConsole::display ($error, $response);
+    $status = $error instanceof HttpException ? $error->getCode () : 500;
+    // Errors may contain an additional `getTitle()` method.
+    if (method_exists ($error, 'getTitle')) {
+      // The title is assumed to be a plain, one-line string (no formatting). If not, make it so.
+      $title   = strip_tags ($error->getTitle ());
+      $message = $error->getMessage ();
+    }
+    else {
+      $title   = strip_tags ($error->getMessage ());
+      $message = '';
+    }
+    $response = $response->withStatus ($status);
+  }
+  else {
+    $status  = $response->getStatusCode ();
+    $title   = $response->getReasonPhrase ();
+    $message = strval ($response->getBody ());
+  }
+  /** @var ResponseInterface $response */
+  $response = $response->withBody ($body = $this->responseFactory->makeBody ());
 
-  // Otherwise, exceptions are shown as a panel (for HTML responses) or they are encoded
-  // into one of the supported output formats.
+  // Otherwise, errors are rendered into a format accepted by the HTML client.
 
-  $body = $response->getBody ();
-
-  // The message is assumed to be a plain, one-line string (no formatting). If not, make it so.
-  $message = strip_tags ($error->getMessage ());
-  // Http errors may contain an additional `info` property with extended error information.
-  $info = property ($error, 'info', '');
-
-  if (HttpUtil::clientAccepts ($request, 'text/html')) {
+  if (Http::clientAccepts ($request, 'text/html')) {
     $response = $response->withHeader ('Content-Type', 'text/html');
     ob_start ();
-    $this->htmlTemplate ($message, $status, $info);
+    $this->htmlTemplate ($status, $title, $message);
     $body->write (ob_get_clean ());
   }
-  else if (HttpUtil::clientAccepts ($request, 'application/json')) {
+  else if (Http::clientAccepts ($request, 'application/json')) {
     $response = $response->withHeader ('Content-Type', 'application/json');
-    $body->write (json_encode (['error' => ['code' => $status, 'message' => $message]]));
+    $body->write (json_encode (['error' => ['code' => $status, 'message' => $title]]));
   }
-  else if (HttpUtil::clientAccepts ($request, 'application/xml')) {
+  else if (Http::clientAccepts ($request, 'application/xml')) {
     $response = $response->withHeader ('Content-Type', 'application/xml');
-    $body->write ("<?xml version=\"1.0\"?><error><code>$status</code><message>$message</message></error>");
+    $body->write ("<?xml version=\"1.0\"?><error><code>$status</code><message>$title</message></error>");
   }
-  else if (HttpUtil::clientAccepts ($request, 'text/plain') || HttpUtil::clientAccepts ($request, '*/*')) {
+  else if (Http::clientAccepts ($request, 'text/plain') || Http::clientAccepts ($request, '*/*')) {
     $response = $response->withHeader ('Content-Type', 'text/plain');
-    $body->write ($message);
+    $body->write ($title);
   }
   // else render nothing
 
@@ -76,69 +76,79 @@ function render (ServerRequestInterface $request, $error)
 
 /**
  * Override this to render your customized template.
- * @param string $message The main message (single, unformatted line).
  * @param int    $status  If not zero, it will be displayed as an HTTP status code.
- * @param string $info    Additional HTML to display.
+ * @param string $title   The main message (single, unformatted line).
+ * @param string $message Additional HTML to display.
  */
-protected function htmlTemplate ($message, $status, $info)
+protected function htmlTemplate ($status, $title, $message)
 {
 ?><!DOCTYPE html>
 <html>
   <head>
-    <title><?= $message ?></title>
+    <title><?= $title ?></title>
     <style>
       body {
         font-family: Helvetica, Arial, sans-serif;
-        background: #eee;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        box-sizing: border-box;
+        background: #D5D5D5;
+        margin: 30px 40px 60px 40px;
       }
 
       kbd {
         color: #000;
         font-weight: 100;
         font-size: 15px;
-        font-family: monospace;
+        font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
       }
 
       h1 {
-        clear: both;
         font-weight: 300;
-        padding: 30px;
-        font-size: 24px;
+        margin: 0;
+        padding-bottom: 30px;
+        font-size: 28px;
       }
 
       h5 {
         font-size: 14px;
         font-weight: 300;
         margin: 0;
-        color: #ddd;
+        color: #BBB;
         text-align: center;
+        padding: 10px;
       }
 
       p {
         margin: 0;
-        padding: 16px 0;
+      }
+
+      body > div {
+        display: table-row;
       }
 
       .container {
+        background: #FFF;
+        display: table;
+        width: 100%;
+        height: 100%;
+        max-height: 400px;
+        color: #777;
         text-align: center;
+        box-shadow: 1px 1px 5px 0 rgba(0,0,0,0.3);
+        border-radius: 5px;
       }
 
-      .panel {
-        color: #777;
-        max-width: 600px;
-        min-width: 400px;
-        margin: 50px auto;
-        padding: 0 0 5px;
-        background: #FFF;
-        border: 1px solid #CCC;
-        display: inline-block;
-        border-radius: 5px;;
+      .row1, .row2 {
+        display: table-row;
       }
 
       header {
-        background: #555;
-        padding: 10px 30px;
-        border-radius: 5px 5px 0 0;;
+        display: table-cell;
+        padding: 10px 15px;
       }
 
       header::after {
@@ -148,34 +158,26 @@ protected function htmlTemplate ($message, $status, $info)
       }
 
       article {
-        padding: 15px;
+        display: table-cell;
+        vertical-align: middle;
+        height: 100%;
+        padding-bottom: 56px;
       }
     </style>
   </head>
   <body>
-    <div class='container'>
-      <div class='panel'>
-        <?php
-        if ($status): ?>
-          <header>
-            <h5 style='float:left'>HTTP <?= $status ?> &nbsp;</h5>
-            <h5 style='float:right'>&nbsp; <?= $this->app->appName ?></h5>
-          </header>
-          <article>
-            <h1><?= $message ?></h1>
-            <p align=center><?= $info ?></p>
-          </article>
-          <?php
-
-        else: ?>
-          <header>
-            <h5><?= $this->app->appName ?></h5>
-          </header>
-          <article>
-            <h1 style='clear:both' align=center><?= $message ?></h1>
-            <p align=center><?= $info ?></p>
-          </article>
-        <?php endif ?>
+    <div class=container>
+      <div class=row1>
+        <header>
+          <h5 style='float:left'>HTTP <?= $status ?> &nbsp;</h5>
+          <h5 style='float:right'>&nbsp; <?= $this->app->appName ?></h5>
+        </header>
+      </div>
+      <div class=row2>
+        <article>
+          <h1><?= $title ?></h1>
+          <p align=center><?= $message ?></p>
+        </article>
       </div>
     </div>
   </body>

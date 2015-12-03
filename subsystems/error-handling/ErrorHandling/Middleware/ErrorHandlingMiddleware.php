@@ -1,13 +1,10 @@
 <?php
 namespace Selenia\ErrorHandling\Middleware;
 
-use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Selenia\Application;
-use Selenia\Exceptions\HttpException;
-use Selenia\Http\HttpUtil;
 use Selenia\Interfaces\Http\ErrorRendererInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 
@@ -58,7 +55,16 @@ class ErrorHandlingMiddleware implements RequestHandlerInterface
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     try {
-      return $next();
+      /** @var ResponseInterface $response */
+      $response = $next();
+
+      // Responses with status >= 400 will be converted into a "pretty" format, using the ErrorRenderer
+      // service, which supports multiple output formats, depending on the HTTP client expectations.
+      $status = $response->getStatusCode();
+      if ($status >= 400)
+        return $this->errorRenderer->render($request, $response);
+
+      return $response;
     }
     catch (\Exception $error) {
       $app = $this->app;
@@ -72,7 +78,7 @@ class ErrorHandlingMiddleware implements RequestHandlerInterface
         ]
       );
 
-      return $this->errorRenderer->render($request, $error);
+      return $this->errorRenderer->render($request, $response, $error);
     }
   }
 

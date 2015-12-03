@@ -1,17 +1,13 @@
 <?php
 namespace Selenia\Exceptions;
 
-use Exception;
-
-class FlashMessageException extends Exception
+class FlashMessageException extends ExceptionWithTitle
 {
   protected $status;
-  public    $title;
 
   public function __construct ($message, $status, $title = '')
   {
-    $this->title  = $title;
-    parent::__construct ($message, $status);
+    parent::__construct ($title, $message, $status);
   }
 
 }

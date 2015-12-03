@@ -175,7 +175,7 @@ class PackagistAPI
     $status = intval(explode(' ', $meta['wrapper_data'][0])[1]);
     if ($status < 200 || $status > 299) {
       if ($stopOnError)
-        throw new HttpException ($status, sprintf ("HTTP GET %s failed.%sServer response: %s",
+        throw new HttpException ($status, '', sprintf ("HTTP GET %s failed.%sServer response: %s",
           urldecode ($url), PHP_EOL, $status));
       return null;
     }

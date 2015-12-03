@@ -3,23 +3,16 @@ namespace Selenia\Exceptions;
 
 use Selenia\Exceptions;
 
-class HttpException extends \Exception
+class HttpException extends ExceptionWithTitle
 {
   /**
-   * Additional information about the error.
-   * @var string
-   */
-  public $info;
-
-  /**
    * @param int    $statusCode
-   * @param string $msg  Error description. It should be a single line of unformatted text.
-   * @param string $info Additional information about the error. It may contain HTML formatting.
+   * @param string $title Error description. It should be a single line of unformatted text.
+   * @param string $msg   Additional information about the error. It may contain HTML formatting.
    */
-  public function __construct ($statusCode = 500, $msg = '', $info = '')
+  function __construct ($statusCode = 500, $title = '', $msg = '')
   {
-    parent::__construct ($msg, $statusCode);
-    $this->info = $info;
+    parent::__construct ($title, $msg, $statusCode);
   }
 
 }

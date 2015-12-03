@@ -66,7 +66,8 @@ class BaseRouterWithLogging extends BaseRouter
 
     // Uncomment the following line if you want to see the routing log when the app crashes without the Debug Console
     // being displayed:
-//    $routingLogger = new DirectOutputLogger();
+    //
+    // $routingLogger = new DirectOutputLogger();
 
     $this->routingLogger = $routingLogger;
     $this->debugMode     = $debugMode;

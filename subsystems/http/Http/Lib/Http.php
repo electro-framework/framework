@@ -1,10 +1,13 @@
 <?php
-namespace Selenia\Http;
+namespace Selenia\Http\Lib;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-class HttpUtil
+/**
+ * Utility methods for working with HTTP messages.
+ */
+class Http
 {
   /**
    * Checks if the HTTP client accepts the given content type.
