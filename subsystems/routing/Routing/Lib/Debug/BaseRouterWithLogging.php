@@ -136,10 +136,13 @@ class BaseRouterWithLogging extends BaseRouter
     $this->routingLogger->writef ("<#row>Begin stack %d</#row>", $stackId);
 
     if ($currentRequest && $currentRequest != self::$currentRequest) {
-      $this->logRequest ($currentRequest,
-        sprintf ('with %s %s object:',
-          self::$currentRequest ? 'a new' : 'the initial',
-          Debug::getType ($currentRequest))
+      if (!self::$currentRequest) {
+        $this->routingLogger
+          ->writef ("<#indent><table class=\"__console-table with-caption\"><caption>with the initial %s object &nbsp; <a class='fa fa-external-link' href='javascript:openConsoleTab(\"request\")'></a></caption></table></#indent>",
+            Debug::getType ($currentRequest));
+      }
+      else $this->logRequest ($currentRequest,
+        sprintf ('with a new %s object:', Debug::getType ($currentRequest))
       );
       self::$currentRequest     = $currentRequest;
       self::$currentRequestSize = $currentRequest->getBody ()->getSize ();
