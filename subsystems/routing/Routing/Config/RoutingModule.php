@@ -8,12 +8,8 @@ use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
 use Selenia\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\Navigation\NavigationInterface;
-use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
 use Selenia\Routing\Middleware\RoutingMiddleware;
-use Selenia\Routing\Navigation\Navigation;
-use Selenia\Routing\Navigation\NavigationLink;
 use Selenia\Routing\Services\Debug\MiddlewareStackWithLogging;
 use Selenia\Routing\Services\Debug\RouterWithLogging;
 use Selenia\Routing\Services\MiddlewareStack;
@@ -48,12 +44,7 @@ class RoutingModule implements ServiceProviderInterface
       //
       ->share (ApplicationMiddlewareInterface::class)
       ->alias (ApplicationMiddlewareInterface::class,
-        $debugMode ? MiddlewareStackWithLogging::class : MiddlewareStack::class)
-      //
-      // Navigation
-      //
-      ->alias (NavigationInterface::class, Navigation::class)
-      ->alias (NavigationLinkInterface::class, NavigationLink::class);
+        $debugMode ? MiddlewareStackWithLogging::class : MiddlewareStack::class);
 
     if ($debugMode) $injector
       ->share (RoutingLogger::class);
