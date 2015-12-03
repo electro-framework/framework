@@ -7,7 +7,6 @@ use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
 use Robo\Task\Vcs\GitStack;
-use Selenia\Console\Lib\PackagistAPI;
 use Selenia\Console\Traits\ApplicationServiceTrait;
 use Selenia\Console\Traits\ConsoleIOServiceTrait;
 use Selenia\Console\Traits\FileSystemStackServiceTrait;
@@ -16,6 +15,7 @@ use Selenia\Console\Traits\ModulesRegistryServiceTrait;
 use Selenia\Console\Traits\ModulesUtilServiceTrait;
 use Selenia\Core\Assembly\ModuleInfo;
 use Selenia\Exceptions\HttpException;
+use Selenia\Lib\PackagistAPI;
 use Selenia\Tasks\Shared\InstallPackageTask;
 use Selenia\Tasks\Shared\UninstallPackageTask;
 

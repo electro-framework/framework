@@ -59,9 +59,12 @@ class ConsoleApplication extends Runner
       ->share ($injector)
       ->alias ('Selenia\Interfaces\InjectorInterface', get_class ($injector));
 
+    /** @var Application $application */
     $application = $injector
       ->share (Application::class)
       ->make (Application::class);
+
+    $application->isConsoleBased = true;
     $application->setup (getcwd ());
 
     // Bootstrap the application's modules.

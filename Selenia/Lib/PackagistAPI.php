@@ -1,12 +1,16 @@
 <?php
-namespace Selenia\Console\Lib;
+namespace Selenia\Lib;
 use PhpCode;
 use RuntimeException;
+use Selenia\Console\Lib\int;
+use Selenia\Console\Lib\string;
 use Selenia\Exceptions\HttpException;
 use Selenia\Traits\FluentTrait;
 
 /**
- * An interface to packagist.org
+ * An interface to packagist.org.
+ *
+ * <p>It is self-contained and requires no external dependencies.
  *
  * @method $this query (string $name) Search for packages containing the specified text in the name or description.
  * @method $this tags (string ...$tag) Search for packages containing all the specified tags.

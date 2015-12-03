@@ -2,7 +2,16 @@
 
 ##### Selenia framework's core command-line tasks
 
+## Introduction
+
 These are the tasks that come bundled with the framework.
+
+These tasks allow you to run automation scripts that perform repetitive tasks like minification, compilation, unit testing, linting, etc.
+
+They can also assist you during the development process by:
+
+* Scaffolding Modules, Controllers, Views and many other framework-related constructs.
+* Installing / removing plugin modules.
 
 ## Installation
 

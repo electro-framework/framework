@@ -1,15 +1,10 @@
-# Task Runner
+# Console Application
 
 ##### Selenia framework's command-line interface
 
-A command-line interface to Selenia.
+## Introduction
 
-Allows one to run automation scripts the perform repetitive tasks like minification, compilation, unit testing, linting, etc.
-
-It can also assist the developer during the development process by:
-
-* Scaffolding Modules, Controllers, Views and many other framework-related constructs.
-* Installing / removing plugin modules.
+This package allows you to create console (command-line-based) applications with the Selenia framework.
 
 ## Installation
 

@@ -68,6 +68,18 @@ class Application
    */
   public $configPath = 'private/config';
   /**
+   * If `true` the application is a web app, otherwise it may be a console app.
+   * @see \Selenia\Application::$isConsoleBased
+   * @var bool
+   */
+  public $isWebBased = false;
+  /**
+   * If `true` the application is a console app, otherwise it may be a web app.
+   * @see \Selenia\Application::$isWebBased
+   * @var bool
+   */
+  public $isConsoleBased = false;
+  /**
    * Holds an array of multiple DataSourceInfo for each site page or null;
    * @var array
    */

@@ -63,9 +63,12 @@ class WebApplication
 
     // Create and register the foundational framework services.
 
+    /** @var Application $application */
     $application = $this->app = $this->injector
       ->share (Application::class)
       ->make (Application::class);
+
+    $application->isWebBased = true;
     $application->setup ($rootDir);
 
     // Pre-assembly setup.
@@ -111,14 +114,14 @@ class WebApplication
   {
     set_exception_handler ([$this, 'exceptionHandler']);
     $debug = $this->app->debugMode = getenv ('APP_DEBUG') == 'true';
-    $this->injector->defineParam('debugMode', $debug);
+    $this->injector->defineParam ('debugMode', $debug);
 
     ErrorConsole::init ($debug, $rootDir);
     ErrorConsole::setAppName ($this->app->appName);
 
-    $settings = new DebugConsoleSettings;
+    $settings                    = new DebugConsoleSettings;
     $settings->defaultPanelTitle = 'Inspector';
-    $settings->defaultPanelIcon = 'fa fa-search';
+    $settings->defaultPanelIcon  = 'fa fa-search';
     DebugConsole::init ($debug, $settings);
   }
 
