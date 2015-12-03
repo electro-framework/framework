@@ -68,7 +68,7 @@ class SessionMiddleware implements RequestHandlerInterface
     try {
       return $next();
     } catch (FlashMessageException $flash) {
-      $session->flashMessage ($flash->getMessage (), $flash->getCode (), $flash->title);
+      $session->flashMessage ($flash->getMessage (), $flash->getCode (), $flash->getTitle());
 
       $post = $request->getParsedBody ();
       if (is_array ($post))
