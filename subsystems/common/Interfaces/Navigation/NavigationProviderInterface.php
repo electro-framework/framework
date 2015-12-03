@@ -7,7 +7,11 @@ namespace Selenia\Interfaces\Navigation;
 interface NavigationProviderInterface
 {
   /**
-   * Returns a navigation map, which is an array of `URL => NavigationLinkInterface` mappings.
+   * Defines a navigation map for the module.
+   *
+   * ##### Navigation Maps
+   *
+   * A navigation map is an array of `URL => NavigationLinkInterface` mappings.
    *
    * <p>Array keys are URLs that can be specified on three formats:
    * 1. relative URL paths (ex: `some/path`)
@@ -17,8 +21,8 @@ interface NavigationProviderInterface
    * Absolute URL paths are always translated to paths relative to the application's base URL.<br>
    * If you do need a real absolute path, you must use the full URL format.
    *
-   * @param NavigationInterface $navigation You need this instance to generate links and assemble the navigation map.
-   * @return NavigationLinkInterface[] The navigation map.
+   * @param NavigationInterface $navigation Use this service to generate links, assemble the navigation map and register
+   *                                        it on the global navigation registry.
    */
-  function getNavigation (NavigationInterface $navigation);
+  function defineNavigation (NavigationInterface $navigation);
 }

@@ -8,6 +8,7 @@ use Selenia\Interfaces\AssignableInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationProviderInterface;
 
 /**
@@ -29,6 +30,10 @@ class ModuleServices
    */
   private $injector;
   /**
+   * @var NavigationInterface
+   */
+  private $navigationInterface;
+  /**
    * Stores temporarily the module path, for use by the other setters.
    * @var string
    */
@@ -39,7 +44,9 @@ class ModuleServices
    */
   private $postConfigs = [];
 
-  function __construct (Application $app, FileServerMappings $fileServerMappings, InjectorInterface $injector)
+  function __construct (Application $app,
+                        FileServerMappings $fileServerMappings,
+                        InjectorInterface $injector)
   {
     $this->app                = $app;
     $this->fileServerMappings = $fileServerMappings;
@@ -69,8 +76,11 @@ class ModuleServices
    */
   function provideNavigation (NavigationProviderInterface $provider)
   {
+    if (!$this->navigationInterface)
+      $this->navigationInterface = $this->injector->make (NavigationInterface::class);
+
+    $provider->defineNavigation ($this->navigationInterface);
 //    inspect ($this->getNavigation ($app->injector->make (NavigationInterface::class)));
-    $this->app->navigationProviders[] = $provider;
     return $this;
   }
 

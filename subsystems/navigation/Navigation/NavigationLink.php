@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Routing\Navigation;
+namespace Selenia\Navigation;
 
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Traits\InspectionTrait;

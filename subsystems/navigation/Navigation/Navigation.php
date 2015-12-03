@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Routing\Navigation;
+namespace Selenia\Navigation;
 
 use PhpKit\Flow\Flow;
 use Selenia\Exceptions\Fatal\ConfigException;
