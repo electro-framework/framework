@@ -23,6 +23,13 @@ interface InjectorInterface
   function buildExecutable ($callableOrMethodStr);
 
   /**
+   * Checks if a specific alias, delegate or shared instance has been registered on the injector.
+   * @param string $name A class name.
+   * @return bool True if the class or alias is defined.
+   */
+  function provides ($name);
+
+  /**
    * Define instantiation directives for the specified class
    *
    * @param string $name The class (or alias) whose constructor arguments we wish to define

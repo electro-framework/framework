@@ -45,12 +45,10 @@ class ModuleServices
   private $postConfigs = [];
 
   function __construct (Application $app,
-                        FileServerMappings $fileServerMappings,
                         InjectorInterface $injector)
   {
-    $this->app                = $app;
-    $this->fileServerMappings = $fileServerMappings;
-    $this->injector           = $injector;
+    $this->app      = $app;
+    $this->injector = $injector;
   }
 
   private static function throwInvalidConfigType ($cfg)
@@ -76,11 +74,12 @@ class ModuleServices
    */
   function provideNavigation (NavigationProviderInterface $provider)
   {
-    if (!$this->navigationInterface)
-      $this->navigationInterface = $this->injector->make (NavigationInterface::class);
+    if ($this->app->isWebBased) {
+      if (!$this->navigationInterface)
+        $this->navigationInterface = $this->injector->make (NavigationInterface::class);
 
-    $provider->defineNavigation ($this->navigationInterface);
-//    inspect ($this->getNavigation ($app->injector->make (NavigationInterface::class)));
+      $provider->defineNavigation ($this->navigationInterface);
+    }
     return $this;
   }
 
@@ -123,6 +122,8 @@ class ModuleServices
    */
   function publishDirs ($v)
   {
+    if (!$this->fileServerMappings)
+      $this->fileServerMappings = $this->injector->make (FileServerMappings::class);
     foreach ($v as $URI => $path)
       $this->fileServerMappings->map ($URI, "{$this->app->baseDirectory}/$path");
     return $this;
@@ -134,6 +135,8 @@ class ModuleServices
    */
   function publishPublicDirAs ($v)
   {
+    if (!$this->fileServerMappings)
+      $this->fileServerMappings = $this->injector->make (FileServerMappings::class);
     $this->fileServerMappings->map ($v, "$this->path/{$this->app->modulePublicPath}");
     return $this;
   }
@@ -201,8 +204,10 @@ class ModuleServices
   {
     // $router is not injected because it's retrieval must be postponed until after the routing module loads.
     /** @var ApplicationRouterInterface $router */
-    $router = $this->injector->make (ApplicationRouterInterface::class);
-    $router->add ($handler, $key, $after);
+    if ($this->app->isWebBased) {
+      $router = $this->injector->make (ApplicationRouterInterface::class);
+      $router->add ($handler, $key, $after);
+    }
     return $this;
   }
 

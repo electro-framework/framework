@@ -49,8 +49,8 @@ class NavigationLink implements NavigationLinkInterface
   function id ($id = null)
   {
     if (is_null ($id)) return $this->id;
-    if (isset($this->id))
-      throw new \InvalidArgumentException ("Duplicate link ID.");
+    if (isset($this->ids[$id]))
+      throw new \InvalidArgumentException ("Duplicate link ID: <kbd>$id</kbd>");
     $this->id = $id;
     return $this->ids[$id] = $this;
   }
@@ -62,7 +62,7 @@ class NavigationLink implements NavigationLinkInterface
 
   function links ($navigationMap)
   {
-    if (!is_iterable($navigationMap))
+    if (!is_iterable ($navigationMap))
       throw new \InvalidArgumentException ("The argument must be iterable.");
     $this->links = $navigationMap;
     return $this;

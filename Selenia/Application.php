@@ -244,12 +244,6 @@ class Application
    */
   public $name = 'selenia';
   /**
-   * A list of registered navigation providers on the application.
-   * <p>An array of callables with signature: <kbd>array ()</kbd>
-   * @var callable[]
-   */
-  public $navigationProviders = [];
-  /**
    * Maximum width and/or height for uploaded images.
    * Images exceeding this dimensions are resized to fit them.
    * @var int
@@ -458,35 +452,6 @@ class Application
     if ($port == ":80")
       $port = '';
     return "http://{$_SERVER['SERVER_NAME']}$port$URI";
-  }
-
-  protected function loadConfiguration ($vuri)
-  {
-    $_ = DIRECTORY_SEPARATOR;
-
-    // Load application-specific configuration.
-
-    $iniPath = "$this->rootPath{$_}$this->configPath{$_}$this->configFilename";
-    $this->loadConfig ($iniPath);
-
-    foreach ($this->subApplications as $prefix => $path) {
-      if (substr ($vuri, 0, strlen ($prefix)) == $prefix) {
-        $iniPath = "$this->rootPath{$_}$this->configPath{$_}$path";
-        $this->loadConfig ($iniPath);
-      }
-    }
-  }
-
-  private function loadConfig ($iniPath)
-  {
-    $ini = @include $iniPath;
-    if ($ini) {
-      extend ($this, $ini['main']);
-      unset ($ini['main']);
-    }
-    else
-      throw new ConfigException("Error parsing " . ErrorConsole::shortFileName ($iniPath));
-    $this->config = $ini;
   }
 
 }

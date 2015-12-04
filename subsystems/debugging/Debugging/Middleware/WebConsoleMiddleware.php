@@ -14,6 +14,7 @@ use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
 use Selenia\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Routing\Services\Router;
 use Selenia\Routing\Services\RoutingLogger;
@@ -35,17 +36,11 @@ class WebConsoleMiddleware implements RequestHandlerInterface
    * @var LoggerInterface
    */
   private $logger;
-  /**
-   * @var SessionInterface
-   */
-  private $session;
 
-  function __construct (Application $app, InjectorInterface $injector, SessionInterface $session,
-                        LoggerInterface $logger)
+  function __construct (Application $app, InjectorInterface $injector, LoggerInterface $logger)
   {
     $this->app      = $app;
     $this->injector = $injector;
-    $this->session  = $session;
     $this->logger   = $logger;
   }
 
@@ -55,6 +50,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     DebugConsole::registerPanel ('request', new PSR7RequestLogger ('Request', 'fa fa-paper-plane'));
     DebugConsole::registerPanel ('response', new PSR7ResponseLogger ('Response', 'fa fa-file'));
     DebugConsole::registerPanel ('routes', new ConsoleLogger ('Routing', 'fa fa-location-arrow'));
+    DebugConsole::registerPanel ('navigation', new ConsoleLogger ('Navigation', 'fa fa-compass big'));
     DebugConsole::registerPanel ('config', new ConsoleLogger ('Config.', 'fa fa-cogs'));
     DebugConsole::registerPanel ('session', new ConsoleLogger ('Session', 'fa fa-user'));
 //    DebugConsole::registerPanel ('DOM', new ConsoleLogger ('DOM', 'fa fa-sitemap'));
@@ -82,13 +78,21 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     // Response panel
     DebugConsole::logger ('response')->setResponse ($response);
 
+    // Navigation panel
+    if ($this->injector->provides (NavigationInterface::class)) {
+      $navigation = $this->injector->make (NavigationInterface::class);
+      DebugConsole::logger ('navigation')->inspect ($navigation);
+    }
+
     // Config. panel
     DebugConsole::logger ('config')->inspect ($app);
 
     // Session panel
-    DebugConsole::logger ('session')
-                ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="__doAction(\'logout\')">Log out</button>')
-                ->inspect ($this->session);
+    if ($this->injector->provides (SessionInterface::class)) {
+      DebugConsole::logger ('session')
+                  ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="__doAction(\'logout\')">Log out</button>')
+                  ->inspect ($this->injector->make (SessionInterface::class));
+    }
 
     // Routes panel
     /** @var Router $router */
@@ -138,4 +142,5 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 
     return DebugConsole::outputContentViaResponse ($request, $response, true);
   }
+
 }
