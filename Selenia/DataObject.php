@@ -221,38 +221,6 @@ class DataObject
         foreach ($this->fileFields as $field)
           $this->deleteFile ($field);
 
-      //cascadade this operation to linked database records (defined by foreign keys)
-
-      if (isset($this->fk)) {
-        foreach ($this->fk as $fk) {
-          if (isset($fk->module))
-            ModuleLoader::searchAndLoadClass ($fk->class, $fk->module);
-          $dataClass = $fk->class;
-          $data      = new $dataClass();
-          if (isset($fk->key))
-            $data->key = $fk->key;
-          if (!isset($data->primaryKeyName))
-            $data->primaryKeyName = $fk->field;
-          $list = $data->queryBy ("$fk->field=?", $data->primaryKeyName, null, [$this->getPrimaryKeyValue ()])
-                       ->fetchAll (PDO::FETCH_NUM);
-          for ($i = 0; $i < count ($list); ++$i) {
-            $data->setPrimaryKeyValue ($list[$i][0]);
-            $data->read ();
-            switch ($fk->action) {
-              case FKDeleteAction::DELETE_RECORD:
-                $data->delete ();
-                break;
-              case FKDeleteAction::SET_KEY_TO_NULL:
-                $data->{$fk->field} = null;
-                $data->update ();
-                break;
-              case FKDeleteAction::DENY:
-                throw new DataModelException($this,
-                  "This data object is being referenced by another one of type $fk->class and cannot be deleted.");
-            }
-          }
-        }
-      }
       $this->afterDelete ();
       database_commit ();
     } catch (Exception $e) {
