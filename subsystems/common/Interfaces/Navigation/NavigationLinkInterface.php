@@ -46,9 +46,10 @@ interface NavigationLinkInterface
    * Defines this link's child links.
    *
    * @param NavigationLinkInterface[]|\Traversable|callable $navigationMap An iterable value.
-   * @return $this|NavigationLinkInterface[]|\Traversable|callable You should call <kbd>iterator ($value)</kbd> to get
-   *                                                               an iterator from this return value before you can
-   *                                                               use it.
+   * @return $this|NavigationLinkInterface[]|\Traversable|callable         You should call <kbd>iterator($value)</kbd>
+   *                                                                       on the returned instance to get an iterator
+   *                                                                       that you can use to iterate the list of
+   *                                                                       links.
    */
   function links ($navigationMap);
 
@@ -100,7 +101,7 @@ interface NavigationLinkInterface
    * <p>If `true`, the link will be shown on menus, but it'll be disabled (and greyed out) until the current route
    * provides all the parameters required for generating a valid URL for this link.
    *
-   * <p>Enabling this setting can used to show the user that there are more links available, even if the user cannot
+   * <p>Enabling this setting can be used to show the user that there are more links available, even if the user cannot
    * select them until an additional selection is performed somehwere on those link's parent page.
    *
    * ###### Example

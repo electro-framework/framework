@@ -2,7 +2,8 @@
 namespace Selenia\Navigation;
 
 use PhpKit\Flow\Flow;
-use Selenia\Exceptions\Fatal\ConfigException;
+use Selenia\Exceptions\Fault;
+use Selenia\Faults\Faults;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Traits\InspectionTrait;
@@ -12,23 +13,20 @@ class Navigation implements NavigationInterface
 {
   use InspectionTrait;
 
+  /**
+   * @var NavigationLinkInterface[]
+   */
   private $ids = [];
   /**
    * @var NavigationLinkInterface[]
    */
   private $map = [];
-  /**
-   * Array of iterables. An iterable, on this context, is {@see NavigationLinkInterface}[] | {@see \Traversable} |
-   * `callable`.
-   * @var array
-   */
-  private $maps = [];
 
   function add ($navigationMap)
   {
     if (!is_iterable ($navigationMap))
       throw new \InvalidArgumentException ("The argument must be iterable.");
-    $this->maps[] = $navigationMap;
+    array_mergeInto ($this->map, $navigationMap);
     return $this;
   }
 
@@ -49,7 +47,7 @@ class Navigation implements NavigationInterface
 
   function getIterator ()
   {
-    return Flow::from ($this->maps)->recursiveUnfold (identity ())->getIterator ();
+    return Flow::from ($this->map)->recursiveUnfold (identity ())->getIterator ();
   }
 
   /**
@@ -68,6 +66,17 @@ class Navigation implements NavigationInterface
     return $link;
   }
 
+  function insertInto ($targetId, $navigationMap)
+  {
+    if (!is_iterable ($navigationMap))
+      throw new Fault (Faults::ARG_NOT_ITERABLE);
+    if (!isset($this->ids[$targetId]))
+      throw new Fault (Faults::LINK_NOT_FOUND, $targetId);
+    //TODO: array_mergeInto ($this->ids[$targetId]->links, $navigationMap);
+    return $this;
+
+  }
+
   function link ()
   {
     $link      = new NavigationLink;
@@ -79,7 +88,7 @@ class Navigation implements NavigationInterface
   {
     foreach ($this->getIterator () as $k => $v) {
       if (!is_string ($k))
-        throw new ConfigException ("Navigation maps must only contain string keys.");
+        throw new Fault (Faults::MAP_MUST_HAVE_STRING_KEYS);
 
     }
   }
