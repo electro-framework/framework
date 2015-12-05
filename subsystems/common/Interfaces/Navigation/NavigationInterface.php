@@ -11,12 +11,12 @@ use SplObjectStorage;
  * <p>There is, usually, one single instance of this interface for the whole application, unless you need to generate
  * additional menus.
  * <p>Modules may provide their own navigation maps that will be merged into the shared navigation instance.<br>
- * The shared instance will be responsable for generating the application's main menu, links and breadcrumbs.
+ * The shared instance will be responsible for generating the application's main menu, links and breadcrumbs.
  */
 interface NavigationInterface extends \IteratorAggregate
 {
   /**
-   * Merges a navigation map onto this navigation.
+   * Inserts a navigation map onto the root level of this navigation.
    *
    * @param NavigationLinkInterface[]|\Traversable|callable $navigationMap An iterable value.
    * @return $this

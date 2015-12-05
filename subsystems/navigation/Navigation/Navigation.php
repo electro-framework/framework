@@ -9,6 +9,10 @@ use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Traits\InspectionTrait;
 use SplObjectStorage;
 
+/**
+ * TODO: optimize navigation maps to be evaluated only on iteration.
+ * TODO: allow inserting maps into IDs that have not yet been defined.
+ */
 class Navigation implements NavigationInterface
 {
   use InspectionTrait;
@@ -22,12 +26,32 @@ class Navigation implements NavigationInterface
    */
   private $map = [];
 
+  /**
+   * Checks if the given argument is a valid iterable value. If it's not, it throws a fault.
+   * @param NavigationLinkInterface[]|\Traversable|callable $navMap
+   * @return \Iterator
+   * @throws Fault {@see Faults::ARG_NOT_ITERABLE}
+   */
+  static function validateNavMap ($navMap)
+  {
+    if (!is_iterable ($navMap))
+      throw new Fault (Faults::ARG_NOT_ITERABLE);
+  }
+
   function add ($navigationMap)
   {
-    if (!is_iterable ($navigationMap))
-      throw new \InvalidArgumentException ("The argument must be iterable.");
-    array_mergeInto ($this->map, $navigationMap);
+    self::validateNavMap ($navigationMap);
+    array_mergeIterable ($this->map, $navigationMap);
     return $this;
+  }
+
+  function buildMenu ()
+  {
+    foreach ($this->getIterator () as $k => $v) {
+      if (!is_string ($k))
+        throw new Fault (Faults::MAP_MUST_HAVE_STRING_KEYS);
+
+    }
   }
 
   function buildPath ($url)
@@ -47,7 +71,10 @@ class Navigation implements NavigationInterface
 
   function getIterator ()
   {
-    return Flow::from ($this->map)->recursiveUnfold (identity ())->getIterator ();
+    return new \ArrayIterator($this->map);
+    return Flow::from ($this->map)->recursiveUnfold (function (NavigationLinkInterface $link, $key, $depth) {
+
+    })->getIterator ();
   }
 
   /**
@@ -68,13 +95,10 @@ class Navigation implements NavigationInterface
 
   function insertInto ($targetId, $navigationMap)
   {
-    if (!is_iterable ($navigationMap))
-      throw new Fault (Faults::ARG_NOT_ITERABLE);
     if (!isset($this->ids[$targetId]))
       throw new Fault (Faults::LINK_NOT_FOUND, $targetId);
-    //TODO: array_mergeInto ($this->ids[$targetId]->links, $navigationMap);
+    $this->ids[$targetId]->merge ($navigationMap);
     return $this;
-
   }
 
   function link ()
@@ -82,15 +106,6 @@ class Navigation implements NavigationInterface
     $link      = new NavigationLink;
     $link->ids =& $this->ids;
     return $link;
-  }
-
-  function buildMenu ()
-  {
-    foreach ($this->getIterator () as $k => $v) {
-      if (!is_string ($k))
-        throw new Fault (Faults::MAP_MUST_HAVE_STRING_KEYS);
-
-    }
   }
 
 }

@@ -6,7 +6,8 @@ use Selenia\Faults\Faults as F;
 interface Faults
 {
   const MESSAGES = [
-    F::ARG_NOT_ITERABLE => 'The argument must be iterable',
-    F::LINK_NOT_FOUND   => 'Navigation link \'%s\' was not found',
+    F::ARG_NOT_ITERABLE  => 'The argument must be iterable',
+    F::DUPLICATE_LINK_ID => "Duplicate link ID: '%s'",
+    F::LINK_NOT_FOUND    => "Navigation link '%s' was not found",
   ];
 }

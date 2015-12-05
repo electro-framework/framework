@@ -1,9 +1,15 @@
 <?php
 namespace Selenia\Navigation;
 
+use Selenia\Exceptions\Fault;
+use Selenia\Faults\Faults;
+use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Traits\InspectionTrait;
 
+/**
+ * TODO: optimize children list to be evaluated only on iteration.
+ */
 class NavigationLink implements NavigationLinkInterface
 {
   use InspectionTrait;
@@ -18,16 +24,19 @@ class NavigationLink implements NavigationLinkInterface
    */
   public $ids;
   /**
-   * Note: this is public so that a {@see NavigationInterface} instance can set it when building the navigation.
-   * The URL is not available at the time of the link's creation and it will only become available later.
+   * Note: the URL is not available at the time of the link's creation and it will only become available later.
+   * <p>Note: this is public so that a {@see NavigationInterface} instance can set it when building the navigation.
    * @var string
    */
   public $url = '';
 
-  private $enabled              = false;
-  private $icon                 = '';
-  private $id                   = '';
+  private $enabled = false;
+  private $icon    = '';
+  private $id      = '';
+  /** @var NavigationLinkInterface[] */
   private $links                = [];
+  /** @var NavigationLinkInterface|NavigationInterface */
+  private $parent;
   private $title                = '';
   private $visible              = true;
   private $visibleIfUnavailable = false;
@@ -37,6 +46,17 @@ class NavigationLink implements NavigationLinkInterface
     if (is_null ($enabled)) return $this->enabled;
     $this->enabled = $enabled;
     return $this;
+  }
+
+  public function getIterator ()
+  {
+    return array_filter ($this->links, function (NavigationLinkInterface $link, $key) {
+      if ($link->isAvailable ()) {
+        if (is_int ($key)) ; //...
+        return true;
+      }
+      return false;
+    }, ARRAY_FILTER_USE_BOTH);
   }
 
   function icon ($icon = null)
@@ -50,9 +70,15 @@ class NavigationLink implements NavigationLinkInterface
   {
     if (is_null ($id)) return $this->id;
     if (isset($this->ids[$id]))
-      throw new \InvalidArgumentException ("Duplicate link ID: <kbd>$id</kbd>");
+      throw new Fault (Faults::DUPLICATE_LINK_ID, $id);
     $this->id = $id;
     return $this->ids[$id] = $this;
+  }
+
+  function isAvailable ()
+  {
+    //TODO: missing functionality
+    return $this->enabled;
   }
 
   function isGroup ()
@@ -62,9 +88,26 @@ class NavigationLink implements NavigationLinkInterface
 
   function links ($navigationMap)
   {
-    if (!is_iterable ($navigationMap))
-      throw new \InvalidArgumentException ("The argument must be iterable.");
-    $this->links = $navigationMap;
+    $this->links = [];
+    return $this->merge($navigationMap);
+  }
+
+  function merge ($navigationMap)
+  {
+    Navigation::validateNavMap ($navigationMap);
+    /**
+     * @var string                  $url
+     * @var NavigationLinkInterface $link
+     */
+    foreach (iterator ($navigationMap) as $url => $link)
+      $this->links[$url] = $link->parent ($this);
+    return $this;
+  }
+
+  function parent ($parent = null)
+  {
+    if (is_null ($parent)) return $this->parent;
+    $this->parent = $parent;
     return $this;
   }
 
@@ -75,9 +118,11 @@ class NavigationLink implements NavigationLinkInterface
     return $this;
   }
 
-  function url ()
+  function url ($url = null)
   {
-    return $this->url;
+    if (is_null ($url)) return $this->url;
+    $this->url = $url;
+    return $this;
   }
 
   function visible ($visible = null)
