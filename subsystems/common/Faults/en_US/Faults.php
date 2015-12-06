@@ -9,5 +9,6 @@ interface Faults
     F::ARG_NOT_ITERABLE  => 'The argument must be iterable',
     F::DUPLICATE_LINK_ID => "Duplicate link ID: '%s'",
     F::LINK_NOT_FOUND    => "Navigation link '%s' was not found",
+    F::REQUEST_NOT_SET   => "No ServerRequest is set for the Navigation",
   ];
 }

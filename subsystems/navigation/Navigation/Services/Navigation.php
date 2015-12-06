@@ -1,11 +1,12 @@
 <?php
-namespace Selenia\Navigation;
+namespace Selenia\Navigation\Services;
 
-use PhpKit\Flow\Flow;
+use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Exceptions\Fault;
 use Selenia\Faults\Faults;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
+use Selenia\Navigation\Lib\NavigationLink;
 use Selenia\Traits\InspectionTrait;
 use SplObjectStorage;
 
@@ -25,6 +26,10 @@ class Navigation implements NavigationInterface
    * @var NavigationLinkInterface[]
    */
   private $map = [];
+  /**
+   * @var ServerRequestInterface
+   */
+  private $request;
 
   /**
    * Checks if the given argument is a valid iterable value. If it's not, it throws a fault.
@@ -45,18 +50,15 @@ class Navigation implements NavigationInterface
     return $this;
   }
 
-  function buildMenu ()
-  {
-    foreach ($this->getIterator () as $k => $v) {
-      if (!is_string ($k))
-        throw new Fault (Faults::MAP_MUST_HAVE_STRING_KEYS);
-
-    }
-  }
-
   function buildPath ($url)
   {
     // TODO: Implement method.
+  }
+
+  function computeUrls ()
+  {
+    foreach ($this->map as $k => $l)
+      $l->subpath ($k);
   }
 
   function currentTrail (SplObjectStorage $path = null)
@@ -72,9 +74,6 @@ class Navigation implements NavigationInterface
   function getIterator ()
   {
     return new \ArrayIterator($this->map);
-    return Flow::from ($this->map)->recursiveUnfold (function (NavigationLinkInterface $link, $key, $depth) {
-
-    })->getIterator ();
   }
 
   /**
@@ -106,6 +105,13 @@ class Navigation implements NavigationInterface
     $link      = new NavigationLink;
     $link->ids =& $this->ids;
     return $link;
+  }
+
+  function request (ServerRequestInterface $request)
+  {
+    if (is_null ($request)) return $this->request;
+    $this->request = $request;
+    return $this;
   }
 
 }

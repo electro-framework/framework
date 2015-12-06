@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Interfaces\Navigation;
 
+use Psr\Http\Message\ServerRequestInterface;
 use SplObjectStorage;
 
 /**
@@ -12,6 +13,14 @@ use SplObjectStorage;
  * additional menus.
  * <p>Modules may provide their own navigation maps that will be merged into the shared navigation instance.<br>
  * The shared instance will be responsible for generating the application's main menu, links and breadcrumbs.
+ *
+ * ### Navigation Maps
+ *
+ * A map is a sequence of key=>value pairs, where the key can be either a subpath (ex: 'admin/users') or a
+ * route parameter reference (ex: '&#64;userId'), and the value is a `NavigationLinkInterface` instance.
+ * <p>String keys set (or override) the links's `subpath` property.
+ * <p>Numeric keys or omitted keys do not change the link's `subpath`. You will need to set the link's `URL` property,
+ * otherwise it will become `null`.
  */
 interface NavigationInterface extends \IteratorAggregate
 {
@@ -92,5 +101,14 @@ interface NavigationInterface extends \IteratorAggregate
    * @return NavigationLinkInterface
    */
   function link ();
+
+  /**
+   * Provides the Navigation instance with information about the current HTTP request, so that it can generate
+   * a navigation that suits the application's current state.
+   * > <p>This is for internal use only.
+   * @param ServerRequestInterface $request
+   * @return $this|ServerRequestInterface
+   */
+  function request (ServerRequestInterface $request = null);
 
 }

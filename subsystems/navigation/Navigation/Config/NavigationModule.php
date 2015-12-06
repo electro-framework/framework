@@ -5,8 +5,8 @@ use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
-use Selenia\Navigation\Navigation;
-use Selenia\Navigation\NavigationLink;
+use Selenia\Navigation\Lib\NavigationLink;
+use Selenia\Navigation\Services\Navigation;
 
 class NavigationModule implements ServiceProviderInterface
 {
