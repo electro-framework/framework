@@ -63,8 +63,10 @@ class WebConsoleMiddleware implements RequestHandlerInterface
       if ($this->logger instanceof Logger)
         $this->logger->pushHandler (new WebConsoleMonologHandler(getenv ('DEBUG_LEVEL') || Logger::DEBUG));
 
+    //------------------------------------------------------------------
     /** @var ResponseInterface $response */
     $response = $next ();
+    //------------------------------------------------------------------
 
     $contentType = $response->getHeaderLine ('Content-Type');
     if ($contentType && $contentType != 'text/html')
@@ -80,7 +82,9 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 
     // Navigation panel
     if ($this->injector->provides (NavigationInterface::class)) {
+      /** @var NavigationInterface $navigation */
       $navigation = $this->injector->make (NavigationInterface::class);
+      $navigation->request ($request);
       DebugConsole::logger ('navigation')->inspect ($navigation);
     }
 

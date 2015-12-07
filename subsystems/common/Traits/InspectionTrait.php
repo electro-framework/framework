@@ -22,14 +22,15 @@ trait InspectionTrait
   function __debugInfo ()
   {
     if (isset (static::$INSPECTABLE)) {
-      $o = [];
       $i = static::$INSPECTABLE;
       if (!is_array ($i))
         throw new FatalException (sprintf ('<kbd class=type>>%s::$INSPECTABLE</kbd> is not a valid list of property names.',
           get_class ()));
-      foreach ($i as $prop) $o[$prop] = $this->$prop;
-      return $o;
     }
-    return get_object_vars ($this);
+    else $i = array_keys (get_object_vars ($this));
+    $o = [];
+    foreach ($i as $prop)
+      $o[$prop] = method_exists ($this, $prop) ? $this->$prop() : $this->$prop;
+    return $o;
   }
 }

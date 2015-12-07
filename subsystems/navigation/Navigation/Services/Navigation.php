@@ -7,58 +7,42 @@ use Selenia\Faults\Faults;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Navigation\Lib\NavigationLink;
-use Selenia\Traits\InspectionTrait;
 use SplObjectStorage;
 
 /**
- * TODO: optimize navigation maps to be evaluated only on iteration.
  * TODO: allow inserting maps into IDs that have not yet been defined.
  */
 class Navigation implements NavigationInterface
 {
-  use InspectionTrait;
-
   /**
    * @var NavigationLinkInterface[]
    */
-  private $ids = [];
+  private $IDs = [];
   /**
-   * @var NavigationLinkInterface[]
+   * @var NavigationLinkInterface
    */
-  private $map = [];
-  /**
-   * @var ServerRequestInterface
-   */
-  private $request;
+  private $rootLink;
 
-  /**
-   * Checks if the given argument is a valid iterable value. If it's not, it throws a fault.
-   * @param NavigationLinkInterface[]|\Traversable|callable $navMap
-   * @return \Iterator
-   * @throws Fault {@see Faults::ARG_NOT_ITERABLE}
-   */
-  static function validateNavMap ($navMap)
+  public function __construct ()
   {
-    if (!is_iterable ($navMap))
-      throw new Fault (Faults::ARG_NOT_ITERABLE);
+    $this->rootLink = $this->group ();
   }
 
-  function add ($navigationMap)
+  function IDs ()
   {
-    self::validateNavMap ($navigationMap);
-    array_mergeIterable ($this->map, $navigationMap);
+    return $this->IDs;
+  }
+
+  function add ($navigationMap, $targetId = null)
+  {
+    if (isset($targetId)) {
+      if (!isset($this->IDs[$targetId]))
+        throw new Fault (Faults::LINK_NOT_FOUND, $targetId);
+      $target = $this->IDs[$targetId];
+    }
+    else $target = $this->rootLink;
+    $target->merge ($navigationMap);
     return $this;
-  }
-
-  function buildPath ($url)
-  {
-    // TODO: Implement method.
-  }
-
-  function computeUrls ()
-  {
-    foreach ($this->map as $k => $l)
-      $l->subpath ($k);
   }
 
   function currentTrail (SplObjectStorage $path = null)
@@ -66,23 +50,14 @@ class Navigation implements NavigationInterface
     // TODO: Implement method.
   }
 
-  function getIds ()
-  {
-    return $this->ids;
-  }
-
   function getIterator ()
   {
-    return new \ArrayIterator($this->map);
+    return $this->rootLink->getIterator ();
   }
 
-  /**
-   * Returns a list of the root links for this navigation set.
-   * @return NavigationLinkInterface[]
-   */
-  function getTree ()
+  function getMenu ()
   {
-    // TODO: Implement getTree() method.
+    return $this->rootLink->getMenu();
   }
 
   function group ()
@@ -92,26 +67,38 @@ class Navigation implements NavigationInterface
     return $link;
   }
 
-  function insertInto ($targetId, $navigationMap)
-  {
-    if (!isset($this->ids[$targetId]))
-      throw new Fault (Faults::LINK_NOT_FOUND, $targetId);
-    $this->ids[$targetId]->merge ($navigationMap);
-    return $this;
-  }
-
+  /**
+   * Override this if you need to return another type of `NavigationLinkInterface`-compatible instance.
+   * @return NavigationLink
+   */
   function link ()
   {
     $link      = new NavigationLink;
-    $link->ids =& $this->ids;
+    $link->IDs =& $this->IDs;
     return $link;
   }
 
-  function request (ServerRequestInterface $request)
+  function request (ServerRequestInterface $request = null)
   {
-    if (is_null ($request)) return $this->request;
-    $this->request = $request;
+    if (is_null ($request)) return $this->rootLink ()->request ();
+    $this->rootLink ()->request ($request);
     return $this;
   }
 
+  function rootLink (NavigationLinkInterface $rootLink = null)
+  {
+    if (is_null ($rootLink)) return $this->rootLink;
+    $this->rootLink = $rootLink;
+    return $this;
+  }
+
+  function __debugInfo ()
+  {
+    return [
+      'IDs*'     => PA ($this->IDs)->keys ()->sort ()->join (', '),
+      'URLs*'   => iterator_to_array ($this->getIterator ()),
+      'request' => $this->request (),
+      'links' => iterator_to_array($this->getMenu())
+    ];
+  }
 }

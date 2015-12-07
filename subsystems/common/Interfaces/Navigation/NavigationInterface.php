@@ -25,20 +25,26 @@ use SplObjectStorage;
 interface NavigationInterface extends \IteratorAggregate
 {
   /**
+   * Returns a set of registered IDs and their corresponding links.
+   *
+   * <p>IDs are registered automatically when a call to `setId()` is done on a link generated from this instance using
+   * {@see link()}.
+   *
+   * @return NavigationLinkInterface[] A map of ID => NavigationLinkInterface
+   */
+  function IDs ();
+
+  /**
    * Inserts a navigation map onto the root level of this navigation.
    *
    * @param NavigationLinkInterface[]|\Traversable|callable $navigationMap An iterable value.
+   * @param string                                          $targetId      Optional ID of the link where the merge will
+   *                                                                       be performed. If not specified, the root
+   *                                                                       link will be targeted.
    * @return $this
    * @throws \InvalidArgumentException If the argument is not iterable.
    */
-  function add ($navigationMap);
-
-  /**
-   * Builds/updates the path of {@see NavigationLinkInterface} instances for the given relative URL path.
-   * @param string $url
-   * @return $this
-   */
-  function buildPath ($url);
+  function add ($navigationMap, $targetId = null);
 
   /**
    * A linear sequence of {@see NavigationLinkInterface} objects that represents the path to the currently displayed
@@ -58,20 +64,11 @@ interface NavigationInterface extends \IteratorAggregate
   function currentTrail (SplObjectStorage $path = null);
 
   /**
-   * Returns a set of registered IDs and their corresponding links.
-   *
-   * <p>IDs are registered automatically when a call to `setId()` is done on a link generated from this instance using
-   * {@see link()}.
-   *
-   * @return NavigationLinkInterface[] A map of ID => NavigationLinkInterface
+   * Returns the first level of navigation links, suitable for display on a navigation menu.
+   * Recursively iterating each link's `getMenu()` will yield the full navigation tree.
+   * @return \Iterator
    */
-  function getIds ();
-
-  /**
-   * Returns a linear list of all links that are relevant to build a menu.
-   * @return NavigationLinkInterface[]
-   */
-  function getTree ();
+  function getMenu ();
 
   /**
    * Creates a new navigation group object, bound to this Navigation.
@@ -86,17 +83,6 @@ interface NavigationInterface extends \IteratorAggregate
   function group ();
 
   /**
-   * Inserts a navigation map into this navigation, as children of a specific link.
-   *
-   * @param string                                          $targetId      The ID of the link where the merge will be
-   *                                                                       performed.
-   * @param NavigationLinkInterface[]|\Traversable|callable $navigationMap An iterable value.
-   * @return $this
-   * @throws
-   */
-  function insertInto ($targetId, $navigationMap);
-
-  /**
    * Creates a new navigation link object, bound to this Navigation.
    * @return NavigationLinkInterface
    */
@@ -106,9 +92,20 @@ interface NavigationInterface extends \IteratorAggregate
    * Provides the Navigation instance with information about the current HTTP request, so that it can generate
    * a navigation that suits the application's current state.
    * > <p>This is for internal use only.
-   * @param ServerRequestInterface $request
+   * @param ServerRequestInterface $request [optional]
    * @return $this|ServerRequestInterface
    */
   function request (ServerRequestInterface $request = null);
+
+  /**
+   * The root of the tree of navigation links for this navigation instance.
+   *
+   * <p>This link is not part of the navigation itself,
+   * <p>You do not usually set this property, as a root link will be created automatically and you can just add
+   * links to it, or to a specific descendant link.
+   * @param NavigationLinkInterface $rootLink [optional] The root of the links tree.
+   * @return $this|NavigationLinkInterface
+   */
+  function rootLink (NavigationLinkInterface $rootLink = null);
 
 }

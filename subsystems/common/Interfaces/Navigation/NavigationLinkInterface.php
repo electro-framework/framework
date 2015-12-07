@@ -1,27 +1,11 @@
 <?php
 namespace Selenia\Interfaces\Navigation;
 
+use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Exceptions\Fault;
 
 interface NavigationLinkInterface extends \IteratorAggregate
 {
-  /**
-   * The link's full URL or complete URL path.
-   *
-   * <p>It can be a path relative to the application's base path, an absolute path or a full URL address.
-   *
-   * <p>If the `url` property is not explicitly set, this is automatically computed from concatenating all subpaths
-   * (static or dynamic) or URLs from all links on the trail that begins on the home/root link and ends on this link.
-   *
-   * <p>Example: **`'admin/users'`** (which is relative to the app's base path)
-   *
-   * <p>If any link on the trail defines an absolute path or an full URL, it will be used for computing the subsequent
-   * links' URLs. If more than one absolute/full URL exist on the trail, the last one overrides previous ones.
-   *
-   * @return string|null If null, the link is disabled (it has no URL).
-   */
-  function actualUrl ();
-
   /**
    * Are links to this location enabled?
    *
@@ -34,15 +18,22 @@ interface NavigationLinkInterface extends \IteratorAggregate
    * > Reading the property (calling the method without an argument) will invoke the callback and return the resulting
    * > value.
    *
-   * @param bool|callable $enabled
+   * @param bool|callable $enabled [optional]
    * @return $this|bool $this if an argument is given, the property's value otherwise.
    */
   function enabled ($enabled = null);
 
   /**
+   * Returns the next level of navigation links, suitable for display on a navigation menu.
+   * Recursively iterating each link's `getMenu()` will yield the full navigation tree.
+   * @return \Iterator
+   */
+  function getMenu ();
+
+  /**
    * The menu item's icon.
    *
-   * @param string $icon A space-separated list of CSS class selectors. Ex: 'fa fa-home'
+   * @param string $icon [optional] A space-separated list of CSS class selectors. Ex: 'fa fa-home'
    * @return $this|string $this if an argument is given, the property's value otherwise.
    */
   function icon ($icon = null);
@@ -54,7 +45,7 @@ interface NavigationLinkInterface extends \IteratorAggregate
    *
    * <p>Default: **`null`** (no ID)
    *
-   * @param string $id
+   * @param string $id [optional]
    * @return $this|string $this if an argument is given, the property's value otherwise.
    * @throws \InvalidArgumentException If any child has a duplicate ID on the current navigation tree.
    */
@@ -92,7 +83,7 @@ interface NavigationLinkInterface extends \IteratorAggregate
    *                                                                       iterator that you can use to iterate the
    *                                                                       list of links.
    */
-  function links ($navigationMap);
+  function links ($navigationMap = null);
 
   /**
    * Merges a navigation map with this link's map.
@@ -105,29 +96,21 @@ interface NavigationLinkInterface extends \IteratorAggregate
   /**
    * The link's parent link or, if this is a root link, the navigation object.
    *
-   * @param NavigationLinkInterface|NavigationInterface $parent
-   * @return $this|NavigationLinkInterface|NavigationInterface $this if an argument is given, the property's value
-   *                                                           otherwise.
+   * @param NavigationLinkInterface|NavigationInterface $parent [optional]
+   * @return $this|NavigationLinkInterface $this if an argument is given, the property's value otherwise.
    */
-  function parent ($parent = null);
+  function parent (NavigationLinkInterface $parent = null);
 
   /**
-   * One or more segments of the full URL path that are contributed to it by this link. It is relative to the parent
-   * link's subpath.
+   * Associates an HTTP server request with this link, to enable URL parameters resolution.
    *
-   * <p>Example: the full path may be **`'admin/users/35/profile'`** and this link's subpath be **`'users/35'`**.
+   * <p>This is only done for the root link of a navigation hierarchy, all other links will read from their
+   * parent until a link with a set value is reached.
    *
-   * > <p>**This is for internal use only.**
-   *
-   * > <p>Setting this property propagates `subpath` and `activeUrl` changes to all child links and their descendants.
-   *
-   * > <p>This will be called only once for each of the Navigation's root links to setup the whole application's
-   * navigation.
-   *
-   * @param string $subpath If it's an integer, the subpath will be set to `null`, so it won't affect the computed URL.
-   * @return $this|string|null $this if an argument is given, the property's value otherwise.
+   * @param ServerRequestInterface $request [optional]
+   * @return $this|bool $this if an argument is given, the property's value otherwise.
    */
-  function subpath ($subpath = null);
+  function request (ServerRequestInterface $request = null);
 
   /**
    * The page title.
@@ -143,28 +126,40 @@ interface NavigationLinkInterface extends \IteratorAggregate
    * > Reading the property (calling the method without an argument) will invoke the callback and return the resulting
    * > value.
    *
-   * @param string|callable $title
+   * @param string|callable $title [optional]
    * @return $this|string $this if an argument is given, the property's value otherwise.
    */
   function title ($title = null);
 
   /**
-   * Set's an explicit URL for the link.
+   * The link's full URL or complete URL path.
    *
    * <p>It can be a path relative to the application's base path, an absolute path or a full URL address.
    *
    * <p>Example: **`'admin/users'`** (which is relative to the app's base path)
    *
-   * <p>You may explicitly override the `actualUrl` generated by default. The link's children URLs will be computed
-   * relatively to this propery's value.
+   * > <p>**Warning:** unlike other link properties, the value read back from this property after it is explicitly set
+   * will frequently differ from the set value.
+   *
+   * <p>If the `url` property is not explicitly set (defaults to `null`), when read, its value is automatically
+   * computed
+   * from concatenating all URLs (static or dynamic) from all links on the trail that begins on the home/root link and
+   * that ends on this link.
+   *
+   * <p>The computed value is cached when read for the first time, and subsequent reads will return the cached value
+   * (unless the final value is `null`, which is not cached).
+   *
+   * <p>If any link on the trail defines an absolute path or a full URL, it will be used for computing the subsequent
+   * links' URLs. If more than one absolute/full URL exist on the trail, the last one overrides previous ones.
    *
    * > ##### Dynamic evaluation
    * > Setting this property to a callback will make it dynamic and lazily evaluated.
    * > Reading the property (calling the method without an argument) will invoke the callback and return the resulting
    * > value.
    *
-   * @param string|callable $url
-   * @return $this|string $this if an argument is given, the property's value otherwise.
+   * @param string|callable $url [optional]
+   * @return $this|string|null $this if an argument is given, the property's value otherwise.
+   *                             If null, the link is non-navigable (it has no URL).
    */
   function url ($url = null);
 
@@ -180,7 +175,7 @@ interface NavigationLinkInterface extends \IteratorAggregate
    * > Reading the property (calling the method without an argument) will invoke the callback and return the resulting
    * > value.
    *
-   * @param bool|callable $visible
+   * @param bool|callable $visible [optional]
    * @return $this|bool $this if an argument is given, the property's value otherwise.
    */
   function visible ($visible = null);
@@ -207,7 +202,7 @@ interface NavigationLinkInterface extends \IteratorAggregate
    *
    * <p>Default: **`false`**
    *
-   * @param bool $visible
+   * @param bool $visible [optional]
    * @return $this|bool $this if an argument is given, the property's value otherwise.
    */
   function visibleIfUnavailable ($visible = null);

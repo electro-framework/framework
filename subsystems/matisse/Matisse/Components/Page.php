@@ -178,15 +178,15 @@ class Page extends Component
       $this->beginTag ("html");
       $this->addAttribute ('class',
         enum (' ',
-          iftrue ($this->browserIsIE, 'IE'),
-          iftrue ($this->browserIsIE6, 'IE6'),
-          iftrue ($this->browserIsIE7, 'IE7'),
-          iftrue ($this->browserIsIE8, 'IE8'),
-          iftrue ($this->browserIsIE9, 'IE9'),
-          iftrue ($this->browserIsFF, 'FF'),
-          iftrue ($this->browserIsSafari, 'SAFARI'),
-          iftrue ($this->browserIsChrome, 'CHROME'),
-          iftrue ($this->clientIsWindows, 'WIN')
+          when ($this->browserIsIE, 'IE'),
+          when ($this->browserIsIE6, 'IE6'),
+          when ($this->browserIsIE7, 'IE7'),
+          when ($this->browserIsIE8, 'IE8'),
+          when ($this->browserIsIE9, 'IE9'),
+          when ($this->browserIsFF, 'FF'),
+          when ($this->browserIsSafari, 'SAFARI'),
+          when ($this->browserIsChrome, 'CHROME'),
+          when ($this->clientIsWindows, 'WIN')
         )
       );
       $this->beginTag ('head');

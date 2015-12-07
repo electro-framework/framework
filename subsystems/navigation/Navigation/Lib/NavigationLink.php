@@ -1,12 +1,12 @@
 <?php
 namespace Selenia\Navigation\Lib;
 
+use PhpKit\Flow\Flow;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Exceptions\Fault;
 use Selenia\Faults\Faults;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
-use Selenia\Navigation\Services\Navigation;
 use Selenia\Traits\InspectionTrait;
 
 /**
@@ -17,41 +17,48 @@ class NavigationLink implements NavigationLinkInterface
   use InspectionTrait;
 
   /**
+   * Note: this will be assigned a reference to an array on a {@see NavigationInterface} instance.
+   * @var NavigationLinkInterface[]
+   */
+  public $IDs;
+  /**
    * Note: this is accessible to `Navigation`.
    * @var bool
    */
   public $group = false;
-  /**
-   * Note: this will be assigned a reference to an array on a {@see NavigationInterface} instance.
-   * @var NavigationLinkInterface[]
-   */
-  public $ids;
-  /** @var string */
-  private $actualUrl = '';
+  /** @var string|null When set, `url()` will always return its value. */
+  private $cachedUrl = null;
   /** @var bool|callable */
-  private $enabled = false;
+  private $enabled = true;
   /** @var string */
   private $icon = '';
   /** @var string */
   private $id = '';
   /** @var NavigationLinkInterface[] */
   private $links = [];
-  /** @var NavigationLinkInterface|NavigationInterface */
+  /** @var NavigationLinkInterface */
   private $parent;
-  /** @var string|null */
-  private $subpath = null;
+  /** @var ServerRequestInterface */
+  private $request;
   /** @var string|callable */
   private $title = '';
-  /** @var string|callable */
-  private $url = '';
+  /** @var string|callable|null When null, the value will be computed on demand */
+  private $url = null;
   /** @var bool|callable */
   private $visible = true;
   /** @var bool */
   private $visibleIfUnavailable = false;
 
-  function actualUrl ()
+  /**
+   * Checks if the given argument is a valid iterable value. If it's not, it throws a fault.
+   * @param NavigationLinkInterface[]|\Traversable|callable $navMap
+   * @return \Iterator
+   * @throws Fault {@see Faults::ARG_NOT_ITERABLE}
+   */
+  static function validateNavMap ($navMap)
   {
-
+    if (!is_iterable ($navMap))
+      throw new Fault (Faults::ARG_NOT_ITERABLE);
   }
 
   function enabled ($enabled = null)
@@ -64,9 +71,19 @@ class NavigationLink implements NavigationLinkInterface
 
   public function getIterator ()
   {
+    $x = Flow::from ($this->links)->recursiveUnfold(function ($v, $k, $depth) {
+      if (is_string($v)) return $v;
+      if ($v instanceof NavigationLinkInterface) return iterator ([$v->url(), $v->getIterator()]);
+      return $v;
+    });
+    return $x;
+  }
+
+  function getMenu ()
+  {
     $request = $this->getRequest ();
-    return array_filter ($this->links, function (NavigationLinkInterface $link, $key) use ($request) {
-      $url = is_int ($key) ? $link->url () : $key;
+    return Flow::from ($this->links)->where (function (NavigationLinkInterface $link, $key) use ($request) {
+      $url = $link->url ();
       if ($url && $url[0] == '@') {
         if (is_null ($url = $request->getAttribute ($url)))
           return $link->visibleIfUnavailable () && $link->visible ();
@@ -77,7 +94,7 @@ class NavigationLink implements NavigationLinkInterface
         return true;
       }
       return false;
-    }, ARRAY_FILTER_USE_BOTH);
+    })->reindex()->getIterator();
   }
 
   function icon ($icon = null)
@@ -90,17 +107,18 @@ class NavigationLink implements NavigationLinkInterface
   function id ($id = null)
   {
     if (is_null ($id)) return $this->id;
-    if (isset($this->ids[$id]))
+    if (isset($this->IDs[$id]))
       throw new Fault (Faults::DUPLICATE_LINK_ID, $id);
     $this->id = $id;
-    return $this->ids[$id] = $this;
+    return $this->IDs[$id] = $this;
   }
 
   function isActuallyEnabled ()
   {
-    if (isset($this->url) && $this->enabled ()) {
-      return $this->url && $this->url[0] == '@'
-        ? !is_null ($this->getRequest ()->getAttribute ($this->url))
+    $url = $this->url;
+    if (isset($url) && $this->enabled ()) {
+      return $url && $url[0] == '@'
+        ? !is_null ($this->getRequest ()->getAttribute ($url))
         : true;
     }
     return false;
@@ -108,9 +126,10 @@ class NavigationLink implements NavigationLinkInterface
 
   function isActuallyVisible ()
   {
-    if (isset($this->url) && $this->visible ()) {
-      return $this->url && $this->url[0] == '@'
-        ? !is_null ($this->getRequest ()->getAttribute ($this->url))
+    $url = $this->url;
+    if (isset($url) && $this->visible ()) {
+      return $url && $url[0] == '@'
+        ? !is_null ($this->getRequest ()->getAttribute ($url))
         : true;
     }
     return false;
@@ -121,59 +140,39 @@ class NavigationLink implements NavigationLinkInterface
     return $this->group;
   }
 
-  function links ($navigationMap)
+  function links ($navigationMap = null)
   {
+    if (is_null ($navigationMap)) return $this->links;
     $this->links = [];
     return $this->merge ($navigationMap);
   }
 
   function merge ($navigationMap)
   {
-    Navigation::validateNavMap ($navigationMap);
+    self::validateNavMap ($navigationMap);
     /**
      * @var string                  $key
      * @var NavigationLinkInterface $link
      */
     foreach (iterator ($navigationMap) as $key => $link) {
-      $this->links[$key] = $link->parent ($this);
+      $this->links[$key] = $link->parent ($this); // assigns $link and sets its parent
       if (is_string ($key)) $link->url ($key);
     }
     return $this;
   }
 
-  function parent ($parent = null)
+  function parent (NavigationLinkInterface $parent = null)
   {
     if (is_null ($parent)) return $this->parent;
     $this->parent = $parent;
     return $this;
   }
 
-  function subpath ($subpath = null)
+  function request (ServerRequestInterface $request = null)
   {
-    if (is_null ($subpath)) return $this->subpath;
-
-    if (is_int ($subpath))
-      $subpath = null;
-    elseif ($subpath != '' && $subpath[0] == '@')
-      $subpath = $this->getRequest ()->getAttribute ($subpath);
-    $this->subpath = $subpath;
-
-    $url = $this->url ();
-    if (!exists ($url)) $url = $subpath;
-
-    // If not an full/absolute URL, concatenate the URL to the parent's URL.
-    if (!str_beginsWith ('http', $url) && !($url != '' && $url[0] == '/')) {
-      $parent = $this->parent;
-      $base   = $parent instanceof NavigationInterface ? $parent->actualUrl () : '';
-      $url    = exists ($base) ? "$base/$url" : $url;
-    }
-    $this->actualUrl = $url;
-
-    // Propagate the URL generation to the children only if the current link has an URL.
-    if (isset($url))
-      foreach ($this->links as $key => $link)
-        $link->subpath ($key);
-
+    if (is_null ($request))
+      return $this->request ?: $this->request = ($this->parent ? $this->parent->request () : null);
+    $this->request = $request;
     return $this;
   }
 
@@ -187,8 +186,15 @@ class NavigationLink implements NavigationLinkInterface
 
   function url ($url = null)
   {
-    if (is_null ($url))
-      return is_callable ($url = $this->url) ? $url() : $url;
+    if (is_null ($url)) {
+      if (isset($this->cachedUrl))
+        return $this->cachedUrl;
+      if (is_callable ($url = $this->url))
+        $url = $url();
+      if (!str_beginsWith ('http', $url) && !($url != '' && $url[0] == '/'))
+        $url = enum ('/', $this->parent->url (), $url);
+      return $this->cachedUrl = $url;
+    }
     $this->url = $url;
     return $this;
   }
@@ -214,7 +220,8 @@ class NavigationLink implements NavigationLinkInterface
    */
   private function getRequest ()
   {
-    if (!$this->parent || !($request = $this->parent->request ()))
+    $request = $this->request ();
+    if (!$request)
       throw new Fault (Faults::REQUEST_NOT_SET);
     return $request;
   }
