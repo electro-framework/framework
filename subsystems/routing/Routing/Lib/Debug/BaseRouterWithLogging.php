@@ -96,7 +96,7 @@ class BaseRouterWithLogging extends BaseRouter
       ->writef ("<#row>Call %s</#row>", Debug::getType ($handler));
 
     if ($request && $request != self::$currentRequest) {
-      $this->logRequest ($request, sprintf ('with a new %s object:', Debug::getType ($request)));
+      $this->logRequest ($request, sprintf ('with another %s object:', Debug::getType ($request)));
       self::$currentRequest     = $request;
       self::$currentRequestSize = $request->getBody ()->getSize ();
     }
@@ -142,7 +142,7 @@ class BaseRouterWithLogging extends BaseRouter
             Debug::getType ($currentRequest));
       }
       else $this->logRequest ($currentRequest,
-        sprintf ('with a new %s object:', Debug::getType ($currentRequest))
+        sprintf ('with another %s object:', Debug::getType ($currentRequest))
       );
       self::$currentRequest     = $currentRequest;
       self::$currentRequestSize = $currentRequest->getBody ()->getSize ();
@@ -189,9 +189,9 @@ class BaseRouterWithLogging extends BaseRouter
   protected function iteration_stepMatchRoute ($key, $routable, ServerRequestInterface $request,
                                                ResponseInterface $response, callable $nextIteration)
   {
-    $this->routingLogger->write (sprintf ("<#row>Route pattern <b class=keyword>'$key'</b> matches request target " .
+    $this->routingLogger->writef ("<#row>Route pattern <b class=keyword>'$key'</b> matches request target " .
                                           "<b class=keyword>'%s'</b></#row>",
-      self::$currentRequest->getRequestTarget ()));
+      self::$currentRequest->getRequestTarget ());
 
     return parent::iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
   }
@@ -213,11 +213,10 @@ class BaseRouterWithLogging extends BaseRouter
    * @param ServerRequestInterface $r
    * @param                        $title
    */
-  private function logRequest ($r, $title)
+  private function logRequest ($r, $title, $forceShow = false)
   {
-    $showAll = !self::$currentRequest;
+    $showAll = !self::$currentRequest || $forceShow;
     $icon    = $showAll ? '' : '<sup>*</sup>';
-    $out     = [];
     if ($showAll || $r->getHeaders () != self::$currentRequest->getHeaders ())
       $out['Headers' . $icon] = map ($r->getHeaders (), function ($v) { return implode ('<br>', $v); });
     if ($showAll || $r->getAttributes () != self::$currentRequest->getAttributes ())

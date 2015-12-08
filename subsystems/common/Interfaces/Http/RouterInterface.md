@@ -421,6 +421,8 @@ A route pattern has the following syntax:
 
 > `[]` encloses optional elements
 
+> `()` groups elements
+
 > `|` separates alternatives
 
 > All other symbol/punctuation characters are themselves.
@@ -438,25 +440,30 @@ The pattern part **must** end with a single space.
 
 It has the following syntax:
 
-`.|*|literal|@param`
+`(.|*|literal|@param)[...]`
 
 - an empty path pattern is not allowed; at least on character must be specified. 
 
 - `.` matches an empty URL path, which means either the path is the root path `/` or the path segment matched by the previous
 pattern was the final one on the URL.
 
-- `*` matches any path, excluding an empty path.
+- `*` matches any path (including an empty path) from that point until the path's end.
+  A new request object is generated with its path set to `''`.
+
+- `...` is similar to `*`, but it generates a new request object with a new path that is comprised of all characters
+  matched by the dots. 
 
 - `literal` is any literal text. You can use any character excluding the ones reserved for pattern matching.
-  You may also use `/` for matching multiple segments.
+  You may also use `/` for matching multiple segments.<br>
+  A new request object is generated with a new path that has the matched span removed.
   > The matcher assumes there is an implicit `/` at the end of any pattern, but it also matches if the URL
   does not end with `/`.  
   > Ex: `'user/37'` matches `'user/37/records'` and `'user/37'`, but not `'user/371'`
 
 - `@param` matches any character sequence until `/` and saves it as a route parameter with the given name.
-  You can retrieve it later via the request object, calling `getAttribute('@param')`.
+  You can retrieve it later via the request object, calling `getAttribute('@param')`.<br>
+  A new request object is generated with a new path that has the matched span removed.
   > Ex: when `'user/@id'` matches `'users/3'`, the router sets the route parameter `@id` to the value 3. You can read
     it later by calling `$request->getAttribute('@id')`.
   > <p>**Note:** `@param` also matches and empty path segment, ex: `users/`. The value of the captured parameter
     will be an empty string.
-

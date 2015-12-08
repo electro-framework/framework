@@ -163,7 +163,7 @@ abstract class BaseRouter implements RouterInterface
     }
     catch (HttpException $error) {
       // Convert HTTP exceptions to normal responses
-      return $this->errorRenderer->render ($request, $error);
+      return $this->errorRenderer->render ($request, $response, $error);
     }
 
     if (!$response)
@@ -187,19 +187,23 @@ abstract class BaseRouter implements RouterInterface
    * > This also works as a router extension point.
    *
    * @param Iterator               $it
-   * @param ServerRequestInterface $currentRequest
-   * @param ResponseInterface      $currentResponse
+   * @param ServerRequestInterface $originalRequest
+   * @param ResponseInterface      $originalResponse
    * @param callable               $nextHandlerAfterIteration
    * @param int                    $stackId For use by logging/debuggin decorators.
    * @return ResponseInterface
    */
-  protected function iteration_start (Iterator $it, ServerRequestInterface $currentRequest,
-                                      ResponseInterface $currentResponse, callable $nextHandlerAfterIteration,
+  protected function iteration_start (Iterator $it, ServerRequestInterface $originalRequest,
+                                      ResponseInterface $originalResponse, callable $nextHandlerAfterIteration,
                                       $stackId)
   {
+    $currentRequest = $originalRequest;
+    $currentResponse = $originalResponse;
     $nextIterationClosure =
       function (ServerRequestInterface $request = null, ResponseInterface $response = null, $first = false)
-      use ($it, &$nextIterationClosure, $nextHandlerAfterIteration, &$currentRequest, &$currentResponse, $stackId) {
+      use ($it, &$nextIterationClosure, $nextHandlerAfterIteration, &$currentRequest, &$currentResponse,
+        $stackId, $originalRequest //, $originalResponse
+      ) {
 
         $request  = $currentRequest = ($request ?: $currentRequest);
         $response = $currentResponse = ($response ?: $currentResponse);
@@ -211,7 +215,7 @@ abstract class BaseRouter implements RouterInterface
 
         return $it->valid ()
           ? $this->iteration_step ($it->key (), $it->current (), $request, $response, $nextIterationClosure)
-          : $this->iteration_stop ($request, $response, $nextHandlerAfterIteration);
+          : $this->iteration_stop ($originalRequest, $response, $nextHandlerAfterIteration);
       };
 
     return $nextIterationClosure ($currentRequest, $currentResponse, true);
