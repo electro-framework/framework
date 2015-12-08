@@ -5,7 +5,6 @@ use PhpKit\Flow\Flow;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Exceptions\Fault;
 use Selenia\Faults\Faults;
-use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Traits\InspectionTrait;
 
@@ -15,6 +14,8 @@ use Selenia\Traits\InspectionTrait;
 class NavigationLink implements NavigationLinkInterface
 {
   use InspectionTrait;
+
+  const NOT_AVAILABLE_URL = '@';
 
   /**
    * Note: this will be assigned a reference to an array on a {@see NavigationInterface} instance.
@@ -71,9 +72,9 @@ class NavigationLink implements NavigationLinkInterface
 
   public function getIterator ()
   {
-    $x = Flow::from ($this->links)->recursiveUnfold(function ($v, $k, $depth) {
-      if (is_string($v)) return $v;
-      if ($v instanceof NavigationLinkInterface) return iterator ([$v->url(), $v->getIterator()]);
+    $x = Flow::from ($this->links)->recursiveUnfold (function ($v, $k, $depth) {
+      if (is_string ($v)) return $v;
+      if ($v instanceof NavigationLinkInterface) return iterator ([$v->url (), $v->getIterator ()]);
       return $v;
     });
     return $x;
@@ -94,7 +95,7 @@ class NavigationLink implements NavigationLinkInterface
         return true;
       }
       return false;
-    })->reindex()->getIterator();
+    })->reindex ()->getIterator ();
   }
 
   function icon ($icon = null)
@@ -115,13 +116,8 @@ class NavigationLink implements NavigationLinkInterface
 
   function isActuallyEnabled ()
   {
-    $url = $this->url;
-    if (isset($url) && $this->enabled ()) {
-      return $url && $url[0] == '@'
-        ? !is_null ($this->getRequest ()->getAttribute ($url))
-        : true;
-    }
-    return false;
+    $url = $this->url ();
+    return isset($url) && $this->enabled () && $url != self::NOT_AVAILABLE_URL;
   }
 
   function isActuallyVisible ()
@@ -193,6 +189,7 @@ class NavigationLink implements NavigationLinkInterface
         $url = $url();
       if (!str_beginsWith ('http', $url) && !($url != '' && $url[0] == '/'))
         $url = enum ('/', $this->parent->url (), $url);
+      $url = $this->evaluateUrl ($url);
       return $this->cachedUrl = $url;
     }
     $this->url = $url;
@@ -212,6 +209,21 @@ class NavigationLink implements NavigationLinkInterface
     if (is_null ($visible)) return $this->visibleIfUnavailable;
     $this->visibleIfUnavailable = $visible;
     return $this;
+  }
+
+  private function evaluateUrl ($url)
+  {
+    $request = $this->getRequest ();
+    $available = true;
+    $url = preg_replace_callback ('/@\w+/', function ($m) use ($request, &$available) {
+      $v = $request->getAttribute ($m[0]);
+      if (is_null ($v)) {
+        $available = false;
+        return '';
+      }
+      return $v;
+    }, $url);
+    return $available ? $url : self::NOT_AVAILABLE_URL;
   }
 
   /**

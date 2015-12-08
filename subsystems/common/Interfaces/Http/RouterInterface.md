@@ -8,7 +8,7 @@ tree traversal is completed.
 > Note that not all nodes on the tree will be visited, as most routes will not match the request's URL.
 
 If the handler tree is exhausted, the router sends the request to the next handler on the application's main
-request handling pipeline.
+request handling stack.
 
 ### A short introduction to Selenia's HTTP handling concepts
 
@@ -66,37 +66,37 @@ application-specific logic.
 
 You can assemble middlewares into a **middleware stack**, which is a set of concentric middleware layers.
 
-##### Composing Request Handlers (the Handler Pipeline)
+##### Composing Request Handlers (the Handler Stack)
 
 Traditional middleware is implemented as a decorator pattern: it wraps around the next middleware on a stack and
 interceps HTTP requests and responses that flow in and out of it.
 
-Request handlers are composed in a **handler pipeline**.
+Request handlers are composed in a **handler stack**.
 
-Both the request and the response flow from handler to handler on the pipeline until a response is fully generated.
-At that point, the response starts moving backwards on the pipeline, evenutally being modified along the way, until the
-start of the pipeline is reached, at which point it will be sent to the HTTP client (usually the web browser).
+Both the request and the response flow from handler to handler on the stack until a response is fully generated.
+At that point, the response starts moving backwards on the stack, evenutally being modified along the way, until the
+start of the stack is reached, at which point it will be sent to the HTTP client (usually the web browser).
 
-If the request reaches the pipeline's end without a complete response being generated, the last handler will usually
+If the request reaches the stack's end without a complete response being generated, the last handler will usually
 just send back an `HTTP 404 Not Found` response.
 
-To make the request and the response advance on the pipeline, each handler **MUST** call the next handler directly, by 
+To make the request and the response advance on the stack, each handler **MUST** call the next handler directly, by 
 invoking the `$next` argument (the third parameter of a standard/common middleware signature).
 
 If a handler does not specifically invoke the next one, that next handler and all subsequent handlers will not be invoked
 for the current request, and the current handler's response (either the function's return value or the function's response
-argument) will start immediately moving backwards the path travelled previously trough the pipeline.
+argument) will start immediately moving backwards the path travelled previously trough the stack.
 
 #### The router middleware
 
-Selenia has a main, application-level, request handling pipeline. At a specific point on that pipeline, there is a
+Selenia has a main, application-level, request handling stack. At a specific point on that stack, there is a
 **routing middleware handler**, also known as a **router**.
 
 The router makes the request/response flow into a parallel tree-like structure of routes, comprised of patterns
 and routable elements (where most of them are also request handlers). This will be explained further ahead.
 
 You can picture this as a tree-like structure whose root is attached to a point in the linear request handling
-pipeline. The request/response must flow trought that tree before returning to the main pipeline, where it may resume
+stack. The request/response must flow trought that tree before returning to the main stack, where it may resume
 traveling forward (if there is no complete response to send back) or it may turn back and send the generated response
 backwards for eventual further processing and output to the HTTP client.
 
@@ -119,7 +119,7 @@ Each of these types are interpreted by the router as explained further below.
 
 ### Routes
 
-> **Route:** a rule for contitionally sending the request to a routable that branches from the current handler pipeline.
+> **Route:** a rule for contitionally sending the request to a routable that branches from the current handler stack.
 
 A route is implemented as a routable that is comprised of a routing pattern and an associated target routable (which may,
 in turn, connect to other routables in a tree-like structure).
@@ -206,8 +206,8 @@ keys**, and they'll be executed in order.
 
 As keyless routables always run, they are ideal for implementing traditional **middleware** (like filters, loggers, etc.).
 
-> In fact, an **iterable routable** is quite like a **handler pipeline**, but keys have special meaning because they are
-interpreted by a router, while a handler pipeline just blindly calls the next handler whenever a handler calls `$next()`. 
+> In fact, an **iterable routable** is quite like a **handler stack**, but keys have special meaning because they are
+interpreted by a router, while a handler stack just blindly calls the next handler whenever a handler calls `$next()`. 
 
 If a middleware performs its own routing, it can be considered a **route**.
 
@@ -394,13 +394,13 @@ For the path `user/37/records`:
 
 #### Handling errors
 
-Exceptions thrown from a handler will backtrace through the routing tree and throught the handler pipeline until a handler
+Exceptions thrown from a handler will backtrace through the routing tree and throught the handler stack until a handler
 catches them with a `try catch` block surrounding its "next" call.
 
 If a handler catches an exception, it can either re-throw it to be catched by a previous handler, or convert it to an
-HTTP response that travels back the pipeline.
+HTTP response that travels back the stack.
 
-> Exception handlers **SHOULD NEVER** suppress exceptions and resume executing the handler pipeline. 
+> Exception handlers **SHOULD NEVER** suppress exceptions and resume executing the handler stack. 
 
 ### Route patterns
 
@@ -415,11 +415,7 @@ for that; you can simply define a routable that checks those elements using plai
 
 A route pattern has the following syntax:
 
-`[methods:][ ]*`
-
-or
-
-`[methods:][ ][literal|@param][/...]`
+`[methods ]path`
 
 > **Grammar**
 
@@ -427,15 +423,29 @@ or
 
 > `|` separates alternatives
 
-> `...` indicates a repetition of the previous element
+> All other symbol/punctuation characters are themselves.
 
-> all other characters are themselves or define a label for a character sequence (ex: `param`).
+> Alphabetic characters define a label for a pattern part (ex: `methods`) or character sequence (ex: `literal`).
 
-- `method` can be one or more of `GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS` or any other HTTP method.
-  If not specified, it maches any method. To specify more than one, separate them with `|`.
+##### The methods pattern part
 
-- `*` matches any path. If not specified and the remaing pattern is empty, the pattern only macthes an empty path, which
-means either the path is the root path `/` or the path segment matched by the previous pattern is the final one on the URL.
+It can be one or more of `GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS` or any other HTTP method.
+If not specified, it maches any method. To specify more than one, separate them with `|`.
+
+The pattern part **must** end with a single space.
+
+##### The path pattern part 
+
+It has the following syntax:
+
+`.|*|literal|@param`
+
+- an empty path pattern is not allowed; at least on character must be specified. 
+
+- `.` matches an empty URL path, which means either the path is the root path `/` or the path segment matched by the previous
+pattern was the final one on the URL.
+
+- `*` matches any path, excluding an empty path.
 
 - `literal` is any literal text. You can use any character excluding the ones reserved for pattern matching.
   You may also use `/` for matching multiple segments.
@@ -444,7 +454,9 @@ means either the path is the root path `/` or the path segment matched by the pr
   > Ex: `'user/37'` matches `'user/37/records'` and `'user/37'`, but not `'user/371'`
 
 - `@param` matches any character sequence until `/` and saves it as a route parameter with the given name.
-  You can retrieve it later trought he request object, calling `getAttribute('@param')`.
-  > Ex: when `'user/:id'` matches `'users/3'`, the router sets the route parameter `@id` to the value 3. You can read
+  You can retrieve it later via the request object, calling `getAttribute('@param')`.
+  > Ex: when `'user/@id'` matches `'users/3'`, the router sets the route parameter `@id` to the value 3. You can read
     it later by calling `$request->getAttribute('@id')`.
+  > <p>**Note:** `@param` also matches and empty path segment, ex: `users/`. The value of the captured parameter
+    will be an empty string.
 

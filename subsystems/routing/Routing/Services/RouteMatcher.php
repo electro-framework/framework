@@ -9,7 +9,7 @@ use Selenia\Interfaces\Http\RouteMatcherInterface;
  */
 class RouteMatcher implements RouteMatcherInterface
 {
-  const SYNTAX = '/^ ([A-Z\|]+:\s*)? ( \* | (?: [\w\-@\/]* ) ) $/x';
+  const SYNTAX = '/^ ([A-Z\|]+\s)? ( \. | \* | (?: [\w\-\/@]+) (?:\*|\.\.\.)? ) $/x';
 
   function match ($pattern, ServerRequestInterface $request, ServerRequestInterface &$modifiedRequest)
   {
@@ -17,33 +17,32 @@ class RouteMatcher implements RouteMatcherInterface
     $path            = $request->getRequestTarget ();
 
     if (!preg_match (self::SYNTAX, $pattern, $m))
-      throw new ConfigException (sprintf ("Invalid route pattern matching expression: <kbd>%s</kbd>", $pattern));
+      throw new ConfigException (sprintf ("Invalid route pattern matching expression: '<kbd>%s</kbd>'", $pattern));
 
     array_push ($m, '', '');
     list ($all, $methods, $pathPattern) = $m;
 
-    if ($methods && !in_array ($request->getMethod (), explode ('|', rtrim ($methods, ' :'))))
+    if ($methods && !in_array ($request->getMethod (), explode ('|', rtrim ($methods))))
       return false;
-
-    // If $pathPattern is empty, it matches only if $path is also empty.
-    if (!$pathPattern)
-      return !strlen ($path); // Note: the == or === operators are not used because they caused problems.
 
     // The asterisk matches any path.
     if ($pathPattern == '*')
-      return true;
+      return !!strlen ($path);
 
-    $compiledPattern = preg_replace ('/@(\w+)/', '(?<$1>[^/]*)', $pathPattern);
+    // @parameters never match the empty path (which is encoded as a single dot)
+    $compiledPattern = preg_replace (
+      ['/(?<=[^\*\.])$/', '/\*$/', '/\.\.\.$/', '/\.$/', '/@(\w+)/', '[\[\]\{\}\(\)\.\?]'],
+      ['(?<_next>$)', '(?<_next>.*)', '(?<_next>)', '(?<_next>$)', '(?<$1>(?=(?:$|[^\.]))[^/]*)', '\\$0'], $pathPattern);
 
-    if (!preg_match ("#^$compiledPattern(?<_next>/|$)#", $path, $m, PREG_OFFSET_CAPTURE))
+    if (!preg_match ("#^$compiledPattern#", $path, $m2, PREG_OFFSET_CAPTURE))
       return false;
 
-    $newPath = substr ($path, $m['_next'][1] + 1);
+    $newPath = substr ($path, $m2['_next'][1] + 1);
     if ($path != $newPath)
       $request = $request->withRequestTarget ($newPath === false ? '' : $newPath);
 
-    foreach ($m as $k => $v)
-      if (is_string ($k) && $k[0] != '_')
+    foreach ($m2 as $k => $v)
+      if (is_string ($k) && $k[0] != '_') // exclude reserved _next key
         $request = $request->withAttribute ('@' . $k, $v[0]);
     $modifiedRequest = $request;
     return true;
