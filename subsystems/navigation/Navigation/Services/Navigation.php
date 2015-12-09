@@ -19,6 +19,10 @@ class Navigation implements NavigationInterface
    */
   private $IDs = [];
   /**
+   * @var SplObjectStorage
+   */
+  private $cachedTrail;
+  /**
    * @var NavigationLinkInterface
    */
   private $rootLink;
@@ -42,6 +46,10 @@ class Navigation implements NavigationInterface
         function ($link) {
           return $link->rawUrl ();
         }),
+      'Trail<sup>*</sup>'          => map ($this->currentTrail (),
+        function (NavigationLinkInterface $link) {
+          return $link->rawUrl();
+        }),
       'Navigation map<sup>*</sup>' => iterator_to_array ($this->rootLink),
       'request'                    => $this->request (),
     ];
@@ -59,9 +67,13 @@ class Navigation implements NavigationInterface
     return $this;
   }
 
-  function currentTrail (SplObjectStorage $path = null)
+  function currentTrail ()
   {
-    // TODO: Implement method.
+    if (isset($this->cachedTrail)) return $this->cachedTrail;
+    $trail = new SplObjectStorage;
+    $link  = $this->rootLink;
+    $this->matchChildrenOf ($link, $trail);
+    return $this->cachedTrail = $trail;
   }
 
   function getIterator ()
@@ -105,4 +117,17 @@ class Navigation implements NavigationInterface
     $this->rootLink = $rootLink;
     return $this;
   }
+
+  private function matchChildrenOf (NavigationLinkInterface $link, SplObjectStorage $trail)
+  {
+    /** @var NavigationLinkInterface $child */
+    foreach ($link->getMenu () as $child) {
+      if ($child->isActive ()) {
+        $trail->attach ($child);
+        $this->matchChildrenOf ($child, $trail);
+        return;
+      }
+    }
+  }
+
 }

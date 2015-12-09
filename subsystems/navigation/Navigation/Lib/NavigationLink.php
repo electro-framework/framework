@@ -105,6 +105,19 @@ class NavigationLink implements NavigationLinkInterface
     return $this->IDs[$id] = $this;
   }
 
+  function isActive ()
+  {
+    $request = $this->getRequest ();
+    $path    = $request->getUri ()->getPath ();
+    $base    = $request->getAttribute ('baseUri');
+    $path    = substr ($path, strlen ($base) + 1);
+    $myUrl   = $this->url ();
+    if (is_null($myUrl)) return false;
+    if ($myUrl == '') return true;
+    $myUrl = preg_quote ($this->url ());
+    return preg_match ("#^$myUrl(?:/|$)#", $path);
+  }
+
   function isActuallyEnabled ()
   {
     $this->url (); // updates $this->available
@@ -224,7 +237,7 @@ class NavigationLink implements NavigationLinkInterface
 
   /**
    * @return ServerRequestInterface
-   * @throws Fault
+   * @throws Fault Faults::REQUEST_NOT_SET
    */
   private function getRequest ()
   {

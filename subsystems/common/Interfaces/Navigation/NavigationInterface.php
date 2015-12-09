@@ -53,15 +53,14 @@ interface NavigationInterface extends \IteratorAggregate
    * <p>The set can be enumerated as a list of objects, with sequential integer keys.
    * > **Note:** no `SplObjectStorage` extra data is associated with elements on the set.
    *
-   * <p>All objects on the path are also on the navigation tree.
+   * > <p>All objects on the path come from the navigation tree; these are not clones.
    *
    * <p>This method also allows you to test if a link on the tree is also on the path (for instance, for deciding if a
    * link on a menu is selected). Use {@see SplObjectStorage::contains()} to check for that.
    *
-   * @param SplObjectStorage|null $path
    * @return $this|SplObjectStorage
    */
-  function currentTrail (SplObjectStorage $path = null);
+  function currentTrail ();
 
   /**
    * Returns the first level of navigation links, suitable for display on a navigation menu.

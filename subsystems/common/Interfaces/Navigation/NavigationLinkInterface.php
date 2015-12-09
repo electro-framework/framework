@@ -232,4 +232,12 @@ interface NavigationLinkInterface extends \IteratorAggregate
    */
   function visibleIfUnavailable ($visible = null);
 
+  /**
+   * Indicates if the link matches the current URL, either totally or partially.
+   *
+   * @return bool
+   * @throws Fault Faults::REQUEST_NOT_SET
+   */
+  function isActive ();
+
 }
