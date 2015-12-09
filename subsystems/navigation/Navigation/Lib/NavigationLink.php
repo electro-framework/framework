@@ -15,8 +15,6 @@ class NavigationLink implements NavigationLinkInterface
 {
   use InspectionTrait;
 
-  const NOT_AVAILABLE_URL = '@';
-
   /**
    * Note: this will be assigned a reference to an array on a {@see NavigationInterface} instance.
    * @var NavigationLinkInterface[]
@@ -27,6 +25,8 @@ class NavigationLink implements NavigationLinkInterface
    * @var bool
    */
   public $group = false;
+  /** @var bool */
+  private $available;
   /** @var string|null When set, `url()` will always return its value. */
   private $cachedUrl = null;
   /** @var bool|callable */
@@ -70,32 +70,23 @@ class NavigationLink implements NavigationLinkInterface
     return $this;
   }
 
+  public function getDescendants ()
+  {
+    return Flow::from ($this->links)->recursive (
+      function (NavigationLinkInterface $link) { return $link->links (); }
+    )->reindex ()->getIterator ();
+  }
+
   public function getIterator ()
   {
-    $x = Flow::from ($this->links)->recursiveUnfold (function ($v, $k, $depth) {
-      if (is_string ($v)) return $v;
-      if ($v instanceof NavigationLinkInterface) return iterator ([$v->url (), $v->getIterator ()]);
-      return $v;
-    });
-    return $x;
+    return Flow::from ($this->links)->reindex ()->getIterator ();
   }
 
   function getMenu ()
   {
-    $request = $this->getRequest ();
-    return Flow::from ($this->links)->where (function (NavigationLinkInterface $link, $key) use ($request) {
-      $url = $link->url ();
-      if ($url && $url[0] == '@') {
-        if (is_null ($url = $request->getAttribute ($url)))
-          return $link->visibleIfUnavailable () && $link->visible ();
-      }
-
-      if ($link->isActuallyEnabled ()) {
-        if (is_int ($key)) ; //...
-        return true;
-      }
-      return false;
-    })->reindex ()->getIterator ();
+    return Flow::from ($this->links)->where (
+      function (NavigationLinkInterface $link) { return $link->isActuallyVisible (); }
+    )->reindex ()->getIterator ();
   }
 
   function icon ($icon = null)
@@ -116,19 +107,14 @@ class NavigationLink implements NavigationLinkInterface
 
   function isActuallyEnabled ()
   {
-    $url = $this->url ();
-    return isset($url) && $this->enabled () && $url != self::NOT_AVAILABLE_URL;
+    $this->url (); // updates $this->available
+    return $this->enabled () && $this->available;
   }
 
   function isActuallyVisible ()
   {
-    $url = $this->url;
-    if (isset($url) && $this->visible ()) {
-      return $url && $url[0] == '@'
-        ? !is_null ($this->getRequest ()->getAttribute ($url))
-        : true;
-    }
-    return false;
+    $this->url (); // updates $this->available
+    return $this->visible () && ($this->available || $this->visibleIfUnavailable);
   }
 
   function isGroup ()
@@ -164,6 +150,19 @@ class NavigationLink implements NavigationLinkInterface
     return $this;
   }
 
+  function rawUrl ()
+  {
+    if (isset($this->cachedUrl))
+      return $this->cachedUrl;
+    if (is_callable ($url = $this->url))
+      $url = $url();
+    if (isset($url) && $this->parent && !str_beginsWith ($url, 'http') && ($url === '' || $url[0] != '/')) {
+      $base = $this->parent->url ();
+      $url  = isset($base) && isset($url) ? ltrim ("$base/$url", '/') : null;
+    }
+    return $this->cachedUrl = $url;
+  }
+
   function request (ServerRequestInterface $request = null)
   {
     if (is_null ($request))
@@ -183,15 +182,12 @@ class NavigationLink implements NavigationLinkInterface
   function url ($url = null)
   {
     if (is_null ($url)) {
-      if (isset($this->cachedUrl))
-        return $this->cachedUrl;
-      if (is_callable ($url = $this->url))
-        $url = $url();
-      if (!str_beginsWith ('http', $url) && !($url != '' && $url[0] == '/'))
-        $url = enum ('/', $this->parent->url (), $url);
-      $url = $this->evaluateUrl ($url);
-      return $this->cachedUrl = $url;
+      $url = $this->rawUrl ();
+      if (isset($url))
+        $url = $this->evaluateUrl ($url);
+      return $url;
     }
+    //else DO NOT CACHE IT YET!
     $this->url = $url;
     return $this;
   }
@@ -213,17 +209,17 @@ class NavigationLink implements NavigationLinkInterface
 
   private function evaluateUrl ($url)
   {
-    $request = $this->getRequest ();
-    $available = true;
-    $url = preg_replace_callback ('/@\w+/', function ($m) use ($request, &$available) {
+    $request         = $this->getRequest ();
+    $this->available = true;
+    $url             = preg_replace_callback ('/@\w+/', function ($m) use ($request) {
       $v = $request->getAttribute ($m[0]);
       if (is_null ($v)) {
-        $available = false;
-        return '';
+        $this->available = false;
+        return ''; //to preg_replace
       }
       return $v;
     }, $url);
-    return $available ? $url : self::NOT_AVAILABLE_URL;
+    return $this->available ? $url : null;
   }
 
   /**

@@ -25,12 +25,26 @@ class Navigation implements NavigationInterface
 
   public function __construct ()
   {
-    $this->rootLink = $this->group ();
+    $this->rootLink = $this->group ()->url ('');
   }
 
   function IDs ()
   {
     return $this->IDs;
+  }
+
+  function __debugInfo ()
+  {
+    return [
+      'All IDs<sup>*</sup>'        => PA ($this->IDs)->keys ()->sort ()->join (', '),
+      'All URLs<sup>*</sup><br>' .
+      '<i>(in scanning order)</i>' => map ($this->rootLink->getDescendants (),
+        function ($link) {
+          return $link->rawUrl ();
+        }),
+      'Navigation map<sup>*</sup>' => iterator_to_array ($this->rootLink),
+      'request'                    => $this->request (),
+    ];
   }
 
   function add ($navigationMap, $targetId = null)
@@ -57,7 +71,7 @@ class Navigation implements NavigationInterface
 
   function getMenu ()
   {
-    return $this->rootLink->getMenu();
+    return $this->rootLink->getMenu ();
   }
 
   function group ()
@@ -80,8 +94,8 @@ class Navigation implements NavigationInterface
 
   function request (ServerRequestInterface $request = null)
   {
-    if (is_null ($request)) return $this->rootLink ()->request ();
-    $this->rootLink ()->request ($request);
+    if (is_null ($request)) return $this->rootLink->request ();
+    $this->rootLink->request ($request);
     return $this;
   }
 
@@ -90,15 +104,5 @@ class Navigation implements NavigationInterface
     if (is_null ($rootLink)) return $this->rootLink;
     $this->rootLink = $rootLink;
     return $this;
-  }
-
-  function __debugInfo ()
-  {
-    return [
-      'IDs*'     => PA ($this->IDs)->keys ()->sort ()->join (', '),
-      'URLs*'   => iterator_to_array ($this->getIterator ()),
-      'request' => $this->request (),
-      'links' => iterator_to_array($this->getMenu())
-    ];
   }
 }

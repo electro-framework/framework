@@ -84,8 +84,9 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     if ($this->injector->provides (NavigationInterface::class)) {
       /** @var NavigationInterface $navigation */
       $navigation = $this->injector->make (NavigationInterface::class);
-      $navigation->request ($request);
-      DebugConsole::logger ('navigation')->inspect ($navigation);
+      // Do not log the navigation if its middleware was not executed.
+      if ($navigation->request ())
+        DebugConsole::logger ('navigation')->inspect ($navigation);
     }
 
     // Config. panel

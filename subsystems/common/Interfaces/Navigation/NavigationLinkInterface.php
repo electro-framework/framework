@@ -24,9 +24,25 @@ interface NavigationLinkInterface extends \IteratorAggregate
   function enabled ($enabled = null);
 
   /**
-   * Returns the next level of navigation links, suitable for display on a navigation menu.
-   * Recursively iterating each link's `getMenu()` will yield the full navigation tree.
+   * Returns all navigation links that are direct or indirect children of this link.
+   * <p>It yields the full navigation tree, starting from this link (but excluding it), flattened into a single
+   * iteration.
+   * <p>The iteration keys are numeric.
+   *
    * @return \Iterator
+   * @see links(), getIterator(), getMenu()
+   */
+  function getDescendants ();
+
+  /**
+   * Returns the next level of navigation links, suitable for display on a navigation menu.
+   * <p>Only visible links are included.
+   * <p>The iteration keys are numeric.
+   * > **Note:** recursively iterating each link's `getMenu()` will yield the full navigation tree.
+   * > <p>Alternatively, you may use {@see getDescendants()} to flatten the tree into a single iteration.
+   *
+   * @return \Iterator
+   * @see links(), getIterator(), getDescendants()
    */
   function getMenu ();
 
@@ -78,10 +94,13 @@ interface NavigationLinkInterface extends \IteratorAggregate
    * @param NavigationLinkInterface[]|\Traversable|callable $navigationMap An iterable value.
    * @return $this|NavigationLinkInterface[]|\Traversable|callable         $this if an argument is given, the
    *                                                                       property's value otherwise.
-   *                                                                       <p>You should call <kbd>iterator($value)
-   *                                                                       </kbd> on the returned instance to get an
-   *                                                                       iterator that you can use to iterate the
-   *                                                                       list of links.
+   *                                                                       <p>To iterate the list of links, it is
+   *                                                                       advisable to call <kbd>iterator($value)
+   *                                                                       </kbd> on the returned instance to make sure
+   *                                                                       you get a valid iterator.
+   *                                                                       <p>The iteration keys are strings, as the
+   *                                                                       value is map.
+   * @see getIterator(), getMenu(), getDescendants()
    */
   function links ($navigationMap = null);
 
@@ -100,6 +119,12 @@ interface NavigationLinkInterface extends \IteratorAggregate
    * @return $this|NavigationLinkInterface $this if an argument is given, the property's value otherwise.
    */
   function parent (NavigationLinkInterface $parent = null);
+
+  /**
+   * Similar to {@see Url()}, but it returns the original, unprocessed URL, with all parameter identifiers untouched.
+   * @return string
+   */
+  function rawUrl ();
 
   /**
    * Associates an HTTP server request with this link, to enable URL parameters resolution.
