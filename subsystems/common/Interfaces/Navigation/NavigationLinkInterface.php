@@ -7,6 +7,16 @@ use Selenia\Exceptions\Fault;
 interface NavigationLinkInterface extends \IteratorAggregate
 {
   /**
+   * Returns the computed link address.
+   *
+   * <p>This is an alias of {@see NavigationLinkInterface::url()}. It is useful for use on databinding expressions
+   * on views.
+   *
+   * @return string
+   */
+  function __toString ();
+
+  /**
    * Are links to this location enabled?
    *
    * <p>If disabled, the links will be shown but will not be actionable.
@@ -66,6 +76,19 @@ interface NavigationLinkInterface extends \IteratorAggregate
    * @throws \InvalidArgumentException If any child has a duplicate ID on the current navigation tree.
    */
   function id ($id = null);
+
+  /**
+   * Indicates if the link matches the current URL, either totally or partially.
+   *
+   * <p>It returns `true` if the link is part of the current trail that spans from the navigation root up to the link
+   * that corresponds to the current page.
+   *
+   * ><p>A link can be active even when it's not visible.
+   *
+   * @return bool
+   * @throws Fault Faults::REQUEST_NOT_SET
+   */
+  function isActive ();
 
   /**
    * Indicates if the link is actually enabled, taking into account `enabled()`, and missing parameters on the URL.
@@ -231,13 +254,5 @@ interface NavigationLinkInterface extends \IteratorAggregate
    * @return $this|bool $this if an argument is given, the property's value otherwise.
    */
   function visibleIfUnavailable ($visible = null);
-
-  /**
-   * Indicates if the link matches the current URL, either totally or partially.
-   *
-   * @return bool
-   * @throws Fault Faults::REQUEST_NOT_SET
-   */
-  function isActive ();
 
 }

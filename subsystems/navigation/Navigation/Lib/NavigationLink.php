@@ -25,7 +25,11 @@ class NavigationLink implements NavigationLinkInterface
    * @var bool
    */
   public $group = false;
-  /** @var bool */
+  /**
+   * `true` when the link's URL can be computed.
+   * ><p>The URL can be computed when all route parameters on the link can be resolved.
+   * @var bool
+   */
   private $available;
   /** @var string|null When set, `url()` will always return its value. */
   private $cachedUrl = null;
@@ -60,6 +64,11 @@ class NavigationLink implements NavigationLinkInterface
   {
     if (!is_iterable ($navMap))
       throw new Fault (Faults::ARG_NOT_ITERABLE);
+  }
+
+  function __toString ()
+  {
+    return $this->url ();
   }
 
   function enabled ($enabled = null)
@@ -107,12 +116,9 @@ class NavigationLink implements NavigationLinkInterface
 
   function isActive ()
   {
-    $request = $this->getRequest ();
-    $path    = $request->getUri ()->getPath ();
-    $base    = $request->getAttribute ('baseUri');
-    $path    = substr ($path, strlen ($base) + 1);
-    $myUrl   = $this->url ();
-    if (is_null($myUrl)) return false;
+    $path  = $this->getRequest ()->getAttribute ('virtualUri');
+    $myUrl = $this->url ();
+    if (is_null ($myUrl)) return false;
     if ($myUrl == '') return true;
     $myUrl = preg_quote ($this->url ());
     return preg_match ("#^$myUrl(?:/|$)#", $path);

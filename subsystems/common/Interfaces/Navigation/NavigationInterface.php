@@ -22,7 +22,7 @@ use SplObjectStorage;
  * <p>Numeric keys or omitted keys do not change the link's `subpath`. You will need to set the link's `URL` property,
  * otherwise it will become `null`.
  */
-interface NavigationInterface extends \IteratorAggregate
+interface NavigationInterface extends \IteratorAggregate, \ArrayAccess
 {
   /**
    * Returns a set of registered IDs and their corresponding links.
@@ -47,8 +47,8 @@ interface NavigationInterface extends \IteratorAggregate
   function add ($navigationMap, $targetId = null);
 
   /**
-   * A linear sequence of {@see NavigationLinkInterface} objects that represents the path to the currently displayed
-   * page starting from a root (home) link.
+   * Returns a linear sequence of {@see NavigationLinkInterface} objects that represents the path to the currently
+   * displayed page starting from a root (home) link.
    *
    * <p>The set can be enumerated as a list of objects, with sequential integer keys.
    * > **Note:** no `SplObjectStorage` extra data is associated with elements on the set.
@@ -56,11 +56,12 @@ interface NavigationInterface extends \IteratorAggregate
    * > <p>All objects on the path come from the navigation tree; these are not clones.
    *
    * <p>This method also allows you to test if a link on the tree is also on the path (for instance, for deciding if a
-   * link on a menu is selected). Use {@see SplObjectStorage::contains()} to check for that.
+   * link on a menu is selected). Use {@see SplObjectStorage::contains()} to check for that. Of course, you may also
+   * call {@see NavigationInterface::isActive()} for the same purpose.
    *
    * @return $this|SplObjectStorage
    */
-  function currentTrail ();
+  function getCurrentTrail ();
 
   /**
    * Returns the first level of navigation links, suitable for display on a navigation menu.
@@ -68,6 +69,19 @@ interface NavigationInterface extends \IteratorAggregate
    * @return \Iterator
    */
   function getMenu ();
+
+  /**
+   * Returns a linear sequence of {@see NavigationLinkInterface} objects that represents the path to the currently
+   * displayed page starting from a root (home) link, **but it consists only of visible links**.
+   *
+   * <p>The visible trail ends at the last visible link that can be reached from the navigation root, so it may not
+   * reach the link that corresponds to the current page.
+   *
+   * <p>See also {@see getCurrentTrail()}.
+   *
+   * @return $this|SplObjectStorage
+   */
+  function getVisibleTrail ();
 
   /**
    * Creates a new navigation group object, bound to this Navigation.

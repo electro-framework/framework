@@ -23,11 +23,15 @@ class Navigation implements NavigationInterface
    */
   private $cachedTrail;
   /**
+   * @var SplObjectStorage
+   */
+  private $cachedVisibleTrail;
+  /**
    * @var NavigationLinkInterface
    */
   private $rootLink;
 
-  public function __construct ()
+  function __construct ()
   {
     $this->rootLink = $this->group ()->url ('');
   }
@@ -39,6 +43,9 @@ class Navigation implements NavigationInterface
 
   function __debugInfo ()
   {
+    $linkToUrl = function (NavigationLinkInterface $link) {
+      return $link->rawUrl ();
+    };
     return [
       'All IDs<sup>*</sup>'        => PA ($this->IDs)->keys ()->sort ()->join (', '),
       'All URLs<sup>*</sup><br>' .
@@ -46,10 +53,8 @@ class Navigation implements NavigationInterface
         function ($link) {
           return $link->rawUrl ();
         }),
-      'Trail<sup>*</sup>'          => map ($this->currentTrail (),
-        function (NavigationLinkInterface $link) {
-          return $link->rawUrl();
-        }),
+      'Trail<sup>*</sup>'          => map ($this->getCurrentTrail (), $linkToUrl),
+      'Visible trail<sup>*</sup>'  => map ($this->getVisibleTrail (), $linkToUrl),
       'Navigation map<sup>*</sup>' => iterator_to_array ($this->rootLink),
       'request'                    => $this->request (),
     ];
@@ -67,12 +72,11 @@ class Navigation implements NavigationInterface
     return $this;
   }
 
-  function currentTrail ()
+  function getCurrentTrail ()
   {
     if (isset($this->cachedTrail)) return $this->cachedTrail;
-    $trail = new SplObjectStorage;
-    $link  = $this->rootLink;
-    $this->matchChildrenOf ($link, $trail);
+    $url = $this->request ()->getAttribute ('virtualUri');
+    $this->buildTrail ($this->rootLink, $trail = new SplObjectStorage, $url);
     return $this->cachedTrail = $trail;
   }
 
@@ -84,6 +88,19 @@ class Navigation implements NavigationInterface
   function getMenu ()
   {
     return $this->rootLink->getMenu ();
+  }
+
+  function getVisibleTrail ()
+  {
+    if (isset($this->cachedVisibleTrail)) return $this->cachedVisibleTrail;
+    $trail  = $this->getCurrentTrail ();
+    $vtrail = new SplObjectStorage;
+    /** @var NavigationLinkInterface $link */
+    foreach ($trail as $link)
+      if ($link->isActuallyVisible ())
+        $vtrail->attach ($link);
+      else break;
+    return $this->cachedVisibleTrail = $vtrail;
   }
 
   function group ()
@@ -104,6 +121,28 @@ class Navigation implements NavigationInterface
     return $link;
   }
 
+  function offsetExists ($offset)
+  {
+    inspect ("EXISTS".$offset, $this->IDs[$offset]);
+    return isset($this->IDs[$offset]);
+  }
+
+  function offsetGet ($offset)
+  {
+    inspect ($offset, $this->IDs[$offset]);
+    return $this->IDs[$offset];
+  }
+
+  function offsetSet ($offset, $value)
+  {
+    throw new Fault (Faults::PROPERTY_IS_READ_ONLY, $offset);
+  }
+
+  function offsetUnset ($offset)
+  {
+    throw new Fault (Faults::PROPERTY_IS_READ_ONLY, $offset);
+  }
+
   function request (ServerRequestInterface $request = null)
   {
     if (is_null ($request)) return $this->rootLink->request ();
@@ -118,14 +157,20 @@ class Navigation implements NavigationInterface
     return $this;
   }
 
-  private function matchChildrenOf (NavigationLinkInterface $link, SplObjectStorage $trail)
+  private function buildTrail (NavigationLinkInterface $link, SplObjectStorage $trail, $url)
   {
     /** @var NavigationLinkInterface $child */
-    foreach ($link->getMenu () as $child) {
+    foreach ($link->links () as $child) {
       if ($child->isActive ()) {
         $trail->attach ($child);
-        $this->matchChildrenOf ($child, $trail);
-        return;
+        $this->buildTrail ($child, $trail, $url);
+        // Special case for the home link (URL=='') when the URL to match is not ''
+        if ($url !== '' && $child->rawUrl () === '') {
+          if ($trail->count () > 1) return;
+          // No trail was built, so do not match the home link and proceed to the next root link.
+          $trail->detach ($child);
+        }
+        else return;
       }
     }
   }

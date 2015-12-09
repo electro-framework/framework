@@ -219,7 +219,6 @@ trait DataBindingTrait
           ? substr ($x, 0, 2) . $this->compileSubexpression (trim (substr ($x, 2)))
           : $this->compileSubexpression ($x);
       })->join ();
-
     return PhpCode::compile ($exp);
   }
 

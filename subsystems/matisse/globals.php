@@ -54,6 +54,8 @@ function _g ($data, $key, $default = null)
         return $data->$key ();
       return $default;
     }
+    if ($data instanceof \ArrayAccess && isset ($data[$key]))
+      return $data[$key];
     if (is_callable ([$data, $key]))
       return $data->$key ();
     return $default;
