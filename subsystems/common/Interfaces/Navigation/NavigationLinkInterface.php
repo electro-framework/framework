@@ -12,7 +12,7 @@ interface NavigationLinkInterface extends \IteratorAggregate
    * <p>This is an alias of {@see NavigationLinkInterface::url()}. It is useful for use on databinding expressions
    * on views.
    *
-   * @return string
+   * @return string It never returns null.
    */
   function __toString ();
 

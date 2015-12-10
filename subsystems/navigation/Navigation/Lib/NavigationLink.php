@@ -68,7 +68,8 @@ class NavigationLink implements NavigationLinkInterface
 
   function __toString ()
   {
-    return $this->url ();
+    $url = $this->url ();
+    return isset($url) ? $url : '';
   }
 
   function enabled ($enabled = null)
@@ -238,7 +239,7 @@ class NavigationLink implements NavigationLinkInterface
       }
       return $v;
     }, $url);
-    return $this->available ? $url : null;
+    return $url;
   }
 
   /**
