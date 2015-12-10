@@ -56,7 +56,8 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 //    DebugConsole::registerPanel ('DOM', new ConsoleLogger ('DOM', 'fa fa-sitemap'));
 //    DebugConsole::registerPanel ('vm', new ConsoleLogger ('View Models', 'fa fa-table'));
     DebugConsole::registerPanel ('database', new ConsoleLogger ('Database', 'fa fa-database'));
-//    WebConsole::registerPanel ('exceptions', new ConsolePanel ('Exceptions', 'fa fa-bug'));
+//    DebugConsole::registerPanel ('exceptions', new ConsoleLogger ('Exceptions', 'fa fa-bug'));
+    $trace = DebugConsole::registerLogger ('trace', new ConsoleLogger ('Trace', 'fa fa-clock-o big'));
 
     // Redirect logger to Inspector panel
     if (isset($this->logger))
@@ -144,6 +145,10 @@ class WebConsoleMiddleware implements RequestHandlerInterface
                 ->write ("<#row>Exit stack 1</#row>")
                 ->write ("<#row>End of routing log</#row>")
                 ->write ("</#section>");
+
+    if ($trace->hasContent())
+      DebugConsole::registerPanel ('trace', $trace);
+
 
     return DebugConsole::outputContentViaResponse ($request, $response, true);
   }

@@ -41,3 +41,8 @@ function dump ()
     return $space . str_pad ("$prop:", 30, ' ');
   }, ob_get_clean ());
 }
+
+function trace ()
+{
+  PhpKit\WebConsole\DebugConsole\DebugConsole::trace ();
+}

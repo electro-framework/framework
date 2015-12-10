@@ -123,13 +123,11 @@ class Navigation implements NavigationInterface
 
   function offsetExists ($offset)
   {
-    inspect ("EXISTS".$offset, $this->IDs[$offset]);
     return isset($this->IDs[$offset]);
   }
 
   function offsetGet ($offset)
   {
-    inspect ($offset, $this->IDs[$offset]);
     return $this->IDs[$offset];
   }
 
