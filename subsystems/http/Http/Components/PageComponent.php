@@ -342,17 +342,10 @@ class PageComponent implements RequestHandlerInterface
 
   protected function autoRedirect ()
   {
-    //TODO: redirect to index page
-
     if (isset($this->indexPage))
       return $this->redirection->to ($this->indexPage);
 
-//    $index = $this->activeRoute->getIndex ();
-//    if (!$index)
-//      return $this->redirection->home ();
-//    return $this->redirection->to ($index->evalURI ($this->URIParams));
-
-    throw new FatalException("No index page defined.");
+    return $this->redirection->refresh();
   }
 
   /**
