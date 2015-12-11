@@ -106,6 +106,14 @@ interface NavigationLinkInterface extends \IteratorAggregate
   function isActuallyVisible ();
 
   /**
+   * Indicates if the link matches the current URL totally (i.e. it matches the current page).
+   *
+   * @return bool
+   * @throws Fault Faults::REQUEST_NOT_SET
+   */
+  function isCurrent ();
+
+  /**
    * Indicates if the link is a group pseudo-link that was created by a {@see NavigationInterface::group()} call.
    * @return bool
    */

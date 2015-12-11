@@ -73,6 +73,7 @@ function html ($e, $d = 0)
     $s       = str_repeat (' ', $d);
     $o       = ($d ? "\n" : '') . "$s<$tag";
     foreach ($attrs as $k => $v) {
+      if (is_null ($v)) continue;
       if (is_array ($v)) {
         0 / 0;
       }

@@ -47,6 +47,12 @@ interface NavigationInterface extends \IteratorAggregate, \ArrayAccess
   function add ($navigationMap, $targetId = null);
 
   /**
+   * Returns the link that corresponds to the currently visible page.
+   * @return NavigationLinkInterface|null null if not found.
+   */
+  function currentLink ();
+
+  /**
    * Returns a linear sequence of {@see NavigationLinkInterface} objects that represents the path to the currently
    * displayed page starting from a root (home) link.
    *

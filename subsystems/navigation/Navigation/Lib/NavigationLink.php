@@ -120,8 +120,13 @@ class NavigationLink implements NavigationLinkInterface
     $path  = $this->getRequest ()->getAttribute ('virtualUri');
     $myUrl = $this->url ();
     if (is_null ($myUrl)) return false;
-    if ($myUrl == '') return true;
-    $myUrl = preg_quote ($this->url ());
+    if ($myUrl == $path) return true;
+    if ($myUrl == '') {
+      foreach ($this->links as $sub)
+        if ($sub->isActive()) return true;
+      return false;
+    }
+    $myUrl = preg_quote ($myUrl);
     return preg_match ("#^$myUrl(?:/|$)#", $path);
   }
 
@@ -135,6 +140,11 @@ class NavigationLink implements NavigationLinkInterface
   {
     $this->url (); // updates $this->available
     return $this->visible () && ($this->available || $this->visibleIfUnavailable);
+  }
+
+  function isCurrent ()
+  {
+    return $this->url () == $this->getRequest ()->getAttribute ('virtualUri');
   }
 
   function isGroup ()

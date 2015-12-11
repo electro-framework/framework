@@ -29,6 +29,10 @@ class Navigation implements NavigationInterface
   /**
    * @var NavigationLinkInterface
    */
+  private $currentLink;
+  /**
+   * @var NavigationLinkInterface
+   */
   private $rootLink;
 
   function __construct ()
@@ -72,10 +76,21 @@ class Navigation implements NavigationInterface
     return $this;
   }
 
+  /**
+   * Returns the link that corresponds to the currently visible page.
+   * @return NavigationLinkInterface|null null if not found.
+   */
+  function currentLink ()
+  {
+    if (!isset($this->cachedTrail)) $this->getCurrentTrail();
+    return $this->currentLink;
+  }
+
   function getCurrentTrail ()
   {
     if (isset($this->cachedTrail)) return $this->cachedTrail;
     $url = $this->request ()->getAttribute ('virtualUri');
+    $this->currentLink = null;
     $this->buildTrail ($this->rootLink, $trail = new SplObjectStorage, $url);
     return $this->cachedTrail = $trail;
   }
@@ -161,12 +176,14 @@ class Navigation implements NavigationInterface
     foreach ($link->links () as $child) {
       if ($child->isActive ()) {
         $trail->attach ($child);
+        $this->currentLink = $child;
         $this->buildTrail ($child, $trail, $url);
         // Special case for the home link (URL=='') when the URL to match is not ''
         if ($url !== '' && $child->rawUrl () === '') {
           if ($trail->count () > 1) return;
           // No trail was built, so do not match the home link and proceed to the next root link.
           $trail->detach ($child);
+          $this->currentLink = null;
         }
         else return;
       }
