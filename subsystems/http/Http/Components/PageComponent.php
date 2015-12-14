@@ -160,7 +160,7 @@ class PageComponent implements RequestHandlerInterface
 
     // Inject extra dependencies into the subclasses' inject methods, if one or more exist.
 
-    $this->polyInject();
+    $this->polyInject ();
   }
 
   /**
@@ -241,7 +241,6 @@ class PageComponent implements RequestHandlerInterface
         $data->read ();
       }
       $data->delete ();
-      return $this->autoRedirect ();
     }
     else throw new FlashMessageException(sprintf ('Can\'t automatically delete object of type <kbd>%s</kbd>',
       gettype ($data)),
@@ -285,17 +284,17 @@ class PageComponent implements RequestHandlerInterface
     // No return value means: auto-redirect
   }
 
-  function getRowOffset ()
+  protected function getRowOffset ()
   {
     return ($this->pageNumber - 1) * $this->app->pageSize;
   }
 
-  function getTitle ()
-    // override to return the title of the current page
+  protected function getTitle ()
+    // override to return a dynamic title for the current page
   {
     return coalesce (
-//      isset($this->activeRoute) ? $this->activeRoute->title : null,
       $this->pageTitle,
+      $this->navigation->currentLink ()->title (),
       ''
     );
   }
@@ -309,7 +308,7 @@ class PageComponent implements RequestHandlerInterface
    * @param string     $param The parameter name. As a convention, it is usually `id`.
    * @return DataObject|false The input model on success, `false` if it was not found.
    */
-  function loadRequested (DataObject $model, $param = 'id')
+  protected function loadRequested (DataObject $model, $param = 'id')
   {
     $id = $this->request->getAttribute ("@$param");
     if (!$id) return $model;
