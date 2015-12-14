@@ -17,29 +17,35 @@ use Selenia\Exceptions\FlashMessageException;
 use Selenia\Exceptions\FlashType;
 use Selenia\Interfaces\Http\RedirectionInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Interfaces\Http\ResponseFactoryInterface;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\Navigation\NavigationInterface;
+use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\Matisse\Components\Page;
 use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\Services\Router;
+use Selenia\Traits\PolymorphicInjectionTrait;
 use Selenia\ViewEngine\Engines\MatisseEngine;
 use Selenia\ViewEngine\View;
 use Zend\Diactoros\Response\HtmlResponse;
 
 /**
  * The base class for components that are web pages.
- *
- * ### Notes:
- * - subclasses that define an inject() method will have that methoc called and dependency-injected upon instantiation.
  */
 class PageComponent implements RequestHandlerInterface
 {
+  use PolymorphicInjectionTrait;
+
   /**
    * @var Application
    */
   public $app;
+  /**
+   * The link that matches the current URL.
+   * @var NavigationLinkInterface
+   */
+  public $currentLink;
   /**
    * The controller's data sources (view model)
    * The 'default' data source corresponds to the **model**.
@@ -58,6 +64,8 @@ class PageComponent implements RequestHandlerInterface
    * @var array|Object|DataObject The page's data model.
    */
   public $model;
+  /** @var NavigationInterface */
+  public $navigation;
   /**
    * It's only set when using Matisse.
    * @var Page
@@ -127,10 +135,6 @@ class PageComponent implements RequestHandlerInterface
    */
   protected $response;
   /**
-   * @var ResponseFactoryInterface
-   */
-  protected $responseFactory;
-  /**
    * @var string
    */
   protected $viewEngineClass = MatisseEngine::class;
@@ -144,20 +148,19 @@ class PageComponent implements RequestHandlerInterface
    */
   private $presets = [];
 
-  function __construct (InjectorInterface $injector, Application $app, ResponseFactoryInterface $responseFactory,
-                        RedirectionInterface $redirection, SessionInterface $session, PipeHandler $pipeHandler)
+  function __construct (InjectorInterface $injector, Application $app, RedirectionInterface $redirection,
+                        SessionInterface $session, NavigationInterface $navigation, PipeHandler $pipeHandler)
   {
-    $this->injector        = $injector;
-    $this->app             = $app;
-    $this->responseFactory = $responseFactory;
-    $this->redirection     = $redirection;
-    $this->session         = $session;
+    $this->injector    = $injector;
+    $this->app         = $app;
+    $this->redirection = $redirection;
+    $this->session     = $session;
+    $this->navigation  = $navigation;
     $pipeHandler->registerFallbackHandler ($this);
 
-    // Inject extra dependencies into the subclass' inject method, if it exists.
+    // Inject extra dependencies into the subclasses' inject methods, if one or more exist.
 
-    if (method_exists ($this, 'inject'))
-      $injector->execute ([$this, 'inject']);
+    $this->polyInject();
   }
 
   /**
@@ -179,6 +182,10 @@ class PageComponent implements RequestHandlerInterface
     $this->request  = $request;
     $this->response = $response;
     $this->redirection->setRequest ($request);
+
+    $this->currentLink = $this->navigation->request ($this->request)->currentLink ();
+    if ($this->currentLink && $parent = $this->currentLink->parent ())
+      $this->indexPage = $parent->url ();
 
     // remove page number parameter
     $this->URI_noPage =
@@ -345,7 +352,7 @@ class PageComponent implements RequestHandlerInterface
     if (isset($this->indexPage))
       return $this->redirection->to ($this->indexPage);
 
-    return $this->redirection->refresh();
+    return $this->redirection->refresh ();
   }
 
   /**
@@ -399,7 +406,8 @@ class PageComponent implements RequestHandlerInterface
     $class = new ReflectionObject($this);
     try {
       $method = $class->getMethod ('action_' . $action);
-    } catch (ReflectionException $e) {
+    }
+    catch (ReflectionException $e) {
       throw new FlashMessageException('Class <b>' . $class->getName () . "</b> can't handle action <b>$action</b>.",
         FlashType::ERROR);
     }
