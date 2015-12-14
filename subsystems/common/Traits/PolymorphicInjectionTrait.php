@@ -19,7 +19,12 @@ trait PolymorphicInjectionTrait
 {
   function polyInject ()
   {
-    $m     = new \ReflectionMethod($this, 'inject');
+    try {
+      $m = new \ReflectionMethod($this, 'inject');
+    }
+    catch (\ReflectionException $e) {
+      return; // Class has no inject()
+    }
     $chain = [$m];
     try {
       while ($m = $m->getPrototype ()) {
