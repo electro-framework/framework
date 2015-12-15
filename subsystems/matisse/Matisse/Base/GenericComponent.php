@@ -1,17 +1,9 @@
 <?php
 namespace Selenia\Matisse\Base;
-use Selenia\Matisse\AttributeType;
+
+use Selenia\Matisse\Attributes\GenericComponentAttributes;
 use Selenia\Matisse\Context;
-use Selenia\Matisse\Attributes\GenericAttributes;
 use Selenia\Matisse\VisualComponent;
-
-class GenericComponentAttributes extends GenericAttributes
-{
-  public $content;
-
-  protected function typeof_content () { return AttributeType::SRC; }
-
-}
 
 class GenericComponent extends VisualComponent
 {

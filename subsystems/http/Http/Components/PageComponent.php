@@ -147,6 +147,11 @@ class PageComponent implements RequestHandlerInterface
    * @var array
    */
   private $presets = [];
+  /**
+   * Map of attributes to set on the body tag.
+   * @var array Map of string => mixed
+   */
+  protected $bodyAttrs = [];
 
   function __construct (InjectorInterface $injector, Application $app, RedirectionInterface $redirection,
                         SessionInterface $session, NavigationInterface $navigation, PipeHandler $pipeHandler)
@@ -338,6 +343,7 @@ class PageComponent implements RequestHandlerInterface
     if ($engine instanceof MatisseEngine) {
       $this->page        = $view->getCompiledView ();
       $this->page->title = str_replace ('@', $this->getTitle (), $this->app->title);
+      $this->page->bodyAttrs = $this->bodyAttrs;
       $this->page->addScript ("{$this->app->frameworkURI}/js/engine.js");
       $flashMessage = $this->session->getFlashMessage ();
       if ($flashMessage)

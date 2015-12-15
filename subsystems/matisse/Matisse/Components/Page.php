@@ -6,6 +6,11 @@ use Selenia\Matisse\Context;
 class Page extends Component
 {
   public $allowsChildren = true;
+  /**
+   * Content to be prepended to the page content. It is usually set via the Body component.
+   * @var string
+   */
+  public $bodyContent = '';
 
   /**
    * Array of strings/Parameters containing URLs of CSS stylesheets to be loaded during the page loading process.
@@ -64,7 +69,7 @@ class Page extends Component
   public $preForm = '';
   /**
    * Map of attributes to set on the body tag.
-   * @var Array Map of string => mixed
+   * @var array Map of string => mixed
    */
   public $bodyAttrs = null;
 
@@ -172,7 +177,7 @@ class Page extends Component
 
       ob_start ();
       $this->renderChildren ();
-      $pageContent = ob_get_clean ();
+      $pageContent = $this->bodyContent . ob_get_clean ();
 
       echo $this->doctype;
       $this->beginTag ("html");
@@ -242,7 +247,6 @@ class Page extends Component
       $this->beginTag ('body', $this->bodyAttrs);
       $this->setContent ($this->preForm);
       $this->beginTag ('form', [
-        'class'        => '',
         'action'       => property ($this, 'targetURL', $_SERVER['REQUEST_URI']),
         'method'       => 'post',
         'enctype'      => $this->enableFileUpload ? 'multipart/form-data' : null,

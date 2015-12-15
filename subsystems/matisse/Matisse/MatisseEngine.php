@@ -18,6 +18,7 @@ class MatisseEngine
     'Literal'  => 'Selenia\Matisse\Components\Literal',
     'Apply'    => 'Selenia\Matisse\Components\Apply',
     'Head'     => 'Selenia\Matisse\Components\Head',
+    'Body'     => 'Selenia\Matisse\Components\Body',
   ];
 
   /**
