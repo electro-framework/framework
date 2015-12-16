@@ -212,12 +212,14 @@ trait DataBindingTrait
 
   private function compileExpression ($expression)
   {
-    $exp = PA (preg_split ('/ (?= \|\| | && ) /xu', $expression))
+    $exp = PA (preg_split ('/ (?= \|\| | && | \+ ) /xu', $expression))
       ->map (function ($x) { return trim ($x); })
       ->map (function ($x) {
-        return str_beginsWith ($x, '||') || str_beginsWith ($x, '&&')
-          ? substr ($x, 0, 2) . $this->compileSubexpression (trim (substr ($x, 2)))
-          : $this->compileSubexpression ($x);
+        if (str_beginsWith ($x, '||') || str_beginsWith ($x, '&&'))
+          return substr ($x, 0, 2) . $this->compileSubexpression (trim (substr ($x, 2)));
+        if (str_beginsWith ($x, '+'))
+          return '.' . $this->compileSubexpression (trim (substr ($x, 1)));
+        return $this->compileSubexpression ($x);
       })->join ();
     return PhpCode::compile ($exp);
   }
@@ -235,7 +237,7 @@ trait DataBindingTrait
             $not = '!';
             $seg = substr ($seg, 1);
           }
-          $exp = "\$this->_f('$seg')";
+          $exp = $seg[0] == '"' ? $seg : "\$this->_f('$seg')";
         }
       $exp = "$not$exp";
       if (!PhpCode::validateExpression ($exp))
