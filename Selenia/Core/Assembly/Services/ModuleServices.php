@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Core\Assembly\Services;
 
+use PhpKit\Flow\FilesystemFlow;
 use Selenia\Application;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\FileServer\Services\FileServerMappings;
@@ -84,13 +85,21 @@ class ModuleServices
   }
 
   /**
-   * @param boolean $v Does the module contains a templates directory?
+   * Does the module contains a templates directory?
+   *
+   * <p>If so, it is registered in the templating engine, along with any immediate sub-directories.
+   *
+   * @param boolean $v
    * @return $this
    */
   function provideTemplates ($v = true)
   {
-    if ($v)
-      array_unshift ($this->app->templateDirectories, "$this->path/{$this->app->moduleTemplatesPath}");
+    if ($v) {
+      $path = "$this->path/{$this->app->moduleTemplatesPath}";
+      $all  = FilesystemFlow::from ($path)->onlyDirectories ()->keys ()->all ();
+      array_unshift ($all, $path);
+      $this->app->templateDirectories = array_merge ($all, $this->app->templateDirectories);
+    }
     return $this;
   }
 
