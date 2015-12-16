@@ -16,7 +16,7 @@ class ComponentAttributes
    * @var array
    */
   public static    $TYPE_NAMES     = [
-    'undefined', 'identifier', 'text', 'number', 'boolean', 'parameters', 'source', 'data', 'binding', 'metadata'
+    'undefined', 'identifier', 'text', 'number', 'boolean', 'parameters', 'source', 'data', 'binding', 'metadata',
   ];
   protected static $BOOLEAN_VALUES = [
     0       => false,
@@ -26,7 +26,7 @@ class ComponentAttributes
     'no'    => false,
     'yes'   => true,
     'off'   => false,
-    'on'    => true
+    'on'    => true,
   ];
   protected static $NEVER_DIRTY    = [];
 
@@ -53,6 +53,11 @@ class ComponentAttributes
     if (is_string ($mixed) && array_key_exists ($mixed, self::$BOOLEAN_VALUES))
       return self::$BOOLEAN_VALUES[$mixed];
     return !is_null ($mixed) && !empty($mixed);
+  }
+
+  public static function getTypeIdOf ($typeName)
+  {
+    return array_search ($typeName, self::$TYPE_NAMES);
   }
 
   public static function validateScalar ($type, $v)
@@ -99,17 +104,6 @@ class ComponentAttributes
     return null;
   }
 
-  public static function getTypeIdOf ($typeName)
-  {
-    return array_search ($typeName, self::$TYPE_NAMES);
-  }
-
-  public function apply (array $attrs)
-  {
-    foreach ($attrs as $k => $v)
-      $this->set ($k, $v);
-  }
-
   public function __get ($name)
   {
     throw new ComponentException($this->component, "Can't read non existing attribute <b>$name</b>.");
@@ -120,6 +114,24 @@ class ComponentAttributes
     throw new ComponentException($this->component, "Can't set non existing attribute <b>$name</b>.");
   }
 
+  public function apply (array $attrs)
+  {
+    foreach ($attrs as $k => $v)
+      $this->set ($k, $v);
+  }
+
+  /**
+   * @param      $name
+   * @param bool $asSubtag When true, the attribute MUST be able to be specified in subtag form.
+   *                       When false, the attribute can be either a tag attribute or a subtag.
+   * @return bool
+   */
+  public function defines ($name, $asSubtag = false)
+  {
+    if ($asSubtag) return $this->isSubtag ($name);
+    return method_exists ($this, "typeof_$name");
+  }
+
   public function get ($name, $default = null)
   {
     if (isset($this->$name))
@@ -127,43 +139,41 @@ class ComponentAttributes
     return $default;
   }
 
-  public function set ($name, $value)
+  public function getAll ()
   {
-    if (!$this->defines ($name))
-      throw new ComponentException($this->component, "Invalid attribute <b>$name</b> specified.");
-    if ($this->isScalar ($name))
-      $this->setScalar ($name, $value);
-    else switch ($type = $this->getTypeOf ($name)) {
-      case AttributeType::SRC:
-        $ctx   = $this->component->context;
-        $text = Text::from ($ctx, $value);
-        if (isset($this->$name))
-          $this->$name->addChild ($text);
-        else {
-          $param = new Parameter ($ctx, $name, $type);
-          $param->attachTo ($this->component);
-          $param->addChild ($text);
-          $this->$name = $param;
-        }
-        $this->_modified = true;
-        break;
-      default:
-        $this->$name     = $value;
-        $this->_modified = true;
-    }
+    $p = $this->getAttributeNames ();
+    $r = [];
+    foreach ($p as $prop)
+      $r[$prop] = $this->{$prop};
+    return $r;
   }
 
-  public function getTypeOf ($name)
+  public function getAttributeNames ()
   {
-    $fn = "typeof_$name";
-    if (method_exists ($this, $fn))
-      return $this->$fn();
-    return AttributeType::TEXT;
+    $a = array_keys (get_object_vars ($this));
+    $a = array_diff ($a, ['component', '_modified']);
+    return $a;
+  }
+
+  public function getAttributesOfType ($type)
+  {
+    $result = [];
+    $names  = $this->getAttributeNames ();
+    if (isset($names))
+      foreach ($names as $name)
+        if ($this->getTypeOf ($name) == $type)
+          $result[$name] = $this->get ($name);
+    return $result;
   }
 
   public function getEnumOf ($name)
   {
     return $this->{"enum_$name"}();
+  }
+
+  public function getScalar ($name)
+  {
+    return self::validateScalar ($this->getTypeOf ($name), $this->get ($name));
   }
 
   public function getTypeNameOf ($name)
@@ -174,9 +184,12 @@ class ComponentAttributes
     return self::$TYPE_NAMES[0];
   }
 
-  public function defines ($name)
+  public function getTypeOf ($name)
   {
-    return method_exists ($this, "typeof_$name");
+    $fn = "typeof_$name";
+    if (method_exists ($this, $fn))
+      return $this->$fn();
+    return AttributeType::TEXT;
   }
 
   public function isEnum ($name)
@@ -191,52 +204,42 @@ class ComponentAttributes
            $type == AttributeType::TEXT;
   }
 
-  public function getAttributeNames ()
+  public function isSubtag ($name)
   {
-    $a = array_keys (get_object_vars ($this));
-    $a = array_diff ($a, ['component', '_modified']);
-    return $a;
-  }
-
-  public function getAll ()
-  {
-    $p = $this->getAttributeNames ();
-    $r = [];
-    foreach ($p as $prop)
-      $r[$prop] = $this->{$prop};
-    return $r;
-  }
-
-  public function getAttributesOfType ($type)
-  {
-    $result = [];
-    $names  = $this->getAttributeNames ();
-    if (isset($names))
-      foreach ($names as $name)
-        if ($this->getTypeOf ($name) == $type)
-          $result[$name] = $this->get ($name);
-    return $result;
-  }
-
-  public function getScalar ($name)
-  {
-    return self::validateScalar ($this->getTypeOf ($name), $this->get ($name));
-  }
-
-  public function setScalar ($name, $v)
-  {
-    if ($this->isEnum ($name)) {
-      $enum = $this->getEnumOf ($name);
-      if (array_search ($v, $enum) === false) {
-        $list = implode ('</b>, <b>', $enum);
-        throw new ComponentException($this->component,
-          "Invalid value for attribute/parameter <b>$name</b>.\nExpected: <b>$list</b>.");
+    $fn = "typeof_$name";
+    if (method_exists ($this, $fn)) {
+      switch ($this->$fn()) {
+        case AttributeType::SRC:
+        case AttributeType::PARAMS:
+        case AttributeType::METADATA:
+          return true;
       }
     }
-    $newV = self::validateScalar ($this->getTypeOf ($name), $v);
-    if ($this->$name !== $newV) {
-      $this->$name = $newV;
-      if (!isset(static::$NEVER_DIRTY[$name]))
+    return false;
+  }
+
+  public function set ($name, $value)
+  {
+    if (!$this->defines ($name))
+      throw new ComponentException($this->component, "Invalid attribute <b>$name</b> specified.");
+    if ($this->isScalar ($name))
+      $this->setScalar ($name, $value);
+    else switch ($type = $this->getTypeOf ($name)) {
+      case AttributeType::SRC:
+        $ctx  = $this->component->context;
+        $text = Text::from ($ctx, $value);
+        if (isset($this->$name))
+          $this->$name->addChild ($text);
+        else {
+          $param = new Parameter ($ctx, $name, $type);
+          $param->attachTo ($this->component);
+          $param->addChild ($text);
+          $this->$name = $param;
+        }
+        $this->_modified = true;
+        break;
+      default:
+        $this->$name     = $value;
         $this->_modified = true;
     }
   }
@@ -256,6 +259,24 @@ class ComponentAttributes
     foreach ($attrs as $name => $values)
       if (!empty($values))
         $this->$name = Component::cloneComponents ($values, $owner);
+  }
+
+  public function setScalar ($name, $v)
+  {
+    if ($this->isEnum ($name)) {
+      $enum = $this->getEnumOf ($name);
+      if (array_search ($v, $enum) === false) {
+        $list = implode ('</b>, <b>', $enum);
+        throw new ComponentException($this->component,
+          "Invalid value for attribute/parameter <b>$name</b>.\nExpected: <b>$list</b>.");
+      }
+    }
+    $newV = self::validateScalar ($this->getTypeOf ($name), $v);
+    if ($this->$name !== $newV) {
+      $this->$name = $newV;
+      if (!isset(static::$NEVER_DIRTY[$name]))
+        $this->_modified = true;
+    }
   }
 
   protected function typeof__modified () { return AttributeType::BOOL; }

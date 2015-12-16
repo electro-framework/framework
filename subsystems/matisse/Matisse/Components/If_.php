@@ -104,28 +104,28 @@ class If_ extends Component implements IAttributes
       }
       if ($v === $is xor $not)
         $this->renderChildren ();
-      else $this->renderParameter ('else');
+      else $this->renderChildren ('else');
       return;
     }
 
     if ($attr->isSet) {
       if ((isset($v) && $v != '') xor $not)
         $this->renderChildren ();
-      else $this->renderParameter ('else');
+      else $this->renderChildren ('else');
       return;
     }
 
     if ($attr->isTrue) {
       if (toBool ($v) xor $not)
         $this->renderChildren ();
-      else $this->renderParameter ('else');
+      else $this->renderChildren ('else');
       return;
     }
 
     if (isset($attr->matches)) {
       if (preg_match ("%$attr->matches%", $v) xor $not)
         $this->renderChildren ();
-      else $this->renderParameter ('else');
+      else $this->renderChildren ('else');
       return;
     }
 
@@ -139,13 +139,13 @@ class If_ extends Component implements IAttributes
           return;
         }
       }
-      $this->renderParameter ('else');
+      $this->renderChildren ('else');
       return;
     }
 
     if (toBool ($v) xor $not)
       $this->renderChildren ();
-    else $this->renderParameter ('else');
+    else $this->renderChildren ('else');
   }
 
 }

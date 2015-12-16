@@ -32,7 +32,7 @@ class Head extends Component implements IAttributes
   protected function render ()
   {
     $html = $this->getContent ();
-    if (!empty($html))
+    if ($html != '')
       $this->page->extraHeadTags .= $html;
   }
 }

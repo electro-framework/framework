@@ -119,6 +119,9 @@ trait MarkupBuilderTrait
     ob_start (null, 0);
   }
 
+  /**
+   * Always call this before outputting any content inside the wrapper tag.
+   */
   protected function beginContent ()
   {
     if (isset($this->tag) && !$this->tag->isContentSet) {

@@ -1,15 +1,12 @@
 <?php
 namespace Selenia\Matisse\Base;
 
-use Selenia\Matisse\Attributes\GenericComponentAttributes;
+use Selenia\Matisse\Attributes\GenericAttributes;
 use Selenia\Matisse\Context;
 use Selenia\Matisse\VisualComponent;
 
 class GenericComponent extends VisualComponent
 {
-
-  public $defaultAttribute = 'content';
-
   public function __construct (Context $context, $tagName, array $attributes = null)
   {
     parent::__construct ($context, $attributes);
@@ -18,7 +15,7 @@ class GenericComponent extends VisualComponent
 
   /**
    * Returns the component's attributes.
-   * @return GenericComponentAttributes
+   * @return GenericAttributes
    */
   public function attrs ()
   {
@@ -27,11 +24,11 @@ class GenericComponent extends VisualComponent
 
   /**
    * Creates an instance of the component's attributes.
-   * @return GenericComponentAttributes
+   * @return GenericAttributes
    */
   public function newAttributes ()
   {
-    return new GenericComponentAttributes($this);
+    return new GenericAttributes($this);
   }
 
   protected function preRender ()
@@ -55,7 +52,7 @@ class GenericComponent extends VisualComponent
       }
     }
     $this->beginContent ();
-    self::renderSet ($this->getChildren ('content'));
+    $this->renderContent();
     $this->endTag ();
   }
 

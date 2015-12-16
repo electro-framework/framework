@@ -305,7 +305,7 @@ does not support the specified parameter <b>$tag</b>.
       return false;
     }
     // If the current component defines an attribute with the same name as the tag being checked, the tag is a parameter.
-    return $this->current instanceof IAttributes && $this->current->attrs ()->defines ($attrName);
+    return $this->current instanceof IAttributes && $this->current->attrs ()->defines ($attrName, true);
   }
 
   /**

@@ -1,9 +1,17 @@
 <?php
 namespace Selenia\Matisse\Base;
-use Selenia\Matisse\AttributeType;
 use Selenia\Matisse\Attributes\VisualComponentAttributes;
+use Selenia\Matisse\AttributeType;
 use Selenia\Matisse\VisualComponent;
 
+/**
+ * Visual containers are components that wrap their content with other markup.
+ *
+ * <p>You may specify the content directly as the component tag's content, or via a specific subtag (`<Content>` by
+ * default).
+ * <p>The subtag is useful on situations where you need to disambiguate the content (because of tag name clashes, for
+ * ex.),
+ */
 class VisualContainerAttributes extends VisualComponentAttributes
 {
   public $content;
@@ -13,7 +21,6 @@ class VisualContainerAttributes extends VisualComponentAttributes
 
 class VisualContainer extends VisualComponent
 {
-
   public $defaultAttribute = 'content';
 
   /**
@@ -37,7 +44,8 @@ class VisualContainer extends VisualComponent
   protected function render ()
   {
     $this->beginContent ();
-    $this->renderSet ($this->getChildren ('content'));
+    $children = $this->hasChildren () ? $this->children : $this->getChildren ($this->defaultAttribute);
+    $this->renderSet ($children);
   }
 
 }

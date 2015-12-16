@@ -67,29 +67,29 @@ class Repeat extends Component implements IAttributes
         $this->contextualModel[$itVar] = $v;
         if ($first) {
           $first = false;
-          $this->renderParameter ('header');
+          $this->renderChildren ('header');
         }
-        else $this->renderParameter ('glue');
+        else $this->renderChildren ('glue');
         $this->renderChildren ();
         if (!--$count) break;
       }
-      if (!$first) $this->renderParameter ('footer');
+      if (!$first) $this->renderChildren ('footer');
       return;
     }
     if ($count > 0) {
       for ($i = 0; $i < $count; ++$i) {
         $this->contextualModel[$idxVar] = $this->contextualModel[$itVar] = $i;
         if ($i == 0)
-          $this->renderParameter ('header');
-        else $this->renderParameter ('glue');
+          $this->renderChildren ('header');
+        else $this->renderChildren ('glue');
         $this->renderChildren ();
       }
       if ($i) {
-        $this->renderParameter ('footer');
+        $this->renderChildren ('footer');
         return;
       }
     }
-    $this->renderParameter ('noData');
+    $this->renderChildren ('noData');
   }
 
 }

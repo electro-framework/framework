@@ -31,6 +31,11 @@ abstract class Component
    */
   public $className;
   /**
+   * The rendering context for the current request.
+   * @var Context
+   */
+  public $context;
+  /**
    * When TRUE indicates that the component will not be rendered.
    *
    * @var boolean
@@ -63,11 +68,6 @@ abstract class Component
    * @var bool
    */
   protected $autoId = false;
-  /**
-   * The rendering context for the current request.
-   * @var Context
-   */
-  public $context;
   /**
    * When true, forces generation of a new auto-id, event if the component already has an assigned id.
    *
@@ -124,7 +124,6 @@ abstract class Component
    * @param boolean   $strict  If true, failure to find a component class will throw an exception.
    *                           If false, an attempt is made to load a template with the same name,
    * @return Component Component instance. For templates, an instance of Template is returned.
-   *                           You should them
    * @throws ComponentException
    * @throws ParseException
    */
@@ -148,7 +147,8 @@ abstract class Component
       try {
         if (is_null ($template))
           $template = self::loadTemplate ($context, $parent, $tagName);
-      } catch (FileIOException $e) {
+      }
+      catch (FileIOException $e) {
         self::throwUnknownComponent ($context, $tagName, $parent);
       }
       $component = new TemplateInstance($context, $tagName, $template, $attributes);
@@ -219,7 +219,7 @@ abstract class Component
 
   public function __set ($name, $value)
   {
-    throw new ComponentException($this, "Can't set non existing property <b>$name</b>.");
+    throw new ComponentException($this, "Can't set non-existing (or non-accessible) property <b>$name</b>.");
   }
 
   function __toString ()
@@ -294,20 +294,14 @@ abstract class Component
 
   /**
    * Renders all children and returns the resulting markup.
-   * Note: the component itself is not rendered.
+   * ><p>**Note:** the component itself is not rendered.
    *
    * @return string
    */
   public function getContent ()
   {
     ob_start (null, 0);
-    if (!$this->inactive) {
-      $this->databind ();
-      $this->preRender ();
-      $this->renderChildren ();
-      $this->postRender ();
-    }
-
+    $this->renderContent ();
     return ob_get_clean ();
   }
 
@@ -335,6 +329,14 @@ abstract class Component
   public final function setTagName ($name)
   {
     $this->tagName = $name;
+  }
+
+  /**
+   * @return bool True if the component has any children at all.
+   */
+  public function hasChildren ()
+  {
+    return !empty($this->children);
   }
 
   function inspect ($deep = true)
@@ -374,26 +376,44 @@ abstract class Component
   }
 
   /**
-   * Invokes doRender() recursively on the component's children.
+   * Invokes doRender() recursively on the component's children (or a subset of).
+   *
+   * @param string|null $attrName [optional] An attribute name. If none, it renders all the component's children.
    */
-  function renderChildren ()
+  public function renderChildren ($attrName = null)
   {
-    if (isset($this->children))
-      foreach ($this->children as $child)
-        $child->doRender ();
+    $children = isset($attrName) ? $this->getChildren ($attrName) : $this->children;
+    foreach ($children as $child)
+      $child->doRender ();
   }
 
   /**
-   * Invokes doRender() recursively on the specified attribute's children.
-   * @param string $name
-   * @throws ComponentException
+   * Renders a set of components as if they are children of this component.
+   *
+   * <p>**Warning:** the components will became detached after begin rendered.
+   *
+   * @param Component[] $components A set of external, non-attached, components.
    */
-  function renderParameter ($name)
+  public function renderExternal (array $components)
   {
-    $children = $this->getChildren ($name);
-    if (!empty($children))
-      foreach ($children as $child)
-        $child->doRender ();
+    $this->attach ($components);
+    foreach ($components as $c)
+      $c->doRender ();
+    $this->detachAll ($components);
+  }
+
+  /**
+   * Renders all children.
+   * ><p>**Note:** the component itself is not rendered.
+   */
+  public function renderContent ()
+  {
+    if (!$this->inactive) {
+      $this->databind ();
+      $this->preRender ();
+      $this->renderChildren ();
+      $this->postRender ();
+    }
   }
 
   /**
@@ -446,11 +466,6 @@ abstract class Component
   protected function render ()
   {
     //implementation is specific to each component type.
-  }
-
-  protected final function runChildren ()
-  {
-    $this->renderChildren ();
   }
 
   protected function setAutoId ()

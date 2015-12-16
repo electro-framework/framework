@@ -19,7 +19,7 @@ class ParameterAttributes extends ComponentAttributes
     return property_exists ($this, $name);
   }
 
-  public function defines ($name)
+  public function defines ($name, $asSubtag = false)
   {
     return true;
   }

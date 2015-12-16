@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Components;
 
-use Selenia\Matisse\Attributes\GenericComponentAttributes;
+use Selenia\Matisse\Attributes\GenericAttributes;
 use Selenia\Matisse\Component;
 use Selenia\Matisse\IAttributes;
 
@@ -12,11 +12,10 @@ use Selenia\Matisse\IAttributes;
 class Body extends Component implements IAttributes
 {
   public $allowsChildren   = true;
-  public $defaultAttribute = 'content';
 
   /**
    * Returns the component's attributes.
-   * @return GenericComponentAttributes
+   * @return GenericAttributes
    */
   public function attrs ()
   {
@@ -25,11 +24,11 @@ class Body extends Component implements IAttributes
 
   /**
    * Creates an instance of the component's attributes.
-   * @return GenericComponentAttributes
+   * @return GenericAttributes
    */
   public function newAttributes ()
   {
-    return new GenericComponentAttributes($this);
+    return new GenericAttributes($this);
   }
 
   /**
@@ -38,11 +37,9 @@ class Body extends Component implements IAttributes
    */
   protected function render ()
   {
-    ob_start ();
-    self::renderSet ($this->getChildren ('content'));
-    $html = ob_get_clean ();
+    $html = $this->getContent();
 
-    if (!empty($html))
+    if ($html != '')
       $this->page->bodyContent .= $html;
 
     $attrs = $this->attrs ()->getAll ();

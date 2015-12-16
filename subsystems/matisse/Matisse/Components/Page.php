@@ -6,72 +6,71 @@ use Selenia\Matisse\Context;
 class Page extends Component
 {
   public $allowsChildren = true;
+  public $author         = '';
+  public $autoHTML       = true;
   /**
-   * Content to be prepended to the page content. It is usually set via the Body component.
-   * @var string
+   * A map of block names => block contents (array of Component).
+   * @var Component[][]
    */
-  public $bodyContent = '';
-
-  /**
-   * Array of strings/Parameters containing URLs of CSS stylesheets to be loaded during the page loading process.
-   * @var array
-   */
-  public $stylesheets = [];
-
-  /**
-   * Array of strings/Parameters containing URLs of scripts to be loaded during the page loading process.
-   * @var array
-   */
-  public $scripts = [];
-
-  /**
-   * Array of strings (or Parameter objects with child content) containing inline javascripts.
-   * @var array
-   */
-  public $inlineScripts = [];
-
-  /**
-   * Array of strings (or Parameter objects with child content) containing inline javascripts.
-   * @var array
-   */
-  public $inlineDeferredScripts = [];
-
-  /**
-   * Array of strings (or Parameter objects with child content) containing inline css code.
-   * @var array
-   */
-  public $inlineCssStyles = [];
-
-  public $autoHTML         = true;
-  public $doctype          = '<!DOCTYPE HTML>';
-  public $charset          = 'UTF-8';
-  public $title;
-  public $browserIsIE      = false;
-  public $browserIsIE6     = false;
-  public $browserIsIE7     = false;
-  public $browserIsIE8     = false;
-  public $browserIsIE9     = false;
-  public $browserIsFF      = false;
-  public $browserIsSafari  = false;
-  public $browserIsChrome  = false;
-  public $clientIsWindows  = false;
-  public $requestURI;
-  public $enableFileUpload = false;
-  public $formAutocomplete = false;
-  public $description      = '';
-  public $keywords         = '';
-  public $author           = '';
-  public $footer           = '';
-  public $extraHeadTags    = '';
-  public $targetURL;
-  public $defaultAction;
-  /** Content to be inserted before the form element. */
-  public $preForm = '';
+  public $blocks = [];
   /**
    * Map of attributes to set on the body tag.
    * @var array Map of string => mixed
    */
   public $bodyAttrs = null;
+  /**
+   * Content to be appended to the page content. It is usually set via the Body component.
+   * @var string
+   */
+  public $bodyContent      = '';
+  public $browserIsChrome  = false;
+  public $browserIsEdge    = false;
+  public $browserIsFF      = false;
+  public $browserIsIE      = false;
+  public $browserIsIE10    = false;
+  public $browserIsIE11    = false;
+  public $browserIsIE9     = false;
+  public $browserIsSafari  = false;
+  public $charset          = 'UTF-8';
+  public $clientIsWindows  = false;
+  public $defaultAction;
+  public $description      = '';
+  public $doctype          = '<!DOCTYPE HTML>';
+  public $enableFileUpload = false;
+  public $extraHeadTags    = '';
+  public $footer           = '';
+  public $formAutocomplete = false;
+  /**
+   * Array of strings (or Parameter objects with child content) containing inline css code.
+   * @var array
+   */
+  public $inlineCssStyles = [];
+  /**
+   * Array of strings (or Parameter objects with child content) containing inline javascripts.
+   * @var array
+   */
+  public $inlineDeferredScripts = [];
+  /**
+   * Array of strings (or Parameter objects with child content) containing inline javascripts.
+   * @var array
+   */
+  public $inlineScripts = [];
+  public $keywords      = '';
+  /** Content to be inserted before the form element. */
+  public $preForm = '';
+  public $requestURI;
+  /**
+   * Array of strings/Parameters containing URLs of scripts to be loaded during the page loading process.
+   * @var array
+   */
+  public $scripts = [];
+  /**
+   * Array of strings/Parameters containing URLs of CSS stylesheets to be loaded during the page loading process.
+   * @var array
+   */
+  public $stylesheets = [];
+  public $targetURL;
+  public $title;
 
   public function __construct (Context $context)
   {
@@ -82,55 +81,22 @@ class Page extends Component
     $this->requestURI = $_SERVER['REQUEST_URI'];
   }
 
-  public function checkBrowser ()
-  {
-    $b = get ($_SERVER, 'HTTP_USER_AGENT', '');
-    if (preg_match ('#MSIE (\d+)#', $b, $match)) {
-      $v                  = intval ($match[1]);
-      $this->browserIsIE6 = $v == 6;
-      $this->browserIsIE7 = $v == 7;
-      $this->browserIsIE8 = $v == 8;
-      $this->browserIsIE9 = $v >= 9;
-      $this->browserIsIE  = true;
-    }
-    $this->browserIsFF     = strpos ($b, 'Gecko/') !== false;
-    $this->browserIsSafari = strpos ($b, 'Safari') !== false && strpos ($b, 'Chrome') === false;
-    $this->browserIsChrome = strpos ($b, 'Chrome') !== false;
-    $this->clientIsWindows = strpos ($b, 'Windows') !== false;
-  }
-
-  public function addStylesheet ($uri, $prepend = false)
-  {
-    if (array_search ($uri, $this->stylesheets) === false)
-      if ($prepend)
-        array_unshift ($this->stylesheets, $uri);
-      else $this->stylesheets[] = $uri;
-  }
-
-  public function addScript ($uri, $prepend = false)
-  {
-    if (array_search ($uri, $this->scripts) === false)
-      if ($prepend)
-        array_unshift ($this->scripts, $uri);
-      else $this->scripts[] = $uri;
-  }
-
   /**
-   * Adds an inline script to the HEAD section of the page.
-   * @param mixed  $code    Either a string or a Parameter.
-   * @param string $name    An identifier for the script, to prevent duplication.
-   *                        When multiple scripts with the same name are added, only the last one is considered.
+   * Adds an inline stylesheet to the HEAD section of the page.
+   * @param mixed  $css     Either a string or a Parameter.
+   * @param string $name    An identifier for the stylesheet, to prevent duplication.
+   *                        When multiple stylesheets with the same name are added, only the last one is considered.
    * @param bool   $prepend If true, prepend to current list instead of appending.
    */
-  public function addInlineScript ($code, $name = null, $prepend = false)
+  public function addInlineCss ($css, $name = null, $prepend = false)
   {
-    if ($code instanceof Component)
-      $code->attachTo ($this);
+    if ($css instanceof Component)
+      $css->attachTo ($this);
     if (isset($name))
-      $this->inlineScripts[$name] = $code;
+      $this->inlineCssStyles[$name] = $css;
     else if ($prepend)
-      array_unshift ($this->inlineScripts, $code);
-    else $this->inlineScripts[] = $code;
+      array_unshift ($this->inlineCssStyles, $css);
+    else $this->inlineCssStyles[] = $css;
   }
 
   /**
@@ -153,21 +119,88 @@ class Page extends Component
   }
 
   /**
-   * Adds an inline stylesheet to the HEAD section of the page.
-   * @param mixed  $css     Either a string or a Parameter.
-   * @param string $name    An identifier for the stylesheet, to prevent duplication.
-   *                        When multiple stylesheets with the same name are added, only the last one is considered.
+   * Adds an inline script to the HEAD section of the page.
+   * @param mixed  $code    Either a string or a Parameter.
+   * @param string $name    An identifier for the script, to prevent duplication.
+   *                        When multiple scripts with the same name are added, only the last one is considered.
    * @param bool   $prepend If true, prepend to current list instead of appending.
    */
-  public function addInlineCss ($css, $name = null, $prepend = false)
+  public function addInlineScript ($code, $name = null, $prepend = false)
   {
-    if ($css instanceof Component)
-      $css->attachTo ($this);
+    if ($code instanceof Component)
+      $code->attachTo ($this);
     if (isset($name))
-      $this->inlineCssStyles[$name] = $css;
+      $this->inlineScripts[$name] = $code;
     else if ($prepend)
-      array_unshift ($this->inlineCssStyles, $css);
-    else $this->inlineCssStyles[] = $css;
+      array_unshift ($this->inlineScripts, $code);
+    else $this->inlineScripts[] = $code;
+  }
+
+  public function addScript ($uri, $prepend = false)
+  {
+    if (array_search ($uri, $this->scripts) === false)
+      if ($prepend)
+        array_unshift ($this->scripts, $uri);
+      else $this->scripts[] = $uri;
+  }
+
+  public function addStylesheet ($uri, $prepend = false)
+  {
+    if (array_search ($uri, $this->stylesheets) === false)
+      if ($prepend)
+        array_unshift ($this->stylesheets, $uri);
+      else $this->stylesheets[] = $uri;
+  }
+
+  /**
+   * Appends an array of components to a specific block.
+   * @param string      $name    An arbitrary block name.
+   * @param Component[] $content An array of <b>detached</b> components.
+   */
+  public function appendToBlock ($name, array $content)
+  {
+    if (!isset($this->blocks[$name]))
+      $this->blocks[$name] = $content;
+    else $this->blocks[$name] = array_merge ($this->blocks[$name], $content);
+  }
+
+  public function checkBrowser ()
+  {
+    $b = get ($_SERVER, 'HTTP_USER_AGENT', '');
+    if (preg_match ('#MSIE (\d+)#', $b, $match)) {
+      $v                   = intval ($match[1]);
+      $this->browserIsIE10 = $v == 10;
+      $this->browserIsIE9  = $v >= 9;
+      $this->browserIsIE   = true;
+    }
+    if (strpos ($b, 'Trident/7.0; rv:11') !== false)
+      $this->browserIsIE = $this->browserIsIE11 = true;
+    if (strpos ($b, 'Edge/') !== false)
+      $this->browserIsIE = $this->browserIsEdge = true;
+    $this->browserIsFF     = strpos ($b, 'Gecko/') !== false;
+    $this->browserIsSafari = strpos ($b, 'Safari') !== false && strpos ($b, 'Chrome') === false;
+    $this->browserIsChrome = strpos ($b, 'Chrome') !== false;
+    $this->clientIsWindows = strpos ($b, 'Windows') !== false;
+  }
+
+  /**
+   * Returns the content of a specific block.
+   * @param string $name An arbitrary block name.
+   * @returns Component[] $content An array of <b>detached</b> components.
+   */
+  public function getBlock ($name)
+  {
+    return get ($this->blocks, $name, []);
+  }
+
+  /**
+   * Saves an array of components on a specific block, overriding the previous content of it.
+   * @param string      $name    An arbitrary block name.
+   * @param Component[] $content An array of <b>detached</b> components.
+   */
+  public function setBlock ($name, array $content)
+  {
+    $this->blocks[$name] = $content;
   }
 
   protected function render ()
@@ -177,17 +210,17 @@ class Page extends Component
 
       ob_start ();
       $this->renderChildren ();
-      $pageContent = $this->bodyContent . ob_get_clean ();
+      $pageContent = ob_get_clean () . $this->bodyContent;
 
       echo $this->doctype;
       $this->beginTag ("html");
       $this->addAttribute ('class',
         enum (' ',
           when ($this->browserIsIE, 'IE'),
-          when ($this->browserIsIE6, 'IE6'),
-          when ($this->browserIsIE7, 'IE7'),
-          when ($this->browserIsIE8, 'IE8'),
           when ($this->browserIsIE9, 'IE9'),
+          when ($this->browserIsIE10, 'IE10'),
+          when ($this->browserIsIE11, 'IE11'),
+          when ($this->browserIsEdge, 'Edge'),
           when ($this->browserIsFF, 'FF'),
           when ($this->browserIsSafari, 'SAFARI'),
           when ($this->browserIsChrome, 'CHROME'),
