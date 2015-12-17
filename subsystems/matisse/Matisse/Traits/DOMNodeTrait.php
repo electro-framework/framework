@@ -13,7 +13,7 @@ use Selenia\Matisse\Exceptions\ComponentException;
  *
  * It's applicable to the Component class.
  *
- * @property Page $page
+ * @property Page                $page
  * @property ComponentAttributes $attrsObj
  */
 trait DOMNodeTrait
@@ -24,6 +24,13 @@ trait DOMNodeTrait
    */
   public $allowsChildren = false;
   /**
+   * Points to the parent component in the page hierarchy.
+   * It is set to NULL if the component is the top one (a Page instance) or if it's standalone.
+   *
+   * @var Component|null
+   */
+  public $parent = null;
+  /**
    * An array of child components that are either defined on the source code or
    * generated dinamically.
    *
@@ -33,13 +40,6 @@ trait DOMNodeTrait
    * @var Component[]
    */
   private $children = [];
-  /**
-   * Points to the parent component in the page hierarchy.
-   * It is set to NULL if the component is the top one (a Page instance) or if it's standalone.
-   *
-   * @var Component|null
-   */
-  public $parent = null;
 
   /**
    * @param Component[] $components
@@ -147,6 +147,16 @@ trait DOMNodeTrait
     return [];
   }
 
+  /**
+   * Replaces the current children with the supplied ones.
+   *
+   * > <p>**Warning:** the previou children (if any) will be detached.
+   * > <p>If some/all of them are in the new assigned list, problems will occur; in that case, use {@see
+   * getChildrenRef()} instead.
+   *
+   * @param array $children
+   * @param bool  $attach
+   */
   public function setChildren (array $children = [], $attach = true)
   {
     if ($this->children)
@@ -154,6 +164,20 @@ trait DOMNodeTrait
     $this->children = $children;
     if ($attach)
       $this->attach ($children);
+  }
+
+  /**
+   * Returns a reference to the children collection.
+   * > <p>**Note:** use this only for in-place manipulation of the children list, without causing redundant
+   * attachments and detachments (which would occur, for instance, if you called `setChildren()`).
+   *
+   * > <p>**Avoid this** unless it's really neccessary.
+   *
+   * @return Component[] A reference. Never null.
+   */
+  public function & getChildrenRef ()
+  {
+    return $this->children;
   }
 
   public function getClonedChildren ($attrName = null)

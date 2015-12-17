@@ -263,9 +263,7 @@ class Template extends Component implements IAttributes
           $values = array_values ($attrs);
           foreach ($values as $paramArray)
             $this->applyTo ($paramArray, $instance);
-          $children = $component->getChildren ();
-          $this->applyTo ($children, $instance);
-          $this->setChildren ($children, false);
+          $this->applyTo ($component->getChildrenRef (), $instance);
         }
       }
   }
