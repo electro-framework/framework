@@ -32,7 +32,7 @@ trait DOMNodeTrait
    *
    * @var Component[]
    */
-  public $children = [];
+  protected $children = [];
   /**
    * Points to the parent component in the page hierarchy.
    * It is set to NULL if the component is the top one (a Page instance) or if it's standalone.

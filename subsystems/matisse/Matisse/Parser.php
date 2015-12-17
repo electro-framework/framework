@@ -319,8 +319,8 @@ does not support the specified parameter <b>$tag</b>.
   {
     $o    = [];
     $prev = null;
-    if (isset($c->children))
-      foreach ($c->children as $child) {
+    if ($c->hasChildren ())
+      foreach ($c->getChildren () as $child) {
         if ($prev && ($child instanceof Literal || $child instanceof Text) && empty($child->bindings)) {
           if (($prev instanceof Literal || $prev instanceof Text) &&
               empty($prev->bindings) && empty($child->bindings) &&
@@ -334,7 +334,7 @@ does not support the specified parameter <b>$tag</b>.
         $o[]  = $child;
         $prev = $child;
       }
-    $c->children = $o;
+    $c->setChildren ($o);
   }
 
   private function createParameter ($attrName, $tagName, array $attributes = null, array $bindings = null)
