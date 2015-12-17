@@ -86,8 +86,8 @@ class Template extends Component implements IAttributes
           $component->removeBinding ($attrName);
         }
       }
-    if (!empty($component->children))
-      foreach ($component->children as $child)
+    if ($component->hasChildren ())
+      foreach ($component->getChildren () as $child)
         self::parsingtimeDatabind ($child, $instance, $force || $component instanceof Parameter);
   }
 
@@ -121,10 +121,10 @@ class Template extends Component implements IAttributes
           ];
         else if (!empty($script->children))
           $o[] = [
-            'type' => 'isc',
-            'name' => $script->attrs ()->get ('name'),
+            'type'  => 'isc',
+            'name'  => $script->attrs ()->get ('name'),
             'defer' => $script->attrs ()->get ('defer'),
-            'data' => $script,
+            'data'  => $script,
           ];
       }
     }
@@ -171,7 +171,7 @@ class Template extends Component implements IAttributes
 //      }
 //    }
 
-    $cloned = $this->cloneComponents ($this->children);
+    $cloned = $this->getClonedChildren ();
     $this->applyTo ($cloned, $instance);
 
     return $cloned;
@@ -263,7 +263,9 @@ class Template extends Component implements IAttributes
           $values = array_values ($attrs);
           foreach ($values as $paramArray)
             $this->applyTo ($paramArray, $instance);
-          $this->applyTo ($component->children, $instance);
+          $children = $component->getChildren ();
+          $this->applyTo ($children, $instance);
+          $this->setChildren ($children, false);
         }
       }
   }

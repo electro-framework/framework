@@ -21,7 +21,7 @@ class ComponentInspector
     ob_start (null, 0);
     if (is_array ($components))
       foreach ($components as $component)
-        self::inspect($component, $deep);
+        self::inspect ($component, $deep);
     return $nested ? ob_get_clean () : "<code>" . ob_get_clean () . "</code>";
   }
 
@@ -39,13 +39,13 @@ class ComponentInspector
       echo '&nbsp;<span style="color:#888">(detached)</span>';
     if ($component->supportsAttributes) {
       echo '<table style="color:#CCC;margin:0 0 0 15px"><colgroup><col width=1><col width=1><col></colgroup>';
-      $props = $component->attrs()->getAll ();
+      $props = $component->attrs ()->getAll ();
       if (!empty($props))
         foreach ($props as $k => $v)
           if (isset($v)) {
-            $t = $component->attrs()->getTypeOf ($k);
+            $t = $component->attrs ()->getTypeOf ($k);
             if (!$deep || ($t != AttributeType::SRC && $t != AttributeType::PARAMS && $t != AttributeType::METADATA)) {
-              $tn = $component->attrs()->getTypeNameOf ($k);
+              $tn = $component->attrs ()->getTypeNameOf ($k);
               echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
               switch ($t) {
                 case AttributeType::BOOL:
@@ -75,18 +75,18 @@ class ComponentInspector
       if (!empty($props))
         foreach ($props as $k => $v)
           if (isset($v)) {
-            $t = $component->attrs()->getTypeOf ($k);
+            $t = $component->attrs ()->getTypeOf ($k);
             if ($t == AttributeType::SRC || $t == AttributeType::PARAMS || $t == AttributeType::METADATA) {
-              $tn = $component->attrs()->getTypeNameOf ($k);
+              $tn = $component->attrs ()->getTypeNameOf ($k);
               echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i>" .
                    "<tr><td><td colspan=2>";
               switch ($t) {
                 case AttributeType::SRC:
                 case AttributeType::METADATA:
-                  echo self::inspect($component->attrs()->$k, $deep);
+                  echo self::inspect ($component->attrs ()->$k, $deep);
                   break;
                 case AttributeType::PARAMS:
-                  echo self::inspectSet ($component->attrs()->$k, true, true);
+                  echo self::inspectSet ($component->attrs ()->$k, true, true);
                   break;
               }
               echo '</tr>';
@@ -101,11 +101,11 @@ class ComponentInspector
       echo "</table>";
     }
     if ($deep) {
-      if (!empty($component->children)) {
+      if ($component->hasChildren ()) {
         $hasContent = true;
         echo '<span style="color:#9ae6ef">&gt;</span><div style="margin:0 0 0 30px">';
-        foreach ($component->children as $c)
-          self::_inspect($c, true);
+        foreach ($component->getChildren () as $c)
+          self::_inspect ($c, true);
         echo '</div>';
       }
     }

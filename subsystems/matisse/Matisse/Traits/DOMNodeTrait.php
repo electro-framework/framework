@@ -32,7 +32,7 @@ trait DOMNodeTrait
    *
    * @var Component[]
    */
-  protected $children = [];
+  private $children = [];
   /**
    * Points to the parent component in the page hierarchy.
    * It is set to NULL if the component is the top one (a Page instance) or if it's standalone.
@@ -156,7 +156,7 @@ trait DOMNodeTrait
       $this->attach ($children);
   }
 
-  public function getClonedChildren ($attrName)
+  public function getClonedChildren ($attrName = null)
   {
     return self::cloneComponents ($this->getChildren ($attrName));
   }

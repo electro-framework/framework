@@ -192,7 +192,7 @@ class TemplateInstance extends Component implements IAttributes
 
     // Move children to default parameter
 
-    if (!empty($this->children)) {
+    if ($this->hasChildren ()) {
       $def = $this->template->attrs ()->defaultParam;
       if (!empty($def)) {
         $param = $this->template->getParameter ($def);
@@ -206,8 +206,7 @@ class TemplateInstance extends Component implements IAttributes
         $param                = new Parameter($this->context, ucfirst ($def), $type);
         $this->attrsObj->$def = $param;
         $param->attachTo ($this);
-        $param->setChildren ($this->children, false);
-        $this->children = [];
+        $param->setChildren ($this->removeChildren ());
       }
     }
     $content = $this->template->apply ($this);

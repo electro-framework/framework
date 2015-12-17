@@ -44,8 +44,7 @@ class VisualContainer extends VisualComponent
   protected function render ()
   {
     $this->beginContent ();
-    $children = $this->hasChildren () ? $this->children : $this->getChildren ($this->defaultAttribute);
-    $this->renderSet ($children);
+    $this->renderChildren ($this->hasChildren () ? null : $this->defaultAttribute);
   }
 
 }

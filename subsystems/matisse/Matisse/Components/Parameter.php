@@ -48,7 +48,7 @@ class Parameter extends Component implements IAttributes
   public function getValue ()
   {
     if ($this->type == AttributeType::SRC)
-      return $this->children;
+      return $this->getChildren ();
     return $this->value;
   }
 

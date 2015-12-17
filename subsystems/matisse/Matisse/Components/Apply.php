@@ -1,21 +1,21 @@
 <?php
 namespace Selenia\Matisse\Components;
+use Selenia\Matisse\Attributes\ComponentAttributes;
 use Selenia\Matisse\AttributeType;
 use Selenia\Matisse\Component;
-use Selenia\Matisse\Attributes\ComponentAttributes;
 use Selenia\Matisse\IAttributes;
 
 class ApplyAttributes extends ComponentAttributes
 {
   public $attrs;
-  public $where;
   public $recursive;
+  public $where;
 
   protected function typeof_attrs () { return AttributeType::SRC; }
 
-  protected function typeof_where () { return AttributeType::TEXT; }
-
   protected function typeof_recursive () { return AttributeType::BOOL; }
+
+  protected function typeof_where () { return AttributeType::TEXT; }
 }
 
 /**
@@ -64,18 +64,18 @@ class Apply extends Component implements IAttributes
     $attrParam = $attr->attrs;
     $attrs     = $attrParam->attrs ()->getAll ();
     $where     = $attr->where;
-    if (!$where && !empty($this->children)) {
-      foreach ($this->children as $k => $child)
+    if (!$where && $this->hasChildren ()) {
+      foreach ($this->getChildren () as $k => $child)
         $child->attrs ()->apply ($attrs);
     }
     else $this->scan ($this, $attr->where, $attrs);
-    $this->renderChildren();
+    $this->renderChildren ();
   }
 
   private function scan (Component $parent, $where, $attrs)
   {
-    if (isset($parent->children))
-      foreach ($parent->children as $child) {
+    if ($parent->hasChildren ())
+      foreach ($parent->getChildren () as $child) {
         if ($child->getTagName () == $where)
           $child->attrs ()->apply ($attrs);
         $this->scan ($child, $where, $attrs);
