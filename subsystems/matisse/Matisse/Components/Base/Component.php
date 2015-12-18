@@ -1,12 +1,16 @@
 <?php
-namespace Selenia\Matisse;
-use Selenia\Matisse\Attributes\ComponentAttributes;
-use Selenia\Matisse\Base\GenericComponent;
-use Selenia\Matisse\Components\MacroInstance;
-use Selenia\Matisse\Components\Page;
+namespace Selenia\Matisse\Components\Base;
+
+use Selenia\Matisse\Attributes\Base\ComponentAttributes;
+use Selenia\Matisse\ComponentInspector;
+use Selenia\Matisse\Components\Internal\Page;
+use Selenia\Matisse\Components\Macro\MacroInstance;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Exceptions\ParseException;
+use Selenia\Matisse\Interfaces\IAttributes;
+use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Parser\Parser;
 use Selenia\Matisse\Traits\DataBindingTrait;
 use Selenia\Matisse\Traits\DOMNodeTrait;
 use Selenia\Matisse\Traits\MarkupBuilderTrait;

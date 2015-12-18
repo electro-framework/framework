@@ -1,8 +1,9 @@
 <?php
-namespace Selenia\Matisse\Base;
-use Selenia\Matisse\Attributes\VisualComponentAttributes;
-use Selenia\Matisse\Type;
-use Selenia\Matisse\VisualComponent;
+namespace Selenia\Matisse\Components\Base;
+
+use Selenia\Matisse\Attributes\Base\VisualComponentAttributes;
+use Selenia\Matisse\Attributes\DSL\type;
+use Selenia\Matisse\Components\Internal\Parameter;
 
 /**
  * Visual containers are components that wrap their content with other markup.
@@ -14,9 +15,11 @@ use Selenia\Matisse\VisualComponent;
  */
 class VisualContainerAttributes extends VisualComponentAttributes
 {
-  public $content;
+  /**
+   * @var Parameter|null
+   */
+  public $content = type::parameter;
 
-  protected function typeof_content () { return Type::SRC; }
 }
 
 class VisualContainer extends VisualComponent

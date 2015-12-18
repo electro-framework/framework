@@ -1,6 +1,7 @@
 <?php
-namespace Selenia\Matisse;
-use Selenia\Matisse\Components\Macro;
+namespace Selenia\Matisse\Parser;
+
+use Selenia\Matisse\Components\Macro\Macro;
 use Selenia\Matisse\Exceptions\FileIOException;
 
 class Context

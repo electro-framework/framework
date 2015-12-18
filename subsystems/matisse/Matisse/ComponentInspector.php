@@ -1,6 +1,9 @@
 <?php
 namespace Selenia\Matisse;
 
+use Selenia\Matisse\Attributes\DSL\type;
+use Selenia\Matisse\Components\Base\Component;
+
 class ComponentInspector
 {
   static function inspect (Component $component, $deep = true)
@@ -44,20 +47,20 @@ class ComponentInspector
         foreach ($props as $k => $v)
           if (isset($v)) {
             $t = $component->attrs ()->getTypeOf ($k);
-            if (!$deep || ($t != Type::SRC && $t != Type::PARAMS && $t != Type::METADATA)) {
+            if (!$deep || ($t != type::parameter && $t != type::multipleParams && $t != type::metadata)) {
               $tn = $component->attrs ()->getTypeNameOf ($k);
               echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
               switch ($t) {
-                case Type::BOOL:
+                case type::bool:
                   echo '<i>' . ($v ? 'TRUE' : 'FALSE') . '</i>';
                   break;
-                case Type::ID:
+                case type::id:
                   echo "\"$v\"";
                   break;
-                case Type::NUM:
+                case type::number:
                   echo $v;
                   break;
-                case Type::TEXT:
+                case type::text:
                   echo "\"<span style='color:#888;white-space: pre-wrap'>" .
                        str_replace ("\n", '&#8626;', htmlspecialchars (strval ($v))) .
                        '</span>"';
@@ -76,16 +79,16 @@ class ComponentInspector
         foreach ($props as $k => $v)
           if (isset($v)) {
             $t = $component->attrs ()->getTypeOf ($k);
-            if ($t == Type::SRC || $t == Type::PARAMS || $t == Type::METADATA) {
+            if ($t == type::parameter || $t == type::multipleParams || $t == type::metadata) {
               $tn = $component->attrs ()->getTypeNameOf ($k);
               echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i>" .
                    "<tr><td><td colspan=2>";
               switch ($t) {
-                case Type::SRC:
-                case Type::METADATA:
+                case type::parameter:
+                case type::metadata:
                   echo self::inspect ($component->attrs ()->$k, $deep);
                   break;
-                case Type::PARAMS:
+                case type::multipleParams:
                   echo self::inspectSet ($component->attrs ()->$k, true, true);
                   break;
               }

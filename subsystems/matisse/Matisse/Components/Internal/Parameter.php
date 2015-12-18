@@ -1,11 +1,12 @@
 <?php
-namespace Selenia\Matisse\Components;
-use Selenia\Matisse\Attributes\ComponentAttributes;
-use Selenia\Matisse\Attributes\ParameterAttributes;
-use Selenia\Matisse\Type;
-use Selenia\Matisse\Component;
-use Selenia\Matisse\Context;
-use Selenia\Matisse\IAttributes;
+namespace Selenia\Matisse\Components\Internal;
+
+use Selenia\Matisse\Attributes\Base\ComponentAttributes;
+use Selenia\Matisse\Attributes\Base\ParameterAttributes;
+use Selenia\Matisse\Attributes\DSL\type;
+use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Interfaces\IAttributes;
+use Selenia\Matisse\Parser\Context;
 
 /**
  * A complex attribute that is expressed as a subtag.
@@ -48,7 +49,7 @@ class Parameter extends Component implements IAttributes
 
   public function getValue ()
   {
-    if ($this->type == Type::SRC)
+    if ($this->type == type::parameter)
       return $this->getChildren ();
     return $this->value;
   }
@@ -56,7 +57,7 @@ class Parameter extends Component implements IAttributes
   public function isScalar ()
   {
     //Note that parameters are never of type TYPE_PARAMS.
-    return $this->type != Type::SRC;
+    return $this->type != type::parameter;
   }
 
   /**

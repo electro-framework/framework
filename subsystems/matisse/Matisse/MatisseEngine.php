@@ -1,6 +1,10 @@
 <?php
 namespace Selenia\Matisse;
-use Selenia\Matisse\Components\Page;
+
+use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Components\Internal\Page;
+use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Parser\Parser;
 
 class MatisseEngine
 {
@@ -16,14 +20,14 @@ class MatisseEngine
    * @var array string => string
    */
   private static $coreTags = [
-    'Repeat'  => Components\Repeat::class,
-    'Macro'   => Components\Macro::class,
+    'Apply'   => Components\Apply::class,
+    'Block'   => Components\Block::class,
+    'Body'    => Components\Body::class,
+    'Head'    => Components\Head::class,
     'If'      => Components\If_::class,
     'Literal' => Components\Literal::class,
-    'Apply'   => Components\Apply::class,
-    'Head'    => Components\Head::class,
-    'Body'    => Components\Body::class,
-    'Block'   => Components\Block::class,
+    'Macro'   => Components\Macro\Macro::class,
+    'Repeat'  => Components\Repeat::class,
   ];
 
   /**

@@ -1,33 +1,41 @@
 <?php
 namespace Selenia\Matisse\Components;
-use Selenia\Matisse\Attributes\ComponentAttributes;
-use Selenia\Matisse\Type;
-use Selenia\Matisse\Component;
-use Selenia\Matisse\Context;
-use Selenia\Matisse\IAttributes;
+
+use Selenia\Matisse\Attributes\Base\ComponentAttributes;
+use Selenia\Matisse\Attributes\DSL\type;
+use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Components\Internal\Parameter;
+use Selenia\Matisse\Interfaces\IAttributes;
+use Selenia\Matisse\Parser\Context;
 
 class LiteralAttributes extends ComponentAttributes
 {
   protected static $NEVER_DIRTY = ['value' => 1];
-  public $cdata      = false;
-  /** @var Parameter */
-  public $content = null;
-  public $encode     = false;
-  public $nl2br   = false;
-  public $value      = '';
+
+  /**
+   * @var bool
+   */
+  public $cdata = false;
+  /**
+   * @var Parameter|null
+   */
+  public $content = type::parameter;
+  /**
+   * @var bool
+   */
+  public $encode = false;
+  /**
+   * @var bool
+   */
+  public $nl2br = false;
+  /**
+   * @var string
+   */
+  public $value = '';
+  /**
+   * @var bool
+   */
   public $whitespace = true;
-
-  protected function typeof_cdata () { return Type::BOOL; }
-
-  protected function typeof_content () { return Type::SRC; }
-
-  protected function typeof_encode () { return Type::BOOL; }
-
-  protected function typeof_nl2br () { return Type::BOOL; }
-
-  protected function typeof_value () { return Type::TEXT; }
-
-  protected function typeof_whitespace () { return Type::BOOL; }
 }
 
 class Literal extends Component implements IAttributes

@@ -2,13 +2,13 @@
 namespace Selenia\Matisse\Traits;
 
 use PhpCode;
-use Selenia\Matisse\Attributes\ComponentAttributes;
-use Selenia\Matisse\Component;
-use Selenia\Matisse\Context;
+use Selenia\Matisse\Attributes\Base\ComponentAttributes;
+use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Exceptions\HandlerNotFoundException;
 use Selenia\Matisse\MatisseEngine;
+use Selenia\Matisse\Parser\Context;
 
 /**
  * Provides an API for handling data binding on a component's properties.

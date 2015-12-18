@@ -1,9 +1,9 @@
 <?php
 namespace Selenia\Matisse\Components;
 
-use Selenia\Matisse\Attributes\GenericAttributes;
-use Selenia\Matisse\Component;
-use Selenia\Matisse\IAttributes;
+use Selenia\Matisse\Attributes\Base\GenericAttributes;
+use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Interfaces\IAttributes;
 
 /**
  * The Body component allows one to set the body tag's attributes and/or, optionally, specify the content that will

@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Matisse\Attributes;
+namespace Selenia\Matisse\Attributes\Base;
 
 class ParameterAttributes extends ComponentAttributes
 {

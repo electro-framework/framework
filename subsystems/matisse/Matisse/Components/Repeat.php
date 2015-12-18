@@ -1,33 +1,42 @@
 <?php
 namespace Selenia\Matisse\Components;
-use Selenia\Matisse\Attributes\ComponentAttributes;
-use Selenia\Matisse\Type;
-use Selenia\Matisse\Component;
-use Selenia\Matisse\IAttributes;
+
+use Selenia\Matisse\Attributes\Base\ComponentAttributes;
+use Selenia\Matisse\Attributes\DSL\type;
+use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Components\Internal\Parameter;
+use Selenia\Matisse\Interfaces\IAttributes;
 
 class RepeaterAttributes extends ComponentAttributes
 {
-  public $as;
-  public $count;
-  public $footer;
-  public $for;
-  public $glue;
-  public $header;
-  public $noData;
-
-  protected function typeof_as () { return Type::TEXT; }
-
-  protected function typeof_count () { return Type::NUM; }
-
-  protected function typeof_footer () { return Type::SRC; }
-
-  protected function typeof_for () { return Type::DATA; }
-
-  protected function typeof_glue () { return Type::SRC; }
-
-  protected function typeof_header () { return Type::SRC; }
-
-  protected function typeof_noData () { return Type::SRC; }
+  /**
+   * @var string
+   */
+  public $as = '';
+  /**
+   * @var int
+   */
+  public $count = 0;
+  /**
+   * @var Parameter|null
+   */
+  public $footer = type::parameter;
+  /**
+   * @var mixed
+   */
+  public $for = type::data;
+  /**
+   * @var Parameter|null
+   */
+  public $glue = type::parameter;
+  /**
+   * @var Parameter|null
+   */
+  public $header = type::parameter;
+  /**
+   * @var Parameter|null
+   */
+  public $noData = type::parameter;
 }
 
 class Repeat extends Component implements IAttributes

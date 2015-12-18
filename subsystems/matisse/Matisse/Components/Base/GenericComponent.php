@@ -1,9 +1,8 @@
 <?php
-namespace Selenia\Matisse\Base;
+namespace Selenia\Matisse\Components\Base;
 
-use Selenia\Matisse\Attributes\GenericAttributes;
-use Selenia\Matisse\Context;
-use Selenia\Matisse\VisualComponent;
+use Selenia\Matisse\Attributes\Base\GenericAttributes;
+use Selenia\Matisse\Parser\Context;
 
 class GenericComponent extends VisualComponent
 {

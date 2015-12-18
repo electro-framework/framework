@@ -1,10 +1,11 @@
 <?php
-namespace Selenia\Matisse\Attributes;
+namespace Selenia\Matisse\Attributes\Base;
 
-use Selenia\Matisse\Type;
-use Selenia\Matisse\Base\Text;
-use Selenia\Matisse\Component;
-use Selenia\Matisse\Components\Parameter;
+use Selenia\Matisse\Attributes\DSL\is;
+use Selenia\Matisse\Attributes\DSL\type;
+use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Components\Internal\Parameter;
+use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Exceptions\ComponentException;
 
 class ComponentAttributes
@@ -15,7 +16,15 @@ class ComponentAttributes
    * @var array
    */
   public static    $TYPE_NAMES     = [
-    'undefined', 'identifier', 'text', 'number', 'boolean', 'parameters', 'source', 'data', 'binding', 'metadata',
+    type::id             => 'identifier',
+    type::text           => 'text',
+    type::number         => 'number',
+    type::bool           => 'boolean',
+    type::multipleParams => 'parameters',
+    type::parameter      => 'source',
+    type::data           => 'data',
+    type::binding        => 'binding',
+    type::metadata       => 'metadata',
   ];
   protected static $BOOLEAN_VALUES = [
     0       => false,
@@ -28,7 +37,30 @@ class ComponentAttributes
     'on'    => true,
   ];
   protected static $NEVER_DIRTY    = [];
-
+  /**
+   * Default values for each attribute.
+   * <p>Map of property name => mixed
+   * @var array
+   */
+  static protected $_defaults = [];
+  /**
+   * Enumerations for each attributes.
+   * <p>Map of property name => array
+   * @var array[]
+   */
+  static protected $_enums = [];
+  /**
+   * Mandatory attributes.
+   * <p>Map of property name => true
+   * @var array
+   */
+  static protected $_required = [];
+  /**
+   * The types of each attribute.
+   * <p>Map of property name => type::XXX
+   * @var string[]
+   */
+  static protected $_types = [];
   /**
    * Set to `true` when one or more attributes have been changed from their default values.
    * @var bool
@@ -43,6 +75,10 @@ class ComponentAttributes
   public function __construct ($component)
   {
     $this->component = $component;
+    if (!static::$_types)
+      $this->initMetadata ();
+    foreach (static::$_defaults as $prop => $val)
+      $this->$prop = $val;
   }
 
   public static function getBoolean ($mixed)
@@ -63,19 +99,19 @@ class ComponentAttributes
   {
     if (isset($v) && $v !== '') {
       switch ($type) {
-        case Type::BOOL:
+        case type::bool:
           return self::getBoolean ($v);
         //throw new InvalidArgumentException("<b>$v</b> (PHP type ".gettype($v).") is not a valid <b>boolean</b> value.");
-        case Type::ID:
+        case type::id:
           if (preg_match ('#^\w+$#', $v) === false)
             throw new \InvalidArgumentException("<b>$v</b> (PHP type " . gettype ($v) .
                                                 ") is not a valid <b>identifier</b>.");
           return $v;
-        case Type::NUM:
+        case type::number:
           if (is_numeric ($v)) return intval ($v);
           throw new \InvalidArgumentException("<b>$v</b> (PHP type " . gettype ($v) .
                                               ") is not a valid <b>number</b>.");
-        case Type::TEXT:
+        case type::text:
           if (!is_scalar ($v))
             throw new \InvalidArgumentException("A value of PHP type <b>" . gettype ($v) .
                                                 "</b> is not valid for a <b>text</b> attribute/parameter.");
@@ -84,7 +120,7 @@ class ComponentAttributes
           $v = preg_replace ('#<br ?/?>$|<p>&nbsp;</p>#', '', $v);
           $v = preg_replace ('#&nbsp;</p>#', '</p>', $v);
           return $v;
-        case Type::DATA:
+        case type::data:
           if ($v instanceof \Iterator)
             return $v;
           if ($v instanceof \IteratorAggregate)
@@ -130,7 +166,7 @@ class ComponentAttributes
   public function defines ($name, $asSubtag = false)
   {
     if ($asSubtag) return $this->isSubtag ($name);
-    return method_exists ($this, "typeof_$name");
+    return isset (self::$_types[$name]);
   }
 
   public function get ($name, $default = null)
@@ -169,7 +205,7 @@ class ComponentAttributes
 
   public function getEnumOf ($name)
   {
-    return $this->{"enum_$name"}();
+    return self::$_enums[$name];
   }
 
   public function getScalar ($name)
@@ -182,39 +218,34 @@ class ComponentAttributes
     $t = $this->getTypeOf ($name);
     if (!is_null ($t))
       return self::$TYPE_NAMES[$t];
-    return self::$TYPE_NAMES[0];
+    return self::$TYPE_NAMES[type::text];
   }
 
   public function getTypeOf ($name)
   {
-    $fn = "typeof_$name";
-    if (method_exists ($this, $fn))
-      return $this->$fn();
-    return Type::TEXT;
+    return self::$_types[$name];
   }
 
   public function isEnum ($name)
   {
-    return method_exists ($this, "enum_$name");
+    return isset(self::$_enums[$name]);
   }
 
   public function isScalar ($name)
   {
     $type = $this->getTypeOf ($name);
-    return $type == Type::BOOL || $type == Type::ID || $type == Type::NUM ||
-           $type == Type::TEXT;
+    return $type == type::bool || $type == type::id || $type == type::number ||
+           $type == type::text;
   }
 
   public function isSubtag ($name)
   {
-    $fn = "typeof_$name";
-    if (method_exists ($this, $fn)) {
-      switch ($this->$fn()) {
-        case Type::SRC:
-        case Type::PARAMS:
-        case Type::METADATA:
-          return true;
-      }
+    $type = $this->getTypeOf ($name);
+    switch ($type) {
+      case type::parameter:
+      case type::multipleParams:
+      case type::metadata:
+        return true;
     }
     return false;
   }
@@ -226,7 +257,7 @@ class ComponentAttributes
     if ($this->isScalar ($name))
       $this->setScalar ($name, $value);
     else switch ($type = $this->getTypeOf ($name)) {
-      case Type::SRC:
+      case type::parameter:
         $ctx  = $this->component->context;
         $text = Text::from ($ctx, $value);
         if (isset($this->$name))
@@ -248,7 +279,7 @@ class ComponentAttributes
   public function setComponent (Component $owner)
   {
     $this->component = $owner;
-    $attrs           = $this->getAttributesOfType (Type::SRC);
+    $attrs           = $this->getAttributesOfType (type::parameter);
     foreach ($attrs as $name => $value)
       if (!is_null ($value)) {
         /** @var Component $c */
@@ -256,7 +287,7 @@ class ComponentAttributes
         $c->attachTo ($owner);
         $this->$name = $c;
       }
-    $attrs = $this->getAttributesOfType (Type::PARAMS);
+    $attrs = $this->getAttributesOfType (type::multipleParams);
     foreach ($attrs as $name => $values)
       if (!empty($values))
         $this->$name = Component::cloneComponents ($values, $owner);
@@ -280,5 +311,111 @@ class ComponentAttributes
     }
   }
 
-  protected function typeof__modified () { return Type::BOOL; }
+  private function initMetadata ()
+  {
+    $class = new \ReflectionClass($this);
+    foreach ($class->getProperties (\ReflectionProperty::IS_PUBLIC) as $property) {
+      $name  = $property->name;
+      $value = $this->$name;
+      if (!is_array ($value))
+        $value = [$value];
+      $it = new \ArrayIterator($value);
+      while ($it->valid ()) {
+        $v = $it->current ();
+        if (is_string ($v)) {
+          if ($v !== '' && $v[0] == '§') // It's metadata.
+            switch ($v) {
+
+              case is::enum:
+                $it->next ();
+                if ($it->valid ()) {
+                  $e = $it->current ();
+                  if (is_array ($e))
+                    self::$_enums[$name] = $e;
+                  else throw new ComponentException($this, "Invalid enumeration for the <kbd>$name</kbd> attribute");
+                }
+                else throw new ComponentException($this,
+                  "Missing argument for the <kbd>$name</kbd> attribute's enumeration");
+                break;
+
+              case is::required:
+                self::$_required[$name] = true;
+                break;
+
+              case type::binding:
+                self::$_types[$name]    = $v;
+                self::$_defaults[$name] = '';
+                break;
+
+              case type::bool:
+                self::$_types[$name]    = $v;
+                self::$_defaults[$name] = false;
+                break;
+
+              case type::data:
+                self::$_types[$name]    = $v;
+                self::$_defaults[$name] = null;
+                break;
+
+              case type::id:
+                self::$_types[$name]    = $v;
+                self::$_defaults[$name] = '';
+                break;
+
+              case type::metadata:
+                self::$_types[$name]    = $v;
+                self::$_defaults[$name] = null;
+                break;
+
+              case type::multipleParams:
+                self::$_types[$name]    = $v;
+                self::$_defaults[$name] = null;
+                break;
+
+              case type::number:
+                self::$_types[$name]    = $v;
+                self::$_defaults[$name] = 0;
+                break;
+
+              case type::parameter:
+                self::$_types[$name]    = $v;
+                self::$_defaults[$name] = null;
+                break;
+
+              case type::text:
+                self::$_types[$name]    = $v;
+                self::$_defaults[$name] = '';
+                break;
+
+              default:
+                throw new ComponentException($this, "Invalid type declaration for the <kbd>$name</kbd> attribute");
+            }
+          else {
+            self::$_types[$name]    = type::text;
+            self::$_defaults[$name] = $v;
+          }
+        }
+        else {
+          // The type is defined implicitly via the default value.
+
+          self::$_defaults[$name] = $v;
+          switch (gettype ($v)) {
+            case 'boolean':
+              self::$_types[$name] = type::bool;
+              break;
+            case 'integer':
+            case 'double':
+              self::$_types[$name] = type::number;
+              break;
+            case 'NULL':
+              break;
+          }
+        }
+        $it->next ();
+      }
+      if (!isset(self::$_types[$name]))
+        throw new ComponentException($this, "Missing type declaration for the <kbd>$name</kbd> attribute");
+    }
+  }
+
 }

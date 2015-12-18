@@ -1,17 +1,18 @@
 <?php
-namespace Selenia\Matisse\Base;
-use Selenia\Matisse\Attributes\ComponentAttributes;
-use Selenia\Matisse\Type;
-use Selenia\Matisse\Component;
-use Selenia\Matisse\Context;
-use Selenia\Matisse\IAttributes;
+namespace Selenia\Matisse\Components\Internal;
+
+use Selenia\Matisse\Attributes\Base\ComponentAttributes;
+use Selenia\Matisse\Attributes\DSL\type;
+use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Interfaces\IAttributes;
+use Selenia\Matisse\Parser\Context;
 
 class TextAttributes extends ComponentAttributes
 {
   protected static $NEVER_DIRTY = ['value' => 1];
   public $value = '';
 
-  protected function typeof_value () { return Type::TEXT; }
+  protected function typeof_value () { return type::text; }
 }
 
 class Text extends Component implements IAttributes
@@ -50,4 +51,5 @@ class Text extends Component implements IAttributes
   {
     echo $this->attrsObj->value;
   }
+
 }

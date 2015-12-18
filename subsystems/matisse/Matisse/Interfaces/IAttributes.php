@@ -1,6 +1,7 @@
 <?php
-namespace Selenia\Matisse;
-use Selenia\Matisse\Attributes\ComponentAttributes;
+namespace Selenia\Matisse\Interfaces;
+
+use Selenia\Matisse\Attributes\Base\ComponentAttributes;
 
 /**
  * Components that implement this interface support attributes, whose values are usually specified on the HTML markup

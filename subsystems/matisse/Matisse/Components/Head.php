@@ -1,8 +1,8 @@
 <?php
 namespace Selenia\Matisse\Components;
-use Selenia\Matisse\Attributes\ComponentAttributes;
-use Selenia\Matisse\Component;
-use Selenia\Matisse\IAttributes;
+use Selenia\Matisse\Attributes\Base\ComponentAttributes;
+use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Interfaces\IAttributes;
 
 class Head extends Component implements IAttributes
 {

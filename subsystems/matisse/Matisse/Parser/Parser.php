@@ -1,10 +1,14 @@
 <?php
-namespace Selenia\Matisse;
-use Selenia\Matisse\Base\Text;
+namespace Selenia\Matisse\Parser;
+
+use Selenia\Matisse\Attributes\DSL\type;
+use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Components\Internal\Page;
+use Selenia\Matisse\Components\Internal\Parameter;
+use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Components\Literal;
-use Selenia\Matisse\Components\Page;
-use Selenia\Matisse\Components\Parameter;
 use Selenia\Matisse\Exceptions\ParseException;
+use Selenia\Matisse\Interfaces\IAttributes;
 
 class Parser
 {
@@ -323,7 +327,7 @@ does not support the specified parameter <b>$tag</b>.
     // All descendants of a metadata parameter are always parameters.
     if ($this->current instanceof Parameter) {
       switch ($this->current->type) {
-        case Type::METADATA:
+        case type::metadata:
           return true;
       }
       // Descendants of parameters not of metadata type cannot be parameters.
@@ -340,16 +344,16 @@ does not support the specified parameter <b>$tag</b>.
     $this->current = $param = new Parameter($this->context, $tagName, $type, $attributes);
     $param->attachTo ($component);
     switch ($type) {
-      case Type::SRC:
+      case type::parameter:
         $component->attrs ()->$attrName = $param;
         $param->bindings                = $bindings;
         break;
-      case Type::METADATA:
+      case type::metadata:
         $component->attrs ()->$attrName = $param;
         $param->bindings                = $bindings;
         $this->metadataContainer        = $param;
         break;
-      case Type::PARAMS:
+      case type::multipleParams:
         if (isset($component->attrs ()->$attrName))
           $component->attrs ()->{$attrName}[] = $param;
         else $component->attrs ()->$attrName = [$param];
@@ -364,7 +368,7 @@ does not support the specified parameter <b>$tag</b>.
   private function subtag_createSubParam ($name, $tagName, array $attributes = null, array $bindings = null)
   {
     $param              = $this->current;
-    $this->current      = $subparam = new Parameter($this->context, $tagName, Type::SRC, $attributes);
+    $this->current      = $subparam = new Parameter($this->context, $tagName, type::parameter, $attributes);
     $subparam->bindings = $bindings;
     $param->addChild ($subparam);
     return $subparam;

@@ -1,36 +1,47 @@
 <?php
 namespace Selenia\Matisse\Components;
-use Selenia\Matisse\Attributes\ComponentAttributes;
-use Selenia\Matisse\Type;
-use Selenia\Matisse\Component;
-use Selenia\Matisse\IAttributes;
+
+use Selenia\Matisse\Attributes\Base\ComponentAttributes;
+use Selenia\Matisse\Attributes\DSL\type;
+use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Components\Internal\Parameter;
+use Selenia\Matisse\Interfaces\IAttributes;
 
 class IfAttributes extends ComponentAttributes
 {
-  public $case;
-  public $else;
-  public $is;
-  public $isSet  = false;
+  /**
+   * @var Parameter[]
+   */
+  public $case = type::multipleParams;
+  /**
+   * @var Parameter|null
+   */
+  public $else = type::parameter;
+  /**
+   * @var string
+   */
+  public $is = '';
+  /**
+   * @var bool
+   */
+  public $isSet = false;
+  /**
+   * @var bool
+   */
   public $isTrue = false;
-  public $matches;
-  public $not    = false;          //note: doesn't work with databinding
-  public $the;
-
-  protected function typeof_case () { return Type::PARAMS; }
-
-  protected function typeof_else () { return Type::SRC; }
-
-  protected function typeof_is () { return Type::TEXT; }
-
-  protected function typeof_isSet () { return Type::BOOL; }
-
-  protected function typeof_isTrue () { return Type::BOOL; }
-
-  protected function typeof_matches () { return Type::TEXT; }
-
-  protected function typeof_not () { return Type::BOOL; }
-
-  protected function typeof_the () { return Type::TEXT; }
+  /**
+   * @var string
+   */
+  public $matches = '';
+  /**
+   * > **Mote:** it doesn't work with databinding.
+   * @var bool
+   */
+  public $not = false;
+  /**
+   * @var string
+   */
+  public $the = '';
 }
 
 /**
@@ -131,11 +142,8 @@ class If_ extends Component implements IAttributes
 
     if (isset($attr->case)) {
       foreach ($attr->case as $param) {
-//        $param->databind ();
         if ($v == $param->attrs ()->is) {
-//          $children = self::cloneComponents ($param->children);
-//          $this->setChildren ($children);
-          $this->setChildren ($param->children);
+          $this->attachAndRenderSet ($param->getChildren ());
           return;
         }
       }

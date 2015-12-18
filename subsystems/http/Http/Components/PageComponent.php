@@ -22,7 +22,7 @@ use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Interfaces\Views\ViewInterface;
-use Selenia\Matisse\Components\Page;
+use Selenia\Matisse\Components\Internal\Page;
 use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\Services\Router;
 use Selenia\Traits\PolymorphicInjectionTrait;
