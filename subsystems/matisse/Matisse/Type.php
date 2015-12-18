@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse;
 
-class AttributeType
+class Type
 {
   /** Alphanumeric identifier. */
   const ID = 1;

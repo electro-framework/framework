@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Components;
 use Selenia\Matisse\Attributes\ComponentAttributes;
-use Selenia\Matisse\AttributeType;
+use Selenia\Matisse\Type;
 use Selenia\Matisse\Component;
 use Selenia\Matisse\IAttributes;
 
@@ -15,19 +15,19 @@ class RepeaterAttributes extends ComponentAttributes
   public $header;
   public $noData;
 
-  protected function typeof_as () { return AttributeType::TEXT; }
+  protected function typeof_as () { return Type::TEXT; }
 
-  protected function typeof_count () { return AttributeType::NUM; }
+  protected function typeof_count () { return Type::NUM; }
 
-  protected function typeof_footer () { return AttributeType::SRC; }
+  protected function typeof_footer () { return Type::SRC; }
 
-  protected function typeof_for () { return AttributeType::DATA; }
+  protected function typeof_for () { return Type::DATA; }
 
-  protected function typeof_glue () { return AttributeType::SRC; }
+  protected function typeof_glue () { return Type::SRC; }
 
-  protected function typeof_header () { return AttributeType::SRC; }
+  protected function typeof_header () { return Type::SRC; }
 
-  protected function typeof_noData () { return AttributeType::SRC; }
+  protected function typeof_noData () { return Type::SRC; }
 }
 
 class Repeat extends Component implements IAttributes

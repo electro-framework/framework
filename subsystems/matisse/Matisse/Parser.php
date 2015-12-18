@@ -323,7 +323,7 @@ does not support the specified parameter <b>$tag</b>.
     // All descendants of a metadata parameter are always parameters.
     if ($this->current instanceof Parameter) {
       switch ($this->current->type) {
-        case AttributeType::METADATA:
+        case Type::METADATA:
           return true;
       }
       // Descendants of parameters not of metadata type cannot be parameters.
@@ -340,16 +340,16 @@ does not support the specified parameter <b>$tag</b>.
     $this->current = $param = new Parameter($this->context, $tagName, $type, $attributes);
     $param->attachTo ($component);
     switch ($type) {
-      case AttributeType::SRC:
+      case Type::SRC:
         $component->attrs ()->$attrName = $param;
         $param->bindings                = $bindings;
         break;
-      case AttributeType::METADATA:
+      case Type::METADATA:
         $component->attrs ()->$attrName = $param;
         $param->bindings                = $bindings;
         $this->metadataContainer        = $param;
         break;
-      case AttributeType::PARAMS:
+      case Type::PARAMS:
         if (isset($component->attrs ()->$attrName))
           $component->attrs ()->{$attrName}[] = $param;
         else $component->attrs ()->$attrName = [$param];
@@ -364,7 +364,7 @@ does not support the specified parameter <b>$tag</b>.
   private function subtag_createSubParam ($name, $tagName, array $attributes = null, array $bindings = null)
   {
     $param              = $this->current;
-    $this->current      = $subparam = new Parameter($this->context, $tagName, AttributeType::SRC, $attributes);
+    $this->current      = $subparam = new Parameter($this->context, $tagName, Type::SRC, $attributes);
     $subparam->bindings = $bindings;
     $param->addChild ($subparam);
     return $subparam;

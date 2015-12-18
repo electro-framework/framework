@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Attributes;
 
-use Selenia\Matisse\AttributeType;
+use Selenia\Matisse\Type;
 use Selenia\Matisse\Base\Text;
 use Selenia\Matisse\Component;
 use Selenia\Matisse\Components\Parameter;
@@ -63,19 +63,19 @@ class ComponentAttributes
   {
     if (isset($v) && $v !== '') {
       switch ($type) {
-        case AttributeType::BOOL:
+        case Type::BOOL:
           return self::getBoolean ($v);
         //throw new InvalidArgumentException("<b>$v</b> (PHP type ".gettype($v).") is not a valid <b>boolean</b> value.");
-        case AttributeType::ID:
+        case Type::ID:
           if (preg_match ('#^\w+$#', $v) === false)
             throw new \InvalidArgumentException("<b>$v</b> (PHP type " . gettype ($v) .
                                                 ") is not a valid <b>identifier</b>.");
           return $v;
-        case AttributeType::NUM:
+        case Type::NUM:
           if (is_numeric ($v)) return intval ($v);
           throw new \InvalidArgumentException("<b>$v</b> (PHP type " . gettype ($v) .
                                               ") is not a valid <b>number</b>.");
-        case AttributeType::TEXT:
+        case Type::TEXT:
           if (!is_scalar ($v))
             throw new \InvalidArgumentException("A value of PHP type <b>" . gettype ($v) .
                                                 "</b> is not valid for a <b>text</b> attribute/parameter.");
@@ -84,7 +84,7 @@ class ComponentAttributes
           $v = preg_replace ('#<br ?/?>$|<p>&nbsp;</p>#', '', $v);
           $v = preg_replace ('#&nbsp;</p>#', '</p>', $v);
           return $v;
-        case AttributeType::DATA:
+        case Type::DATA:
           if ($v instanceof \Iterator)
             return $v;
           if ($v instanceof \IteratorAggregate)
@@ -190,7 +190,7 @@ class ComponentAttributes
     $fn = "typeof_$name";
     if (method_exists ($this, $fn))
       return $this->$fn();
-    return AttributeType::TEXT;
+    return Type::TEXT;
   }
 
   public function isEnum ($name)
@@ -201,8 +201,8 @@ class ComponentAttributes
   public function isScalar ($name)
   {
     $type = $this->getTypeOf ($name);
-    return $type == AttributeType::BOOL || $type == AttributeType::ID || $type == AttributeType::NUM ||
-           $type == AttributeType::TEXT;
+    return $type == Type::BOOL || $type == Type::ID || $type == Type::NUM ||
+           $type == Type::TEXT;
   }
 
   public function isSubtag ($name)
@@ -210,9 +210,9 @@ class ComponentAttributes
     $fn = "typeof_$name";
     if (method_exists ($this, $fn)) {
       switch ($this->$fn()) {
-        case AttributeType::SRC:
-        case AttributeType::PARAMS:
-        case AttributeType::METADATA:
+        case Type::SRC:
+        case Type::PARAMS:
+        case Type::METADATA:
           return true;
       }
     }
@@ -226,7 +226,7 @@ class ComponentAttributes
     if ($this->isScalar ($name))
       $this->setScalar ($name, $value);
     else switch ($type = $this->getTypeOf ($name)) {
-      case AttributeType::SRC:
+      case Type::SRC:
         $ctx  = $this->component->context;
         $text = Text::from ($ctx, $value);
         if (isset($this->$name))
@@ -248,7 +248,7 @@ class ComponentAttributes
   public function setComponent (Component $owner)
   {
     $this->component = $owner;
-    $attrs           = $this->getAttributesOfType (AttributeType::SRC);
+    $attrs           = $this->getAttributesOfType (Type::SRC);
     foreach ($attrs as $name => $value)
       if (!is_null ($value)) {
         /** @var Component $c */
@@ -256,7 +256,7 @@ class ComponentAttributes
         $c->attachTo ($owner);
         $this->$name = $c;
       }
-    $attrs = $this->getAttributesOfType (AttributeType::PARAMS);
+    $attrs = $this->getAttributesOfType (Type::PARAMS);
     foreach ($attrs as $name => $values)
       if (!empty($values))
         $this->$name = Component::cloneComponents ($values, $owner);
@@ -280,5 +280,5 @@ class ComponentAttributes
     }
   }
 
-  protected function typeof__modified () { return AttributeType::BOOL; }
+  protected function typeof__modified () { return Type::BOOL; }
 }

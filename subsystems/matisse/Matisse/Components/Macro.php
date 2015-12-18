@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Components;
 use Selenia\Matisse\Attributes\ComponentAttributes;
-use Selenia\Matisse\AttributeType;
+use Selenia\Matisse\Type;
 use Selenia\Matisse\Component;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\IAttributes;
@@ -14,15 +14,15 @@ class MacroAttributes extends ComponentAttributes
   public $script;
   public $style;
 
-  protected function typeof_defaultParam () { return AttributeType::ID; }
+  protected function typeof_defaultParam () { return Type::ID; }
 
-  protected function typeof_name () { return AttributeType::ID; }
+  protected function typeof_name () { return Type::ID; }
 
-  protected function typeof_param () { return AttributeType::PARAMS; }
+  protected function typeof_param () { return Type::PARAMS; }
 
-  protected function typeof_script () { return AttributeType::PARAMS; }
+  protected function typeof_script () { return Type::PARAMS; }
 
-  protected function typeof_style () { return AttributeType::PARAMS; }
+  protected function typeof_style () { return Type::PARAMS; }
 }
 
 class Macro extends Component implements IAttributes
@@ -238,9 +238,9 @@ class Macro extends Component implements IAttributes
                       }
                       if (!self::isBindingExpression ($value))
                         //convert boolean value to string, only for literals
-                        if ($instance->attrs ()->getTypeOf ($attrName) == AttributeType::BOOL)
+                        if ($instance->attrs ()->getTypeOf ($attrName) == Type::BOOL)
                           $value =
-                            ComponentAttributes::validateScalar (AttributeType::BOOL, $value)
+                            ComponentAttributes::validateScalar (Type::BOOL, $value)
                               ? 'true' : 'false';
                     }
                     if (self::isBindingExpression ($value)) {
@@ -256,10 +256,10 @@ class Macro extends Component implements IAttributes
               }
             }
           }
-          $attrs  = $component->attrs ()->getAttributesOfType (AttributeType::SRC);
+          $attrs  = $component->attrs ()->getAttributesOfType (Type::SRC);
           $values = array_values ($attrs);
           $this->applyTo ($values, $instance);
-          $attrs  = $component->attrs ()->getAttributesOfType (AttributeType::PARAMS);
+          $attrs  = $component->attrs ()->getAttributesOfType (Type::PARAMS);
           $values = array_values ($attrs);
           foreach ($values as $paramArray)
             $this->applyTo ($paramArray, $instance);

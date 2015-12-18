@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Base;
 use Selenia\Matisse\Attributes\VisualComponentAttributes;
-use Selenia\Matisse\AttributeType;
+use Selenia\Matisse\Type;
 use Selenia\Matisse\VisualComponent;
 
 /**
@@ -16,7 +16,7 @@ class VisualContainerAttributes extends VisualComponentAttributes
 {
   public $content;
 
-  protected function typeof_content () { return AttributeType::SRC; }
+  protected function typeof_content () { return Type::SRC; }
 }
 
 class VisualContainer extends VisualComponent

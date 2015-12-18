@@ -44,20 +44,20 @@ class ComponentInspector
         foreach ($props as $k => $v)
           if (isset($v)) {
             $t = $component->attrs ()->getTypeOf ($k);
-            if (!$deep || ($t != AttributeType::SRC && $t != AttributeType::PARAMS && $t != AttributeType::METADATA)) {
+            if (!$deep || ($t != Type::SRC && $t != Type::PARAMS && $t != Type::METADATA)) {
               $tn = $component->attrs ()->getTypeNameOf ($k);
               echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
               switch ($t) {
-                case AttributeType::BOOL:
+                case Type::BOOL:
                   echo '<i>' . ($v ? 'TRUE' : 'FALSE') . '</i>';
                   break;
-                case AttributeType::ID:
+                case Type::ID:
                   echo "\"$v\"";
                   break;
-                case AttributeType::NUM:
+                case Type::NUM:
                   echo $v;
                   break;
-                case AttributeType::TEXT:
+                case Type::TEXT:
                   echo "\"<span style='color:#888;white-space: pre-wrap'>" .
                        str_replace ("\n", '&#8626;', htmlspecialchars (strval ($v))) .
                        '</span>"';
@@ -76,16 +76,16 @@ class ComponentInspector
         foreach ($props as $k => $v)
           if (isset($v)) {
             $t = $component->attrs ()->getTypeOf ($k);
-            if ($t == AttributeType::SRC || $t == AttributeType::PARAMS || $t == AttributeType::METADATA) {
+            if ($t == Type::SRC || $t == Type::PARAMS || $t == Type::METADATA) {
               $tn = $component->attrs ()->getTypeNameOf ($k);
               echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i>" .
                    "<tr><td><td colspan=2>";
               switch ($t) {
-                case AttributeType::SRC:
-                case AttributeType::METADATA:
+                case Type::SRC:
+                case Type::METADATA:
                   echo self::inspect ($component->attrs ()->$k, $deep);
                   break;
-                case AttributeType::PARAMS:
+                case Type::PARAMS:
                   echo self::inspectSet ($component->attrs ()->$k, true, true);
                   break;
               }

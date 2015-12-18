@@ -2,7 +2,7 @@
 namespace Selenia\Matisse\Components;
 use Selenia\Matisse\Attributes\ComponentAttributes;
 use Selenia\Matisse\Attributes\ParameterAttributes;
-use Selenia\Matisse\AttributeType;
+use Selenia\Matisse\Type;
 use Selenia\Matisse\Component;
 use Selenia\Matisse\Context;
 use Selenia\Matisse\IAttributes;
@@ -48,7 +48,7 @@ class Parameter extends Component implements IAttributes
 
   public function getValue ()
   {
-    if ($this->type == AttributeType::SRC)
+    if ($this->type == Type::SRC)
       return $this->getChildren ();
     return $this->value;
   }
@@ -56,7 +56,7 @@ class Parameter extends Component implements IAttributes
   public function isScalar ()
   {
     //Note that parameters are never of type TYPE_PARAMS.
-    return $this->type != AttributeType::SRC;
+    return $this->type != Type::SRC;
   }
 
   /**

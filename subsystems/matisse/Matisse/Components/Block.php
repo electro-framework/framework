@@ -2,7 +2,7 @@
 namespace Selenia\Matisse\Components;
 
 use Selenia\Matisse\Attributes\ComponentAttributes;
-use Selenia\Matisse\AttributeType;
+use Selenia\Matisse\Type;
 use Selenia\Matisse\Component;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\IAttributes;
@@ -13,13 +13,13 @@ class BlockAttributes extends ComponentAttributes
   public $replace = false;
   public $yield;
 
-  protected function typeof_content () { return AttributeType::SRC; }
+  protected function typeof_content () { return Type::SRC; }
 
-  protected function typeof_name () { return AttributeType::ID; }
+  protected function typeof_name () { return Type::ID; }
 
-  protected function typeof_replace () { return AttributeType::BOOL; }
+  protected function typeof_replace () { return Type::BOOL; }
 
-  protected function typeof_yield () { return AttributeType::ID; }
+  protected function typeof_yield () { return Type::ID; }
 
 }
 

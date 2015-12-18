@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Components;
 use Selenia\Matisse\Attributes\ComponentAttributes;
-use Selenia\Matisse\AttributeType;
+use Selenia\Matisse\Type;
 use Selenia\Matisse\Component;
 use Selenia\Matisse\IAttributes;
 
@@ -16,21 +16,21 @@ class IfAttributes extends ComponentAttributes
   public $not    = false;          //note: doesn't work with databinding
   public $the;
 
-  protected function typeof_case () { return AttributeType::PARAMS; }
+  protected function typeof_case () { return Type::PARAMS; }
 
-  protected function typeof_else () { return AttributeType::SRC; }
+  protected function typeof_else () { return Type::SRC; }
 
-  protected function typeof_is () { return AttributeType::TEXT; }
+  protected function typeof_is () { return Type::TEXT; }
 
-  protected function typeof_isSet () { return AttributeType::BOOL; }
+  protected function typeof_isSet () { return Type::BOOL; }
 
-  protected function typeof_isTrue () { return AttributeType::BOOL; }
+  protected function typeof_isTrue () { return Type::BOOL; }
 
-  protected function typeof_matches () { return AttributeType::TEXT; }
+  protected function typeof_matches () { return Type::TEXT; }
 
-  protected function typeof_not () { return AttributeType::BOOL; }
+  protected function typeof_not () { return Type::BOOL; }
 
-  protected function typeof_the () { return AttributeType::TEXT; }
+  protected function typeof_the () { return Type::TEXT; }
 }
 
 /**

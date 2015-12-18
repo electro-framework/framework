@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Components;
 use Selenia\Matisse\Attributes\ComponentAttributes;
-use Selenia\Matisse\AttributeType;
+use Selenia\Matisse\Type;
 use Selenia\Matisse\Component;
 use Selenia\Matisse\IAttributes;
 
@@ -11,11 +11,11 @@ class ApplyAttributes extends ComponentAttributes
   public $recursive;
   public $where;
 
-  protected function typeof_attrs () { return AttributeType::SRC; }
+  protected function typeof_attrs () { return Type::SRC; }
 
-  protected function typeof_recursive () { return AttributeType::BOOL; }
+  protected function typeof_recursive () { return Type::BOOL; }
 
-  protected function typeof_where () { return AttributeType::TEXT; }
+  protected function typeof_where () { return Type::TEXT; }
 }
 
 /**

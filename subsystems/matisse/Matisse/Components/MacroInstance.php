@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Components;
 use Selenia\Matisse\Attributes\ComponentAttributes;
-use Selenia\Matisse\AttributeType;
+use Selenia\Matisse\Type;
 use Selenia\Matisse\Component;
 use Selenia\Matisse\Context;
 use Selenia\Matisse\Exceptions\ComponentException;
@@ -139,12 +139,12 @@ class MacroInstanceAttributes
 
   protected function typeof_script ()
   {
-    return AttributeType::PARAMS;
+    return Type::PARAMS;
   }
 
   protected function typeof_style ()
   {
-    return AttributeType::PARAMS;
+    return Type::PARAMS;
   }
 
 }
@@ -198,7 +198,7 @@ class MacroInstance extends Component implements IAttributes
         if (!$param)
           throw new ComponentException($this, "The macro's declared default parameter is invalid: $def");
         $type = $this->attrsObj->getTypeOf ($def);
-        if ($type != AttributeType::SRC && $type != AttributeType::METADATA)
+        if ($type != Type::SRC && $type != Type::METADATA)
           throw new ComponentException($this,
             "The macro's default parameter <b>$def</b> can't hold content (type: " .
             ComponentAttributes::$TYPE_NAMES[$type] . ").");

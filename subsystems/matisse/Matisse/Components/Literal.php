@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Components;
 use Selenia\Matisse\Attributes\ComponentAttributes;
-use Selenia\Matisse\AttributeType;
+use Selenia\Matisse\Type;
 use Selenia\Matisse\Component;
 use Selenia\Matisse\Context;
 use Selenia\Matisse\IAttributes;
@@ -17,17 +17,17 @@ class LiteralAttributes extends ComponentAttributes
   public $value      = '';
   public $whitespace = true;
 
-  protected function typeof_cdata () { return AttributeType::BOOL; }
+  protected function typeof_cdata () { return Type::BOOL; }
 
-  protected function typeof_content () { return AttributeType::SRC; }
+  protected function typeof_content () { return Type::SRC; }
 
-  protected function typeof_encode () { return AttributeType::BOOL; }
+  protected function typeof_encode () { return Type::BOOL; }
 
-  protected function typeof_nl2br () { return AttributeType::BOOL; }
+  protected function typeof_nl2br () { return Type::BOOL; }
 
-  protected function typeof_value () { return AttributeType::TEXT; }
+  protected function typeof_value () { return Type::TEXT; }
 
-  protected function typeof_whitespace () { return AttributeType::BOOL; }
+  protected function typeof_whitespace () { return Type::BOOL; }
 }
 
 class Literal extends Component implements IAttributes
