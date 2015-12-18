@@ -10,9 +10,10 @@ use Selenia\Matisse\IAttributes;
 /**
  * A complex attribute that is expressed as a subtag.
  *
- * ><p>**Note:** rendering a parameter **does not** render its children.
- * <p>Otherwise problems would occur when rendering a component's children, as some of those components may be parameters.
- * <p>The content of parameters **must always** be rendered manually on the owner component's `render()`.
+ * > <p>**Note:** rendering a parameter **does not** render its children.
+ * > <p>Otherwise problems would occur when rendering a component's children, as some of those components may be
+ * parameters.
+ * > <p>The content of parameters **must always** be rendered manually on the owner component's `render()`.
  */
 class Parameter extends Component implements IAttributes
 {

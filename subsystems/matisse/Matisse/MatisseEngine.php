@@ -5,27 +5,42 @@ use Selenia\Matisse\Components\Page;
 class MatisseEngine
 {
   const MAX_BUFFER_SIZE = 1048576; // 1Mb = 1024 * 1024
-
+  /**
+   * A map of databinding expressions to compiled functions.
+   * @var array [string => Closure]
+   */
+  static $expressions = [];
   /**
    * A map of tag names to fully qualified PHP component class names.
    * It is initialized to the core Matisse components that can be instantiated via tags.
    * @var array string => string
    */
   private static $coreTags = [
-    'Repeat'   => 'Selenia\Matisse\Components\Repeat',
-    'Template' => 'Selenia\Matisse\Components\Template',
-    'If'       => 'Selenia\Matisse\Components\If_',
-    'Literal'  => 'Selenia\Matisse\Components\Literal',
-    'Apply'    => 'Selenia\Matisse\Components\Apply',
-    'Head'     => 'Selenia\Matisse\Components\Head',
-    'Body'     => 'Selenia\Matisse\Components\Body',
+    'Repeat'  => Components\Repeat::class,
+    'Macro'   => Components\Macro::class,
+    'If'      => Components\If_::class,
+    'Literal' => Components\Literal::class,
+    'Apply'   => Components\Apply::class,
+    'Head'    => Components\Head::class,
+    'Body'    => Components\Body::class,
+    'Block'   => Components\Block::class,
   ];
 
   /**
-   * A map of databinding expressions to compiled functions.
-   * @var array [string => Closure]
+   * Creates a new rendering context.
+   *
+   * You should this factory method whenever you need a new context, instead of creating it directly.
+   *
+   * @param array  $tags        A map of tag names to fully qualified PHP class names.
+   * @param object $pipeHandler A value for {@see $pipeHandler}
+   * @return Context
    */
-  static $expressions = [];
+  function createContext (array $tags, $pipeHandler = null)
+  {
+    $tags = array_merge (self::$coreTags, $tags);
+    $ctx  = new Context($tags, $pipeHandler);
+    return $ctx;
+  }
 
   /**
    * @param           $markup
@@ -56,22 +71,6 @@ class MatisseEngine
     ob_start (null, self::MAX_BUFFER_SIZE);
     $root->run ();
     return ob_get_clean ();
-  }
-
-  /**
-   * Creates a new rendering context.
-   *
-   * You should this factory method whenever you need a new context, instead of creating it directly.
-   *
-   * @param array  $tags        A map of tag names to fully qualified PHP class names.
-   * @param object $pipeHandler A value for {@see $pipeHandler}
-   * @return Context
-   */
-  function createContext (array $tags, $pipeHandler = null)
-  {
-    $tags = array_merge (self::$coreTags, $tags);
-    $ctx  = new Context($tags, $pipeHandler);
-    return $ctx;
   }
 
 }

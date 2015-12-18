@@ -5,14 +5,13 @@ use Selenia\Matisse\AttributeType;
 use Selenia\Matisse\Base\Text;
 use Selenia\Matisse\Component;
 use Selenia\Matisse\Components\Parameter;
-use Selenia\Matisse\DataSet;
 use Selenia\Matisse\Exceptions\ComponentException;
 
 class ComponentAttributes
 {
   /**
    * An array of names for each attribute data type.
-   * Its public to allow access from the Template class.
+   * Its public to allow access from the Macro class.
    * @var array
    */
   public static    $TYPE_NAMES     = [
@@ -86,12 +85,14 @@ class ComponentAttributes
           $v = preg_replace ('#&nbsp;</p>#', '</p>', $v);
           return $v;
         case AttributeType::DATA:
-          if ($v instanceof DataSet)
+          if ($v instanceof \Iterator)
             return $v;
+          if ($v instanceof \IteratorAggregate)
+            return $v->getIterator ();
           if (is_string ($v) && strpos ($v, '{') !== false)
             return $v;
           if (is_array ($v) || is_object ($v))
-            return new DataSet($v);
+            return $v;
           throw new \InvalidArgumentException((is_scalar ($v) ? "The value <b>$v</b>" : 'A value') .
                                               " of PHP type <b>" .
                                               gettype ($v) .

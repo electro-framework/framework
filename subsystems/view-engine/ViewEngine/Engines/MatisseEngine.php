@@ -46,13 +46,13 @@ class MatisseEngine implements ViewEngineInterface
 
     $ctx = $this->matisse->createContext ($this->app->tags, $pipeHandler);
 
-    $ctx->condenseLiterals    = $this->app->condenseLiterals;
-    $ctx->debugMode           = $this->app->debugMode;
-    $ctx->templateDirectories = $this->app->templateDirectories;
-    $ctx->presets             = map ($this->app->presets,
+    $ctx->condenseLiterals  = $this->app->condenseLiterals;
+    $ctx->debugMode         = $this->app->debugMode;
+    $ctx->macrosDirectories = $this->app->macrosDirectories;
+    $ctx->presets           = map ($this->app->presets,
       function ($class) { return $this->app->injector->make ($class); });
-    $ctx->templatesExt        = '.html';
-    $ctx->injectorFn          = function ($name) {
+    $ctx->macrosExt         = '.html';
+    $ctx->injectorFn        = function ($name) {
       return $this->injector->make ($name);
     };
 

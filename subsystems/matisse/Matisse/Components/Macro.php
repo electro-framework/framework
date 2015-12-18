@@ -6,7 +6,7 @@ use Selenia\Matisse\Component;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\IAttributes;
 
-class TemplateAttributes extends ComponentAttributes
+class MacroAttributes extends ComponentAttributes
 {
   public $defaultParam;
   public $name;
@@ -25,20 +25,20 @@ class TemplateAttributes extends ComponentAttributes
   protected function typeof_style () { return AttributeType::PARAMS; }
 }
 
-class Template extends Component implements IAttributes
+class Macro extends Component implements IAttributes
 {
-  /** Finds binding expressions which are not template bindings. */
-  const FIND_NON_TEMPLATE_EXP = '#\{\{\s*(?=\S)[^@]#u';
-  /** Finds template binding expressions. */
-  const PARSE_TEMPLATE_BINDING_EXP = '#\{\{\s*@(.*?)\s*\}\}#u';
+  /** Finds binding expressions which are not macro bindings. */
+  const FIND_NON_MACRO_EXP = '#\{\{\s*(?=\S)[^@]#u';
+  /** Finds macro binding expressions. */
+  const PARSE_MACRO_BINDING_EXP = '#\{\{\s*@(.*?)\s*\}\}#u';
 
   public $allowsChildren = true;
 
-  private static function evalScalarExp ($bindExp, TemplateInstance $instance, &$transfer_binding = null)
+  private static function evalScalarExp ($bindExp, MacroInstance $instance, &$transfer_binding = null)
   {
     $transfer_binding = false;
     if (self::isCompositeBinding ($bindExp))
-      return preg_replace_callback (self::PARSE_TEMPLATE_BINDING_EXP,
+      return preg_replace_callback (self::PARSE_MACRO_BINDING_EXP,
         function ($args) use ($instance, $transfer_binding) {
           return self::evalScalarRef ($args[1], $instance, $transfer_binding);
         }, $bindExp);
@@ -48,7 +48,7 @@ class Template extends Component implements IAttributes
     return self::evalScalarRef ($bindExp, $instance, $transfer_binding);
   }
 
-  private static function evalScalarRef ($ref, TemplateInstance $instance, &$transfer_binding)
+  private static function evalScalarRef ($ref, MacroInstance $instance, &$transfer_binding)
   {
     $ref = normalizeAttributeName ($ref);
     if (isset($instance->bindings) && array_key_exists ($ref, $instance->bindings)) {
@@ -66,7 +66,7 @@ class Template extends Component implements IAttributes
     return $value;
   }
 
-  private static function parsingtimeDatabind (Component $component, TemplateInstance $instance, $force = false)
+  private static function parsingtimeDatabind (Component $component, MacroInstance $instance, $force = false)
   {
     if (isset($component->bindings))
       foreach ($component->bindings as $attrName => $bindExp) {
@@ -91,7 +91,7 @@ class Template extends Component implements IAttributes
         self::parsingtimeDatabind ($child, $instance, $force || $component instanceof Parameter);
   }
 
-  public function apply (TemplateInstance $instance)
+  public function apply (MacroInstance $instance)
   {
     $o      = [];
     $styles = $this->attrs ()->style;
@@ -177,7 +177,7 @@ class Template extends Component implements IAttributes
     return $cloned;
   }
 
-  public function applyTo (array &$components = null, TemplateInstance $instance)
+  public function applyTo (array &$components = null, MacroInstance $instance)
   {
     if (!is_null ($components))
       for ($i = 0; $i < count ($components); ++$i) {
@@ -185,10 +185,10 @@ class Template extends Component implements IAttributes
         if (!is_null ($component)) {
           if (isset($component->bindings)) {
             foreach ($component->bindings as $field => $exp) {
-              if (preg_match (self::PARSE_TEMPLATE_BINDING_EXP, $exp, $match)) {
-                //evaluate template binding expression
-                if (preg_match (self::FIND_NON_TEMPLATE_EXP, $exp)) {
-                  //mixed (data/template) binding
+              if (preg_match (self::PARSE_MACRO_BINDING_EXP, $exp, $match)) {
+                //evaluate macro binding expression
+                if (preg_match (self::FIND_NON_MACRO_EXP, $exp)) {
+                  //mixed (data/macro) binding
                   $component->addBinding ($field,
                     self::evalScalarExp ($exp, $instance)); //replace current binding
                 }
@@ -212,7 +212,7 @@ class Template extends Component implements IAttributes
                     if (!$instance->attrs ()->defines ($attrName)) {
                       $s = join (', ', $instance->attrs ()->getAttributeNames ());
                       throw new ComponentException($instance,
-                        "<p>The parameter <b>$attrName</b>, specified on a call to/in the <b>{$this->attrs ()->name}</b> template, is not defined on that template.</p>
+                        "<p>The parameter <b>$attrName</b>, specified on a call to/in the <b>{$this->attrs ()->name}</b> macro, is not defined on that macro.</p>
 <table>
   <th>Expected parameters:<td>$s
   <tr><th>Instance:<td>{$instance->getTagName ()}
@@ -224,7 +224,7 @@ class Template extends Component implements IAttributes
                     if (isset($instance->bindings) &&
                         array_key_exists ($attrName, $instance->bindings)
                     ) {
-                      //transfer binding from the template instance to the component
+                      //transfer binding from the macro instance to the component
                       $component->addBinding ($field, $instance->bindings[$attrName]);
                       continue;
                     }
@@ -270,7 +270,7 @@ class Template extends Component implements IAttributes
 
   /**
    * @see IAttributes::attrs()
-   * @return TemplateAttributes
+   * @return MacroAttributes
    */
   public function attrs ()
   {
@@ -278,7 +278,7 @@ class Template extends Component implements IAttributes
   }
 
   /**
-   * Returns the template parameter with the given name.
+   * Returns the macro parameter with the given name.
    * @param string $name
    * @return Parameter
    */
@@ -324,15 +324,15 @@ class Template extends Component implements IAttributes
 
   /**
    * @see IAttributes::newAttributes()
-   * @return TemplateAttributes
+   * @return MacroAttributes
    */
   public function newAttributes ()
   {
-    return new TemplateAttributes($this);
+    return new MacroAttributes($this);
   }
 
   public function parsed ()
   {
-    $this->context->addTemplate ($this->attrs ()->name, $this);
+    $this->context->addMacro ($this->attrs ()->name, $this);
   }
 }

@@ -3,8 +3,8 @@ namespace Selenia\Matisse\Traits;
 
 use PhpCode;
 use Selenia\Matisse\Attributes\ComponentAttributes;
+use Selenia\Matisse\Component;
 use Selenia\Matisse\Context;
-use Selenia\Matisse\DataSource;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Exceptions\HandlerNotFoundException;
@@ -17,6 +17,7 @@ use Selenia\Matisse\MatisseEngine;
  *
  * @property Context             $context  The rendering context.
  * @property ComponentAttributes $attrsObj The component's attributes.
+ * @property Component           $parent   The component's parent.
  */
 trait DataBindingTrait
 {
@@ -168,7 +169,8 @@ trait DataBindingTrait
           throw new DataBindingException($this,
             "The maximum nesting depth for a data binding expression was exceeded.<p>The last evaluated expression is   <b>$bindExp</b>");
       } while (true);
-    } catch (\InvalidArgumentException $e) {
+    }
+    catch (\InvalidArgumentException $e) {
       throw new DataBindingException($this, "Invalid databinding expression: $bindExp\n" . $e->getMessage (), $e);
     }
   }
@@ -191,7 +193,7 @@ trait DataBindingTrait
    * Returns the data source to be used for #model contextual databinging expressions.
    * Searches upwards on the component hierarchy.
    *
-   * @return DataSource
+   * @return mixed
    */
   protected function getContextualModel ()
   {
@@ -274,7 +276,7 @@ trait DataBindingTrait
     if (!$compiled)
       $compiled = MatisseEngine::$expressions[$expression] = $this->compileExpression ($expression);
     // Compatible with PHP < 7
-    $c = \Closure::bind($compiled, $this, $this);
+    $c = \Closure::bind ($compiled, $this, $this);
     $v = $c ();
 
     // Apply pipes to expression result
@@ -283,7 +285,8 @@ trait DataBindingTrait
       $pipe = $this->context->getPipe (trim ($name));
       try {
         $v = call_user_func ($pipe, $v, $this->context);
-      } catch (HandlerNotFoundException $e) {
+      }
+      catch (HandlerNotFoundException $e) {
         throw new ComponentException ($this, "Pipe <b>$name</b> was not found.");
       }
     }

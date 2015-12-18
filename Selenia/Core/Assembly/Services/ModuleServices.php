@@ -69,6 +69,25 @@ class ModuleServices
   }
 
   /**
+   * Does the module contains a macros directory?
+   *
+   * <p>If so, it is registered in the templating engine, along with any immediate sub-directories.
+   *
+   * @param boolean $v
+   * @return $this
+   */
+  function provideMacros ($v = true)
+  {
+    if ($v) {
+      $path = "$this->path/{$this->app->moduleMacrosPath}";
+      $all  = FilesystemFlow::from ($path)->onlyDirectories ()->keys ()->all ();
+      array_unshift ($all, $path);
+      $this->app->macrosDirectories = array_merge ($all, $this->app->macrosDirectories);
+    }
+    return $this;
+  }
+
+  /**
    * Registers a navigation provider on the application.
    * @param NavigationProviderInterface $provider A class instance that provides a means to obtain a NavigationInterface
    * @return $this
@@ -80,25 +99,6 @@ class ModuleServices
         $this->navigationInterface = $this->injector->make (NavigationInterface::class);
 
       $provider->defineNavigation ($this->navigationInterface);
-    }
-    return $this;
-  }
-
-  /**
-   * Does the module contains a templates directory?
-   *
-   * <p>If so, it is registered in the templating engine, along with any immediate sub-directories.
-   *
-   * @param boolean $v
-   * @return $this
-   */
-  function provideTemplates ($v = true)
-  {
-    if ($v) {
-      $path = "$this->path/{$this->app->moduleTemplatesPath}";
-      $all  = FilesystemFlow::from ($path)->onlyDirectories ()->keys ()->all ();
-      array_unshift ($all, $path);
-      $this->app->templateDirectories = array_merge ($all, $this->app->templateDirectories);
     }
     return $this;
   }

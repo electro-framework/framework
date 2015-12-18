@@ -1,31 +1,31 @@
 <?php
 namespace Selenia\Matisse\Components;
+use Selenia\Matisse\Attributes\ComponentAttributes;
 use Selenia\Matisse\AttributeType;
 use Selenia\Matisse\Component;
-use Selenia\Matisse\Attributes\ComponentAttributes;
 use Selenia\Matisse\Context;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\IAttributes;
 
-class TemplateInstanceAttributes
+class MacroInstanceAttributes
 {
 
   public $script;
   public $style;
   /**
-   * Points to the component that defines the template for these attributes.
-   * @var Template
+   * Points to the component that defines the macro for these attributes.
+   * @var Macro
    */
-  protected $template;
+  protected $macro;
   /**
    * Dynamic set of attributes, as specified on the source markup.
    * @var array
    */
   private $attributes;
 
-  public function __construct (Component $component, Template $template)
+  public function __construct (Component $component, Macro $macro)
   {
-    $this->template = $template;
+    $this->macro = $macro;
   }
 
   public function __get ($name)
@@ -35,9 +35,9 @@ class TemplateInstanceAttributes
       if (!is_null ($v) && $v != '')
         return $v;
     }
-    $templateParam = $this->template->getParameter ($name);
-    if (isset($templateParam->bindings) && array_key_exists ('default', $templateParam->bindings))
-      return $templateParam->bindings['default'];
+    $macroParam = $this->macro->getParameter ($name);
+    if (isset($macroParam->bindings) && array_key_exists ('default', $macroParam->bindings))
+      return $macroParam->bindings['default'];
 
     return $this->getDefault ($name);
   }
@@ -55,6 +55,11 @@ class TemplateInstanceAttributes
     return isset($this->attributes) && array_key_exists ($name, $this->attributes);
   }
 
+  public function defines ($name)
+  {
+    return $this->isPredefined ($name) || !is_null ($this->macro->getParameter ($name));
+  }
+
   public function get ($name, $default = null)
   {
     $v = $this->__get ($name);
@@ -64,9 +69,37 @@ class TemplateInstanceAttributes
     return $v;
   }
 
-  public function set ($name, $value)
+  public function getAll ()
   {
-    $this->$name = $value;
+    return $this->attributes;
+  }
+
+  public function getAttributeNames ()
+  {
+    return $this->macro->getParametersNames ();
+  }
+
+  public function getDefault ($name)
+  {
+    $param = $this->macro->getParameter ($name);
+    if (is_null ($param))
+      throw new ComponentException($this->macro, "Undefined parameter $name.");
+
+    return $this->macro->getParameter ($name)->attrs ()->default;
+  }
+
+  public function getScalar ($name)
+  {
+    return ComponentAttributes::validateScalar ($this->getTypeOf ($name), $this->get ($name));
+  }
+
+  public function getTypeNameOf ($name)
+  {
+    $t = $this->getTypeOf ($name);
+    if (!is_null ($t))
+      return ComponentAttributes::$TYPE_NAMES[$t];
+
+    return null;
   }
 
   public function getTypeOf ($name)
@@ -79,12 +112,7 @@ class TemplateInstanceAttributes
       return null;
     }
 
-    return $this->template->getParameterType ($name);
-  }
-
-  public function defines ($name)
-  {
-    return $this->isPredefined ($name) || !is_null ($this->template->getParameter ($name));
+    return $this->macro->getParameterType ($name);
   }
 
   public function isPredefined ($name)
@@ -92,37 +120,9 @@ class TemplateInstanceAttributes
     return method_exists ($this, "typeof_$name");
   }
 
-  public function getAttributeNames ()
+  public function set ($name, $value)
   {
-    return $this->template->getParametersNames ();
-  }
-
-  public function getAll ()
-  {
-    return $this->attributes;
-  }
-
-  public function getTypeNameOf ($name)
-  {
-    $t = $this->getTypeOf ($name);
-    if (!is_null ($t))
-      return ComponentAttributes::$TYPE_NAMES[$t];
-
-    return null;
-  }
-
-  public function getScalar ($name)
-  {
-    return ComponentAttributes::validateScalar ($this->getTypeOf ($name), $this->get ($name));
-  }
-
-  public function getDefault ($name)
-  {
-    $param = $this->template->getParameter ($name);
-    if (is_null ($param))
-      throw new ComponentException($this->template, "Undefined parameter $name.");
-
-    return $this->template->getParameter ($name)->attrs ()->default;
+    $this->$name = $value;
   }
 
   public function setScalar ($name, $v)
@@ -150,26 +150,26 @@ class TemplateInstanceAttributes
 
 }
 
-class TemplateInstance extends Component implements IAttributes
+class MacroInstance extends Component implements IAttributes
 {
   public $allowsChildren = true;
 
   /**
-   * Points to the component that defines the template for this instance.
-   * @var Template
+   * Points to the component that defines the macro for this instance.
+   * @var Macro
    */
-  protected $template;
+  protected $macro;
 
-  public function __construct (Context $context, $tagName, Template $template, array $attributes = null)
+  public function __construct (Context $context, $tagName, Macro $macro, array $attributes = null)
   {
-    $this->template = $template; //must be defined before the parent constructor is called
+    $this->macro = $macro; //must be defined before the parent constructor is called
     parent::__construct ($context, $attributes);
     $this->setTagName ($tagName);
   }
 
   /**
    * @see IAttributes::attrs()
-   * @return TemplateInstanceAttributes
+   * @return MacroInstanceAttributes
    */
   function attrs ()
   {
@@ -178,11 +178,11 @@ class TemplateInstance extends Component implements IAttributes
 
   /**
    * @see IAttributes::newAttributes()
-   * @return TemplateInstanceAttributes
+   * @return MacroInstanceAttributes
    */
   function newAttributes ()
   {
-    return new TemplateInstanceAttributes($this, $this->template);
+    return new MacroInstanceAttributes($this, $this->macro);
   }
 
   public function parsed ()
@@ -193,15 +193,15 @@ class TemplateInstance extends Component implements IAttributes
     // Move children to default parameter
 
     if ($this->hasChildren ()) {
-      $def = $this->template->attrs ()->defaultParam;
+      $def = $this->macro->attrs ()->defaultParam;
       if (!empty($def)) {
-        $param = $this->template->getParameter ($def);
+        $param = $this->macro->getParameter ($def);
         if (!$param)
-          throw new ComponentException($this, "The template's declared default parameter is invalid: $def");
+          throw new ComponentException($this, "The macro's declared default parameter is invalid: $def");
         $type = $this->attrsObj->getTypeOf ($def);
         if ($type != AttributeType::SRC && $type != AttributeType::METADATA)
           throw new ComponentException($this,
-            "The template's default parameter <b>$def</b> can't hold content (type: " .
+            "The macro's default parameter <b>$def</b> can't hold content (type: " .
             ComponentAttributes::$TYPE_NAMES[$type] . ").");
         $param                = new Parameter($this->context, ucfirst ($def), $type);
         $this->attrsObj->$def = $param;
@@ -209,7 +209,7 @@ class TemplateInstance extends Component implements IAttributes
         $param->setChildren ($this->removeChildren ());
       }
     }
-    $content = $this->template->apply ($this);
+    $content = $this->macro->apply ($this);
     $this->replaceBy ($content);
   }
 

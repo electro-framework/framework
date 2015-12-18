@@ -2,8 +2,8 @@
 namespace Selenia\Matisse;
 use Selenia\Matisse\Attributes\ComponentAttributes;
 use Selenia\Matisse\Base\GenericComponent;
+use Selenia\Matisse\Components\MacroInstance;
 use Selenia\Matisse\Components\Page;
-use Selenia\Matisse\Components\TemplateInstance;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Exceptions\ParseException;
@@ -122,8 +122,8 @@ abstract class Component
    * @param array     $attributes
    * @param bool      $generic If true, an instance of GenericComponent is created.
    * @param boolean   $strict  If true, failure to find a component class will throw an exception.
-   *                           If false, an attempt is made to load a template with the same name,
-   * @return Component Component instance. For templates, an instance of Template is returned.
+   *                           If false, an attempt is made to load a macro with the same name,
+   * @return Component Component instance. For macros, an instance of Macro is returned.
    * @throws ComponentException
    * @throws ParseException
    */
@@ -141,17 +141,17 @@ abstract class Component
         self::throwUnknownComponent ($context, $tagName, $parent);
 
       // Component class not found.
-      // Try to load a template with the same tag name.
+      // Try to load a macro with the same tag name.
 
-      $template = $context->getTemplate ($tagName);
+      $macro = $context->getMacro ($tagName);
       try {
-        if (is_null ($template))
-          $template = self::loadTemplate ($context, $parent, $tagName);
+        if (is_null ($macro))
+          $macro = self::loadMacro ($context, $parent, $tagName);
       }
       catch (FileIOException $e) {
         self::throwUnknownComponent ($context, $tagName, $parent);
       }
-      $component = new TemplateInstance($context, $tagName, $template, $attributes);
+      $component = new MacroInstance($context, $tagName, $macro, $attributes);
     }
 
     // Component class was found.
@@ -165,19 +165,19 @@ abstract class Component
     return $component;
   }
 
-  static function loadTemplate (Context $context, Component $parent, $tagName)
+  static function loadMacro (Context $context, Component $parent, $tagName)
   {
-    $filename = normalizeTagName ($tagName) . $context->templatesExt;
-    $content  = $context->loadTemplate ($filename);
+    $filename = normalizeTagName ($tagName) . $context->macrosExt;
+    $content  = $context->loadMacro ($filename);
     $parser   = new Parser($context);
     $parser->parse ($content, $parent);
-    $template = $context->getTemplate ($tagName);
-    if (isset($template)) {
-      $template->remove ();
+    $macro = $context->getMacro ($tagName);
+    if (isset($macro)) {
+      $macro->remove ();
 
-      return $template;
+      return $macro;
     }
-    throw new ParseException("File <b>$filename</b> does not define a template named <b>$tagName</b>.");
+    throw new ParseException("File <b>$filename</b> does not define a macro named <b>$tagName</b>.");
   }
 
   /**
@@ -199,13 +199,13 @@ abstract class Component
 
   private static function throwUnknownComponent (Context $context, $tagName, Component $parent)
   {
-    $paths = implode ('', map ($context->templateDirectories,
+    $paths = implode ('', map ($context->macrosDirectories,
       function ($dir) { return "<li><path>$dir</path></li>"; }));
     throw new ComponentException (null,
       "<h3>Unknown tag: <b>&lt;$tagName></b></h3>
-<p>Neither a class, parameter or template implementing that tag were found.
+<p>Neither a <b>class</b>, nor a <b>parameter</b>, nor a <b>macro</b> implementing that tag were found.
 <p>Perhaps you forgot to register the tag?
-<p>If it's a template, Matisse is searching for it on these paths:<ul>$paths</ul>
+<p>If it's a macro, Matisse is searching for it on these paths:<ul>$paths</ul>
 <table>
   <th>Container component:<td><b>&lt;{$parent->getTagName()}></b>, of type <b>{$parent->className}</b>
 </table>
@@ -388,6 +388,20 @@ abstract class Component
   }
 
   /**
+   * Renders all children.
+   * ><p>**Note:** the component itself is not rendered.
+   */
+  public function renderContent ()
+  {
+    if (!$this->inactive) {
+      $this->databind ();
+      $this->preRender ();
+      $this->renderChildren ();
+      $this->postRender ();
+    }
+  }
+
+  /**
    * Renders a set of components as if they are children of this component.
    *
    * <p>**Warning:** the components will became detached after begin rendered.
@@ -400,20 +414,6 @@ abstract class Component
     foreach ($components as $c)
       $c->doRender ();
     $this->detachAll ($components);
-  }
-
-  /**
-   * Renders all children.
-   * ><p>**Note:** the component itself is not rendered.
-   */
-  public function renderContent ()
-  {
-    if (!$this->inactive) {
-      $this->databind ();
-      $this->preRender ();
-      $this->renderChildren ();
-      $this->postRender ();
-    }
   }
 
   /**

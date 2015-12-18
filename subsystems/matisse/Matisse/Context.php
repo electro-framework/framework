@@ -1,35 +1,48 @@
 <?php
 namespace Selenia\Matisse;
-use Selenia\Matisse\Components\Template;
+use Selenia\Matisse\Components\Macro;
 use Selenia\Matisse\Exceptions\FileIOException;
 
 class Context
 {
-  /**
-   * The view-model data for the current rendering context.
-   * @var array
-   */
-  public $viewModel = [];
-  /**
-   * Set to true to generate pretty-printed markup.
-   * @var bool
-   */
-  public $debugMode = false;
   /**
    * Remove white space around raw markup blocks.
    * @var bool
    */
   public $condenseLiterals = false;
   /**
+   * Set to true to generate pretty-printed markup.
+   * @var bool
+   */
+  public $debugMode = false;
+  /**
    * @var string[]
    */
-  public $templateDirectories = [];
+  public $macrosDirectories = [];
   /**
    * File extension of macro files.
    * @var string
    */
-  public $templatesExt = '.html';
-
+  public $macrosExt = '.html';
+  /**
+   * A stack of presets.
+   *
+   * Each preset is an instance of a class where methods are named after tags or preset names.
+   * When components are being instantiated, if they match a tag name or preset name on any of the stacked presets,
+   * they will be passed to the corresponding methods on the presets to be transformed.
+   * @var array
+   */
+  public $presets = [];
+  /**
+   * The view-model data for the current rendering context.
+   * @var array
+   */
+  public $viewModel = [];
+  /**
+   * A list of memorized macros for the current request.
+   * @var array
+   */
+  private $macros = [];
   /**
    * A class instance who's methods provide pipe implementations.
    *
@@ -43,26 +56,11 @@ class Context
    * @var object
    */
   private $pipeHandler;
-
   /**
    * A map of tag names to fully qualified PHP class names.
    * @var array string => string
    */
   private $tags = [];
-  /**
-   * A list of memorized templates for the current request.
-   * @var array
-   */
-  private $templates = [];
-  /**
-   * A stack of presets.
-   *
-   * Each preset is an instance of a class where methods are named after tags or preset names.
-   * When components are being instantiated, if they match a tag name or preset name on any of the stacked presets,
-   * they will be passed to the corresponding methods on the presets to be transformed.
-   * @var array
-   */
-  public $presets = [];
 
   /**
    * @param array  $tags        A map of tag names to fully qualified PHP class names.
@@ -74,28 +72,19 @@ class Context
     $this->pipeHandler = $pipeHandler;
   }
 
+  function addMacro ($name, Macro $macro)
+  {
+    $this->macros[$name] = $macro;
+  }
+
   function getClassForTag ($tag)
   {
     return get ($this->tags, $tag);
   }
 
-  function addTemplate ($name, Template $template)
+  function getMacro ($name)
   {
-    $this->templates[$name] = $template;
-  }
-
-  function getTemplate ($name)
-  {
-    return get ($this->templates, $name);
-  }
-
-  function loadTemplate ($filename)
-  {
-    foreach ($this->templateDirectories as $dir) {
-      $f = loadFile ("$dir/$filename", false);
-      if ($f) return $f;
-    }
-    throw new FileIOException($filename);
+    return get ($this->macros, $name);
   }
 
   /**
@@ -109,5 +98,14 @@ class Context
     if (!isset($this->pipeHandler))
       throw new \RuntimeException ("Can't use pipes if no pipe handler is set.");
     return [$this->pipeHandler, $name];
+  }
+
+  function loadMacro ($filename)
+  {
+    foreach ($this->macrosDirectories as $dir) {
+      $f = loadFile ("$dir/$filename", false);
+      if ($f) return $f;
+    }
+    throw new FileIOException($filename);
   }
 }

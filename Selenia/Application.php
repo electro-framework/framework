@@ -2,7 +2,6 @@
 namespace Selenia;
 
 use Monolog\Handler\HandlerInterface;
-use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 use Selenia\Core\Assembly\Config\AssemblyServiceProvider;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\InjectorInterface;
@@ -67,18 +66,6 @@ class Application
    * @var string
    */
   public $configPath = 'private/config';
-  /**
-   * If `true` the application is a web app, otherwise it may be a console app.
-   * @see \Selenia\Application::$isConsoleBased
-   * @var bool
-   */
-  public $isWebBased = false;
-  /**
-   * If `true` the application is a console app, otherwise it may be a web app.
-   * @see \Selenia\Application::$isWebBased
-   * @var bool
-   */
-  public $isConsoleBased = false;
   /**
    * Holds an array of multiple DataSourceInfo for each site page or null;
    * @var array
@@ -174,6 +161,18 @@ class Application
    */
   public $injector;
   /**
+   * If `true` the application is a console app, otherwise it may be a web app.
+   * @see \Selenia\Application::$isWebBased
+   * @var bool
+   */
+  public $isConsoleBased = false;
+  /**
+   * If `true` the application is a web app, otherwise it may be a console app.
+   * @see \Selenia\Application::$isConsoleBased
+   * @var bool
+   */
+  public $isWebBased = false;
+  /**
    * The path of the application's language files' folder, relative to the root folder.
    * @var string
    */
@@ -201,6 +200,19 @@ class Application
    */
   public $loginFormUrl = 'login/login';
   /**
+   * Directories where macros can be found.
+   * <p>They will be search in order until the requested macro is found.
+   * <p>These paths will be registered on the templating engine.
+   * <p>This is preinitialized to the application macro's path.
+   * @var array
+   */
+  public $macrosDirectories = [];
+  /**
+   * Relative to the root folder.
+   * @var string
+   */
+  public $macrosPath = 'private/resources/macros';
+  /**
    * @var string
    */
   public $modelPath = 'models';
@@ -210,15 +222,15 @@ class Application
    */
   public $moduleLangPath = 'resources/lang';
   /**
+   * The relative path of the macros folder inside a module.
+   * @var string
+   */
+  public $moduleMacrosPath = 'resources/macros';
+  /**
    * The relative path of the public folder inside a module.
    * @var string
    */
   public $modulePublicPath = 'public';
-  /**
-   * The relative path of the templates folder inside a module.
-   * @var string
-   */
-  public $moduleTemplatesPath = 'resources/templates';
   /**
    * The relative path of the views folder inside a module.
    * @var string
@@ -298,19 +310,6 @@ class Application
    * @var string[]
    */
   public $taskClasses = [];
-  /**
-   * Directories where templates can be found.
-   * <p>They will be search in order until the requested template is found.
-   * <p>These paths will be registered on the templating engine.
-   * <p>This is preinitialized to the application template's path.
-   * @var array
-   */
-  public $templateDirectories = [];
-  /**
-   * Relative to the root folder.
-   * @var string
-   */
-  public $templatesPath = 'private/resources/templates';
   /**
    * A site name that can be used on auto-generated window titles (using the title tag).
    * The symbol @ will be replaced by the current page's title.
@@ -409,12 +408,8 @@ class Application
     $this->rootPath      = $rootDir;
     $this->frameworkPath =
       "$rootDir/" . self::FRAMEWORK_PATH; // due to eventual symlinking, we can't use dirname(__DIR__) here
-
     $this->setIncludePath ();
-//    $this->loadConfiguration ($vuri);
 
-//    $this->templateDirectories[] = $this->toFilePath ($this->templatesPath);
-//    $this->viewsDirectories[]    = $this->toFilePath ($this->viewPath);
     $this->languageFolders[] = $this->langPath;
     if (getenv ('APP_DEFAULT_LANG'))
       $this->defaultLang = getenv ('APP_DEFAULT_LANG');

@@ -17,9 +17,11 @@ class AttributeType
   const SRC = 6;
   /** Data source. This attribute type is a DataSource object. */
   const DATA = 7;
-  /** Binding expression. This attribute is a string.
-   * Do not define attributes/parameters of this type. It is used only on template instances when binding expreesions
-   * are specified for template parameters instead of constant values. */
+  /**
+   * Binding expression. This attribute is a string.
+   * Do not define attributes/parameters of this type. It is used only on macro instances when binding expreesions
+   * are specified for macro parameters instead of constant values.
+   */
   const BINDING = 8;
   /** A parameter that can contain other parameters. */
   const METADATA = 9;
