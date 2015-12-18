@@ -51,7 +51,7 @@ function _g ($data, $key, $default = null)
       if (isset($data->$key))
         return $data->$key;
       // Property may be private/protected, try to call a getter method with the same name
-      if (method_exists($data, $key) || method_exists($data, '__call'))
+      if (method_exists ($data, $key) || method_exists ($data, '__call'))
         return $data->$key ();
       return $default;
     }

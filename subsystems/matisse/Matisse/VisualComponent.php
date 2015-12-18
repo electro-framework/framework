@@ -21,6 +21,14 @@ class VisualComponent extends Component implements IAttributes
    */
   protected $containerTag = 'div';
 
+  public final function addClass ($class)
+  {
+    $c = " {$this->cssClassName} ";
+    $c = str_replace (" $class ", ' ', $c);
+
+    $this->cssClassName = trim ("$c $class");
+  }
+
   /**
    * Returns the component's attributes.
    * @return VisualComponentAttributes
@@ -39,12 +47,9 @@ class VisualComponent extends Component implements IAttributes
     return new VisualComponentAttributes($this);
   }
 
-  public final function addClass ($class)
+  protected function postRender ()
   {
-    $c = " {$this->cssClassName} ";
-    $c = str_replace (" $class ", ' ', $c);
-
-    $this->cssClassName = trim ("$c $class");
+    $this->endTag ();
   }
 
   protected function preRender ()
@@ -61,11 +66,6 @@ class VisualComponent extends Component implements IAttributes
     ));
     if (!empty($this->attrs ()->htmlAttrs))
       echo ' ' . $this->attrs ()->htmlAttrs;
-  }
-
-  protected function postRender ()
-  {
-    $this->endTag ();
   }
 
 }

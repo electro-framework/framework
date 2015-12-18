@@ -14,14 +14,14 @@ class ParameterAttributes extends ComponentAttributes
     $this->$name = $value;
   }
 
-  public function __isset ($name)
-  {
-    return property_exists ($this, $name);
-  }
-
   public function defines ($name, $asSubtag = false)
   {
     return true;
+  }
+
+  public function __isset ($name)
+  {
+    return property_exists ($this, $name);
   }
 
 }

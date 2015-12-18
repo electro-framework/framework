@@ -20,14 +20,14 @@ class GenericAttributes extends VisualComponentAttributes
     $this->$name = $value;
   }
 
-  public function __isset ($name)
-  {
-    return property_exists ($this, $name);
-  }
-
   public function defines ($name, $asSubtag = false)
   {
     return !$asSubtag;
+  }
+
+  public function __isset ($name)
+  {
+    return property_exists ($this, $name);
   }
 
 }

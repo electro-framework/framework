@@ -11,7 +11,7 @@ use Selenia\Matisse\IAttributes;
  */
 class Body extends Component implements IAttributes
 {
-  public $allowsChildren   = true;
+  public $allowsChildren = true;
 
   /**
    * Returns the component's attributes.
@@ -37,7 +37,7 @@ class Body extends Component implements IAttributes
    */
   protected function render ()
   {
-    $html = $this->getContent();
+    $html = $this->getContent ();
 
     if ($html != '')
       $this->page->bodyContent .= $html;

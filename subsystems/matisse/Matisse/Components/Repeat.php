@@ -8,26 +8,26 @@ use Selenia\Matisse\IAttributes;
 class RepeaterAttributes extends ComponentAttributes
 {
   public $as;
-  public $glue;
-  public $noData;
-  public $for;
-  public $header;
-  public $footer;
   public $count;
+  public $footer;
+  public $for;
+  public $glue;
+  public $header;
+  public $noData;
 
   protected function typeof_as () { return AttributeType::TEXT; }
 
-  protected function typeof_header () { return AttributeType::SRC; }
+  protected function typeof_count () { return AttributeType::NUM; }
 
   protected function typeof_footer () { return AttributeType::SRC; }
 
-  protected function typeof_glue () { return AttributeType::SRC; }
-
-  protected function typeof_noData () { return AttributeType::SRC; }
-
   protected function typeof_for () { return AttributeType::DATA; }
 
-  protected function typeof_count () { return AttributeType::NUM; }
+  protected function typeof_glue () { return AttributeType::SRC; }
+
+  protected function typeof_header () { return AttributeType::SRC; }
+
+  protected function typeof_noData () { return AttributeType::SRC; }
 }
 
 class Repeat extends Component implements IAttributes
@@ -55,8 +55,8 @@ class Repeat extends Component implements IAttributes
 
   protected function render ()
   {
-    $attr = $this->attrs ();
-    $count = $attr->get ('count', -1);
+    $attr                  = $this->attrs ();
+    $count                 = $attr->get ('count', -1);
     $this->contextualModel = [];
     $this->parseIteratorExp ($attr->as, $idxVar, $itVar);
     if (!is_null ($for = $attr->get ('for'))) {

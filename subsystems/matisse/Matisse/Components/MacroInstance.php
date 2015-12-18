@@ -9,7 +9,6 @@ use Selenia\Matisse\IAttributes;
 
 class MacroInstanceAttributes
 {
-
   public $script;
   public $style;
   /**

@@ -31,11 +31,11 @@ class GenericComponent extends VisualComponent
     return new GenericAttributes($this);
   }
 
-  protected function preRender ()
+  protected function postRender ()
   {
   }
 
-  protected function postRender ()
+  protected function preRender ()
   {
   }
 
@@ -52,7 +52,7 @@ class GenericComponent extends VisualComponent
       }
     }
     $this->beginContent ();
-    $this->renderContent();
+    $this->renderContent ();
     $this->endTag ();
   }
 

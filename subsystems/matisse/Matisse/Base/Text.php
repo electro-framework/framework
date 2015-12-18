@@ -1,18 +1,17 @@
 <?php
 namespace Selenia\Matisse\Base;
+use Selenia\Matisse\Attributes\ComponentAttributes;
 use Selenia\Matisse\AttributeType;
 use Selenia\Matisse\Component;
-use Selenia\Matisse\Attributes\ComponentAttributes;
 use Selenia\Matisse\Context;
 use Selenia\Matisse\IAttributes;
 
 class TextAttributes extends ComponentAttributes
 {
+  protected static $NEVER_DIRTY = ['value' => 1];
   public $value = '';
 
   protected function typeof_value () { return AttributeType::TEXT; }
-
-  protected static $NEVER_DIRTY = ['value' => 1];
 }
 
 class Text extends Component implements IAttributes
