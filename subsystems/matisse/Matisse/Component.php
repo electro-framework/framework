@@ -189,12 +189,7 @@ abstract class Component
   {
     if (isset($components))
       foreach ($components as $component)
-        $component->doRender ();
-  }
-
-  protected static function runSet (array $components = null)
-  {
-    self::renderSet ($components);
+        $component->run ();
   }
 
   private static function throwUnknownComponent (Context $context, $tagName, Component $parent)
@@ -228,20 +223,30 @@ abstract class Component
   }
 
   /**
-   * Performs both the component's rendering and its children's.
-   * Do not override! Use event handlers or override render() or renderChildren().
-   * This method is called from run() or from renderChildren().
+   * Runs a private child component that does not belong to the hierarchy.
+   *
+   * <p>**Warning:** the component will **not** be detached after begin rendered.
+   *
+   * @param Component $c
    */
-  public final function doRender ()
+  public final function attachAndRender (Component $c)
   {
-    if (!$this->inactive) {
-      $this->databind ();
-      if (!isset($this->attrsObj) || !isset($this->attrsObj->hidden) || !$this->attrsObj->hidden) {
-        $this->preRender ();
-        $this->render ();
-        $this->postRender ();
-      }
-    }
+    $this->attach ($c);
+    $c->run ();
+  }
+
+  /**
+   * Renders a set of components as if they are children of this component.
+   *
+   * <p>**Warning:** the components will **not** br detached after begin rendered.
+   *
+   * @param Component[] $components A set of external, non-attached, components.
+   */
+  public function attachAndRenderSet (array $components)
+  {
+    $this->attach ($components);
+    foreach ($components as $c)
+      $c->run ();
   }
 
   /**
@@ -384,7 +389,7 @@ abstract class Component
   {
     $children = isset($attrName) ? $this->getChildren ($attrName) : $this->children;
     foreach ($children as $child)
-      $child->doRender ();
+      $child->run ();
   }
 
   /**
@@ -402,38 +407,21 @@ abstract class Component
   }
 
   /**
-   * Renders a set of components as if they are children of this component.
-   *
-   * <p>**Warning:** the components will became detached after begin rendered.
-   *
-   * @param Component[] $components A set of external, non-attached, components.
-   */
-  public function renderExternal (array $components)
-  {
-    $this->attach ($components);
-    foreach ($components as $c)
-      $c->doRender ();
-    $this->detachAll ($components);
-  }
-
-  /**
    * Executes the component and any relevant children.
+   *
    * Do not override! Use event handlers or override render() or renderChildren().
+   * This method is called from run() or from renderChildren().
    */
   public final function run ()
   {
-    $this->doRender ();
-  }
-
-  /**
-   * Runs a private child component that does not belong to the hierarchy.
-   *
-   * @param Component $c
-   */
-  public final function runPrivate (Component $c)
-  {
-    $this->attach ($c);
-    $c->run ();
+    if (!$this->inactive) {
+      $this->databind ();
+      if (!isset($this->attrsObj) || !isset($this->attrsObj->hidden) || !$this->attrsObj->hidden) {
+        $this->preRender ();
+        $this->render ();
+        $this->postRender ();
+      }
+    }
   }
 
   protected function getUniqueId ()
@@ -461,7 +449,7 @@ abstract class Component
    * component's children, if any.
    * DO NOT CALL DIRECTLY FROM YOUR COMPONENT!
    *
-   * @see doRender()
+   * @see run()
    */
   protected function render ()
   {

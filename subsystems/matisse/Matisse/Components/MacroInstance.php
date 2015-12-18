@@ -266,28 +266,6 @@ class MacroInstance extends Component implements IAttributes
           else $this->page->addInlineScript ($i['data'], $i['name'], true);
           break;
       }
-
-//    if (isset($styles))
-//      foreach ($styles as $sheet) {
-//        if (isset($sheet->attrs ()->src))
-//          $this->page->addStylesheet ($sheet->attrs ()->src);
-//        else if (!empty($sheet->children)) {
-//          $name = $sheet->attrs ()->get ('name');
-//          $this->page->addInlineCss ($sheet, $name);
-//        }
-//      }
-//    $scripts = $this->attrs ()->script;
-//    if (isset($scripts)) {
-//      foreach ($scripts as $script) {
-//        if (isset($script->attrs ()->src))
-//          $this->page->addScript ($script->attrs ()->src);
-//        else if (!empty($script->children)) {
-//          $name = $script->attrs ()->get ('name');
-//          $this->page->addInlineScript ($script, $name);
-//        }
-//      }
-//    }
-
   }
 
 }

@@ -213,8 +213,8 @@ class Page extends Component
       $pageContent = ob_get_clean () . $this->bodyContent;
 
       echo $this->doctype;
-      $this->beginTag ("html");
-      $this->addAttribute ('class',
+      $this->begin ("html");
+      $this->attr ('class',
         enum (' ',
           when ($this->browserIsIE, 'IE'),
           when ($this->browserIsIE9, 'IE9'),
@@ -227,19 +227,19 @@ class Page extends Component
           when ($this->clientIsWindows, 'WIN')
         )
       );
-      $this->beginTag ('head');
-      $this->addTag ('meta', [
+      $this->begin ('head');
+      $this->tag ('meta', [
         'charset' => $this->charset,
       ]);
-      $this->addTag ('title', null, $this->title);
-      $this->addTag ('base', ['href' => "$application->baseURI/"]);
+      $this->tag ('title', null, $this->title);
+      $this->tag ('base', ['href' => "$application->baseURI/"]);
 
       foreach ($this->stylesheets as $URI) {
         if (substr ($URI, 0, 4) != 'http') {
           if (substr ($URI, 0, 1) != '/')
             $URI = $application->toURI ($URI);
         }
-        $this->addTag ('link', [
+        $this->tag ('link', [
           'rel'  => 'stylesheet',
           'type' => 'text/css',
           'href' => $URI,
@@ -251,42 +251,42 @@ class Page extends Component
           if ($item instanceof Parameter)
             $css .= $item->getContent ();
           else $css .= $item;
-        $this->addTag ('style', null, $css);
+        $this->tag ('style', null, $css);
       }
 
       if (!empty($this->description))
-        $this->addTag ('meta', [
+        $this->tag ('meta', [
           'name'    => 'description',
           'content' => $this->description,
         ]);
       if (!empty($this->keywords))
-        $this->addTag ('meta', [
+        $this->tag ('meta', [
           'name'    => 'keywords',
           'content' => $this->keywords,
         ]);
       if (!empty($this->author))
-        $this->addTag ('meta', [
+        $this->tag ('meta', [
           'name'    => 'author',
           'content' => $this->author,
         ]);
       if (!empty($application->favicon))
-        $this->addTag ('link', [
+        $this->tag ('link', [
           'rel'  => 'shortcut icon',
           'href' => $application->favicon,
         ]);
       if (isset($this->extraHeadTags))
         $this->setContent ($this->extraHeadTags);
-      $this->endTag ();
-      $this->beginTag ('body', $this->bodyAttrs);
+      $this->end ();
+      $this->begin ('body', $this->bodyAttrs);
       $this->setContent ($this->preForm);
-      $this->beginTag ('form', [
+      $this->begin ('form', [
         'action'       => property ($this, 'targetURL', $_SERVER['REQUEST_URI']),
         'method'       => 'post',
         'enctype'      => $this->enableFileUpload ? 'multipart/form-data' : null,
         'autocomplete' => $this->formAutocomplete ? null : 'off',
         'onsubmit'     => 'return Form_onSubmit()',
       ]);
-      $this->addTag ('input', [
+      $this->tag ('input', [
         'type'  => 'hidden',
         'name'  => '_action',
         'value' => property ($this, 'defaultAction'),
@@ -294,14 +294,14 @@ class Page extends Component
 
       echo $pageContent;
 
-      $this->endTag (); // form
+      $this->end (); // form
 
       foreach ($this->page->scripts as $URI) {
         if (substr ($URI, 0, 4) != 'http') {
           if (substr ($URI, 0, 1) != '/')
             $URI = $application->toURI ($URI);
         }
-        $this->addTag ('script', [
+        $this->tag ('script', [
           'type' => 'text/javascript',
           'src'  => $URI,
         ]);
@@ -313,7 +313,7 @@ class Page extends Component
             $code .= $item->getContent ();
           }
           else $code .= $item;
-        $this->addTag ('script',
+        $this->tag ('script',
           [
             'type' => 'text/javascript',
           ],
@@ -328,7 +328,7 @@ class Page extends Component
           }
           else $code .= $item;
         $code .= '})';
-        $this->addTag ('script',
+        $this->tag ('script',
           [
             'type' => 'text/javascript',
           ],
@@ -337,8 +337,8 @@ class Page extends Component
       }
 
       echo $this->footer;
-      $this->endTag (); // body
-      $this->endTag (); // html
+      $this->end (); // body
+      $this->end (); // html
     }
     else $this->renderChildren ();
   }

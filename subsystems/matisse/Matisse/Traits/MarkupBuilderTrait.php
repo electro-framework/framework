@@ -30,24 +30,30 @@ trait MarkupBuilderTrait
   private $tag;
   private $tags = [];
 
-  protected function addAttribute ($name, $value = '')
+  protected function addAttrs ($attrs)
+  {
+    foreach ($attrs as $name => $val)
+      $this->attr ($name, $val);
+  }
+
+  protected function attr ($name, $value = '')
   {
     echo isset($value) && $value !== false ? (strlen ($value) && $value !== true ? " $name=\"$value\"" : " $name") : '';
   }
 
-  protected function addAttribute2 ($name, $value1, $value2)
+  protected function attr2 ($name, $value1, $value2)
   {
     if (strlen ($value2))
       echo " $name=\"$value1$value2\"";
   }
 
-  protected function addAttributeIf ($checkValue, $name, $value = '')
+  protected function attrIf ($checkValue, $name, $value = '')
   {
     if ($checkValue)
-      $this->addAttribute ($name, $value);
+      $this->attr ($name, $value);
   }
 
-  protected function addAttributeValue ($value)
+  protected function attrValue ($value)
   {
     if (strlen ($value)) {
       echo $this->tag->attrName;
@@ -61,7 +67,7 @@ trait MarkupBuilderTrait
     }
   }
 
-  protected function addAttributeValue2 ($value1, $value2)
+  protected function attrValue2 ($value1, $value2)
   {
     if (strlen ($value2)) {
       echo $this->tag->attrName;
@@ -75,7 +81,7 @@ trait MarkupBuilderTrait
     }
   }
 
-  protected function addAttributeValueIf ($checkValue, $value)
+  protected function attrValueIf ($checkValue, $value)
   {
     if ($checkValue) {
       echo $this->tag->attrName;
@@ -89,21 +95,7 @@ trait MarkupBuilderTrait
     }
   }
 
-  protected function addAttributes ($attrs)
-  {
-    foreach ($attrs as $name => $val)
-      $this->addAttribute ($name, $val);
-  }
-
-  protected function addTag ($name, array $parameters = null, $content = null)
-  {
-    $this->beginTag ($name, $parameters);
-    if (!is_null ($content))
-      $this->setContent ($content);
-    $this->endTag ();
-  }
-
-  protected function beginAttribute ($name, $value = null, $attrSep = ' ')
+  protected function beginAttr ($name, $value = null, $attrSep = ' ')
   {
     if (strlen ($value) == 0) {
       $this->tag->attrName     = " $name=\"";
@@ -130,7 +122,7 @@ trait MarkupBuilderTrait
     }
   }
 
-  protected function beginTag ($name, array $attributes = null)
+  protected function begin ($name, array $attributes = null)
   {
     if (isset($this->tag)) {
       $this->beginContent ();
@@ -141,10 +133,10 @@ trait MarkupBuilderTrait
     echo '<' . $name;
     if ($attributes)
       foreach ($attributes as $k => $v)
-        $this->addAttribute ($k, $v);
+        $this->attr ($k, $v);
   }
 
-  protected function endAttribute ()
+  protected function endAttr ()
   {
     if ($this->tag->attrName != '')
       $this->tag->attrName = '';
@@ -160,7 +152,7 @@ trait MarkupBuilderTrait
       $this->addChild ($literal);
   }
 
-  protected function endTag ()
+  protected function end ()
   {
     if (is_null ($this->tag))
       throw new ComponentException($this, "Unbalanced beginTag() / endTag() pairs.");
@@ -197,6 +189,14 @@ trait MarkupBuilderTrait
       echo '>';
     echo $content;
     $this->tag->isContentSet = true;
+  }
+
+  protected function tag ($name, array $parameters = null, $content = null)
+  {
+    $this->begin ($name, $parameters);
+    if (!is_null ($content))
+      $this->setContent ($content);
+    $this->end ();
   }
 
 }

@@ -49,16 +49,16 @@ class VisualComponent extends Component implements IAttributes
 
   protected function postRender ()
   {
-    $this->endTag ();
+    $this->end ();
   }
 
   protected function preRender ()
   {
     if ($this->autoId)
       $this->setAutoId ();
-    $this->beginTag ($this->containerTag);
-    $this->addAttribute ('id', $this->attrs ()->id);
-    $this->addAttribute ('class', enum (' ',
+    $this->begin ($this->containerTag);
+    $this->attr ('id', $this->attrs ()->id);
+    $this->attr ('class', enum (' ',
       $this->className,
       $this->cssClassName,
       $this->attrs ()->class,

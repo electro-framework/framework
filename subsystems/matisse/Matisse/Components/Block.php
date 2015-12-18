@@ -66,7 +66,7 @@ class Block extends Component implements IAttributes
     $attr = $this->attrs ();
     if (strlen ($attr->yield)) {
       $block = $this->page->getBlock ($attr->yield);
-      $this->renderExternal ($block);
+      $this->attachAndRenderSet ($block);
     }
     $content = $this->removeChildren ();
     if (!strlen ($attr->name))

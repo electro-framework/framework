@@ -41,7 +41,7 @@ class GenericComponent extends VisualComponent
 
   protected function render ()
   {
-    $this->beginTag ($this->getTagName ());
+    $this->begin ($this->getTagName ());
     $attrs = $this->attrs ()->getAll ();
     foreach ($attrs as $k => $v) {
       if (isset($v) && $v !== '' && is_scalar ($v)) {
@@ -53,7 +53,7 @@ class GenericComponent extends VisualComponent
     }
     $this->beginContent ();
     $this->renderContent ();
-    $this->endTag ();
+    $this->end ();
   }
 
 }
