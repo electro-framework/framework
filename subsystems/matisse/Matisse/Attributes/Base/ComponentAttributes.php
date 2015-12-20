@@ -10,33 +10,7 @@ use Selenia\Matisse\Exceptions\ComponentException;
 
 class ComponentAttributes
 {
-  /**
-   * An array of names for each attribute data type.
-   * Its public to allow access from the Macro class.
-   * @var array
-   */
-  public static    $TYPE_NAMES     = [
-    type::id             => 'identifier',
-    type::text           => 'text',
-    type::number         => 'number',
-    type::bool           => 'boolean',
-    type::multipleParams => 'parameters',
-    type::parameter      => 'source',
-    type::data           => 'data',
-    type::binding        => 'binding',
-    type::metadata       => 'metadata',
-  ];
-  protected static $BOOLEAN_VALUES = [
-    0       => false,
-    1       => true,
-    'false' => false,
-    'true'  => true,
-    'no'    => false,
-    'yes'   => true,
-    'off'   => false,
-    'on'    => true,
-  ];
-  protected static $NEVER_DIRTY    = [];
+  protected static $NEVER_DIRTY = [];
   /**
    * Default values for each attribute.
    * <p>Map of property name => mixed
@@ -60,12 +34,14 @@ class ComponentAttributes
    * <p>Map of property name => type::XXX
    * @var string[]
    */
-  static protected $_types = [];
+  static protected $_types         = [];
+
   /**
    * Set to `true` when one or more attributes have been changed from their default values.
    * @var bool
    */
   public $_modified = false;
+
   /**
    * The component that owns these attributes.
    * @var Component
@@ -81,45 +57,41 @@ class ComponentAttributes
       $this->$prop = $val;
   }
 
-  public static function getBoolean ($mixed)
-  {
-    if (is_bool ($mixed))
-      return $mixed;
-    if (is_string ($mixed) && array_key_exists ($mixed, self::$BOOLEAN_VALUES))
-      return self::$BOOLEAN_VALUES[$mixed];
-    return !is_null ($mixed) && !empty($mixed);
-  }
-
-  public static function getTypeIdOf ($typeName)
-  {
-    return array_search ($typeName, self::$TYPE_NAMES);
-  }
-
   public static function validateScalar ($type, $v)
   {
+    if (!type::validate($type, $v))
+      throw new \InvalidArgumentException(sprintf(
+        "A value of PHP type <b>%s</b> is not valid for an attribute/parameter of type <b>%s</b>.",
+        typeOf($v), type::getNameOf($type)
+      ));
+
     if (isset($v) && $v !== '') {
       switch ($type) {
+
         case type::bool:
-          return self::getBoolean ($v);
-        //throw new InvalidArgumentException("<b>$v</b> (PHP type ".gettype($v).") is not a valid <b>boolean</b> value.");
+          return type::toBoolean ($v);
+
         case type::id:
           if (preg_match ('#^\w+$#', $v) === false)
-            throw new \InvalidArgumentException("<b>$v</b> (PHP type " . gettype ($v) .
-                                                ") is not a valid <b>identifier</b>.");
+            throw new \InvalidArgumentException(
+              "<b>$v</b> (PHP type " . gettype ($v) . ") is not a valid <b>identifier</b>.");
           return $v;
+
         case type::number:
           if (is_numeric ($v)) return intval ($v);
-          throw new \InvalidArgumentException("<b>$v</b> (PHP type " . gettype ($v) .
-                                              ") is not a valid <b>number</b>.");
+          throw new \InvalidArgumentException(
+            "<b>$v</b> (PHP type " . gettype ($v) . ") is not a valid <b>number</b>.");
+
         case type::text:
           if (!is_scalar ($v))
-            throw new \InvalidArgumentException("A value of PHP type <b>" . gettype ($v) .
-                                                "</b> is not valid for a <b>text</b> attribute/parameter.");
+            throw new \InvalidArgumentException(
+              "A value of PHP type <b>" . gettype ($v) . "</b> is not valid for a <b>text</b> attribute/parameter.");
           if (!is_string ($v))
             return $v; //for mixed value attributes
           $v = preg_replace ('#<br ?/?>$|<p>&nbsp;</p>#', '', $v);
           $v = preg_replace ('#&nbsp;</p>#', '</p>', $v);
           return $v;
+
         case type::data:
           if ($v instanceof \Iterator)
             return $v;
@@ -129,10 +101,9 @@ class ComponentAttributes
             return $v;
           if (is_array ($v) || is_object ($v))
             return $v;
-          throw new \InvalidArgumentException((is_scalar ($v) ? "The value <b>$v</b>" : 'A value') .
-                                              " of PHP type <b>" .
-                                              gettype ($v) .
-                                              "</b> is not valid for a <b>data</b> attribute/parameter.");
+          throw new \InvalidArgumentException(
+            (is_scalar ($v) ? "The value <b>$v</b>" : 'A value')
+            . " of PHP type <b>" . gettype ($v) . "</b> is not valid for a <b>data</b> attribute/parameter.");
       }
       if (isset(self::$TYPE_NAMES[$type]))
         throw new \InvalidArgumentException("Invalid attempt to validate an attribute/parameter value of type <b>" .
@@ -158,22 +129,22 @@ class ComponentAttributes
   }
 
   /**
-   * @param      $name
-   * @param bool $asSubtag When true, the attribute MUST be able to be specified in subtag form.
-   *                       When false, the attribute can be either a tag attribute or a subtag.
+   * Checks if the component supports the given attribute.
+   *
+   * @param string $name
+   * @param bool   $asSubtag When true, the attribute MUST be able to be specified in subtag form.
+   *                         When false, the attribute can be either a tag attribute or a subtag.
    * @return bool
    */
   public function defines ($name, $asSubtag = false)
   {
     if ($asSubtag) return $this->isSubtag ($name);
-    return isset (self::$_types[$name]);
+    return isset (static::$_types[$name]);
   }
 
   public function get ($name, $default = null)
   {
-    if (isset($this->$name))
-      return $this->$name;
-    return $default;
+    return property ($this, $name, $default);
   }
 
   public function getAll ()
@@ -187,9 +158,7 @@ class ComponentAttributes
 
   public function getAttributeNames ()
   {
-    $a = array_keys (get_object_vars ($this));
-    $a = array_diff ($a, ['component', '_modified']);
-    return $a;
+    return array_keys (static::$_types);
   }
 
   public function getAttributesOfType ($type)
@@ -205,30 +174,30 @@ class ComponentAttributes
 
   public function getEnumOf ($name)
   {
-    return self::$_enums[$name];
+    return get (static::$_enums, $name, false);
   }
 
   public function getScalar ($name)
   {
-    return self::validateScalar ($this->getTypeOf ($name), $this->get ($name));
+    return static::validateScalar ($this->getTypeOf ($name), $this->get ($name));
   }
 
   public function getTypeNameOf ($name)
   {
     $t = $this->getTypeOf ($name);
     if (!is_null ($t))
-      return self::$TYPE_NAMES[$t];
-    return self::$TYPE_NAMES[type::text];
+      return static::$TYPE_NAMES[$t];
+    return static::$TYPE_NAMES[type::text];
   }
 
   public function getTypeOf ($name)
   {
-    return self::$_types[$name];
+    return static::$_types[$name];
   }
 
   public function isEnum ($name)
   {
-    return isset(self::$_enums[$name]);
+    return isset(static::$_enums[$name]);
   }
 
   public function isScalar ($name)
@@ -303,7 +272,7 @@ class ComponentAttributes
           "Invalid value for attribute/parameter <b>$name</b>.\nExpected: <b>$list</b>.");
       }
     }
-    $newV = self::validateScalar ($this->getTypeOf ($name), $v);
+    $newV = static::validateScalar ($this->getTypeOf ($name), $v);
     if ($this->$name !== $newV) {
       $this->$name = $newV;
       if (!isset(static::$NEVER_DIRTY[$name]))
@@ -331,7 +300,7 @@ class ComponentAttributes
                 if ($it->valid ()) {
                   $e = $it->current ();
                   if (is_array ($e))
-                    self::$_enums[$name] = $e;
+                    static::$_enums[$name] = $e;
                   else throw new ComponentException($this, "Invalid enumeration for the <kbd>$name</kbd> attribute");
                 }
                 else throw new ComponentException($this,
@@ -339,73 +308,73 @@ class ComponentAttributes
                 break;
 
               case is::required:
-                self::$_required[$name] = true;
+                static::$_required[$name] = true;
                 break;
 
               case type::binding:
-                self::$_types[$name]    = $v;
-                self::$_defaults[$name] = '';
+                static::$_types[$name]    = $v;
+                static::$_defaults[$name] = '';
                 break;
 
               case type::bool:
-                self::$_types[$name]    = $v;
-                self::$_defaults[$name] = false;
+                static::$_types[$name]    = $v;
+                static::$_defaults[$name] = false;
                 break;
 
               case type::data:
-                self::$_types[$name]    = $v;
-                self::$_defaults[$name] = null;
+                static::$_types[$name]    = $v;
+                static::$_defaults[$name] = null;
                 break;
 
               case type::id:
-                self::$_types[$name]    = $v;
-                self::$_defaults[$name] = '';
+                static::$_types[$name]    = $v;
+                static::$_defaults[$name] = '';
                 break;
 
               case type::metadata:
-                self::$_types[$name]    = $v;
-                self::$_defaults[$name] = null;
+                static::$_types[$name]    = $v;
+                static::$_defaults[$name] = null;
                 break;
 
               case type::multipleParams:
-                self::$_types[$name]    = $v;
-                self::$_defaults[$name] = null;
+                static::$_types[$name]    = $v;
+                static::$_defaults[$name] = null;
                 break;
 
               case type::number:
-                self::$_types[$name]    = $v;
-                self::$_defaults[$name] = 0;
+                static::$_types[$name]    = $v;
+                static::$_defaults[$name] = 0;
                 break;
 
               case type::parameter:
-                self::$_types[$name]    = $v;
-                self::$_defaults[$name] = null;
+                static::$_types[$name]    = $v;
+                static::$_defaults[$name] = null;
                 break;
 
               case type::text:
-                self::$_types[$name]    = $v;
-                self::$_defaults[$name] = '';
+                static::$_types[$name]    = $v;
+                static::$_defaults[$name] = '';
                 break;
 
               default:
                 throw new ComponentException($this, "Invalid type declaration for the <kbd>$name</kbd> attribute");
             }
           else {
-            self::$_types[$name]    = type::text;
-            self::$_defaults[$name] = $v;
+            static::$_types[$name]    = type::text;
+            static::$_defaults[$name] = $v;
           }
         }
         else {
           // The type is defined implicitly via the default value.
 
-          self::$_defaults[$name] = $v;
+          static::$_defaults[$name] = $v;
           switch (gettype ($v)) {
             case 'boolean':
-              self::$_types[$name] = type::bool;
+              static::$_types[$name] = type::bool;
               break;
             case 'integer':
             case 'double':
-              self::$_types[$name] = type::number;
+              static::$_types[$name] = type::number;
               break;
             case 'NULL':
               break;
@@ -413,7 +382,7 @@ class ComponentAttributes
         }
         $it->next ();
       }
-      if (!isset(self::$_types[$name]))
+      if (!isset(static::$_types[$name]))
         throw new ComponentException($this, "Missing type declaration for the <kbd>$name</kbd> attribute");
     }
   }

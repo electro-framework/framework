@@ -283,7 +283,7 @@ class Macro extends Component implements IAttributes
   {
     $param = $this->getParameter ($name);
     if (isset($param)) {
-      $p = ComponentAttributes::getTypeIdOf ($param->attrs ()->type);
+      $p = type::getIdOf($param->attrs ()->type);
       if ($p === false) {
         $s = join ('</b>, <b>', array_slice (ComponentAttributes::$TYPE_NAMES, 1));
         throw new ComponentException($this,
