@@ -1,22 +1,22 @@
 <?php
 namespace Selenia\Matisse\Components\Internal;
 
-use Selenia\Matisse\Attributes\Base\ComponentAttributes;
-use Selenia\Matisse\Attributes\Base\ParameterAttributes;
-use Selenia\Matisse\Attributes\DSL\type;
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Interfaces\IAttributes;
+use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Properties\Base\ComponentProperties;
+use Selenia\Matisse\Properties\Base\ContentProperties;
+use Selenia\Matisse\Properties\Types\type;
 
 /**
- * A complex attribute that is expressed as a subtag.
+ * A complex property that is expressed as a subtag.
  *
  * > <p>**Note:** rendering a parameter **does not** render its children.
  * > <p>Otherwise problems would occur when rendering a component's children, as some of those components may be
  * parameters.
  * > <p>The content of parameters **must always** be rendered manually on the owner component's `render()`.
  */
-class Parameter extends Component implements IAttributes
+class ContentProperty extends Component implements PropertiesInterface
 {
   public $allowsChildren = true;
   /**
@@ -40,16 +40,16 @@ class Parameter extends Component implements IAttributes
 
   /**
    * @see IAttributes::attrs()
-   * @return ParameterAttributes
+   * @return ContentProperties
    */
-  function attrs ()
+  function props ()
   {
-    return $this->attrsObj;
+    return $this->props;
   }
 
   public function getValue ()
   {
-    if ($this->type == type::parameter)
+    if ($this->type == type::content)
       return $this->getChildren ();
     return $this->value;
   }
@@ -57,16 +57,16 @@ class Parameter extends Component implements IAttributes
   public function isScalar ()
   {
     //Note that parameters are never of type TYPE_PARAMS.
-    return $this->type != type::parameter;
+    return $this->type != type::content;
   }
 
   /**
    * @see IAttributes::newAttributes()
-   * @return ParameterAttributes
+   * @return ContentProperties
    */
-  function newAttributes ()
+  function newProperties ()
   {
-    return new ParameterAttributes($this);
+    return new ContentProperties($this);
   }
 
   public function parsed ()
@@ -76,7 +76,7 @@ class Parameter extends Component implements IAttributes
 
   public function setScalar ($v)
   {
-    $this->value = ComponentAttributes::validateScalar ($this->type, $v);
+    $this->value = ComponentProperties::validateScalar ($this->type, $v);
   }
 
 }

@@ -249,7 +249,7 @@ class Page extends Component
       if (!empty($this->inlineCssStyles)) {
         $css = '';
         foreach ($this->inlineCssStyles as $item)
-          if ($item instanceof Parameter)
+          if ($item instanceof ContentProperty)
             $css .= $item->getContent ();
           else $css .= $item;
         $this->tag ('style', null, $css);
@@ -310,7 +310,7 @@ class Page extends Component
       if (!empty($this->inlineScripts)) {
         $code = '';
         foreach ($this->inlineScripts as $item)
-          if ($item instanceof Parameter) {
+          if ($item instanceof ContentProperty) {
             $code .= $item->getContent ();
           }
           else $code .= $item;
@@ -324,7 +324,7 @@ class Page extends Component
       if (!empty($this->inlineDeferredScripts)) {
         $code = '$(function(){';
         foreach ($this->inlineDeferredScripts as $item)
-          if ($item instanceof Parameter) {
+          if ($item instanceof ContentProperty) {
             $code .= $item->getContent ();
           }
           else $code .= $item;

@@ -1,23 +1,23 @@
 <?php
-namespace Selenia\Matisse\Attributes\Macro;
+namespace Selenia\Matisse\Properties\Macro;
 
-use Selenia\Matisse\Attributes\Base\ComponentAttributes;
-use Selenia\Matisse\Attributes\DSL\type;
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\Parameter;
+use Selenia\Matisse\Components\Internal\ContentProperty;
 use Selenia\Matisse\Components\Macro\Macro;
 use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Properties\Base\ComponentProperties;
+use Selenia\Matisse\Properties\Types\type;
 
-class MacroInstanceAttributes
+class MacroInstanceProps
 {
   /**
-   * @var Parameter[]
+   * @var ContentProperty[]
    */
-  public $script = type::multipleParams;
+  public $script = type::collection;
   /**
-   * @var Parameter[]
+   * @var ContentProperty[]
    */
-  public $style = type::multipleParams;
+  public $style = type::collection;
 
   /**
    * Points to the component that defines the macro for these attributes.
@@ -28,7 +28,7 @@ class MacroInstanceAttributes
    * Dynamic set of attributes, as specified on the source markup.
    * @var array
    */
-  private $attributes;
+  private $props;
 
   public function __construct (Component $component, Macro $macro)
   {
@@ -37,8 +37,8 @@ class MacroInstanceAttributes
 
   public function __get ($name)
   {
-    if (isset($this->attributes)) {
-      $v = get ($this->attributes, $name);
+    if (isset($this->props)) {
+      $v = get ($this->props, $name);
       if (!is_null ($v) && $v != '')
         return $v;
     }
@@ -51,15 +51,15 @@ class MacroInstanceAttributes
 
   public function __set ($name, $value)
   {
-    if (!isset($this->attributes))
-      $this->attributes = [$name => $value];
+    if (!isset($this->props))
+      $this->props = [$name => $value];
     else
-      $this->attributes[$name] = $value;
+      $this->props[$name] = $value;
   }
 
   public function __isset ($name)
   {
-    return isset($this->attributes) && array_key_exists ($name, $this->attributes);
+    return isset($this->props) && array_key_exists ($name, $this->props);
   }
 
   public function defines ($name)
@@ -78,7 +78,7 @@ class MacroInstanceAttributes
 
   public function getAll ()
   {
-    return $this->attributes;
+    return $this->props;
   }
 
   public function getAttributeNames ()
@@ -92,19 +92,19 @@ class MacroInstanceAttributes
     if (is_null ($param))
       throw new ComponentException($this->macro, "Undefined parameter $name.");
 
-    return $this->macro->getParameter ($name)->attrs ()->default;
+    return $this->macro->getParameter ($name)->props ()->default;
   }
 
   public function getScalar ($name)
   {
-    return ComponentAttributes::validateScalar ($this->getTypeOf ($name), $this->get ($name));
+    return ComponentProperties::validateScalar ($this->getTypeOf ($name), $this->get ($name));
   }
 
   public function getTypeNameOf ($name)
   {
     $t = $this->getTypeOf ($name);
     if (!is_null ($t))
-      return ComponentAttributes::$TYPE_NAMES[$t];
+      return ComponentProperties::$TYPE_NAMES[$t];
 
     return null;
   }
@@ -142,7 +142,7 @@ class MacroInstanceAttributes
       throw new ComponentException($this->component,"Invalid value for attribute/parameter <b>$name</b>.\nExpected: <b>$list</b>.");
       }
       } */
-    $this->attributes[$name] = ComponentAttributes::validateScalar ($this->getTypeOf ($name), $v, $name);
+    $this->props[$name] = ComponentProperties::validateScalar ($this->getTypeOf ($name), $v, $name);
   }
 
 }

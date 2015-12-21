@@ -1,25 +1,25 @@
 <?php
 namespace Selenia\Matisse\Interfaces;
 
-use Selenia\Matisse\Attributes\Base\ComponentAttributes;
+use Selenia\Matisse\Properties\Base\ComponentProperties;
 
 /**
  * Components that implement this interface support attributes, whose values are usually specified on the HTML markup
  * of web pages.
  */
-interface IAttributes
+interface PropertiesInterface
 {
   /**
    * Returns the component's attributes.
    * This method must be redefined in each subclass so that it will provide the correct keyword completion on the IDE.
-   * @return ComponentAttributes
+   * @return ComponentProperties
    */
-  function attrs ();
+  function props ();
 
   /**
    * Creates an instance of the component's attributes.
    * This method must be redefined in each subclass so that it will provide the correct keyword completion on the IDE.
-   * @return ComponentAttributes
+   * @return ComponentProperties
    */
-  function newAttributes ();
+  function newProperties ();
 }

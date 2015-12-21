@@ -1,22 +1,22 @@
 <?php
 namespace Selenia\Matisse\Components;
 
-use Selenia\Matisse\Attributes\Base\ComponentAttributes;
-use Selenia\Matisse\Attributes\DSL\type;
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\Parameter;
-use Selenia\Matisse\Interfaces\IAttributes;
+use Selenia\Matisse\Components\Internal\ContentProperty;
+use Selenia\Matisse\Interfaces\PropertiesInterface;
+use Selenia\Matisse\Properties\Base\ComponentProperties;
+use Selenia\Matisse\Properties\Types\type;
 
-class IfAttributes extends ComponentAttributes
+class IfProperties extends ComponentProperties
 {
   /**
-   * @var Parameter[]
+   * @var ContentProperty[]
    */
-  public $case = type::multipleParams;
+  public $case = type::collection;
   /**
-   * @var Parameter|null
+   * @var ContentProperty|null
    */
-  public $else = type::parameter;
+  public $else = type::content;
   /**
    * @var string
    */
@@ -78,31 +78,31 @@ class IfAttributes extends ComponentAttributes
  * </If>
  * ```
  */
-class If_ extends Component implements IAttributes
+class If_ extends Component implements PropertiesInterface
 {
   public $allowsChildren = true;
 
   /**
-   * Returns the component's attributes.
-   * @return IfAttributes
+   * Returns the component's properties.
+   * @return IfProperties
    */
-  public function attrs ()
+  public function props ()
   {
-    return $this->attrsObj;
+    return $this->props;
   }
 
   /**
-   * Creates an instance of the component's attributes.
-   * @return IfAttributes
+   * Creates an instance of the component's properties.
+   * @return IfProperties
    */
-  public function newAttributes ()
+  public function newProperties ()
   {
-    return new IfAttributes($this);
+    return new IfProperties($this);
   }
 
   protected function render ()
   {
-    $attr = $this->attrs ();
+    $attr = $this->props ();
 
     $v   = $attr->get ('the');
     $is  = $attr->get ('is');
@@ -142,7 +142,7 @@ class If_ extends Component implements IAttributes
 
     if (isset($attr->case)) {
       foreach ($attr->case as $param) {
-        if ($v == $param->attrs ()->is) {
+        if ($v == $param->props ()->is) {
           $this->attachAndRenderSet ($param->getChildren ());
           return;
         }

@@ -1,16 +1,16 @@
 <?php
 namespace Selenia\Matisse\Components\Macro;
 
-use Selenia\Matisse\Attributes\Base\ComponentAttributes;
-use Selenia\Matisse\Attributes\DSL\type;
-use Selenia\Matisse\Attributes\Macro\MacroInstanceAttributes;
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\Parameter;
+use Selenia\Matisse\Components\Internal\ContentProperty;
 use Selenia\Matisse\Exceptions\ComponentException;
-use Selenia\Matisse\Interfaces\IAttributes;
+use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Properties\Base\ComponentProperties;
+use Selenia\Matisse\Properties\Macro\MacroInstanceProps;
+use Selenia\Matisse\Properties\Types\type;
 
-class MacroInstance extends Component implements IAttributes
+class MacroInstance extends Component implements PropertiesInterface
 {
   public $allowsChildren = true;
 
@@ -28,21 +28,12 @@ class MacroInstance extends Component implements IAttributes
   }
 
   /**
-   * @see IAttributes::attrs()
-   * @return MacroInstanceAttributes
-   */
-  function attrs ()
-  {
-    return $this->attrsObj;
-  }
-
-  /**
    * @see IAttributes::newAttributes()
-   * @return MacroInstanceAttributes
+   * @return MacroInstanceProps
    */
-  function newAttributes ()
+  function newProperties ()
   {
-    return new MacroInstanceAttributes($this, $this->macro);
+    return new MacroInstanceProps($this, $this->macro);
   }
 
   public function parsed ()
@@ -53,18 +44,18 @@ class MacroInstance extends Component implements IAttributes
     // Move children to default parameter
 
     if ($this->hasChildren ()) {
-      $def = $this->macro->attrs ()->defaultParam;
+      $def = $this->macro->props ()->defaultParam;
       if (!empty($def)) {
         $param = $this->macro->getParameter ($def);
         if (!$param)
           throw new ComponentException($this, "The macro's declared default parameter is invalid: $def");
-        $type = $this->attrsObj->getTypeOf ($def);
-        if ($type != type::parameter && $type != type::metadata)
+        $type = $this->props->getTypeOf ($def);
+        if ($type != type::content && $type != type::metadata)
           throw new ComponentException($this,
             "The macro's default parameter <b>$def</b> can't hold content (type: " .
-            ComponentAttributes::$TYPE_NAMES[$type] . ").");
-        $param                = new Parameter($this->context, ucfirst ($def), $type);
-        $this->attrsObj->$def = $param;
+            ComponentProperties::$TYPE_NAMES[$type] . ").");
+        $param             = new ContentProperty($this->context, ucfirst ($def), $type);
+        $this->props->$def = $param;
         $param->attachTo ($this);
         $param->setChildren ($this->removeChildren ());
       }
@@ -73,38 +64,47 @@ class MacroInstance extends Component implements IAttributes
     $this->replaceBy ($content);
   }
 
+  /**
+   * @see IAttributes::attrs()
+   * @return MacroInstanceProps
+   */
+  function props ()
+  {
+    return $this->props;
+  }
+
   private function processParameters ()
   {
     $o      = [];
-    $styles = $this->attrs ()->style;
+    $styles = $this->props ()->style;
 
     if (isset($styles))
       foreach ($styles as $sheet) {
-        if (isset($sheet->attrs ()->src))
+        if (isset($sheet->props ()->src))
           $o[] = [
             'type' => 'sh',
-            'src'  => $sheet->attrs ()->src,
+            'src'  => $sheet->props ()->src,
           ];
-        else if (!empty($sheet->children))
+        else if ($sheet->hasChildren ())
           $o[] = [
             'type' => 'ish',
-            'name' => $sheet->attrs ()->get ('name'),
+            'name' => $sheet->props ()->get ('name'),
             'data' => $sheet,
           ];
       }
-    $scripts = $this->attrs ()->script;
+    $scripts = $this->props ()->script;
     if (isset($scripts)) {
       foreach ($scripts as $script) {
-        if (isset($script->attrs ()->src))
+        if (isset($script->props ()->src))
           $o[] = [
             'type' => 'sc',
-            'src'  => $script->attrs ()->src,
+            'src'  => $script->props ()->src,
           ];
-        else if (!empty($script->children))
+        else if ($script->hasChildren ())
           $o[] = [
             'type'  => 'isc',
-            'name'  => $script->attrs ()->get ('name'),
-            'defer' => $script->attrs ()->get ('defer'),
+            'name'  => $script->props ()->get ('name'),
+            'defer' => $script->props ()->get ('defer'),
             'data'  => $script,
           ];
       }

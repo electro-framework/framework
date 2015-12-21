@@ -1,16 +1,16 @@
 <?php
 namespace Selenia\Matisse\Components\Macro;
 
-use Selenia\Matisse\Attributes\Base\ComponentAttributes;
-use Selenia\Matisse\Attributes\DSL\type;
-use Selenia\Matisse\Attributes\Macro\MacroAttributes;
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\Parameter;
+use Selenia\Matisse\Components\Internal\ContentProperty;
 use Selenia\Matisse\Components\Literal;
 use Selenia\Matisse\Exceptions\ComponentException;
-use Selenia\Matisse\Interfaces\IAttributes;
+use Selenia\Matisse\Interfaces\PropertiesInterface;
+use Selenia\Matisse\Properties\Base\ComponentProperties;
+use Selenia\Matisse\Properties\Macro\MacroProperties;
+use Selenia\Matisse\Properties\Types\type;
 
-class Macro extends Component implements IAttributes
+class Macro extends Component implements PropertiesInterface
 {
   /** Finds binding expressions which are not macro bindings. */
   const FIND_NON_MACRO_EXP = '#\{\{\s*(?=\S)[^@]#u';
@@ -27,9 +27,9 @@ class Macro extends Component implements IAttributes
         function ($args) use ($instance, $transfer_binding) {
           return self::evalScalarRef ($args[1], $instance, $transfer_binding);
         }, $bindExp);
+
     throw new \Exception("TO DO: upgrade identifier extract formula (see source code)");
     $bindExp = substr ($bindExp, 2, strlen ($bindExp) - 3);
-
     return self::evalScalarRef ($bindExp, $instance, $transfer_binding);
   }
 
@@ -41,12 +41,12 @@ class Macro extends Component implements IAttributes
 
       return $instance->bindings[$ref];
     }
-    $value = $instance->attrs ()->$ref;
+    $value = $instance->props ()->$ref;
     if (self::isBindingExpression ($value))
       return $value;
-    $value = $instance->attrs ()->getScalar ($ref);
+    $value = $instance->props ()->getScalar ($ref);
     if (is_null ($value) || $value === '')
-      $value = $instance->attrs ()->getDefault ($ref);
+      $value = $instance->props ()->getDefault ($ref);
 
     return $value;
   }
@@ -60,55 +60,55 @@ class Macro extends Component implements IAttributes
         if ($transfer_binding) {
           if ($force) {
             //$value = $component->evalBinding($value);
-            //$component->attrs()->$attrName = $value;
+            //$component->props()->$attrName = $value;
             $component->removeBinding ($attrName);
           }
           $component->addBinding ($attrName, $value); //replace current binding
         }
         else {
           //final value is not a binding exp.
-          $component->attrs ()->$attrName = $value;
+          $component->props ()->$attrName = $value;
           $component->removeBinding ($attrName);
         }
       }
     if ($component->hasChildren ())
       foreach ($component->getChildren () as $child)
-        self::parsingtimeDatabind ($child, $instance, $force || $component instanceof Parameter);
+        self::parsingtimeDatabind ($child, $instance, $force || $component instanceof ContentProperty);
   }
 
   public function apply (MacroInstance $instance)
   {
     $o      = [];
-    $styles = $this->attrs ()->style;
+    $styles = $this->props ()->style;
     if (isset($styles))
       foreach ($styles as $sheet) {
         self::parsingtimeDatabind ($sheet, $instance);
-        if (isset($sheet->attrs ()->src))
+        if (isset($sheet->props ()->src))
           $o[] = [
             'type' => 'sh',
-            'src'  => $sheet->attrs ()->src,
+            'src'  => $sheet->props ()->src,
           ];
         else if (!empty($sheet->getChildren()))
           $o[] = [
             'type' => 'ish',
-            'name' => $sheet->attrs ()->get ('name'),
+            'name' => $sheet->props ()->get ('name'),
             'data' => $sheet,
           ];
       }
-    $scripts = $this->attrs ()->script;
+    $scripts = $this->props ()->script;
     if (isset($scripts)) {
       foreach ($scripts as $script) {
         self::parsingtimeDatabind ($script, $instance);
-        if (isset($script->attrs ()->src))
+        if (isset($script->props ()->src))
           $o[] = [
             'type' => 'sc',
-            'src'  => $script->attrs ()->src,
+            'src'  => $script->props ()->src,
           ];
         else if (!empty($script->getChildren()))
           $o[] = [
             'type'  => 'isc',
-            'name'  => $script->attrs ()->get ('name'),
-            'defer' => $script->attrs ()->get ('defer'),
+            'name'  => $script->props ()->get ('name'),
+            'defer' => $script->props ()->get ('defer'),
             'data'  => $script,
           ];
       }
@@ -132,25 +132,25 @@ class Macro extends Component implements IAttributes
           break;
       }
 
-//    $styles = $this->attrs ()->get ('style');
+//    $styles = $this->props ()->get ('style');
 //    if (isset($styles))
 //      foreach ($styles as $sheet) {
 //        self::parsingtimeDatabind ($sheet, $instance);
-//        if (isset($sheet->attrs ()->src))
-//          $instance->page->addStylesheet ($sheet->attrs ()->src);
+//        if (isset($sheet->props ()->src))
+//          $instance->page->addStylesheet ($sheet->props ()->src);
 //        else if (!empty($sheet->children)) {
-//          $name = $sheet->attrs ()->get ('name');
+//          $name = $sheet->props ()->get ('name');
 //          $instance->page->addInlineCss ($sheet, $name);
 //        }
 //      }
-//    $scripts = $this->attrs ()->get ('script');
+//    $scripts = $this->props ()->get ('script');
 //    if (isset($scripts)) {
 //      foreach ($scripts as $script) {
 //        self::parsingtimeDatabind ($script, $instance);
-//        if (isset($script->attrs ()->src))
-//          $instance->page->addScript ($script->attrs ()->src);
+//        if (isset($script->props ()->src))
+//          $instance->page->addScript ($script->props ()->src);
 //        else if (!empty($script->children)) {
-//          $name = $script->attrs ()->get ('name');
+//          $name = $script->props ()->get ('name');
 //          $instance->page->addInlineScript ($script, $name);
 //        }
 //      }
@@ -187,17 +187,17 @@ class Macro extends Component implements IAttributes
                       $component->addBinding ($field, $value); //replace current binding
                     else {
                       //final value is not a binding exp.
-                      $component->attrs ()->$field = $value;
+                      $component->props ()->$field = $value;
                       $component->removeBinding ($field);
                     }
                   }
                   else {
                     //simple exp. (binding ref. only}
                     $attrName = $match[1];
-                    if (!$instance->attrs ()->defines ($attrName)) {
-                      $s = join (', ', $instance->attrs ()->getAttributeNames ());
+                    if (!$instance->props ()->defines ($attrName)) {
+                      $s = join (', ', $instance->props ()->getAttributeNames ());
                       throw new ComponentException($instance,
-                        "<p>The parameter <b>$attrName</b>, specified on a call to/in the <b>{$this->attrs ()->name}</b> macro, is not defined on that macro.</p>
+                        "<p>The parameter <b>$attrName</b>, specified on a call to/in the <b>{$this->props ()->name}</b> macro, is not defined on that macro.</p>
 <table>
   <th>Expected parameters:<td>$s
   <tr><th>Instance:<td>{$instance->getTagName ()}
@@ -205,7 +205,7 @@ class Macro extends Component implements IAttributes
                     }
                     if (isset($this->bindings) && array_key_exists ($attrName, $this->bindings))
                       $content = $this->bindings[$attrName];
-                    else $content = $instance->attrs ()->$attrName;
+                    else $content = $instance->props ()->$attrName;
                     if (isset($instance->bindings) &&
                         array_key_exists ($attrName, $instance->bindings)
                     ) {
@@ -213,7 +213,7 @@ class Macro extends Component implements IAttributes
                       $component->addBinding ($field, $instance->bindings[$attrName]);
                       continue;
                     }
-                    $value = $content instanceof Parameter ? $content->getValue () : $content;
+                    $value = $content instanceof ContentProperty ? $content->getValue () : $content;
                     if ($component instanceof Literal) {
                       if (is_array ($value)) {
                         //replace literal by a component set
@@ -223,9 +223,9 @@ class Macro extends Component implements IAttributes
                       }
                       if (!self::isBindingExpression ($value))
                         //convert boolean value to string, only for literals
-                        if ($instance->attrs ()->getTypeOf ($attrName) == type::bool)
+                        if ($instance->props ()->getTypeOf ($attrName) == type::bool)
                           $value =
-                            ComponentAttributes::validateScalar (type::bool, $value)
+                            ComponentProperties::validateScalar (type::bool, $value)
                               ? 'true' : 'false';
                     }
                     if (self::isBindingExpression ($value)) {
@@ -233,7 +233,7 @@ class Macro extends Component implements IAttributes
                       $component->addBinding ($field, $value);
                     }
                     else {
-                      $component->attrs ()->$field = $value;
+                      $component->props ()->$field = $value;
                       $component->removeBinding ($field);
                     }
                   }
@@ -241,10 +241,10 @@ class Macro extends Component implements IAttributes
               }
             }
           }
-          $attrs  = $component->attrs ()->getAttributesOfType (type::parameter);
+          $attrs  = $component->props ()->getAttributesOfType (type::content);
           $values = array_values ($attrs);
           $this->applyTo ($values, $instance);
-          $attrs  = $component->attrs ()->getAttributesOfType (type::multipleParams);
+          $attrs  = $component->props ()->getAttributesOfType (type::collection);
           $values = array_values ($attrs);
           foreach ($values as $paramArray)
             $this->applyTo ($paramArray, $instance);
@@ -254,26 +254,25 @@ class Macro extends Component implements IAttributes
   }
 
   /**
-   * @see IAttributes::attrs()
-   * @return MacroAttributes
+   * @return MacroProperties
    */
-  public function attrs ()
+  public function props ()
   {
-    return $this->attrsObj;
+    return $this->props;
   }
 
   /**
    * Returns the macro parameter with the given name.
    * @param string $name
-   * @return Parameter
+   * @return ContentProperty
    */
   public function getParameter ($name)
   {
     $name   = denormalizeAttributeName ($name);
-    $params = $this->attrs ()->get ('param');
+    $params = $this->props ()->get ('param');
     if (!is_null ($params))
       foreach ($params as $param)
-        if ($param->attrs ()->name == $name)
+        if ($param->props ()->name == $name)
           return $param;
 
     return null;
@@ -283,9 +282,9 @@ class Macro extends Component implements IAttributes
   {
     $param = $this->getParameter ($name);
     if (isset($param)) {
-      $p = type::getIdOf($param->attrs ()->type);
+      $p = type::getIdOf($param->props ()->type);
       if ($p === false) {
-        $s = join ('</b>, <b>', array_slice (ComponentAttributes::$TYPE_NAMES, 1));
+        $s = join ('</b>, <b>', array_slice (type::NAMES, 1));
         throw new ComponentException($this,
           "The type attribute for the <b>$name</b> parameter is invalid.\nExpected values: <b>$s</b>.");
       }
@@ -298,26 +297,25 @@ class Macro extends Component implements IAttributes
 
   public function getParametersNames ()
   {
-    $params = $this->attrs ()->get ('param');
+    $params = $this->props ()->get ('param');
     if (is_null ($params)) return null;
     $names = [];
     foreach ($params as $param)
-      $names[] = $param->attrs ()->name;
+      $names[] = $param->props ()->name;
 
     return $names;
   }
 
   /**
-   * @see IAttributes::newAttributes()
-   * @return MacroAttributes
+   * @return MacroProperties
    */
-  public function newAttributes ()
+  public function newProperties ()
   {
-    return new MacroAttributes($this);
+    return new MacroProperties($this);
   }
 
   public function parsed ()
   {
-    $this->context->addMacro ($this->attrs ()->name, $this);
+    $this->context->addMacro ($this->props ()->name, $this);
   }
 }

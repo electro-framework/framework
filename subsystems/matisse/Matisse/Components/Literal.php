@@ -1,14 +1,14 @@
 <?php
 namespace Selenia\Matisse\Components;
 
-use Selenia\Matisse\Attributes\Base\ComponentAttributes;
-use Selenia\Matisse\Attributes\DSL\type;
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\Parameter;
-use Selenia\Matisse\Interfaces\IAttributes;
+use Selenia\Matisse\Components\Internal\ContentProperty;
+use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Properties\Base\ComponentProperties;
+use Selenia\Matisse\Properties\Types\type;
 
-class LiteralAttributes extends ComponentAttributes
+class LiteralProperties extends ComponentProperties
 {
   protected static $NEVER_DIRTY = ['value' => 1];
 
@@ -17,9 +17,9 @@ class LiteralAttributes extends ComponentAttributes
    */
   public $cdata = false;
   /**
-   * @var Parameter|null
+   * @var ContentProperty|null
    */
-  public $content = type::parameter;
+  public $content = type::content;
   /**
    * @var bool
    */
@@ -38,7 +38,7 @@ class LiteralAttributes extends ComponentAttributes
   public $whitespace = true;
 }
 
-class Literal extends Component implements IAttributes
+class Literal extends Component implements PropertiesInterface
 {
   public function __construct (Context $context, $properties = null)
   {
@@ -53,44 +53,44 @@ class Literal extends Component implements IAttributes
   }
 
   /**
-   * Returns the component's attributes.
-   * @return LiteralAttributes
+   * Returns the component's properties.
+   * @return LiteralProperties
    */
-  public function attrs ()
+  public function props ()
   {
-    return $this->attrsObj;
+    return $this->props;
   }
 
   /**
-   * Creates an instance of the component's attributes.
-   * @return LiteralAttributes
+   * Creates an instance of the component's properties.
+   * @return LiteralProperties
    */
-  public function newAttributes ()
+  public function newProperties ()
   {
-    return new LiteralAttributes($this);
+    return new LiteralProperties($this);
   }
 
   protected function render ()
   {
-    if (!is_null ($this->attrs ()->content))
-      $value = $this->attrs ()->content->value;
-    else $value = $this->attrs ()->value;
-    if ($this->attrs ()->cdata)
+    if (!is_null ($this->props ()->content))
+      $value = $this->props ()->content->value;
+    else $value = $this->props ()->value;
+    if ($this->props ()->cdata)
       echo '<![CDATA[';
     switch (gettype ($value)) {
       case 'boolean':
         echo $value ? 'true' : 'false';
         break;
       default:
-        if ($this->attrs ()->encode)
+        if ($this->props ()->encode)
           $value = htmlspecialchars ($value);
-        if ($this->attrs ()->nl2br)
+        if ($this->props ()->nl2br)
           $value = nl2br ($value);
-        if (!$this->attrs ()->whitespace)
+        if (!$this->props ()->whitespace)
           $value = preg_replace ('#^ | $|(>) (<)|(<br ?/?>) #', '$1$2$3', preg_replace ('#\s+#', ' ', $value));
         echo $value;
     }
-    if ($this->attrs ()->cdata)
+    if ($this->props ()->cdata)
       echo ']]>';
   }
 }

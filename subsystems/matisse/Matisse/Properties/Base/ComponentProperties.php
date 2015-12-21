@@ -1,14 +1,14 @@
 <?php
-namespace Selenia\Matisse\Attributes\Base;
+namespace Selenia\Matisse\Properties\Base;
 
-use Selenia\Matisse\Attributes\DSL\is;
-use Selenia\Matisse\Attributes\DSL\type;
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\Parameter;
+use Selenia\Matisse\Components\Internal\ContentProperty;
 use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Properties\Types\is;
+use Selenia\Matisse\Properties\Types\type;
 
-class ComponentAttributes
+class ComponentProperties
 {
   protected static $NEVER_DIRTY = [];
   /**
@@ -37,13 +37,13 @@ class ComponentAttributes
   static protected $_types         = [];
 
   /**
-   * Set to `true` when one or more attributes have been changed from their default values.
+   * Set to `true` when one or more properties have been changed from their default values.
    * @var bool
    */
   public $_modified = false;
 
   /**
-   * The component that owns these attributes.
+   * The component that owns these properties.
    * @var Component
    */
   protected $component;
@@ -65,51 +65,7 @@ class ComponentAttributes
         typeOf($v), type::getNameOf($type)
       ));
 
-    if (isset($v) && $v !== '') {
-      switch ($type) {
-
-        case type::bool:
-          return type::toBoolean ($v);
-
-        case type::id:
-          if (preg_match ('#^\w+$#', $v) === false)
-            throw new \InvalidArgumentException(
-              "<b>$v</b> (PHP type " . gettype ($v) . ") is not a valid <b>identifier</b>.");
-          return $v;
-
-        case type::number:
-          if (is_numeric ($v)) return intval ($v);
-          throw new \InvalidArgumentException(
-            "<b>$v</b> (PHP type " . gettype ($v) . ") is not a valid <b>number</b>.");
-
-        case type::text:
-          if (!is_scalar ($v))
-            throw new \InvalidArgumentException(
-              "A value of PHP type <b>" . gettype ($v) . "</b> is not valid for a <b>text</b> attribute/parameter.");
-          if (!is_string ($v))
-            return $v; //for mixed value attributes
-          $v = preg_replace ('#<br ?/?>$|<p>&nbsp;</p>#', '', $v);
-          $v = preg_replace ('#&nbsp;</p>#', '</p>', $v);
-          return $v;
-
-        case type::data:
-          if ($v instanceof \Iterator)
-            return $v;
-          if ($v instanceof \IteratorAggregate)
-            return $v->getIterator ();
-          if (is_string ($v) && strpos ($v, '{') !== false)
-            return $v;
-          if (is_array ($v) || is_object ($v))
-            return $v;
-          throw new \InvalidArgumentException(
-            (is_scalar ($v) ? "The value <b>$v</b>" : 'A value')
-            . " of PHP type <b>" . gettype ($v) . "</b> is not valid for a <b>data</b> attribute/parameter.");
-      }
-      if (isset(self::$TYPE_NAMES[$type]))
-        throw new \InvalidArgumentException("Invalid attempt to validate an attribute/parameter value of type <b>" .
-                                            self::$TYPE_NAMES[$type] . "<b> with code $type.");
-    }
-    return null;
+    return type::typecast($type, $v);
   }
 
   public function __get ($name)
@@ -187,7 +143,7 @@ class ComponentAttributes
     $t = $this->getTypeOf ($name);
     if (!is_null ($t))
       return static::$TYPE_NAMES[$t];
-    return static::$TYPE_NAMES[type::text];
+    return static::$TYPE_NAMES[type::string];
   }
 
   public function getTypeOf ($name)
@@ -204,15 +160,15 @@ class ComponentAttributes
   {
     $type = $this->getTypeOf ($name);
     return $type == type::bool || $type == type::id || $type == type::number ||
-           $type == type::text;
+           $type == type::string;
   }
 
   public function isSubtag ($name)
   {
     $type = $this->getTypeOf ($name);
     switch ($type) {
-      case type::parameter:
-      case type::multipleParams:
+      case type::content:
+      case type::collection:
       case type::metadata:
         return true;
     }
@@ -226,13 +182,13 @@ class ComponentAttributes
     if ($this->isScalar ($name))
       $this->setScalar ($name, $value);
     else switch ($type = $this->getTypeOf ($name)) {
-      case type::parameter:
+      case type::content:
         $ctx  = $this->component->context;
         $text = Text::from ($ctx, $value);
         if (isset($this->$name))
           $this->$name->addChild ($text);
         else {
-          $param = new Parameter ($ctx, $name, $type);
+          $param = new ContentProperty ($ctx, $name, $type);
           $param->attachTo ($this->component);
           $param->addChild ($text);
           $this->$name = $param;
@@ -248,7 +204,7 @@ class ComponentAttributes
   public function setComponent (Component $owner)
   {
     $this->component = $owner;
-    $attrs           = $this->getAttributesOfType (type::parameter);
+    $attrs           = $this->getAttributesOfType (type::content);
     foreach ($attrs as $name => $value)
       if (!is_null ($value)) {
         /** @var Component $c */
@@ -256,7 +212,7 @@ class ComponentAttributes
         $c->attachTo ($owner);
         $this->$name = $c;
       }
-    $attrs = $this->getAttributesOfType (type::multipleParams);
+    $attrs = $this->getAttributesOfType (type::collection);
     foreach ($attrs as $name => $values)
       if (!empty($values))
         $this->$name = Component::cloneComponents ($values, $owner);
@@ -336,7 +292,7 @@ class ComponentAttributes
                 static::$_defaults[$name] = null;
                 break;
 
-              case type::multipleParams:
+              case type::collection:
                 static::$_types[$name]    = $v;
                 static::$_defaults[$name] = null;
                 break;
@@ -346,12 +302,12 @@ class ComponentAttributes
                 static::$_defaults[$name] = 0;
                 break;
 
-              case type::parameter:
+              case type::content:
                 static::$_types[$name]    = $v;
                 static::$_defaults[$name] = null;
                 break;
 
-              case type::text:
+              case type::string:
                 static::$_types[$name]    = $v;
                 static::$_defaults[$name] = '';
                 break;
@@ -360,7 +316,7 @@ class ComponentAttributes
                 throw new ComponentException($this, "Invalid type declaration for the <kbd>$name</kbd> attribute");
             }
           else {
-            static::$_types[$name]    = type::text;
+            static::$_types[$name]    = type::string;
             static::$_defaults[$name] = $v;
           }
         }

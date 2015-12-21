@@ -1,29 +1,29 @@
 <?php
 namespace Selenia\Matisse\Components;
-use Selenia\Matisse\Attributes\Base\ComponentAttributes;
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Interfaces\IAttributes;
+use Selenia\Matisse\Interfaces\PropertiesInterface;
+use Selenia\Matisse\Properties\Base\ComponentProperties;
 
-class Head extends Component implements IAttributes
+class Head extends Component implements PropertiesInterface
 {
   public $allowsChildren = true;
 
   /**
-   * Returns the component's attributes.
-   * @return ComponentAttributes
+   * Returns the component's properties.
+   * @return ComponentProperties
    */
-  public function attrs ()
+  public function props ()
   {
-    return $this->attrsObj;
+    return $this->props;
   }
 
   /**
-   * Creates an instance of the component's attributes.
-   * @return ComponentAttributes
+   * Creates an instance of the component's properties.
+   * @return ComponentProperties
    */
-  public function newAttributes ()
+  public function newProperties ()
   {
-    return new ComponentAttributes($this);
+    return new ComponentProperties($this);
   }
 
   /**

@@ -1,18 +1,18 @@
 <?php
 namespace Selenia\Matisse\Components;
 
-use Selenia\Matisse\Attributes\Base\ComponentAttributes;
-use Selenia\Matisse\Attributes\DSL\type;
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\Parameter;
-use Selenia\Matisse\Interfaces\IAttributes;
+use Selenia\Matisse\Components\Internal\ContentProperty;
+use Selenia\Matisse\Interfaces\PropertiesInterface;
+use Selenia\Matisse\Properties\Base\ComponentProperties;
+use Selenia\Matisse\Properties\Types\type;
 
-class ApplyAttributes extends ComponentAttributes
+class ApplyProperties extends ComponentProperties
 {
   /**
-   * @var Parameter|null
+   * @var ContentProperty|null
    */
-  public $attrs = type::parameter;
+  public $attrs = type::content;
   /**
    * @var bool
    */
@@ -39,39 +39,39 @@ class ApplyAttributes extends ComponentAttributes
  * <p>If no filter is provided, only direct children of the component will be affected.
  *
  */
-class Apply extends Component implements IAttributes
+class Apply extends Component implements PropertiesInterface
 {
   public $allowsChildren = true;
 
   /**
-   * Returns the component's attributes.
-   * @return ApplyAttributes
+   * Returns the component's properties.
+   * @return ApplyProperties
    */
-  public function attrs ()
+  public function props ()
   {
-    return $this->attrsObj;
+    return $this->props;
   }
 
   /**
-   * Creates an instance of the component's attributes.
-   * @return ApplyAttributes
+   * Creates an instance of the component's properties.
+   * @return ApplyProperties
    */
-  public function newAttributes ()
+  public function newProperties ()
   {
-    return new ApplyAttributes($this);
+    return new ApplyProperties($this);
   }
 
   protected function render ()
   {
-    $attr = $this->attrs ();
-    /** @var Parameter $attrParam */
-    /** @var Parameter $content */
-    $attrParam = $attr->attrs;
-    $attrs     = $attrParam->attrs ()->getAll ();
+    $attr = $this->props ();
+    /** @var ContentProperty $attrParam */
+    /** @var ContentProperty $content */
+    $attrParam = $attr->props;
+    $attrs     = $attrParam->props ()->getAll ();
     $where     = $attr->where;
     if (!$where && $this->hasChildren ()) {
       foreach ($this->getChildren () as $k => $child)
-        $child->attrs ()->apply ($attrs);
+        $child->props ()->apply ($attrs);
     }
     else $this->scan ($this, $attr->where, $attrs);
     $this->renderChildren ();
@@ -82,20 +82,20 @@ class Apply extends Component implements IAttributes
     if ($parent->hasChildren ())
       foreach ($parent->getChildren () as $child) {
         if ($child->getTagName () == $where)
-          $child->attrs ()->apply ($attrs);
+          $child->props ()->apply ($attrs);
         $this->scan ($child, $where, $attrs);
       }
     return;
-    /** @var ComponentAttributes $params */
+    /** @var ComponentProperties $params */
     /*
-    $params = $parent->attrs ();
+    $params = $parent->props ();
     foreach ($params->getAll () as $param) {
       if ($param instanceof Parameter) {
         $content = $param->children;
         if (isset($content))
           foreach ($content as $k => $child) {
             if ($child->getTagName () == $where)
-              $child->attrs ()->apply ($attrs);
+              $child->props ()->apply ($attrs);
             $this->scan ($child, $where, $attrs);
           }
       }

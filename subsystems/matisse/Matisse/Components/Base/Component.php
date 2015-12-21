@@ -1,16 +1,16 @@
 <?php
 namespace Selenia\Matisse\Components\Base;
 
-use Selenia\Matisse\Attributes\Base\ComponentAttributes;
 use Selenia\Matisse\ComponentInspector;
 use Selenia\Matisse\Components\Internal\Page;
 use Selenia\Matisse\Components\Macro\MacroInstance;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Exceptions\ParseException;
-use Selenia\Matisse\Interfaces\IAttributes;
+use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Parser\Parser;
+use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Traits\DataBindingTrait;
 use Selenia\Matisse\Traits\DOMNodeTrait;
 use Selenia\Matisse\Traits\MarkupBuilderTrait;
@@ -62,9 +62,9 @@ abstract class Component
    * markup). This property contains an object of class ComponentAttributes or of a subclass of it, depending on the
    * component class of the instance. Do not access this property directly. @see Component::attrs()
    *
-   * @var ComponentAttributes
+   * @var ComponentProperties
    */
-  protected $attrsObj;
+  protected $props;
   /**
    * Set to true on a component class definition to automatically assign an ID to instances.
    *
@@ -88,7 +88,7 @@ abstract class Component
   /**
    * Creates a new component instance and optionally sets its attributes and styles.
    *
-   * @param array   $attributes A map of the component's attributes.
+   * @param array   $attributes A map of the component's properties.
    * @param Context $context    The rendering context for the current request.
    * @throws ComponentException
    */
@@ -98,9 +98,9 @@ abstract class Component
     $s                        = explode ('\\', $class);
     $this->context            = $context;
     $this->className          = end ($s);
-    $this->supportsAttributes = $this instanceof IAttributes;
+    $this->supportsAttributes = $this instanceof PropertiesInterface;
     if ($this->supportsAttributes) {
-      $this->attrsObj = $this->newAttributes ();
+      $this->props = $this->newProperties ();
 
       // Apply presets.
       foreach ($context->presets as $preset)
@@ -110,7 +110,7 @@ abstract class Component
       // Apply attributes.
       if ($attributes)
         foreach ($attributes as $name => $value)
-          $this->attrsObj->set ($name, $value);
+          $this->props->set ($name, $value);
     }
     else if ($attributes)
       throw new ComponentException($this, 'This component does not support attributes.');
@@ -135,7 +135,7 @@ abstract class Component
                                  $generic = false, $strict = false)
   {
     if ($generic) {
-      $component = new GenericComponent($context, $tagName, $attributes);
+      $component = new GenericHtmlComponent($context, $tagName, $attributes);
 
       return $component;
     }
@@ -361,15 +361,15 @@ abstract class Component
    */
   public final function isAttributeSet ($fieldName)
   {
-    return isset($this->attrsObj->$fieldName) || $this->isBound ($fieldName);
+    return isset($this->props->$fieldName) || $this->isBound ($fieldName);
   }
 
   /**
    * Can't be abstract because the child class may not implement IAttributes.
    *
-   * @return ComponentAttributes
+   * @return ComponentProperties
    */
-  public function newAttributes ()
+  public function newProperties ()
   {
     return null;
   }
@@ -420,7 +420,7 @@ abstract class Component
   {
     if (!$this->inactive) {
       $this->databind ();
-      if (!isset($this->attrsObj) || !isset($this->attrsObj->hidden) || !$this->attrsObj->hidden) {
+      if (!isset($this->props) || !isset($this->props->hidden) || !$this->props->hidden) {
         $this->preRender ();
         $this->render ();
         $this->postRender ();
@@ -462,15 +462,15 @@ abstract class Component
 
   protected function setAutoId ()
   {
-    if ($this->regenerateId || (isset($this->attrsObj) && !isset($this->attrsObj->id))) {
+    if ($this->regenerateId || (isset($this->props) && !isset($this->props->id))) {
       $this->regenerateId = true; // if the component is re-rendered, always generate an id from now on.
       // Strip non alpha-numeric chars from generated name.
-      $this->attrsObj->id =
-        preg_replace ('/\W/', '', property ($this->attrsObj, 'name', strtolower ($this->className))) .
+      $this->props->id =
+        preg_replace ('/\W/', '', property ($this->props, 'name', strtolower ($this->className))) .
         $this->getUniqueId ();
     }
 
-    return $this->attrsObj->id;
+    return $this->props->id;
   }
 
 }

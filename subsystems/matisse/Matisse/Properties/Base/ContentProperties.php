@@ -1,13 +1,10 @@
 <?php
-namespace Selenia\Matisse\Attributes\Base;
+namespace Selenia\Matisse\Properties\Base;
 
 /**
- * Generic Attributes allow a component instance to have any tag attributes, without them having to be specifically
- * declared for the component class.
- *
- * ><p>**Note:** attributes specified as subtags cannot be generic.
+ * Properties of a Content metadata component.
  */
-class GenericAttributes extends VisualComponentAttributes
+class ContentProperties extends ComponentProperties
 {
   public function __get ($name)
   {
@@ -22,7 +19,7 @@ class GenericAttributes extends VisualComponentAttributes
 
   public function defines ($name, $asSubtag = false)
   {
-    return !$asSubtag;
+    return true;
   }
 
   public function __isset ($name)

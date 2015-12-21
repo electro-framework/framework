@@ -2,13 +2,13 @@
 namespace Selenia\Matisse\Traits;
 
 use PhpCode;
-use Selenia\Matisse\Attributes\Base\ComponentAttributes;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Exceptions\HandlerNotFoundException;
 use Selenia\Matisse\MatisseEngine;
 use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Properties\Base\ComponentProperties;
 
 /**
  * Provides an API for handling data binding on a component's properties.
@@ -16,7 +16,7 @@ use Selenia\Matisse\Parser\Context;
  * It's applicable to the Component class.
  *
  * @property Context             $context  The rendering context.
- * @property ComponentAttributes $attrsObj The component's attributes.
+ * @property ComponentProperties $props The component's attributes.
  * @property Component           $parent   The component's parent.
  */
 trait DataBindingTrait
@@ -133,8 +133,8 @@ trait DataBindingTrait
   protected function bindToAttribute ($name, $value)
   {
     if (is_object ($value))
-      $this->attrsObj->$name = $value;
-    else $this->attrsObj->set ($name, $value);
+      $this->props->$name = $value;
+    else $this->props->set ($name, $value);
   }
 
   protected function databind ()
@@ -186,7 +186,7 @@ trait DataBindingTrait
     if (isset($this->bindings[$name]))
       return $this->evalBinding ($this->bindings[$name]);
 
-    return $this->attrsObj->$name;
+    return $this->props->$name;
   }
 
   /**

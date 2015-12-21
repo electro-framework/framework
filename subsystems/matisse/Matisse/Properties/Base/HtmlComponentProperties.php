@@ -1,9 +1,12 @@
 <?php
-namespace Selenia\Matisse\Attributes\Base;
+namespace Selenia\Matisse\Properties\Base;
 
-use Selenia\Matisse\Attributes\DSL\type;
+use Selenia\Matisse\Properties\Types\type;
 
-class VisualComponentAttributes extends ComponentAttributes
+/**
+ * Properties shared by all {@see HtmlComponent} descendants.
+ */
+class HtmlComponentProperties extends ComponentProperties
 {
   /**
    * @var string

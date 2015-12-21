@@ -1,10 +1,10 @@
 <?php
 namespace Selenia\Matisse\Components\Base;
 
-use Selenia\Matisse\Attributes\Base\GenericAttributes;
 use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Properties\Base\GenericProperties;
 
-class GenericComponent extends VisualComponent
+class GenericHtmlComponent extends HtmlComponent
 {
   public function __construct (Context $context, $tagName, array $attributes = null)
   {
@@ -13,21 +13,21 @@ class GenericComponent extends VisualComponent
   }
 
   /**
-   * Returns the component's attributes.
-   * @return GenericAttributes
+   * Returns the component's properties.
+   * @return GenericProperties
    */
-  public function attrs ()
+  public function props ()
   {
-    return $this->attrsObj;
+    return $this->props;
   }
 
   /**
-   * Creates an instance of the component's attributes.
-   * @return GenericAttributes
+   * Creates an instance of the component's properties.
+   * @return GenericProperties
    */
-  public function newAttributes ()
+  public function newProperties ()
   {
-    return new GenericAttributes($this);
+    return new GenericProperties($this);
   }
 
   protected function postRender ()
@@ -41,7 +41,7 @@ class GenericComponent extends VisualComponent
   protected function render ()
   {
     $this->begin ($this->getTagName ());
-    $attrs = $this->attrs ()->getAll ();
+    $attrs = $this->props ()->getAll ();
     foreach ($attrs as $k => $v) {
       if (isset($v) && $v !== '' && is_scalar ($v)) {
         if (is_bool ($v)) {

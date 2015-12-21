@@ -1,8 +1,10 @@
 <?php
 namespace Selenia\Matisse;
 
-use Selenia\Matisse\Attributes\DSL\type;
 use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Properties\Base\ComponentProperties;
+use Selenia\Matisse\Properties\Types\type;
 
 class ComponentInspector
 {
@@ -32,6 +34,7 @@ class ComponentInspector
    * Returns a textual representation of the component, suitable for debugging purposes.
    * @param Component $component
    * @param bool      $deep
+   * @throws ComponentException
    */
   private static function _inspect (Component $component, $deep = true)
   {
@@ -42,13 +45,16 @@ class ComponentInspector
       echo '&nbsp;<span style="color:#888">(detached)</span>';
     if ($component->supportsAttributes) {
       echo '<table style="color:#CCC;margin:0 0 0 15px"><colgroup><col width=1><col width=1><col></colgroup>';
-      $props = $component->attrs ()->getAll ();
+      /** @var ComponentProperties $propsObj */
+      $propsObj = $component->props ();
+      if ($propsObj) $props = $propsObj->getAll ();
+      else throw new \RuntimeException ("No properties exist for component ".$component->getTagName());
       if (!empty($props))
         foreach ($props as $k => $v)
           if (isset($v)) {
-            $t = $component->attrs ()->getTypeOf ($k);
-            if (!$deep || ($t != type::parameter && $t != type::multipleParams && $t != type::metadata)) {
-              $tn = $component->attrs ()->getTypeNameOf ($k);
+            $t = $component->props ()->getTypeOf ($k);
+            if (!$deep || ($t != type::content && $t != type::collection && $t != type::metadata)) {
+              $tn = $component->props ()->getTypeNameOf ($k);
               echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
               switch ($t) {
                 case type::bool:
@@ -60,7 +66,7 @@ class ComponentInspector
                 case type::number:
                   echo $v;
                   break;
-                case type::text:
+                case type::string:
                   echo "\"<span style='color:#888;white-space: pre-wrap'>" .
                        str_replace ("\n", '&#8626;', htmlspecialchars (strval ($v))) .
                        '</span>"';
@@ -78,18 +84,18 @@ class ComponentInspector
       if (!empty($props))
         foreach ($props as $k => $v)
           if (isset($v)) {
-            $t = $component->attrs ()->getTypeOf ($k);
-            if ($t == type::parameter || $t == type::multipleParams || $t == type::metadata) {
-              $tn = $component->attrs ()->getTypeNameOf ($k);
+            $t = $component->props ()->getTypeOf ($k);
+            if ($t == type::content || $t == type::collection || $t == type::metadata) {
+              $tn = $component->props ()->getTypeNameOf ($k);
               echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i>" .
                    "<tr><td><td colspan=2>";
               switch ($t) {
-                case type::parameter:
+                case type::content:
                 case type::metadata:
-                  echo self::inspect ($component->attrs ()->$k, $deep);
+                  echo self::inspect ($component->props ()->$k, $deep);
                   break;
-                case type::multipleParams:
-                  echo self::inspectSet ($component->attrs ()->$k, true, true);
+                case type::collection:
+                  echo self::inspectSet ($component->props ()->$k, true, true);
                   break;
               }
               echo '</tr>';

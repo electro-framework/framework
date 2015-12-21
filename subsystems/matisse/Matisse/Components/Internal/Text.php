@@ -1,21 +1,21 @@
 <?php
 namespace Selenia\Matisse\Components\Internal;
 
-use Selenia\Matisse\Attributes\Base\ComponentAttributes;
-use Selenia\Matisse\Attributes\DSL\type;
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Interfaces\IAttributes;
+use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Properties\Base\ComponentProperties;
+use Selenia\Matisse\Properties\Types\type;
 
-class TextAttributes extends ComponentAttributes
+class TextProperties extends ComponentProperties
 {
   protected static $NEVER_DIRTY = ['value' => 1];
   public $value = '';
 
-  protected function typeof_value () { return type::text; }
+  protected function typeof_value () { return type::string; }
 }
 
-class Text extends Component implements IAttributes
+class Text extends Component implements PropertiesInterface
 {
   public function __construct (Context $context, $properties = null)
   {
@@ -30,26 +30,26 @@ class Text extends Component implements IAttributes
   }
 
   /**
-   * Returns the component's attributes.
-   * @return TextAttributes
+   * Returns the component's properties.
+   * @return TextProperties
    */
-  public function attrs ()
+  public function props ()
   {
-    return $this->attrsObj;
+    return $this->props;
   }
 
   /**
-   * Creates an instance of the component's attributes.
-   * @return TextAttributes
+   * Creates an instance of the component's properties.
+   * @return TextProperties
    */
-  public function newAttributes ()
+  public function newProperties ()
   {
-    return new TextAttributes($this);
+    return new TextProperties($this);
   }
 
   protected function render ()
   {
-    echo $this->attrsObj->value;
+    echo $this->props->value;
   }
 
 }

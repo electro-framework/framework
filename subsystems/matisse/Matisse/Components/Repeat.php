@@ -1,13 +1,13 @@
 <?php
 namespace Selenia\Matisse\Components;
 
-use Selenia\Matisse\Attributes\Base\ComponentAttributes;
-use Selenia\Matisse\Attributes\DSL\type;
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\Parameter;
-use Selenia\Matisse\Interfaces\IAttributes;
+use Selenia\Matisse\Components\Internal\ContentProperty;
+use Selenia\Matisse\Interfaces\PropertiesInterface;
+use Selenia\Matisse\Properties\Base\ComponentProperties;
+use Selenia\Matisse\Properties\Types\type;
 
-class RepeaterAttributes extends ComponentAttributes
+class RepeatProperties extends ComponentProperties
 {
   /**
    * @var string
@@ -18,53 +18,53 @@ class RepeaterAttributes extends ComponentAttributes
    */
   public $count = 0;
   /**
-   * @var Parameter|null
+   * @var ContentProperty|null
    */
-  public $footer = type::parameter;
+  public $footer = type::content;
   /**
    * @var mixed
    */
   public $for = type::data;
   /**
-   * @var Parameter|null
+   * @var ContentProperty|null
    */
-  public $glue = type::parameter;
+  public $glue = type::content;
   /**
-   * @var Parameter|null
+   * @var ContentProperty|null
    */
-  public $header = type::parameter;
+  public $header = type::content;
   /**
-   * @var Parameter|null
+   * @var ContentProperty|null
    */
-  public $noData = type::parameter;
+  public $noData = type::content;
 }
 
-class Repeat extends Component implements IAttributes
+class Repeat extends Component implements PropertiesInterface
 {
   public $allowsChildren = true;
 
   /**
-   * Returns the component's attributes.
-   * @return RepeaterAttributes
+   * Returns the component's properties.
+   * @return RepeatProperties
    */
-  public function attrs ()
+  public function props ()
   {
-    return $this->attrsObj;
+    return $this->props;
   }
 
   /**
-   * Creates an instance of the component's attributes.
-   * @return RepeaterAttributes
+   * Creates an instance of the component's properties.
+   * @return RepeatProperties
    */
-  public function newAttributes ()
+  public function newProperties ()
   {
-    return new RepeaterAttributes($this);
+    return new RepeatProperties($this);
   }
 
 
   protected function render ()
   {
-    $attr                  = $this->attrs ();
+    $attr                  = $this->props ();
     $count                 = $attr->get ('count', -1);
     $this->contextualModel = [];
     $this->parseIteratorExp ($attr->as, $idxVar, $itVar);

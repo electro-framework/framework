@@ -10,7 +10,7 @@ class ComponentException extends MatisseException
       parent::__construct ($msg);
     else {
       $i  = $this->inspect ($component, $deep);
-      $id = $component->supportsAttributes && isset($component->attrs ()->id) ? $component->attrs ()->id : null;
+      $id = $component->supportsAttributes && isset($component->props ()->id) ? $component->props ()->id : null;
       parent::__construct (
         $id
           ?

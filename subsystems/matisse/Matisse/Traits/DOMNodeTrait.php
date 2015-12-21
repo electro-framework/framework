@@ -1,12 +1,12 @@
 <?php
 namespace Selenia\Matisse\Traits;
 
-use Selenia\Matisse\Attributes\Base\ComponentAttributes;
 use Selenia\Matisse\ComponentInspector;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Page;
-use Selenia\Matisse\Components\Internal\Parameter;
+use Selenia\Matisse\Components\Internal\ContentProperty;
 use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Properties\Base\ComponentProperties;
 
 /**
  * Provides an API for manipulating DOM nodes on a tree of components.
@@ -14,7 +14,7 @@ use Selenia\Matisse\Exceptions\ComponentException;
  * It's applicable to the Component class.
  *
  * @property Page                $page
- * @property ComponentAttributes $attrsObj
+ * @property ComponentProperties $props
  */
 trait DOMNodeTrait
 {
@@ -76,9 +76,9 @@ trait DOMNodeTrait
 
   public function __clone ()
   {
-    if (isset($this->attrsObj)) {
-      $this->attrsObj = clone $this->attrsObj;
-      $this->attrsObj->setComponent ($this);
+    if (isset($this->props)) {
+      $this->props = clone $this->props;
+      $this->props->setComponent ($this);
     }
     if ($this->children)
       $this->children = self::cloneComponents ($this->children, $this);
@@ -137,9 +137,9 @@ trait DOMNodeTrait
     if (is_null ($attrName))
       return $this->children;
 
-    if (isset($this->attrsObj->$attrName)) {
-      $p = $this->attrsObj->$attrName;
-      if ($p instanceof Parameter)
+    if (isset($this->props->$attrName)) {
+      $p = $this->props->$attrName;
+      if ($p instanceof ContentProperty)
         return $p->children;
       throw new ComponentException($this,
         "Can' get children of attribute <b>$attrName</b>, which has a value of type <b>" . gettype ($p) . '</b>.');

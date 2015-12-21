@@ -1,10 +1,10 @@
 <?php
 namespace Selenia\Matisse\Components\Base;
 
-use Selenia\Matisse\Attributes\Base\VisualComponentAttributes;
-use Selenia\Matisse\Interfaces\IAttributes;
+use Selenia\Matisse\Interfaces\PropertiesInterface;
+use Selenia\Matisse\Properties\Base\HtmlComponentProperties;
 
-class VisualComponent extends Component implements IAttributes
+class HtmlComponent extends Component implements PropertiesInterface
 {
   /**
    * The component's runtime CSS classes.
@@ -31,21 +31,21 @@ class VisualComponent extends Component implements IAttributes
   }
 
   /**
-   * Returns the component's attributes.
-   * @return VisualComponentAttributes
+   * Returns the component's properties.
+   * @return HtmlComponentProperties
    */
-  public function attrs ()
+  public function props ()
   {
-    return $this->attrsObj;
+    return $this->props;
   }
 
   /**
-   * Creates an instance of the component's attributes.
-   * @return VisualComponentAttributes
+   * Creates an instance of the component's properties.
+   * @return HtmlComponentProperties
    */
-  public function newAttributes ()
+  public function newProperties ()
   {
-    return new VisualComponentAttributes($this);
+    return new HtmlComponentProperties($this);
   }
 
   protected function postRender ()
@@ -58,15 +58,15 @@ class VisualComponent extends Component implements IAttributes
     if ($this->autoId)
       $this->setAutoId ();
     $this->begin ($this->containerTag);
-    $this->attr ('id', $this->attrs ()->id);
+    $this->attr ('id', $this->props ()->id);
     $this->attr ('class', enum (' ',
       $this->className,
       $this->cssClassName,
-      $this->attrs ()->class,
-      $this->attrs ()->disabled ? 'disabled' : null
+      $this->props ()->class,
+      $this->props ()->disabled ? 'disabled' : null
     ));
-    if (!empty($this->attrs ()->htmlAttrs))
-      echo ' ' . $this->attrs ()->htmlAttrs;
+    if (!empty($this->props ()->htmlAttrs))
+      echo ' ' . $this->props ()->htmlAttrs;
   }
 
 }

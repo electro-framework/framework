@@ -1,14 +1,14 @@
 <?php
 namespace Selenia\Matisse\Parser;
 
-use Selenia\Matisse\Attributes\DSL\type;
 use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Components\Internal\ContentProperty;
 use Selenia\Matisse\Components\Internal\Page;
-use Selenia\Matisse\Components\Internal\Parameter;
 use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Components\Literal;
 use Selenia\Matisse\Exceptions\ParseException;
-use Selenia\Matisse\Interfaces\IAttributes;
+use Selenia\Matisse\Interfaces\PropertiesInterface;
+use Selenia\Matisse\Properties\Types\type;
 
 class Parser
 {
@@ -40,7 +40,7 @@ class Parser
   /**
    * Points to the component being currently processed on the components tree.
    *
-   * @var Component|Parameter
+   * @var Component|ContentProperty
    */
   private $current;
   /**
@@ -55,7 +55,7 @@ class Parser
   private $currentTagStart;
   /**
    * When set, all tags are created as parameters and added to the specified parameter's subtree.
-   * @var Parameter
+   * @var ContentProperty
    */
   private $metadataContainer = null;
   /**
@@ -201,7 +201,7 @@ class Parser
     if (!$this->current->allowsChildren)
       $this->parsingError ("Neither the component <b>{$this->current->getTagName()}</b> supports children, neither the element <b>$tag</b> is a {$this->current->getTagName()} parameter.");
 
-    /** @var Parameter|boolean $defParam */
+    /** @var ContentProperty|boolean $defParam */
     $this->parse_attributes ($attrs, $attributes, $bindings, true);
     $component =
       Component::create ($this->context, $this->current, $tag, $attributes, false /*TODO: support HTML components*/);
@@ -245,7 +245,7 @@ class Parser
   {
     $attrName = lcfirst ($tag);
 
-    if (!$this->current instanceof Parameter) {
+    if (!$this->current instanceof ContentProperty) {
 
       // Create a component parameter
 
@@ -253,8 +253,8 @@ class Parser
         $this->parsingError ("The component <b>&lt;{$this->current->getTagName()}&gt;</b> does not support parameters.");
       $this->parse_attributes ($attrs, $attributes, $bindings);
 
-      if (!$this->current->attrs ()->defines ($attrName)) {
-        $s = '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->attrs ()->getAttributeNames ())) . '>';
+      if (!$this->current->props ()->defines ($attrName)) {
+        $s = '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->props ()->getAttributeNames ())) . '>';
         $this->parsingError ("The component <b>&lt;{$this->current->getTagName()}&gt;</b> ({$this->current->className})
 does not support the specified parameter <b>$tag</b>.
 <p>Expected: <span class='fixed'>$s</span>");
@@ -297,8 +297,8 @@ does not support the specified parameter <b>$tag</b>.
       }
 
       else {
-        $s = $this->current instanceof IAttributes
-          ? '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->attrs ()->getAttributeNames ())) . '>'
+        $s = $this->current instanceof PropertiesInterface
+          ? '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->props ()->getAttributeNames ())) . '>'
           : '';
         throw new ParseException("
 <h4>You may not define literal content at this location.</h4>
@@ -325,7 +325,7 @@ does not support the specified parameter <b>$tag</b>.
   {
     $attrName = lcfirst ($subtagName);
     // All descendants of a metadata parameter are always parameters.
-    if ($this->current instanceof Parameter) {
+    if ($this->current instanceof ContentProperty) {
       switch ($this->current->type) {
         case type::metadata:
           return true;
@@ -334,29 +334,29 @@ does not support the specified parameter <b>$tag</b>.
       return false;
     }
     // If the current component defines an attribute with the same name as the tag being checked, the tag is a parameter.
-    return $this->current instanceof IAttributes && $this->current->attrs ()->defines ($attrName, true);
+    return $this->current instanceof PropertiesInterface && $this->current->props ()->defines ($attrName, true);
   }
 
   private function subtag_createParam ($attrName, $tagName, array $attributes = null, array $bindings = null)
   {
     $component     = $this->current;
-    $type          = $component->attrs ()->getTypeOf ($attrName);
-    $this->current = $param = new Parameter($this->context, $tagName, $type, $attributes);
+    $type          = $component->props ()->getTypeOf ($attrName);
+    $this->current = $param = new ContentProperty($this->context, $tagName, $type, $attributes);
     $param->attachTo ($component);
     switch ($type) {
-      case type::parameter:
-        $component->attrs ()->$attrName = $param;
+      case type::content:
+        $component->props ()->$attrName = $param;
         $param->bindings                = $bindings;
         break;
       case type::metadata:
-        $component->attrs ()->$attrName = $param;
+        $component->props ()->$attrName = $param;
         $param->bindings                = $bindings;
         $this->metadataContainer        = $param;
         break;
-      case type::multipleParams:
-        if (isset($component->attrs ()->$attrName))
-          $component->attrs ()->{$attrName}[] = $param;
-        else $component->attrs ()->$attrName = [$param];
+      case type::collection:
+        if (isset($component->props ()->$attrName))
+          $component->props ()->{$attrName}[] = $param;
+        else $component->props ()->$attrName = [$param];
         $param->bindings = $bindings;
         break;
       default:
@@ -368,7 +368,7 @@ does not support the specified parameter <b>$tag</b>.
   private function subtag_createSubParam ($name, $tagName, array $attributes = null, array $bindings = null)
   {
     $param              = $this->current;
-    $this->current      = $subparam = new Parameter($this->context, $tagName, type::parameter, $attributes);
+    $this->current      = $subparam = new ContentProperty($this->context, $tagName, type::content, $attributes);
     $subparam->bindings = $bindings;
     $param->addChild ($subparam);
     return $subparam;
@@ -417,10 +417,10 @@ does not support the specified parameter <b>$tag</b>.
         if ($prev && ($child instanceof Literal || $child instanceof Text) && empty($child->bindings)) {
           if (($prev instanceof Literal || $prev instanceof Text) &&
               empty($prev->bindings) && empty($child->bindings) &&
-              !$prev->attrs ()->_modified && !$child->attrs ()->_modified
+              !$prev->props ()->_modified && !$child->props ()->_modified
           ) {
             // safe to merge
-            $prev->attrs ()->value .= $child->attrs ()->value;
+            $prev->props ()->value .= $child->props ()->value;
             continue;
           }
         }
