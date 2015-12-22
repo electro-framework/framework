@@ -15,6 +15,8 @@ class HtmlComponent extends Component
    * @var string
    */
   public $cssClassName = '';
+  /** @var HtmlComponentProperties */
+  public $props;
 
   /**
    * Override to select a different tag as the component container.
@@ -22,21 +24,12 @@ class HtmlComponent extends Component
    */
   protected $containerTag = 'div';
 
-  public final function addClass ($class)
+  function addClass ($class)
   {
     $c = " {$this->cssClassName} ";
     $c = str_replace (" $class ", ' ', $c);
 
     $this->cssClassName = trim ("$c $class");
-  }
-
-  /**
-   * Returns the component's properties.
-   * @return HtmlComponentProperties
-   */
-  public function props ()
-  {
-    return $this->props;
   }
 
   protected function postRender ()
@@ -49,15 +42,15 @@ class HtmlComponent extends Component
     if ($this->autoId)
       $this->setAutoId ();
     $this->begin ($this->containerTag);
-    $this->attr ('id', $this->props ()->id);
+    $this->attr ('id', $this->props->id);
     $this->attr ('class', enum (' ',
       $this->className,
       $this->cssClassName,
-      $this->props ()->class,
-      $this->props ()->disabled ? 'disabled' : null
+      $this->props->class,
+      $this->props->disabled ? 'disabled' : null
     ));
-    if (!empty($this->props ()->htmlAttrs))
-      echo ' ' . $this->props ()->htmlAttrs;
+    if (!empty($this->props->htmlAttrs))
+      echo ' ' . $this->props->htmlAttrs;
   }
 
 }

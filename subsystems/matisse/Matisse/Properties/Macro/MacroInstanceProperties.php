@@ -1,7 +1,6 @@
 <?php
 namespace Selenia\Matisse\Properties\Macro;
 
-use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Components\Macro\Macro;
 use Selenia\Matisse\Exceptions\ComponentException;
@@ -23,20 +22,14 @@ class MacroInstanceProperties extends ComponentProperties
    * Points to the component that defines the macro for these attributes.
    * @var Macro
    */
-  protected $macro;
+  private $macro;
   /**
    * Dynamic set of attributes, as specified on the source markup.
    * @var array
    */
-  private $props;
+  private $props = [];
 
-  public function __construct (Component $component, Macro $macro)
-  {
-    parent::__construct ();
-    $this->macro = $macro;
-  }
-
-  public function __get ($name)
+  function __get ($name)
   {
     if (isset($this->props)) {
       $v = get ($this->props, $name);
@@ -50,25 +43,22 @@ class MacroInstanceProperties extends ComponentProperties
     return $this->getDefault ($name);
   }
 
-  public function __set ($name, $value)
+  function __set ($name, $value)
   {
-    if (!isset($this->props))
-      $this->props = [$name => $value];
-    else
-      $this->props[$name] = $value;
+     $this->props[$name] = $value;
   }
 
-  public function __isset ($name)
+  function __isset ($name)
   {
-    return isset($this->props) && array_key_exists ($name, $this->props);
+    return isset($this->props[$name]);
   }
 
-  public function defines ($name, $asSubtag = false)
+  function defines ($name, $asSubtag = false)
   {
     return $this->isPredefined ($name) || !is_null ($this->macro->getParameter ($name));
   }
 
-  public function get ($name, $default = null)
+  function get ($name, $default = null)
   {
     $v = $this->__get ($name);
     if (is_null ($v))
@@ -77,17 +67,12 @@ class MacroInstanceProperties extends ComponentProperties
     return $v;
   }
 
-  public function getAll ()
+  function getAll ()
   {
     return $this->props;
   }
 
-  public function getPropertyNames ()
-  {
-    return $this->macro->getParametersNames ();
-  }
-
-  public function getDefault ($name)
+  function getDefault ($name)
   {
     $param = $this->macro->getParameter ($name);
     if (is_null ($param))
@@ -96,12 +81,17 @@ class MacroInstanceProperties extends ComponentProperties
     return $this->macro->getParameter ($name)->props ()->default;
   }
 
-  public function getScalar ($name)
+  function getPropertyNames ()
   {
-    return ComponentProperties::validateScalar ($this->getTypeOf ($name), $this->get ($name));
+    return $this->macro->getParametersNames ();
   }
 
-  public function getTypeNameOf ($name)
+  function getScalar ($name)
+  {
+    return $this->validateScalar ($this->getTypeOf ($name), $this->get ($name));
+  }
+
+  function getTypeNameOf ($name)
   {
     $t = $this->getTypeOf ($name);
     if (!is_null ($t))
@@ -110,7 +100,7 @@ class MacroInstanceProperties extends ComponentProperties
     return null;
   }
 
-  public function getTypeOf ($name)
+  function getTypeOf ($name)
   {
     if ($this->isPredefined ($name)) {
       $fn = "typeof_$name";
@@ -123,17 +113,22 @@ class MacroInstanceProperties extends ComponentProperties
     return $this->macro->getParameterType ($name);
   }
 
-  public function isPredefined ($name)
+  function isPredefined ($name)
   {
     return method_exists ($this, "typeof_$name");
   }
 
-  public function set ($name, $value)
+  function set ($name, $value)
   {
     $this->$name = $value;
   }
 
-  public function setScalar ($name, $v)
+  function setMacro (Macro $macro)
+  {
+    $this->macro = $macro;
+  }
+
+  function setScalar ($name, $v)
   {
     /*
       if ($this->isEnum($name)) {
@@ -143,7 +138,7 @@ class MacroInstanceProperties extends ComponentProperties
       throw new ComponentException($this->component,"Invalid value for attribute/parameter <b>$name</b>.\nExpected: <b>$list</b>.");
       }
       } */
-    $this->props[$name] = ComponentProperties::validateScalar ($this->getTypeOf ($name), $v, $name);
+    $this->props[$name] = $this->validateScalar ($this->getTypeOf ($name), $v);
   }
 
 }

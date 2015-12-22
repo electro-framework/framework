@@ -63,13 +63,17 @@ class ComponentProperties
     return $i;
   }
 
-  public static function validateScalar ($type, $v)
+  public function validateScalar ($type, $v)
   {
     if (!type::validate ($type, $v))
-      throw new \InvalidArgumentException(sprintf (
-        "A value of PHP type <b>%s</b> is not valid for a property of type <b>%s</b>.",
-        typeOf ($v), type::getNameOf ($type)
-      ));
+      throw new ComponentException($this->component,
+        sprintf (
+          "%s is not a valid value for a component property of type <b>%s</b>",
+          is_scalar ($v)
+            ? sprintf ("<kbd>%s</kbd>", var_export ($v, true))
+            : sprintf ("A value of PHP type <b>%s</b>", typeOf ($v)),
+          type::getNameOf ($type)
+        ));
 
     return type::typecast ($type, $v);
   }
@@ -141,7 +145,7 @@ class ComponentProperties
 
   public function getScalar ($name)
   {
-    return static::validateScalar ($this->getTypeOf ($name), $this->get ($name));
+    return $this->validateScalar ($this->getTypeOf ($name), $this->get ($name));
   }
 
   public function getTypeNameOf ($name)
@@ -214,7 +218,6 @@ class ComponentProperties
   {
     $this->component = $owner;
     $props           = $this->getPropertiesOf (type::content);
-    inspect ($this);
     foreach ($props as $name => $value)
       if (!is_null ($value)) {
         /** @var Component $c */
@@ -238,7 +241,7 @@ class ComponentProperties
           "Invalid value for attribute/parameter <b>$name</b>.\nExpected: <b>$list</b>.");
       }
     }
-    $newV = static::validateScalar ($this->getTypeOf ($name), $v);
+    $newV = $this->validateScalar ($this->getTypeOf ($name), $v);
     if ($this->$name !== $newV) {
       $this->$name = $newV;
       if (!isset(static::$NEVER_DIRTY[$name]))
@@ -260,13 +263,12 @@ class ComponentProperties
       while ($it->valid ()) {
         $v = $it->current ();
         if (is_string ($v)) {
-          if ($v == '' || $v[0] == '§') // It's not metadata.
+          if ($v == '' || $v[0] != '~') // It's not metadata.
           {
             $meta->types[$name]    = type::string;
             $meta->defaults[$name] = $v;
           }
           else switch ($v) {
-
             case is::enum:
               $it->next ();
               if ($it->valid ()) {
@@ -335,7 +337,8 @@ class ComponentProperties
               break;
 
             default:
-              throw new ComponentException($this, "Invalid type declaration for the <kbd>$name</kbd> attribute");
+              throw new ComponentException($this->component, "Invalid type declaration for the <kbd>$name</kbd> attribute"
+              . sprintf("<p>Value: <kbd>%s</kbd>", var_export($v, true)) );
           }
         }
         else {
@@ -363,7 +366,9 @@ class ComponentProperties
         $it->next ();
       }
       if (!isset($meta->types[$name]))
-        throw new ComponentException($this, "Missing type declaration for the <kbd>$name</kbd> attribute");
+        throw new ComponentException($this->component, sprintf (
+          "%s is missing a type declaration for the <kbd>%s</kbd> property",
+          typeInfoOf ($this), $name));
     }
   }
 

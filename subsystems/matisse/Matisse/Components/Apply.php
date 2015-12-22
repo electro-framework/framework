@@ -10,13 +10,13 @@ use Selenia\Matisse\Properties\Types\type;
 class ApplyProperties extends ComponentProperties
 {
   /**
-   * @var Metadata|null
-   */
-  public $attrs = type::content;
-  /**
    * @var bool
    */
   public $recursive = false;
+  /**
+   * @var Metadata|null
+   */
+  public $set = type::metadata;
   /**
    * @var string
    */
@@ -24,49 +24,39 @@ class ApplyProperties extends ComponentProperties
 }
 
 /**
- * A component that applies a set of attributes to its children, optionally filtered by tag name.
+ * A component that applies a set of property values to the instance's children, optionally filtered by tag name.
  *
- * This is useful when the attributes have dynamic values, otherwise use 'presets', as they are less computationally
+ * This is useful when the properties have dynamic values, otherwise use 'presets', as they are less computationally
  * expensive.
  *
  * ##### Syntax:
  * ```
  * <Apply [where="tag-name"]>
- *   <Attrs attr1="value1" ... attrN="valueN"/>
+ *   <Set prop1="value1" ... propN="valueN"/>
  *   content
  * </Apply>
  *  ```
  * <p>If no filter is provided, only direct children of the component will be affected.
- *
+ * > **Note:** you can use data-bindings on the property values of `<Set>`
  */
-class Apply extends Component implements PropertiesInterface
+class Apply extends Component
 {
   protected static $propertiesClass = ApplyProperties::class;
 
   public $allowsChildren = true;
-
-  /**
-   * Returns the component's properties.
-   * @return ApplyProperties
-   */
-  public function props ()
-  {
-    return $this->props;
-  }
+  /** @var ApplyProperties */
+  public $props;
 
   protected function render ()
   {
-    $attr = $this->props ();
-    /** @var Metadata $attrParam */
-    /** @var Metadata $content */
-    $attrParam = $attr->props;
-    $attrs     = $attrParam->props ()->getAll ();
-    $where     = $attr->where;
+    $setterProp = $this->props->set;
+    $props      = $setterProp->props->getAll ();
+    $where      = $this->props->where;
     if (!$where && $this->hasChildren ()) {
       foreach ($this->getChildren () as $k => $child)
-        $child->props ()->apply ($attrs);
+        $child->props->apply ($props);
     }
-    else $this->scan ($this, $attr->where, $attrs);
+    else $this->scan ($this, $this->props->where, $props);
     $this->renderChildren ();
   }
 
@@ -75,7 +65,7 @@ class Apply extends Component implements PropertiesInterface
     if ($parent->hasChildren ())
       foreach ($parent->getChildren () as $child) {
         if ($child->getTagName () == $where)
-          $child->props ()->apply ($attrs);
+          $child->props->apply ($attrs);
         $this->scan ($child, $where, $attrs);
       }
     return;

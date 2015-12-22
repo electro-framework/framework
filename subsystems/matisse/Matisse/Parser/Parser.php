@@ -317,13 +317,13 @@ does not support the specified parameter <b>$tag</b>.
   }
 
   /**
-   * Checks if a subtag is a parameter of the current component.
+   * Checks if a tag is a subtag of the current component.
    * @param string $subtagName
    * @return bool
    */
   private function subtag_check ($subtagName)
   {
-    $attrName = lcfirst ($subtagName);
+    $propName = lcfirst ($subtagName);
     // All descendants of a metadata parameter are always parameters.
     if ($this->current instanceof Metadata) {
       switch ($this->current->type) {
@@ -334,7 +334,7 @@ does not support the specified parameter <b>$tag</b>.
       return false;
     }
     // If the current component defines an attribute with the same name as the tag being checked, the tag is a parameter.
-    return $this->current->supportsProperties && $this->current->props ()->defines ($attrName, true);
+    return $this->current->supportsProperties && $this->current->props ()->defines ($propName, true);
   }
 
   private function subtag_createParam ($attrName, $tagName, array $attributes = null, array $bindings = null)

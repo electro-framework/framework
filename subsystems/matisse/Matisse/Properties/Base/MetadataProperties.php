@@ -24,7 +24,7 @@ class MetadataProperties extends ComponentProperties
 
   public function __isset ($name)
   {
-    return property_exists ($this, $name);
+    return isset ($this->$name);
   }
 
 }

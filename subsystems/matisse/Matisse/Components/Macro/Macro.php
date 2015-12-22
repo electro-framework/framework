@@ -1,14 +1,27 @@
 <?php
 namespace Selenia\Matisse\Components\Macro;
 
+use Selenia\Matisse\ComponentInspector;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Components\Literal;
 use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\Macro\MacroProperties;
 use Selenia\Matisse\Properties\Types\type;
 
+/**
+ * The Macro component allows you to define a macro trasformation via markup.
+ *
+ * <p>A macro is composed by metadata elements and a template.
+ * - With metadata you can define macro parameters, stylesheets and scripts.
+ * - All child elements that are not metadata define the template that will be transformed and replace a
+ * {@see MacroInstance} that refers to the Macro.
+ *
+ * > A `MacroInstance` is a component that can be represented via any tag that has the same name as the macro it refers
+ * to.
+ */
 class Macro extends Component
 {
   /** Finds binding expressions which are not macro bindings. */
@@ -19,6 +32,8 @@ class Macro extends Component
   protected static $propertiesClass = MacroProperties::class;
 
   public $allowsChildren = true;
+  /** @var MacroProperties */
+  public $props;
 
   private static function evalScalarExp ($bindExp, MacroInstance $instance, &$transfer_binding = null)
   {
@@ -277,9 +292,9 @@ class Macro extends Component
     if (isset($param)) {
       $p = type::getIdOf ($param->props ()->type);
       if ($p === false) {
-        $s = join ('</b>, <b>', array_slice (type::NAMES, 1));
+        $s = join ('</kbd>, <kbd>', array_slice (type::NAMES, 1));
         throw new ComponentException($this,
-          "The type attribute for the <b>$name</b> parameter is invalid.\nExpected values: <b>$s</b>.");
+          "The property type of the <kbd>$name</kbd> parameter is invalid.<p>Expected values: <kbd>$s</kbd>.");
       }
 
       return $p;
@@ -304,11 +319,4 @@ class Macro extends Component
     $this->context->addMacro ($this->props ()->name, $this);
   }
 
-  /**
-   * @return MacroProperties
-   */
-  public function props ()
-  {
-    return $this->props;
-  }
 }

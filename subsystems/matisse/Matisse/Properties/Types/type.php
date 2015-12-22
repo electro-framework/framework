@@ -17,18 +17,18 @@ class type
     self::id         => 'id',
     self::metadata   => 'metadata',
     self::number     => 'number',
-    self::string     => 'text',
+    self::string     => 'string',
   ];
   /**
    * Binding expression. This property is a string.
    * Do not define properties of this type. It is used only on macro instances when binding expressions are specified
    * for macro parameters instead of constant values.
    */
-  const binding = '§bin';
+  const binding = '~bin';
   /**
    * Boolean (1/0, yes/no, on/off, true/false).
    */
-  const bool = '§bol';
+  const bool = '~bol';
   /**
    * A multi-valued metadata property that can be specified as multiple subtags that all share the same name.
    * <p>The type for the values should be specified using the {@see is::of} construct, otherwise a
@@ -38,33 +38,33 @@ class type
    *   public $column = [type::collection, is::of, type::content]
    * ```
    */
-  const collection = '§col';
+  const collection = '~col';
   /**
    * A metadata component that holds renderable child components.
    * <p>This is a variant of the metadata property.
    */
-  const content = '§con';
+  const content = '~con';
   /**
    * Data source. This property type can be an array, an object or an iterable.
    */
-  const data = '§dat';
+  const data = '~dat';
   /**
    * Alphanumeric identifier. Similar to the 'string' type, but with a narrower subset of allowable characters.
    */
-  const id = '§id';
+  const id = '~id';
   /**
    * A lightweight component that can be used to convey information to the host component; it is not itself renderable.
    * It only contains metadata components. All children will be converted to metadata automatically.
    */
-  const metadata = '§mtd';
+  const metadata = '~mtd';
   /**
    * Int or float.
    */
-  const number = '§num';
+  const number = '~num';
   /**
    * Plain text. Single-line or multi-line.
    */
-  const string = '§str';
+  const string = '~str';
 
   private static $BOOLEAN_VALUES = [
     0       => false,
@@ -79,6 +79,7 @@ class type
 
   /**
    * Converts a type name to a type identifier (one of the `type::XXX` constants).
+   *
    * @param string $name
    * @return string|false
    */
@@ -89,6 +90,7 @@ class type
 
   /**
    * Converts a type identifier (one of the `type::XXX` constants) to a type name.
+   *
    * @param string $id
    * @return string|false
    */
@@ -99,6 +101,7 @@ class type
 
   /**
    * Converts a boolean textual representation into a true boolean value.
+   *
    * @param string $v
    * @return bool
    */
@@ -116,6 +119,7 @@ class type
    * property.
    * >**Note:** you should call {@see validate()} before calling this method, as the later does not
    * validate its input.
+   *
    * @param string $type The property type.
    * @param mixed  $v    The value to be converted.
    * @return bool|float|int|null|string|\Traversable
@@ -151,6 +155,7 @@ class type
 
   /**
    * Validates a value against a specific type.
+   *
    * @param string $type
    * @param mixed  $v
    * @return bool
@@ -174,7 +179,7 @@ class type
                || (is_string ($v) && strpos ($v, '{') !== false);
 
       case type::id:
-        return !!preg_match ('#^\w+$#', $v);
+        return !!preg_match ('#^[\w\-]+$#', $v);
 
       case type::content:
       case type::metadata:

@@ -55,6 +55,14 @@ abstract class Component
    */
   public $page;
   /**
+   * The component's published properties (the ones which are settable through html attribute declarations on the source
+   * markup). This property contains an object of class ComponentAttributes or of a subclass of it, depending on the
+   * component class of the instance.
+   *
+   * @var ComponentProperties
+   */
+  public $props;
+  /**
    * Indicates if the component supports the IAttributes interface.
    *
    * @var boolean
@@ -67,14 +75,6 @@ abstract class Component
    * @var bool
    */
   protected $autoId = false;
-  /**
-   * The component's published properties (the ones which are settable through xml attribute declarations on the source
-   * markup). This property contains an object of class ComponentAttributes or of a subclass of it, depending on the
-   * component class of the instance. Do not access this property directly. @see Component::attrs()
-   *
-   * @var ComponentProperties
-   */
-  protected $props;
   /**
    * When true, forces generation of a new auto-id, event if the component already has an assigned id.
    *
@@ -368,16 +368,6 @@ abstract class Component
   }
 
   /**
-   * Can't be abstract because the child class may not implement IAttributes.
-   *
-   * @return ComponentProperties
-   */
-  public function newProperties ()
-  {
-    return null;
-  }
-
-  /**
    * Called after the component has been created by the parsing process
    * and all attributes and children have also been parsed.
    * Override this to implement parsing-time behavior.
@@ -385,6 +375,15 @@ abstract class Component
   public function parsed ()
   {
     //implementation is specific to each component type.
+  }
+
+  /**
+   * TODO: remove this
+   * @return ComponentProperties
+   */
+  function props ()
+  {
+    return $this->props;
   }
 
   /**
@@ -448,15 +447,6 @@ abstract class Component
   protected function preRender ()
   {
     //stub
-  }
-
-  /**
-   * TODO: remove this
-   * @return ComponentProperties
-   */
-  function props ()
-  {
-    return $this->props;
   }
 
   /**

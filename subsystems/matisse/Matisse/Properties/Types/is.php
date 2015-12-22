@@ -11,7 +11,7 @@ class is
    *   public $align = [type::string, is::enum, ['left', 'center', 'right']]
    * ```
    */
-  const enum = '§enum';
+  const enum = '~enum';
   /**
    * Declares the type of the elements of a collection property.
    * <p>The type is specified as the next value following this keyword on the declaration array.
@@ -20,7 +20,7 @@ class is
    *   public $column = [type::collection, is::of, type::content]
    * ```
    */
-  const of = '§of';
+  const of = '~of';
   /**
    * Declares that a property is mandatory (i.e. it must be specified on every instance).
    * >**Ex:**
@@ -28,5 +28,5 @@ class is
    *   public $title = [type::string, is::required]
    * ```
    */
-  const required = '§req';
+  const required = '~req';
 }

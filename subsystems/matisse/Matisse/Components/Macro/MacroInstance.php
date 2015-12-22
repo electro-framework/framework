@@ -9,12 +9,18 @@ use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\Macro\MacroInstanceProperties;
 use Selenia\Matisse\Properties\Types\type;
 
+/**
+ * A `MacroInstance` is a component that can be represented via any tag that has the same name as the macro it refers to.
+ */
 class MacroInstance extends Component
 {
   protected static $propertiesClass = MacroInstanceProperties::class;
 
   public $allowsChildren = true;
-
+  /**
+   * @var MacroInstanceProperties
+   */
+  public $props;
   /**
    * Points to the component that defines the macro for this instance.
    * @var Macro
@@ -24,7 +30,10 @@ class MacroInstance extends Component
   public function __construct (Context $context, $tagName, Macro $macro, array $attributes = null)
   {
     $this->macro = $macro; //must be defined before the parent constructor is called
-    parent::__construct ($context, $attributes);
+    parent::__construct ($context);
+    $this->props->setMacro ($macro);
+    if ($attributes)
+      $this->props->apply ($attributes);
     $this->setTagName ($tagName);
   }
 
@@ -69,7 +78,6 @@ class MacroInstance extends Component
   {
     $o      = [];
     $styles = $this->props ()->style;
-    inspect ("process", $this->props (), $styles);
 
     if (isset($styles))
       foreach ($styles as $sheet) {
