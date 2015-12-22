@@ -2,7 +2,7 @@
 namespace Selenia\Matisse\Components;
 
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\ContentProperty;
+use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\Types\type;
@@ -10,7 +10,7 @@ use Selenia\Matisse\Properties\Types\type;
 class ApplyProperties extends ComponentProperties
 {
   /**
-   * @var ContentProperty|null
+   * @var Metadata|null
    */
   public $attrs = type::content;
   /**
@@ -41,6 +41,8 @@ class ApplyProperties extends ComponentProperties
  */
 class Apply extends Component implements PropertiesInterface
 {
+  protected static $propertiesClass = ApplyProperties::class;
+
   public $allowsChildren = true;
 
   /**
@@ -52,20 +54,11 @@ class Apply extends Component implements PropertiesInterface
     return $this->props;
   }
 
-  /**
-   * Creates an instance of the component's properties.
-   * @return ApplyProperties
-   */
-  public function newProperties ()
-  {
-    return new ApplyProperties($this);
-  }
-
   protected function render ()
   {
     $attr = $this->props ();
-    /** @var ContentProperty $attrParam */
-    /** @var ContentProperty $content */
+    /** @var Metadata $attrParam */
+    /** @var Metadata $content */
     $attrParam = $attr->props;
     $attrs     = $attrParam->props ()->getAll ();
     $where     = $attr->where;

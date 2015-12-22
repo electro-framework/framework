@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Properties\Macro;
 
-use Selenia\Matisse\Components\Internal\ContentProperty;
+use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\Types\type;
 
@@ -16,15 +16,15 @@ class MacroProperties extends ComponentProperties
    */
   public $name = type::id;
   /**
-   * @var ContentProperty[]
+   * @var Metadata[]
    */
   public $param = type::collection;
   /**
-   * @var ContentProperty[]
+   * @var Metadata[]
    */
   public $script = type::collection;
   /**
-   * @var ContentProperty[]
+   * @var Metadata[]
    */
   public $style = type::collection;
 }

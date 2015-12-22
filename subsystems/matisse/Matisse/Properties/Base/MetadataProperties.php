@@ -4,7 +4,7 @@ namespace Selenia\Matisse\Properties\Base;
 /**
  * Properties of a Content metadata component.
  */
-class ContentProperties extends ComponentProperties
+class MetadataProperties extends ComponentProperties
 {
   public function __get ($name)
   {

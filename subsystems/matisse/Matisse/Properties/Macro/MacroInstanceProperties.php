@@ -2,20 +2,20 @@
 namespace Selenia\Matisse\Properties\Macro;
 
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\ContentProperty;
+use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Components\Macro\Macro;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\Types\type;
 
-class MacroInstanceProps
+class MacroInstanceProperties extends ComponentProperties
 {
   /**
-   * @var ContentProperty[]
+   * @var Metadata[]
    */
   public $script = type::collection;
   /**
-   * @var ContentProperty[]
+   * @var Metadata[]
    */
   public $style = type::collection;
 
@@ -32,6 +32,7 @@ class MacroInstanceProps
 
   public function __construct (Component $component, Macro $macro)
   {
+    parent::__construct ();
     $this->macro = $macro;
   }
 
@@ -62,7 +63,7 @@ class MacroInstanceProps
     return isset($this->props) && array_key_exists ($name, $this->props);
   }
 
-  public function defines ($name)
+  public function defines ($name, $asSubtag = false)
   {
     return $this->isPredefined ($name) || !is_null ($this->macro->getParameter ($name));
   }
@@ -81,7 +82,7 @@ class MacroInstanceProps
     return $this->props;
   }
 
-  public function getAttributeNames ()
+  public function getPropertyNames ()
   {
     return $this->macro->getParametersNames ();
   }

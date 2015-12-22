@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Properties\Types;
 
-use Selenia\Matisse\Components\Internal\ContentProperty;
+use Selenia\Matisse\Components\Internal\Metadata;
 
 class type
 {
@@ -43,7 +43,7 @@ class type
    * A metadata component that holds renderable child components.
    * <p>This is a variant of the metadata property.
    */
-  const content = '§ctx';
+  const content = '§con';
   /**
    * Data source. This property type can be an array, an object or an iterable.
    */
@@ -178,7 +178,7 @@ class type
 
       case type::content:
       case type::metadata:
-        return $v instanceof ContentProperty;
+        return $v instanceof Metadata;
 
       case type::collection:
         return is_array ($v);

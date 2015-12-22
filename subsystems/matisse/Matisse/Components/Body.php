@@ -2,15 +2,16 @@
 namespace Selenia\Matisse\Components;
 
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Properties\Base\GenericProperties;
 
 /**
  * The Body component allows one to set the body tag's attributes and/or, optionally, specify the content that will
  * be wrapped by the `form` HTML element.
  */
-class Body extends Component implements PropertiesInterface
+class Body extends Component
 {
+  protected static $propertiesClass = GenericProperties::class;
+
   public $allowsChildren = true;
 
   /**
@@ -20,15 +21,6 @@ class Body extends Component implements PropertiesInterface
   public function props ()
   {
     return $this->props;
-  }
-
-  /**
-   * Creates an instance of the component's properties.
-   * @return GenericProperties
-   */
-  public function newProperties ()
-  {
-    return new GenericProperties($this);
   }
 
   /**

@@ -2,7 +2,7 @@
 namespace Selenia\Matisse\Parser;
 
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\ContentProperty;
+use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Components\Internal\Page;
 use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Components\Literal;
@@ -40,7 +40,7 @@ class Parser
   /**
    * Points to the component being currently processed on the components tree.
    *
-   * @var Component|ContentProperty
+   * @var Component|Metadata
    */
   private $current;
   /**
@@ -55,7 +55,7 @@ class Parser
   private $currentTagStart;
   /**
    * When set, all tags are created as parameters and added to the specified parameter's subtree.
-   * @var ContentProperty
+   * @var Metadata
    */
   private $metadataContainer = null;
   /**
@@ -201,7 +201,7 @@ class Parser
     if (!$this->current->allowsChildren)
       $this->parsingError ("Neither the component <b>{$this->current->getTagName()}</b> supports children, neither the element <b>$tag</b> is a {$this->current->getTagName()} parameter.");
 
-    /** @var ContentProperty|boolean $defParam */
+    /** @var Metadata|boolean $defParam */
     $this->parse_attributes ($attrs, $attributes, $bindings, true);
     $component =
       Component::create ($this->context, $this->current, $tag, $attributes, false /*TODO: support HTML components*/);
@@ -245,16 +245,16 @@ class Parser
   {
     $attrName = lcfirst ($tag);
 
-    if (!$this->current instanceof ContentProperty) {
+    if (!$this->current instanceof Metadata) {
 
       // Create a component parameter
 
-      if (!$this->current->supportsAttributes)
+      if (!$this->current->supportsProperties)
         $this->parsingError ("The component <b>&lt;{$this->current->getTagName()}&gt;</b> does not support parameters.");
       $this->parse_attributes ($attrs, $attributes, $bindings);
 
       if (!$this->current->props ()->defines ($attrName)) {
-        $s = '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->props ()->getAttributeNames ())) . '>';
+        $s = '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->props ()->getPropertyNames ())) . '>';
         $this->parsingError ("The component <b>&lt;{$this->current->getTagName()}&gt;</b> ({$this->current->className})
 does not support the specified parameter <b>$tag</b>.
 <p>Expected: <span class='fixed'>$s</span>");
@@ -298,7 +298,7 @@ does not support the specified parameter <b>$tag</b>.
 
       else {
         $s = $this->current instanceof PropertiesInterface
-          ? '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->props ()->getAttributeNames ())) . '>'
+          ? '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->props ()->getPropertyNames ())) . '>'
           : '';
         throw new ParseException("
 <h4>You may not define literal content at this location.</h4>
@@ -325,7 +325,7 @@ does not support the specified parameter <b>$tag</b>.
   {
     $attrName = lcfirst ($subtagName);
     // All descendants of a metadata parameter are always parameters.
-    if ($this->current instanceof ContentProperty) {
+    if ($this->current instanceof Metadata) {
       switch ($this->current->type) {
         case type::metadata:
           return true;
@@ -334,14 +334,14 @@ does not support the specified parameter <b>$tag</b>.
       return false;
     }
     // If the current component defines an attribute with the same name as the tag being checked, the tag is a parameter.
-    return $this->current instanceof PropertiesInterface && $this->current->props ()->defines ($attrName, true);
+    return $this->current->supportsProperties && $this->current->props ()->defines ($attrName, true);
   }
 
   private function subtag_createParam ($attrName, $tagName, array $attributes = null, array $bindings = null)
   {
     $component     = $this->current;
     $type          = $component->props ()->getTypeOf ($attrName);
-    $this->current = $param = new ContentProperty($this->context, $tagName, $type, $attributes);
+    $this->current = $param = new Metadata($this->context, $tagName, $type, $attributes);
     $param->attachTo ($component);
     switch ($type) {
       case type::content:
@@ -368,7 +368,7 @@ does not support the specified parameter <b>$tag</b>.
   private function subtag_createSubParam ($name, $tagName, array $attributes = null, array $bindings = null)
   {
     $param              = $this->current;
-    $this->current      = $subparam = new ContentProperty($this->context, $tagName, type::content, $attributes);
+    $this->current      = $subparam = new Metadata($this->context, $tagName, type::content, $attributes);
     $subparam->bindings = $bindings;
     $param->addChild ($subparam);
     return $subparam;

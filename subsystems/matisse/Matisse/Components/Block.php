@@ -3,7 +3,6 @@ namespace Selenia\Matisse\Components;
 
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\ComponentException;
-use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\Types\type;
 
@@ -36,8 +35,10 @@ class BlockProperties extends ComponentProperties
  *   <Block yield="header"/>
  * ```
  */
-class Block extends Component implements PropertiesInterface
+class Block extends Component
 {
+  protected static $propertiesClass = BlockProperties::class;
+
   public $allowsChildren = true;
 
   /**
@@ -47,15 +48,6 @@ class Block extends Component implements PropertiesInterface
   public function props ()
   {
     return $this->props;
-  }
-
-  /**
-   * Creates an instance of the component's properties.
-   * @return BlockProperties
-   */
-  public function newProperties ()
-  {
-    return new BlockProperties($this);
   }
 
   /**

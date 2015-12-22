@@ -1,11 +1,11 @@
 <?php
 namespace Selenia\Matisse\Components\Base;
 
-use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Properties\Base\HtmlComponentProperties;
 
-class HtmlComponent extends Component implements PropertiesInterface
+class HtmlComponent extends Component
 {
+  protected static $propertiesClass = HtmlComponentProperties::class;
   /**
    * The component's runtime CSS classes.
    *
@@ -37,15 +37,6 @@ class HtmlComponent extends Component implements PropertiesInterface
   public function props ()
   {
     return $this->props;
-  }
-
-  /**
-   * Creates an instance of the component's properties.
-   * @return HtmlComponentProperties
-   */
-  public function newProperties ()
-  {
-    return new HtmlComponentProperties($this);
   }
 
   protected function postRender ()

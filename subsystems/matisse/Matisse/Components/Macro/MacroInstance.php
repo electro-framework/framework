@@ -2,16 +2,17 @@
 namespace Selenia\Matisse\Components\Macro;
 
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\ContentProperty;
+use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Exceptions\ComponentException;
-use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
-use Selenia\Matisse\Properties\Macro\MacroInstanceProps;
+use Selenia\Matisse\Properties\Macro\MacroInstanceProperties;
 use Selenia\Matisse\Properties\Types\type;
 
-class MacroInstance extends Component implements PropertiesInterface
+class MacroInstance extends Component
 {
+  protected static $propertiesClass = MacroInstanceProperties::class;
+
   public $allowsChildren = true;
 
   /**
@@ -25,15 +26,6 @@ class MacroInstance extends Component implements PropertiesInterface
     $this->macro = $macro; //must be defined before the parent constructor is called
     parent::__construct ($context, $attributes);
     $this->setTagName ($tagName);
-  }
-
-  /**
-   * @see IAttributes::newAttributes()
-   * @return MacroInstanceProps
-   */
-  function newProperties ()
-  {
-    return new MacroInstanceProps($this, $this->macro);
   }
 
   public function parsed ()
@@ -54,7 +46,7 @@ class MacroInstance extends Component implements PropertiesInterface
           throw new ComponentException($this,
             "The macro's default parameter <b>$def</b> can't hold content (type: " .
             ComponentProperties::$TYPE_NAMES[$type] . ").");
-        $param             = new ContentProperty($this->context, ucfirst ($def), $type);
+        $param             = new Metadata($this->context, ucfirst ($def), $type);
         $this->props->$def = $param;
         $param->attachTo ($this);
         $param->setChildren ($this->removeChildren ());
@@ -66,7 +58,7 @@ class MacroInstance extends Component implements PropertiesInterface
 
   /**
    * @see IAttributes::attrs()
-   * @return MacroInstanceProps
+   * @return MacroInstanceProperties
    */
   function props ()
   {
@@ -77,6 +69,7 @@ class MacroInstance extends Component implements PropertiesInterface
   {
     $o      = [];
     $styles = $this->props ()->style;
+    inspect ("process", $this->props (), $styles);
 
     if (isset($styles))
       foreach ($styles as $sheet) {

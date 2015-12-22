@@ -2,8 +2,7 @@
 namespace Selenia\Matisse\Components;
 
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\ContentProperty;
-use Selenia\Matisse\Interfaces\PropertiesInterface;
+use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\Types\type;
@@ -17,7 +16,7 @@ class LiteralProperties extends ComponentProperties
    */
   public $cdata = false;
   /**
-   * @var ContentProperty|null
+   * @var Metadata|null
    */
   public $content = type::content;
   /**
@@ -38,8 +37,10 @@ class LiteralProperties extends ComponentProperties
   public $whitespace = true;
 }
 
-class Literal extends Component implements PropertiesInterface
+class Literal extends Component
 {
+  protected static $propertiesClass = LiteralProperties::class;
+
   public function __construct (Context $context, $properties = null)
   {
     parent::__construct ($context, $properties);
@@ -59,15 +60,6 @@ class Literal extends Component implements PropertiesInterface
   public function props ()
   {
     return $this->props;
-  }
-
-  /**
-   * Creates an instance of the component's properties.
-   * @return LiteralProperties
-   */
-  public function newProperties ()
-  {
-    return new LiteralProperties($this);
   }
 
   protected function render ()

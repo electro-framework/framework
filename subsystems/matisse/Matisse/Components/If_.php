@@ -2,7 +2,7 @@
 namespace Selenia\Matisse\Components;
 
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\ContentProperty;
+use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\Types\type;
@@ -10,11 +10,11 @@ use Selenia\Matisse\Properties\Types\type;
 class IfProperties extends ComponentProperties
 {
   /**
-   * @var ContentProperty[]
+   * @var Metadata[]
    */
   public $case = type::collection;
   /**
-   * @var ContentProperty|null
+   * @var Metadata|null
    */
   public $else = type::content;
   /**
@@ -78,8 +78,10 @@ class IfProperties extends ComponentProperties
  * </If>
  * ```
  */
-class If_ extends Component implements PropertiesInterface
+class If_ extends Component
 {
+  protected static $propertiesClass = IfProperties::class;
+
   public $allowsChildren = true;
 
   /**
@@ -89,15 +91,6 @@ class If_ extends Component implements PropertiesInterface
   public function props ()
   {
     return $this->props;
-  }
-
-  /**
-   * Creates an instance of the component's properties.
-   * @return IfProperties
-   */
-  public function newProperties ()
-  {
-    return new IfProperties($this);
   }
 
   protected function render ()

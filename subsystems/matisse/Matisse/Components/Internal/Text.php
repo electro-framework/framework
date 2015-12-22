@@ -2,21 +2,20 @@
 namespace Selenia\Matisse\Components\Internal;
 
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
-use Selenia\Matisse\Properties\Types\type;
 
 class TextProperties extends ComponentProperties
 {
   protected static $NEVER_DIRTY = ['value' => 1];
-  public $value = '';
 
-  protected function typeof_value () { return type::string; }
+  public $value = '';
 }
 
-class Text extends Component implements PropertiesInterface
+class Text extends Component
 {
+  protected static $propertiesClass = TextProperties::class;
+
   public function __construct (Context $context, $properties = null)
   {
     parent::__construct ($context, $properties);
@@ -36,15 +35,6 @@ class Text extends Component implements PropertiesInterface
   public function props ()
   {
     return $this->props;
-  }
-
-  /**
-   * Creates an instance of the component's properties.
-   * @return TextProperties
-   */
-  public function newProperties ()
-  {
-    return new TextProperties($this);
   }
 
   protected function render ()

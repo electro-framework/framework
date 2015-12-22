@@ -43,12 +43,12 @@ class ComponentInspector
     echo "<span style='color:#9ae6ef'>&lt;$tag</span>";
     if (!isset($component->parent))
       echo '&nbsp;<span style="color:#888">(detached)</span>';
-    if ($component->supportsAttributes) {
+    if ($component->supportsProperties) {
       echo '<table style="color:#CCC;margin:0 0 0 15px"><colgroup><col width=1><col width=1><col></colgroup>';
       /** @var ComponentProperties $propsObj */
       $propsObj = $component->props ();
       if ($propsObj) $props = $propsObj->getAll ();
-      else throw new \RuntimeException ("No properties exist for component ".$component->getTagName());
+      else $props = null;
       if (!empty($props))
         foreach ($props as $k => $v)
           if (isset($v)) {

@@ -7,7 +7,6 @@ use Selenia\Matisse\Components\Macro\MacroInstance;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Exceptions\ParseException;
-use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Parser\Parser;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
@@ -22,6 +21,10 @@ abstract class Component
 {
   use MarkupBuilderTrait, DataBindingTrait, DOMNodeTrait;
 
+  /**
+   * @var string
+   */
+  protected static $propertiesClass;
   /**
    * An array containing the instance creation counters for each component class name.
    *
@@ -56,7 +59,14 @@ abstract class Component
    *
    * @var boolean
    */
-  public $supportsAttributes;
+  public $supportsProperties;
+  /**
+   * Set to true on a component class definition to automatically assign an ID to instances.
+   *
+   * @see setAutoId().
+   * @var bool
+   */
+  protected $autoId = false;
   /**
    * The component's published properties (the ones which are settable through xml attribute declarations on the source
    * markup). This property contains an object of class ComponentAttributes or of a subclass of it, depending on the
@@ -65,13 +75,6 @@ abstract class Component
    * @var ComponentProperties
    */
   protected $props;
-  /**
-   * Set to true on a component class definition to automatically assign an ID to instances.
-   *
-   * @see setAutoId().
-   * @var bool
-   */
-  protected $autoId = false;
   /**
    * When true, forces generation of a new auto-id, event if the component already has an assigned id.
    *
@@ -88,19 +91,20 @@ abstract class Component
   /**
    * Creates a new component instance and optionally sets its attributes and styles.
    *
-   * @param array   $attributes A map of the component's properties.
+   * @param array   $properties A map of the component's properties.
    * @param Context $context    The rendering context for the current request.
    * @throws ComponentException
    */
-  public function __construct (Context $context, array $attributes = null)
+  public function __construct (Context $context, array $properties = null)
   {
     $class                    = get_class ($this);
     $s                        = explode ('\\', $class);
     $this->context            = $context;
     $this->className          = end ($s);
-    $this->supportsAttributes = $this instanceof PropertiesInterface;
-    if ($this->supportsAttributes) {
-      $this->props = $this->newProperties ();
+    $this->supportsProperties = isset($class::$propertiesClass);
+    if ($this->supportsProperties) {
+      $propClass   = $class::$propertiesClass;
+      $this->props = $propClass::make ($this);
 
       // Apply presets.
       foreach ($context->presets as $preset)
@@ -108,12 +112,11 @@ abstract class Component
           $preset->{$this->className} ($this);
 
       // Apply attributes.
-      if ($attributes)
-        foreach ($attributes as $name => $value)
-          $this->props->set ($name, $value);
+      if ($properties)
+        $this->props->apply ($properties);
     }
-    else if ($attributes)
-      throw new ComponentException($this, 'This component does not support attributes.');
+    else if ($properties)
+      throw new ComponentException($this, 'This component does not support properties.');
   }
 
   /**
@@ -445,6 +448,15 @@ abstract class Component
   protected function preRender ()
   {
     //stub
+  }
+
+  /**
+   * TODO: remove this
+   * @return ComponentProperties
+   */
+  function props ()
+  {
+    return $this->props;
   }
 
   /**

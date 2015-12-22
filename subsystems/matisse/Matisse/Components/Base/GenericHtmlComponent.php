@@ -6,10 +6,20 @@ use Selenia\Matisse\Properties\Base\GenericProperties;
 
 class GenericHtmlComponent extends HtmlComponent
 {
+  protected static $propertiesClass = GenericProperties::class;
+
   public function __construct (Context $context, $tagName, array $attributes = null)
   {
     parent::__construct ($context, $attributes);
     $this->setTagName ($tagName);
+  }
+
+  protected function postRender ()
+  {
+  }
+
+  protected function preRender ()
+  {
   }
 
   /**
@@ -19,23 +29,6 @@ class GenericHtmlComponent extends HtmlComponent
   public function props ()
   {
     return $this->props;
-  }
-
-  /**
-   * Creates an instance of the component's properties.
-   * @return GenericProperties
-   */
-  public function newProperties ()
-  {
-    return new GenericProperties($this);
-  }
-
-  protected function postRender ()
-  {
-  }
-
-  protected function preRender ()
-  {
   }
 
   protected function render ()

@@ -1,11 +1,12 @@
 <?php
 namespace Selenia\Matisse\Components;
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 
-class Head extends Component implements PropertiesInterface
+class Head extends Component
 {
+  protected static $propertiesClass = ComponentProperties::class;
+
   public $allowsChildren = true;
 
   /**
@@ -15,15 +16,6 @@ class Head extends Component implements PropertiesInterface
   public function props ()
   {
     return $this->props;
-  }
-
-  /**
-   * Creates an instance of the component's properties.
-   * @return ComponentProperties
-   */
-  public function newProperties ()
-  {
-    return new ComponentProperties($this);
   }
 
   /**

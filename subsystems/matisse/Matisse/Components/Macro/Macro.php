@@ -2,20 +2,21 @@
 namespace Selenia\Matisse\Components\Macro;
 
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\ContentProperty;
+use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Components\Literal;
 use Selenia\Matisse\Exceptions\ComponentException;
-use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\Macro\MacroProperties;
 use Selenia\Matisse\Properties\Types\type;
 
-class Macro extends Component implements PropertiesInterface
+class Macro extends Component
 {
   /** Finds binding expressions which are not macro bindings. */
   const FIND_NON_MACRO_EXP = '#\{\{\s*(?=\S)[^@]#u';
   /** Finds macro binding expressions. */
   const PARSE_MACRO_BINDING_EXP = '#\{\{\s*@(.*?)\s*\}\}#u';
+
+  protected static $propertiesClass = MacroProperties::class;
 
   public $allowsChildren = true;
 
@@ -73,7 +74,7 @@ class Macro extends Component implements PropertiesInterface
       }
     if ($component->hasChildren ())
       foreach ($component->getChildren () as $child)
-        self::parsingtimeDatabind ($child, $instance, $force || $component instanceof ContentProperty);
+        self::parsingtimeDatabind ($child, $instance, $force || $component instanceof Metadata);
   }
 
   public function apply (MacroInstance $instance)
@@ -88,7 +89,7 @@ class Macro extends Component implements PropertiesInterface
             'type' => 'sh',
             'src'  => $sheet->props ()->src,
           ];
-        else if (!empty($sheet->getChildren()))
+        else if (!empty($sheet->getChildren ()))
           $o[] = [
             'type' => 'ish',
             'name' => $sheet->props ()->get ('name'),
@@ -104,7 +105,7 @@ class Macro extends Component implements PropertiesInterface
             'type' => 'sc',
             'src'  => $script->props ()->src,
           ];
-        else if (!empty($script->getChildren()))
+        else if (!empty($script->getChildren ()))
           $o[] = [
             'type'  => 'isc',
             'name'  => $script->props ()->get ('name'),
@@ -195,7 +196,7 @@ class Macro extends Component implements PropertiesInterface
                     //simple exp. (binding ref. only}
                     $attrName = $match[1];
                     if (!$instance->props ()->defines ($attrName)) {
-                      $s = join (', ', $instance->props ()->getAttributeNames ());
+                      $s = join (', ', $instance->props ()->getPropertyNames ());
                       throw new ComponentException($instance,
                         "<p>The parameter <b>$attrName</b>, specified on a call to/in the <b>{$this->props ()->name}</b> macro, is not defined on that macro.</p>
 <table>
@@ -213,7 +214,7 @@ class Macro extends Component implements PropertiesInterface
                       $component->addBinding ($field, $instance->bindings[$attrName]);
                       continue;
                     }
-                    $value = $content instanceof ContentProperty ? $content->getValue () : $content;
+                    $value = $content instanceof Metadata ? $content->getValue () : $content;
                     if ($component instanceof Literal) {
                       if (is_array ($value)) {
                         //replace literal by a component set
@@ -241,10 +242,10 @@ class Macro extends Component implements PropertiesInterface
               }
             }
           }
-          $attrs  = $component->props ()->getAttributesOfType (type::content);
+          $attrs  = $component->props ()->getPropertiesOf (type::content);
           $values = array_values ($attrs);
           $this->applyTo ($values, $instance);
-          $attrs  = $component->props ()->getAttributesOfType (type::collection);
+          $attrs  = $component->props ()->getPropertiesOf (type::collection);
           $values = array_values ($attrs);
           foreach ($values as $paramArray)
             $this->applyTo ($paramArray, $instance);
@@ -254,17 +255,9 @@ class Macro extends Component implements PropertiesInterface
   }
 
   /**
-   * @return MacroProperties
-   */
-  public function props ()
-  {
-    return $this->props;
-  }
-
-  /**
    * Returns the macro parameter with the given name.
    * @param string $name
-   * @return ContentProperty
+   * @return Metadata
    */
   public function getParameter ($name)
   {
@@ -282,7 +275,7 @@ class Macro extends Component implements PropertiesInterface
   {
     $param = $this->getParameter ($name);
     if (isset($param)) {
-      $p = type::getIdOf($param->props ()->type);
+      $p = type::getIdOf ($param->props ()->type);
       if ($p === false) {
         $s = join ('</b>, <b>', array_slice (type::NAMES, 1));
         throw new ComponentException($this,
@@ -306,16 +299,16 @@ class Macro extends Component implements PropertiesInterface
     return $names;
   }
 
-  /**
-   * @return MacroProperties
-   */
-  public function newProperties ()
-  {
-    return new MacroProperties($this);
-  }
-
   public function parsed ()
   {
     $this->context->addMacro ($this->props ()->name, $this);
+  }
+
+  /**
+   * @return MacroProperties
+   */
+  public function props ()
+  {
+    return $this->props;
   }
 }

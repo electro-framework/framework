@@ -2,8 +2,7 @@
 namespace Selenia\Matisse\Components;
 
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\ContentProperty;
-use Selenia\Matisse\Interfaces\PropertiesInterface;
+use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\Types\type;
 
@@ -18,7 +17,7 @@ class RepeatProperties extends ComponentProperties
    */
   public $count = 0;
   /**
-   * @var ContentProperty|null
+   * @var Metadata|null
    */
   public $footer = type::content;
   /**
@@ -26,21 +25,23 @@ class RepeatProperties extends ComponentProperties
    */
   public $for = type::data;
   /**
-   * @var ContentProperty|null
+   * @var Metadata|null
    */
   public $glue = type::content;
   /**
-   * @var ContentProperty|null
+   * @var Metadata|null
    */
   public $header = type::content;
   /**
-   * @var ContentProperty|null
+   * @var Metadata|null
    */
   public $noData = type::content;
 }
 
-class Repeat extends Component implements PropertiesInterface
+class Repeat extends Component
 {
+  protected static $propertiesClass = RepeatProperties::class;
+
   public $allowsChildren = true;
 
   /**
@@ -51,16 +52,6 @@ class Repeat extends Component implements PropertiesInterface
   {
     return $this->props;
   }
-
-  /**
-   * Creates an instance of the component's properties.
-   * @return RepeatProperties
-   */
-  public function newProperties ()
-  {
-    return new RepeatProperties($this);
-  }
-
 
   protected function render ()
   {

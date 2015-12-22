@@ -4,7 +4,7 @@ namespace Selenia\Matisse\Traits;
 use Selenia\Matisse\ComponentInspector;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Page;
-use Selenia\Matisse\Components\Internal\ContentProperty;
+use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 
@@ -139,7 +139,7 @@ trait DOMNodeTrait
 
     if (isset($this->props->$attrName)) {
       $p = $this->props->$attrName;
-      if ($p instanceof ContentProperty)
+      if ($p instanceof Metadata)
         return $p->children;
       throw new ComponentException($this,
         "Can' get children of attribute <b>$attrName</b>, which has a value of type <b>" . gettype ($p) . '</b>.');

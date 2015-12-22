@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Components\Base;
 
-use Selenia\Matisse\Components\Internal\ContentProperty;
+use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Properties\Base\HtmlComponentProperties;
 use Selenia\Matisse\Properties\Types\type;
 
@@ -15,8 +15,9 @@ use Selenia\Matisse\Properties\Types\type;
  */
 class HtmlContainerProperties extends HtmlComponentProperties
 {
+  protected static $propertiesClass = HtmlContainerProperties::class;
   /**
-   * @var ContentProperty|null
+   * @var Metadata|null
    */
   public $content = type::content;
 
@@ -33,15 +34,6 @@ class HtmlContainer extends HtmlComponent
   public function props ()
   {
     return $this->props;
-  }
-
-  /**
-   * Creates an instance of the component's properties.
-   * @return HtmlContainerProperties
-   */
-  public function newProperties ()
-  {
-    return new HtmlContainerProperties($this);
   }
 
   protected function render ()
