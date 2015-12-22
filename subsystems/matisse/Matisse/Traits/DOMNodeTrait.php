@@ -1,10 +1,10 @@
 <?php
 namespace Selenia\Matisse\Traits;
 
-use Selenia\Matisse\ComponentInspector;
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\Page;
 use Selenia\Matisse\Components\Internal\Metadata;
+use Selenia\Matisse\Components\Internal\Page;
+use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 

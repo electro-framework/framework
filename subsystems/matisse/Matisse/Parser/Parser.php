@@ -8,7 +8,7 @@ use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Components\Literal;
 use Selenia\Matisse\Exceptions\ParseException;
 use Selenia\Matisse\Interfaces\PropertiesInterface;
-use Selenia\Matisse\Properties\Types\type;
+use Selenia\Matisse\Properties\TypeSystem\type;
 
 class Parser
 {

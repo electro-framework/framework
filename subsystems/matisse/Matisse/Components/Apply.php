@@ -5,7 +5,7 @@ use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
-use Selenia\Matisse\Properties\Types\type;
+use Selenia\Matisse\Properties\TypeSystem\type;
 
 class ApplyProperties extends ComponentProperties
 {

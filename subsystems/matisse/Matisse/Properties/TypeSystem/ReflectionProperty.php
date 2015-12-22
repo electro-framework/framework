@@ -1,7 +1,7 @@
 <?php
-namespace Selenia\Matisse\Properties;
+namespace Selenia\Matisse\Properties\TypeSystem;
 
-class PropertiesMetadata
+class ReflectionProperty
 {
   /**
    * Default values for each attribute.

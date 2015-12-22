@@ -5,9 +5,9 @@ use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Exceptions\ComponentException;
-use Selenia\Matisse\Properties\PropertiesMetadata;
-use Selenia\Matisse\Properties\Types\is;
-use Selenia\Matisse\Properties\Types\type;
+use Selenia\Matisse\Properties\TypeSystem\is;
+use Selenia\Matisse\Properties\TypeSystem\ReflectionProperty;
+use Selenia\Matisse\Properties\TypeSystem\type;
 
 class ComponentProperties
 {
@@ -20,7 +20,7 @@ class ComponentProperties
   /**
    * The type metadata for each class.
    * <p>Map of PHP class name => PropertiesMetadata
-   * @var PropertiesMetadata[]
+   * @var ReflectionProperty[]
    */
   static protected $_metadata = [];
   /**
@@ -42,7 +42,7 @@ class ComponentProperties
    */
   protected $component;
   /**
-   * @var PropertiesMetadata
+   * @var ReflectionProperty
    */
   protected $metadata;
 
@@ -253,7 +253,7 @@ class ComponentProperties
   {
     $className = get_class ($this);
     $refClass  = new \ReflectionClass($className);
-    $meta      = $this->metadata = self::$_metadata[$className] = new PropertiesMetadata;
+    $meta      = $this->metadata = self::$_metadata[$className] = new ReflectionProperty;
     foreach ($refClass->getProperties (\ReflectionProperty::IS_PUBLIC) as $property) {
       $name  = $property->name;
       $value = $this->$name;

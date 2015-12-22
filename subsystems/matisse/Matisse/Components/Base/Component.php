@@ -1,9 +1,9 @@
 <?php
 namespace Selenia\Matisse\Components\Base;
 
-use Selenia\Matisse\ComponentInspector;
 use Selenia\Matisse\Components\Internal\Page;
 use Selenia\Matisse\Components\Macro\MacroInstance;
+use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Exceptions\ParseException;

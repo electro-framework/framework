@@ -4,7 +4,7 @@ namespace Selenia\Matisse\Components\Internal;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\MetadataProperties;
-use Selenia\Matisse\Properties\Types\type;
+use Selenia\Matisse\Properties\TypeSystem\type;
 
 /**
  * A complex property that is expressed as a subtag.

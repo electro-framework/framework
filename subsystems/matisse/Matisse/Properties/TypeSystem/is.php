@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Matisse\Properties\Types;
+namespace Selenia\Matisse\Properties\TypeSystem;
 
 class is
 {

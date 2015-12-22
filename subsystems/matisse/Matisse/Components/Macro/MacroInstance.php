@@ -7,7 +7,7 @@ use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\Macro\MacroInstanceProperties;
-use Selenia\Matisse\Properties\Types\type;
+use Selenia\Matisse\Properties\TypeSystem\type;
 
 /**
  * A `MacroInstance` is a component that can be represented via any tag that has the same name as the macro it refers to.

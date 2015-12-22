@@ -3,7 +3,7 @@ namespace Selenia\Matisse\Components\Base;
 
 use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Properties\Base\HtmlComponentProperties;
-use Selenia\Matisse\Properties\Types\type;
+use Selenia\Matisse\Properties\TypeSystem\type;
 
 /**
  * Html containers are components that wrap their content with other markup.

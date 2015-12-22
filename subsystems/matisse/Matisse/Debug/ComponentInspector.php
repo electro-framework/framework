@@ -1,10 +1,10 @@
 <?php
-namespace Selenia\Matisse;
+namespace Selenia\Matisse\Debug;
 
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
-use Selenia\Matisse\Properties\Types\type;
+use Selenia\Matisse\Properties\TypeSystem\type;
 
 class ComponentInspector
 {

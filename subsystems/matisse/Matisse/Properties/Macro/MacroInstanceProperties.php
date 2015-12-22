@@ -5,7 +5,7 @@ use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Components\Macro\Macro;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
-use Selenia\Matisse\Properties\Types\type;
+use Selenia\Matisse\Properties\TypeSystem\type;
 
 class MacroInstanceProperties extends ComponentProperties
 {

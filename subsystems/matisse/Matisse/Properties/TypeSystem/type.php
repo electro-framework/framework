@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Matisse\Properties\Types;
+namespace Selenia\Matisse\Properties\TypeSystem;
 
 use Selenia\Matisse\Components\Internal\Metadata;
 
