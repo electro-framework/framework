@@ -14,9 +14,12 @@ class Reflection
 
   private function __construct () { }
 
-  function of ($className)
+  function of ($className, $autoInit = true)
   {
     $v = get ($this->classes, $className);
-    return $v ?: ($this->classes[$className] = new ReflectionClass($className));
+    if ($v) return $v;
+    $v = $this->classes[$className] = new ReflectionClass($className);
+    if ($autoInit) $v->init ();
+    return $v;
   }
 }

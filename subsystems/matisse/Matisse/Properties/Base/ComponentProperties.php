@@ -5,7 +5,6 @@ use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Exceptions\ComponentException;
-use Selenia\Matisse\Properties\TypeSystem\is;
 use Selenia\Matisse\Properties\TypeSystem\Reflection;
 use Selenia\Matisse\Properties\TypeSystem\ReflectionClass;
 use Selenia\Matisse\Properties\TypeSystem\type;
@@ -18,12 +17,6 @@ class ComponentProperties
    * @var string[]
    */
   static protected $NEVER_DIRTY = [];
-  /**
-   * Contains pre-initialized instances that will be cloned when new instances of a properties class are requested.
-   * <p>A map of class name => ComponentProperties or one of its subclasses.
-   * @var ComponentProperties[]
-   */
-  static protected $preInitialized = [];
 
   /**
    * Set to `true` when one or more properties have been changed from their default values, **at initialization time**.
@@ -36,33 +29,31 @@ class ComponentProperties
    * @var Component
    */
   protected $component;
+  /**
+   * @var ReflectionClass
+   */
+  protected $metadata;
 
-  protected function __construct ()
+  function __construct (Component $ownerComponent, ReflectionClass $metadata)
   {
-    $refClass = Reflection::instance ()->of (get_class ($this));
-    $this->initMetadata ($refClass);
-    foreach ($refClass->properties () as $prop => $info)
-      $this->$prop = $info->default;
+    $this->component = $ownerComponent;
+    $this->metadata  = $metadata;
   }
 
   static function make ($ownerComponent)
   {
-    $class = get_called_class ();
-    if (!isset(self::$preInitialized[$class]))
-      static::$preInitialized[$class] = new static();
-    $i            = clone static::$preInitialized[$class];
-    $i->component = $ownerComponent;
-    return $i;
+    $refClass = Reflection::instance ()->of (get_called_class ());
+    return $refClass->newInstance ($ownerComponent, $refClass);
   }
 
   public function __get ($name)
   {
-    throw new ComponentException($this->component, "Can't read non existing property <b>$name</b>.");
+    throw new ComponentException ($this->component, "Can't read non existing property <b>$name</b>.");
   }
 
   public function __set ($name, $value)
   {
-    throw new ComponentException($this->component, "Can't set non existing property <b>$name</b>.");
+    throw new ComponentException ($this->component, "Can't set non existing property <b>$name</b>.");
   }
 
   public function apply (array $attrs)
@@ -82,7 +73,7 @@ class ComponentProperties
   public function defines ($name, $asSubtag = false)
   {
     if ($asSubtag) return $this->isSubtag ($name);
-    return isset ($this->metadata->types[$name]);
+    return $this->metadata->hasProperty ($name);
   }
 
   public function get ($name, $default = null)
@@ -99,9 +90,14 @@ class ComponentProperties
     return $r;
   }
 
+  /**
+   * @param string $name Property name.
+   * @return array Always returns an array, even if no enumeration is defined for the target property.
+   * @throws \Selenia\Matisse\Exceptions\ReflectionPropertyException
+   */
   public function getEnumOf ($name)
   {
-    return get ($this->metadata->enums, $name, false);
+    return $this->metadata->getProperty ($name)->enum ?: [];
   }
 
   public function getPropertiesOf ($type)
@@ -117,7 +113,7 @@ class ComponentProperties
 
   public function getPropertyNames ()
   {
-    return array_keys ($this->metadata->types);
+    return array_keys ($this->metadata->getProperties ());
   }
 
   public function getScalar ($name)
@@ -133,12 +129,12 @@ class ComponentProperties
 
   public function getTypeOf ($name)
   {
-    return get ($this->metadata->types, $name);
+    return $this->metadata->getProperty ($name)->type;
   }
 
   public function isEnum ($name)
   {
-    return isset($this->metadata->enums[$name]);
+    return isset($this->metadata->getProperty ($name)->enum);
   }
 
   public function isScalar ($name)
@@ -150,12 +146,14 @@ class ComponentProperties
 
   public function isSubtag ($name)
   {
-    $type = $this->getTypeOf ($name);
-    switch ($type) {
-      case type::content:
-      case type::collection:
-      case type::metadata:
-        return true;
+    if ($this->defines($name)) {
+      $type = $this->getTypeOf ($name);
+      switch ($type) {
+        case type::content:
+        case type::collection:
+        case type::metadata:
+          return true;
+      }
     }
     return false;
   }
@@ -214,7 +212,7 @@ class ComponentProperties
       $enum = $this->getEnumOf ($name);
       if (array_search ($v, $enum) === false) {
         $list = implode ('</b>, <b>', $enum);
-        throw new ComponentException($this->component,
+        throw new ComponentException ($this->component,
           "Invalid value for attribute/parameter <b>$name</b>.\nExpected: <b>$list</b>.");
       }
     }
@@ -229,7 +227,7 @@ class ComponentProperties
   public function validateScalar ($type, $v)
   {
     if (!type::validate ($type, $v))
-      throw new ComponentException($this->component,
+      throw new ComponentException ($this->component,
         sprintf (
           "%s is not a valid value for a component property of type <b>%s</b>",
           is_scalar ($v)
@@ -241,123 +239,5 @@ class ComponentProperties
     return type::typecast ($type, $v);
   }
 
-  private function initMetadata (ReflectionClass $classInfo)
-  {
-    $className = $classInfo->getName();;
-    $refClass  = new \ReflectionClass($className);
-    foreach ($refClass->getProperties (\ReflectionProperty::IS_PUBLIC) as $property) {
-      $name  = $property->name;
-      $value = $this->$name;
-      $meta  = $classInfo->property($name);
-      if (!is_array ($value))
-        $value = [$value];
-      $it = new \ArrayIterator($value);
-      while ($it->valid ()) {
-        $v = $it->current ();
-        if (is_string ($v)) {
-          if ($v == '' || $v[0] != '~') // It's not metadata.
-          {
-            $meta->type    = type::string;
-            $meta->default = $v;
-          }
-          else switch ($v) {
-            case is::enum:
-              $it->next ();
-              if ($it->valid ()) {
-                $e = $it->current ();
-                if (is_array ($e))
-                  $meta->enum = $e;
-                else throw new ComponentException($this, "Invalid enumeration for the <kbd>$name</kbd> attribute");
-              }
-              else throw new ComponentException($this,
-                "Missing argument for the <kbd>$name</kbd> attribute's enumeration");
-              break;
-
-            case type::string:
-            case type::id:
-              $meta->type = $v;
-              if (!isset($meta->default))
-                $meta->default = '';
-              break;
-
-            case type::number:
-              $meta->types[$name] = $v;
-              if (!isset($meta->default))
-                $meta->default = 0;
-              break;
-
-            case type::bool:
-              $meta->types[$name] = $v;
-              if (!isset($meta->default))
-                $meta->default[$name] = false;
-              break;
-
-            case type::content:
-              $meta->types[$name]    = $v;
-              $meta->defaults[$name] = null;
-              break;
-
-            case type::data:
-              $meta->types[$name]    = $v;
-              $meta->defaults[$name] = null;
-              break;
-
-            case type::metadata:
-              $meta->types[$name]    = $v;
-              $meta->defaults[$name] = null;
-              break;
-
-            case type::collection:
-              $meta->types[$name] = $v;
-              if (!array_key_exists ($name, $meta->defaults))
-                $meta->defaults[$name] = [];
-              break;
-
-            case type::binding:
-              $meta->types[$name] = $v;
-              if (!array_key_exists ($name, $meta->defaults))
-                $meta->defaults[$name] = '';
-              break;
-
-            case is::required:
-              $meta->required[$name] = true;
-              break;
-
-            default:
-              throw new ComponentException($this->component,
-                "Invalid type declaration for the <kbd>$name</kbd> attribute"
-                . sprintf ("<p>Value: <kbd>%s</kbd>", var_export ($v, true)));
-          }
-        }
-        else {
-          // Set the default value explicitly.
-          $meta->defaults[$name] = $v;
-
-          // If the type has not yet been defined, it will be defined implicitly via the default value.
-          if (!isset($meta->types[$name]))
-            switch (gettype ($v)) {
-              case 'string':
-                $meta->types[$name] = type::string;
-                break;
-              case 'boolean':
-                $meta->types[$name] = type::bool;
-                break;
-              case 'integer':
-              case 'double':
-                $meta->types[$name] = type::number;
-                break;
-              case 'NULL':
-                // Don't bother setting a NULL default.
-                break;
-            }
-        }
-        $it->next ();
-      }
-      if (!isset($meta->types[$name]))
-        throw new ComponentException($this->component, sprintf (
-          "%s is missing a type declaration for the <kbd>%s</kbd> property",
-          typeInfoOf ($this), $name));
-    }
-  }
 
 }

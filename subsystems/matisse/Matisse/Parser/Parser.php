@@ -7,7 +7,6 @@ use Selenia\Matisse\Components\Internal\Page;
 use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Components\Literal;
 use Selenia\Matisse\Exceptions\ParseException;
-use Selenia\Matisse\Interfaces\PropertiesInterface;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
 class Parser
@@ -243,30 +242,30 @@ class Parser
    */
   private function parse_subtag ($tag, $attrs)
   {
-    $attrName = lcfirst ($tag);
+    $property = lcfirst ($tag);
 
     if (!$this->current instanceof Metadata) {
 
-      // Create a component parameter
+      // Create a component property
 
       if (!$this->current->supportsProperties)
         $this->parsingError ("The component <b>&lt;{$this->current->getTagName()}&gt;</b> does not support parameters.");
       $this->parse_attributes ($attrs, $attributes, $bindings);
 
-      if (!$this->current->props ()->defines ($attrName)) {
+      if (!$this->current->props ()->defines ($property)) {
         $s = '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->props ()->getPropertyNames ())) . '>';
         $this->parsingError ("The component <b>&lt;{$this->current->getTagName()}&gt;</b> ({$this->current->className})
 does not support the specified parameter <b>$tag</b>.
 <p>Expected: <span class='fixed'>$s</span>");
       }
-      $param = $this->subtag_createParam ($attrName, $tag, $attributes, $bindings);
+      $this->subtag_createParam ($property, $tag, $attributes, $bindings);
     }
     else {
 
-      // Create parameter's subparameter
+      // Create a component
 
       $this->parse_attributes ($attrs, $attributes, $bindings);
-      $param = $this->subtag_createSubParam ($attrName, $tag, $attributes, $bindings);
+      $this->subtag_createSubParam ($property, $tag, $attributes, $bindings);
     }
   }
 
@@ -297,7 +296,7 @@ does not support the specified parameter <b>$tag</b>.
       }
 
       else {
-        $s = $this->current instanceof PropertiesInterface
+        $s = $this->current->supportsProperties
           ? '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->props ()->getPropertyNames ())) . '>'
           : '';
         throw new ParseException("
@@ -333,36 +332,35 @@ does not support the specified parameter <b>$tag</b>.
       // Descendants of parameters not of metadata type cannot be parameters.
       return false;
     }
-    // If the current component defines an attribute with the same name as the tag being checked, the tag is a parameter.
+    // If the current component defines an property with the same name as the tag being checked, the tag is a subtag.
     return $this->current->supportsProperties && $this->current->props ()->defines ($propName, true);
   }
 
-  private function subtag_createParam ($attrName, $tagName, array $attributes = null, array $bindings = null)
+  private function subtag_createParam ($propName, $tagName, array $attributes = null, array $bindings = null)
   {
     $component     = $this->current;
-    $type          = $component->props ()->getTypeOf ($attrName);
-    $this->current = $param = new Metadata($this->context, $tagName, $type, $attributes);
+    $type          = $component->props ()->getTypeOf ($propName);
+    $this->current = $param = new Metadata ($this->context, $tagName, $type, $attributes);
     $param->attachTo ($component);
     switch ($type) {
       case type::content:
-        $component->props ()->$attrName = $param;
+        $component->props ()->$propName = $param;
         $param->bindings                = $bindings;
         break;
       case type::metadata:
-        $component->props ()->$attrName = $param;
+        $component->props ()->$propName = $param;
         $param->bindings                = $bindings;
         $this->metadataContainer        = $param;
         break;
       case type::collection:
-        if (isset($component->props ()->$attrName))
-          $component->props ()->{$attrName}[] = $param;
-        else $component->props ()->$attrName = [$param];
+        if (isset($component->props ()->$propName))
+          $component->props ()->{$propName}[] = $param;
+        else $component->props ()->$propName = [$param];
         $param->bindings = $bindings;
         break;
       default:
         $this->scalarParam = true;
     }
-    return $param;
   }
 
   private function subtag_createSubParam ($name, $tagName, array $attributes = null, array $bindings = null)
@@ -371,7 +369,6 @@ does not support the specified parameter <b>$tag</b>.
     $this->current      = $subparam = new Metadata($this->context, $tagName, type::content, $attributes);
     $subparam->bindings = $bindings;
     $param->addChild ($subparam);
-    return $subparam;
   }
 
   private function text_addComponent ($content, $trim = self::NO_TRIM)

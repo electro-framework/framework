@@ -6,25 +6,34 @@ namespace Selenia\Matisse\Properties\Base;
  */
 class MetadataProperties extends ComponentProperties
 {
-  public function __get ($name)
+  function __get ($name)
   {
     if (property_exists ($this, $name)) return $this->$name;
     return null;
   }
 
-  public function __set ($name, $value)
+  function __set ($name, $value)
   {
     $this->$name = $value;
   }
 
-  public function defines ($name, $asSubtag = false)
-  {
-    return true;
-  }
-
-  public function __isset ($name)
+  function __isset ($name)
   {
     return isset ($this->$name);
   }
 
+  function defines ($name, $asSubtag = false)
+  {
+    return true;
+  }
+
+  function isScalar ($name)
+  {
+    return isset($this->name) ? is_scalar ($this->name) : true;
+  }
+
+  function setScalar ($name, $v)
+  {
+    $this->$name = $v;
+  }
 }

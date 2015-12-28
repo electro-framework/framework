@@ -35,7 +35,7 @@ class type
   const bool = '~bol';
   /**
    * A multi-valued metadata property that can be specified as multiple subtags that all share the same name.
-   * <p>The type for the values should be specified using the {@see is::of} construct, otherwise a
+   * <p>The type of the values should be specified using the {@see is::of} construct, otherwise a
    * {@see type::metadata} type is assumed.
    * >**Ex:**
    * ```

@@ -25,7 +25,7 @@ class ReflectionProperty
    * - declaring the type of a collection property's elements.
    * @var string
    */
-  public $relatedTtype;
+  public $relatedType;
   /**
    * Must it be set explicitly to a non-null value?
    * @var bool
