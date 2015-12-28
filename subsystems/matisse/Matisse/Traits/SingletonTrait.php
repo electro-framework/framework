@@ -15,7 +15,7 @@ trait SingletonTrait
   /** @var self */
   private static $it;
 
-  static function get ()
+  static function instance ()
   {
     return self::$it ?: (self::$it = new static);
   }
@@ -27,7 +27,7 @@ trait SingletonTrait
    *
    * @param mixed $instance
    */
-  static function set ($instance)
+  static function setInstance ($instance)
   {
     self::$it = $instance;
   }

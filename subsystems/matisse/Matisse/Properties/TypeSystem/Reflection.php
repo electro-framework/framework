@@ -14,4 +14,9 @@ class Reflection
 
   private function __construct () { }
 
+  function of ($className)
+  {
+    $v = get ($this->classes, $className);
+    return $v ?: ($this->classes[$className] = new ReflectionClass($className));
+  }
 }

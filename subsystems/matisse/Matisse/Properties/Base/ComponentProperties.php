@@ -6,7 +6,8 @@ use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\TypeSystem\is;
-use Selenia\Matisse\Properties\TypeSystem\ReflectionProperty;
+use Selenia\Matisse\Properties\TypeSystem\Reflection;
+use Selenia\Matisse\Properties\TypeSystem\ReflectionClass;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
 class ComponentProperties
@@ -17,12 +18,6 @@ class ComponentProperties
    * @var string[]
    */
   static protected $NEVER_DIRTY = [];
-  /**
-   * The type metadata for each class.
-   * <p>Map of PHP class name => PropertiesMetadata
-   * @var ReflectionProperty[]
-   */
-  static protected $_metadata = [];
   /**
    * Contains pre-initialized instances that will be cloned when new instances of a properties class are requested.
    * <p>A map of class name => ComponentProperties or one of its subclasses.
@@ -41,16 +36,13 @@ class ComponentProperties
    * @var Component
    */
   protected $component;
-  /**
-   * @var ReflectionProperty
-   */
-  protected $metadata;
 
   protected function __construct ()
   {
-    $this->initMetadata ();
-    foreach ($this->metadata->defaults as $prop => $val)
-      $this->$prop = $val;
+    $refClass = Reflection::instance ()->of (get_class ($this));
+    $this->initMetadata ($refClass);
+    foreach ($refClass->properties () as $prop => $info)
+      $this->$prop = $info->default;
   }
 
   static function make ($ownerComponent)
@@ -61,21 +53,6 @@ class ComponentProperties
     $i            = clone static::$preInitialized[$class];
     $i->component = $ownerComponent;
     return $i;
-  }
-
-  public function validateScalar ($type, $v)
-  {
-    if (!type::validate ($type, $v))
-      throw new ComponentException($this->component,
-        sprintf (
-          "%s is not a valid value for a component property of type <b>%s</b>",
-          is_scalar ($v)
-            ? sprintf ("<kbd>%s</kbd>", var_export ($v, true))
-            : sprintf ("A value of PHP type <b>%s</b>", typeOf ($v)),
-          type::getNameOf ($type)
-        ));
-
-    return type::typecast ($type, $v);
   }
 
   public function __get ($name)
@@ -249,14 +226,29 @@ class ComponentProperties
     }
   }
 
-  private function initMetadata ()
+  public function validateScalar ($type, $v)
   {
-    $className = get_class ($this);
+    if (!type::validate ($type, $v))
+      throw new ComponentException($this->component,
+        sprintf (
+          "%s is not a valid value for a component property of type <b>%s</b>",
+          is_scalar ($v)
+            ? sprintf ("<kbd>%s</kbd>", var_export ($v, true))
+            : sprintf ("A value of PHP type <b>%s</b>", typeOf ($v)),
+          type::getNameOf ($type)
+        ));
+
+    return type::typecast ($type, $v);
+  }
+
+  private function initMetadata (ReflectionClass $classInfo)
+  {
+    $className = $classInfo->getName();;
     $refClass  = new \ReflectionClass($className);
-    $meta      = $this->metadata = self::$_metadata[$className] = new ReflectionProperty;
     foreach ($refClass->getProperties (\ReflectionProperty::IS_PUBLIC) as $property) {
       $name  = $property->name;
       $value = $this->$name;
+      $meta  = $classInfo->property($name);
       if (!is_array ($value))
         $value = [$value];
       $it = new \ArrayIterator($value);
@@ -265,8 +257,8 @@ class ComponentProperties
         if (is_string ($v)) {
           if ($v == '' || $v[0] != '~') // It's not metadata.
           {
-            $meta->types[$name]    = type::string;
-            $meta->defaults[$name] = $v;
+            $meta->type    = type::string;
+            $meta->default = $v;
           }
           else switch ($v) {
             case is::enum:
@@ -274,7 +266,7 @@ class ComponentProperties
               if ($it->valid ()) {
                 $e = $it->current ();
                 if (is_array ($e))
-                  $meta->enums[$name] = $e;
+                  $meta->enum = $e;
                 else throw new ComponentException($this, "Invalid enumeration for the <kbd>$name</kbd> attribute");
               }
               else throw new ComponentException($this,
@@ -282,27 +274,22 @@ class ComponentProperties
               break;
 
             case type::string:
-              $meta->types[$name] = $v;
-              if (!array_key_exists ($name, $meta->defaults))
-                $meta->defaults[$name] = '';
-              break;
-
             case type::id:
-              $meta->types[$name] = $v;
-              if (!array_key_exists ($name, $meta->defaults))
-                $meta->defaults[$name] = '';
+              $meta->type = $v;
+              if (!isset($meta->default))
+                $meta->default = '';
               break;
 
             case type::number:
               $meta->types[$name] = $v;
-              if (!array_key_exists ($name, $meta->defaults))
-                $meta->defaults[$name] = 0;
+              if (!isset($meta->default))
+                $meta->default = 0;
               break;
 
             case type::bool:
               $meta->types[$name] = $v;
-              if (!array_key_exists ($name, $meta->defaults))
-                $meta->defaults[$name] = false;
+              if (!isset($meta->default))
+                $meta->default[$name] = false;
               break;
 
             case type::content:
@@ -337,8 +324,9 @@ class ComponentProperties
               break;
 
             default:
-              throw new ComponentException($this->component, "Invalid type declaration for the <kbd>$name</kbd> attribute"
-              . sprintf("<p>Value: <kbd>%s</kbd>", var_export($v, true)) );
+              throw new ComponentException($this->component,
+                "Invalid type declaration for the <kbd>$name</kbd> attribute"
+                . sprintf ("<p>Value: <kbd>%s</kbd>", var_export ($v, true)));
           }
         }
         else {

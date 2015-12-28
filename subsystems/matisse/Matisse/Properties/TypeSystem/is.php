@@ -1,6 +1,9 @@
 <?php
 namespace Selenia\Matisse\Properties\TypeSystem;
 
+/**
+ * Defines additional constants that can be used on the DSL of data type declarations of component properties.
+ */
 class is
 {
   /**

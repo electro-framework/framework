@@ -3,6 +3,10 @@ namespace Selenia\Matisse\Properties\TypeSystem;
 
 use Selenia\Matisse\Components\Internal\Metadata;
 
+/**
+ * Represents the available data types of component properties and provides an API for working with both the types
+ * themselves and values of those types.
+ */
 class type
 {
   /**

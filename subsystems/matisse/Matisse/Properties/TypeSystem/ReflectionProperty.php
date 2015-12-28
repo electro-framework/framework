@@ -4,28 +4,42 @@ namespace Selenia\Matisse\Properties\TypeSystem;
 class ReflectionProperty
 {
   /**
-   * Default values for each attribute.
-   * <p>Map of property name => mixed
-   * @var array
+   * The property's default value.
+   * @var mixed
    */
-  public $defaults = [];
+  public $default;
   /**
-   * Enumerations for each attributes.
-   * <p>Map of property name => array
-   * @var array[]
+   * The property's valid values (optional). `null` if not applicable.
+   * @var array|null
    */
-  public $enums = [];
+  public $enum;
   /**
-   * Mandatory attributes.
-   * <p>Map of property name => true
-   * @var array
+   * The property's name.
+   * @var string
    */
-  public $required = [];
+  public $name;
   /**
-   * The types of each attribute.
-   * <p>Map of property name => type::XXX
-   * @var string[]
+   * An additional data type related to the property. One of the {@see type}::XXX constants.
+   *
+   * <p>This data type can be used for:
+   * - declaring the type of a collection property's elements.
+   * @var string
    */
-  public $types = [];
+  public $relatedTtype;
+  /**
+   * Must it be set explicitly to a non-null value?
+   * @var bool
+   */
+  public $required = false;
+  /**
+   * The property's data type. One of the {@see type}::XXX constants.
+   * @var string
+   */
+  public $type;
+
+  function __construct ($name)
+  {
+    $this->name = $name;
+  }
 
 }
