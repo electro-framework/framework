@@ -74,7 +74,7 @@ trait DataBindingTrait
     $this->bindings[$attrName] = $bindExp;
   }
 
-  function getCascaded ($field)
+  private function getCascaded ($field)
   {
     if (isset($this->contextualModel)) {
       $data = $this->contextualModel;

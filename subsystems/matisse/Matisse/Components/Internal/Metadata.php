@@ -39,6 +39,13 @@ class Metadata extends Component
     $this->setTagName ($tagName);
   }
 
+  /**
+   * Returns the main value of the metadata component.
+   * For content-type metadata, this will be the children collection.
+   *
+   * @return mixed|\Selenia\Matisse\Components\Base\Component[]
+   * @throws \Selenia\Matisse\Exceptions\ComponentException
+   */
   public function getValue ()
   {
     if ($this->type == type::content)
@@ -46,14 +53,9 @@ class Metadata extends Component
     return $this->value;
   }
 
-  public function isScalar ()
+  public function onCreatedByParser ()
   {
-    //Note that parameters are never of type TYPE_PARAMS.
-    return $this->type != type::content;
-  }
-
-  public function parsed ()
-  {
+    // Parsing-time databinding.
     $this->databind ();
   }
 

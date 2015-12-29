@@ -37,24 +37,23 @@ class MacroInstance extends Component
     $this->setTagName ($tagName);
   }
 
-  public function parsed ()
+  public function onCreatedByParser ()
   {
-    $this->processParameters ();
+//    $this->processParameters ();
 //    $this->databind ();
 
     // Move children to default parameter
 
     if ($this->hasChildren ()) {
-      $def = $this->macro->props ()->defaultParam;
+      $def = $this->macro->props->defaultParam;
       if (!empty($def)) {
         $param = $this->macro->getParameter ($def);
         if (!$param)
           throw new ComponentException($this, "The macro's declared default parameter is invalid: $def");
         $type = $this->props->getTypeOf ($def);
         if ($type != type::content && $type != type::metadata)
-          throw new ComponentException($this,
-            "The macro's default parameter <b>$def</b> can't hold content (type: " .
-            ComponentProperties::$TYPE_NAMES[$type] . ").");
+          throw new ComponentException($this, sprintf(
+            "The macro's default parameter <kbd>$def</kbd> can't hold content because its type is <kbd>%s</kbd>.", type::getNameOf($type)));
         $param             = new Metadata($this->context, ucfirst ($def), $type);
         $this->props->$def = $param;
         $param->attachTo ($this);
@@ -65,69 +64,60 @@ class MacroInstance extends Component
     $this->replaceBy ($content);
   }
 
-  /**
-   * @see IAttributes::attrs()
-   * @return MacroInstanceProperties
-   */
-  function props ()
-  {
-    return $this->props;
-  }
-
-  private function processParameters ()
-  {
-    $o      = [];
-    $styles = $this->props ()->style;
-
-    if (isset($styles))
-      foreach ($styles as $sheet) {
-        if (isset($sheet->props ()->src))
-          $o[] = [
-            'type' => 'sh',
-            'src'  => $sheet->props ()->src,
-          ];
-        else if ($sheet->hasChildren ())
-          $o[] = [
-            'type' => 'ish',
-            'name' => $sheet->props ()->get ('name'),
-            'data' => $sheet,
-          ];
-      }
-    $scripts = $this->props ()->script;
-    if (isset($scripts)) {
-      foreach ($scripts as $script) {
-        if (isset($script->props ()->src))
-          $o[] = [
-            'type' => 'sc',
-            'src'  => $script->props ()->src,
-          ];
-        else if ($script->hasChildren ())
-          $o[] = [
-            'type'  => 'isc',
-            'name'  => $script->props ()->get ('name'),
-            'defer' => $script->props ()->get ('defer'),
-            'data'  => $script,
-          ];
-      }
-    }
-    $o = array_reverse ($o);
-    foreach ($o as $i)
-      switch ($i['type']) {
-        case 'sh':
-          $this->page->addStylesheet ($i['src'], true);
-          break;
-        case 'ish':
-          $this->page->addInlineCss ($i['data'], $i['name'], true);
-          break;
-        case 'sc':
-          $this->page->addScript ($i['src'], true);
-          break;
-        case 'isc':
-          if ($i['defer'])
-            $this->page->addInlineDeferredScript ($i['data'], $i['name'], true);
-          else $this->page->addInlineScript ($i['data'], $i['name'], true);
-          break;
-      }
-  }
+//  private function processParameters ()
+//  {
+//    $o      = [];
+//    $styles = $this->props->style;
+//
+//    if (isset($styles))
+//      foreach ($styles as $sheet) {
+//        if (isset($sheet->props->src))
+//          $o[] = [
+//            'type' => 'sh',
+//            'src'  => $sheet->props->src,
+//          ];
+//        else if ($sheet->hasChildren ())
+//          $o[] = [
+//            'type' => 'ish',
+//            'name' => $sheet->props->get ('name'),
+//            'data' => $sheet,
+//          ];
+//      }
+//    $scripts = $this->props->script;
+//    if (isset($scripts)) {
+//      foreach ($scripts as $script) {
+//        if (isset($script->props->src))
+//          $o[] = [
+//            'type' => 'sc',
+//            'src'  => $script->props->src,
+//          ];
+//        else if ($script->hasChildren ())
+//          $o[] = [
+//            'type'  => 'isc',
+//            'name'  => $script->props->get ('name'),
+//            'defer' => $script->props->get ('defer'),
+//            'data'  => $script,
+//          ];
+//      }
+//    }
+//    $o = array_reverse ($o);
+//    foreach ($o as $i)
+//      switch ($i['type']) {
+//        case 'sh':
+//          $this->page->addStylesheet ($i['src'], true);
+//          break;
+//        case 'ish':
+//          $this->page->addInlineCss ($i['data'], $i['name'], true);
+//          break;
+//        case 'sc':
+//          $this->page->addScript ($i['src'], true);
+//          break;
+//        case 'isc':
+//          if ($i['defer'])
+//            $this->page->addInlineDeferredScript ($i['data'], $i['name'], true);
+//          else $this->page->addInlineScript ($i['data'], $i['name'], true);
+//          break;
+//      }
+//  }
 
 }

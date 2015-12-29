@@ -2,6 +2,7 @@
 namespace Selenia\Matisse\Properties\Base;
 
 use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Interfaces\ComponentPropertiesInterface;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
@@ -20,7 +21,7 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
   }
 
   /**
-   * Checks if the component supports the given attribute.
+   * Checks if the component supports setting/getting a specific attribute.
    *
    * @param string $propName
    * @param bool   $asSubtag When true, the attribute MUST be able to be specified in subtag form.
@@ -28,6 +29,13 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
    * @return bool
    */
   abstract function defines ($propName, $asSubtag = false);
+
+  /**
+   * Returns all property values, indexed by property name.
+   *
+   * @return array A map of property name => property value.
+   */
+  abstract function getAll ();
 
   /**
    * @param string $propName Property name.
@@ -42,6 +50,14 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
    * @return string[]
    */
   abstract function getPropertyNames ();
+
+  /**
+   * Returns the type ID of a property's secondary type (usually, a collection item type).
+   *
+   * @param string $propName
+   * @return string
+   */
+  abstract function getRelatedTypeOf ($propName);
 
   /**
    * Returns the type ID of a property.
@@ -59,14 +75,6 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
    */
   abstract function isEnum ($propName);
 
-  /**
-   * Validates, typecasts and assigns a value to a property.
-   *
-   * @param string $propName
-   * @param mixed  $value
-   */
-  abstract function set ($propName, $value);
-
   function apply (array $props)
   {
     foreach ($props as $k => $v)
@@ -76,20 +84,6 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
   function get ($propName, $default = null)
   {
     return property ($this, $propName, $default);
-  }
-
-  /**
-   * Returns all property values, indexed by property name.
-   *
-   * @return array A map of property name => property value.
-   */
-  function getAll ()
-  {
-    $p = $this->getPropertyNames ();
-    $r = [];
-    foreach ($p as $prop)
-      $r[$prop] = $this->{$prop};
-    return $r;
   }
 
   /**
@@ -110,6 +104,18 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
   }
 
   /**
+   * Returns the type name of a property's secondary type (usually, a collection item type).
+   *
+   * @param string $propName
+   * @return false|string
+   */
+  function getRelatedTypeNameOf ($propName)
+  {
+    $id = $this->getRelatedTypeOf ($propName);
+    return type::getNameOf ($id);
+  }
+
+  /**
    * Returns the type name of a property.
    *
    * @param string $propName
@@ -117,7 +123,7 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
    */
   function getTypeNameOf ($propName)
   {
-    $id = static::getTypeOf ($propName);
+    $id = $this->getTypeOf ($propName);
     return type::getNameOf ($id);
   }
 
@@ -155,6 +161,18 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
   }
 
   /**
+   * Validates, typecasts and assigns a value to a property.
+   *
+   * @param string $propName
+   * @param mixed  $value
+   */
+  function set ($propName, $value)
+  {
+    $this->ensurePropertyExists ($propName);
+    $this->setPropertyValue ($propName, $value);
+  }
+
+  /**
    * Assign a new owner to the properties object. This will also do a deep clone of the component's properties.
    *
    * @param Component $owner
@@ -174,6 +192,95 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
     foreach ($props as $name => $values)
       if (!empty($values))
         $this->$name = Component::cloneComponents ($values, $owner);
+  }
+
+  /**
+   * Returns the value converted to a the data type required by the specified property.
+   *
+   * @param string $name
+   * @param mixed  $v
+   * @return bool|float|int|null|string|\Traversable
+   * @throws ComponentException
+   */
+  function typecastPropertyValue ($name, $v)
+  {
+    $type = $this->getTypeOf ($name);
+    if (!type::validate ($type, $v))
+      throw new ComponentException ($this->component,
+        sprintf (
+          "%s is not a valid value for a component property of type <b>%s</b>",
+          is_scalar ($v)
+            ? sprintf ("<kbd>%s</kbd>", var_export ($v, true))
+            : sprintf ("A value of PHP type <b>%s</b>", typeOf ($v)),
+          type::getNameOf ($type)
+        ));
+
+    return type::typecast ($type, $v);
+  }
+
+  /**
+   * Throws an exception if the specified property is not available.
+   *
+   * @param $propName
+   * @throws ComponentException
+   */
+  protected function ensurePropertyExists ($propName)
+  {
+    if (!$this->defines ($propName)) {
+      throw new ComponentException(
+        $this->component,
+        sprintf ("Invalid property <kbd>%s</kbd> specified for a %s instance.", $propName, typeInfoOf ($this))
+      );
+    }
+  }
+
+  /**
+   * Called whenever a property's value changes.
+   *
+   * @param string $propName
+   */
+  protected function onPropertyChange ($propName)
+  {
+    // noop
+  }
+
+  /**
+   * Sets a property's value, typecasting that value and/or transforming it as necessary.
+   *
+   * <p>This is meant to be called by subclasses' property setters.
+   *
+   * @param string $propName
+   * @param mixed  $v
+   * @throws ComponentException
+   */
+  protected function setPropertyValue ($propName, $v)
+  {
+    if ($this->isScalar ($propName) && $this->isEnum ($propName))
+      $this->validateEnum ($propName, $v);
+
+    $newV = $this->typecastPropertyValue ($propName, $v);
+
+    if ($this->$propName !== $newV) {
+      $this->$propName = $newV;
+      $this->onPropertyChange ($propName);
+    }
+  }
+
+  /**
+   * Throws an exception if the the specified value is not valid for the given enumerated property.
+   *
+   * @param string $name
+   * @param mixed  $v
+   * @throws ComponentException
+   */
+  protected function validateEnum ($name, $v)
+  {
+    $enum = $this->getEnumOf ($name);
+    if (array_search ($v, $enum) === false) {
+      $list = implode ('</b>, <b>', $enum);
+      throw new ComponentException ($this->component,
+        "Invalid value for attribute/parameter <b>$name</b>.\nExpected: <b>$list</b>.");
+    }
   }
 
 }

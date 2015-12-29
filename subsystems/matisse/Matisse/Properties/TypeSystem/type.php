@@ -10,20 +10,6 @@ use Selenia\Matisse\Components\Internal\Metadata;
 class type
 {
   /**
-   * A map of property type identifiers to property type names.
-   */
-  const NAMES = [
-    self::binding    => 'binding',
-    self::bool       => 'bool',
-    self::collection => 'collection',
-    self::content    => 'content',
-    self::data       => 'data',
-    self::id         => 'id',
-    self::metadata   => 'metadata',
-    self::number     => 'number',
-    self::string     => 'string',
-  ];
-  /**
    * Binding expression. This property is a string.
    * Do not define properties of this type. It is used only on macro instances when binding expressions are specified
    * for macro parameters instead of constant values.
@@ -69,7 +55,6 @@ class type
    * Plain text. Single-line or multi-line.
    */
   const string = '~str';
-
   private static $BOOLEAN_VALUES = [
     0       => false,
     1       => true,
@@ -80,6 +65,25 @@ class type
     'off'   => false,
     'on'    => true,
   ];
+  /**
+   * A map of property type identifiers to property type names.
+   */
+  private static $NAMES = [
+    self::binding    => 'binding',
+    self::bool       => 'bool',
+    self::collection => 'collection',
+    self::content    => 'content',
+    self::data       => 'data',
+    self::id         => 'id',
+    self::metadata   => 'metadata',
+    self::number     => 'number',
+    self::string     => 'string',
+  ];
+
+  static function getAllNames ()
+  {
+    return array_keys (self::$NAMES);
+  }
 
   /**
    * Converts a type name to a type identifier (one of the `type::XXX` constants).
@@ -89,7 +93,7 @@ class type
    */
   static function getIdOf ($name)
   {
-    return array_search ($name, self::NAMES);
+    return array_search ($name, self::$NAMES);
   }
 
   /**
@@ -100,7 +104,7 @@ class type
    */
   static function getNameOf ($id)
   {
-    return get (self::NAMES, $id, false);
+    return get (self::$NAMES, $id, false);
   }
 
   /**

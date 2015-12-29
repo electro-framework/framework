@@ -17,8 +17,6 @@ class Parser
   const PARSE_ATTRS          = '# ([\w\-\:]+) \s* (?: = \s* ("|\') (.*?) \2 )? (\s|@) #sxu';
   const PARSE_DATABINDINGS   = '# (?: \{\{ | \{!! ) ( .*? ) (?: \}\} | !!\} ) #xu';
   const PARSE_TAG            = '# (<) (/?) ([A-Z]\w+) \s* (.*?) (/?) (>) #sxu';
-  const RAW_EXP_BEGIN        = '{!!';
-  const RAW_EXP_END          = '!!}';
   const TRIM                 = 3;
   const TRIM_LEFT            = 1; // @ is at the end of the attrs string and it's used as a marker.
   const TRIM_LEFT_CONTENT    = '# (?<=\>) \s+ (?=\s) #xu';
@@ -33,32 +31,37 @@ class Parser
   public $root;
   /**
    * The rendering context for the current request.
+   *
    * @var Context
    */
   private $context;
   /**
    * Points to the component being currently processed on the components tree.
    *
-   * @var Component|Metadata
+   * @var Component
    */
   private $current;
   /**
    * The ending position of the tag currently being parsed.
+   *
    * @var int
    */
   private $currentTagEnd;
   /**
    * The starting position of the tag currently being parsed.
+   *
    * @var int
    */
   private $currentTagStart;
   /**
    * When set, all tags are created as parameters and added to the specified parameter's subtree.
+   *
    * @var Metadata
    */
   private $metadataContainer = null;
   /**
    * The ending position + 1 of the tag that was parsed previously.
+   *
    * @var int
    */
   private $prevTagEnd;
@@ -81,6 +84,7 @@ class Parser
   /*********************************************************************************************************************
    * THE MAIN PARSING LOOP
    *******************************************************************************************************************
+   *
    * @param string    $body
    * @param Component $parent
    * @param Page      $root
@@ -142,6 +146,7 @@ class Parser
   /*********************************************************************************************************************
    * PARSE ATTRIBUTES
    *********************************************************************************************************************
+   *
    * @param string $attrStr
    * @param array  $attributes
    * @param array  $bindings
@@ -168,6 +173,7 @@ class Parser
   /*********************************************************************************************************************
    * PARSE CLOSING TAG
    *********************************************************************************************************************
+   *
    * @param string $tag
    * @throws ParseException
    */
@@ -191,6 +197,7 @@ class Parser
   /*********************************************************************************************************************
    * PARSE A COMPONENT TAG
    *********************************************************************************************************************
+   *
    * @param string $tag
    * @param string $attrs
    * @throws ParseException
@@ -213,6 +220,7 @@ class Parser
   /*********************************************************************************************************************
    * EXIT THE CURRENT TAG CONTEXT (and go up)
    *********************************************************************************************************************
+   *
    * @param bool   $fromClosingTag
    * @param string $tag
    */
@@ -224,7 +232,7 @@ class Parser
       $this->scalarParam = false;
 
     $parent = $current->parent;
-    $current->parsed (); //calling this method may unset the 'parent' property.
+    $current->onCreatedByParser (); //Note: calling this method may unset the 'parent' property.
 
     // Check if the metadata context is being closed.
     if (isset($this->metadataContainer) && $this->current == $this->metadataContainer)
@@ -236,6 +244,7 @@ class Parser
   /*********************************************************************************************************************
    * PARSE A SUBTAG
    *********************************************************************************************************************
+   *
    * @param string $tag
    * @param string $attrs
    * @throws ParseException
@@ -272,6 +281,7 @@ does not support the specified parameter <b>$tag</b>.
   /*********************************************************************************************************************
    * PARSE LITERAL TEXT
    *********************************************************************************************************************
+   *
    * @param string $text
    * @throws ParseException
    */
@@ -317,6 +327,7 @@ does not support the specified parameter <b>$tag</b>.
 
   /**
    * Checks if a tag is a subtag of the current component.
+   *
    * @param string $subtagName
    * @return bool
    */
@@ -399,10 +410,11 @@ does not support the specified parameter <b>$tag</b>.
   }
 
   /**
-   * Merges adjacent Literal children of the specified container whenever that merge can be safely done.
+   * Merges adjacent Literal or Text children of the specified container whenever that merge can be safely done.
    *
    * > Note: Although the parser doesn't generate redundant literals, they may occur after macro substitutions are
    * performed.
+   *
    * @param Component $c The container component.
    */
   private function text_optimize (Component $c)
@@ -411,15 +423,17 @@ does not support the specified parameter <b>$tag</b>.
     $prev = null;
     if ($c->hasChildren ())
       foreach ($c->getChildren () as $child) {
-        if ($prev && ($child instanceof Literal || $child instanceof Text) && empty($child->bindings)) {
-          if (($prev instanceof Literal || $prev instanceof Text) &&
-              empty($prev->bindings) && empty($child->bindings) &&
-              !$prev->props ()->_modified && !$child->props ()->_modified
-          ) {
-            // safe to merge
-            $prev->props ()->value .= $child->props ()->value;
-            continue;
-          }
+        if ($prev
+            && ($prev instanceof Literal || $prev instanceof Text)
+            && empty ($prev->bindings)
+            && ($child instanceof Literal || $child instanceof Text)
+            && empty($child->bindings)
+            && !$prev->props ()->isModified ()
+            && !$child->props ()->isModified ()
+        ) {
+          // safe to merge
+          $prev->props ()->value .= $child->props ()->value;
+          continue;
         }
         $o[]  = $child;
         $prev = $child;

@@ -7,9 +7,17 @@ use Selenia\Matisse\Properties\Base\ComponentProperties;
 
 class TextProperties extends ComponentProperties
 {
-  protected static $NEVER_DIRTY = ['value' => 1];
-
   public $value = '';
+
+  /**
+   * @see PropertiesWithChangeTracking::isModified
+   * @return bool
+   */
+  function isModified ()
+  {
+    return false;
+  }
+
 }
 
 class Text extends Component
@@ -30,6 +38,7 @@ class Text extends Component
 
   /**
    * Returns the component's properties.
+   *
    * @return TextProperties
    */
   public function props ()

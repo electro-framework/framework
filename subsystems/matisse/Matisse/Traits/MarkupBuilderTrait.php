@@ -21,12 +21,6 @@ trait MarkupBuilderTrait
     'area', 'base', 'br', 'col', 'command', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source',
     'track', 'wbr',
   ];
-  /**
-   * The value of the tag being currently outputted.
-   *
-   * @var string
-   */
-  public  $content;
   private $tag;
   private $tags = [];
 

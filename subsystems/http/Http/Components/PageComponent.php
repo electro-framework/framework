@@ -3,6 +3,7 @@ namespace Selenia\Http\Components;
 
 use Exception;
 use PDOStatement;
+use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionException;
@@ -571,6 +572,18 @@ class PageComponent implements RequestHandlerInterface
     /** @var ViewInterface $view */
     $output = $view->render ($this);
     $this->response->getBody ()->write ($output);
+
+    // DOM panel
+    if (DebugConsole::hasLogger('DOM')) {
+      $insp = $this->page->inspect (true);
+      DebugConsole::logger ('DOM')->write ($insp);
+    }
+
+    // View Model panel
+    if (DebugConsole::hasLogger('vm')) {
+      DebugConsole::logger ('vm')->inspect ($this->model);
+    }
+
     return $this->response;
   }
 

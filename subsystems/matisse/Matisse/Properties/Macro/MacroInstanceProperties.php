@@ -1,84 +1,36 @@
 <?php
 namespace Selenia\Matisse\Properties\Macro;
 
-use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Components\Macro\Macro;
 use Selenia\Matisse\Exceptions\ComponentException;
-use Selenia\Matisse\Properties\Base\ComponentProperties;
-use Selenia\Matisse\Properties\TypeSystem\type;
+use Selenia\Matisse\Properties\Base\MetadataProperties;
 
-class MacroInstanceProperties extends ComponentProperties
+class MacroInstanceProperties extends MetadataProperties
 {
   /**
-   * @var Metadata[]
-   */
-  public $script = type::collection;
-  /**
-   * @var Metadata[]
-   */
-  public $style = type::collection;
-
-  /**
-   * Points to the component that defines the macro for these attributes.
+   * Points to the component that defines the macro for these properties.
+   *
    * @var Macro
    */
   private $macro;
-  /**
-   * Dynamic set of attributes, as specified on the source markup.
-   * @var array
-   */
-  private $props = [];
 
   function __get ($name)
   {
-    if (isset($this->props)) {
-      $v = get ($this->props, $name);
-      if (!is_null ($v) && $v != '')
-        return $v;
-    }
-    $macroParam = $this->macro->getParameter ($name);
-    if (isset($macroParam->bindings) && array_key_exists ('default', $macroParam->bindings))
-      return $macroParam->bindings['default'];
+    if (array_key_exists($name, $this->props))
+      return $this->props [$name];
 
+    // The parameter was not set, so return the declared default value (if any).
     return $this->getDefault ($name);
-  }
-
-  function __set ($name, $value)
-  {
-     $this->props[$name] = $value;
-  }
-
-  function __isset ($name)
-  {
-    return isset($this->props[$name]);
   }
 
   function defines ($name, $asSubtag = false)
   {
-    return $this->isPredefined ($name) || !is_null ($this->macro->getParameter ($name));
+    return !is_null ($this->macro->getParameter ($name));
   }
 
-  function get ($name, $default = null)
+  function getEnumOf ($propName)
   {
-    $v = $this->__get ($name);
-    if (is_null ($v))
-      return $default;
-
-    return $v;
-  }
-
-  function getAll ()
-  {
-    return $this->props;
-  }
-
-  function getDefault ($name)
-  {
-    $param = $this->macro->getParameter ($name);
-    if (is_null ($param))
-      throw new ComponentException($this->macro, "Undefined parameter $name.");
-
-    return $this->macro->getParameter ($name)->props ()->default;
+    return $this->macro->getParameterEnum ($propName) ?: [];
   }
 
   function getPropertyNames ()
@@ -86,59 +38,38 @@ class MacroInstanceProperties extends ComponentProperties
     return $this->macro->getParametersNames ();
   }
 
-  function getScalar ($name)
-  {
-    return $this->validateScalar ($this->getTypeOf ($name), $this->get ($name));
-  }
-
-  function getTypeNameOf ($propName)
-  {
-    $t = $this->getTypeOf ($propName);
-    if (!is_null ($t))
-      return ComponentProperties::$TYPE_NAMES[$t];
-
-    return null;
-  }
-
   function getTypeOf ($propName)
   {
-    if ($this->isPredefined ($propName)) {
-      $fn = "typeof_$propName";
-      if (method_exists ($this, $fn))
-        return $this->$fn();
-
-      return null;
-    }
-
     return $this->macro->getParameterType ($propName);
   }
 
-  function isPredefined ($name)
+  function isEnum ($propName)
   {
-    return method_exists ($this, "typeof_$name");
+    return !is_null ($this->macro->getParameterEnum ($propName));
   }
 
-  function set ($propName, $value)
+  function getDefault ($name)
   {
-    $this->$propName = $value;
+    $param = $this->macro->getParameter ($name);
+    if (is_null ($param))
+      throw new ComponentException($this->macro, "Undefined parameter <kbd>$name</kbd>.");
+
+    //TODO: test this
+    if (isset($param->bindings) && array_key_exists ('default', $param->bindings))
+      return $param->bindings['default'];
+    inspect ($this->component->getTagName(),$param->getTagName(),$param->props);
+    return $param->props->default; // Return the parameter's `default` property.
   }
 
+  /**
+   * Sets the component that defines the macro for these properties.
+   * > This is used by {@see MacroInstance} when it creates an instance of this class.
+   *
+   * @param Macro $macro
+   */
   function setMacro (Macro $macro)
   {
     $this->macro = $macro;
-  }
-
-  function setScalar ($name, $v)
-  {
-    /*
-      if ($this->isEnum($name)) {
-      $enum = $this->getEnumOf($name);
-      if (array_search($v,$enum) === FALSE) {
-      $list = implode('</b>, <b>',$enum);
-      throw new ComponentException($this->component,"Invalid value for attribute/parameter <b>$name</b>.\nExpected: <b>$list</b>.");
-      }
-      } */
-    $this->props[$name] = $this->validateScalar ($this->getTypeOf ($name), $v);
   }
 
 }

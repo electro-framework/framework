@@ -264,54 +264,6 @@ abstract class Component
   }
 
   /**
-   * Escapes (secures) data for output.<br>
-   *
-   * <p>Array attribute values are converted to space-separated value string lists.
-   * > A useful use case for an array attribute is the `class` attribute.
-   *
-   * Object attribute values generate either:
-   * - a space-separated list of keys who's corresponding value is truthy;
-   * - a semicolon-separated list of key:value elements if at least one value is a string.
-   *
-   * Boolean values will generate the string "true" or "false".
-   *
-   * @param mixed $o
-   * @return string
-   */
-  function e ($o)
-  {
-    if (!is_string ($o)) {
-      switch (gettype ($o)) {
-        case 'boolean':
-          return $o ? 'true' : 'false';
-        case 'integer':
-        case 'double':
-          return strval ($o);
-        case 'array':
-          $at = [];
-          $s  = ' ';
-          foreach ($o as $k => $v)
-            if (is_numeric ($k))
-              $at[] = $v;
-            else if (is_string ($v)) {
-              $at[] = "$k:$v";
-              $s    = ';';
-            }
-            else
-              $at[] = $k;
-          $o = implode ($s, $at);
-          break;
-        case 'NULL':
-          return '';
-        default:
-          throw new \InvalidArgumentException ("Can't output a value of type " . gettype ($o));
-      }
-    }
-
-    return htmlentities ($o, ENT_QUOTES, 'UTF-8', false);
-  }
-
-  /**
    * Renders all children and returns the resulting markup.
    * ><p>**Note:** the component itself is not rendered.
    *
@@ -379,7 +331,7 @@ abstract class Component
    * and all attributes and children have also been parsed.
    * Override this to implement parsing-time behavior.
    */
-  public function parsed ()
+  public function onCreatedByParser ()
   {
     //implementation is specific to each component type.
   }

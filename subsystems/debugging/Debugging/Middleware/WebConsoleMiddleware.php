@@ -53,8 +53,8 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     DebugConsole::registerPanel ('navigation', new ConsoleLogger ('Navigation', 'fa fa-compass big'));
     DebugConsole::registerPanel ('config', new ConsoleLogger ('Config.', 'fa fa-cogs'));
     DebugConsole::registerPanel ('session', new ConsoleLogger ('Session', 'fa fa-user'));
-//    DebugConsole::registerPanel ('DOM', new ConsoleLogger ('DOM', 'fa fa-sitemap'));
-//    DebugConsole::registerPanel ('vm', new ConsoleLogger ('View Models', 'fa fa-table'));
+    DebugConsole::registerPanel ('DOM', new ConsoleLogger ('DOM', 'fa fa-sitemap'));
+    DebugConsole::registerPanel ('vm', new ConsoleLogger ('View Model', 'fa fa-table'));
     DebugConsole::registerPanel ('database', new ConsoleLogger ('Database', 'fa fa-database'));
 //    DebugConsole::registerPanel ('exceptions', new ConsoleLogger ('Exceptions', 'fa fa-bug'));
     $trace = DebugConsole::registerLogger ('trace', new ConsoleLogger ('Trace', 'fa fa-clock-o big'));
@@ -100,25 +100,6 @@ class WebConsoleMiddleware implements RequestHandlerInterface
                   ->inspect ($this->injector->make (SessionInterface::class));
     }
 
-    // Routes panel
-    /** @var Router $router */
-//    $router = $this->injector->make ('Selenia\Routing\Router');
-//    if (isset($router->controller)) {
-//
-//      // DOM panel
-//      if (isset($router->controller->page)) {
-//        $insp = $router->controller->page->inspect (true);
-//        DebugConsole::logger ('DOM')->write ($insp);
-//      }
-//      $filter = function ($k, $v) { return $k !== 'parent' && $k !== 'page'; };
-//      WebConsole::DOM ()->withFilter($filter, $controller->page);
-//
-//      // View Models panel
-//      DebugConsole::logger ('vm')->inspect (get_object_vars ($router->controller));
-//    }
-
-    /** @var ApplicationMiddlewareInterface $middlewareStack */
-//    $middlewareStack = $this->injector->make (ApplicationMiddlewareInterface::class);
     $router = $this->injector->make (ApplicationRouterInterface::class);
 
     $handlers = $router->__debugInfo ()['handlers'];
@@ -131,10 +112,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 
     $logger = $this->injector->make (RoutingLogger::class);
     $log    = $logger->getContent ();
-//    echo $log;exit;
 
-//    DebugConsole::logger ('routes')
-//                ->write ("<#section|REGISTERED ROUTERS>$rootR</#section>");
     DebugConsole::logger ('routes')
                 ->write ("<#section|REGISTERED ROUTERS>$rootR</#section>" .
                          "<#section|APPLICATION MIDDLEWARE STACK &nbsp;┊&nbsp; RUN HISTORY>")

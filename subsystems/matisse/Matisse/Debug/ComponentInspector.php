@@ -32,6 +32,7 @@ class ComponentInspector
 
   /**
    * Returns a textual representation of the component, suitable for debugging purposes.
+   *
    * @param Component $component
    * @param bool      $deep
    * @throws ComponentException
@@ -46,69 +47,85 @@ class ComponentInspector
     if ($component->supportsProperties) {
       echo '<table style="color:#CCC;margin:0 0 0 15px"><colgroup><col width=1><col width=1><col></colgroup>';
       /** @var ComponentProperties $propsObj */
-      $propsObj = $component->props ();
+      $propsObj = $component->props;
       if ($propsObj) $props = $propsObj->getAll ();
       else $props = null;
+
+      // Display all scalar properties.
+
       if (!empty($props))
-        foreach ($props as $k => $v)
-          if (isset($v)) {
-            $t = $component->props ()->getTypeOf ($k);
-            if (!$deep || ($t != type::content && $t != type::collection && $t != type::metadata)) {
-              $tn = $component->props ()->getTypeNameOf ($k);
-              echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
-              switch ($t) {
-                case type::bool:
-                  echo '<i>' . ($v ? 'TRUE' : 'FALSE') . '</i>';
-                  break;
-                case type::id:
+        foreach ($props as $k => $v) {
+          $t = $component->props->getTypeOf ($k);
+          if ($t != type::content && $t != type::collection && $t != type::metadata) {
+            $tn = $component->props->getTypeNameOf ($k);
+            echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
+
+            $exp = htmlspecialchars (get ($component->bindings, $k));
+            if (isset($exp))
+              echo "<span style='color:#c5a3e6'>$exp</span> = ";
+
+            switch ($t) {
+              case type::bool:
+                echo '<i>' . ($v ? 'TRUE' : 'FALSE') . '</i>';
+                break;
+              case type::id:
+                echo "\"$v\"";
+                break;
+              case type::number:
+                echo $v;
+                break;
+              case type::string:
+                echo "\"<span style='color:#888;white-space: pre-wrap'>" .
+                     str_replace ("\n", '&#8626;', htmlspecialchars (strval ($v))) .
+                     '</span>"';
+                break;
+              default:
+                if (is_null ($v))
+                  echo 'null';
+                elseif (is_object ($v))
+                  echo '<i>object</i>';
+                elseif (is_array ($v))
+                  echo '<i>array</i>';
+                else
                   echo "\"$v\"";
-                  break;
-                case type::number:
-                  echo $v;
-                  break;
-                case type::string:
-                  echo "\"<span style='color:#888;white-space: pre-wrap'>" .
-                       str_replace ("\n", '&#8626;', htmlspecialchars (strval ($v))) .
-                       '</span>"';
-                  break;
-                default:
-                  if (is_object ($v))
-                    echo '<i>object</i>';
-                  else if (is_array ($v))
-                    echo '<i>array</i>';
-                  else
-                    echo "\"$v\"";
-              }
             }
           }
+        }
+
+      // Display all structured properties.
+
       if (!empty($props))
-        foreach ($props as $k => $v)
-          if (isset($v)) {
-            $t = $component->props ()->getTypeOf ($k);
-            if ($t == type::content || $t == type::collection || $t == type::metadata) {
-              $tn = $component->props ()->getTypeNameOf ($k);
-              echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i>" .
-                   "<tr><td><td colspan=2>";
-              switch ($t) {
-                case type::content:
-                case type::metadata:
-                  echo self::inspect ($component->props ()->$k, $deep);
-                  break;
-                case type::collection:
-                  echo self::inspectSet ($component->props ()->$k, true, true);
-                  break;
-              }
-              echo '</tr>';
+        foreach ($props as $k => $v) {
+          $t = $component->props->getTypeOf ($k);
+          if ($t == type::content || $t == type::collection || $t == type::metadata) {
+            $tn = $component->props->getTypeNameOf ($k);
+            echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
+
+            $exp = htmlspecialchars (get ($component->bindings, $k));
+            if (isset($exp))
+              echo "<span style='color:#c5a3e6'>$exp</span> = ";
+
+            switch ($t) {
+              case type::content:
+                echo $v ? "<tr><td><td colspan=2>" . self::inspect ($v, $deep) : '<i style="color:#888">(empty)</i>';
+                break;
+              case type::metadata:
+                echo $v ? "<tr><td><td colspan=2>" . self::inspect ($v, $deep) : '<i style="color:#888">(empty)</i>';
+                break;
+              case type::collection:
+                echo 'of <i style=\'color:#ffcb69\'>', $component->props->getRelatedTypeNameOf ($k), '</i>';
+                echo $v ? "<tr><td><td colspan=2>" . self::inspectSet ($v, true, true) : ' <i style="color:#888">(empty)</i>';
+                break;
             }
+            echo '</tr>';
           }
-      if (isset($component->bindings)) {
-        echo "<tr><td colspan=3><div style='border-top: 1px solid #666;margin:5px 0'></div>";
-        foreach ($component->bindings as $k => $v)
-          echo "<tr><td style='color:#7ae17a'>$k<td style='color:#ffcb69'>binding<td style='color:#c5a3e6'>" .
-               htmlspecialchars ($v);
-      }
+        }
+
       echo "</table>";
     }
+
+    // If deep inspection is enabled, recursively inspect all children components.
+
     if ($deep) {
       if ($component->hasChildren ()) {
         $hasContent = true;
