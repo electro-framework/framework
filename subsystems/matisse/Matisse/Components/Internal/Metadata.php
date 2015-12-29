@@ -59,14 +59,6 @@ class Metadata extends Component
     $this->databind ();
   }
 
-  /**
-   * @return MetadataProperties
-   */
-  function props ()
-  {
-    return $this->props;
-  }
-
   public function setScalar ($v)
   {
     $this->value = $this->props->validateScalar ($this->type, $v);

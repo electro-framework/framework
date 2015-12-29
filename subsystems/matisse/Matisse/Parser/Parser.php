@@ -261,8 +261,8 @@ class Parser
         $this->parsingError ("The component <b>&lt;{$this->current->getTagName()}&gt;</b> does not support parameters.");
       $this->parse_attributes ($attrs, $attributes, $bindings);
 
-      if (!$this->current->props ()->defines ($property)) {
-        $s = '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->props ()->getPropertyNames ())) . '>';
+      if (!$this->current->props->defines ($property)) {
+        $s = '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->props->getPropertyNames ())) . '>';
         $this->parsingError ("The component <b>&lt;{$this->current->getTagName()}&gt;</b> ({$this->current->className})
 does not support the specified parameter <b>$tag</b>.
 <p>Expected: <span class='fixed'>$s</span>");
@@ -307,7 +307,7 @@ does not support the specified parameter <b>$tag</b>.
 
       else {
         $s = $this->current->supportsProperties
-          ? '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->props ()->getPropertyNames ())) . '>'
+          ? '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->props->getPropertyNames ())) . '>'
           : '';
         throw new ParseException("
 <h4>You may not define literal content at this location.</h4>
@@ -344,29 +344,29 @@ does not support the specified parameter <b>$tag</b>.
       return false;
     }
     // If the current component defines an property with the same name as the tag being checked, the tag is a subtag.
-    return $this->current->supportsProperties && $this->current->props ()->defines ($propName, true);
+    return $this->current->supportsProperties && $this->current->props->defines ($propName, true);
   }
 
   private function subtag_createParam ($propName, $tagName, array $attributes = null, array $bindings = null)
   {
     $component     = $this->current;
-    $type          = $component->props ()->getTypeOf ($propName);
+    $type          = $component->props->getTypeOf ($propName);
     $this->current = $param = new Metadata ($this->context, $tagName, $type, $attributes);
     $param->attachTo ($component);
     switch ($type) {
       case type::content:
-        $component->props ()->$propName = $param;
+        $component->props->$propName = $param;
         $param->bindings                = $bindings;
         break;
       case type::metadata:
-        $component->props ()->$propName = $param;
+        $component->props->$propName = $param;
         $param->bindings                = $bindings;
         $this->metadataContainer        = $param;
         break;
       case type::collection:
-        if (isset($component->props ()->$propName))
-          $component->props ()->{$propName}[] = $param;
-        else $component->props ()->$propName = [$param];
+        if (isset($component->props->$propName))
+          $component->props->{$propName}[] = $param;
+        else $component->props->$propName = [$param];
         $param->bindings = $bindings;
         break;
       default:
@@ -428,11 +428,11 @@ does not support the specified parameter <b>$tag</b>.
             && empty ($prev->bindings)
             && ($child instanceof Literal || $child instanceof Text)
             && empty($child->bindings)
-            && !$prev->props ()->isModified ()
-            && !$child->props ()->isModified ()
+            && !$prev->props->isModified ()
+            && !$child->props->isModified ()
         ) {
           // safe to merge
-          $prev->props ()->value .= $child->props ()->value;
+          $prev->props->value .= $child->props->value;
           continue;
         }
         $o[]  = $child;

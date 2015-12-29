@@ -27,15 +27,6 @@ class HtmlContainer extends HtmlComponent
 {
   public $defaultAttribute = 'content';
 
-  /**
-   * Returns the component's properties.
-   * @return HtmlContainerProperties
-   */
-  public function props ()
-  {
-    return $this->props;
-  }
-
   protected function render ()
   {
     $this->beginContent ();

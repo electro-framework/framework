@@ -15,15 +15,6 @@ class Body extends Component
   public $allowsChildren = true;
 
   /**
-   * Returns the component's properties.
-   * @return GenericProperties
-   */
-  public function props ()
-  {
-    return $this->props;
-  }
-
-  /**
    * Adds the content of the `content` parameter to the page's body element.
    * Adds the attributes defined via the html-attrs parameter to the page's body element.
    */
@@ -34,7 +25,7 @@ class Body extends Component
     if ($html != '')
       $this->page->bodyContent .= $html;
 
-    $attrs = $this->props ()->getAll ();
+    $attrs = $this->props->getAll ();
     $a     = [];
     foreach ($attrs as $k => $v) {
       if (isset($v) && $v !== '' && is_scalar ($v))

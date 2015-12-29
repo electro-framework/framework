@@ -42,20 +42,11 @@ class Block extends Component
   public $allowsChildren = true;
 
   /**
-   * Returns the component's properties.
-   * @return BlockProperties
-   */
-  public function props ()
-  {
-    return $this->props;
-  }
-
-  /**
    * Adds the content of the `content` parameter to a named block on the page.
    */
   protected function render ()
   {
-    $attr = $this->props ();
+    $attr = $this->props;
     if (strlen ($attr->yield)) {
       $block = $this->page->getBlock ($attr->yield);
       $this->attachAndRenderSet ($block);

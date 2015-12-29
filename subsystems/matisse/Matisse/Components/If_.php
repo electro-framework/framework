@@ -83,18 +83,9 @@ class If_ extends Component
 
   public $allowsChildren = true;
 
-  /**
-   * Returns the component's properties.
-   * @return IfProperties
-   */
-  public function props ()
-  {
-    return $this->props;
-  }
-
   protected function render ()
   {
-    $attr = $this->props ();
+    $attr = $this->props;
 
     $v   = $attr->get ('the');
     $is  = $attr->get ('is');
@@ -134,7 +125,7 @@ class If_ extends Component
 
     if (isset($attr->case)) {
       foreach ($attr->case as $param) {
-        if ($v == $param->props ()->is) {
+        if ($v == $param->props->is) {
           $this->attachAndRenderSet ($param->getChildren ());
           return;
         }

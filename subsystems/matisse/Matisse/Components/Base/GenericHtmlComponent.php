@@ -22,19 +22,10 @@ class GenericHtmlComponent extends HtmlComponent
   {
   }
 
-  /**
-   * Returns the component's properties.
-   * @return GenericProperties
-   */
-  public function props ()
-  {
-    return $this->props;
-  }
-
   protected function render ()
   {
     $this->begin ($this->getTagName ());
-    $attrs = $this->props ()->getAll ();
+    $attrs = $this->props->getAll ();
     foreach ($attrs as $k => $v) {
       if (isset($v) && $v !== '' && is_scalar ($v)) {
         if (is_bool ($v)) {

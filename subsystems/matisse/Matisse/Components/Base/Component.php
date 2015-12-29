@@ -337,16 +337,6 @@ abstract class Component
   }
 
   /**
-   * TODO: remove this
-   *
-   * @return AbstractProperties
-   */
-  function props ()
-  {
-    return $this->props;
-  }
-
-  /**
    * Invokes doRender() recursively on the component's children (or a subset of).
    *
    * @param string|null $attrName [optional] An attribute name. If none, it renders all the component's children.

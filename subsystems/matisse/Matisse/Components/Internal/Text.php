@@ -36,16 +36,6 @@ class Text extends Component
     return new Text($context, ['value' => $text]);
   }
 
-  /**
-   * Returns the component's properties.
-   *
-   * @return TextProperties
-   */
-  public function props ()
-  {
-    return $this->props;
-  }
-
   protected function render ()
   {
     echo $this->props->value;

@@ -70,14 +70,14 @@ class Apply extends Component
     return;
     /** @var ComponentProperties $params */
     /*
-    $params = $parent->props ();
+    $params = $parent->props;
     foreach ($params->getAll () as $param) {
       if ($param instanceof Parameter) {
         $content = $param->children;
         if (isset($content))
           foreach ($content as $k => $child) {
             if ($child->getTagName () == $where)
-              $child->props ()->apply ($attrs);
+              $child->props->apply ($attrs);
             $this->scan ($child, $where, $attrs);
           }
       }

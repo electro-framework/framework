@@ -62,35 +62,25 @@ class Literal extends Component
     return new Literal($context, ['value' => $text]);
   }
 
-  /**
-   * Returns the component's properties.
-   *
-   * @return LiteralProperties
-   */
-  public function props ()
-  {
-    return $this->props;
-  }
-
   protected function render ()
   {
-    $value = $this->hasChildren () ? $this->getContent () : $this->props ()->value;
-    if ($this->props ()->cdata)
+    $value = $this->hasChildren () ? $this->getContent () : $this->props->value;
+    if ($this->props->cdata)
       echo '<![CDATA[';
     switch (gettype ($value)) {
       case 'boolean':
         echo $value ? 'true' : 'false';
         break;
       default:
-        if ($this->props ()->escape)
+        if ($this->props->escape)
           $value = htmlentities ($value, ENT_QUOTES, 'UTF-8', false);
-        if ($this->props ()->nl2br)
+        if ($this->props->nl2br)
           $value = nl2br ($value);
-        if ($this->props ()->collapse)
+        if ($this->props->collapse)
           $value = preg_replace ('#^ | $|(>) (<)|(<br ?/?>) #', '$1$2$3', preg_replace ('#\s+#', ' ', $value));
         echo $value;
     }
-    if ($this->props ()->cdata)
+    if ($this->props->cdata)
       echo ']]>';
   }
 }

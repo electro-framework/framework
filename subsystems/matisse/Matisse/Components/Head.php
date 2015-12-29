@@ -10,15 +10,6 @@ class Head extends Component
   public $allowsChildren = true;
 
   /**
-   * Returns the component's properties.
-   * @return ComponentProperties
-   */
-  public function props ()
-  {
-    return $this->props;
-  }
-
-  /**
    * Adds the content of the `content` parameter to the page's head element.
    */
   protected function render ()

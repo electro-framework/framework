@@ -44,18 +44,9 @@ class Repeat extends Component
 
   public $allowsChildren = true;
 
-  /**
-   * Returns the component's properties.
-   * @return RepeatProperties
-   */
-  public function props ()
-  {
-    return $this->props;
-  }
-
   protected function render ()
   {
-    $attr                  = $this->props ();
+    $attr                  = $this->props;
     $count                 = $attr->get ('count', -1);
     $this->contextualModel = [];
     $this->parseIteratorExp ($attr->as, $idxVar, $itVar);
