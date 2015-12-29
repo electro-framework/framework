@@ -34,7 +34,7 @@ class ComponentProperties extends AbstractProperties
   function __construct (Component $ownerComponent)
   {
     parent::__construct ($ownerComponent);
-    $this->metadata = Reflection::instance ()->of ($this);
+    $this->metadata = Reflection::instance ()->of (get_class ($this));
     $this->metadata->init ($this);
   }
 
@@ -76,11 +76,13 @@ class ComponentProperties extends AbstractProperties
 
   function set ($propName, $value)
   {
-    if (!$this->defines ($propName))
+    if (!$this->defines ($propName)) {
+      inspect ($this);
       throw new ComponentException(
         $this->component,
         sprintf ("Invalid property <kbd>%s</kbd> specified for a %s instance.", $propName, typeInfoOf ($this))
       );
+    }
     if ($this->isScalar ($propName))
       $this->setScalar ($propName, $value);
     else switch ($type = $this->getTypeOf ($propName)) {

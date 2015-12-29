@@ -2,9 +2,9 @@
 namespace Selenia\Matisse\Properties\TypeSystem;
 
 use Iterator;
-use Matisse\Interfaces\ComponentPropertiesInterface;
 use Selenia\Matisse\Exceptions\ReflectionException;
 use Selenia\Matisse\Exceptions\ReflectionPropertyException;
+use Selenia\Matisse\Interfaces\ComponentPropertiesInterface;
 
 class ReflectionClass
 {
@@ -92,7 +92,7 @@ class ReflectionClass
 
   function parseMetadataFromPropertyDefaults ()
   {
-    $refClass = new \ReflectionClass($this);
+    $refClass = new \ReflectionClass($this->name);
     $defaults = $refClass->getDefaultProperties ();
     foreach ($refClass->getProperties (\ReflectionProperty::IS_PUBLIC) as $property)
       $this->setupProp ($name = $property->name, get ($defaults, $name));

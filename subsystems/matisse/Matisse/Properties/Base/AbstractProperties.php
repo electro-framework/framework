@@ -1,8 +1,8 @@
 <?php
 namespace Selenia\Matisse\Properties\Base;
 
-use Matisse\Interfaces\ComponentPropertiesInterface;
 use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Interfaces\ComponentPropertiesInterface;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
 abstract class AbstractProperties implements ComponentPropertiesInterface
@@ -117,7 +117,7 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
    */
   function getTypeNameOf ($propName)
   {
-    $id = self::getTypeOf ($propName);
+    $id = static::getTypeOf ($propName);
     return type::getNameOf ($id);
   }
 

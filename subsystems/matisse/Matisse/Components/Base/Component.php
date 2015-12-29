@@ -10,7 +10,6 @@ use Selenia\Matisse\Exceptions\ParseException;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Parser\Parser;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
-use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Traits\DataBindingTrait;
 use Selenia\Matisse\Traits\DOMNodeTrait;
 use Selenia\Matisse\Traits\MarkupBuilderTrait;
@@ -40,6 +39,7 @@ abstract class Component
   public $className;
   /**
    * The rendering context for the current request.
+   *
    * @var Context
    */
   public $context;
@@ -105,14 +105,14 @@ abstract class Component
     $this->supportsProperties = isset($class::$propertiesClass);
     if ($this->supportsProperties) {
       $propClass   = $class::$propertiesClass;
-      $this->props = $propClass::make ($this);
+      $this->props = new $propClass ($this);
 
       // Apply presets.
       foreach ($context->presets as $preset)
         if (method_exists ($preset, $this->className))
           $preset->{$this->className} ($this);
 
-      // Apply attributes.
+      // Apply properties.
       if ($properties)
         $this->props->apply ($properties);
     }
@@ -227,7 +227,13 @@ abstract class Component
 
   function __toString ()
   {
-    return $this->inspect ();
+    try {
+      return $this->inspect ();
+    }
+    catch (\Exception $e) {
+      inspect ($e->getTraceAsString ());
+      return '';
+    }
   }
 
   /**
@@ -380,6 +386,7 @@ abstract class Component
 
   /**
    * TODO: remove this
+   *
    * @return AbstractProperties
    */
   function props ()
