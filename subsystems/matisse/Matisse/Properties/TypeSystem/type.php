@@ -154,7 +154,7 @@ class type
           return $v;
       }
 
-    return null;
+    return $v;
   }
 
   /**

@@ -2,6 +2,8 @@
 namespace Selenia\Matisse\Properties\TypeSystem;
 
 use Iterator;
+use Matisse\Interfaces\ComponentPropertiesInterface;
+use Selenia\Matisse\Exceptions\ReflectionException;
 use Selenia\Matisse\Exceptions\ReflectionPropertyException;
 
 class ReflectionClass
@@ -16,10 +18,14 @@ class ReflectionClass
   private $props = [];
 
   /**
-   * @param string $className
+   * @param string $className The name of a class that implements {@see ComponentPropertiesInterface}
+   * @throws ReflectionException
    */
   function __construct ($className)
   {
+    if (!implementsInterface ($className, ComponentPropertiesInterface::class))
+      throw new ReflectionException ("Class %s does not implement %s", formatClassName ($className),
+        formatClassName (ComponentPropertiesInterface::class));
     $this->name = $className;
   }
 
@@ -35,6 +41,7 @@ class ReflectionClass
 
   /**
    * Returns all property names and corresponding reflection information.
+   *
    * @return ReflectionProperty[] A map of property names => reflection info.
    */
   function getProperties ()
@@ -59,26 +66,36 @@ class ReflectionClass
     return isset($this->props[$name]);
   }
 
-  function init ()
+  /**
+   * Initializes the given instance of the target class to the default values set by metadata.
+   *
+   * @param ComponentPropertiesInterface $o An instance of the target class.
+   * @return mixed The new instance.
+   */
+  function init (ComponentPropertiesInterface $o)
   {
-    $refClass = new \ReflectionClass($this->name);
-    $defaults = $refClass->getDefaultProperties ();
-    foreach ($refClass->getProperties (\ReflectionProperty::IS_PUBLIC) as $property)
-      $this->setupProp ($name = $property->name, $defaults[$name]);
+    foreach ($this->props as $p => $i)
+      $o->$p = $i->default;
+    return $o;
   }
 
   /**
    * Creates a new instance of the target class, initialized to the default values set by metadata.
    *
    * @param array $args Optional constructor arguments for the new instance.
-   * @return mixed The new instance.
+   * @return ComponentPropertiesInterface The new instance.
    */
   function newInstance (...$args)
   {
-    $o = new $this->name (...$args);
-    foreach ($this->props as $prop => $info)
-      $o->$prop = $info->default;
-    return $o;
+    return $this->init (new $this->name (...$args));
+  }
+
+  function parseMetadataFromPropertyDefaults ()
+  {
+    $refClass = new \ReflectionClass($this);
+    $defaults = $refClass->getDefaultProperties ();
+    foreach ($refClass->getProperties (\ReflectionProperty::IS_PUBLIC) as $property)
+      $this->setupProp ($name = $property->name, get ($defaults, $name));
   }
 
   private function getNextKeyword ($it, $propName)
@@ -145,6 +162,8 @@ class ReflectionClass
         $prop->type = $value;
         if (!isset ($prop->default))
           $prop->default = [];
+        if (!isset ($prop->relatedType))
+          $prop->relatedType = type::content;
         break;
 
       case type::binding:
@@ -173,6 +192,7 @@ class ReflectionClass
 
   /**
    * Set the default value explicitly.
+   *
    * @param ReflectionProperty $prop
    * @param mixed              $v
    */

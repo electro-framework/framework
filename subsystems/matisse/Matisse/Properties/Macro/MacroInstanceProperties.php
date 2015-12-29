@@ -91,26 +91,26 @@ class MacroInstanceProperties extends ComponentProperties
     return $this->validateScalar ($this->getTypeOf ($name), $this->get ($name));
   }
 
-  function getTypeNameOf ($name)
+  function getTypeNameOf ($propName)
   {
-    $t = $this->getTypeOf ($name);
+    $t = $this->getTypeOf ($propName);
     if (!is_null ($t))
       return ComponentProperties::$TYPE_NAMES[$t];
 
     return null;
   }
 
-  function getTypeOf ($name)
+  function getTypeOf ($propName)
   {
-    if ($this->isPredefined ($name)) {
-      $fn = "typeof_$name";
+    if ($this->isPredefined ($propName)) {
+      $fn = "typeof_$propName";
       if (method_exists ($this, $fn))
         return $this->$fn();
 
       return null;
     }
 
-    return $this->macro->getParameterType ($name);
+    return $this->macro->getParameterType ($propName);
   }
 
   function isPredefined ($name)
@@ -118,9 +118,9 @@ class MacroInstanceProperties extends ComponentProperties
     return method_exists ($this, "typeof_$name");
   }
 
-  function set ($name, $value)
+  function set ($propName, $value)
   {
-    $this->$name = $value;
+    $this->$propName = $value;
   }
 
   function setMacro (Macro $macro)

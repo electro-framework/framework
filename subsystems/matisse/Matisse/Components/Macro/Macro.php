@@ -58,7 +58,6 @@ class Macro extends Component
     $value = $instance->props ()->$ref;
     if (self::isBindingExpression ($value))
       return $value;
-    $value = $instance->props ()->getScalar ($ref);
     if (is_null ($value) || $value === '')
       $value = $instance->props ()->getDefault ($ref);
 

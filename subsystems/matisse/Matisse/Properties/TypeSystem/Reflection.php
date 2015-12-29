@@ -18,8 +18,8 @@ class Reflection
   {
     $v = get ($this->classes, $className);
     if ($v) return $v;
-    $v = $this->classes[$className] = new ReflectionClass($className);
-    if ($autoInit) $v->init ();
+    $v = $this->classes[$className] = new ReflectionClass ($className);
+    if ($autoInit) $v->parseMetadataFromPropertyDefaults ();
     return $v;
   }
 }

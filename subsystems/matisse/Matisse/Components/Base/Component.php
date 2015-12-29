@@ -9,6 +9,7 @@ use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Exceptions\ParseException;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Parser\Parser;
+use Selenia\Matisse\Properties\Base\AbstractProperties;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Traits\DataBindingTrait;
 use Selenia\Matisse\Traits\DOMNodeTrait;
@@ -59,7 +60,7 @@ abstract class Component
    * markup). This property contains an object of class ComponentAttributes or of a subclass of it, depending on the
    * component class of the instance.
    *
-   * @var ComponentProperties
+   * @var AbstractProperties
    */
   public $props;
   /**
@@ -379,7 +380,7 @@ abstract class Component
 
   /**
    * TODO: remove this
-   * @return ComponentProperties
+   * @return AbstractProperties
    */
   function props ()
   {
