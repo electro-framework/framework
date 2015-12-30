@@ -25,9 +25,8 @@ class ComponentInspector
   static function inspectSet (array $components = null, $deep = false, $nested = false)
   {
     ob_start (null, 0);
-    if (is_array ($components))
-      foreach ($components as $component)
-        self::inspect ($component, $deep);
+    foreach ($components as $component)
+      self::_inspect ($component, $deep);
     return $nested ? ob_get_clean () : "<code>" . ob_get_clean () . "</code>";
   }
 
@@ -47,12 +46,12 @@ class ComponentInspector
     $COLOR_TAG   = '#000;font-weight:bold';
     $COLOR_TYPE  = '#55A';
     $COLOR_VALUE = '#333';
-    $Q = "<i style='color:#CCC'>\"</i>";
+    $Q           = "<i style='color:#CCC'>\"</i>";
 
     $tag        = $component->getTagName ();
     $hasContent = false;
     echo "<span style='color:$COLOR_TAG'>&lt;$tag</span>";
-    if (!isset($component->parent) && ! $component instanceof Page)
+    if (!isset($component->parent) && !$component instanceof Page)
       echo "&nbsp;<span style='color:$COLOR_INFO'>(detached)</span>";
     if ($component->supportsProperties) {
       echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";
@@ -60,10 +59,12 @@ class ComponentInspector
       $propsObj = $component->props;
       if ($propsObj) $props = $propsObj->getAll ();
       else $props = null;
+      if ($props)
+        ksort ($props);
 
       // Display all scalar properties.
 
-      if (!empty($props))
+      if ($props)
         foreach ($props as $k => $v) {
           $t = $component->props->getTypeOf ($k);
           if ($t != type::content && $t != type::collection && $t != type::metadata) {
@@ -94,9 +95,9 @@ class ComponentInspector
                 break;
               default:
                 if (is_object ($v))
-                  echo "<i style='color:$COLOR_CONST'>object</i>";
+                  echo sprintf ("<i style='color:$COLOR_CONST'>%s</i>", typeInfoOf ($v));
                 elseif (is_array ($v))
-                  echo "<i style='color:$COLOR_CONST'>array</i>";
+                  echo sprintf ("<i style='color:$COLOR_CONST'>array(%d)</i>", count ($v));
                 else
                   echo "$Q$v$Q";
             }
@@ -105,7 +106,7 @@ class ComponentInspector
 
       // Display all slot properties.
 
-      if (!empty($props))
+      if ($props)
         foreach ($props as $k => $v) {
           $t = $component->props->getTypeOf ($k);
           if ($t == type::content || $t == type::collection || $t == type::metadata) {
