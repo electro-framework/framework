@@ -1,5 +1,6 @@
 <?php
 namespace Selenia\Debugging\Middleware;
+
 use Monolog\Logger;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\Loggers\ConsoleLogger;
@@ -11,12 +12,10 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 use Selenia\Application;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
 use Selenia\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\SessionInterface;
-use Selenia\Routing\Services\Router;
 use Selenia\Routing\Services\RoutingLogger;
 
 /**
@@ -51,9 +50,9 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     DebugConsole::registerPanel ('response', new PSR7ResponseLogger ('Response', 'fa fa-file'));
     DebugConsole::registerPanel ('routes', new ConsoleLogger ('Routing', 'fa fa-location-arrow'));
     DebugConsole::registerPanel ('navigation', new ConsoleLogger ('Navigation', 'fa fa-compass big'));
-    DebugConsole::registerPanel ('config', new ConsoleLogger ('Config.', 'fa fa-cogs'));
+    DebugConsole::registerPanel ('config', new ConsoleLogger ('Configuration', 'fa fa-cogs'));
     DebugConsole::registerPanel ('session', new ConsoleLogger ('Session', 'fa fa-user'));
-    DebugConsole::registerPanel ('DOM', new ConsoleLogger ('DOM', 'fa fa-sitemap'));
+    DebugConsole::registerPanel ('DOM', new ConsoleLogger ('Server-side DOM', 'fa fa-sitemap'));
     DebugConsole::registerPanel ('vm', new ConsoleLogger ('View Model', 'fa fa-table'));
     DebugConsole::registerPanel ('database', new ConsoleLogger ('Database', 'fa fa-database'));
 //    DebugConsole::registerPanel ('exceptions', new ConsoleLogger ('Exceptions', 'fa fa-bug'));
@@ -124,7 +123,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
                 ->write ("<#row>End of routing log</#row>")
                 ->write ("</#section>");
 
-    if ($trace->hasContent())
+    if ($trace->hasContent ())
       DebugConsole::registerPanel ('trace', $trace);
 
 

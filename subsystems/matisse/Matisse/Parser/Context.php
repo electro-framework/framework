@@ -17,6 +17,11 @@ class Context
    */
   public $debugMode = false;
   /**
+   * A service locator function that receives a class/interface/service name and returns a new instance of it.
+   * @var callable
+   */
+  public $serviceLocator;
+  /**
    * @var string[]
    */
   public $macrosDirectories = [];

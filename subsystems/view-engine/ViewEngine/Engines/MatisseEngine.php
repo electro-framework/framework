@@ -52,7 +52,7 @@ class MatisseEngine implements ViewEngineInterface
     $ctx->presets           = map ($this->app->presets,
       function ($class) { return $this->app->injector->make ($class); });
     $ctx->macrosExt         = '.html';
-    $ctx->injectorFn        = function ($name) {
+    $ctx->serviceLocator    = function ($name) {
       return $this->injector->make ($name);
     };
 

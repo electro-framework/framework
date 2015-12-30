@@ -36,15 +36,10 @@ class Macro extends Component
   private static function evalScalarExp ($bindExp, MacroInstance $instance, &$transfer_binding = null)
   {
     $transfer_binding = false;
-    if (self::isCompositeBinding ($bindExp))
-      return preg_replace_callback (self::PARSE_MACRO_BINDING_EXP,
-        function ($args) use ($instance, $transfer_binding) {
-          return self::evalScalarRef ($args[1], $instance, $transfer_binding);
-        }, $bindExp);
-
-    throw new \Exception("TO DO: upgrade identifier extract formula (see source code)");
-    $bindExp = substr ($bindExp, 2, strlen ($bindExp) - 3);
-    return self::evalScalarRef ($bindExp, $instance, $transfer_binding);
+    return preg_replace_callback (self::PARSE_MACRO_BINDING_EXP,
+      function ($args) use ($instance, $transfer_binding) {
+        return self::evalScalarRef ($args[1], $instance, $transfer_binding);
+      }, $bindExp);
   }
 
   private static function evalScalarRef ($ref, MacroInstance $instance, &$transfer_binding)
