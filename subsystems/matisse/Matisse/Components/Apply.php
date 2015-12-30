@@ -50,7 +50,6 @@ class Apply extends Component
   {
     $setterProp = $this->props->set;
     $props      = $setterProp->props->getAll ();
-    inspect ("APPLY SET",$props);
     $where      = $this->props->where;
     if (!$where && $this->hasChildren ()) {
       foreach ($this->getChildren () as $k => $child)
@@ -69,6 +68,7 @@ class Apply extends Component
         $this->scan ($child, $where, $attrs);
       }
     return;
+    //TODO: enable recursive mode
     /** @var ComponentProperties $params */
     /*
     $params = $parent->props;

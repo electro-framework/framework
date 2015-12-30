@@ -50,9 +50,7 @@ class Literal extends Component
 {
   protected static $propertiesClass = LiteralProperties::class;
 
-  /**
-   * @var LiteralProperties
-   */
+  /** @var LiteralProperties */
   public $props;
 
   public function __construct (Context $context, $properties = null)

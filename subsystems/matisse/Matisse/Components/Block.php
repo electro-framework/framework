@@ -40,6 +40,8 @@ class Block extends Component
   protected static $propertiesClass = BlockProperties::class;
 
   public $allowsChildren = true;
+  /** @var BlockProperties */
+  public $props;
 
   /**
    * Adds the content of the `content` parameter to a named block on the page.

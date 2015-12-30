@@ -159,10 +159,13 @@ class Macro extends Component
         $component = $components[$i];
         if (!is_null ($component)) {
           if (isset($component->bindings)) {
-            inspect("BINDINGS",$component->bindings);
             foreach ($component->bindings as $field => $exp)
               $this->applyBinding ($component, $field, $exp, $instance, $components, $i);
           }
+          $props  = $component->props->getPropertiesOf (type::metadata);
+          $values = array_values ($props);
+          $this->applyTo ($values, $instance);
+
           $props  = $component->props->getPropertiesOf (type::content);
           $values = array_values ($props);
           $this->applyTo ($values, $instance);
@@ -245,7 +248,6 @@ class Macro extends Component
 
   private function applyBinding (Component $component, $field, $exp, MacroInstance $instance, array & $components, & $i)
   {
-    inspect("APPLY $field",$exp);
     if (preg_match (self::PARSE_MACRO_BINDING_EXP, $exp, $match)) {
       //evaluate macro binding expression
       if (preg_match (self::FIND_NON_MACRO_EXP, $exp)) {
@@ -303,13 +305,13 @@ class Macro extends Component
               $i += count ($value) - 1;
               return;
             }
-            if (!Parser::isBindingExpression ($value))
-
-              // Convert boolean value to string, only for literals.
-
-              if ($instance->props->getTypeOf ($attrName) == type::bool)
-                $value = $this->props->typecastPropertyValue (type::bool, $value)
-                  ? 'true' : 'false';
+//            if (!Parser::isBindingExpression ($value))
+//
+//              // Convert boolean value to string, only for literals.
+//
+//              if ($instance->props->getTypeOf ($attrName) == type::bool)
+//                $value = $this->props->typecastPropertyValue (type::bool, $value)
+//                  ? 'true' : 'false';
           }
 
           if (Parser::isBindingExpression ($value)) {

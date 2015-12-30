@@ -23,6 +23,8 @@ class TextProperties extends ComponentProperties
 class Text extends Component
 {
   protected static $propertiesClass = TextProperties::class;
+  /** @var TextProperties */
+  public $props;
 
   public function __construct (Context $context, $properties = null)
   {

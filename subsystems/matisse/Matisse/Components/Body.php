@@ -13,6 +13,8 @@ class Body extends Component
   protected static $propertiesClass = GenericProperties::class;
 
   public $allowsChildren = true;
+  /** @var GenericProperties */
+  public $props;
 
   /**
    * Adds the content of the `content` parameter to the page's body element.

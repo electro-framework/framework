@@ -20,14 +20,18 @@ class Metadata extends Component
   protected static $propertiesClass = MetadataProperties::class;
 
   public $allowsChildren = true;
+  /** @var MetadataProperties */
+  public $props;
   /**
    * The data type of the property for which this component holds the value.
+   *
    * @var number
    */
   public $type;
   /**
    * The parameter's scalar value.
    * Note that data sources are also considered scalar values.
+   *
    * @var mixed
    */
   public $value;
@@ -51,18 +55,6 @@ class Metadata extends Component
     if ($this->type == type::content)
       return $this->getChildren ();
     return $this->value;
-  }
-
-  public function onParsingComplete ()
-  {
-    // Parsing-time databinding.
-    inspect ($this->getTagName(), $this->bindings);
-//    $this->databind ();
-  }
-
-  public function setScalar ($v)
-  {
-    $this->value = $this->props->validateScalar ($this->type, $v);
   }
 
 }

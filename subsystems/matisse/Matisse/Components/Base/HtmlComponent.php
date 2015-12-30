@@ -12,6 +12,7 @@ class HtmlComponent extends Component
    * You should never change the `class` attribute at rendering time, because if the component
    * is being repeatedly re-rendered (being part of a repeater section, for instance), the
    * attribute will become instable. Use this property instead.
+   *
    * @var string
    */
   public $cssClassName = '';
@@ -20,6 +21,7 @@ class HtmlComponent extends Component
 
   /**
    * Override to select a different tag as the component container.
+   *
    * @var string
    */
   protected $containerTag = 'div';

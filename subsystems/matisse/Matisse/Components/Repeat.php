@@ -43,6 +43,8 @@ class Repeat extends Component
   protected static $propertiesClass = RepeatProperties::class;
 
   public $allowsChildren = true;
+  /** @var RepeatProperties */
+  public $props;
 
   protected function render ()
   {

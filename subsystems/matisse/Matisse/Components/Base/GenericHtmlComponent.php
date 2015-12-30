@@ -8,6 +8,9 @@ class GenericHtmlComponent extends HtmlComponent
 {
   protected static $propertiesClass = GenericProperties::class;
 
+  /** @var GenericProperties */
+  public $props;
+
   public function __construct (Context $context, $tagName, array $attributes = null)
   {
     parent::__construct ($context, $attributes);

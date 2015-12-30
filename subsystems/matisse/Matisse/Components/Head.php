@@ -8,6 +8,8 @@ class Head extends Component
   protected static $propertiesClass = ComponentProperties::class;
 
   public $allowsChildren = true;
+  /** @var ComponentProperties */
+  public $props;
 
   /**
    * Adds the content of the `content` parameter to the page's head element.

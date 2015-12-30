@@ -19,7 +19,7 @@ class IfProperties extends ComponentProperties
   /**
    * @var string
    */
-  public $is = '';
+  public $is = [type::string, null];
   /**
    * @var bool
    */
@@ -34,6 +34,7 @@ class IfProperties extends ComponentProperties
   public $matches = '';
   /**
    * > **Mote:** it doesn't work with databinding.
+   *
    * @var bool
    */
   public $not = false;
@@ -61,9 +62,9 @@ class IfProperties extends ComponentProperties
  *
  * <If the="value" not isTrue> content if value is falsy </If>
  *
- * <If the="value" isSet> content if value is different from null and the empty string </If>
+ * <If the="value" isSet> content if value is different from both null and the empty string </If>
  *
- * <If the="value" not isSet> content if value is equal to null or an empty string </If>
+ * <If the="value" not isSet> content if value is equal to null or to an empty string </If>
  *
  * <If the="value" matches="regexp"> content if value matches the regular expression </If>
  *
@@ -82,14 +83,16 @@ class If_ extends Component
   protected static $propertiesClass = IfProperties::class;
 
   public $allowsChildren = true;
+  /** @var IfProperties */
+  public $props;
 
   protected function render ()
   {
-    $attr = $this->props;
+    $prop = $this->props;
 
-    $v   = $attr->get ('the');
-    $is  = $attr->get ('is');
-    $not = $attr->not;
+    $v   = $prop->get ('the');
+    $is  = $prop->get ('is');
+    $not = $prop->not;
 
     if (isset($is)) {
       if (!isset($v)) {
@@ -102,29 +105,29 @@ class If_ extends Component
       return;
     }
 
-    if ($attr->isSet) {
-      if ((isset($v) && $v != '') xor $not)
+    if ($prop->isSet) {
+      if (exists ($v) xor $not)
         $this->renderChildren ();
       else $this->renderChildren ('else');
       return;
     }
 
-    if ($attr->isTrue) {
+    if ($prop->isTrue) {
       if (toBool ($v) xor $not)
         $this->renderChildren ();
       else $this->renderChildren ('else');
       return;
     }
 
-    if (isset($attr->matches)) {
-      if (preg_match ("%$attr->matches%", $v) xor $not)
+    if (exists ($prop->matches)) {
+      if (preg_match ("%$prop->matches%", $v) xor $not)
         $this->renderChildren ();
       else $this->renderChildren ('else');
       return;
     }
 
-    if (isset($attr->case)) {
-      foreach ($attr->case as $param) {
+    if ($prop->case) {
+      foreach ($prop->case as $param) {
         if ($v == $param->props->is) {
           $this->attachAndRenderSet ($param->getChildren ());
           return;

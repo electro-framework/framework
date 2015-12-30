@@ -30,10 +30,6 @@ class ComponentInspector
     return $nested ? ob_get_clean () : "<code>" . ob_get_clean () . "</code>";
   }
 
-  private static function inspectString ($s) {
-    return str_replace ("\n", '&#8626;', htmlspecialchars ($s));
-  }
-
   /**
    * Returns a textual representation of the component, suitable for debugging purposes.
    *
@@ -43,13 +39,21 @@ class ComponentInspector
    */
   private static function _inspect (Component $component, $deep = true)
   {
+    $COLOR_BIND  = '#c5a3e6';
+    $COLOR_CONST = '#ffcb69';
+    $COLOR_INFO  = '#888';
+    $COLOR_PROP  = '#eee';
+    $COLOR_TAG   = '#9ae6ef';
+    $COLOR_TYPE  = '#70CC70';
+    $COLOR_VALUE = '#CCC';
+
     $tag        = $component->getTagName ();
     $hasContent = false;
-    echo "<span style='color:#9ae6ef'>&lt;$tag</span>";
+    echo "<span style='color:$COLOR_TAG'>&lt;$tag</span>";
     if (!isset($component->parent))
-      echo '&nbsp;<span style="color:#888">(detached)</span>';
+      echo "&nbsp;<span style='color:$COLOR_INFO'>(detached)</span>";
     if ($component->supportsProperties) {
-      echo '<table style="color:#CCC;margin:0 0 0 15px"><colgroup><col width=1><col width=1><col></colgroup>';
+      echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";
       /** @var ComponentProperties $propsObj */
       $propsObj = $component->props;
       if ($propsObj) $props = $propsObj->getAll ();
@@ -62,15 +66,18 @@ class ComponentInspector
           $t = $component->props->getTypeOf ($k);
           if ($t != type::content && $t != type::collection && $t != type::metadata) {
             $tn = $component->props->getTypeNameOf ($k);
-            echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
+            echo "<tr><td style='color:$COLOR_PROP'>$k<td><i style='color:$COLOR_TYPE'>$tn</i><td>";
 
             $exp = self::inspectString (get ($component->bindings, $k, ''));
             if ($exp != '')
-              echo "<span style='color:#c5a3e6'>$exp</span> = ";
+              echo "<span style='color:$COLOR_BIND'>$exp</span> = ";
 
-            switch ($t) {
+            if (is_null ($v))
+              echo "<i style='color:$COLOR_CONST'>null</i>";
+
+            else switch ($t) {
               case type::bool:
-                echo '<i>' . ($v ? 'TRUE' : 'FALSE') . '</i>';
+                echo "<i style='color:$COLOR_CONST'>" . ($v ? 'true' : 'false') . '</i>';
                 break;
               case type::id:
                 echo "\"$v\"";
@@ -79,46 +86,47 @@ class ComponentInspector
                 echo $v;
                 break;
               case type::string:
-                echo "\"<span style='color:#888;white-space: pre-wrap'>" .
+                echo "\"<span style='white-space: pre-wrap'>" .
                      self::inspectString (strval ($v)) .
                      '</span>"';
                 break;
               default:
-                if (is_null ($v))
-                  echo 'null';
-                elseif (is_object ($v))
-                  echo '<i>object</i>';
+                if (is_object ($v))
+                  echo "<i style='color:$COLOR_CONST'>object</i>";
                 elseif (is_array ($v))
-                  echo '<i>array</i>';
+                  echo "<i style='color:$COLOR_CONST'>array</i>";
                 else
                   echo "\"$v\"";
             }
           }
         }
 
-      // Display all structured properties.
+      // Display all slot properties.
 
       if (!empty($props))
         foreach ($props as $k => $v) {
           $t = $component->props->getTypeOf ($k);
           if ($t == type::content || $t == type::collection || $t == type::metadata) {
             $tn = $component->props->getTypeNameOf ($k);
-            echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
+            echo "<tr><td style='color:$COLOR_PROP'>$k<td><i style='color:$COLOR_TYPE'>$tn</i><td>";
 
             $exp = self::inspectString (get ($component->bindings, $k, ''));
             if ($exp != '')
-              echo "<span style='color:#c5a3e6'>$exp</span> = ";
+              echo "<span style='color:$COLOR_BIND'>$exp</span> = ";
 
             switch ($t) {
               case type::content:
-                echo $v ? "<tr><td><td colspan=2>" . self::inspect ($v, $deep) : '<i style="color:#888">(empty)</i>';
+                echo $v ? "<tr><td><td colspan=2>" . self::inspect ($v, $deep)
+                  : "<i style='color:$COLOR_INFO'>(empty)</i>";
                 break;
               case type::metadata:
-                echo $v ? "<tr><td><td colspan=2>" . self::inspect ($v, $deep) : '<i style="color:#888">(empty)</i>';
+                echo $v ? "<tr><td><td colspan=2>" . self::inspect ($v, $deep)
+                  : "<i style='color:$COLOR_INFO'>(empty)</i>";
                 break;
               case type::collection:
-                echo 'of <i style=\'color:#ffcb69\'>', $component->props->getRelatedTypeNameOf ($k), '</i>';
-                echo $v ? "<tr><td><td colspan=2>" . self::inspectSet ($v, true, true) : ' <i style="color:#888">(empty)</i>';
+                echo "of <i style='color:$COLOR_TYPE'>", $component->props->getRelatedTypeNameOf ($k), '</i>';
+                echo $v ? "<tr><td><td colspan=2>" . self::inspectSet ($v, true, true)
+                  : " <i style='color:$COLOR_INFO'>(empty)</i>";
                 break;
             }
             echo '</tr>';
@@ -133,13 +141,18 @@ class ComponentInspector
     if ($deep) {
       if ($component->hasChildren ()) {
         $hasContent = true;
-        echo '<span style="color:#9ae6ef">&gt;</span><div style="margin:0 0 0 30px">';
+        echo "<span style='color:$COLOR_TAG'>&gt;</span><div style=\"margin:0 0 0 30px\">";
         foreach ($component->getChildren () as $c)
           self::_inspect ($c, true);
         echo '</div>';
       }
     }
-    echo "<span style='color:#9ae6ef'>" . ($hasContent ? "&lt;/$tag&gt;<br>" : "/&gt;<br>") . "</span>";
+    echo "<span style='color:$COLOR_TAG'>" . ($hasContent ? "&lt;/$tag&gt;<br>" : "/&gt;<br>") . "</span>";
+  }
+
+  private static function inspectString ($s)
+  {
+    return str_replace ("\n", '&#8626;', htmlspecialchars ($s));
   }
 
 }
