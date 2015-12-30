@@ -23,18 +23,21 @@ class Locale
   public $name;
   /**
    * How to automatically set the current locale.  Either 'session' or 'url'.
+   *
    * @var string
    */
   public $selectionMode = 'session';
   /**
    * A list of locale names supported by the application.
    * This setting is application-specific.
+   *
    * @var string[]
    */
   protected $available = [];
 
   /**
    * Returns a map of `$name => [...locale data...]` for all known locales.
+   *
    * @return array
    */
   static function getAll ()
@@ -43,7 +46,8 @@ class Locale
   }
 
   /**
-   * Checks if the a locale name is valid.
+   * Checks if the locale name is valid.
+   *
    * @param string $name Locale name. Either a 2 char or 5 char ISO identifier.
    * @return bool
    */
@@ -57,6 +61,7 @@ class Locale
   /**
    * Converts the locale name into a normalized form.
    * Currently, 2 char identifiers are converted to 5 char form (ex: 'en' -> 'en-US').
+   *
    * @param string $name
    * @return string|null `null` if the name not valid.
    */
@@ -76,6 +81,7 @@ class Locale
 
   /**
    * Returns a map of `$name => [...locale data...]` for all locales supported by the application.
+   *
    * @return array
    */
   function getAvailable ()
@@ -102,6 +108,7 @@ class Locale
 
   /**
    * Checks if the a locale name is valid.
+   *
    * @param string $name Locale name. Either a 2 char or 5 char ISO identifier.
    * @return bool
    */
@@ -138,7 +145,8 @@ class Locale
    * @param string $mode Either 'session' or 'url'.
    * @return $this
    */
-  function setSelectionMode ($mode) {
+  function setSelectionMode ($mode)
+  {
     $this->selectionMode = $mode;
     return $this;
   }
