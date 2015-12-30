@@ -12,9 +12,9 @@ window.onload = function(){
 
 function seleniaReady() {
   callListeners('onReady',null,true);
-  if ($id('alertBox'))
+  if ($id('status'))
     setTimeout(function () {
-      fadeOut($id('alertBox'));
+      fadeOut($id('status'));
     },3000);
   onEvent(document.body,'click',closeSelector);
   for (var selectorId in selectors) {
@@ -26,6 +26,8 @@ function seleniaReady() {
     }
   }
 }
+
+seleniaReady();
 
 function isIE() {
   return navigator.userAgent.indexOf('MSIE') > 0;
