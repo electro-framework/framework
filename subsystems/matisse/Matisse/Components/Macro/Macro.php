@@ -145,30 +145,6 @@ class Macro extends Component
           break;
       }
 
-//    $styles = $this->props->get ('style');
-//    if (isset($styles))
-//      foreach ($styles as $sheet) {
-//        self::parsingtimeDatabind ($sheet, $instance);
-//        if (isset($sheet->props->src))
-//          $instance->page->addStylesheet ($sheet->props->src);
-//        else if (!empty($sheet->children)) {
-//          $name = $sheet->props->get ('name');
-//          $instance->page->addInlineCss ($sheet, $name);
-//        }
-//      }
-//    $scripts = $this->props->get ('script');
-//    if (isset($scripts)) {
-//      foreach ($scripts as $script) {
-//        self::parsingtimeDatabind ($script, $instance);
-//        if (isset($script->props->src))
-//          $instance->page->addScript ($script->props->src);
-//        else if (!empty($script->children)) {
-//          $name = $script->props->get ('name');
-//          $instance->page->addInlineScript ($script, $name);
-//        }
-//      }
-//    }
-
     $cloned = $this->getClonedChildren ();
     $this->applyTo ($cloned, $instance);
 
@@ -179,19 +155,23 @@ class Macro extends Component
   {
     if (!is_null ($components))
       for ($i = 0; $i < count ($components); ++$i) {
+        /** @var Component $component */
         $component = $components[$i];
         if (!is_null ($component)) {
           if (isset($component->bindings)) {
+            inspect("BINDINGS",$component->bindings);
             foreach ($component->bindings as $field => $exp)
               $this->applyBinding ($component, $field, $exp, $instance, $components, $i);
           }
-          $attrs  = $component->props->getPropertiesOf (type::content);
-          $values = array_values ($attrs);
+          $props  = $component->props->getPropertiesOf (type::content);
+          $values = array_values ($props);
           $this->applyTo ($values, $instance);
-          $attrs  = $component->props->getPropertiesOf (type::collection);
-          $values = array_values ($attrs);
+
+          $props  = $component->props->getPropertiesOf (type::collection);
+          $values = array_values ($props);
           foreach ($values as $paramArray)
             $this->applyTo ($paramArray, $instance);
+
           $this->applyTo ($component->getChildrenRef (), $instance);
         }
       }
@@ -238,7 +218,7 @@ class Macro extends Component
     if (isset($param)) {
       $p = type::getIdOf ($param->props->type);
       if ($p === false) {
-        $s = join ('</kbd>, <kbd>', array_slice (type::getAllNames (), 1));
+        $s = join ('</kbd>, <kbd>', type::getAllNames ());
         throw new ComponentException($this,
           "The property type of the <kbd>$name</kbd> parameter is invalid.<p>Expected values: <kbd>$s</kbd>.");
       }
@@ -265,6 +245,7 @@ class Macro extends Component
 
   private function applyBinding (Component $component, $field, $exp, MacroInstance $instance, array & $components, & $i)
   {
+    inspect("APPLY $field",$exp);
     if (preg_match (self::PARSE_MACRO_BINDING_EXP, $exp, $match)) {
       //evaluate macro binding expression
       if (preg_match (self::FIND_NON_MACRO_EXP, $exp)) {
@@ -273,10 +254,10 @@ class Macro extends Component
           self::evalScalarExp ($exp, $instance)); //replace current binding
       }
       else {
-        if ($exp[0] != '{' || substr ($exp, -1) != '}' ||
-            strpos ($exp, '}') < strlen ($exp) - 2
+        if ($exp[0] != '{' || substr ($exp, -1) != '}' || strpos ($exp, '}') < strlen ($exp) - 2
         ) {
-          //composite exp. (constant text + binding ref)
+          // Composite exp. (constant text + binding ref)
+
           $value = self::evalScalarExp ($exp, $instance, $transfer_binding);
           if ($transfer_binding)
             $component->addBinding ($field, $value); //replace current binding
@@ -287,7 +268,8 @@ class Macro extends Component
           }
         }
         else {
-          //simple exp. (binding ref. only}
+          // Simple exp. (binding ref. only}
+
           $attrName = $match[1];
           if (!$instance->props->defines ($attrName)) {
             $s = join (', ', $instance->props->getPropertyNames ());
@@ -301,27 +283,39 @@ class Macro extends Component
           if (isset($this->bindings) && array_key_exists ($attrName, $this->bindings))
             $content = $this->bindings[$attrName];
           else $content = $instance->props->$attrName;
+
           if (isset($instance->bindings) && array_key_exists ($attrName, $instance->bindings)) {
-            //transfer binding from the macro instance to the component
+
+            // Transfer binding from the macro instance to the component.
+
             $component->addBinding ($field, $instance->bindings[$attrName]);
             return;
           }
+
           $value = $content instanceof Metadata ? $content->getValue () : $content;
+
           if ($component instanceof Literal) {
             if (is_array ($value)) {
-              //replace literal by a component set
+
+              // Replace literal by a component set.
+
               array_splice ($components, $i, 1, $value);
               $i += count ($value) - 1;
               return;
             }
             if (!Parser::isBindingExpression ($value))
-              //convert boolean value to string, only for literals
+
+              // Convert boolean value to string, only for literals.
+
               if ($instance->props->getTypeOf ($attrName) == type::bool)
                 $value = $this->props->typecastPropertyValue (type::bool, $value)
                   ? 'true' : 'false';
           }
+
           if (Parser::isBindingExpression ($value)) {
-            //assign new binding expression to target component
+
+            // Assign new binding expression to target component.
+
             $component->addBinding ($field, $value);
           }
           else {

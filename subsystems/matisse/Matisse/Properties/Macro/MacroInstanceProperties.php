@@ -57,7 +57,6 @@ class MacroInstanceProperties extends MetadataProperties
     //TODO: test this
     if (isset($param->bindings) && array_key_exists ('default', $param->bindings))
       return $param->bindings['default'];
-    inspect ($this->component->getTagName(),$param->getTagName(),$param->props);
     return $param->props->default; // Return the parameter's `default` property.
   }
 

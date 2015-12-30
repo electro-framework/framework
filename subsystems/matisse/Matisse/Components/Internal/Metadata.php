@@ -56,7 +56,8 @@ class Metadata extends Component
   public function onParsingComplete ()
   {
     // Parsing-time databinding.
-    $this->databind ();
+    inspect ($this->getTagName(), $this->bindings);
+//    $this->databind ();
   }
 
   public function setScalar ($v)

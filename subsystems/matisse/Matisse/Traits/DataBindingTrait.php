@@ -26,7 +26,7 @@ trait DataBindingTrait
    * Finds binding expressions and extracts information from them.
    * > Note: the u modifier allows unicode white space to be properly matched.
    */
-  static private $PARSE_PARAM_BINDING_EXP = '#
+  static private $PARSE_BINDING_EXP = '#
     ( \{ (?: \{ | !! ))
     \s*
     (
@@ -150,13 +150,13 @@ trait DataBindingTrait
       do {
         if (self::isCompositeBinding ($bindExp)) {
           //composite expression
-          $bindExp = preg_replace_callback (self::$PARSE_PARAM_BINDING_EXP, [$this, 'evalBindingExp'], $bindExp);
+          $bindExp = preg_replace_callback (self::$PARSE_BINDING_EXP, [$this, 'evalBindingExp'], $bindExp);
           if (!Parser::isBindingExpression ($bindExp))
             return $bindExp;
         }
         else {
           //simple expression
-          preg_match (self::$PARSE_PARAM_BINDING_EXP, $bindExp, $matches);
+          preg_match (self::$PARSE_BINDING_EXP, $bindExp, $matches);
           $bindExp = $this->evalBindingExp ($matches);
           if (!Parser::isBindingExpression ($bindExp))
             return $bindExp;

@@ -39,10 +39,7 @@ class MacroInstance extends Component
 
   public function onParsingComplete ()
   {
-//    $this->processParameters ();
-//    $this->databind ();
-
-    // Move children to default parameter
+    // Move children to default parameter.
 
     if ($this->hasChildren ()) {
       $def = $this->macro->props->defaultParam;
@@ -60,64 +57,11 @@ class MacroInstance extends Component
         $param->setChildren ($this->removeChildren ());
       }
     }
+
+    // Perform macro-expansion.
+
     $content = $this->macro->apply ($this);
     $this->replaceBy ($content);
   }
-
-//  private function processParameters ()
-//  {
-//    $o      = [];
-//    $styles = $this->props->style;
-//
-//    if (isset($styles))
-//      foreach ($styles as $sheet) {
-//        if (isset($sheet->props->src))
-//          $o[] = [
-//            'type' => 'sh',
-//            'src'  => $sheet->props->src,
-//          ];
-//        else if ($sheet->hasChildren ())
-//          $o[] = [
-//            'type' => 'ish',
-//            'name' => $sheet->props->get ('name'),
-//            'data' => $sheet,
-//          ];
-//      }
-//    $scripts = $this->props->script;
-//    if (isset($scripts)) {
-//      foreach ($scripts as $script) {
-//        if (isset($script->props->src))
-//          $o[] = [
-//            'type' => 'sc',
-//            'src'  => $script->props->src,
-//          ];
-//        else if ($script->hasChildren ())
-//          $o[] = [
-//            'type'  => 'isc',
-//            'name'  => $script->props->get ('name'),
-//            'defer' => $script->props->get ('defer'),
-//            'data'  => $script,
-//          ];
-//      }
-//    }
-//    $o = array_reverse ($o);
-//    foreach ($o as $i)
-//      switch ($i['type']) {
-//        case 'sh':
-//          $this->page->addStylesheet ($i['src'], true);
-//          break;
-//        case 'ish':
-//          $this->page->addInlineCss ($i['data'], $i['name'], true);
-//          break;
-//        case 'sc':
-//          $this->page->addScript ($i['src'], true);
-//          break;
-//        case 'isc':
-//          if ($i['defer'])
-//            $this->page->addInlineDeferredScript ($i['data'], $i['name'], true);
-//          else $this->page->addInlineScript ($i['data'], $i['name'], true);
-//          break;
-//      }
-//  }
 
 }
