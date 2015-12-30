@@ -37,7 +37,7 @@ class MacroInstance extends Component
     $this->setTagName ($tagName);
   }
 
-  public function onCreatedByParser ()
+  public function onParsingComplete ()
   {
 //    $this->processParameters ();
 //    $this->databind ();

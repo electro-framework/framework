@@ -5,6 +5,7 @@ use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Components\Literal;
 use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Parser\Parser;
 use Selenia\Matisse\Properties\Macro\MacroProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
@@ -55,7 +56,7 @@ class Macro extends Component
       return $instance->bindings[$ref];
     }
     $value = $instance->props->$ref;
-    if (self::isBindingExpression ($value))
+    if (Parser::isBindingExpression ($value))
       return $value;
     if (is_null ($value) || $value === '')
       $value = $instance->props->getDefault ($ref);
@@ -68,7 +69,7 @@ class Macro extends Component
     if (isset($component->bindings))
       foreach ($component->bindings as $attrName => $bindExp) {
         $value            = self::evalScalarExp ($bindExp, $instance);
-        $transfer_binding = self::isBindingExpression ($value);
+        $transfer_binding = Parser::isBindingExpression ($value);
         if ($transfer_binding) {
           if ($force) {
             //$value = $component->evalBinding($value);
@@ -257,7 +258,7 @@ class Macro extends Component
     return $names;
   }
 
-  public function onCreatedByParser ()
+  public function onParsingComplete ()
   {
     $this->context->addMacro ($this->props->name, $this);
   }
@@ -313,13 +314,13 @@ class Macro extends Component
               $i += count ($value) - 1;
               return;
             }
-            if (!self::isBindingExpression ($value))
+            if (!Parser::isBindingExpression ($value))
               //convert boolean value to string, only for literals
               if ($instance->props->getTypeOf ($attrName) == type::bool)
                 $value = $this->props->typecastPropertyValue (type::bool, $value)
                   ? 'true' : 'false';
           }
-          if (self::isBindingExpression ($value)) {
+          if (Parser::isBindingExpression ($value)) {
             //assign new binding expression to target component
             $component->addBinding ($field, $value);
           }

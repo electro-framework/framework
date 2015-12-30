@@ -35,7 +35,7 @@ class ComponentProperties extends AbstractProperties
 
   function defines ($name, $asSubtag = false)
   {
-    if ($asSubtag) return $this->isSubtag ($name);
+    if ($asSubtag) return $this->canBeSubtag ($name);
     return $this->metadata->hasProperty ($name);
   }
 

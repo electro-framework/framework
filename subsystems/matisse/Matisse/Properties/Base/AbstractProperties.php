@@ -81,6 +81,27 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
       $this->set ($k, $v);
   }
 
+  /**
+   * Checks if a property can be specified on markup as a subtag.
+   *
+   * @param string $propName
+   * @return bool
+   */
+  function canBeSubtag ($propName)
+  {
+    if ($this->defines ($propName)) {
+      $type = $this->getTypeOf ($propName);
+      switch ($type) {
+        case type::content:
+        case type::collection:
+        case type::metadata:
+        case type::string:
+          return true;
+      }
+    }
+    return false;
+  }
+
   function get ($propName, $default = null)
   {
     return property ($this, $propName, $default);
@@ -138,26 +159,6 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
     $type = $this->getTypeOf ($propName);
     return $type == type::bool || $type == type::id || $type == type::number ||
            $type == type::string;
-  }
-
-  /**
-   * Checks if a property is of a component type or component collection.
-   *
-   * @param string $propName
-   * @return bool
-   */
-  function isSubtag ($propName)
-  {
-    if ($this->defines ($propName)) {
-      $type = $this->getTypeOf ($propName);
-      switch ($type) {
-        case type::content:
-        case type::collection:
-        case type::metadata:
-          return true;
-      }
-    }
-    return false;
   }
 
   /**

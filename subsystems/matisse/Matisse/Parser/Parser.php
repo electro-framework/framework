@@ -42,6 +42,19 @@ class Parser
    */
   private $current;
   /**
+   * The name of the scalar property being currently parsed in a subtag format.
+   * When set, it also indicates that the content of a scalar property is being parsed in a subtag format.
+   *
+   * @var string|null
+   */
+  private $currentScalarProperty = null;
+  /**
+   * The current value of the scalar property being currently parsed in a subtag format.
+   *
+   * @var string
+   */
+  private $currentScalarValue = '';
+  /**
    * The ending position of the tag currently being parsed.
    *
    * @var int
@@ -54,7 +67,7 @@ class Parser
    */
   private $currentTagStart;
   /**
-   * When set, all tags are created as parameters and added to the specified parameter's subtree.
+   * When set, all tags are created as metadata and added as children of the specified component.
    *
    * @var Metadata
    */
@@ -66,12 +79,6 @@ class Parser
    */
   private $prevTagEnd;
   /**
-   * Indicates that a parameter of scalar type is being processed.
-   *
-   * @var boolean
-   */
-  private $scalarParam = false;
-  /**
    * @var string The source markup being parsed.
    */
   private $source;
@@ -79,6 +86,11 @@ class Parser
   function __construct (Context $context)
   {
     $this->context = $context;
+  }
+
+  public static function isBindingExpression ($exp)
+  {
+    return is_string ($exp) ? strpos ($exp, '{{') !== false || strpos ($exp, '{!!') !== false : false;
   }
 
   /*********************************************************************************************************************
@@ -116,8 +128,8 @@ class Parser
       else {
         // OPEN TAG
 
-        if ($this->scalarParam)
-          $this->parsingError ("Can't set tag <b>$tag</b> as a value for the scalar parameter <b>{$this->current->getTagName()}</b>.");
+        if ($this->currentScalarProperty)
+          $this->parsingError ("Invalid tag <kbd>$tag</kbd>; components are not allowed inside the <kbd>{$this->current->getTagName()}</kbd> scalar property.");
 
         if (isset($this->metadataContainer) || $this->subtag_check ($tag))
           $this->parse_subtag ($tag, $attrs);
@@ -126,7 +138,7 @@ class Parser
 
         // SELF-CLOSING TAG
         if ($term2)
-          $this->parse_exitTagContext (true, $tag);
+          $this->parse_exitTagContext ();
       }
 
       // LOOP: advance to the next component tag
@@ -179,19 +191,26 @@ class Parser
    */
   private function parse_closingTag ($tag)
   {
-    if ($tag != $this->current->getTagName ()) {
-      $parent = $this->current->parent;
+    if (isset($this->currentScalarProperty)) {
+      $expected = ucfirst ($this->currentScalarProperty);
+      $scope    = $this->current;
+    }
+    else {
+      $expected = $this->current->getTagName ();
+      $scope    = $this->current->parent;
+    }
+    if ($expected != $tag) {
       $this->parsingError ("Closing tag mismatch.
 <table>
   <tr><th>Found:<td class='fixed'><b>&lt;/$tag&gt;</b>
-  <tr><th>Expected:<td class='fixed'><b>&lt;/{$this->current->getTagName ()}&gt;</b>
-  <tr><th>Component in scope:<td class='fixed'><b>&lt;{$parent->getTagName()}></b><td>Class: <b>{$parent->className}</b>
-" . (isset($parent->parent) ? "
-  <tr><th>Scope's parent:<td><b>&lt;{$parent->parent->getTagName()}></b><td>Class: <b>{$parent->parent->className}</b>"
+  <tr><th>Expected:<td class='fixed'><b>&lt;/$expected&gt;</b>
+  <tr><th>Component in scope:<td class='fixed'><b>&lt;{$scope->getTagName()}></b><td>Class: <b>{$scope->className}</b>
+" . (isset($scope->parent) ? "
+  <tr><th>Scope's parent:<td><b>&lt;{$scope->parent->getTagName()}></b><td>Class: <b>{$scope->parent->className}</b>"
           : '') . "
 </table>");
     }
-    $this->parse_exitTagContext (true, $tag);
+    $this->parse_exitTagContext ();
   }
 
   /*********************************************************************************************************************
@@ -220,25 +239,32 @@ class Parser
   /*********************************************************************************************************************
    * EXIT THE CURRENT TAG CONTEXT (and go up)
    *********************************************************************************************************************
-   *
-   * @param bool   $fromClosingTag
-   * @param string $tag
    */
-  private function parse_exitTagContext ($fromClosingTag = true, $tag = '')
+  private function parse_exitTagContext ()
   {
     $current = $this->current;
-    $this->text_optimize ($current);
-    if ($this->scalarParam)
-      $this->scalarParam = false;
+    if (isset($this->currentScalarProperty)) {
+      $prop = $this->currentScalarProperty;
+      $v    = $this->currentScalarValue;
 
-    $parent = $current->parent;
-    $current->onCreatedByParser (); //Note: calling this method may unset the 'parent' property.
+      $this->currentScalarProperty = null;
+      $this->currentScalarValue    = '';
 
-    // Check if the metadata context is being closed.
-    if (isset($this->metadataContainer) && $this->current == $this->metadataContainer)
-      unset ($this->metadataContainer);
+      if (self::isBindingExpression ($v))
+        $this->current->bindings[$prop] = $v;
+      else $this->current->props->$prop = $v;
+    }
+    else {
+      $this->text_optimize ($current);
+      $parent = $current->parent;
+      $current->onParsingComplete (); //Note: calling this method may unset the 'parent' property (ex. with macros).
 
-    $this->current = $parent; //also discards the current scalar parameter, if that is the case.
+      // Check if the metadata context is being closed.
+      if (isset($this->metadataContainer) && $this->current == $this->metadataContainer)
+        unset ($this->metadataContainer);
+
+      $this->current = $parent; //also discards the current scalar parameter, if that is the case.
+    }
   }
 
   /*********************************************************************************************************************
@@ -255,10 +281,11 @@ class Parser
 
     if (!$this->current instanceof Metadata) {
 
-      // Create a component property
+      // Move the tag's content to the corresponding slot property.
 
       if (!$this->current->supportsProperties)
         $this->parsingError ("The component <b>&lt;{$this->current->getTagName()}&gt;</b> does not support parameters.");
+
       $this->parse_attributes ($attrs, $attributes, $bindings);
 
       if (!$this->current->props->defines ($property)) {
@@ -267,14 +294,15 @@ class Parser
 does not support the specified parameter <b>$tag</b>.
 <p>Expected: <span class='fixed'>$s</span>");
       }
-      $this->subtag_createParam ($property, $tag, $attributes, $bindings);
+
+      $this->subtag_createSlotContent ($property, $tag, $attributes, $bindings);
     }
     else {
 
-      // Create a component
+      // Currently on a metadata property. Create a child component of the corresponding component.
 
       $this->parse_attributes ($attrs, $attributes, $bindings);
-      $this->subtag_createSubParam ($property, $tag, $attributes, $bindings);
+      $this->subtag_createSlotSubcontent ($property, $tag, $attributes, $bindings);
     }
   }
 
@@ -326,55 +354,60 @@ does not support the specified parameter <b>$tag</b>.
   }
 
   /**
-   * Checks if a tag is a subtag of the current component.
+   * Checks if a tag is a subtag of the current component or it is a child component.
    *
-   * @param string $subtagName
-   * @return bool
+   * @param string $tagName
+   * @return bool true if it is a subtag.
    */
-  private function subtag_check ($subtagName)
+  private function subtag_check ($tagName)
   {
-    $propName = lcfirst ($subtagName);
-    // All descendants of a metadata parameter are always parameters.
+    $propName = lcfirst ($tagName);
     if ($this->current instanceof Metadata) {
       switch ($this->current->type) {
+        // All descendants of a metadata property are always metadata.
         case type::metadata:
           return true;
       }
-      // Descendants of parameters not of metadata type cannot be parameters.
+      // Descendants of a content property are children, not properties.
       return false;
     }
-    // If the current component defines an property with the same name as the tag being checked, the tag is a subtag.
+    // If the current component defines an property with the same name as the tag being checked, and if that property
+    // supports begin specified as a tag, the tag is a subtag.
     return $this->current->supportsProperties && $this->current->props->defines ($propName, true);
   }
 
-  private function subtag_createParam ($propName, $tagName, array $attributes = null, array $bindings = null)
+  private function subtag_createSlotContent ($propName, $tagName, array $attributes = null, array $bindings = null)
   {
-    $component     = $this->current;
-    $type          = $component->props->getTypeOf ($propName);
-    $this->current = $param = new Metadata ($this->context, $tagName, $type, $attributes);
-    $param->attachTo ($component);
-    switch ($type) {
-      case type::content:
-        $component->props->$propName = $param;
-        $param->bindings                = $bindings;
-        break;
-      case type::metadata:
-        $component->props->$propName = $param;
-        $param->bindings                = $bindings;
-        $this->metadataContainer        = $param;
-        break;
-      case type::collection:
-        if (isset($component->props->$propName))
-          $component->props->{$propName}[] = $param;
-        else $component->props->$propName = [$param];
-        $param->bindings = $bindings;
-        break;
-      default:
-        $this->scalarParam = true;
+    $component = $this->current;
+    $type      = $component->props->getTypeOf ($propName);
+    if ($type == type::string)
+      $this->currentScalarProperty = $propName;
+    else {
+      $this->current = $param = new Metadata ($this->context, $tagName, $type, $attributes);
+      $param->attachTo ($component);
+      switch ($type) {
+        case type::content:
+          $component->props->$propName = $param;
+          $param->bindings             = $bindings;
+          break;
+        case type::metadata:
+          $component->props->$propName = $param;
+          $param->bindings             = $bindings;
+          $this->metadataContainer     = $param;
+          break;
+        case type::collection:
+          if (isset($component->props->$propName))
+            $component->props->{$propName}[] = $param;
+          else $component->props->$propName = [$param];
+          $param->bindings = $bindings;
+          break;
+        default:
+          $this->parsingError ("Invalid subtag <kbd>$tagName</kbd>");
+      }
     }
   }
 
-  private function subtag_createSubParam ($name, $tagName, array $attributes = null, array $bindings = null)
+  private function subtag_createSlotSubcontent ($name, $tagName, array $attributes = null, array $bindings = null)
   {
     $param              = $this->current;
     $this->current      = $subparam = new Metadata($this->context, $tagName, type::content, $attributes);
@@ -397,15 +430,20 @@ does not support the specified parameter <b>$tag</b>.
           break;
       }
     if (strlen ($content)) {
-      $v = [
-        'value' => $content,
-      ];
-      if ($content[0] == '{') {
-        $lit           = new Literal($this->context);
-        $lit->bindings = $v;
+      if (isset($this->currentScalarProperty)) {
+        $this->currentScalarValue .= $content; //Note: databinding will be taken care of later.
       }
-      else $lit = new Text ($this->context, $v);
-      $this->current->addChild ($lit);
+      else {
+        $v = [
+          'value' => $content,
+        ];
+        if ($content[0] == '{') {
+          $lit           = new Literal($this->context);
+          $lit->bindings = $v;
+        }
+        else $lit = new Text ($this->context, $v);
+        $this->current->addChild ($lit);
+      }
     }
   }
 

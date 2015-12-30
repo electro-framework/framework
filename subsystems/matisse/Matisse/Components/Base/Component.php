@@ -331,7 +331,7 @@ abstract class Component
    * and all attributes and children have also been parsed.
    * Override this to implement parsing-time behavior.
    */
-  public function onCreatedByParser ()
+  public function onParsingComplete ()
   {
     //implementation is specific to each component type.
   }

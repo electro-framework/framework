@@ -8,6 +8,7 @@ use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Exceptions\HandlerNotFoundException;
 use Selenia\Matisse\MatisseEngine;
 use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Parser\Parser;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 
 /**
@@ -50,11 +51,6 @@ trait DataBindingTrait
    * @var mixed
    */
   public $contextualModel;
-
-  static function isBindingExpression ($exp)
-  {
-    return is_string ($exp) ? strpos ($exp, '{{') !== false || strpos ($exp, '{!!') !== false : false;
-  }
 
   static function isCompositeBinding ($exp)
   {
@@ -155,14 +151,14 @@ trait DataBindingTrait
         if (self::isCompositeBinding ($bindExp)) {
           //composite expression
           $bindExp = preg_replace_callback (self::$PARSE_PARAM_BINDING_EXP, [$this, 'evalBindingExp'], $bindExp);
-          if (!self::isBindingExpression ($bindExp))
+          if (!Parser::isBindingExpression ($bindExp))
             return $bindExp;
         }
         else {
           //simple expression
           preg_match (self::$PARSE_PARAM_BINDING_EXP, $bindExp, $matches);
           $bindExp = $this->evalBindingExp ($matches);
-          if (!self::isBindingExpression ($bindExp))
+          if (!Parser::isBindingExpression ($bindExp))
             return $bindExp;
         }
         if (++$z > 10)

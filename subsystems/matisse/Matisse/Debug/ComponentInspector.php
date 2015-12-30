@@ -30,6 +30,10 @@ class ComponentInspector
     return $nested ? ob_get_clean () : "<code>" . ob_get_clean () . "</code>";
   }
 
+  private static function inspectString ($s) {
+    return str_replace ("\n", '&#8626;', htmlspecialchars ($s));
+  }
+
   /**
    * Returns a textual representation of the component, suitable for debugging purposes.
    *
@@ -60,8 +64,8 @@ class ComponentInspector
             $tn = $component->props->getTypeNameOf ($k);
             echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
 
-            $exp = htmlspecialchars (get ($component->bindings, $k));
-            if (isset($exp))
+            $exp = self::inspectString (get ($component->bindings, $k, ''));
+            if ($exp != '')
               echo "<span style='color:#c5a3e6'>$exp</span> = ";
 
             switch ($t) {
@@ -76,7 +80,7 @@ class ComponentInspector
                 break;
               case type::string:
                 echo "\"<span style='color:#888;white-space: pre-wrap'>" .
-                     str_replace ("\n", '&#8626;', htmlspecialchars (strval ($v))) .
+                     self::inspectString (strval ($v)) .
                      '</span>"';
                 break;
               default:
@@ -101,8 +105,8 @@ class ComponentInspector
             $tn = $component->props->getTypeNameOf ($k);
             echo "<tr><td style='color:#eee'>$k<td><i style='color:#ffcb69'>$tn</i><td>";
 
-            $exp = htmlspecialchars (get ($component->bindings, $k));
-            if (isset($exp))
+            $exp = self::inspectString (get ($component->bindings, $k, ''));
+            if ($exp != '')
               echo "<span style='color:#c5a3e6'>$exp</span> = ";
 
             switch ($t) {

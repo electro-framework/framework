@@ -53,7 +53,7 @@ class Metadata extends Component
     return $this->value;
   }
 
-  public function onCreatedByParser ()
+  public function onParsingComplete ()
   {
     // Parsing-time databinding.
     $this->databind ();
