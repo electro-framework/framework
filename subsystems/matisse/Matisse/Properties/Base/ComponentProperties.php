@@ -2,12 +2,9 @@
 namespace Selenia\Matisse\Properties\Base;
 
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\Metadata;
-use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\TypeSystem\Reflection;
 use Selenia\Matisse\Properties\TypeSystem\ReflectionClass;
-use Selenia\Matisse\Properties\TypeSystem\type;
 
 class ComponentProperties extends AbstractProperties
 {
