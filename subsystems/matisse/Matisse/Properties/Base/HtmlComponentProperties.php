@@ -27,6 +27,6 @@ class HtmlComponentProperties extends ComponentProperties
   /**
    * @var string
    */
-  public $id = type::id;
+  public $id = [type::id, null];
 
 }

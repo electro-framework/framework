@@ -51,7 +51,7 @@ class HtmlComponent extends Component
       $this->props->class,
       $this->props->disabled ? 'disabled' : null
     ));
-    if (!empty($this->props->htmlAttrs))
+    if (exists ($this->props->htmlAttrs))
       echo ' ' . $this->props->htmlAttrs;
   }
 
