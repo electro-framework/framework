@@ -5,7 +5,7 @@ use Selenia\Core\Assembly\Services\ModuleServices;
 use Selenia\Interfaces\ModuleInterface;
 use Selenia\Migrations\Commands\Commands;
 
-class DatabaseModule implements ModuleInterface
+class DatabaseMigrationsModule implements ModuleInterface
 {
   function boot () { }
 

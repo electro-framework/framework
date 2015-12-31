@@ -41,21 +41,16 @@ class Commands
 
   function __construct (ConsoleIO $io, ModulesRegistry $registry, ModulesUtil $modulesUtil, SymfonyConsole $console)
   {
-    $this->io         = $io;
-    $this->registry = $registry;
+    $this->io          = $io;
+    $this->registry    = $registry;
     $this->modulesUtil = $modulesUtil;
-    $this->console = $console;
+    $this->console     = $console;
   }
 
-  /**
-   * Gets the specified setting from the module's configuration.
-   * @param string $key
-   * @return mixed
-   */
-//  public function config ($key)
-//  {
-//    return get ($this->app ()->config['migrations'], $key);
-//  }
+  static protected function getConfigPath ()
+  {
+    return updir (__DIR__, 2) . '/config.php';
+  }
 
   /**
    * Create a new database migration
@@ -82,7 +77,7 @@ class Commands
     $command = new Command\Create;
     $command->setApplication ($this->console);
     $input  = new ArrayInput(PA ([
-      '--configuration' => dirname (__DIR__) . '/config.php',
+      '--configuration' => self::getConfigPath (),
       'name'            => $name,
       '--class'         => $options['class'],
       '--template'      => $options['template'],
@@ -111,7 +106,7 @@ class Commands
     $command = new Command\Rollback;
     $command->setApplication ($this->console);
     $input  = new ArrayInput(PA ([
-      '--configuration' => dirname (__DIR__) . '/config.php',
+      '--configuration' => self::getConfigPath (),
       '--target'        => $options['target'],
       '--environment'   => 'main',
       $moduleName,
@@ -139,7 +134,7 @@ class Commands
     $command = new Command\Migrate;
     $command->setApplication ($this->console);
     $input  = new ArrayInput(PA ([
-      '--configuration' => dirname (__DIR__) . '/config.php',
+      '--configuration' => self::getConfigPath (),
       '--target'        => $options['target'],
       '--environment'   => 'main',
       $moduleName,
@@ -167,7 +162,7 @@ class Commands
     $command = new Command\Status;
     $command->setApplication ($this->console);
     $input  = new ArrayInput(PA ([
-      '--configuration' => dirname (__DIR__) . '/config.php',
+      '--configuration' => self::getConfigPath (),
       '--format'        => $options['format'],
       '--environment'   => 'main',
       $moduleName,
@@ -179,11 +174,12 @@ class Commands
 
   /**
    * Sets the migrations folder path for subsequent commands.
+   *
    * @param string $moduleName vendor-name/package-name
    */
   protected function setupMigrationConfig ($moduleName)
   {
-    self::$migrationsPath  = $this->registry->getModule($moduleName)->path . '/migrations';
+    self::$migrationsPath  = $this->registry->getModule ($moduleName)->path . '/migrations';
     self::$migrationsTable = 'migrations_of_' . str_replace ('/', '_', dehyphenate ($moduleName));
   }
 
@@ -192,11 +188,12 @@ class Commands
    *
    * It also validates the module name and/or asks for it, if empty. In the later case, the `$moduleName` argument will
    * be updated on the caller.
+   *
    * @param string $moduleName vendor-name/package-name
    */
   private function setupModule (&$moduleName)
   {
-    $this->modulesUtil->selectModule($moduleName);
+    $this->modulesUtil->selectModule ($moduleName);
     $this->setupMigrationConfig ($moduleName);
   }
 
