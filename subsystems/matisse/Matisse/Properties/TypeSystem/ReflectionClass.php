@@ -127,14 +127,10 @@ class ReflectionClass
       case type::string:
       case type::id:
         $prop->type = $value;
-        if (!isset($prop->default))
-          $prop->default = '';
         break;
 
       case type::number:
         $prop->type = $value;
-        if (!isset($prop->default))
-          $prop->default = 0;
         break;
 
       case type::bool:
@@ -168,8 +164,6 @@ class ReflectionClass
 
       case type::binding:
         $prop->type = $value;
-        if (!isset ($prop->default))
-          $prop->default = '';
         break;
 
       case is::required:

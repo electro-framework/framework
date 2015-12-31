@@ -193,7 +193,7 @@ class Commands
    */
   private function setupModule (&$moduleName)
   {
-    $this->modulesUtil->selectModule ($moduleName);
+    $this->modulesUtil->selectModule ($moduleName, true);
     $this->setupMigrationConfig ($moduleName);
   }
 

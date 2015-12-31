@@ -28,9 +28,11 @@ class ModulesUtil
    * Validate the given module name or ask the user to select a module from a list of installed modules.
    *
    * <p>This method is available to console tasks only.
-   * @param string $moduleName A variable reference. If empty, it will be set to the selected module name.
+   *
+   * @param bool   $onlyEnabled Display only modules that are enabled.
+   * @param string $moduleName  A variable reference. If empty, it will be set to the selected module name.
    */
-  function selectModule (& $moduleName)
+  function selectModule (& $moduleName, $onlyEnabled = false)
   {
     if ($moduleName) {
       if (!$this->registry->validateModuleName ($moduleName))
@@ -39,7 +41,7 @@ class ModulesUtil
         $this->io->error ("Module $moduleName is not installed");
     }
     else {
-      $modules    = $this->registry->getApplicationModuleNames ();
+      $modules    = $this->registry->getApplicationModuleNames ($onlyEnabled);
       $i          = $this->io->menu ("Select a module:", $modules);
       $moduleName = $modules[$i];
     }

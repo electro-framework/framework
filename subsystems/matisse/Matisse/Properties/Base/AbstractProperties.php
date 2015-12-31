@@ -211,7 +211,7 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
         sprintf (
           "%s is not a valid value for a component property of type <b>%s</b>",
           is_scalar ($v)
-            ? sprintf ("<kbd>%s</kbd>", var_export ($v, true))
+            ? sprintf ("The %s<kbd>%s</kbd>", typeOf ($v), var_export ($v, true))
             : sprintf ("A value of PHP type <b>%s</b>", typeOf ($v)),
           type::getNameOf ($type)
         ));

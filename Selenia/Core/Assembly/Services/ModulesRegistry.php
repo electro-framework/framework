@@ -24,6 +24,7 @@ class ModulesRegistry
   /**
    * Contains information about all registered modules.
    * <p>It's a map of module names to module information objects.
+   *
    * @var ModuleInfo[]
    */
   private $modules = [];
@@ -46,6 +47,7 @@ class ModulesRegistry
   /**
    * Gets information about all registered modules.
    * <p>Returns a map of module names to module information objects.
+   *
    * @return ModuleInfo[]
    */
   function getAllModules ()
@@ -54,25 +56,30 @@ class ModulesRegistry
   }
 
   /**
-   * Gets a list of names for all installed plugins and private modules, in that order.
+   * Returns the names of all installed plugins and private modules, in that order.
+   *
+   * @param bool $onlyEnabled Return only modules that are enabled.
    * @return string[]
    */
-  function getApplicationModuleNames ()
+  function getApplicationModuleNames ($onlyEnabled = false)
   {
-    return array_merge ($this->getPluginNames (), $this->getPrivateModuleNames ());
+    return array_merge ($this->getPluginNames ($onlyEnabled), $this->getPrivateModuleNames ($onlyEnabled));
   }
 
   /**
    * Gets a list of all plugins and private modules, in that order.
-   * @return ModuleInfo[]
+   *
+   * @param bool $onlyEnabled Return only modules that are enabled.
+   * @return \Selenia\Core\Assembly\ModuleInfo[]
    */
-  function getApplicationModules ()
+  function getApplicationModules ($onlyEnabled = false)
   {
-    return array_merge ($this->getPlugins (), $this->getPrivateModules ());
+    return array_merge ($this->getPlugins ($onlyEnabled), $this->getPrivateModules ($onlyEnabled));
   }
 
   /**
    * Gets the module information object for the module registered with the given name.
+   *
    * @param string $moduleName vendor-name/product-name
    * @return ModuleInfo|null `null` if the module is not registered.
    */
@@ -89,54 +96,94 @@ class ModulesRegistry
     });
   }
 
-  function getPluginNames ()
+  /**
+   * Returns the names of all registered modules of tyoe 'plugin'.
+   *
+   * @param bool $onlyEnabled Return only modules that are enabled.
+   * @return string[]
+   */
+  function getPluginNames ($onlyEnabled = false)
   {
     return mapAndFilter (array_values ($this->modules),
-      function (ModuleInfo $m) { return $m->type == ModuleInfo::TYPE_PLUGIN ? $m->name : null; });
+      function (ModuleInfo $m) use ($onlyEnabled) {
+        return $m->type == ModuleInfo::TYPE_PLUGIN && ($m->enabled || !$onlyEnabled) ? $m->name : null;
+      });
   }
 
   /**
    * Returns a list of module infomation objects for all registered modules of tyoe 'plugin'.
+   *
+   * @param bool $onlyEnabled Return only modules that are enabled.
    * @return ModuleInfo[]
    */
-  function getPlugins ()
+  function getPlugins ($onlyEnabled = false)
   {
-    return array_filter ($this->modules, function (ModuleInfo $m) { return $m->type == ModuleInfo::TYPE_PLUGIN; });
+    return array_filter ($this->modules,
+      function (ModuleInfo $m) use ($onlyEnabled) {
+        return $m->type == ModuleInfo::TYPE_PLUGIN && ($m->enabled || !$onlyEnabled);
+      });
   }
 
-  function getPrivateModuleNames ()
+  /**
+   * Returns the names of all registered modules of tyoe 'private'.
+   *
+   * @param bool $onlyEnabled Return only modules that are enabled.
+   * @return string[]
+   */
+  function getPrivateModuleNames ($onlyEnabled = false)
   {
     return mapAndFilter (array_values ($this->modules),
-      function (ModuleInfo $m) { return $m->type == ModuleInfo::TYPE_PRIVATE ? $m->name : null; });
+      function (ModuleInfo $m) use ($onlyEnabled) {
+        return $m->type == ModuleInfo::TYPE_PRIVATE && ($m->enabled || !$onlyEnabled) ? $m->name : null;
+      });
   }
 
   /**
    * Returns a list of module infomation objects for all registered modules of tyoe 'private'.
+   *
+   * @param bool $onlyEnabled Return only modules that are enabled.
    * @return ModuleInfo[]
    */
-  function getPrivateModules ()
+  function getPrivateModules ($onlyEnabled = false)
   {
-    return array_filter ($this->modules, function (ModuleInfo $m) { return $m->type == ModuleInfo::TYPE_PRIVATE; });
+    return array_filter ($this->modules,
+      function (ModuleInfo $m) use ($onlyEnabled) {
+        return $m->type == ModuleInfo::TYPE_PRIVATE && ($m->enabled || !$onlyEnabled);
+      });
   }
 
-  function getSubsystemNames ()
+  /**
+   * Returns the names of all registered modules of tyoe 'subsystem'.
+   *
+   * @param bool $onlyEnabled Return only modules that are enabled.
+   * @return string[]
+   */
+  function getSubsystemNames ($onlyEnabled = false)
   {
     return mapAndFilter (array_values ($this->modules),
-      function (ModuleInfo $m) { return $m->type == ModuleInfo::TYPE_SUBSYSTEM ? $m->name : null; });
+      function (ModuleInfo $m) use ($onlyEnabled) {
+        return $m->type == ModuleInfo::TYPE_SUBSYSTEM && ($m->enabled || !$onlyEnabled) ? $m->name : null;
+      });
   }
 
   /**
    * Returns a list of module infomation objects for all registered modules of tyoe 'subsystem'.
+   *
+   * @param bool $onlyEnabled Return only modules that are enabled.
    * @return ModuleInfo[]
    */
-  function getSubsystems ()
+  function getSubsystems ($onlyEnabled = false)
   {
-    return array_filter ($this->modules, function (ModuleInfo $m) { return $m->type == ModuleInfo::TYPE_SUBSYSTEM; });
+    return array_filter ($this->modules,
+      function (ModuleInfo $m) use ($onlyEnabled) {
+        return $m->type == ModuleInfo::TYPE_SUBSYSTEM && ($m->enabled || !$onlyEnabled);
+      });
   }
 
   /**
    * Imports an array representation of an instance of this class (possibly generated from {@see json_decode()}) into
    * the instance's public properties.
+   *
    * @param array $data
    * @return $this
    */
@@ -148,6 +195,7 @@ class ModulesRegistry
 
   /**
    * Checks if a module is installed.
+   *
    * @param string $moduleName `vendor-name/package-name` syntax.
    * @return bool
    */
@@ -158,6 +206,7 @@ class ModulesRegistry
 
   /**
    * Checks if the installed module with the given name is a plugin.
+   *
    * @param string $moduleName `vendor-name/package-name` syntax.
    * @return bool
    */
@@ -169,6 +218,7 @@ class ModulesRegistry
 
   /**
    * Checks if the installed module with the given name is a private application module.
+   *
    * @param string $moduleName `vendor-name/package-name` syntax.
    * @return bool
    */
@@ -180,6 +230,7 @@ class ModulesRegistry
 
   /**
    * Checks if the installed module with the given name is a framework core module (subsystem).
+   *
    * @param string $moduleName `vendor-name/package-name` syntax.
    * @return bool
    */
@@ -243,6 +294,7 @@ class ModulesRegistry
 
   /**
    * Checks if the given name is a valid module name.
+   *
    * @param string $name A module name in `vendor-name/package-name` format.
    * @return bool `true` if the name is valid.
    */

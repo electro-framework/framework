@@ -115,11 +115,7 @@ class type
    */
   static function toBoolean ($v)
   {
-    if (is_bool ($v))
-      return $v;
-    if (is_string ($v) && isset (self::$BOOLEAN_VALUES[$v]))
-      return self::$BOOLEAN_VALUES[$v];
-    return !is_null ($v) && !empty($v);
+    return is_string ($v) ? get (self::$BOOLEAN_VALUES, $v, false) : boolval ($v);
   }
 
   /**
@@ -179,7 +175,7 @@ class type
         return is_string ($v);
 
       case type::bool:
-        return is_bool ($v) || isset (self::$BOOLEAN_VALUES[$v]);
+        return true;   // Any value can be typecast to boolean.
 
       case type::data:
         return is_array ($v) || is_object ($v)
