@@ -205,7 +205,7 @@ class PageComponent implements RequestHandlerInterface
     $this->mergeIntoModel ($model, $request->getAttributes ());
     switch ($this->request->getMethod ()) {
       case 'GET':
-        if ($model) array_mergeInto ($model, $this->presets);
+        if ($model) $this->mergeIntoModel ($model, $this->presets);
         $this->mergeIntoModel ($model, $this->session->getOldInput ());
         break;
       /** @noinspection PhpMissingBreakStatementInspection */
@@ -300,7 +300,7 @@ class PageComponent implements RequestHandlerInterface
   {
     return coalesce (
       $this->pageTitle,
-      $this->navigation->currentLink ()->title (),
+      ($link = $this->navigation->currentLink ()) ? $link->title () : null,
       ''
     );
   }
