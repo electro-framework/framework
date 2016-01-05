@@ -212,6 +212,10 @@ trait DOMNodeTrait
     return array_search ($child, $this->children, true);
   }
 
+  /**
+   * Removes the component from its parent's children list.
+   * @throws ComponentException
+   */
   public function remove ()
   {
     if (isset($this->parent))

@@ -8,7 +8,6 @@ use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Exceptions\ParseException;
 use Selenia\Matisse\Parser\Context;
-use Selenia\Matisse\Parser\Parser;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
 use Selenia\Matisse\Traits\DataBindingTrait;
 use Selenia\Matisse\Traits\DOMNodeTrait;
@@ -154,7 +153,11 @@ abstract class Component
       $macro = $context->getMacro ($tagName);
       try {
         if (is_null ($macro))
-          $macro = self::loadMacro ($context, $parent, $tagName);
+
+          // A macro with the given name is not defined yet.
+          // Try to load it now.
+
+          $macro = $context->loadMacro ($tagName, $parent);
       }
       catch (FileIOException $e) {
         self::throwUnknownComponent ($context, $tagName, $parent);
@@ -171,21 +174,6 @@ abstract class Component
     $component->setTagName ($tagName);
 
     return $component;
-  }
-
-  static function loadMacro (Context $context, Component $parent, $tagName)
-  {
-    $filename = normalizeTagName ($tagName) . $context->macrosExt;
-    $content  = $context->loadMacro ($filename);
-    $parser   = new Parser($context);
-    $parser->parse ($content, $parent);
-    $macro = $context->getMacro ($tagName);
-    if (isset($macro)) {
-      $macro->remove ();
-
-      return $macro;
-    }
-    throw new ParseException("File <b>$filename</b> does not define a macro named <b>$tagName</b>.");
   }
 
   /**

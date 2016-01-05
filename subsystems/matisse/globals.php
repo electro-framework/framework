@@ -4,6 +4,13 @@
 //  Matisse-specific functions
 //------------------------------
 
+/**
+ * Converts a dash-separated tag name into a camel case tag name.
+ * > Ex: `<my-tag>` -> `<myTag>`
+ *
+ * @param string $name
+ * @return string
+ */
 function normalizeTagName ($name)
 {
   return str_replace (' ', '', ucwords (str_replace ('-', ' ', $name)));
