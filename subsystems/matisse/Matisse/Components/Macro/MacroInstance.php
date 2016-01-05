@@ -26,14 +26,13 @@ class MacroInstance extends Component
    */
   protected $macro;
 
-  public function __construct (Context $context, $tagName, Macro $macro, array $attributes = null)
+  public function __construct (Context $context, Macro $macro, array $props = null)
   {
     $this->macro = $macro; //must be defined before the parent constructor is called
     parent::__construct ($context);
     $this->props->setMacro ($macro);
-    if ($attributes)
-      $this->props->apply ($attributes);
-    $this->setTagName ($tagName);
+    if ($props)
+      $this->props->apply ($props);
   }
 
   public function onParsingComplete ()

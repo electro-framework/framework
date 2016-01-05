@@ -150,18 +150,7 @@ abstract class Component
       // Component class not found.
       // Try to load a macro with the same tag name.
 
-      $macro = $context->getMacro ($tagName);
-      try {
-        if (is_null ($macro))
-
-          // A macro with the given name is not defined yet.
-          // Try to load it now.
-
-          $macro = $context->loadMacro ($tagName, $parent);
-      }
-      catch (FileIOException $e) {
-        self::throwUnknownComponent ($context, $tagName, $parent);
-      }
+      $macro     = self::getMacro ($context, $parent->page, $tagName);
       $component = new MacroInstance($context, $tagName, $macro, $attributes);
     }
 
@@ -174,6 +163,22 @@ abstract class Component
     $component->setTagName ($tagName);
 
     return $component;
+  }
+
+  static function getMacro (Context $context, Page $root, $tagName)
+  {
+    $macro = $context->getMacro ($tagName);
+    if (is_null ($macro))
+      try {
+        // A macro with the given name is not defined yet.
+        // Try to load it now.
+
+        return $context->loadMacro ($tagName, $root);
+      }
+      catch (FileIOException $e) {
+        self::throwUnknownComponent ($context, $tagName, $root);
+      }
+    return $macro;
   }
 
   /**

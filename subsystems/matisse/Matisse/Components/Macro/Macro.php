@@ -10,7 +10,7 @@ use Selenia\Matisse\Properties\Macro\MacroProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
 /**
- * The Macro component allows you to define a macro transformation via markup.
+ * The Macro component allows you to define a macro trasformation via markup.
  *
  * <p>A macro is composed by metadata elements and a template.
  * - With metadata you can define macro parameters, stylesheets and scripts.

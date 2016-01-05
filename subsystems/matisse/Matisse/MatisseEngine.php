@@ -11,12 +11,14 @@ class MatisseEngine
   const MAX_BUFFER_SIZE = 1048576; // 1Mb = 1024 * 1024
   /**
    * A map of databinding expressions to compiled functions.
+   *
    * @var array [string => Closure]
    */
   static $expressions = [];
   /**
    * A map of tag names to fully qualified PHP component class names.
    * It is initialized to the core Matisse components that can be instantiated via tags.
+   *
    * @var array string => string
    */
   private static $coreTags = [
@@ -25,6 +27,7 @@ class MatisseEngine
     'Body'    => Components\Body::class,
     'Head'    => Components\Head::class,
     'If'      => Components\If_::class,
+    'Include' => Components\Macro\Include_::class,
     'Literal' => Components\Literal::class,
     'Macro'   => Components\Macro\Macro::class,
     'Repeat'  => Components\Repeat::class,
@@ -67,6 +70,7 @@ class MatisseEngine
 
   /**
    * Renders the given component tree and returns the resulting markup.
+   *
    * @param Component $root The component tree's root element.
    * @return string The resulting markup (usually HTML).
    */

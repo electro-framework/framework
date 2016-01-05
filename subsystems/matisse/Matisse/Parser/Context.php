@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Parser;
 
-use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Components\Internal\Page;
 use Selenia\Matisse\Components\Macro\Macro;
 use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Exceptions\ParseException;
@@ -127,18 +127,18 @@ class Context
   /**
    * Searches for a file defining a macro for the given tag name.
    *
-   * @param string    $tagName
-   * @param Component $parent
+   * @param string $tagName
+   * @param Page   $root
    * @return Macro
    * @throws FileIOException
    * @throws ParseException
    */
-  function loadMacro ($tagName, Component $parent)
+  function loadMacro ($tagName, Page $root)
   {
     $filename = normalizeTagName ($tagName) . $this->macrosExt;
     $content  = $this->loadMacroFile ($filename);
     $parser   = new Parser($this);
-    $parser->parse ($content, $parent);
+    $parser->parse ($content, $root);
     $macro = $this->getMacro ($tagName);
     if (isset($macro))
       return $macro;
