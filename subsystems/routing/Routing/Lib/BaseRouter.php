@@ -6,7 +6,7 @@ use PhpKit\WebConsole\Lib\Debug;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Exceptions\HttpException;
-use Selenia\Interfaces\Http\ErrorRendererInterface;
+use Selenia\Http\Lib\Http;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
 use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
@@ -30,35 +30,31 @@ abstract class BaseRouter implements RouterInterface
   public $routingEnabled = true;
   /**
    * **Note:** used by RoutingMiddleware
+   *
    * @var array|\Traversable
    */
   protected $handlers;
   /**
    * **Note:** used by RoutingMiddleware
+   *
    * @var InjectorInterface
    */
   protected $injector;
   /**
    * For use by logging/debugging decorators.
+   *
    * @var int
    */
   protected $stackId;
-  /**
-   * @var ErrorRendererInterface
-   */
-  private $errorRenderer;
   /**
    * @var RouteMatcherInterface
    */
   private $matcher;
 
-  public function __construct (RouteMatcherInterface $matcher,
-                               ErrorRendererInterface $errorRenderer,
-                               InjectorInterface $injector)
+  public function __construct (RouteMatcherInterface $matcher, InjectorInterface $injector)
   {
-    $this->matcher       = $matcher;
-    $this->injector      = $injector;
-    $this->errorRenderer = $errorRenderer;
+    $this->matcher  = $matcher;
+    $this->injector = $injector;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -163,7 +159,7 @@ abstract class BaseRouter implements RouterInterface
     }
     catch (HttpException $error) {
       // Convert HTTP exceptions to normal responses
-      return $this->errorRenderer->render ($request, $response, $error);
+      return Http::send ($response, $error->getCode (), $error->getMessage () ?: $error->getTitle ());
     }
 
     if (!$response)
@@ -197,11 +193,12 @@ abstract class BaseRouter implements RouterInterface
                                       ResponseInterface $originalResponse, callable $nextHandlerAfterIteration,
                                       $stackId)
   {
-    $currentRequest = $originalRequest;
-    $currentResponse = $originalResponse;
+    $currentRequest       = $originalRequest;
+    $currentResponse      = $originalResponse;
     $nextIterationClosure =
       function (ServerRequestInterface $request = null, ResponseInterface $response = null, $first = false)
-      use ($it, &$nextIterationClosure, $nextHandlerAfterIteration, &$currentRequest, &$currentResponse,
+      use (
+        $it, &$nextIterationClosure, $nextHandlerAfterIteration, &$currentRequest, &$currentResponse,
         $stackId, $originalRequest //, $originalResponse
       ) {
 

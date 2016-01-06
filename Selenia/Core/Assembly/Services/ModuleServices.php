@@ -242,7 +242,7 @@ class ModuleServices
 
   /**
    * @param array $v Configuration default settings to be merged into the application config.
-   *                 Settings already defined will not be changed.
+   *                 Settings already defined will not be changed, except for Application settings.
    * @return $this
    * @throws ConfigException
    */
@@ -251,7 +251,7 @@ class ModuleServices
     foreach ($v as $section => $cfg) {
       if ($section == 'main') {
         foreach ($cfg as $k => $v)
-          if (!property ($this->app, $k)) $this->app->$k = $v;
+          $this->app->$k = $v;
       }
       else {
         $appCfg = get ($this->app->config, $section);

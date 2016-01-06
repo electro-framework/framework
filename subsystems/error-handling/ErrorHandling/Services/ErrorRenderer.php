@@ -57,20 +57,20 @@ function render (ServerRequestInterface $request, ResponseInterface $response, $
     $this->htmlTemplate ($status, $title, $message);
     $body->write (ob_get_clean ());
   }
-  else if (Http::clientAccepts ($request, 'application/json')) {
+  elseif (Http::clientAccepts ($request, 'application/json')) {
     $response = $response->withHeader ('Content-Type', 'application/json');
     $body->write (json_encode (['error' => ['code' => $status, 'message' => $title]]));
   }
-  else if (Http::clientAccepts ($request, 'application/xml')) {
+  elseif (Http::clientAccepts ($request, 'application/xml')) {
     $response = $response->withHeader ('Content-Type', 'application/xml');
     $body->write ("<?xml version=\"1.0\"?><error><code>$status</code><message>$title</message></error>");
   }
-  else if (Http::clientAccepts ($request, 'text/plain') || Http::clientAccepts ($request, '*/*')) {
+  elseif (Http::clientAccepts ($request, 'text/plain') || Http::clientAccepts ($request, '*/*')) {
     $response = $response->withHeader ('Content-Type', 'text/plain');
     $body->write ($title);
   }
-  // else render nothing
 
+  // else render nothing
   return $response;
 }
 

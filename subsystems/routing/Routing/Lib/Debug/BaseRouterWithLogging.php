@@ -5,7 +5,6 @@ use Iterator;
 use PhpKit\WebConsole\Lib\Debug;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Interfaces\Http\ErrorRendererInterface;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
 use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
@@ -15,6 +14,7 @@ use Selenia\Routing\Services\RoutingLogger;
 
 /**
  * Provides the inspection aspect of a RouterInterface implementation.
+ *
  * @property RouterInterface $decorated
  */
 class BaseRouterWithLogging extends BaseRouter
@@ -22,28 +22,33 @@ class BaseRouterWithLogging extends BaseRouter
   /**
    * The current request; updated as the router calls request handlers.
    * > This is used for debugging only.
+   *
    * @var ServerRequestInterface
    */
   static private $currentRequest;
   /**
    * The current request body size; updated as the router calls request handlers.
    * > This is used for debugging only.
+   *
    * @var int
    */
   static private $currentRequestSize = 0;
   /**
    * The current response; updated as the router calls request handlers.
+   *
    * @var ResponseInterface
    */
   static private $currentResponse;
   /**
    * The current response body size; updated as the router calls request handlers.
    * > This is used for debugging only.
+   *
    * @var int
    */
   static private $currentResponseSize = 0;
   /**
    * Are we currently unwinding the handler stacks due to a thrown exception?
+   *
    * @var bool
    */
   static private $unwinding = false;
@@ -59,10 +64,9 @@ class BaseRouterWithLogging extends BaseRouter
 
   public function __construct (InjectorInterface $injector,
                                RouteMatcherInterface $matcher,
-                               ErrorRendererInterface $errorRenderer,
                                RoutingLogger $routingLogger, $debugMode)
   {
-    parent::__construct ($matcher, $errorRenderer, $injector);
+    parent::__construct ($matcher, $injector);
 
     // Uncomment the following line if you want to see the routing log when the app crashes without the Debug Console
     // being displayed:
@@ -190,7 +194,7 @@ class BaseRouterWithLogging extends BaseRouter
                                                ResponseInterface $response, callable $nextIteration)
   {
     $this->routingLogger->writef ("<#row>Route pattern <b class=keyword>'$key'</b> matches request target " .
-                                          "<b class=keyword>'%s'</b></#row>",
+                                  "<b class=keyword>'%s'</b></#row>",
       self::$currentRequest->getRequestTarget ());
 
     return parent::iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
