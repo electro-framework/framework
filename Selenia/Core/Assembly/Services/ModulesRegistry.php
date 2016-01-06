@@ -267,9 +267,17 @@ class ModulesRegistry
     /** @var ModuleInfo[] $all */
     $all = array_merge ([$main], $subsystems, $plugins, $private);
 
+    $oldModules    = $this->modules;
     $this->modules = [];
-    foreach ($all as $module)
+    foreach ($all as $module) {
+      /** @var ModuleInfo $oldModule */
+      $oldModule = get ($oldModules, $module->name);
+      if ($oldModule) {
+        // Keep user preferences.
+        $module->enabled = $oldModule->enabled;
+      }
       $this->modules [$module->name] = $module;
+    }
   }
 
   /**
