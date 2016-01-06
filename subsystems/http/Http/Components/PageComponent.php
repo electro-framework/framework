@@ -43,12 +43,14 @@ class PageComponent implements RequestHandlerInterface
   public $app;
   /**
    * The link that matches the current URL.
+   *
    * @var NavigationLinkInterface
    */
   public $currentLink;
   /**
    * The controller's data sources (view model)
    * The 'default' data source corresponds to the **model**.
+   *
    * @var array
    */
   public $dataSources = [];
@@ -68,6 +70,7 @@ class PageComponent implements RequestHandlerInterface
   public $navigation;
   /**
    * It's only set when using Matisse.
+   *
    * @var Page
    */
   public $page;
@@ -81,6 +84,7 @@ class PageComponent implements RequestHandlerInterface
   public $request;
   /**
    * The loader which has loaded this controller.
+   *
    * @var Router
    */
   public $router;
@@ -90,11 +94,13 @@ class PageComponent implements RequestHandlerInterface
   public $session;
   /**
    * An HTML fragment to display a status message or an empty string if no status message exists.
+   *
    * @var string
    */
   public $statusMessage = '';
   /**
    * Set this to automatically load a view from the specified external template.
+   *
    * @var string
    */
   public $templateUrl;
@@ -105,19 +111,28 @@ class PageComponent implements RequestHandlerInterface
   /**
    * The current request URI without the page number parameters.
    * This property is useful for databing with the expression {!controller.URI_noPage}.
+   *
    * @var string
    */
   protected $URI_noPage;
   /**
+   * Map of attributes to set on the body tag.
+   *
+   * @var array Map of string => mixed
+   */
+  protected $bodyAttrs = [];
+  /**
    * Specifies the URL of the index page, to where the browser should naviagate upon the
    * successful insertion / update of records.
    * If not defined on a subclass then the request will redisplay the same page.
+   *
    * @var string
    */
   protected $indexPage = null;
   /**
    * If set, defines the page title. It will generate a document `<title>` and it can be used on
    * breadcrumbs.
+   *
    * @var string
    */
   protected $pageTitle = null;
@@ -127,6 +142,7 @@ class PageComponent implements RequestHandlerInterface
   protected $redirection;
   /**
    * If set to true, the view will be rendered on the POST request without a redirection taking place.
+   *
    * @var bool
    */
   protected $renderOnAction = false;
@@ -144,14 +160,10 @@ class PageComponent implements RequestHandlerInterface
   private $injector;
   /**
    * Values to be automatically merged into the view model.
+   *
    * @var array
    */
   private $presets = [];
-  /**
-   * Map of attributes to set on the body tag.
-   * @var array Map of string => mixed
-   */
-  protected $bodyAttrs = [];
 
   function __construct (InjectorInterface $injector, Application $app, RedirectionInterface $redirection,
                         SessionInterface $session, NavigationInterface $navigation, PipeHandler $pipeHandler)
@@ -228,6 +240,7 @@ class PageComponent implements RequestHandlerInterface
    * Responds to the standard 'delete' controller action.
    * The default procedure is to delete the object on the database.
    * Override to implement non-standard behaviour.
+   *
    * @param null $param
    * @return ResponseInterface
    * @throws FlashMessageException
@@ -257,6 +270,7 @@ class PageComponent implements RequestHandlerInterface
    * This is useful, for instance, for updating a form by submitting it without actually saving it.
    * The custom processing will usually take place on the render() or the viewModel() methods, but you may also
    * override this method; just make sure you call the inherited one.
+   *
    * @param string $param     A JQuery selector for the element that should automatically receive focus after the page
    *                          reloads.
    */
@@ -271,6 +285,7 @@ class PageComponent implements RequestHandlerInterface
    * Responds to the standard 'submit' controller action.
    * The default procedure is to either call insert() or update().
    * Override to implement non-standard behaviour.
+   *
    * @param null $param
    * @throws FlashMessageException
    */
@@ -289,40 +304,9 @@ class PageComponent implements RequestHandlerInterface
     // No return value means: auto-redirect
   }
 
-  protected function getRowOffset ()
-  {
-    return ($this->pageNumber - 1) * $this->app->pageSize;
-  }
-
-  protected function getTitle ()
-    // override to return a dynamic title for the current page
-  {
-    return coalesce (
-      $this->pageTitle,
-      ($link = $this->navigation->currentLink ()) ? $link->title () : null,
-      ''
-    );
-  }
-
-  /**
-   * Loads the record with the id specified on from the request URI into the model object.
-   *
-   * If the URI parameter is empty, the model is returned unmodified.
-   *
-   * @param DataObject $model
-   * @param string     $param The parameter name. As a convention, it is usually `id`.
-   * @return DataObject|false The input model on success, `false` if it was not found.
-   */
-  protected function loadRequested (DataObject $model, $param = 'id')
-  {
-    $id = $this->request->getAttribute ("@$param");
-    if (!$id) return $model;
-    $f = $model->find ($id);
-    return $f ? $model : false;
-  }
-
   /**
    * Merges data into the view model.
+   *
    * @param array $data
    */
   function preset (array $data)
@@ -335,6 +319,7 @@ class PageComponent implements RequestHandlerInterface
    * Component specific initialization can be performed here before the
    * page is rendered.
    * Override to add extra initialization.
+   *
    * @param ViewInterface $view
    */
   function setupView (ViewInterface $view)
@@ -364,6 +349,7 @@ class PageComponent implements RequestHandlerInterface
   /**
    * Defines the set of fields which will be fetched to a data object from a POST request.
    * All other values on the request will be ignored.
+   *
    * @return array If NULL all the data object's fields fields will be fetched.
    */
   protected function defineDataFields ()
@@ -400,6 +386,7 @@ class PageComponent implements RequestHandlerInterface
 
   /**
    * Invokes the right controller method in response to the POST request's specified action.
+   *
    * @return ResponseInterface|null
    * @throws FlashMessageException
    * @throws FileException
@@ -438,6 +425,21 @@ class PageComponent implements RequestHandlerInterface
     else $param = null;
   }
 
+  protected function getRowOffset ()
+  {
+    return ($this->pageNumber - 1) * $this->app->pageSize;
+  }
+
+  protected function getTitle ()
+    // override to return a dynamic title for the current page
+  {
+    return coalesce (
+      $this->pageTitle,
+      ($link = $this->navigation->currentLink ()) ? $link->title () : null,
+      ''
+    );
+  }
+
   /**
    * Initializes the controller.
    * Override to implement initialization code that should run before all other processing on the controller.
@@ -451,6 +453,7 @@ class PageComponent implements RequestHandlerInterface
    * Responds to the standard 'submit' controller action when a primary key value is not present on the request.
    * The default procedure is to create a new record on the database if the model is an ORM model.
    * Override to implement your own saving algorithm.
+   *
    * @param $model
    * @throws FatalException
    */
@@ -460,6 +463,23 @@ class PageComponent implements RequestHandlerInterface
       $model->insert ();
     else throw new FatalException (sprintf ("Don't know how to save a model of type <kbd class=type>%s</kbd>.<p>You should override <kbd>insertData()</kbd>.",
       is_object ($model) ? get_class ($model) : gettype ($model)));
+  }
+
+  /**
+   * Loads the record with the id specified on from the request URI into the model object.
+   *
+   * If the URI parameter is empty, the model is returned unmodified.
+   *
+   * @param DataObject $model
+   * @param string     $param The parameter name. As a convention, it is usually `id`.
+   * @return DataObject|false The input model on success, `false` if it was not found.
+   */
+  protected function loadRequested (DataObject $model, $param = 'id')
+  {
+    $id = $this->request->getAttribute ("@$param");
+    if (!$id) return $model;
+    $f = $model->find ($id);
+    return $f ? $model : false;
   }
 
   /**
@@ -512,7 +532,9 @@ class PageComponent implements RequestHandlerInterface
    * Allows subclasses to generate the view's markup dinamically.
    * If not overriden, the default behaviour is to load the view from an external file, if one is defined on
    * `templateUrl`. If not, no output is generated.
-   * @return ViewInterface|null If `null`, the framework assumes the content has been output to PHP's output buffer.
+   *
+   * @return ViewInterface|string|null If `null` (or no return value), the framework assumes the content has been
+   *                                   output to PHP's output buffer.
    */
   protected function render ()
   {
@@ -525,6 +547,7 @@ class PageComponent implements RequestHandlerInterface
    * Responds to the standard 'submit' controller action when a primary key value is present on the request.
    * The default procedure is to create a new record on the database if the model is an ORM model.
    * Override to implement your own saving algorithm.
+   *
    * @param $model
    * @throws FatalException
    */
@@ -553,34 +576,44 @@ class PageComponent implements RequestHandlerInterface
 
   /**
    * Performs all processing related to the view generation.
+   *
    * @return ResponseInterface
-   * @throws FileNotFoundException
+   * @throws FatalException
    */
   private function processView ()
   {
     $this->view = $this->injector->make ('Selenia\Interfaces\ViewInterface');
     ob_start ();
-    $view    = $this->render ();
-    $content = ob_get_clean ();
-    if (!$view) {
-      /** @var ViewInterface $view */
+    $rendered = $this->render ();
+    if (!$rendered)
+      $rendered = ob_get_clean ();
+    else ob_end_clean ();
+
+    // If render() returned a string, compile it using the default rendering engine.
+    if (is_string ($rendered)) {
       $view = $this->view
         ->setEngine ($this->viewEngineClass)
-        ->loadFromString ($content);
+        ->loadFromString ($rendered);
     }
+
+    else if ($rendered instanceof ViewInterface)
+      $view = $rendered;
+
+    else throw new FatalException (sprintf("Invalid return type from <kbd>%s::render()</kbd>", typeInfoOf($this)));
+
     $this->setupView ($view);
     /** @var ViewInterface $view */
     $output = $view->render ($this);
     $this->response->getBody ()->write ($output);
 
     // DOM panel
-    if (DebugConsole::hasLogger('DOM')) {
+    if (DebugConsole::hasLogger ('DOM')) {
       $insp = $this->page->inspect (true);
       DebugConsole::logger ('DOM')->write ($insp);
     }
 
     // View Model panel
-    if (DebugConsole::hasLogger('vm')) {
+    if (DebugConsole::hasLogger ('vm')) {
       DebugConsole::logger ('vm')->inspect ($this->model);
     }
 

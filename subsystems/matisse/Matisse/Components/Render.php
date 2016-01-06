@@ -36,6 +36,9 @@ class RenderProperties extends ComponentProperties
 
 /**
  * Renders a dynamic view or an arbitrary static file.
+ *
+ * <p>When rendering a view, the view's rendering context (and associated view model) come from the current rendering
+ * context.
  */
 class Render extends Component
 {
