@@ -8,17 +8,21 @@ use Selenia\Matisse\Properties\Macro\MacroInstanceProperties;
 class IncludeProperties extends MacroInstanceProperties
 {
   /**
-   * The name of the macro to be loaded and expanded at parse-time.
+   * The name of the macro to be loaded at parse time and inserted on the current view, replacing the `Include`
+   * component.
    *
-   * > <p>You can't use databinding on this property as databinding is not available at parse-time.
+   * > <p>You **can not** use databinding on this property, as the view model is not available at parse time.
    *
    * @var string
    */
   public $macro = '';
   /**
-   * The name of the view to be loaded and merged into the one being currently parsed.
+   * The relative file path of the view to be loaded and rendered at the component's location.
    *
-   * > <p>You can't use databinding on this property as databinding is not available at parse-time.
+   * <p>Matisse will search for the view on all the view paths registered on the framework.
+   *
+   * > <p>You **can** use databinding on this property, as the view is loaded at render time and the view model is
+   * > available.
    *
    * @var string
    */
@@ -38,6 +42,12 @@ class IncludeProperties extends MacroInstanceProperties
 
 }
 
+/**
+ * Includes either a macro or a view at the component's location.
+ *
+ * <p>When including a macro, all properties not specific to this component (ex. `macro` and `view`) are converted to
+ * macro parameters, including the tag's content, if any.
+ */
 class Include_ extends MacroInstance
 {
   protected static $propertiesClass = IncludeProperties::class;
