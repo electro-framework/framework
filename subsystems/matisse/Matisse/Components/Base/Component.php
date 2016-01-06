@@ -138,11 +138,13 @@ abstract class Component
         self::throwUnknownComponent ($context, $tagName, $parent);
 
       // Component class not found.
-      // Try to load a macro with the same tag name.
+      // Convert the tag to a MacroInstance component instance that will attempt to load a macro with the same
+      // name as the tag name.
 
-      $macro     = self::getMacro ($context, $parent->page, $tagName);
+      if (is_null($props))
+        $props = [];
+      $props['macro'] = $tagName;
       $component = new MacroInstance($context);
-      $component->setMacro ($macro);
     }
 
     // Component class was found.
@@ -192,9 +194,9 @@ abstract class Component
     $paths = implode ('', map ($context->macrosDirectories,
       function ($dir) { return "<li><path>$dir</path></li>"; }));
     throw new ComponentException (null,
-      "<h3>Unknown component: <b>&lt;$tagName></b></h3>
-<p>Neither a <b>class</b>, nor a <b>property</b>, nor a <b>macro</b> implementing that tag were found.
-<p>Perhaps you forgot to register the tag?
+      "<h3>Unknown component / macro: <b>$tagName</b></h3>
+<p>Neither a <b>class</b>, nor a <b>property</b>, nor a <b>macro</b> with the specified name were found.
+<p>If it's a component, perhaps you forgot to register the tag...
 <p>If it's a macro, Matisse is searching for it on these paths:<ul>$paths</ul>
 <table>
   <th>Container component:<td><b>&lt;{$parent->getTagName()}></b>, of type <b>{$parent->className}</b>

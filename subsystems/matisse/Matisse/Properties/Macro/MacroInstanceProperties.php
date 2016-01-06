@@ -8,11 +8,20 @@ use Selenia\Matisse\Properties\Base\MetadataProperties;
 class MacroInstanceProperties extends MetadataProperties
 {
   /**
+   * The name of the macro to be loaded at parse time and inserted on the current view, replacing the `MacroInstance`
+   * component.
+   *
+   * > <p>You **can not** use databinding on this property, as the view model is not available at parse time.
+   *
+   * @var string
+   */
+  public $macro = '';
+  /**
    * Points to the component that defines the macro for these properties.
    *
    * @var Macro
    */
-  private $macro;
+  private $macroInstance;
 
   function __get ($name)
   {
@@ -25,40 +34,40 @@ class MacroInstanceProperties extends MetadataProperties
 
   function defines ($name, $asSubtag = false)
   {
-    if (!$this->macro) $this->noMacro ();
-    return !is_null ($this->macro->getParameter ($name));
+    if (!$this->macroInstance) $this->noMacro ();
+    return !is_null ($this->macroInstance->getParameter ($name));
   }
 
   function getEnumOf ($propName)
   {
-    if (!$this->macro) $this->noMacro ();
-    return $this->macro->getParameterEnum ($propName) ?: [];
+    if (!$this->macroInstance) $this->noMacro ();
+    return $this->macroInstance->getParameterEnum ($propName) ?: [];
   }
 
   function getPropertyNames ()
   {
-    if (!$this->macro) $this->noMacro ();
-    return $this->macro->getParametersNames ();
+    if (!$this->macroInstance) $this->noMacro ();
+    return $this->macroInstance->getParametersNames ();
   }
 
   function getTypeOf ($propName)
   {
-    if (!$this->macro) $this->noMacro ();
-    return $this->macro->getParameterType ($propName);
+    if (!$this->macroInstance) $this->noMacro ();
+    return $this->macroInstance->getParameterType ($propName);
   }
 
   function isEnum ($propName)
   {
-    if (!$this->macro) $this->noMacro ();
-    return !is_null ($this->macro->getParameterEnum ($propName));
+    if (!$this->macroInstance) $this->noMacro ();
+    return !is_null ($this->macroInstance->getParameterEnum ($propName));
   }
 
   function getDefault ($name)
   {
-    if (!$this->macro) $this->noMacro ();
-    $param = $this->macro->getParameter ($name);
+    if (!$this->macroInstance) $this->noMacro ();
+    $param = $this->macroInstance->getParameter ($name);
     if (is_null ($param))
-      throw new ComponentException($this->macro, "Undefined parameter <kbd>$name</kbd>.");
+      throw new ComponentException($this->macroInstance, "Undefined parameter <kbd>$name</kbd>.");
 
     //TODO: test this
     if (isset($param->bindings) && array_key_exists ('default', $param->bindings))
@@ -74,7 +83,7 @@ class MacroInstanceProperties extends MetadataProperties
    */
   function setMacro (Macro $macro)
   {
-    $this->macro = $macro;
+    $this->macroInstance = $macro;
   }
 
   private function noMacro ()

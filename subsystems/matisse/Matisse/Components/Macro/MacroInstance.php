@@ -13,6 +13,8 @@ use Selenia\Matisse\Properties\TypeSystem\type;
  */
 class MacroInstance extends Component
 {
+  const TAG_NAME = 'Include';
+
   protected static $propertiesClass = MacroInstanceProperties::class;
 
   public $allowsChildren = true;
@@ -23,16 +25,16 @@ class MacroInstance extends Component
    *
    * @var Macro
    */
-  protected $macro;
+  protected $macroInstance;
 
   function onParsingComplete ()
   {
     // Move children to default parameter.
 
     if ($this->hasChildren ()) {
-      $def = $this->macro->props->defaultParam;
+      $def = $this->macroInstance->props->defaultParam;
       if (!empty($def)) {
-        $param = $this->macro->getParameter ($def);
+        $param = $this->macroInstance->getParameter ($def);
         if (!$param)
           throw new ComponentException($this, "Invalid default parameter <kbd>$def</kbd>");
         $type = $this->props->getTypeOf ($def);
@@ -49,13 +51,33 @@ class MacroInstance extends Component
 
     // Perform macro-expansion.
 
-    $content = $this->macro->apply ($this);
+    $content = $this->macroInstance->apply ($this);
     $this->replaceBy ($content);
   }
 
+  protected function onCreate (array $props = null, Component $parent)
+  {
+    $this->parent = $parent;
+    $name         = get ($props, 'macro');
+    if (exists ($name)) {
+      $macro = self::getMacro ($this->context, $parent->page, $name);
+      $this->setMacro ($macro);
+    }
+//    else {
+//      $this->viewName = get ($props, 'view');
+//      if (!exists ($this->viewName) && !$this->isBound ('view'))
+//        throw new ComponentException($this,
+//          "One of these properties must be set:<p><kbd>macro</kbd> | <kbd>view</kbd>");
+//      $this->allowsChildren = false;
+//      $this->expectingView  = true;
+//    }
+    parent::onCreate ($props, $parent);
+  }
+
+
   function setMacro (Macro $macro)
   {
-    $this->macro = $macro;
+    $this->macroInstance = $macro;
     if (isset($this->props))
       $this->props->setMacro ($macro);
   }

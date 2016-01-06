@@ -3,6 +3,7 @@ namespace Selenia\Matisse;
 
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Page;
+use Selenia\Matisse\Components\Macro\MacroInstance;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Parser\Parser;
 
@@ -27,11 +28,12 @@ class MatisseEngine
     'Body'    => Components\Body::class,
     'Head'    => Components\Head::class,
     'If'      => Components\If_::class,
-    'Include' => Components\Macro\Include_::class,
     'Literal' => Components\Literal::class,
     'Macro'   => Components\Macro\Macro::class,
     'Render'  => Components\Render::class,
     'Repeat'  => Components\Repeat::class,
+    MacroInstance::TAG_NAME
+              => MacroInstance::class,
   ];
 
   /**

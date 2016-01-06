@@ -86,6 +86,10 @@ class Macro extends Component
 
   public function apply (MacroInstance $instance)
   {
+    $params = $this->getParametersNames ();
+    if (in_array ('macro', $params))
+      throw new ComponentException($this, "The parameter name <b>macro</b> is reserved, you can't use it");
+
     $o      = [];
     $styles = $this->props->style;
     if (isset($styles))
@@ -231,7 +235,7 @@ class Macro extends Component
     if (is_null ($params)) return null;
     $names = [];
     foreach ($params as $param)
-      $names[] = $param->props->name;
+      $names[] = lcfirst ($param->props->name);
 
     return $names;
   }
@@ -267,25 +271,25 @@ class Macro extends Component
         else {
           // Simple exp. (binding ref. only}
 
-          $attrName = $match[1];
-          if (!$instance->props->defines ($attrName)) {
+          $prop = $match[1];
+          if (!$instance->props->defines ($prop)) {
             $s = join (', ', $instance->props->getPropertyNames ());
             throw new ComponentException($instance,
-              "<p>The parameter <b>$attrName</b>, specified on a call to/in the <b>{$this->props->name}</b> macro, is not defined on that macro.</p>
+              "<p>The macro parameter <b>$prop</b>, specified on a call to the <b>{$this->props->name}</b> macro, is not defined on that macro.</p>
 <table>
   <th>Expected parameters:<td>$s
   <tr><th>Instance:<td>{$instance->getTagName ()}
 </table>");
           }
-          if (isset($this->bindings) && array_key_exists ($attrName, $this->bindings))
-            $content = $this->bindings[$attrName];
-          else $content = $instance->props->$attrName;
+          if (isset($this->bindings) && array_key_exists ($prop, $this->bindings))
+            $content = $this->bindings[$prop];
+          else $content = $instance->props->$prop;
 
-          if (isset($instance->bindings) && array_key_exists ($attrName, $instance->bindings)) {
+          if (isset($instance->bindings) && array_key_exists ($prop, $instance->bindings)) {
 
             // Transfer binding from the macro instance to the component.
 
-            $component->addBinding ($field, $instance->bindings[$attrName]);
+            $component->addBinding ($field, $instance->bindings[$prop]);
             return;
           }
 
