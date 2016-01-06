@@ -36,11 +36,13 @@ class ModuleServices
   private $navigationInterface;
   /**
    * Stores temporarily the module path, for use by the other setters.
+   *
    * @var string
    */
   private $path;
   /**
    * A list of callbacks to be executed after all modules have performed their configuration.
+   *
    * @var callable[]
    */
   private $postConfigs = [];
@@ -61,6 +63,7 @@ class ModuleServices
   /**
    * Sets a function that will be called after all modules have performed their configuration.
    * <p>It will be able to perform aditional configuration based on settings from other modules.
+   *
    * @param callable $fn
    */
   function onPostConfig (callable $fn)
@@ -89,6 +92,7 @@ class ModuleServices
 
   /**
    * Registers a navigation provider on the application.
+   *
    * @param NavigationProviderInterface $provider A class instance that provides a means to obtain a NavigationInterface
    * @return $this
    */
@@ -104,13 +108,20 @@ class ModuleServices
   }
 
   /**
-   * @param boolean $v Does the module contains a translations folder?
+   * Does the module provide language translation tables?
+   *
+   * <p>If yes, the translation engine is automatically enabled; the module, of course, must also contain a translations
+   * folder.
+   *
+   * @param boolean $v
    * @return $this
    */
   function provideTranslations ($v = true)
   {
-    if ($v)
+    if ($v) {
       $this->app->languageFolders[] = "$this->path/{$this->app->moduleLangPath}";
+      $this->app->translation       = true;
+    }
     return $this;
   }
 
@@ -153,6 +164,7 @@ class ModuleServices
   /**
    * A list of relative file paths of assets published by the module, relative to the module's public folder.
    * The framework's build process may automatically concatenate and minify those assets for a release-grade build.
+   *
    * @param string[] $v
    * @return $this
    */
@@ -281,6 +293,7 @@ class ModuleServices
    *
    * It is used internally by the framework, but you can also use it if you want to relocate some of the module's
    * internal directories into non-standard locations.
+   *
    * @param string $path
    * @return $this
    */
