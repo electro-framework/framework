@@ -82,7 +82,7 @@ class MetadataProperties extends AbstractProperties
 
   function set ($propName, $value)
   {
-    $this->props[$propName] = $value;
+    $this->$propName = $value;
   }
 
 }

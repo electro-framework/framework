@@ -1,12 +1,12 @@
 <?php
 namespace Selenia\Matisse\Components\Base;
 
+use Selenia\Matisse\Components\GenericHtmlComponent;
 use Selenia\Matisse\Components\Internal\Page;
 use Selenia\Matisse\Components\Macro\MacroInstance;
 use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
-use Selenia\Matisse\Exceptions\ParseException;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
 use Selenia\Matisse\Traits\DataBindingTrait;
@@ -89,13 +89,13 @@ abstract class Component
   private $tagName;
 
   /**
-   * Creates a new component instance and optionally sets its attributes and styles.
+   * Creates a new component instance
    *
-   * @param array   $properties A map of the component's properties.
-   * @param Context $context    The rendering context for the current request.
-   * @throws ComponentException
+   * > <p>After being constructed, the first method called on an instance is, usually, {@see init()}.
+   *
+   * @param Context $context The rendering context for the current request.
    */
-  public function __construct (Context $context, array $properties = null)
+  function __construct (Context $context)
   {
     $class                    = get_class ($this);
     $s                        = explode ('\\', $class);
@@ -105,40 +105,30 @@ abstract class Component
     if ($this->supportsProperties) {
       $propClass   = $class::$propertiesClass;
       $this->props = new $propClass ($this);
-
-      // Apply presets.
-      foreach ($context->presets as $preset)
-        if (method_exists ($preset, $this->className))
-          $preset->{$this->className} ($this);
-
-      // Apply properties.
-      if ($properties)
-        $this->props->apply ($properties);
     }
-    else if ($properties)
-      throw new ComponentException($this, 'This component does not support properties.');
   }
 
   /**
    * Creates a component corresponding to the specified tag and optionally sets its attributes.
    *
-   * @param Context   $context
-   * @param Component $parent  This is used only for error reporting. You should still manually add the component to
-   *                           it's parent's child list or source parameter.
-   * @param string    $tagName
-   * @param array     $attributes
-   * @param bool      $generic If true, an instance of GenericComponent is created.
-   * @param boolean   $strict  If true, failure to find a component class will throw an exception.
-   *                           If false, an attempt is made to load a macro with the same name,
+   * @param Context    $context
+   * @param Component  $parent   The component's container component.
+   * @param string     $tagName
+   * @param string[]   $props    A map of property names to property values.
+   *                             Properties specified via this argument come only from markup attributes, not
+   *                             from subtags.
+   * @param array|null $bindings A map of attribute names and corresponding databinding expressions.
+   * @param bool       $generic  If true, an instance of GenericComponent is created.
+   * @param boolean    $strict   If true, failure to find a component class will throw an exception.
+   *                             If false, an attempt is made to load a macro with the same name,
    * @return Component Component instance. For macros, an instance of Macro is returned.
    * @throws ComponentException
-   * @throws ParseException
    */
-  static public function create (Context $context, Component $parent, $tagName, array $attributes = null,
-                                 $generic = false, $strict = false)
+  static function create (Context $context, Component $parent, $tagName, array $props = null,
+                          array $bindings = null, $generic = false, $strict = false)
   {
     if ($generic) {
-      $component = new GenericHtmlComponent($context, $tagName, $attributes);
+      $component = new GenericHtmlComponent($context, $tagName, $props);
 
       return $component;
     }
@@ -151,16 +141,20 @@ abstract class Component
       // Try to load a macro with the same tag name.
 
       $macro     = self::getMacro ($context, $parent->page, $tagName);
-      $component = new MacroInstance($context, $tagName, $macro, $attributes);
+      $component = new MacroInstance($context);
+      $component->setMacro ($macro);
     }
 
     // Component class was found.
 
-    else $component = new $class ($context, $attributes);
+    else $component = new $class ($context);
 
     // For both types of components:
 
     $component->setTagName ($tagName);
+    $component->bindings = $bindings;
+    $component->onCreate ($props, $parent);
+    $component->init ($props);
 
     return $component;
   }
@@ -198,8 +192,8 @@ abstract class Component
     $paths = implode ('', map ($context->macrosDirectories,
       function ($dir) { return "<li><path>$dir</path></li>"; }));
     throw new ComponentException (null,
-      "<h3>Unknown tag: <b>&lt;$tagName></b></h3>
-<p>Neither a <b>class</b>, nor a <b>parameter</b>, nor a <b>macro</b> implementing that tag were found.
+      "<h3>Unknown component: <b>&lt;$tagName></b></h3>
+<p>Neither a <b>class</b>, nor a <b>property</b>, nor a <b>macro</b> implementing that tag were found.
 <p>Perhaps you forgot to register the tag?
 <p>If it's a macro, Matisse is searching for it on these paths:<ul>$paths</ul>
 <table>
@@ -208,12 +202,12 @@ abstract class Component
 ");
   }
 
-  public function __get ($name)
+  function __get ($name)
   {
     throw new ComponentException($this, "Can't read from non existing property <b>$name</b>.");
   }
 
-  public function __set ($name, $value)
+  function __set ($name, $value)
   {
     throw new ComponentException($this, "Can't set non-existing (or non-accessible) property <b>$name</b>.");
   }
@@ -236,7 +230,7 @@ abstract class Component
    *
    * @param Component $c
    */
-  public final function attachAndRender (Component $c)
+  function attachAndRender (Component $c)
   {
     $this->attach ($c);
     $c->run ();
@@ -249,7 +243,7 @@ abstract class Component
    *
    * @param Component[] $components A set of external, non-attached, components.
    */
-  public function attachAndRenderSet (array $components)
+  function attachAndRenderSet (array $components)
   {
     $this->attach ($components);
     foreach ($components as $c)
@@ -262,7 +256,7 @@ abstract class Component
    *
    * @return string
    */
-  public function getContent ()
+  function getContent ()
   {
     ob_start (null, 0);
     $this->renderContent ();
@@ -275,7 +269,7 @@ abstract class Component
    *
    * @return string
    */
-  public final function getTagName ()
+  function getTagName ()
   {
     if (isset($this->tagName))
       return $this->tagName;
@@ -290,7 +284,7 @@ abstract class Component
    *
    * @param string $name
    */
-  public final function setTagName ($name)
+  function setTagName ($name)
   {
     $this->tagName = $name;
   }
@@ -298,9 +292,34 @@ abstract class Component
   /**
    * @return bool True if the component has any children at all.
    */
-  public function hasChildren ()
+  function hasChildren ()
   {
     return !empty($this->children);
+  }
+
+  /**
+   * Initializes a newly created component instance.
+   *
+   * It applies to the instance the applicable registered presets, followed by the given properties, if any.
+   *
+   * @param array|null $props A map of the component's properties.
+   * @throws ComponentException
+   */
+  function init (array $props = null)
+  {
+    if ($this->supportsProperties) {
+      // Apply presets.
+
+      foreach ($this->context->presets as $preset)
+        if (method_exists ($preset, $this->className))
+          $preset->{$this->className} ($this);
+
+      // Apply properties.
+      if ($props)
+        $this->props->apply ($props);
+    }
+    else if ($props)
+      throw new ComponentException($this, 'This component does not support properties.');
   }
 
   function inspect ($deep = true)
@@ -314,7 +333,7 @@ abstract class Component
    * @param string $fieldName
    * @return boolean
    */
-  public final function isAttributeSet ($fieldName)
+  function isAttributeSet ($fieldName)
   {
     return isset($this->props->$fieldName) || $this->isBound ($fieldName);
   }
@@ -324,7 +343,7 @@ abstract class Component
    * and all attributes and children have also been parsed.
    * Override this to implement parsing-time behavior.
    */
-  public function onParsingComplete ()
+  function onParsingComplete ()
   {
     //implementation is specific to each component type.
   }
@@ -334,7 +353,7 @@ abstract class Component
    *
    * @param string|null $attrName [optional] An attribute name. If none, it renders all the component's children.
    */
-  public function renderChildren ($attrName = null)
+  function renderChildren ($attrName = null)
   {
     $children = isset($attrName) ? $this->getChildren ($attrName) : $this->children;
     foreach ($children as $child)
@@ -345,7 +364,7 @@ abstract class Component
    * Renders all children.
    * ><p>**Note:** the component itself is not rendered.
    */
-  public function renderContent ()
+  function renderContent ()
   {
     if (!$this->inactive) {
       $this->databind ();
@@ -361,7 +380,7 @@ abstract class Component
    * Do not override! Use event handlers or override render() or renderChildren().
    * This method is called from run() or from renderChildren().
    */
-  public final function run ()
+  function run ()
   {
     if (!$this->inactive) {
       $this->databind ();
@@ -380,6 +399,18 @@ abstract class Component
     self::$uniqueIDs[$this->className] = 1;
 
     return 1;
+  }
+
+  /**
+   * Allows a component to do something before it is initialized.
+   * <p>The provided arguments have an informational purpose.
+   *
+   * @param array|null $props
+   * @param Component  $parent
+   */
+  protected function onCreate (array $props = null, Component $parent)
+  {
+    //noop
   }
 
   protected function postRender ()

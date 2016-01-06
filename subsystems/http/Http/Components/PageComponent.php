@@ -28,7 +28,6 @@ use Selenia\Matisse\PipeHandler;
 use Selenia\Routing\Services\Router;
 use Selenia\Traits\PolymorphicInjectionTrait;
 use Selenia\ViewEngine\Engines\MatisseEngine;
-use Selenia\ViewEngine\View;
 use Zend\Diactoros\Response\HtmlResponse;
 
 /**
@@ -100,7 +99,7 @@ class PageComponent implements RequestHandlerInterface
    */
   public $templateUrl;
   /**
-   * @var View
+   * @var ViewInterface
    */
   public $view;
   /**
@@ -342,8 +341,9 @@ class PageComponent implements RequestHandlerInterface
   {
     $engine = $view->getEngine ();
     if ($engine instanceof MatisseEngine) {
-      $this->page        = $view->getCompiledView ();
-      $this->page->title = str_replace ('@', $this->getTitle (), $this->app->title);
+      $this->page            = $view->getCompiledView ();
+      $this->page->view      = $view;
+      $this->page->title     = str_replace ('@', $this->getTitle (), $this->app->title);
       $this->page->bodyAttrs = $this->bodyAttrs;
       $this->page->addScript ("{$this->app->frameworkURI}/js/engine.js");
       $flashMessage = $this->session->getFlashMessage ();

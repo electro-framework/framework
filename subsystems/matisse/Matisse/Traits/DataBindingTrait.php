@@ -17,7 +17,7 @@ use Selenia\Matisse\Properties\Base\ComponentProperties;
  * It's applicable to the Component class.
  *
  * @property Context             $context  The rendering context.
- * @property ComponentProperties $props The component's attributes.
+ * @property ComponentProperties $props    The component's attributes.
  * @property Component           $parent   The component's parent.
  */
 trait DataBindingTrait
@@ -39,7 +39,7 @@ trait DataBindingTrait
     ( \}\} | !!\} )
   #xu';
   /**
-   * An array of attribute names and corresponding databinding expressions.
+   * A map of attribute names and corresponding databinding expressions.
    * Equals NULL if no bindings are defined.
    *
    * @var array
@@ -60,43 +60,25 @@ trait DataBindingTrait
   /**
    * Registers a data binding.
    *
-   * @param string $attrName The name of the bound attribute.
-   * @param string $bindExp  The binding expression.
+   * @param string $prop    The name of the bound attribute.
+   * @param string $bindExp The binding expression.
    */
-  public final function addBinding ($attrName, $bindExp)
+  public final function addBinding ($prop, $bindExp)
   {
     if (!isset($this->bindings))
       $this->bindings = [];
-    $this->bindings[$attrName] = $bindExp;
+    $this->bindings[$prop] = $bindExp;
   }
 
-  private function getCascaded ($field)
+  public final function isBound ($prop)
   {
-    if (isset($this->contextualModel)) {
-      $data = $this->contextualModel;
-      if (is_array ($data)) {
-        if (array_key_exists ($field, $data))
-          return $data[$field];
-      }
-      else if (is_object ($data)) {
-        if (property_exists ($data, $field))
-          return $data->$field;
-      }
-    }
-    /** @var static $parent */
-    $parent = $this->parent;
-    return isset($parent) ? $parent->getCascaded ($field) : null;
+    return isset($this->bindings) && array_key_exists ($prop, $this->bindings);
   }
 
-  public final function isBound ($fieldName)
-  {
-    return isset($this->bindings) && array_key_exists ($fieldName, $this->bindings);
-  }
-
-  public final function removeBinding ($attrName)
+  public final function removeBinding ($prop)
   {
     if (isset($this->bindings)) {
-      unset($this->bindings[$attrName]);
+      unset($this->bindings[$prop]);
       if (empty($this->bindings))
         $this->bindings = null;
     }
@@ -105,6 +87,7 @@ trait DataBindingTrait
   /**
    * Gets a field from the current data-binding context.
    * > This is reserverd for internal use by compiled data-binding expressions.
+   *
    * @param string $field
    * @return mixed
    * @throws DataBindingException
@@ -173,16 +156,19 @@ trait DataBindingTrait
 
   /**
    * Returns the current value of an attribute, performing databinding if necessary.
+   *
+   * <p>This is only required on situation where you need a property's value before databinging has occured.
+   *
    * @param string $name
    * @return mixed
    * @throws DataBindingException
    */
-  protected function evaluateAttr ($name)
+  protected function evalProp ($name)
   {
     if (isset($this->bindings[$name]))
       return $this->evalBinding ($this->bindings[$name]);
 
-    return $this->props->$name;
+    return $this->props->get ($name);
   }
 
   /**
@@ -290,6 +276,24 @@ trait DataBindingTrait
     // Return the computed value
 
     return $rawOutput || !is_scalar ($v) ? $v : e ($v);
+  }
+
+  private function getCascaded ($field)
+  {
+    if (isset($this->contextualModel)) {
+      $data = $this->contextualModel;
+      if (is_array ($data)) {
+        if (array_key_exists ($field, $data))
+          return $data[$field];
+      }
+      else if (is_object ($data)) {
+        if (property_exists ($data, $field))
+          return $data->$field;
+      }
+    }
+    /** @var static $parent */
+    $parent = $this->parent;
+    return isset($parent) ? $parent->getCascaded ($field) : null;
   }
 
 }

@@ -83,7 +83,8 @@ class View implements ViewInterface
     foreach ($this->patterns as $pattern => $class)
       if (preg_match ($pattern, $fileName))
         return $this->engine = $this->injector->make ($class);
-    throw new FatalException ("No registered view engine is capable of handling the file <b>$fileName</b>");
+    throw new FatalException ("None of the available view engines is capable of handling a file named <b>$fileName</b>.
+<p>Make sure the file name has one of the supported file extensions or matches a known pattern.");
   }
 
   /**

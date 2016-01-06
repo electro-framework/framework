@@ -224,14 +224,14 @@ class Parser
   private function parse_componentTag ($tag, $attrs)
   {
     if (!$this->current->allowsChildren)
-      $this->parsingError ("Neither the component <b>{$this->current->getTagName()}</b> supports children, neither the element <b>$tag</b> is a {$this->current->getTagName()} parameter.");
+      $this->parsingError ("Neither the <b>{$this->current->getTagName()}</b> tag allows children, neither <b>$tag</b> is a subtag of <b>{$this->current->getTagName()}</b>");
 
     /** @var Metadata|boolean $defParam */
     $this->parse_attributes ($attrs, $attributes, $bindings, true);
     $component =
-      Component::create ($this->context, $this->current, $tag, $attributes, false /*TODO: support HTML components*/);
+      Component::create ($this->context, $this->current, $tag, $attributes, $bindings,
+        false /*TODO: support HTML components*/);
 
-    $component->bindings = $bindings;
     $this->current->addChild ($component);
     $this->current = $component;
   }
@@ -334,15 +334,16 @@ does not support the specified parameter <b>$tag</b>.
       }
 
       else {
-        $s = $this->current->supportsProperties
-          ? '&lt;' . join ('>, &lt;', array_map ('ucfirst', $this->current->props->getPropertyNames ())) . '>'
-          : '';
+        $props = $this->current->supportsProperties ? $this->current->props->getPropertyNames () : [];
+        $s = $props
+          ? '&lt;' . join ('>, &lt;', array_map ('ucfirst', $props)) . '>'
+          : 'none';
         throw new ParseException("
 <h4>You may not define literal content at this location.</h4>
 <table>
   <tr><th>Component:<td class='fixed'>&lt;{$this->current->getTagName()}&gt;
   <tr><th>Expected&nbsp;tags:<td class='fixed'>$s
-</table>", $this->source, $this->prevTagEnd, $this->currentTagStart);
+</table>", $this->source, $this->prevTagEnd, $this->currentTagStart - 1);
       }
 
     }

@@ -26,11 +26,12 @@ class Text extends Component
   /** @var TextProperties */
   public $props;
 
-  public function __construct (Context $context, $properties = null)
+  public function __construct (Context $context, $props = null)
   {
-    parent::__construct ($context, $properties);
+    parent::__construct ($context);
     $this->page = $this;
     $this->setTagName ('Text');
+    $this->init ($props);
   }
 
   public static function from (Context $context, $text)

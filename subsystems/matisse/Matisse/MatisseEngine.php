@@ -50,7 +50,7 @@ class MatisseEngine
   }
 
   /**
-   * @param           $markup
+   * @param string    $markup
    * @param Context   $ctx The rendering context for the current request.
    * @param Component $parent
    * @param Page      $page

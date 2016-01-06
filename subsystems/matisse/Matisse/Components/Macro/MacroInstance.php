@@ -4,7 +4,6 @@ namespace Selenia\Matisse\Components\Macro;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Exceptions\ComponentException;
-use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Macro\MacroInstanceProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
@@ -26,16 +25,7 @@ class MacroInstance extends Component
    */
   protected $macro;
 
-  public function __construct (Context $context, Macro $macro, array $props = null)
-  {
-    $this->macro = $macro; //must be defined before the parent constructor is called
-    parent::__construct ($context);
-    $this->props->setMacro ($macro);
-    if ($props)
-      $this->props->apply ($props);
-  }
-
-  public function onParsingComplete ()
+  function onParsingComplete ()
   {
     // Move children to default parameter.
 
@@ -44,7 +34,7 @@ class MacroInstance extends Component
       if (!empty($def)) {
         $param = $this->macro->getParameter ($def);
         if (!$param)
-          throw new ComponentException($this, "The macro's declared default parameter is invalid: $def");
+          throw new ComponentException($this, "Invalid default parameter <kbd>$def</kbd>");
         $type = $this->props->getTypeOf ($def);
         if ($type != type::content && $type != type::metadata)
           throw new ComponentException($this, sprintf (
@@ -61,6 +51,13 @@ class MacroInstance extends Component
 
     $content = $this->macro->apply ($this);
     $this->replaceBy ($content);
+  }
+
+  function setMacro (Macro $macro)
+  {
+    $this->macro = $macro;
+    if (isset($this->props))
+      $this->props->setMacro ($macro);
   }
 
 }

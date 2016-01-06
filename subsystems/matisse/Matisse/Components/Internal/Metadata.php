@@ -38,9 +38,10 @@ class Metadata extends Component
 
   public function __construct (Context $context, $tagName, $type, array $props = null)
   {
-    parent::__construct ($context, $props);
+    parent::__construct ($context);
     $this->type = $type;
     $this->setTagName ($tagName);
+    $this->init ($props);
   }
 
   /**

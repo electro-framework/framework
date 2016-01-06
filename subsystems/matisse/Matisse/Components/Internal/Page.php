@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Matisse\Components\Internal;
 
+use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Parser\Context;
 
@@ -11,16 +12,19 @@ class Page extends Component
   public $autoHTML       = true;
   /**
    * A map of block names => block contents (array of Component).
+   *
    * @var Component[][]
    */
   public $blocks = [];
   /**
    * Map of attributes to set on the body tag.
+   *
    * @var array Map of string => mixed
    */
   public $bodyAttrs = null;
   /**
    * Content to be appended to the page content. It is usually set via the Body component.
+   *
    * @var string
    */
   public $bodyContent      = '';
@@ -43,16 +47,19 @@ class Page extends Component
   public $formAutocomplete = false;
   /**
    * Array of strings (or Parameter objects with child content) containing inline css code.
+   *
    * @var array
    */
   public $inlineCssStyles = [];
   /**
    * Array of strings (or Parameter objects with child content) containing inline javascripts.
+   *
    * @var array
    */
   public $inlineDeferredScripts = [];
   /**
    * Array of strings (or Parameter objects with child content) containing inline javascripts.
+   *
    * @var array
    */
   public $inlineScripts = [];
@@ -62,16 +69,23 @@ class Page extends Component
   public $requestURI;
   /**
    * Array of strings/Parameters containing URLs of scripts to be loaded during the page loading process.
+   *
    * @var array
    */
   public $scripts = [];
   /**
    * Array of strings/Parameters containing URLs of CSS stylesheets to be loaded during the page loading process.
+   *
    * @var array
    */
   public $stylesheets = [];
   public $targetURL;
   public $title;
+  /**
+   * Some components (ex. Include) require a View instance in order to load additional views.
+   * @var ViewInterface
+   */
+  public $view;
 
   public function __construct (Context $context)
   {
@@ -84,6 +98,7 @@ class Page extends Component
 
   /**
    * Adds an inline stylesheet to the HEAD section of the page.
+   *
    * @param mixed  $css     Either a string or a Parameter.
    * @param string $name    An identifier for the stylesheet, to prevent duplication.
    *                        When multiple stylesheets with the same name are added, only the last one is considered.
@@ -102,6 +117,7 @@ class Page extends Component
 
   /**
    * Similar to addInlineScript(), but the script will only run on the document.ready event.
+   *
    * @param mixed  $code    Either a string or a Parameter.
    * @param string $name    An identifier for the script, to prevent duplication.
    *                        When multiple scripts with the same name are added, only the last one is considered.
@@ -121,6 +137,7 @@ class Page extends Component
 
   /**
    * Adds an inline script to the HEAD section of the page.
+   *
    * @param mixed  $code    Either a string or a Parameter.
    * @param string $name    An identifier for the script, to prevent duplication.
    *                        When multiple scripts with the same name are added, only the last one is considered.
@@ -155,6 +172,7 @@ class Page extends Component
 
   /**
    * Appends an array of components to a specific block.
+   *
    * @param string      $name    An arbitrary block name.
    * @param Component[] $content An array of <b>detached</b> components.
    */
@@ -186,6 +204,7 @@ class Page extends Component
 
   /**
    * Returns the content of a specific block.
+   *
    * @param string $name An arbitrary block name.
    * @returns Component[] $content An array of <b>detached</b> components.
    */
@@ -196,6 +215,7 @@ class Page extends Component
 
   /**
    * Saves an array of components on a specific block, overriding the previous content of it.
+   *
    * @param string      $name    An arbitrary block name.
    * @param Component[] $content An array of <b>detached</b> components.
    */

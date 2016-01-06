@@ -1,7 +1,7 @@
 <?php
-namespace Selenia\Matisse\Components\Base;
+namespace Selenia\Matisse\Components;
 
-use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Components\Base\HtmlComponent;
 use Selenia\Matisse\Properties\Base\GenericProperties;
 
 class GenericHtmlComponent extends HtmlComponent
@@ -10,12 +10,6 @@ class GenericHtmlComponent extends HtmlComponent
 
   /** @var GenericProperties */
   public $props;
-
-  public function __construct (Context $context, $tagName, array $attributes = null)
-  {
-    parent::__construct ($context, $attributes);
-    $this->setTagName ($tagName);
-  }
 
   protected function postRender ()
   {

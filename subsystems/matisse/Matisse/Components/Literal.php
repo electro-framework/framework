@@ -53,11 +53,12 @@ class Literal extends Component
   /** @var LiteralProperties */
   public $props;
 
-  public function __construct (Context $context, $properties = null)
+  public function __construct (Context $context, $props = null)
   {
-    parent::__construct ($context, $properties);
+    parent::__construct ($context);
     $this->page = $this;
     $this->setTagName ('Literal');
+    $this->init ($props);
   }
 
   public static function from (Context $context, $text)

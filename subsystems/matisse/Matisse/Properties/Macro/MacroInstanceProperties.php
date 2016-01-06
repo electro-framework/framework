@@ -16,7 +16,7 @@ class MacroInstanceProperties extends MetadataProperties
 
   function __get ($name)
   {
-    if (array_key_exists($name, $this->props))
+    if (array_key_exists ($name, $this->props))
       return $this->props [$name];
 
     // The parameter was not set, so return the declared default value (if any).
@@ -25,31 +25,37 @@ class MacroInstanceProperties extends MetadataProperties
 
   function defines ($name, $asSubtag = false)
   {
+    if (!$this->macro) $this->noMacro ();
     return !is_null ($this->macro->getParameter ($name));
   }
 
   function getEnumOf ($propName)
   {
+    if (!$this->macro) $this->noMacro ();
     return $this->macro->getParameterEnum ($propName) ?: [];
   }
 
   function getPropertyNames ()
   {
+    if (!$this->macro) $this->noMacro ();
     return $this->macro->getParametersNames ();
   }
 
   function getTypeOf ($propName)
   {
+    if (!$this->macro) $this->noMacro ();
     return $this->macro->getParameterType ($propName);
   }
 
   function isEnum ($propName)
   {
+    if (!$this->macro) $this->noMacro ();
     return !is_null ($this->macro->getParameterEnum ($propName));
   }
 
   function getDefault ($name)
   {
+    if (!$this->macro) $this->noMacro ();
     $param = $this->macro->getParameter ($name);
     if (is_null ($param))
       throw new ComponentException($this->macro, "Undefined parameter <kbd>$name</kbd>.");
@@ -71,4 +77,9 @@ class MacroInstanceProperties extends MetadataProperties
     $this->macro = $macro;
   }
 
+  private function noMacro ()
+  {
+    throw new ComponentException($this->component,
+      "Can't access any of a macro instance's properties before a macro is assigned to it");
+  }
 }
