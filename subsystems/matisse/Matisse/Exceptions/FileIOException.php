@@ -3,7 +3,7 @@ namespace Selenia\Matisse\Exceptions;
 
 class FileIOException extends MatisseException
 {
-  public function __construct ($filename, $mode = 'read')
+  public function __construct ($filename, $mode = 'read', array $paths = null)
   {
     switch ($mode) {
       case 'read':
@@ -18,7 +18,12 @@ class FileIOException extends MatisseException
       default:
         throw new \RuntimeException("Invalid mode $mode.");
     }
-    parent::__construct ("File '$filename' $m.");
+    $extra = $paths
+      ? sprintf ("<p>The file was searched for at:<ul>%s</ul>", implode ('', map ($paths,
+        function ($p) use ($filename) { return "<li><pre>$p/$filename</pre>"; }
+      )))
+      : '';
+    parent::__construct ("File '<kbd>$filename</kbd>' $m.$extra");
   }
 
 }

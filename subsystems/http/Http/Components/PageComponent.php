@@ -341,8 +341,8 @@ class PageComponent implements RequestHandlerInterface
   {
     $engine = $view->getEngine ();
     if ($engine instanceof MatisseEngine) {
-      $this->page            = $view->getCompiledView ();
-      $this->page->view      = $view;
+      $this->page = $view->getCompiledView ();
+      $this->page->setView ($view);
       $this->page->title     = str_replace ('@', $this->getTitle (), $this->app->title);
       $this->page->bodyAttrs = $this->bodyAttrs;
       $this->page->addScript ("{$this->app->frameworkURI}/js/engine.js");

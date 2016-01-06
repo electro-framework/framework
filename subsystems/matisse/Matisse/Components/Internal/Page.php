@@ -3,6 +3,7 @@ namespace Selenia\Matisse\Components\Internal;
 
 use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Parser\Context;
 
 class Page extends Component
@@ -81,13 +82,15 @@ class Page extends Component
   public $stylesheets = [];
   public $targetURL;
   public $title;
+
   /**
    * Some components (ex. Include) require a View instance in order to load additional views.
+   *
    * @var ViewInterface
    */
-  public $view;
+  private $view;
 
-  public function __construct (Context $context)
+  function __construct (Context $context)
   {
     parent::__construct ($context);
     $this->page = $this;
@@ -104,7 +107,7 @@ class Page extends Component
    *                        When multiple stylesheets with the same name are added, only the last one is considered.
    * @param bool   $prepend If true, prepend to current list instead of appending.
    */
-  public function addInlineCss ($css, $name = null, $prepend = false)
+  function addInlineCss ($css, $name = null, $prepend = false)
   {
     if ($css instanceof Component)
       $css->attachTo ($this);
@@ -124,7 +127,7 @@ class Page extends Component
    * @param bool   $prepend If true, prepend to current list instead of appending.
    * @see addInlineScript
    */
-  public function addInlineDeferredScript ($code, $name = null, $prepend = false)
+  function addInlineDeferredScript ($code, $name = null, $prepend = false)
   {
     if ($code instanceof Component)
       $code->attachTo ($this);
@@ -143,7 +146,7 @@ class Page extends Component
    *                        When multiple scripts with the same name are added, only the last one is considered.
    * @param bool   $prepend If true, prepend to current list instead of appending.
    */
-  public function addInlineScript ($code, $name = null, $prepend = false)
+  function addInlineScript ($code, $name = null, $prepend = false)
   {
     if ($code instanceof Component)
       $code->attachTo ($this);
@@ -154,7 +157,7 @@ class Page extends Component
     else $this->inlineScripts[] = $code;
   }
 
-  public function addScript ($uri, $prepend = false)
+  function addScript ($uri, $prepend = false)
   {
     if (array_search ($uri, $this->scripts) === false)
       if ($prepend)
@@ -162,7 +165,7 @@ class Page extends Component
       else $this->scripts[] = $uri;
   }
 
-  public function addStylesheet ($uri, $prepend = false)
+  function addStylesheet ($uri, $prepend = false)
   {
     if (array_search ($uri, $this->stylesheets) === false)
       if ($prepend)
@@ -176,14 +179,14 @@ class Page extends Component
    * @param string      $name    An arbitrary block name.
    * @param Component[] $content An array of <b>detached</b> components.
    */
-  public function appendToBlock ($name, array $content)
+  function appendToBlock ($name, array $content)
   {
     if (!isset($this->blocks[$name]))
       $this->blocks[$name] = $content;
     else $this->blocks[$name] = array_merge ($this->blocks[$name], $content);
   }
 
-  public function checkBrowser ()
+  function checkBrowser ()
   {
     $b = get ($_SERVER, 'HTTP_USER_AGENT', '');
     if (preg_match ('#MSIE (\d+)#', $b, $match)) {
@@ -208,9 +211,30 @@ class Page extends Component
    * @param string $name An arbitrary block name.
    * @returns Component[] $content An array of <b>detached</b> components.
    */
-  public function getBlock ($name)
+  function getBlock ($name)
   {
     return get ($this->blocks, $name, []);
+  }
+
+  /**
+   * The currently active view engine.
+   *
+   * @return ViewInterface
+   * @throws ComponentException
+   */
+  function getView ()
+  {
+    if (isset($this->view))
+      return $this->view;
+    else throw new ComponentException($this, "A view instance has not been assigned to the Page");
+  }
+
+  /**
+   * @param ViewInterface $view
+   */
+  function setView (ViewInterface $view)
+  {
+    $this->view = $view;
   }
 
   /**
@@ -219,7 +243,7 @@ class Page extends Component
    * @param string      $name    An arbitrary block name.
    * @param Component[] $content An array of <b>detached</b> components.
    */
-  public function setBlock ($name, array $content)
+  function setBlock ($name, array $content)
   {
     $this->blocks[$name] = $content;
   }

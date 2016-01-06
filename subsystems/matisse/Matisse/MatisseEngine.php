@@ -30,6 +30,7 @@ class MatisseEngine
     'Include' => Components\Macro\Include_::class,
     'Literal' => Components\Literal::class,
     'Macro'   => Components\Macro\Macro::class,
+    'Render'  => Components\Render::class,
     'Repeat'  => Components\Repeat::class,
   ];
 

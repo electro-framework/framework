@@ -88,11 +88,8 @@ class Include_ extends MacroInstance
   {
     // If we reach this point, `$this->expectingView` is sure to be `true`.
 
-    if (isset($this->page->view)) {
-      $name    = $this->viewName ?: $this->evalProp ('view');
-      $content = $this->page->view->loadFromFile ($name)->getCompiledView ();
-    }
-    else throw new ComponentException($this, "A view instance has not been assigned to the Page");
+    $name    = $this->viewName ?: $this->evalProp ('view');
+    $content = $this->page->getView()->loadFromFile ($name)->getCompiledView ();
     $this->attachAndRender ($content);
   }
 
