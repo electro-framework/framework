@@ -188,12 +188,42 @@ class ModuleServices
   }
 
   /**
-   * @param string[] $v List of class names providing component presets.
+   * Registers one or more injectable callables that will return a Matisse component presetters map when invoked.
+   *
+   * <p>Each callable (a map factory) can request any services it needs via its function call arguments.
+   *
+   * <p>Factories that are specified as class names will be instantiated before being invoked.
+   *
+   * <p>Each factory will be called only once on each application lifecycle; the result will be cached.
+   *
+   * <p>Factories must return an associative array of `component class name => callable`, i.e., a map of component
+   * classes to presetter callables.
+   *
+   * <p>Presetters are functions, methods or invokable classes that receive an array of component instance properties
+   * and return an (possibly) modified version of those properties.
+   *
+   * <p>A presetter is invoked right before a component is instantiated, thereby allowing it to set default values for
+   * any missing properties, or modify any property in any way. It may also throw an exception if a validation of a
+   * property fails.
+   *
+   * <p>Finally, a presetter, instead of returning an array, can also return a new component instance, already
+   * initialized with any desired properties.<br>It can be:
+   *
+   * - a new instance of the original class;
+   * - a clone of a predefined, pre-configured instance;
+   * - an instance of a completely different class (effectively mapping a tag to a different component).
+   *
+   * <p>Presetters are free to use any logic to return different properties or components, based on some criteria
+   * being met. To help them perform those evaluations, the framework also provides a second argument to the
+   * presetter that refers to the parent component to which the new instance will be attached to. From that parent,
+   * references to the Page and to the rendering context can also be obtained.
+   *
+   * @param callable[] $v List of injectable callables providing component presets.
    * @return $this
    */
-  function registerPresets (array $v)
+  function registerPresets (callable ...$v)
   {
-    array_mergeInto ($this->app->presets, $v);
+    array_push ($this->app->presets, ...$v);
     return $this;
   }
 
