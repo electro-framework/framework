@@ -11,7 +11,6 @@ use ReflectionObject;
 use Selenia\Application;
 use Selenia\DataObject;
 use Selenia\Exceptions\Fatal\DataModelException;
-use Selenia\Exceptions\Fatal\FileNotFoundException;
 use Selenia\Exceptions\FatalException;
 use Selenia\Exceptions\Flash\FileException;
 use Selenia\Exceptions\FlashMessageException;
@@ -599,7 +598,7 @@ class PageComponent implements RequestHandlerInterface
     else if ($rendered instanceof ViewInterface)
       $view = $rendered;
 
-    else throw new FatalException (sprintf("Invalid return type from <kbd>%s::render()</kbd>", typeInfoOf($this)));
+    else throw new FatalException (sprintf ("Invalid return type from <kbd>%s::render()</kbd>", typeInfoOf ($this)));
 
     $this->setupView ($view);
     /** @var ViewInterface $view */
