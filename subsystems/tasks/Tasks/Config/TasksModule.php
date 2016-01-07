@@ -19,7 +19,7 @@ class TasksModule implements ModuleInterface
            * The path of the Core Tasks's scaffolds's directory, relative to the project's directory.
            * @var string
            */
-          'scaffoldsPath' => dirname (__DIR__) . '/scaffolds',
+          'scaffoldsPath' => updir (__DIR__, 2) . '/scaffolds',
         ],
       ]);
   }

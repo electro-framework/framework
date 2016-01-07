@@ -1,5 +1,6 @@
 <?php
 namespace Selenia\Tasks\Commands;
+
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
@@ -26,7 +27,7 @@ trait InitCommands
    */
   static function runInit ()
   {
-    $tmp = dirname (dirname (dirname (dirname (dirname (__DIR__)))));
+    $tmp = updir (__DIR__, 5);
     require "$tmp/packages/autoload.php";
     ConsoleApplication::run (['', 'init']);
   }
