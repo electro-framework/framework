@@ -1,6 +1,22 @@
 <?php
 
 //------------------------------
+//  Matisse's AST node keys
+//------------------------------
+/**
+ * The tag name, capitalized.
+ */
+const MTE_TAG = 'tag';
+/**
+ * The fully qualified component class name.
+ */
+const MTE_CLASS = 'class';
+/**
+ * An associative array of component instance properties.
+ */
+const MTE_PROPS = 'props';
+
+//------------------------------
 //  Matisse-specific functions
 //------------------------------
 

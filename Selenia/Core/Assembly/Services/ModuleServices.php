@@ -221,7 +221,7 @@ class ModuleServices
    * @param callable[] $v List of injectable callables providing component presets.
    * @return $this
    */
-  function registerPresets (callable ...$v)
+  function registerMatisseCompilerExtensions (callable ...$v)
   {
     array_push ($this->app->presets, ...$v);
     return $this;
