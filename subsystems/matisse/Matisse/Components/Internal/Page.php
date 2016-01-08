@@ -12,9 +12,9 @@ class Page extends Component
   public $author         = '';
   public $autoHTML       = true;
   /**
-   * A map of block names => block contents (array of Component).
+   * A map of block names => block contents.
    *
-   * @var Component[][]
+   * @var string[]
    */
   public $blocks = [];
   /**
@@ -174,16 +174,16 @@ class Page extends Component
   }
 
   /**
-   * Appends an array of components to a specific block.
+   * Appends content to a specific block.
    *
-   * @param string      $name    An arbitrary block name.
-   * @param Component[] $content An array of <b>detached</b> components.
+   * @param string $name An arbitrary block name.
+   * @param string $content
    */
-  function appendToBlock ($name, array $content)
+  function appendToBlock ($name, $content)
   {
     if (!isset($this->blocks[$name]))
       $this->blocks[$name] = $content;
-    else $this->blocks[$name] = array_merge ($this->blocks[$name], $content);
+    else $this->blocks[$name] .= $content;
   }
 
   function checkBrowser ()
@@ -209,11 +209,11 @@ class Page extends Component
    * Returns the content of a specific block.
    *
    * @param string $name An arbitrary block name.
-   * @returns Component[] $content An array of <b>detached</b> components.
+   * @returns string
    */
   function getBlock ($name)
   {
-    return get ($this->blocks, $name, []);
+    return get ($this->blocks, $name, '');
   }
 
   /**
@@ -238,12 +238,36 @@ class Page extends Component
   }
 
   /**
-   * Saves an array of components on a specific block, overriding the previous content of it.
+   * Checks if a block with the specified name exists and has content.
    *
-   * @param string      $name    An arbitrary block name.
-   * @param Component[] $content An array of <b>detached</b> components.
+   * @param string $name An arbitrary block name.
+   * @return bool
    */
-  function setBlock ($name, array $content)
+  function hasBlock ($name)
+  {
+    return get ($this->blocks, $name, '') != '';
+  }
+
+  /**
+   * Prepends content to a specific block.
+   *
+   * @param string $name An arbitrary block name.
+   * @param string $content
+   */
+  function prependToBlock ($name, $content)
+  {
+    if (!isset($this->blocks[$name]))
+      $this->blocks[$name] = $content;
+    else $this->blocks[$name] = $content . $this->blocks[$name];
+  }
+
+  /**
+   * Saves a string on a specific block, overriding the previous content of it.
+   *
+   * @param string $name An arbitrary block name.
+   * @param string $content
+   */
+  function setBlock ($name, $content)
   {
     $this->blocks[$name] = $content;
   }

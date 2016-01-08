@@ -24,8 +24,8 @@ class MatisseEngine
    */
   private static $coreTags = [
     'Apply'   => Components\Apply::class,
-    'Block'   => Components\Block::class,
     'Body'    => Components\Body::class,
+    'Content' => Components\Content::class,
     'Head'    => Components\Head::class,
     'If'      => Components\If_::class,
     'Literal' => Components\Literal::class,

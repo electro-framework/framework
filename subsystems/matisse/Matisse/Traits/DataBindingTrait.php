@@ -196,6 +196,8 @@ trait DataBindingTrait
 
   private function compileExpression ($expression)
   {
+    if ($expression[0] == '#')
+      $expression = 'page.blocks.' . substr($expression, 1);
     $exp = PA (preg_split ('/ (?= \|\| | && | \+ ) /xu', $expression))
       ->map (function ($x) { return trim ($x); })
       ->map (function ($x) {
