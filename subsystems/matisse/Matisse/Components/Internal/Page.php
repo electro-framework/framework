@@ -10,7 +10,7 @@ class Page extends Component
 {
   public $allowsChildren = true;
   public $author         = '';
-  public $autoHTML       = true;
+  public $autoHTML       = false;
   /**
    * A map of block names => block contents.
    *

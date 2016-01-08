@@ -201,9 +201,9 @@ class PageComponent implements RequestHandlerInterface
     if (!$this->app)
       throw new FatalException("Class <kbd class=type>" . get_class ($this) .
                                "</kbd>'s constructor forgot to call <kbd>parent::__construct()</kbd>");
-    $this->request  = $request;
-    $this->response = $response;
-    $this->virtualUrl = $request->getAttribute('virtualUri');
+    $this->request    = $request;
+    $this->response   = $response;
+    $this->virtualUrl = $request->getAttribute ('virtualUri');
     $this->redirection->setRequest ($request);
 
     $this->currentLink = $this->navigation->request ($this->request)->currentLink ();
@@ -334,6 +334,7 @@ class PageComponent implements RequestHandlerInterface
     if ($engine instanceof MatisseEngine) {
       $this->page = $view->getCompiledView ();
       $this->page->setView ($view);
+      $this->page->autoHTML  = true; // `true` only for the top view, `false` for subviews.
       $this->page->title     = str_replace ('@', $this->getTitle (), $this->app->title);
       $this->page->bodyAttrs = $this->bodyAttrs;
       $this->page->addScript ("{$this->app->frameworkURI}/js/engine.js");
