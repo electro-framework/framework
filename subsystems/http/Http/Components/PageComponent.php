@@ -108,6 +108,12 @@ class PageComponent implements RequestHandlerInterface
    */
   public $view;
   /**
+   * The HTTP request's virtual URL.
+   *
+   * @var string
+   */
+  public $virtualUrl;
+  /**
    * The current request URI without the page number parameters.
    * This property is useful for databing with the expression {!controller.URI_noPage}.
    *
@@ -197,6 +203,7 @@ class PageComponent implements RequestHandlerInterface
                                "</kbd>'s constructor forgot to call <kbd>parent::__construct()</kbd>");
     $this->request  = $request;
     $this->response = $response;
+    $this->virtualUrl = $request->getAttribute('virtualUri');
     $this->redirection->setRequest ($request);
 
     $this->currentLink = $this->navigation->request ($this->request)->currentLink ();

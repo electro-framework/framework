@@ -51,15 +51,19 @@ class Block extends Component
     $prop = $this->props;
     if (strlen ($prop->yield)) {
       $block = $this->page->getBlock ($prop->yield);
-      $this->attachAndRenderSet ($block);
-      return;
+      if (!$block)
+        $this->renderContent ();
+      else
+        $this->attachAndRenderSet ($block);
     }
-    $content = $this->removeChildren ();
-    if (!strlen ($prop->name))
-      throw new ComponentException($this, "<kbd>name</kbd> attribute is not set.");
-    if ($prop->replace)
-      $this->page->setBlock ($prop->name, $content);
-    else $this->page->appendToBlock ($prop->name, $content);
+    else {
+      $content = $this->removeChildren ();
+      if (!strlen ($prop->name))
+        throw new ComponentException($this, "<kbd>name</kbd> attribute is not set.");
+      if ($prop->replace)
+        $this->page->setBlock ($prop->name, $content);
+      else $this->page->appendToBlock ($prop->name, $content);
+    }
   }
 }
 
