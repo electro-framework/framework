@@ -9,10 +9,16 @@ use Selenia\Matisse\Properties\TypeSystem\type;
 class BlockProperties extends ComponentProperties
 {
   /**
+   * Sets the block content only if none is set yet.
+   * @var bool
+   */
+  public $default = false;
+  /**
    * @var string
    */
   public $name = type::id;
   /**
+   * When true, the tag's content overwrites the block's content instead of appending to it.
    * @var bool
    */
   public $replace = false;
@@ -49,7 +55,14 @@ class Block extends Component
   protected function render ()
   {
     $prop = $this->props;
-    if (strlen ($prop->yield)) {
+    if ($prop->default) {
+      $block = $this->page->getBlock ($prop->name);
+      if (!$block) {
+        $content = $this->removeChildren ();
+        $this->page->setBlock ($prop->name, $content);
+      }
+    }
+    elseif (strlen ($prop->yield)) {
       $block = $this->page->getBlock ($prop->yield);
       if (!$block)
         $this->renderContent ();
