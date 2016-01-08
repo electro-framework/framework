@@ -28,9 +28,9 @@ class MatisseEngine
     'Content' => Components\Content::class,
     'Head'    => Components\Head::class,
     'If'      => Components\If_::class,
+    'Include' => Components\Include_::class,
     'Literal' => Components\Literal::class,
     'Macro'   => Components\Macro\Macro::class,
-    'Render'  => Components\Render::class,
     'Repeat'  => Components\Repeat::class,
     MacroInstance::TAG_NAME
               => MacroInstance::class,

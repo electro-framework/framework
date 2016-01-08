@@ -7,7 +7,7 @@ use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 
-class RenderProperties extends ComponentProperties
+class IncludeProperties extends ComponentProperties
 {
   /**
    * The relative path and file name of the file to be loaded and rendered at the component's location.
@@ -40,11 +40,11 @@ class RenderProperties extends ComponentProperties
  * <p>When rendering a view, the view's rendering context (and associated view model) come from the current rendering
  * context.
  */
-class Render extends Component
+class Include_ extends Component
 {
-  protected static $propertiesClass = RenderProperties::class;
+  protected static $propertiesClass = IncludeProperties::class;
 
-  /** @var RenderProperties */
+  /** @var IncludeProperties */
   public $props;
 
   protected function render ()

@@ -13,7 +13,7 @@ use Selenia\Matisse\Properties\TypeSystem\type;
  */
 class MacroInstance extends Component
 {
-  const TAG_NAME = 'Include';
+  const TAG_NAME = 'Call';
 
   protected static $propertiesClass = MacroInstanceProperties::class;
 
