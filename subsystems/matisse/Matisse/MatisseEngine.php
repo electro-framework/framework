@@ -31,6 +31,8 @@ class MatisseEngine
     'Include' => Components\Include_::class,
     'Literal' => Components\Literal::class,
     'Macro'   => Components\Macro\Macro::class,
+    'Script'  => Components\Script::class,
+    'Style'   => Components\Style::class,
     'Repeat'  => Components\Repeat::class,
     MacroInstance::TAG_NAME
               => MacroInstance::class,

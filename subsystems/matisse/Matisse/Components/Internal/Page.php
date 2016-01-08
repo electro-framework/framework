@@ -111,7 +111,7 @@ class Page extends Component
   {
     if ($css instanceof Component)
       $css->attachTo ($this);
-    if (isset($name))
+    if (exists ($name))
       $this->inlineCssStyles[$name] = $css;
     else if ($prepend)
       array_unshift ($this->inlineCssStyles, $css);
@@ -131,7 +131,7 @@ class Page extends Component
   {
     if ($code instanceof Component)
       $code->attachTo ($this);
-    if (isset($name))
+    if (exists ($name))
       $this->inlineDeferredScripts[$name] = $code;
     else if ($prepend)
       array_unshift ($this->inlineDeferredScripts, $code);
@@ -150,7 +150,7 @@ class Page extends Component
   {
     if ($code instanceof Component)
       $code->attachTo ($this);
-    if (isset($name))
+    if (exists ($name))
       $this->inlineScripts[$name] = $code;
     else if ($prepend)
       array_unshift ($this->inlineScripts, $code);
