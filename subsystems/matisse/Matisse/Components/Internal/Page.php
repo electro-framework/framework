@@ -39,6 +39,7 @@ class Page extends Component
   public $browserIsSafari  = false;
   public $charset          = 'UTF-8';
   public $clientIsWindows  = false;
+  public $debugMode   = false;
   public $defaultAction;
   public $description      = '';
   public $doctype          = '<!DOCTYPE HTML>';
@@ -82,7 +83,6 @@ class Page extends Component
   public $stylesheets = [];
   public $targetURL;
   public $title;
-
   /**
    * Some components (ex. Include) require a View instance in order to load additional views.
    *
@@ -205,6 +205,18 @@ class Page extends Component
     $this->clientIsWindows = strpos ($b, 'Windows') !== false;
   }
 
+  function debugHeaderBegin ($title)
+  {
+    if ($this->debugMode)
+      echo "\n<!-- ########[ SELENIA ]######## -- $title -->\n";
+  }
+
+  function debugHeaderEnd ($title)
+  {
+    if ($this->debugMode)
+      echo "\n<!--/########[ SELENIA ]######## -- /$title -->\n";
+  }
+
   /**
    * Returns the content of a specific block.
    *
@@ -297,31 +309,15 @@ class Page extends Component
         )
       );
       $this->begin ('head');
+      $this->beginContent ();
+
+      $this->debugHeaderBegin ("AUTO-GENERATED");
+
       $this->tag ('meta', [
         'charset' => $this->charset,
       ]);
       $this->tag ('title', null, $this->title);
       $this->tag ('base', ['href' => "$application->baseURI/"]);
-
-      foreach ($this->stylesheets as $URI) {
-        if (substr ($URI, 0, 4) != 'http') {
-          if (substr ($URI, 0, 1) != '/')
-            $URI = $application->toURI ($URI);
-        }
-        $this->tag ('link', [
-          'rel'  => 'stylesheet',
-          'type' => 'text/css',
-          'href' => $URI,
-        ]);
-      }
-      if (!empty($this->inlineCssStyles)) {
-        $css = '';
-        foreach ($this->inlineCssStyles as $item)
-          if ($item instanceof Metadata)
-            $css .= $item->getContent ();
-          else $css .= $item;
-        $this->tag ('style', null, $css);
-      }
 
       if (!empty($this->description))
         $this->tag ('meta', [
@@ -343,11 +339,49 @@ class Page extends Component
           'rel'  => 'shortcut icon',
           'href' => $application->favicon,
         ]);
+
+      $this->debugHeaderEnd ("AUTO-GENERATED");
+
+      $this->debugHeaderBegin ("APP STYLES");
+
+      foreach ($this->stylesheets as $URI) {
+        if (substr ($URI, 0, 4) != 'http') {
+          if (substr ($URI, 0, 1) != '/')
+            $URI = $application->toURI ($URI);
+        }
+        $this->tag ('link', [
+          'rel'  => 'stylesheet',
+          'type' => 'text/css',
+          'href' => $URI,
+        ]);
+      }
+      if (!empty($this->inlineCssStyles)) {
+        $css = '';
+        foreach ($this->inlineCssStyles as $item)
+          if ($item instanceof Metadata)
+            $css .= $item->getContent ();
+          else $css .= $item;
+        $this->tag ('style', null, $css);
+      }
+
+      $this->debugHeaderEnd ("APP STYLES");
+
+      $this->debugHeaderBegin ("CUSTOM HEAD CONTENT");
+
       if (isset($this->extraHeadTags))
         $this->setContent ($this->extraHeadTags);
+
+      $this->debugHeaderEnd ("CUSTOM HEAD CONTENT");
+
       $this->end ();
+
       $this->begin ('body', $this->bodyAttrs);
-      $this->setContent ($this->preForm);
+      $this->beginContent ();
+
+
+      $this->debugHeaderBegin ("APP CONTENT");
+
+      echo $this->preForm;
       $this->begin ('form', [
         'action'       => property ($this, 'targetURL', $_SERVER['REQUEST_URI']),
         'method'       => 'post',
@@ -360,10 +394,13 @@ class Page extends Component
         'name'  => '_action',
         'value' => property ($this, 'defaultAction'),
       ]);
-
       echo $pageContent;
-
       $this->end (); // form
+
+      $this->debugHeaderEnd ("APP CONTENT");
+
+
+      $this->debugHeaderBegin ("APP SCRIPTS");
 
       foreach ($this->page->scripts as $URI) {
         if (substr ($URI, 0, 4) != 'http') {
@@ -371,8 +408,7 @@ class Page extends Component
             $URI = $application->toURI ($URI);
         }
         $this->tag ('script', [
-          'type' => 'text/javascript',
-          'src'  => $URI,
+          'src' => $URI,
         ]);
       }
       if (!empty($this->inlineScripts)) {
@@ -382,11 +418,7 @@ class Page extends Component
             $code .= $item->getContent ();
           }
           else $code .= $item;
-        $this->tag ('script',
-          [
-            'type' => 'text/javascript',
-          ],
-          $code
+        $this->tag ('script', [], $code
         );
       }
       if (!empty($this->inlineDeferredScripts)) {
@@ -404,6 +436,9 @@ class Page extends Component
           $code
         );
       }
+
+      $this->debugHeaderEnd ("APP SCRIPTS");
+
 
       echo $this->footer;
       $this->end (); // body

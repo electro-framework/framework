@@ -335,6 +335,7 @@ class PageComponent implements RequestHandlerInterface
       $this->page = $view->getCompiledView ();
       $this->page->setView ($view);
       $this->page->autoHTML  = true; // `true` only for the top view, `false` for subviews.
+      $this->page->debugMode = $this->app->debugMode;
       $this->page->title     = str_replace ('@', $this->getTitle (), $this->app->title);
       $this->page->bodyAttrs = $this->bodyAttrs;
       $this->page->addScript ("{$this->app->frameworkURI}/js/engine.js");
