@@ -74,6 +74,12 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 
     $response->getBody ()->rewind ();
 
+    // Logging panel
+    if (extension_loaded ('xdebug'))
+      DebugConsole::defaultLogger ()
+                  ->write ('<#alert><b>Warning:</b> When running with Xdebug enabled, the framework\'s performance is severely degraded, especially on debug mode.</#alert>'
+                           . '<p class=__comment>Refer to the framework\'s documentation for more information.</div>');
+
     // Request panel
     DebugConsole::logger ('request')->setRequest ($request);
 
