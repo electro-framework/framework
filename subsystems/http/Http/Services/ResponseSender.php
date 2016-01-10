@@ -70,6 +70,8 @@ class ResponseSender implements ResponseSenderInterface
         $first = false;
       }
     }
+    $time   = round (microtime (true) - $_SERVER['REQUEST_TIME_FLOAT'], 3);
+    header ("X-Processing-Time: $time seconds");
   }
 
   /**
