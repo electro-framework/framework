@@ -1,12 +1,11 @@
 <?php
-namespace Selenia\Matisse\Traits;
+namespace Selenia\Matisse\Traits\Component;
 
 use PhpCode;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Exceptions\HandlerNotFoundException;
-use Selenia\Matisse\MatisseEngine;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Parser\Parser;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
@@ -46,11 +45,13 @@ trait DataBindingTrait
    */
   public $bindings = null;
   /**
-   * Supplies the value for databinding expressions with no explicit data source references.
+   * The component's own view model.
+   * <p>Do not confuse this with {@see Context::viewModel}, the later will be effective only if a field is not found on
+   * any of the cascaded component view models.
    *
    * @var mixed
    */
-  public $contextualModel;
+  public $viewModel;
 
   static function isCompositeBinding ($exp)
   {
@@ -86,7 +87,7 @@ trait DataBindingTrait
 
   /**
    * Gets a field from the current data-binding context.
-   * > This is reserverd for internal use by compiled data-binding expressions.
+   * > This is reserved for internal use by compiled data-binding expressions.
    *
    * @param string $field
    * @return mixed
@@ -94,19 +95,37 @@ trait DataBindingTrait
    */
   protected function _f ($field)
   {
+    if (isset($this->viewModel)) {
+      $data = $this->viewModel;
+      if (is_array ($data)) {
+        if (array_key_exists ($field, $data))
+          return $data[$field];
+      }
+      else if (is_object ($data)) {
+        if (property_exists ($data, $field))
+          return $data->$field;
+      }
+      else $this->throwInvalidData ($data, $field);
+    }
+
+    /** @var static $parent */
+    $parent = $this->parent;
+    if (isset($parent))
+      return $parent->_f ($field);
+
     $data = $this->context->viewModel;
-    if (is_array ($data)) {
-      if (array_key_exists ($field, $data))
-        return $data[$field];
-      return $this->getCascaded ($field);
+    if (isset($data)) {
+      if (is_array ($data)) {
+        if (array_key_exists ($field, $data))
+          return $data[$field];
+      }
+      else if (is_object ($data)) {
+        if (property_exists ($data, $field))
+          return $data->$field;
+      }
+      else $this->throwInvalidData ($data, $field);
     }
-    else if (is_object ($data)) {
-      if (property_exists ($data, $field))
-        return $data->$field;
-      return $this->getCascaded ($field);
-    }
-    else throw new DataBindingException ($this,
-      "Can't get property <kbd>$field</kbd> from a value of type <kbd>" . gettype ($data) . "</kbd>");
+    return null;
   }
 
   protected function bindToAttribute ($name, $value)
@@ -171,21 +190,6 @@ trait DataBindingTrait
     return $this->props->get ($name);
   }
 
-  /**
-   * Returns the data source to be used for #model contextual databinging expressions.
-   * Searches upwards on the component hierarchy.
-   *
-   * @return mixed
-   */
-  protected function getContextualModel ()
-  {
-    if (isset($this->contextualModel))
-      return $this->contextualModel;
-    /** @var static $parent */
-    $parent = $this->parent;
-    return isset($parent) ? $parent->getContextualModel () : null;
-  }
-
   protected function parseIteratorExp ($exp, & $idxVar, & $itVar)
   {
     if (!preg_match ('/^(?:(\w+):)?(\w+)$/', $exp, $m))
@@ -197,7 +201,7 @@ trait DataBindingTrait
   private function compileExpression ($expression)
   {
     if ($expression[0] == '#')
-      $expression = 'page.blocks.' . substr($expression, 1);
+      $expression = 'page.context.blocks.' . substr ($expression, 1);
     $exp = PA (preg_split ('/ (?= \|\| | && | \+ ) /xu', $expression))
       ->map (function ($x) { return trim ($x); })
       ->map (function ($x) {
@@ -256,9 +260,9 @@ trait DataBindingTrait
     // Call a previously compiled expression or compile one now, cache it and call it.
 
     /** @var \Closure $compiled */
-    $compiled = get (MatisseEngine::$expressions, $expression);
+    $compiled = get (Context::$expressions, $expression);
     if (!$compiled)
-      $compiled = MatisseEngine::$expressions[$expression] = $this->compileExpression ($expression);
+      $compiled = Context::$expressions[$expression] = $this->compileExpression ($expression);
     // Compatible with PHP < 7
     $c = \Closure::bind ($compiled, $this, $this);
     $v = $c ();
@@ -280,22 +284,10 @@ trait DataBindingTrait
     return $rawOutput || !is_scalar ($v) ? $v : e ($v);
   }
 
-  private function getCascaded ($field)
+  private function throwInvalidData ($data, $field)
   {
-    if (isset($this->contextualModel)) {
-      $data = $this->contextualModel;
-      if (is_array ($data)) {
-        if (array_key_exists ($field, $data))
-          return $data[$field];
-      }
-      else if (is_object ($data)) {
-        if (property_exists ($data, $field))
-          return $data->$field;
-      }
-    }
-    /** @var static $parent */
-    $parent = $this->parent;
-    return isset($parent) ? $parent->getCascaded ($field) : null;
+    throw new DataBindingException ($this,
+      "Can't get property <kbd>$field</kbd> from a value of type <kbd>" . gettype ($data) . "</kbd>");
   }
 
 }

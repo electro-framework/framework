@@ -39,11 +39,11 @@ class Style extends Component
   {
     $prop = $this->props;
     if (exists ($prop->src))
-      $this->page->addStylesheet ($prop->src);
+      $this->context->addStylesheet ($prop->src);
     else {
       $css = $this->getContent ();
       if ($css != '')
-        $this->page->addInlineCss ($css, $prop->name);
+        $this->context->addInlineCss ($css, $prop->name);
     }
   }
 }

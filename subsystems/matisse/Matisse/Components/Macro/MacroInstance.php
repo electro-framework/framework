@@ -4,6 +4,7 @@ namespace Selenia\Matisse\Components\Macro;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Properties\Macro\MacroInstanceProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
@@ -26,6 +27,48 @@ class MacroInstance extends Component
    * @var Macro
    */
   protected $macroInstance;
+
+  function setMacro (Macro $macro)
+  {
+    $this->macroInstance = $macro;
+    if (isset($this->props))
+      $this->props->setMacro ($macro);
+  }
+
+  /**
+   * Loads the macro with the name specified by the `macro` property.
+   *
+   * @param array|null $props
+   * @param Component  $parent
+   */
+  protected function onCreate (array $props = null, Component $parent)
+  {
+    $this->parent = $parent;
+    $name         = get ($props, 'macro');
+    if (exists ($name)) {
+      $macro = $this->context->getMacro ($name);
+      if (is_null ($macro))
+        try {
+          // A macro with the given name is not defined yet.
+          // Try to load it now.
+          $macro = $this->context->loadMacro ($name, $parent);
+        }
+        catch (FileIOException $e) {
+          self::throwUnknownComponent ($this->context, $name, $parent);
+        }
+
+      $this->setMacro ($macro);
+    }
+//    else {
+//      $this->viewName = get ($props, 'view');
+//      if (!exists ($this->viewName) && !$this->isBound ('view'))
+//        throw new ComponentException($this,
+//          "One of these properties must be set:<p><kbd>macro</kbd> | <kbd>view</kbd>");
+//      $this->allowsChildren = false;
+//      $this->expectingView  = true;
+//    }
+    parent::onCreate ($props, $parent);
+  }
 
   function onParsingComplete ()
   {
@@ -53,33 +96,6 @@ class MacroInstance extends Component
 
     $content = $this->macroInstance->apply ($this);
     $this->replaceBy ($content);
-  }
-
-  protected function onCreate (array $props = null, Component $parent)
-  {
-    $this->parent = $parent;
-    $name         = get ($props, 'macro');
-    if (exists ($name)) {
-      $macro = self::getMacro ($this->context, $parent->page, $name);
-      $this->setMacro ($macro);
-    }
-//    else {
-//      $this->viewName = get ($props, 'view');
-//      if (!exists ($this->viewName) && !$this->isBound ('view'))
-//        throw new ComponentException($this,
-//          "One of these properties must be set:<p><kbd>macro</kbd> | <kbd>view</kbd>");
-//      $this->allowsChildren = false;
-//      $this->expectingView  = true;
-//    }
-    parent::onCreate ($props, $parent);
-  }
-
-
-  function setMacro (Macro $macro)
-  {
-    $this->macroInstance = $macro;
-    if (isset($this->props))
-      $this->props->setMacro ($macro);
   }
 
 }

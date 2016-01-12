@@ -66,19 +66,19 @@ class Content extends Component
     $prop = $this->props;
 
     if (exists ($name = $prop->of)) {
-      if ($prop->byDefault && $this->page->hasBlock ($name))
+      if ($prop->byDefault && $this->context->hasBlock ($name))
         return;
-      $this->page->setBlock ($name, $this->getContent ());
+      $this->context->setBlock ($name, $this->getContent ());
     }
     elseif (exists ($name = $prop->appendTo)) {
-      if ($prop->byDefault && $this->page->hasBlock ($name))
+      if ($prop->byDefault && $this->context->hasBlock ($name))
         return;
-      $this->page->appendToBlock ($name, $this->getContent ());
+      $this->context->appendToBlock ($name, $this->getContent ());
     }
     elseif (exists ($name = $prop->prependTo)) {
-      if ($prop->byDefault && $this->page->hasBlock ($name))
+      if ($prop->byDefault && $this->context->hasBlock ($name))
         return;
-      $this->page->prependToBlock ($name, $this->getContent ());
+      $this->context->prependToBlock ($name, $this->getContent ());
     }
     else throw new ComponentException($this,
       "One of these properties must be set:<p><kbd>of | appendTo | prependTo</kbd>");

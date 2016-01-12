@@ -8,6 +8,13 @@ namespace Selenia\Interfaces\Views;
 interface ViewEngineInterface
 {
   /**
+   * Passes the given object or array to the view engine. It may be anything that the engine needs to perform the
+   * compilation or rendering steps,
+   *
+   * @param mixed $options
+   */
+  function configure ($options);
+  /**
    * Compiles the given template.
    * @param string $src The source markup (ex: HTML).
    * @return mixed The compiled template.

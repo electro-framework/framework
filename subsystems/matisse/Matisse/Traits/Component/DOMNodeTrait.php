@@ -1,9 +1,9 @@
 <?php
-namespace Selenia\Matisse\Traits;
+namespace Selenia\Matisse\Traits\Component;
 
 use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Components\Internal\Metadata;
-use Selenia\Matisse\Components\Internal\Page;
 use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
@@ -13,7 +13,7 @@ use Selenia\Matisse\Properties\Base\ComponentProperties;
  *
  * It's applicable to the Component class.
  *
- * @property Page                $page
+ * @property DocumentFragment    $root
  * @property ComponentProperties $props
  */
 trait DOMNodeTrait
@@ -117,14 +117,11 @@ trait DOMNodeTrait
   public function attachTo (Component $parent = null)
   {
     $this->parent = $parent;
-    $this->setPage ($parent->page);
   }
 
   public function detach ()
   {
     $this->parent = null;
-    // The page remains constant.
-    // $this->setPage (null);
   }
 
   /**
@@ -271,16 +268,6 @@ trait DOMNodeTrait
   public function replaceByContents ()
   {
     $this->replaceBy ($this->children);
-  }
-
-  public function setPage (Page $page = null)
-  {
-    // Do not walk the tree if the page was not changed. Note that detach() does not unset the page references.
-    if ($page != $this->page) {
-      $this->page = $page;
-      foreach ($this->children as $child)
-        $child->setPage ($page);
-    }
   }
 
 }

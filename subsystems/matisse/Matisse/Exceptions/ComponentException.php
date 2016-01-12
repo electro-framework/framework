@@ -16,7 +16,7 @@ class ComponentException extends MatisseException
       if (ctype_alnum (substr ($msg, -1)))
         $msg .= '.';
       parent::__construct (
-        empty($component->props->getAll ())
+        !$component->props || !$component->props->getAll ()
           ? "<blockquote>$msg</blockquote><br><p>On a $class instance."
           : "<blockquote>$msg</blockquote><br><p>$class instance's current attributes values:</p>$i"
         ,

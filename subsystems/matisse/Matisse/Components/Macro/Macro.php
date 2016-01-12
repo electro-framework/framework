@@ -129,18 +129,18 @@ class Macro extends Component
     foreach ($o as $i)
       switch ($i['type']) {
         case 'sh':
-          $instance->page->addStylesheet ($i['src'], false);
+          $instance->context->addStylesheet ($i['src'], false);
           break;
         case 'ish':
-          $instance->page->addInlineCss ($i['data'], $i['name'], false);
+          $instance->context->addInlineCss ($i['data'], $i['name'], false);
           break;
         case 'sc':
-          $instance->page->addScript ($i['src'], false);
+          $instance->context->addScript ($i['src'], false);
           break;
         case 'isc':
           if ($i['defer'])
-            $instance->page->addInlineDeferredScript ($i['data'], $i['name'], false);
-          else $instance->page->addInlineScript ($i['data'], $i['name'], false);
+            $instance->context->addInlineDeferredScript ($i['data'], $i['name'], false);
+          else $instance->context->addInlineScript ($i['data'], $i['name'], false);
           break;
       }
 

@@ -3,7 +3,7 @@ namespace Selenia\Matisse\Parser;
 
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Metadata;
-use Selenia\Matisse\Components\Internal\Page;
+use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Components\Literal;
 use Selenia\Matisse\Exceptions\ParseException;
@@ -23,18 +23,6 @@ class Parser
   const TRIM_LITERAL_CONTENT = '# (?<=\>) \s+ (?=\s) | (?<=\s) \s+ (?=\<) #xu';
   const TRIM_RIGHT           = 2;
   const TRIM_RIGHT_CONTENT   = '# (?<=\s) \s+ (?=\<) #xu';
-  /**
-   * Points to the root of the component hierarchy.
-   *
-   * @var Page
-   */
-  public $root;
-  /**
-   * The rendering context for the current request.
-   *
-   * @var Context
-   */
-  private $context;
   /**
    * Points to the component being currently processed on the components tree.
    *
@@ -83,11 +71,6 @@ class Parser
    */
   private $source;
 
-  function __construct (Context $context)
-  {
-    $this->context = $context;
-  }
-
   public static function isBindingExpression ($exp)
   {
     return is_string ($exp) ? strpos ($exp, '{{') !== false || strpos ($exp, '{!!') !== false : false;
@@ -97,17 +80,14 @@ class Parser
    * THE MAIN PARSING LOOP
    *******************************************************************************************************************
    *
-   * @param string    $body
-   * @param Component $parent
-   * @param Page      $root
+   * @param string           $body
+   * @param Component        $parent
    * @throws ParseException
    */
-  public function parse ($body, Component $parent, Page $root = null)
+  public function parse ($body, Component $parent)
   {
     $pos = 0;
-    if (!$root) $root = $parent;
     $this->current = $parent;
-    $this->root    = $root;
     $this->source  = $body;
 
     while (preg_match (self::PARSE_TAG, $body, $match, PREG_OFFSET_CAPTURE, $pos)) {
@@ -229,7 +209,7 @@ class Parser
     /** @var Metadata|boolean $defParam */
     $this->parse_attributes ($attrs, $attributes, $bindings, true);
     $component =
-      Component::create ($this->context, $this->current, $tag, $attributes, $bindings,
+      Component::create ($this->current, $tag, $attributes, $bindings,
         false /*TODO: support HTML components*/);
 
     $this->current->addChild ($component);
@@ -384,7 +364,7 @@ does not support the specified parameter <b>$tag</b>.
     if ($type == type::string)
       $this->currentScalarProperty = $propName;
     else {
-      $this->current = $param = new Metadata ($this->context, $tagName, $type, $attributes);
+      $this->current = $param = new Metadata ($component->context, $tagName, $type, $attributes);
       $param->attachTo ($component);
       switch ($type) {
         case type::content:
@@ -411,14 +391,14 @@ does not support the specified parameter <b>$tag</b>.
   private function subtag_createSlotSubcontent ($name, $tagName, array $attributes = null, array $bindings = null)
   {
     $param              = $this->current;
-    $this->current      = $subparam = new Metadata($this->context, $tagName, type::content, $attributes);
+    $this->current      = $subparam = new Metadata($param->context, $tagName, type::content, $attributes);
     $subparam->bindings = $bindings;
     $param->addChild ($subparam);
   }
 
   private function text_addComponent ($content, $trim = self::NO_TRIM)
   {
-    if ($this->context->condenseLiterals)
+    if ($this->current->context->condenseLiterals)
       switch ($trim) {
         case self::TRIM_LEFT:
           $content = preg_replace (self::TRIM_LEFT_CONTENT, '', $content);
@@ -439,10 +419,10 @@ does not support the specified parameter <b>$tag</b>.
           'value' => $content,
         ];
         if ($content[0] == '{') {
-          $lit           = new Literal($this->context);
+          $lit           = Component::create($this->current, Literal::TAG_NAME);
           $lit->bindings = $v;
         }
-        else $lit = new Text ($this->context, $v);
+        else $lit = new Text ($this->current->context, $v);
         $this->current->addChild ($lit);
       }
     }

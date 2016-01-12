@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Matisse;
+namespace Selenia\Matisse\Lib;
 
 use Selenia\Matisse\Exceptions\HandlerNotFoundException;
 use Selenia\Traits\InspectionTrait;

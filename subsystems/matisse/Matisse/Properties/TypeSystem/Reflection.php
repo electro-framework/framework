@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Properties\TypeSystem;
 
-use Selenia\Matisse\Traits\SingletonTrait;
+use Selenia\Traits\SingletonTrait;
 
 class Reflection
 {

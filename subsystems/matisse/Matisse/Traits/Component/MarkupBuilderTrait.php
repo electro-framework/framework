@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Matisse\Traits;
+namespace Selenia\Matisse\Traits\Component;
 
 use Selenia\Matisse\Components\Literal;
 use Selenia\Matisse\Exceptions\ComponentException;

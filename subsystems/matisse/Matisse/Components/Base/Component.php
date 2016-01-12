@@ -2,16 +2,16 @@
 namespace Selenia\Matisse\Components\Base;
 
 use Selenia\Matisse\Components\GenericHtmlComponent;
-use Selenia\Matisse\Components\Internal\Page;
+use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Components\Macro\MacroInstance;
 use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
-use Selenia\Matisse\Traits\DataBindingTrait;
-use Selenia\Matisse\Traits\DOMNodeTrait;
-use Selenia\Matisse\Traits\MarkupBuilderTrait;
+use Selenia\Matisse\Traits\Component\DataBindingTrait;
+use Selenia\Matisse\Traits\Component\DOMNodeTrait;
+use Selenia\Matisse\Traits\Component\MarkupBuilderTrait;
 
 /**
  * The base class from which all components derive.
@@ -48,12 +48,6 @@ abstract class Component
    * @var boolean
    */
   public $inactive = false;
-  /**
-   * Points to the root of the components tree.
-   *
-   * @var Page
-   */
-  public $page;
   /**
    * The component's published properties (the ones which are settable through html attribute declarations on the source
    * markup). This property contains an object of class ComponentAttributes or of a subclass of it, depending on the
@@ -92,14 +86,11 @@ abstract class Component
    * Creates a new component instance
    *
    * > <p>After being constructed, the first method called on an instance is, usually, {@see init()}.
-   *
-   * @param Context $context The rendering context for the current request.
    */
-  function __construct (Context $context)
+  function __construct ()
   {
     $class                    = get_class ($this);
     $s                        = explode ('\\', $class);
-    $this->context            = $context;
     $this->className          = end ($s);
     $this->supportsProperties = isset($class::$propertiesClass);
     if ($this->supportsProperties) {
@@ -124,14 +115,15 @@ abstract class Component
    * @return Component Component instance. For macros, an instance of Macro is returned.
    * @throws ComponentException
    */
-  static function create (Context $context, Component $parent, $tagName, array $props = null,
+  static function create (Component $parent, $tagName, array $props = null,
                           array $bindings = null, $generic = false, $strict = false)
   {
     if ($generic) {
-      $component = new GenericHtmlComponent($context, $tagName, $props);
+      $component = new GenericHtmlComponent($tagName, $props);
 
       return $component;
     }
+    $context = $parent->context;
     $class = $context->getClassForTag ($tagName);
     if (!$class) {
       if ($strict)
@@ -141,40 +133,26 @@ abstract class Component
       // Convert the tag to a MacroInstance component instance that will attempt to load a macro with the same
       // name as the tag name.
 
-      if (is_null($props))
+      if (is_null ($props))
         $props = [];
       $props['macro'] = $tagName;
-      $component = new MacroInstance($context);
+      $component      = new MacroInstance;
+      $component->setContext($context);
     }
 
     // Component class was found.
 
-    else $component = new $class ($context);
+    else $component = $context->injector->make ($class);
 
     // For both types of components:
 
+    $component->setContext ($context);
     $component->setTagName ($tagName);
     $component->bindings = $bindings;
     $component->onCreate ($props, $parent);
     $component->init ($props);
 
     return $component;
-  }
-
-  static function getMacro (Context $context, Page $root, $tagName)
-  {
-    $macro = $context->getMacro ($tagName);
-    if (is_null ($macro))
-      try {
-        // A macro with the given name is not defined yet.
-        // Try to load it now.
-
-        return $context->loadMacro ($tagName, $root);
-      }
-      catch (FileIOException $e) {
-        self::throwUnknownComponent ($context, $tagName, $root);
-      }
-    return $macro;
   }
 
   /**
@@ -189,7 +167,7 @@ abstract class Component
         $component->run ();
   }
 
-  private static function throwUnknownComponent (Context $context, $tagName, Component $parent)
+  protected static function throwUnknownComponent (Context $context, $tagName, Component $parent)
   {
     $paths = implode ('', map ($context->macrosDirectories,
       function ($dir) { return "<li><path>$dir</path></li>"; }));
@@ -211,7 +189,10 @@ abstract class Component
 
   function __set ($name, $value)
   {
-    throw new ComponentException($this, "Can't set non-existing (or non-accessible) property <b>$name</b>.");
+    throw new ComponentException($this, $this->props
+      ? "Can't set non-existing (or non-accessible) property <b>$name</b>."
+      : "Can't set properties on a component that doesn't support them."
+    );
   }
 
   function __toString ()
@@ -266,6 +247,18 @@ abstract class Component
   }
 
   /**
+   * Renders the component and returns the resulting markup.
+   *
+   * @return string
+   */
+  function getRenderedComponent ()
+  {
+    ob_start (null, 0);
+    $this->run ();
+    return ob_get_clean ();
+  }
+
+  /**
    * Returns name of the tag that represents the component.
    * If the name is not set then it generates it from the class name and caches it.
    *
@@ -303,6 +296,8 @@ abstract class Component
    * Initializes a newly created component instance.
    *
    * It applies to the instance the applicable registered presets, followed by the given properties, if any.
+   *
+   * > **Warning:** for some components this method will not be called (ex: Literal).
    *
    * @param array|null $props A map of the component's properties.
    * @throws ComponentException
@@ -365,6 +360,7 @@ abstract class Component
   /**
    * Renders all children.
    * ><p>**Note:** the component itself is not rendered.
+   * ><p>**Note:** usually, you should use this insted of {@see renderChildren()}.
    */
   function renderContent ()
   {
@@ -392,6 +388,16 @@ abstract class Component
         $this->postRender ();
       }
     }
+  }
+
+  /**
+   * Sets the component's rendering context.
+   *
+   * @param Context $context
+   */
+  function setContext (Context $context)
+  {
+    $this->context = $context;
   }
 
   protected function getUniqueId ()

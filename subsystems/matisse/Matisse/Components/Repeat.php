@@ -48,16 +48,16 @@ class Repeat extends Component
 
   protected function render ()
   {
-    $attr                  = $this->props;
-    $count                 = $attr->get ('count', -1);
-    $this->contextualModel = [];
+    $attr            = $this->props;
+    $count           = $attr->get ('count', -1);
+    $this->viewModel = [];
     $this->parseIteratorExp ($attr->as, $idxVar, $itVar);
     if (!is_null ($for = $attr->get ('for'))) {
       $first = true;
       foreach ($for as $i => $v) {
         if ($idxVar)
-          $this->contextualModel[$idxVar] = $i;
-        $this->contextualModel[$itVar] = $v;
+          $this->viewModel[$idxVar] = $i;
+        $this->viewModel[$itVar] = $v;
         if ($first) {
           $first = false;
           $this->renderChildren ('header');
@@ -71,7 +71,7 @@ class Repeat extends Component
     }
     if ($count > 0) {
       for ($i = 0; $i < $count; ++$i) {
-        $this->contextualModel[$idxVar] = $this->contextualModel[$itVar] = $i;
+        $this->viewModel[$idxVar] = $this->viewModel[$itVar] = $i;
         if ($i == 0)
           $this->renderChildren ('header');
         else $this->renderChildren ('glue');

@@ -39,11 +39,11 @@ class Script extends Component
   {
     $prop = $this->props;
     if (exists ($prop->src))
-      $this->page->addScript ($prop->src);
+      $this->context->addScript ($prop->src);
     else {
       $css = $this->getContent ();
       if ($css != '')
-        $this->page->addInlineScript ($css, $prop->name);
+        $this->context->addInlineScript ($css, $prop->name);
     }
   }
 }

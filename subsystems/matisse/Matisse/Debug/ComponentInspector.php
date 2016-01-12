@@ -2,7 +2,7 @@
 namespace Selenia\Matisse\Debug;
 
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\Page;
+use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
@@ -51,7 +51,7 @@ class ComponentInspector
     $tag        = $component->getTagName ();
     $hasContent = false;
     echo "<span style='color:$COLOR_TAG'>&lt;$tag</span>";
-    if (!isset($component->parent) && !$component instanceof Page)
+    if (!isset($component->parent) && !$component instanceof DocumentFragment)
       echo "&nbsp;<span style='color:$COLOR_INFO'>(detached)</span>";
     if ($component->supportsProperties) {
       echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";

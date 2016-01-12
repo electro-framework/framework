@@ -28,8 +28,9 @@ class Text extends Component
 
   public function __construct (Context $context, $props = null)
   {
-    parent::__construct ($context);
-    $this->page = $this;
+    parent::__construct ();
+    $this->setContext ($context);
+//    $this->page = $this;
     $this->setTagName ('Text');
     $this->init ($props);
   }

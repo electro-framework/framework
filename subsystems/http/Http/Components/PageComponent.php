@@ -22,8 +22,8 @@ use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Interfaces\Views\ViewInterface;
-use Selenia\Matisse\Components\Internal\Page;
-use Selenia\Matisse\PipeHandler;
+use Selenia\Matisse\Components\Internal\DocumentFragment;
+use Selenia\Matisse\Lib\PipeHandler;
 use Selenia\Routing\Services\Router;
 use Selenia\Traits\PolymorphicInjectionTrait;
 use Selenia\ViewEngine\Engines\MatisseEngine;
@@ -70,13 +70,22 @@ class PageComponent implements RequestHandlerInterface
   /**
    * It's only set when using Matisse.
    *
-   * @var Page
+   * @var DocumentFragment
    */
   public $page;
   /**
    * @var int Current page number.
    */
   public $pageNumber = 1;
+  /**
+   * If set, defines the page title. It will generate a document `<title>` and it can be used on
+   * breadcrumbs.
+   *
+   * <p>Use this, instead of `title` to manually set the page title.
+   *
+   * @var string
+   */
+  public $pageTitle = null;
   /**
    * @var ServerRequestInterface
    */
@@ -134,13 +143,6 @@ class PageComponent implements RequestHandlerInterface
    * @var string
    */
   protected $indexPage = null;
-  /**
-   * If set, defines the page title. It will generate a document `<title>` and it can be used on
-   * breadcrumbs.
-   *
-   * @var string
-   */
-  protected $pageTitle = null;
   /**
    * @var RedirectionInterface
    */
@@ -284,7 +286,7 @@ class PageComponent implements RequestHandlerInterface
   {
     $this->renderOnAction = true;
     if ($param)
-      $this->page->addInlineDeferredScript ("$('$param').focus()");
+      $this->page->context->addInlineDeferredScript ("$('$param').focus()");
   }
 
   /**
@@ -332,17 +334,13 @@ class PageComponent implements RequestHandlerInterface
   {
     $engine = $view->getEngine ();
     if ($engine instanceof MatisseEngine) {
-      $this->page = $view->getCompiledView ();
-      $this->page->setView ($view);
-      $this->page->autoHTML  = true; // `true` only for the top view, `false` for subviews.
-      $this->page->debugMode = $this->app->debugMode;
-      $this->page->title     = str_replace ('@', $this->getTitle (), $this->app->title);
-      $this->page->bodyAttrs = $this->bodyAttrs;
-      $this->page->addScript ("{$this->app->frameworkURI}/js/engine.js");
+      $this->page      = $view->getCompiledView ();
+      $title           = $this->getTitle ();
+      $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
+      $this->page->context->addScript ("{$this->app->frameworkURI}/js/engine.js");
       $flashMessage = $this->session->getFlashMessage ();
       if ($flashMessage)
         $this->displayStatus ($flashMessage['type'], $flashMessage['message']);
-      $this->page->contextualModel = $this;
     }
   }
 
@@ -443,8 +441,7 @@ class PageComponent implements RequestHandlerInterface
   {
     return coalesce (
       $this->pageTitle,
-      ($link = $this->navigation->currentLink ()) ? $link->title () : null,
-      ''
+      ($link = $this->navigation->currentLink ()) ? $link->title () : null
     );
   }
 
@@ -590,7 +587,7 @@ class PageComponent implements RequestHandlerInterface
    */
   private function processView ()
   {
-    $this->view = $this->injector->make ('Selenia\Interfaces\ViewInterface');
+    $this->view = $this->injector->make (ViewInterface::class);
     ob_start ();
     $rendered = $this->render ();
     if (!$rendered)
@@ -622,7 +619,7 @@ class PageComponent implements RequestHandlerInterface
 
     // View Model panel
     if (DebugConsole::hasLogger ('vm')) {
-      DebugConsole::logger ('vm')->inspect ($this->model);
+      DebugConsole::logger ('vm')->inspect ($this);
     }
 
     return $this->response;

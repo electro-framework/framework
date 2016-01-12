@@ -1,11 +1,12 @@
 <?php
 namespace Selenia\Matisse\Components;
 
+use Selenia\Interfaces\Views\ViewEngineInterface;
+use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\Text;
-use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
+use Selenia\ViewEngine\Engines\MatisseEngine;
 
 class IncludeProperties extends ComponentProperties
 {
@@ -20,6 +21,18 @@ class IncludeProperties extends ComponentProperties
    * @var string
    */
   public $file = '';
+  /**
+   * When true, the component outputs all script imports and embedded scripts for the current document.
+   *
+   * @var bool
+   */
+  public $scripts = false;
+  /**
+   * When true, the component outputs all CSS stylesheet imports and embedded styles for the current document.
+   *
+   * @var bool
+   */
+  public $styles = false;
   /**
    * The relative file path of the view to be loaded and rendered at the component's location.
    *
@@ -46,22 +59,38 @@ class Include_ extends Component
 
   /** @var IncludeProperties */
   public $props;
+  /**
+   * @var ViewInterface
+   */
+  private $view;
+
+  public function __construct (ViewInterface $view)
+  {
+    parent::__construct ();
+    $this->view = $view;
+    $this->view->configure (function (ViewEngineInterface $engine) {
+      if ($engine instanceof MatisseEngine)
+        $engine->configure ($this->context);
+    });
+  }
 
   protected function render ()
   {
     $prop = $this->props;
     if (exists ($prop->view)) {
-      $content = $this->page->getView ()->loadFromFile ($prop->view)->getCompiledView ();
+      $content = $this->view->loadFromFile ($prop->view)->getCompiledView ();
+      $content->run ();
     }
     else if (exists ($prop->file)) {
       $fileContent = loadFile ($prop->file);
       if (!$fileContent)
         throw new FileIOException($prop->file, 'read', explode (PATH_SEPARATOR, get_include_path ()));
-      $content = Text::from ($this->context, $fileContent);
+      echo $fileContent;
     }
-    else throw new ComponentException($this,
-      "One of these properties must be set:<p><kbd>file</kbd> | <kbd>view</kbd>");
-    $this->attachAndRender ($content);
+    else if ($prop->styles)
+      $this->context->outputStyles ();
+    else if ($prop->scripts)
+      $this->context->outputScripts ();
   }
 
 }

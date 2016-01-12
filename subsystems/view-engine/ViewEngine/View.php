@@ -19,6 +19,10 @@ class View implements ViewInterface
    */
   private $compiled;
   /**
+   * @var callable The engine configuration callback.
+   */
+  private $configurator;
+  /**
    * @var ViewEngineInterface
    */
   private $engine;
@@ -37,6 +41,11 @@ class View implements ViewInterface
     $this->app      = $app;
   }
 
+  function configure (callable $callback)
+  {
+    $this->configurator = $callback;
+  }
+
   function getCompiledView ()
   {
     return $this->compiled;
@@ -50,6 +59,10 @@ class View implements ViewInterface
   function setEngine ($engineClass)
   {
     $this->engine = $this->injector->make ($engineClass);
+    if ($this->configurator) {
+      $fn = $this->configurator;
+      $fn ($this->engine);
+    }
     return $this;
   }
 
@@ -82,13 +95,14 @@ class View implements ViewInterface
   {
     foreach ($this->patterns as $pattern => $class)
       if (preg_match ($pattern, $fileName))
-        return $this->engine = $this->injector->make ($class);
+        return $this->setEngine ($class);
     throw new FatalException ("None of the available view engines is capable of handling a file named <b>$fileName</b>.
 <p>Make sure the file name has one of the supported file extensions or matches a known pattern.");
   }
 
   /**
    * Attempts to load the specified view file.
+   *
    * @param string $path
    * @return string The file's content.
    * @throws FileNotFoundException If the file was not found.

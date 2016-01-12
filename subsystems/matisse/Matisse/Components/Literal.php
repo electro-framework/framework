@@ -48,22 +48,17 @@ class LiteralProperties extends PropertiesWithChangeTracking
  */
 class Literal extends Component
 {
+  const TAG_NAME = 'Literal';
   protected static $propertiesClass = LiteralProperties::class;
 
   /** @var LiteralProperties */
   public $props;
 
-  public function __construct (Context $context, $props = null)
-  {
-    parent::__construct ($context);
-    $this->page = $this;
-    $this->setTagName ('Literal');
-    $this->init ($props);
-  }
-
   public static function from (Context $context, $text)
   {
-    return new Literal($context, ['value' => $text]);
+    $lit = new static ();
+    $lit->setContext ($context);
+    $lit->init (['value' => $text]);
   }
 
   protected function render ()

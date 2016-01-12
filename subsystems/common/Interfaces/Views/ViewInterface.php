@@ -12,19 +12,30 @@ use Selenia\Exceptions\FatalException;
 interface ViewInterface
 {
   /**
+   * Passes a configuration callback to the view instance, which will be called upon instantiation of a specific
+   * rendering engine. The callback receives the engine instance and returns nothing.
+   *
+   * @param callable $callback
+   */
+  function configure (callable $callback);
+
+  /**
    * Gets the previously compiled view, if any.
+   *
    * @return mixed|null
    */
   function getCompiledView ();
 
   /**
-   * Gets the active view enging instance, if any.
+   * Gets the active view engine instance, if any.
+   *
    * @return ViewEngineInterface|null
    */
   function getEngine ();
 
   /**
    * Loads and compiles the specified template file.
+   *
    * @param string $path
    * @return $this
    */
@@ -33,6 +44,7 @@ interface ViewInterface
   /**
    * Compiles the given template.
    * > Don't forget to set a view engine before calling this method.
+   *
    * @param string $src
    * @return $this
    */
@@ -40,6 +52,7 @@ interface ViewInterface
 
   /**
    * Registes a view engine to be used for rendering files that match the given regular expression pattern.
+   *
    * @param string $engineClass
    * @param string $filePattern A regular expression. Multiple patterns can be specified using the | operator.
    * @return $this
@@ -48,6 +61,7 @@ interface ViewInterface
 
   /**
    * Renders the previously compiled template.
+   *
    * @param array|object $data The view model; optional data for use by databinding expressions on the template.
    * @return string The generated output (ex: HTML).
    */
@@ -55,6 +69,7 @@ interface ViewInterface
 
   /**
    * Instantiates the specified engine and sets it as the active engine for the view.
+   *
    * @param string $engineClass
    * @return $this
    */

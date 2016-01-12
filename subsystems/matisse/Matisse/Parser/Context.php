@@ -1,13 +1,46 @@
 <?php
 namespace Selenia\Matisse\Parser;
 
-use Selenia\Matisse\Components\Internal\Page;
-use Selenia\Matisse\Components\Macro\Macro;
-use Selenia\Matisse\Exceptions\FileIOException;
-use Selenia\Matisse\Exceptions\ParseException;
+use Selenia\Interfaces\InjectorInterface;
+use Selenia\Matisse\Components;
+use Selenia\Matisse\Components\Macro\MacroInstance;
+use Selenia\Matisse\Traits\Context\AssetsManagementTrait;
+use Selenia\Matisse\Traits\Context\BlocksManagementTrait;
+use Selenia\Matisse\Traits\Context\MacrosManagementTrait;
 
 class Context
 {
+  use AssetsManagementTrait;
+  use BlocksManagementTrait;
+  use MacrosManagementTrait;
+
+  /**
+   * A map of databinding expressions to compiled functions.
+   *
+   * @var array [string => Closure]
+   */
+  static $expressions = [];
+  /**
+   * A map of tag names to fully qualified PHP component class names.
+   * It is initialized to the core Matisse components that can be instantiated via tags.
+   *
+   * @var array string => string
+   */
+  private static $coreTags = [
+    'Apply'   => Components\Apply::class,
+    'Content' => Components\Content::class,
+    'If'      => Components\If_::class,
+    'Include' => Components\Include_::class,
+    Components\Literal::TAG_NAME
+              => Components\Literal::class,
+    'Macro'   => Components\Macro\Macro::class,
+    'Script'  => Components\Script::class,
+    'Style'   => Components\Style::class,
+    'Repeat'  => Components\Repeat::class,
+    MacroInstance::TAG_NAME
+              => MacroInstance::class,
+  ];
+
   /**
    * Remove white space around raw markup blocks.
    *
@@ -21,15 +54,11 @@ class Context
    */
   public $debugMode = false;
   /**
-   * @var string[]
-   */
-  public $macrosDirectories = [];
-  /**
-   * File extension of macro files.
+   * The injector allows the creation of components with yet unknown dependencies.
    *
-   * @var string
+   * @var InjectorInterface
    */
-  public $macrosExt = '.html';
+  public $injector;
   /**
    * A stack of presets.
    *
@@ -41,23 +70,12 @@ class Context
    */
   public $presets = [];
   /**
-   * A service locator function that receives a class/interface/service name and returns a new instance of it.
-   *
-   * @var callable
-   */
-  public $serviceLocator;
-  /**
    * The view-model data for the current rendering context.
+   * <p>This is usually shared throughout the whole document.
    *
    * @var array
    */
   public $viewModel = [];
-  /**
-   * A list of memorized macros for the current request.
-   *
-   * @var Macro[]
-   */
-  private $macros = [];
   /**
    * A class instance who's methods provide pipe implementations.
    *
@@ -76,25 +94,11 @@ class Context
    *
    * @var array string => string
    */
-  private $tags = [];
+  private $tags;
 
-  /**
-   * @param array  $tags        A map of tag names to fully qualified PHP class names.
-   * @param object $pipeHandler A value for {@see $pipeHandler}
-   */
-  function __construct (array &$tags, $pipeHandler = null)
+  function __construct ()
   {
-    $this->tags        =& $tags;
-    $this->pipeHandler = $pipeHandler;
-  }
-
-  function addMacro ($name, Macro $macro)
-  {
-    if (isset($this->macros[$name]))
-      throw new ParseException("Can't redefine the <kbd>$name</kbd> macro");
-    $this->macros[$name] = $macro;
-    // Remove macro from its original location. It now lives on only as a detached template.
-    $macro->remove ();
+    $this->tags = self::$coreTags;
   }
 
   function getClassForTag ($tag)
@@ -103,12 +107,17 @@ class Context
   }
 
   /**
-   * @param string $name
-   * @return Macro
+   * Use this instead of the `clone` operator to get a correct clone of an instance of this class.
+   * <p>Changes to assets on the cloned instance will affect the original instance.
    */
-  function getMacro ($name)
+  function getClone ()
   {
-    return get ($this->macros, $name);
+    $clone                        = clone $this;
+    $clone->stylesheets           =& $this->stylesheets;
+    $clone->scripts               =& $this->scripts;
+    $clone->inlineCssStyles       =& $this->inlineCssStyles;
+    $clone->inlineDeferredScripts =& $this->inlineDeferredScripts;
+    $clone->inlineScripts         =& $this->inlineScripts;
   }
 
   /**
@@ -124,34 +133,14 @@ class Context
     return [$this->pipeHandler, $name];
   }
 
-  /**
-   * Searches for a file defining a macro for the given tag name.
-   *
-   * @param string $tagName
-   * @param Page   $root
-   * @return Macro
-   * @throws FileIOException
-   * @throws ParseException
-   */
-  function loadMacro ($tagName, Page $root)
+  function registerTags (array $tags)
   {
-    $filename = normalizeTagName ($tagName) . $this->macrosExt;
-    $content  = $this->loadMacroFile ($filename);
-    $parser   = new Parser($this);
-    $parser->parse ($content, $root);
-    $macro = $this->getMacro ($tagName);
-    if (isset($macro))
-      return $macro;
-    throw new ParseException("File <b>$filename</b> does not define a macro named <b>$tagName</b>.");
+    $this->tags = array_merge ($this->tags, $tags);
   }
 
-  private function loadMacroFile ($filename)
+  function setPipeHandler ($pipeHandler)
   {
-    foreach ($this->macrosDirectories as $dir) {
-      $f = loadFile ("$dir/$filename", false);
-      if ($f) return $f;
-    }
-    throw new FileIOException($filename);
+    $this->pipeHandler = $pipeHandler;
   }
 
 }
