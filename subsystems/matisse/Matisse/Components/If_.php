@@ -39,9 +39,9 @@ class IfProperties extends ComponentProperties
    */
   public $not = false;
   /**
-   * @var string
+   * @var mixed
    */
-  public $the = '';
+  public $the = type::any;
 }
 
 /**

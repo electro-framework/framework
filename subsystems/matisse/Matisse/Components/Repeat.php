@@ -51,7 +51,9 @@ class Repeat extends Component
     $attr            = $this->props;
     $count           = $attr->get ('count', -1);
     $this->viewModel = [];
-    $this->parseIteratorExp ($attr->as, $idxVar, $itVar);
+    if (exists ($attr->as))
+      $this->parseIteratorExp ($attr->as, $idxVar, $itVar);
+    else $idxVar = $itVar = null;
     if (!is_null ($for = $attr->get ('for'))) {
       $first = true;
       foreach ($for as $i => $v) {

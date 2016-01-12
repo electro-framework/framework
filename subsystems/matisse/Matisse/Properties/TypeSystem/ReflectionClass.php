@@ -162,6 +162,11 @@ class ReflectionClass
           $prop->relatedType = type::content;
         break;
 
+      case type::any:
+        $prop->type = $value;
+        $prop->default = null;
+        break;
+
       case type::binding:
         $prop->type = $value;
         break;

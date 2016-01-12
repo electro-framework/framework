@@ -10,6 +10,10 @@ use Selenia\Matisse\Components\Internal\Metadata;
 class type
 {
   /**
+   * Any data type.
+   */
+  const any = '~any';
+  /**
    * Binding expression. This property is a string.
    * Do not define properties of this type. It is used only on macro instances when binding expressions are specified
    * for macro parameters instead of constant values.
@@ -69,6 +73,7 @@ class type
    * A map of property type identifiers to property type names.
    */
   private static $NAMES = [
+    self::any        => 'any',
     self::binding    => 'binding',
     self::bool       => 'bool',
     self::collection => 'collection',
@@ -174,8 +179,9 @@ class type
       case type::binding:
         return is_string ($v);
 
-      case type::bool:
-        return true;   // Any value can be typecast to boolean.
+      case type::any:
+      case type::bool: // Any value can be typecast to boolean.
+        return true;
 
       case type::data:
         return is_array ($v) || is_object ($v)
