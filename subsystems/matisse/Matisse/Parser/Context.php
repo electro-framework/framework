@@ -4,6 +4,7 @@ namespace Selenia\Matisse\Parser;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Matisse\Components;
 use Selenia\Matisse\Components\Macro\MacroInstance;
+use Selenia\Matisse\Lib\AssetsContext;
 use Selenia\Matisse\Traits\Context\AssetsManagementTrait;
 use Selenia\Matisse\Traits\Context\BlocksManagementTrait;
 use Selenia\Matisse\Traits\Context\MacrosManagementTrait;
@@ -27,18 +28,19 @@ class Context
    * @var array string => string
    */
   private static $coreTags = [
-    'Apply'   => Components\Apply::class,
-    'Content' => Components\Content::class,
-    'If'      => Components\If_::class,
-    'Include' => Components\Include_::class,
+    'Apply'       => Components\Apply::class,
+    'AssetsGroup' => Components\AssetsGroup::class,
+    'Content'     => Components\Content::class,
+    'If'          => Components\If_::class,
+    'Include'     => Components\Include_::class,
     Components\Literal::TAG_NAME
-              => Components\Literal::class,
-    'Macro'   => Components\Macro\Macro::class,
-    'Script'  => Components\Script::class,
-    'Style'   => Components\Style::class,
-    'Repeat'  => Components\Repeat::class,
+                  => Components\Literal::class,
+    'Macro'       => Components\Macro\Macro::class,
+    'Script'      => Components\Script::class,
+    'Style'       => Components\Style::class,
+    'Repeat'      => Components\Repeat::class,
     MacroInstance::TAG_NAME
-              => MacroInstance::class,
+                  => MacroInstance::class,
   ];
 
   /**
@@ -98,26 +100,13 @@ class Context
 
   function __construct ()
   {
-    $this->tags = self::$coreTags;
+    $this->tags   = self::$coreTags;
+    $this->assets = $this->mainAssets = new AssetsContext;
   }
 
   function getClassForTag ($tag)
   {
     return get ($this->tags, $tag);
-  }
-
-  /**
-   * Use this instead of the `clone` operator to get a correct clone of an instance of this class.
-   * <p>Changes to assets on the cloned instance will affect the original instance.
-   */
-  function getClone ()
-  {
-    $clone                        = clone $this;
-    $clone->stylesheets           =& $this->stylesheets;
-    $clone->scripts               =& $this->scripts;
-    $clone->inlineCssStyles       =& $this->inlineCssStyles;
-    $clone->inlineDeferredScripts =& $this->inlineDeferredScripts;
-    $clone->inlineScripts         =& $this->inlineScripts;
   }
 
   /**
