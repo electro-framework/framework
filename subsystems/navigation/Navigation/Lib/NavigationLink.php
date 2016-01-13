@@ -248,6 +248,11 @@ class NavigationLink implements NavigationLinkInterface
     return $this;
   }
 
+  function getOriginalUrl ()
+  {
+    return $this->url;
+  }
+
   private function evaluateUrl ($url)
   {
     $request         = $this->getRequest ();

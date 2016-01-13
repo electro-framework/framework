@@ -15,16 +15,16 @@ class HtmlComponent extends Component
    *
    * @var string
    */
-  public $cssClassName = '';
+  public  $cssClassName = '';
   /** @var HtmlComponentProperties */
   public $props;
-
   /**
    * Override to select a different tag as the component container.
    *
    * @var string
    */
   protected $containerTag = 'div';
+  private $originalCssClassName;
 
   function addClass ($class)
   {
@@ -37,12 +37,6 @@ class HtmlComponent extends Component
   protected function postRender ()
   {
     $this->end ();
-  }
-
-  function run ()
-  {
-    $this->cssClassName = '';
-    parent::run ();
   }
 
   protected function preRender ()
@@ -59,6 +53,14 @@ class HtmlComponent extends Component
     ));
     if (exists ($this->props->htmlAttrs))
       echo ' ' . $this->props->htmlAttrs;
+  }
+
+  function run ()
+  {
+    if ($this->renderCount)
+      $this->cssClassName = $this->originalCssClassName;
+    else $this->originalCssClassName = $this->cssClassName;
+    parent::run ();
   }
 
 }

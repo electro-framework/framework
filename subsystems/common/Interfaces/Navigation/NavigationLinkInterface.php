@@ -57,6 +57,13 @@ interface NavigationLinkInterface extends \IteratorAggregate
   function getMenu ();
 
   /**
+   * Rwturns the original URL as it was set on the navigation declaration.
+   *
+   * @return string
+   */
+  function getOriginalUrl ();
+
+  /**
    * The menu item's icon.
    *
    * @param string $icon [optional] A space-separated list of CSS class selectors. Ex: 'fa fa-home'

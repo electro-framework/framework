@@ -2,11 +2,9 @@
 namespace Selenia\Matisse\Components\Base;
 
 use Selenia\Matisse\Components\GenericHtmlComponent;
-use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Components\Macro\MacroInstance;
 use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
-use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
 use Selenia\Matisse\Traits\Component\DataBindingTrait;
@@ -70,6 +68,14 @@ abstract class Component
    */
   protected $autoId = false;
   /**
+   * How many times has this instance been rendered.
+   *
+   * <p>It's useful for determining if the component is being repeated, for instance.
+   *
+   * @var int
+   */
+  protected $renderCount = 0;
+  /**
    * When true, forces generation of a new auto-id, event if the component already has an assigned id.
    *
    * @var bool
@@ -124,7 +130,7 @@ abstract class Component
       return $component;
     }
     $context = $parent->context;
-    $class = $context->getClassForTag ($tagName);
+    $class   = $context->getClassForTag ($tagName);
     if (!$class) {
       if ($strict)
         self::throwUnknownComponent ($context, $tagName, $parent);
@@ -137,7 +143,7 @@ abstract class Component
         $props = [];
       $props['macro'] = $tagName;
       $component      = new MacroInstance;
-      $component->setContext($context);
+      $component->setContext ($context);
     }
 
     // Component class was found.
@@ -380,6 +386,7 @@ abstract class Component
    */
   function run ()
   {
+    ++$this->renderCount;
     if (!$this->inactive) {
       $this->databind ();
       if (!isset($this->props) || !isset($this->props->hidden) || !$this->props->hidden) {
