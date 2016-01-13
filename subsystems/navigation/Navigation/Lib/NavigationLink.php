@@ -17,17 +17,20 @@ class NavigationLink implements NavigationLinkInterface
 
   /**
    * Note: this will be assigned a reference to an array on a {@see NavigationInterface} instance.
+   *
    * @var NavigationLinkInterface[]
    */
   public $IDs;
   /**
    * Note: this is accessible to `Navigation`.
+   *
    * @var bool
    */
   public $group = false;
   /**
    * `true` when the link's URL can be computed.
    * ><p>The URL can be computed when all route parameters on the link can be resolved.
+   *
    * @var bool
    */
   private $available;
@@ -56,6 +59,7 @@ class NavigationLink implements NavigationLinkInterface
 
   /**
    * Checks if the given argument is a valid iterable value. If it's not, it throws a fault.
+   *
    * @param NavigationLinkInterface[]|\Traversable|callable $navMap
    * @return \Iterator
    * @throws Fault {@see Faults::ARG_NOT_ITERABLE}
@@ -123,7 +127,7 @@ class NavigationLink implements NavigationLinkInterface
     if ($myUrl == $path) return true;
     if ($myUrl == '') {
       foreach ($this->links as $sub)
-        if ($sub->isActive()) return true;
+        if ($sub->isActive ()) return true;
       return false;
     }
     $myUrl = preg_quote ($myUrl);
@@ -159,7 +163,7 @@ class NavigationLink implements NavigationLinkInterface
     return $this->merge ($navigationMap);
   }
 
-  function merge ($navigationMap)
+  function merge ($navigationMap, $prepend = false)
   {
     self::validateNavMap ($navigationMap);
     /**
@@ -167,9 +171,16 @@ class NavigationLink implements NavigationLinkInterface
      * @var NavigationLinkInterface $link
      */
     foreach (iterator ($navigationMap) as $key => $link) {
-      $this->links[$key] = $link->parent ($this); // assigns $link and sets its parent
+      $link->parent ($this);
       if (is_string ($key)) $link->url ($key);
     }
+    if ($prepend)
+      $this->links = array_merge ($navigationMap, $this->links);
+    else $this->links = array_merge ($this->links, $navigationMap);
+//    foreach (iterator ($navigationMap) as $key => $link) {
+//      $this->links[$key] = $link->parent ($this); // assigns $link and sets its parent
+//      if (is_string ($key)) $link->url ($key);
+//    }
     return $this;
   }
 
@@ -188,7 +199,7 @@ class NavigationLink implements NavigationLinkInterface
       $url = $url();
     if (isset($url) && $this->parent && !str_beginsWith ($url, 'http') && ($url === '' || $url[0] != '/')) {
       $base = $this->parent->url ();
-      $url  = isset($base) && isset($url) ? ltrim ("$base/$url", '/') : null;
+      $url  = exists ($base) ? (exists ($url) ? "$base/$url" : $base) : $url;
     }
     return $this->cachedUrl = $url;
   }
@@ -213,7 +224,7 @@ class NavigationLink implements NavigationLinkInterface
   {
     if (is_null ($url)) {
       $url = $this->rawUrl ();
-      if (isset($url))
+      if (exists ($url))
         $url = $this->evaluateUrl ($url);
       return $url;
     }

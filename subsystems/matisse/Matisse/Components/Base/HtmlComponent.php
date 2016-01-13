@@ -10,8 +10,8 @@ class HtmlComponent extends Component
    * The component's runtime CSS classes.
    *
    * You should never change the `class` attribute at rendering time, because if the component
-   * is being repeatedly re-rendered (being part of a repeater section, for instance), the
-   * attribute will become instable. Use this property instead.
+   * is being repeatedly re-rendered (being a child of a `<Repeat>` component, for instance), the
+   * attribute will become unstable. Use this property instead, which is reset for every rendering of the component.
    *
    * @var string
    */
@@ -37,6 +37,12 @@ class HtmlComponent extends Component
   protected function postRender ()
   {
     $this->end ();
+  }
+
+  function run ()
+  {
+    $this->cssClassName = '';
+    parent::run ();
   }
 
   protected function preRender ()

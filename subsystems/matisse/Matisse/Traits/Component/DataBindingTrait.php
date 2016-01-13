@@ -270,9 +270,21 @@ trait DataBindingTrait
     // Apply pipes to expression result
 
     foreach ($pipes as $name) {
-      $pipe = $this->context->getPipe (trim ($name));
+      $name = trim ($name);
+
+      // Parse pipe expression, with syntax: pipe(args1,...argN)
+
+      if (substr ($name, -1) == ')') {
+        list ($name, $args) = explode ('(', substr ($name, 0, -1));
+        $name   = trim ($name);
+        $args   = explode (',', $args);
+        $fnArgs = array_from ($v, ...$args);
+      }
+      else $fnArgs = [$v];
+
+      $pipe = $this->context->getPipe ($name);
       try {
-        $v = call_user_func ($pipe, $v, $this->context);
+        $v = call_user_func_array ($pipe, $fnArgs);
       }
       catch (HandlerNotFoundException $e) {
         throw new ComponentException ($this, "Pipe <b>$name</b> was not found.");

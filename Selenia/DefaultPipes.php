@@ -14,6 +14,17 @@ class DefaultPipes
   }
 
   /**
+   * @param mixed $v
+   * @param string $true
+   * @param string $false
+   * @return string
+   */
+  function then ($v, $true = '', $false = '')
+  {
+    return $v ? $true : $false;
+  }
+
+  /**
    * @param string $v
    * @return string
    */

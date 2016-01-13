@@ -92,6 +92,7 @@ interface NavigationLinkInterface extends \IteratorAggregate
 
   /**
    * Indicates if the link is actually enabled, taking into account `enabled()`, and missing parameters on the URL.
+   *
    * @return bool
    * @throws Fault Faults::REQUEST_NOT_SET
    */
@@ -100,6 +101,7 @@ interface NavigationLinkInterface extends \IteratorAggregate
   /**
    * Indicates if the link is actually visible, taking into account `visible()`, `visibleIfUnavailable()` and missing
    * parameters on the URL.
+   *
    * @return bool
    * @throws Fault Faults::REQUEST_NOT_SET
    */
@@ -115,6 +117,7 @@ interface NavigationLinkInterface extends \IteratorAggregate
 
   /**
    * Indicates if the link is a group pseudo-link that was created by a {@see NavigationInterface::group()} call.
+   *
    * @return bool
    */
   function isGroup ();
@@ -139,9 +142,11 @@ interface NavigationLinkInterface extends \IteratorAggregate
    * Merges a navigation map with this link's map.
    *
    * @param NavigationLinkInterface[]|\Traversable|callable $navigationMap An iterable value.
+   * @param bool                                            $prepend       Append or prepend to the existing children
+   *                                                                       collection.
    * @return $this
    */
-  function merge ($navigationMap);
+  function merge ($navigationMap, $prepend = false);
 
   /**
    * The link's parent link or, if this is a root link, the navigation object.
@@ -153,6 +158,7 @@ interface NavigationLinkInterface extends \IteratorAggregate
 
   /**
    * Similar to {@see Url()}, but it returns the original, unprocessed URL, with all parameter identifiers untouched.
+   *
    * @return string
    */
   function rawUrl ();

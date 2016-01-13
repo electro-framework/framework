@@ -35,19 +35,22 @@ interface NavigationInterface extends \IteratorAggregate, \ArrayAccess
   function IDs ();
 
   /**
-   * Inserts a navigation map onto the root level of this navigation.
+   * Inserts a navigation map into this navigation.
    *
    * @param NavigationLinkInterface[]|\Traversable|callable $navigationMap An iterable value.
+   * @param bool                                            $prepend       Append or prepend to the existing children
+   *                                                                       collection.
    * @param string                                          $targetId      Optional ID of the link where the merge will
    *                                                                       be performed. If not specified, the root
    *                                                                       link will be targeted.
    * @return $this
    * @throws \InvalidArgumentException If the argument is not iterable.
    */
-  function add ($navigationMap, $targetId = null);
+  function add ($navigationMap, $prepend = false, $targetId = null);
 
   /**
    * Returns the link that corresponds to the currently visible page.
+   *
    * @return NavigationLinkInterface|null null if not found.
    */
   function currentLink ();
@@ -56,22 +59,17 @@ interface NavigationInterface extends \IteratorAggregate, \ArrayAccess
    * Returns a linear sequence of {@see NavigationLinkInterface} objects that represents the path to the currently
    * displayed page starting from a root (home) link.
    *
-   * <p>The set can be enumerated as a list of objects, with sequential integer keys.
-   * > **Note:** no `SplObjectStorage` extra data is associated with elements on the set.
-   *
    * > <p>All objects on the path come from the navigation tree; these are not clones.
    *
-   * <p>This method also allows you to test if a link on the tree is also on the path (for instance, for deciding if a
-   * link on a menu is selected). Use {@see SplObjectStorage::contains()} to check for that. Of course, you may also
-   * call {@see NavigationInterface::isActive()} for the same purpose.
-   *
-   * @return $this|SplObjectStorage
+   * @param int $offset If specified, discards the first N items.
+   * @return $this|NavigationLinkInterface[]
    */
-  function getCurrentTrail ();
+  function getCurrentTrail ($offset = 0);
 
   /**
    * Returns the first level of navigation links, suitable for display on a navigation menu.
    * Recursively iterating each link's `getMenu()` will yield the full navigation tree.
+   *
    * @return \Iterator
    */
   function getMenu ();
@@ -103,6 +101,7 @@ interface NavigationInterface extends \IteratorAggregate, \ArrayAccess
 
   /**
    * Creates a new navigation link object, bound to this Navigation.
+   *
    * @return NavigationLinkInterface
    */
   function link ();
@@ -111,6 +110,7 @@ interface NavigationInterface extends \IteratorAggregate, \ArrayAccess
    * Provides the Navigation instance with information about the current HTTP request, so that it can generate
    * a navigation that suits the application's current state.
    * > <p>This is for internal use only.
+   *
    * @param ServerRequestInterface $request [optional]
    * @return $this|ServerRequestInterface
    */
@@ -122,6 +122,7 @@ interface NavigationInterface extends \IteratorAggregate, \ArrayAccess
    * <p>This link is not part of the navigation itself,
    * <p>You do not usually set this property, as a root link will be created automatically and you can just add
    * links to it, or to a specific descendant link.
+   *
    * @param NavigationLinkInterface $rootLink [optional] The root of the links tree.
    * @return $this|NavigationLinkInterface
    */

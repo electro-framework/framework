@@ -19,7 +19,7 @@ class Navigation implements NavigationInterface
    */
   private $IDs = [];
   /**
-   * @var SplObjectStorage
+   * @var NavigationLinkInterface[]
    */
   private $cachedTrail;
   /**
@@ -45,26 +45,7 @@ class Navigation implements NavigationInterface
     return $this->IDs;
   }
 
-  function __debugInfo ()
-  {
-    $linkToUrl = function (NavigationLinkInterface $link) {
-      return $link->rawUrl ();
-    };
-    return [
-      'All IDs<sup>*</sup>'        => PA ($this->IDs)->keys ()->sort ()->join (', '),
-      'All URLs<sup>*</sup><br>' .
-      '<i>(in scanning order)</i>' => map ($this->rootLink->getDescendants (),
-        function ($link) {
-          return $link->rawUrl ();
-        }),
-      'Trail<sup>*</sup>'          => map ($this->getCurrentTrail (), $linkToUrl),
-      'Visible trail<sup>*</sup>'  => map ($this->getVisibleTrail (), $linkToUrl),
-      'Navigation map<sup>*</sup>' => iterator_to_array ($this->rootLink),
-      'request'                    => $this->request (),
-    ];
-  }
-
-  function add ($navigationMap, $targetId = null)
+  function add ($navigationMap, $prepend = false, $targetId = null)
   {
     if (isset($targetId)) {
       if (!isset($this->IDs[$targetId]))
@@ -72,27 +53,33 @@ class Navigation implements NavigationInterface
       $target = $this->IDs[$targetId];
     }
     else $target = $this->rootLink;
-    $target->merge ($navigationMap);
+    $target->merge ($navigationMap, $prepend);
     return $this;
   }
 
   /**
    * Returns the link that corresponds to the currently visible page.
+   *
    * @return NavigationLinkInterface|null null if not found.
    */
   function currentLink ()
   {
-    if (!isset($this->cachedTrail)) $this->getCurrentTrail();
+    if (!isset($this->cachedTrail)) $this->getCurrentTrail ();
     return $this->currentLink;
   }
 
-  function getCurrentTrail ()
+  function getCurrentTrail ($offset = 0)
   {
-    if (isset($this->cachedTrail)) return $this->cachedTrail;
-    $url = $this->request ()->getAttribute ('virtualUri');
-    $this->currentLink = null;
-    $this->buildTrail ($this->rootLink, $trail = new SplObjectStorage, $url);
-    return $this->cachedTrail = $trail;
+    if (!isset($this->cachedTrail)) {
+      $request = $this->request ();
+      if (is_null ($request))
+        throw new Fault (Faults::REQUEST_NOT_SET);
+      $url               = $request->getAttribute ('virtualUri');
+      $this->currentLink = null;
+      $this->cachedTrail = [];
+      $this->buildTrail ($this->rootLink, $this->cachedTrail, $url);
+    }
+    return $offset ? array_slice ($this->cachedTrail, $offset) : $this->cachedTrail;
   }
 
   function getIterator ()
@@ -127,6 +114,7 @@ class Navigation implements NavigationInterface
 
   /**
    * Override this if you need to return another type of `NavigationLinkInterface`-compatible instance.
+   *
    * @return NavigationLink
    */
   function link ()
@@ -170,19 +158,38 @@ class Navigation implements NavigationInterface
     return $this;
   }
 
-  private function buildTrail (NavigationLinkInterface $link, SplObjectStorage $trail, $url)
+  function __debugInfo ()
+  {
+    $linkToUrl = function (NavigationLinkInterface $link) {
+      return $link->rawUrl ();
+    };
+    return [
+      'All IDs<sup>*</sup>'        => PA ($this->IDs)->keys ()->sort ()->join (', '),
+      'All URLs<sup>*</sup><br>' .
+      '<i>(in scanning order)</i>' => map ($this->rootLink->getDescendants (),
+        function ($link) {
+          return $link->rawUrl ();
+        }),
+      'Trail<sup>*</sup>'          => map ($this->getCurrentTrail (), $linkToUrl),
+      'Visible trail<sup>*</sup>'  => map ($this->getVisibleTrail (), $linkToUrl),
+      'Navigation map<sup>*</sup>' => iterator_to_array ($this->rootLink),
+      'request'                    => $this->request (),
+    ];
+  }
+
+  private function buildTrail (NavigationLinkInterface $link, array & $trail, $url)
   {
     /** @var NavigationLinkInterface $child */
     foreach ($link->links () as $child) {
       if ($child->isActive ()) {
-        $trail->attach ($child);
+        $trail[]           = $child;
         $this->currentLink = $child;
         $this->buildTrail ($child, $trail, $url);
         // Special case for the home link (URL=='') when the URL to match is not ''
         if ($url !== '' && $child->rawUrl () === '') {
-          if ($trail->count () > 1) return;
+          if (count ($trail) > 1) return;
           // No trail was built, so do not match the home link and proceed to the next root link.
-          $trail->detach ($child);
+          array_pop ($trail);
           $this->currentLink = null;
         }
         else return;
