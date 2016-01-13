@@ -3,6 +3,7 @@ namespace Selenia\Routing\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Exceptions\Fatal\FileNotFoundException;
 use Selenia\Http\Components\PageComponent;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\InjectorInterface;
@@ -18,7 +19,6 @@ use Selenia\Interfaces\InjectorInterface;
  */
 class AutoRoutingMiddleware implements RequestHandlerInterface
 {
-  const PREFIX = 'prototype';
   /**
    * @var InjectorInterface
    */
@@ -32,17 +32,20 @@ class AutoRoutingMiddleware implements RequestHandlerInterface
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     $URL = $request->getAttribute ('virtualUri');
-    if (str_beginsWith ($URL, self::PREFIX)) {
-      $URL = substr ($URL, strlen (self::PREFIX) + 1);
-      if ($URL === false) $URL = 'index';
+    inspect ($URL);
+    if ($URL == '') $URL = '/';
+    if (substr ($URL, -1) == '/') $URL = $URL . 'index';
 
-      /** @var PageComponent $page */
-      $page = $this->injector->make (PageComponent::class);
-      $page->templateUrl = "$URL.html";
+    /** @var PageComponent $page */
+    $page              = $this->injector->make (PageComponent::class);
+    $page->templateUrl = "$URL.html";
 
+    try {
       return $page ($request, $response, $next);
     }
-    return $next ();
+    catch (FileNotFoundException $e) {
+      return $next ();
+    }
   }
 
 }
