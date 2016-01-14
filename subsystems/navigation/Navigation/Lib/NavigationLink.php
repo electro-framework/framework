@@ -27,6 +27,8 @@ class NavigationLink implements NavigationLinkInterface
    * @var bool
    */
   public $group = false;
+  /** @var bool */
+  private $active = false;
   /**
    * `true` when the link's URL can be computed.
    * ><p>The URL can be computed when all route parameters on the link can be resolved.
@@ -36,6 +38,8 @@ class NavigationLink implements NavigationLinkInterface
   private $available;
   /** @var string|null When set, `url()` will always return its value. */
   private $cachedUrl = null;
+  /** @var bool */
+  private $current = false;
   /** @var bool|callable */
   private $enabled = true;
   /** @var string */
@@ -48,6 +52,8 @@ class NavigationLink implements NavigationLinkInterface
   private $parent;
   /** @var ServerRequestInterface */
   private $request;
+  /** @var bool */
+  private $selected = false;
   /** @var string|callable */
   private $title = '';
   /** @var string|callable|null When null, the value will be computed on demand */
@@ -84,14 +90,14 @@ class NavigationLink implements NavigationLinkInterface
     return $this;
   }
 
-  public function getDescendants ()
+  function getDescendants ()
   {
     return Flow::from ($this->links)->recursive (
       function (NavigationLinkInterface $link) { return $link->links (); }
     )->reindex ()->getIterator ();
   }
 
-  public function getIterator ()
+  function getIterator ()
   {
     return Flow::from ($this->links)->reindex ()->getIterator ();
   }
@@ -126,15 +132,7 @@ class NavigationLink implements NavigationLinkInterface
 
   function isActive ()
   {
-    $path  = $this->getRequest ()->getAttribute ('virtualUri');
-    $myUrl = $this->url ();
-    if (is_null ($myUrl)) return false;
-    if ($myUrl == $path) return true;
-    foreach ($this->links as $sub)
-      if ($sub->isActive ()) return true;
-    return false;
-//    $myUrl = preg_quote ($myUrl);
-//    return preg_match ("#^$myUrl(?:/|$)#", $path);
+    return $this->active;
   }
 
   function isActuallyEnabled ()
@@ -151,12 +149,17 @@ class NavigationLink implements NavigationLinkInterface
 
   function isCurrent ()
   {
-    return $this->url () == $this->getRequest ()->getAttribute ('virtualUri');
+    return $this->current;
   }
 
   function isGroup ()
   {
     return $this->group;
+  }
+
+  function isSelected ()
+  {
+    return $this->selected;
   }
 
   function links ($navigationMap = null)
@@ -213,6 +216,13 @@ class NavigationLink implements NavigationLinkInterface
       return $this->request ?: $this->request = ($this->parent ? $this->parent->request () : null);
     $this->request = $request;
     return $this;
+  }
+
+  function setState ($active, $selected, $current)
+  {
+    $this->active   = $active;
+    $this->selected = $selected;
+    $this->current  = $current;
   }
 
   function title ($title = null)

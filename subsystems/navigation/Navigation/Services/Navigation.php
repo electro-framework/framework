@@ -7,7 +7,6 @@ use Selenia\Faults\Faults;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Navigation\Lib\NavigationLink;
-use SplObjectStorage;
 
 /**
  * TODO: allow inserting maps into IDs that have not yet been defined.
@@ -23,7 +22,7 @@ class Navigation implements NavigationInterface
    */
   private $cachedTrail;
   /**
-   * @var SplObjectStorage
+   * @var NavigationLinkInterface[]
    */
   private $cachedVisibleTrail;
   /**
@@ -34,6 +33,10 @@ class Navigation implements NavigationInterface
    * @var NavigationLinkInterface
    */
   private $rootLink;
+  /**
+   * @var NavigationLinkInterface
+   */
+  private $selectedLink;
 
   function __construct ()
   {
@@ -57,11 +60,6 @@ class Navigation implements NavigationInterface
     return $this;
   }
 
-  /**
-   * Returns the link that corresponds to the currently visible page.
-   *
-   * @return NavigationLinkInterface|null null if not found.
-   */
   function currentLink ()
   {
     if (!isset($this->cachedTrail)) $this->getCurrentTrail ();
@@ -78,6 +76,14 @@ class Navigation implements NavigationInterface
       $this->currentLink = null;
       $this->cachedTrail = [];
       $this->buildTrail ($this->rootLink, $this->cachedTrail, $url);
+      if ($this->currentLink) {
+        if ($this->currentLink === $this->selectedLink)
+          $this->currentLink->setState (true, true, true);
+        else {
+          $this->currentLink->setState (true, false, true);
+          $this->selectedLink->setState (true, true, false);
+        }
+      }
     }
     return $offset ? array_slice ($this->cachedTrail, $offset) : $this->cachedTrail;
   }
@@ -96,11 +102,11 @@ class Navigation implements NavigationInterface
   {
     if (isset($this->cachedVisibleTrail)) return $this->cachedVisibleTrail;
     $trail  = $this->getCurrentTrail ();
-    $vtrail = new SplObjectStorage;
+    $vtrail = [];
     /** @var NavigationLinkInterface $link */
     foreach ($trail as $link)
       if ($link->isActuallyVisible ())
-        $vtrail->attach ($link);
+        $vtrail[] = $link;
       else break;
     return $this->cachedVisibleTrail = $vtrail;
   }
@@ -158,6 +164,12 @@ class Navigation implements NavigationInterface
     return $this;
   }
 
+  function selectedLink ()
+  {
+    if (!isset($this->cachedTrail)) $this->getCurrentTrail ();
+    return $this->selectedLink;
+  }
+
   function __debugInfo ()
   {
     $linkToUrl = function (NavigationLinkInterface $link) {
@@ -181,20 +193,35 @@ class Navigation implements NavigationInterface
   {
     /** @var NavigationLinkInterface $child */
     foreach ($link->links () as $child) {
-      if ($child->isActive ()) {
+      if ($this->linkIsActive ($child, $url)) {
         $trail[]           = $child;
         $this->currentLink = $child;
+        if ($child->isActuallyVisible ())
+          $this->selectedLink = $child;
+        $child->setState (true, false, false);
         $this->buildTrail ($child, $trail, $url);
         // Special case for the home link (URL=='') when the URL to match is not ''
         if ($url !== '' && $child->rawUrl () === '') {
           if (count ($trail) > 1) return;
           // No trail was built, so do not match the home link and proceed to the next root link.
           array_pop ($trail);
-          $this->currentLink = null;
+          $this->selectedLink = null;
         }
         else return;
       }
     }
+  }
+
+  private function linkIsActive (NavigationLinkInterface $link, $url)
+  {
+    $linkUrl = $link->url ();
+    if (is_null ($linkUrl)) return false;
+    if ($linkUrl == $url) return true;
+    foreach ($link->links () as $sub)
+      if ($this->linkIsActive ($sub, $url)) return true;
+    return false;
+//    $linkUrl = preg_quote ($myUrl);
+//    return preg_match ("#^$myUrl(?:/|$)#", $url);
   }
 
 }

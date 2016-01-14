@@ -2,7 +2,6 @@
 namespace Selenia\Interfaces\Navigation;
 
 use Psr\Http\Message\ServerRequestInterface;
-use SplObjectStorage;
 
 /**
  * Represents a set of navigation link trees and provides an API for performing operations on it.
@@ -49,7 +48,9 @@ interface NavigationInterface extends \IteratorAggregate, \ArrayAccess
   function add ($navigationMap, $prepend = false, $targetId = null);
 
   /**
-   * Returns the link that corresponds to the currently visible page.
+   * Returns the link matches the current URL totally (i.e. it matches the current page).
+   *
+   * > <p>The current link may be hidden; in that case, it will differ from {@see selectedLink()}.
    *
    * @return NavigationLinkInterface|null null if not found.
    */
@@ -83,7 +84,7 @@ interface NavigationInterface extends \IteratorAggregate, \ArrayAccess
    *
    * <p>See also {@see getCurrentTrail()}.
    *
-   * @return $this|SplObjectStorage
+   * @return $this|NavigationLinkInterface[]
    */
   function getVisibleTrail ();
 
@@ -127,5 +128,14 @@ interface NavigationInterface extends \IteratorAggregate, \ArrayAccess
    * @return $this|NavigationLinkInterface
    */
   function rootLink (NavigationLinkInterface $rootLink = null);
+
+  /**
+   * Returns the link that corresponds to the currently visible page.
+   *
+   * > <p>It may be an ancestor of the real link that matches the URL if the later is hidden.
+   *
+   * @return NavigationLinkInterface|null null if not found.
+   */
+  function selectedLink ();
 
 }

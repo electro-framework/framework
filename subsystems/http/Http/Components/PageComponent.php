@@ -208,7 +208,7 @@ class PageComponent implements RequestHandlerInterface
     $this->virtualUrl = $request->getAttribute ('virtualUri');
     $this->redirection->setRequest ($request);
 
-    $this->currentLink = $this->navigation->request ($this->request)->currentLink ();
+    $this->currentLink = $this->navigation->request ($this->request)->selectedLink ();
     if ($this->currentLink && $parent = $this->currentLink->parent ())
       $this->indexPage = $parent->url ();
 
@@ -441,7 +441,7 @@ class PageComponent implements RequestHandlerInterface
   {
     return coalesce (
       $this->pageTitle,
-      ($link = $this->navigation->currentLink ()) ? $link->title () : null
+      ($link = $this->navigation->selectedLink ()) ? $link->title () : null
     );
   }
 

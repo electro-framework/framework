@@ -93,7 +93,6 @@ interface NavigationLinkInterface extends \IteratorAggregate
    * ><p>A link can be active even when it's not visible.
    *
    * @return bool
-   * @throws Fault Faults::REQUEST_NOT_SET
    */
   function isActive ();
 
@@ -118,7 +117,6 @@ interface NavigationLinkInterface extends \IteratorAggregate
    * Indicates if the link matches the current URL totally (i.e. it matches the current page).
    *
    * @return bool
-   * @throws Fault Faults::REQUEST_NOT_SET
    */
   function isCurrent ();
 
@@ -128,6 +126,16 @@ interface NavigationLinkInterface extends \IteratorAggregate
    * @return bool
    */
   function isGroup ();
+
+  /**
+   * Indicates if the link is the last active link on the trail.
+   *
+   * <p>Selected links are usually highlighted on a user interface.
+   * <p>They may also be the 'current' link, but they can also be an ancestor if the next active link is not visible.
+   *
+   * @return bool
+   */
+  function isSelected ();
 
   /**
    * This link's navigation map (a map of child links).
@@ -180,6 +188,19 @@ interface NavigationLinkInterface extends \IteratorAggregate
    * @return $this|bool $this if an argument is given, the property's value otherwise.
    */
   function request (ServerRequestInterface $request = null);
+
+  /**
+   * For internal use by the {@see NavigationInterface} that manages the link.
+   *
+   * <p>When building a navigation trail, the navigation instance calls this method for each child on the trail in order
+   * to set its state-related properties.
+   *
+   * @param bool $active
+   * @param bool $selected
+   * @param bool $current
+   * @return mixed
+   */
+  function setState ($active, $selected, $current);
 
   /**
    * The page title.
