@@ -25,7 +25,7 @@ class Macro extends Component
   /** Finds binding expressions which are not macro parameter bindings. */
   const FIND_NON_MACRO_EXP = '#\{\{\s*(?=\S)[^@]#u';
   /** Finds macro binding expressions. */
-  const PARSE_MACRO_BINDING_EXP = '#\{\{\s*@(.*?)\s*\}\}#u';
+  const PARSE_MACRO_BINDING_EXP = '#\{\{\s*@([\w\-]*)\s*([|.][^\}]*)?\s*\}\}#u';
 
   protected static $propertiesClass = MacroProperties::class;
 
@@ -289,7 +289,13 @@ class Macro extends Component
 
             // Transfer binding from the macro instance to the component.
 
-            $component->addBinding ($field, $instance->bindings[$prop]);
+            $newBinding = $instance->bindings[$prop];
+            // Transfer remaining original expression, if any.
+            $pipe = get($match, 2);
+            if (isset($pipe))
+              $newBinding = rtrim(substr($newBinding,0,-2)) . $pipe . substr($newBinding, -2);
+
+            $component->addBinding ($field, $newBinding);
             return;
           }
 
