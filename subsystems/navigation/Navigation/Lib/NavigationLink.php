@@ -103,6 +103,11 @@ class NavigationLink implements NavigationLinkInterface
     )->reindex ()->getIterator ();
   }
 
+  function getOriginalUrl ()
+  {
+    return $this->url;
+  }
+
   function icon ($icon = null)
   {
     if (is_null ($icon)) return $this->icon;
@@ -125,13 +130,11 @@ class NavigationLink implements NavigationLinkInterface
     $myUrl = $this->url ();
     if (is_null ($myUrl)) return false;
     if ($myUrl == $path) return true;
-    if ($myUrl == '') {
-      foreach ($this->links as $sub)
-        if ($sub->isActive ()) return true;
-      return false;
-    }
-    $myUrl = preg_quote ($myUrl);
-    return preg_match ("#^$myUrl(?:/|$)#", $path);
+    foreach ($this->links as $sub)
+      if ($sub->isActive ()) return true;
+    return false;
+//    $myUrl = preg_quote ($myUrl);
+//    return preg_match ("#^$myUrl(?:/|$)#", $path);
   }
 
   function isActuallyEnabled ()
@@ -246,11 +249,6 @@ class NavigationLink implements NavigationLinkInterface
     if (is_null ($visible)) return $this->visibleIfUnavailable;
     $this->visibleIfUnavailable = $visible;
     return $this;
-  }
-
-  function getOriginalUrl ()
-  {
-    return $this->url;
   }
 
   private function evaluateUrl ($url)
