@@ -1,5 +1,6 @@
 <?php
 namespace Selenia\Localization\Middleware;
+
 use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -18,6 +19,7 @@ class TranslationMiddleware implements RequestHandlerInterface
   const FIND_TRANS_KEY = '#\$([A-Z][A-Z0-9_]*)#';
   /**
    * The i18n cached translation table.
+   *
    * @var array An array of arrays indexed by language code.
    */
   protected static $translation = [];
@@ -54,17 +56,19 @@ class TranslationMiddleware implements RequestHandlerInterface
       return $response;
 
     if (!isset(self::$translation[$lang])) {
-      $found   = false;
-      $folders = array_reverse ($this->app->languageFolders);
+      // Load and merge all translation files now.
+
+      self::$translation[$lang] = [];
+
+      $trans   =& self::$translation[$lang];
+      $folders = $this->app->languageFolders;
       foreach ($folders as $folder) {
-        $path = "$folder/$lang.ini";
-        $z    = file_exists ($path) ? parse_ini_file ($path) : null;
-        if (!empty($z)) {
-          $found                    = true;
-          self::$translation[$lang] = array_merge (get (self::$translation, $lang, []), $z);
-        }
+        $path     = "$folder/$lang.ini";
+        $newTrans = file_exists ($path) ? parse_ini_file ($path) : null;
+        if ($newTrans)
+          $trans = array_merge ($trans, $newTrans);
       }
-      if (!$found) {
+      if (!$trans) {
         $paths = array_map (function ($path) { return "<li>" . ErrorConsole::shortFileName ($path); }, $folders);
         throw new ConfigException("A translation file for language <b>$lang</b> was not found.<p>Search paths:<ul>" .
                                   implode ('', $paths) . "</ul>", FlashType::FATAL);

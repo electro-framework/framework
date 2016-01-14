@@ -173,11 +173,6 @@ class Application
    */
   public $isWebBased = false;
   /**
-   * The path of the application's language files' folder, relative to the root folder.
-   * @var string
-   */
-  public $langPath = 'private/resources/lang';
-  /**
    * Search paths for module language files, in order of precedence.
    * @var array
    */
@@ -410,7 +405,6 @@ class Application
       "$rootDir/" . self::FRAMEWORK_PATH; // due to eventual symlinking, we can't use dirname(__DIR__) here
     $this->setIncludePath ();
 
-    $this->languageFolders[] = $this->langPath;
     if (getenv ('APP_DEFAULT_LANG'))
       $this->defaultLang = getenv ('APP_DEFAULT_LANG');
 
