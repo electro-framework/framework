@@ -164,11 +164,10 @@ function $form(e) {
 }
 
 function ImageField_blank(uid,className) {
-  var i=$id(uid);
-  var e=document.createElement('DIV');
-  e.className='emptyImg'+(className?' '+className:'');
-  i.replaceChild(e,NthChild(i,1));
-  return e;
+  var i=NthChild($id(uid), 1);
+  i.innerHTML = '';
+  i.className = 'emptyImg'+(className?' '+className:'');
+  return i;
 }
 
 function ImageField_clear(uid)
