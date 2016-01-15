@@ -120,7 +120,6 @@ class Macro extends Component
           $o[] = [
             'type'  => 'isc',
             'name'  => $script->props->get ('name'),
-            'defer' => $script->props->get ('defer'),
             'data'  => $script,
           ];
       }
@@ -138,9 +137,7 @@ class Macro extends Component
           $instance->context->addScript ($i['src'], false);
           break;
         case 'isc':
-          if ($i['defer'])
-            $instance->context->addInlineDeferredScript ($i['data'], $i['name'], false);
-          else $instance->context->addInlineScript ($i['data'], $i['name'], false);
+          $instance->context->addInlineScript ($i['data'], $i['name'], false);
           break;
       }
 

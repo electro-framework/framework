@@ -39,27 +39,6 @@ trait AssetsManagementTrait
   }
 
   /**
-   * Similar to addInlineScript(), but the script will only run on the document.ready event.
-   *
-   * @param string|Component $code    Javascript code without the script tags.
-   * @param string           $name    An identifier for the script, to prevent duplication.
-   *                                  When multiple scripts with the same name are added, only the last one is
-   *                                  considered.
-   * @param bool             $prepend If true, prepend to current list instead of appending.
-   * @see addInlineScript
-   */
-  function addInlineDeferredScript ($code, $name = null, $prepend = false)
-  {
-    if ($code instanceof Component)
-      $code = $code->getContent ();
-    if (exists ($name))
-      $this->assets->inlineDeferredScripts[$name] = $code;
-    else if ($prepend)
-      array_unshift ($this->assets->inlineDeferredScripts, $code);
-    else $this->assets->inlineDeferredScripts[] = $code;
-  }
-
-  /**
    * Adds an inline script to the HEAD section of the page.
    *
    * @param string|Component $code    Javascript code without the script tags.
@@ -108,7 +87,6 @@ trait AssetsManagementTrait
 
     if ($from->prepend) {
       $to->inlineCssStyles       = array_merge ($from->inlineCssStyles, $to->inlineCssStyles);
-      $to->inlineDeferredScripts = array_merge ($from->inlineDeferredScripts, $to->inlineDeferredScripts);
       $to->inlineScripts         = array_merge ($from->inlineScripts, $to->inlineScripts);
       $unique                    = array_diff ($from->scripts, $to->scripts);
       $to->scripts               = array_merge ($unique, $to->scripts);
@@ -117,7 +95,6 @@ trait AssetsManagementTrait
     }
     else {
       array_mergeInto ($to->inlineCssStyles, $from->inlineCssStyles);
-      array_mergeInto ($to->inlineDeferredScripts, $from->inlineDeferredScripts);
       array_mergeInto ($to->inlineScripts, $from->inlineScripts);
       $unique = array_diff ($from->scripts, $to->scripts);
       array_mergeInto ($to->scripts, $unique);
@@ -137,14 +114,6 @@ trait AssetsManagementTrait
       foreach ($this->assets->inlineScripts as $item)
         echo $item;
       echo "</script>";
-    }
-    if (!empty($this->assets->inlineDeferredScripts)) {
-      echo '<script>
-$(function(){';
-      foreach ($this->assets->inlineDeferredScripts as $item)
-        echo $item;
-      echo '})
-</script>';
     }
   }
 

@@ -14,12 +14,6 @@ class AssetsContext
    *
    * @var array
    */
-  public $inlineDeferredScripts = [];
-  /**
-   * Array of strings (or Parameter objects with child content) containing inline javascripts.
-   *
-   * @var array
-   */
   public $inlineScripts = [];
   /**
    * For a context that is not the main context, this indicates how it will be merged back to main.

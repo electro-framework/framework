@@ -286,7 +286,7 @@ class PageComponent implements RequestHandlerInterface
   {
     $this->renderOnAction = true;
     if ($param)
-      $this->page->context->addInlineDeferredScript ("$('$param').focus()");
+      $this->page->context->addInlineScript ("$('$param').focus()");
   }
 
   /**
