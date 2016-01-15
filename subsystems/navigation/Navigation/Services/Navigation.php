@@ -81,7 +81,8 @@ class Navigation implements NavigationInterface
           $this->currentLink->setState (true, true, true);
         else {
           $this->currentLink->setState (true, false, true);
-          $this->selectedLink->setState (true, true, false);
+          if ($this->selectedLink)
+            $this->selectedLink->setState (true, true, false);
         }
       }
     }
