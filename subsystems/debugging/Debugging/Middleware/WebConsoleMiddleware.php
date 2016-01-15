@@ -74,37 +74,27 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 
     $response->getBody ()->rewind ();
 
+    //------------------
     // Logging panel
+    //------------------
     if (extension_loaded ('xdebug'))
       DebugConsole::defaultLogger ()
                   ->write ('<#alert><b>Warning:</b> When running with Xdebug enabled, the framework\'s performance is severely degraded, especially on debug mode.</#alert>'
                            . '<p class=__comment>Refer to the framework\'s documentation for more information.</div>');
 
+    //------------------
     // Request panel
+    //------------------
     DebugConsole::logger ('request')->setRequest ($request);
 
+    //------------------
     // Response panel
+    //------------------
     DebugConsole::logger ('response')->setResponse ($response);
 
-    // Navigation panel
-    if ($this->injector->provides (NavigationInterface::class)) {
-      /** @var NavigationInterface $navigation */
-      $navigation = $this->injector->make (NavigationInterface::class);
-      // Do not log the navigation if its middleware was not executed.
-      if ($navigation->request ())
-        DebugConsole::logger ('navigation')->inspect ($navigation);
-    }
-
-    // Config. panel
-    DebugConsole::logger ('config')->inspect ($app);
-
-    // Session panel
-    if ($this->injector->provides (SessionInterface::class)) {
-      DebugConsole::logger ('session')
-                  ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="__doAction(\'logout\')">Log out</button>')
-                  ->inspect ($this->injector->make (SessionInterface::class));
-    }
-
+    //------------------
+    // Routing panel
+    //------------------
     $router = $this->injector->make (ApplicationRouterInterface::class);
 
     $handlers = $router->__debugInfo ()['handlers'];
@@ -129,6 +119,38 @@ class WebConsoleMiddleware implements RequestHandlerInterface
                 ->write ("<#row>End of routing log</#row>")
                 ->write ("</#section>");
 
+    //------------------
+    // Navigation panel
+    //------------------
+    if ($this->injector->provides (NavigationInterface::class)) {
+      /** @var NavigationInterface $navigation */
+      $navigation = $this->injector->make (NavigationInterface::class);
+      // Do not log the navigation if its middleware was not executed.
+      if ($navigation->request ())
+        DebugConsole::logger ('navigation')->withFilter (function ($k, $v, $o) use ($navigation) {
+          if ($k === 'parent' || $k === 'request') return '...';
+          if ($k === 'IDs' && $o != $navigation->rootLink()) return '...';
+          return true;
+        }, $navigation);
+    }
+
+    //------------------
+    // Config. panel
+    //------------------
+    DebugConsole::logger ('config')->inspect ($app);
+
+    //------------------
+    // Session panel
+    //------------------
+    if ($this->injector->provides (SessionInterface::class)) {
+      DebugConsole::logger ('session')
+                  ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="__doAction(\'logout\')">Log out</button>')
+                  ->inspect ($this->injector->make (SessionInterface::class));
+    }
+
+    //------------------
+    // Tracing panel
+    //------------------
     if ($trace->hasContent ())
       DebugConsole::registerPanel ('trace', $trace);
 

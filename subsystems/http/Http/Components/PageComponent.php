@@ -611,15 +611,24 @@ class PageComponent implements RequestHandlerInterface
     $output = $view->render ($this);
     $this->response->getBody ()->write ($output);
 
+    //------------------
     // DOM panel
+    //------------------
     if (DebugConsole::hasLogger ('DOM')) {
       $insp = $this->page->inspect (true);
       DebugConsole::logger ('DOM')->write ($insp);
     }
 
+    //------------------
     // View Model panel
+    //------------------
     if (DebugConsole::hasLogger ('vm')) {
-      DebugConsole::logger ('vm')->inspect ($this);
+      DebugConsole::logger ('vm')->withFilter (function ($k, $v, $o) {
+        if ($k === 'app' || $k === 'navigation' || $k === 'session' || $k === 'request' ||
+            $k === 'currentLink' || $k === 'page' || $v instanceof NavigationLinkInterface
+        ) return '...';
+        return true;
+      }, $this);
     }
 
     return $this->response;
