@@ -3,12 +3,15 @@ namespace Selenia\Matisse\Traits\Component;
 
 use Selenia\Matisse\Components\Literal;
 use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Parser\Tag;
 
 /**
  * Provides an API for generating structured HTML code.
  *
  * It's applicable to the Component class.
+ *
+ * @property Context context
  */
 trait MarkupBuilderTrait
 {
