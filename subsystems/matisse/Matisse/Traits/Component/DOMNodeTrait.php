@@ -117,6 +117,7 @@ trait DOMNodeTrait
   public function attachTo (Component $parent = null)
   {
     $this->parent = $parent;
+    $this->context = $parent->context;
   }
 
   public function detach ()

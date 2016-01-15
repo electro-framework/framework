@@ -3,7 +3,6 @@ namespace Selenia\Matisse\Parser;
 
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Metadata;
-use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Components\Literal;
 use Selenia\Matisse\Exceptions\ParseException;
@@ -80,13 +79,13 @@ class Parser
    * THE MAIN PARSING LOOP
    *******************************************************************************************************************
    *
-   * @param string           $body
-   * @param Component        $parent
+   * @param string    $body
+   * @param Component $parent
    * @throws ParseException
    */
   public function parse ($body, Component $parent)
   {
-    $pos = 0;
+    $pos           = 0;
     $this->current = $parent;
     $this->source  = $body;
 
@@ -209,7 +208,7 @@ class Parser
     /** @var Metadata|boolean $defParam */
     $this->parse_attributes ($attrs, $attributes, $bindings, true);
     $component =
-      Component::create ($this->current, $tag, $attributes, $bindings,
+      Component::createFromTag ($tag, $this->current, $attributes, $bindings,
         false /*TODO: support HTML components*/);
 
     $this->current->addChild ($component);
@@ -315,7 +314,7 @@ does not support the specified parameter <b>$tag</b>.
 
       else {
         $props = $this->current->supportsProperties ? $this->current->props->getPropertyNames () : [];
-        $s = $props
+        $s     = $props
           ? '&lt;' . join ('>, &lt;', array_map ('ucfirst', $props)) . '>'
           : 'none';
         throw new ParseException("
@@ -419,7 +418,7 @@ does not support the specified parameter <b>$tag</b>.
           'value' => $content,
         ];
         if ($content[0] == '{') {
-          $lit           = Component::create($this->current, Literal::TAG_NAME);
+          $lit           = Literal::create ($this->current);
           $lit->bindings = $v;
         }
         else $lit = new Text ($this->current->context, $v);

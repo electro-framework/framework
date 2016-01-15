@@ -95,13 +95,13 @@ trait AssetsManagementTrait
       else $this->assets->stylesheets[] = $uri;
   }
 
-  function beginContext ($prepend = false)
+  function beginAssetsContext ($prepend = false)
   {
     $this->assets          = new AssetsContext;
     $this->assets->prepend = $prepend;
   }
 
-  function endContext ()
+  function endAssetsContext ()
   {
     $from = $this->assets;
     $to   = $this->mainAssets;

@@ -106,11 +106,31 @@ abstract class Component
   }
 
   /**
+   * Creates a component from the static class from where this method was invoked from.
+   *
+   * @param Component  $parent   The component's container component.
+   * @param string[]   $props    A map of property names to property values.
+   *                             Properties specified via this argument come only from markup attributes, not
+   *                             from subtags.
+   * @param array|null $bindings A map of attribute names and corresponding databinding expressions.
+   * @return Component Component instance.
+   * @throws ComponentException
+   */
+  static function create (Component $parent, array $props = null, array $bindings = null)
+  {
+    $component = new static;
+    $component->setContext ($parent->context);
+    $component->bindings = $bindings;
+    $component->onCreate ($props, $parent);
+    $component->init ($props);
+    return $component;
+  }
+
+  /**
    * Creates a component corresponding to the specified tag and optionally sets its attributes.
    *
-   * @param Context    $context
-   * @param Component  $parent   The component's container component.
    * @param string     $tagName
+   * @param Component  $parent   The component's container component.
    * @param string[]   $props    A map of property names to property values.
    *                             Properties specified via this argument come only from markup attributes, not
    *                             from subtags.
@@ -121,7 +141,7 @@ abstract class Component
    * @return Component Component instance. For macros, an instance of Macro is returned.
    * @throws ComponentException
    */
-  static function create (Component $parent, $tagName, array $props = null,
+  static function createFromTag ($tagName, Component $parent, array $props = null,
                           array $bindings = null, $generic = false, $strict = false)
   {
     if ($generic) {
@@ -276,7 +296,7 @@ abstract class Component
       return $this->tagName;
     preg_match_all ('#[A-Z][a-z]*#', $this->className, $matches, PREG_PATTERN_ORDER);
 
-    return $this->tagName = ucfirst (strtolower (implode ('-', $matches[0])));
+    return $this->tagName = ucfirst (strtolower (implode ('', $matches[0])));
   }
 
   /**
@@ -313,6 +333,8 @@ abstract class Component
     if ($this->supportsProperties) {
       // Apply presets.
 
+      if (!$this->context)
+        throw new ComponentException($this, "Component has no context set");
       foreach ($this->context->presets as $preset)
         if (method_exists ($preset, $this->className))
           $preset->{$this->className} ($this);
