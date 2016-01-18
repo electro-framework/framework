@@ -58,8 +58,7 @@
       "Selenia\\": "Selenia"
     },
     "files": [
-      "global.php",
-      "database.php"
+      "global.php"
     ]
   },
   "extra": {

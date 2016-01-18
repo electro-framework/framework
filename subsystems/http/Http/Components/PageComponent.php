@@ -27,7 +27,6 @@ use Selenia\Matisse\Lib\PipeHandler;
 use Selenia\Routing\Services\Router;
 use Selenia\Traits\PolymorphicInjectionTrait;
 use Selenia\ViewEngine\Engines\MatisseEngine;
-use Zend\Diactoros\Response\HtmlResponse;
 
 /**
  * The base class for components that are web pages.
@@ -193,7 +192,7 @@ class PageComponent implements RequestHandlerInterface
    * @param ServerRequestInterface $request
    * @param ResponseInterface      $response
    * @param callable               $next
-   * @return HtmlResponse
+   * @return ResponseInterface
    * @throws FatalException
    * @throws FileException
    * @throws FlashMessageException
