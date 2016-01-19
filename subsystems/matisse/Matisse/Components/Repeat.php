@@ -9,7 +9,7 @@ use Selenia\Matisse\Properties\TypeSystem\type;
 class RepeatProperties extends ComponentProperties
 {
   /**
-   * @var string
+   * @var string Syntax: 'index:var' or 'var' or not set
    */
   public $as = '';
   /**

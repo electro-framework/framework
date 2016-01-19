@@ -129,12 +129,6 @@ class PageComponent implements RequestHandlerInterface
    */
   protected $URI_noPage;
   /**
-   * Map of attributes to set on the body tag.
-   *
-   * @var array Map of string => mixed
-   */
-  protected $bodyAttrs = [];
-  /**
    * Specifies the URL of the index page, to where the browser should naviagate upon the
    * successful insertion / update of records.
    * If not defined on a subclass then the request will redisplay the same page.
@@ -362,6 +356,13 @@ class PageComponent implements RequestHandlerInterface
     return null;
   }
 
+  /**
+   * Sets the `statusMessage` view property to a rendered HTML status message.
+   * <p>Override to define a different template or rendering mechanism.
+   *
+   * @param int    $status
+   * @param string $message
+   */
   protected function displayStatus ($status, $message)
   {
     if (!is_null ($status)) {
@@ -410,6 +411,19 @@ class PageComponent implements RequestHandlerInterface
         FlashType::ERROR);
     }
     return $method->invoke ($this, $param);
+  }
+
+  /**
+   * Utility method for retrieving the value of a form field submitted via a `application/x-www-form-urlencoded` POST
+   * request.
+   *
+   * @param string $name
+   * @param        mixed [optional] $def
+   * @return mixed
+   */
+  protected function formField ($name, $def = null)
+  {
+    return get ($this->request->getParsedBody (), $name, $def);
   }
 
   /**
