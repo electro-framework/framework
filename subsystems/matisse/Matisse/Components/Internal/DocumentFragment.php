@@ -15,5 +15,4 @@ class DocumentFragment extends Component
     $this->renderContent();
   }
 
-
 }

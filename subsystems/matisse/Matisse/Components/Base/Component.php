@@ -91,7 +91,7 @@ abstract class Component
   /**
    * Creates a new component instance
    *
-   * > <p>After being constructed, the first method called on an instance is, usually, {@see init()}.
+   * > <p>It is recommended to create component instances via {@see Component::create()} to correctly initialize them.
    */
   function __construct ()
   {
@@ -142,7 +142,7 @@ abstract class Component
    * @throws ComponentException
    */
   static function createFromTag ($tagName, Component $parent, array $props = null,
-                          array $bindings = null, $generic = false, $strict = false)
+                                 array $bindings = null, $generic = false, $strict = false)
   {
     if ($generic) {
       $component = new GenericHtmlComponent($tagName, $props);
@@ -260,6 +260,21 @@ abstract class Component
   }
 
   /**
+   * Renders a set of components as if they are children of this component.
+   *
+   * <p>**Warning:** the components will **not** br detached after begin rendered.
+   *
+   * @param Component[] $components A set of external, non-attached, components.
+   * @return string
+   */
+  function attachSetAndGetContent (array $components)
+  {
+    ob_start (null, 0);
+    $this->attachAndRenderSet ($components);
+    return ob_get_clean ();
+  }
+
+  /**
    * Renders all children and returns the resulting markup.
    * ><p>**Note:** the component itself is not rendered.
    *
@@ -333,11 +348,10 @@ abstract class Component
     if ($this->supportsProperties) {
       // Apply presets.
 
-      if (!$this->context)
-        throw new ComponentException($this, "Component has no context set");
-      foreach ($this->context->presets as $preset)
-        if (method_exists ($preset, $this->className))
-          $preset->{$this->className} ($this);
+      if ($this->context)
+        foreach ($this->context->presets as $preset)
+          if (method_exists ($preset, $this->className))
+            $preset->{$this->className} ($this);
 
       // Apply properties.
       if ($props)

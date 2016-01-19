@@ -200,8 +200,14 @@ trait DataBindingTrait
 
   private function compileExpression ($expression)
   {
-    if ($expression[0] == '#')
-      $expression = 'page.context.blocks.' . substr ($expression, 1);
+    if ($expression[0] == '#') {
+      $exp = substr ($expression, 1);
+      return function () use ($exp) {
+        $block = $this->context->getBlock ($exp);
+        /** @var Component $this */
+        return $this->attachSetAndGetContent ($block);
+      };
+    }
     $exp = PA (preg_split ('/ (?= \|\| | && | \+ ) /xu', $expression))
       ->map (function ($x) { return trim ($x); })
       ->map (function ($x) {
