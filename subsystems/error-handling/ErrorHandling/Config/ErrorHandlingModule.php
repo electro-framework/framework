@@ -12,7 +12,8 @@ class ErrorHandlingModule implements ServiceProviderInterface
   function register (InjectorInterface $injector)
   {
     $injector
-      ->alias (ErrorRendererInterface::class, ErrorRenderer::class);
+      ->alias (ErrorRendererInterface::class, ErrorRenderer::class)
+      ->share (ErrorHandlingSettings::class);
   }
 
 }

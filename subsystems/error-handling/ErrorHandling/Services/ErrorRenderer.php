@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\ErrorHandling\Services;
 
-use PhpKit\WebConsole\ErrorConsole\ErrorConsole;use Psr\Http\Message\ResponseInterface;use Psr\Http\Message\ServerRequestInterface;use Selenia\Application;use Selenia\Exceptions\HttpException;use Selenia\Http\Lib\Http;use Selenia\Interfaces\Http\ErrorRendererInterface;use Selenia\Interfaces\Http\ResponseFactoryInterface;
+use PhpKit\WebConsole\ErrorConsole\ErrorConsole;use Psr\Http\Message\ResponseInterface;use Psr\Http\Message\ServerRequestInterface;use Selenia\Application;use Selenia\ErrorHandling\Config\ErrorHandlingSettings;use Selenia\Exceptions\HttpException;use Selenia\Http\Lib\Http;use Selenia\Interfaces\Http\ErrorRendererInterface;use Selenia\Interfaces\Http\ResponseFactoryInterface;
 
 /**
  * Renders an error HTTP response into a format supported by the client.
@@ -10,11 +10,13 @@ class ErrorRenderer implements ErrorRendererInterface
 {
 protected $app;
 private $responseFactory;
+private $settings;
 
-function __construct (Application $app, ResponseFactoryInterface $responseFactory)
+function __construct (Application $app, ResponseFactoryInterface $responseFactory, ErrorHandlingSettings $settings)
 {
   $this->app             = $app;
   $this->responseFactory = $responseFactory;
+  $this->settings        = $settings;
 }
 
 function render (ServerRequestInterface $request, ResponseInterface $response, $error = null)
@@ -52,10 +54,15 @@ function render (ServerRequestInterface $request, ResponseInterface $response, $
   // Otherwise, errors are rendered into a format accepted by the HTML client.
 
   if (Http::clientAccepts ($request, 'text/html')) {
-    $response = $response->withHeader ('Content-Type', 'text/html');
-    ob_start ();
-    $this->htmlTemplate ($status, $title, $message);
-    $body->write (ob_get_clean ());
+    $response       = $response->withHeader ('Content-Type', 'text/html');
+    $customRenderer = $this->settings->getCustomRenderer ($status);
+    if ($customRenderer)
+      $response = $customRenderer($request, $response, nop ());
+    else {
+      ob_start ();
+      $this->htmlTemplate ($status, $title, $message);
+      $body->write (ob_get_clean ());
+    }
   }
   elseif (Http::clientAccepts ($request, 'application/json')) {
     $response = $response->withHeader ('Content-Type', 'application/json');
@@ -76,6 +83,7 @@ function render (ServerRequestInterface $request, ResponseInterface $response, $
 
 /**
  * Override this to render your customized template.
+ *
  * @param int    $status  If not zero, it will be displayed as an HTTP status code.
  * @param string $title   The main message (single, unformatted line).
  * @param string $message Additional HTML to display.
@@ -138,7 +146,7 @@ protected function htmlTemplate ($status, $title, $message)
         max-height: 400px;
         color: #777;
         text-align: center;
-        box-shadow: 1px 1px 5px 0 rgba(0,0,0,0.3);
+        box-shadow: 1px 1px 5px 0 rgba(0, 0, 0, 0.3);
         border-radius: 5px;
       }
 

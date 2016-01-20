@@ -14,6 +14,9 @@ use Selenia\Interfaces\Http\RequestHandlerInterface;
  * <p>Exceptions / errors that are thrown further the pipeline will be catched here and transformed into normal HTTP
  * responses that will resume travelling the pipeline from this point backwards.
  *
+ * <p>Normal HTTP responses with status code >= 400 are processed by the error renderer service to generate an error
+ * representation suitable for the request's HTTP client.
+ *
  * <p>**Note:** every request handler that follows this one on the pipeline should wrap it's request handling/forwarding
  * code in a `try/finally` block if it really needs to do something after the request is handled/delegated (ex.
  * finishing an open tag on the debug console), otherwise that code may not execute if an exception is thrown or an
