@@ -209,10 +209,10 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
     if (!type::validate ($type, $v))
       throw new ComponentException ($this->component,
         sprintf (
-          "%s is not a valid value for a component property of type <b>%s</b>",
+          "%s is not a valid value for the <kbd>$name</kbd> property, which is of type <kbd>%s</kbd>",
           is_scalar ($v)
             ? sprintf ("The %s<kbd>%s</kbd>", typeOf ($v), var_export ($v, true))
-            : sprintf ("A value of PHP type <b>%s</b>", typeOf ($v)),
+            : sprintf ("A value of PHP type <kbd>%s</kbd>", typeOf ($v)),
           type::getNameOf ($type)
         ));
 
