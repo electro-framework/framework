@@ -359,7 +359,7 @@ class ModulesRegistry
   {
     return (new ModuleInfo)->_assign ([
       'name' => 'App',
-      'path' => 'private/App',
+      'path' => 'private/app',
       'type' => ModuleInfo::TYPE_SUBSYSTEM,
     ]);
   }
