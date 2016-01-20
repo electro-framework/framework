@@ -34,8 +34,16 @@ class MacroInstanceProperties extends MetadataProperties
 
   function defines ($name, $asSubtag = false)
   {
+    inspect ($name);
     if (!$this->macroInstance) $this->noMacro ();
     return !is_null ($this->macroInstance->getParameter ($name));
+  }
+
+  function __set ($name, $value)
+  {
+    if (!$this->defines($name))
+      throw new ComponentException($this->macroInstance, "Undefined parameter <kbd>$name</kbd>.");
+    $this->setPropertyValue($name, $value);
   }
 
   function getEnumOf ($propName)

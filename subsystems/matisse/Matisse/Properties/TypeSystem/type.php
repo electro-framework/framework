@@ -87,7 +87,7 @@ class type
 
   static function getAllNames ()
   {
-    return array_keys (self::$NAMES);
+    return array_values (self::$NAMES);
   }
 
   /**

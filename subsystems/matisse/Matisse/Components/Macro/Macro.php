@@ -44,7 +44,6 @@ class Macro extends Component
 
   private static function evalScalarRef ($ref, MacroInstance $instance, &$transfer_binding)
   {
-    $ref = normalizeAttributeName ($ref);
     if (isset($instance->bindings) && array_key_exists ($ref, $instance->bindings)) {
       $transfer_binding = true;
 
@@ -184,7 +183,6 @@ class Macro extends Component
    */
   public function getParameter ($name)
   {
-    $name   = denormalizeAttributeName ($name);
     $params = $this->props->get ('param');
     if (!is_null ($params))
       foreach ($params as $param)
@@ -219,7 +217,7 @@ class Macro extends Component
       if ($p === false) {
         $s = join ('</kbd>, <kbd>', type::getAllNames ());
         throw new ComponentException($this,
-          "The property type of the <kbd>$name</kbd> parameter is invalid.<p>Expected values: <kbd>$s</kbd>.");
+          "The <kbd>$name</kbd> parameter has an invalid type: <kbd>{$param->props->type}</kbd>.<p>Expected values: <kbd>$s</kbd>.");
       }
       return $p;
     }
@@ -268,7 +266,7 @@ class Macro extends Component
         else {
           // Simple exp. (binding ref. only}
 
-          $prop = $match[1];
+          $prop = normalizeAttributeName ($match[1]);
           if (!$instance->props->defines ($prop)) {
             $s = join (', ', $instance->props->getPropertyNames ());
             throw new ComponentException($instance,

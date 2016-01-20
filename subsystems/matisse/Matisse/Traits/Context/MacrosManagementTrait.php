@@ -58,7 +58,8 @@ trait MacrosManagementTrait
    */
   function loadMacro ($tagName, Component $parent)
   {
-    $filename = normalizeTagName ($tagName) . $this->macrosExt;
+    $tagName  = normalizeTagName ($tagName);
+    $filename = $tagName . $this->macrosExt;
     $content  = $this->loadMacroFile ($filename);
     $parser   = new Parser;
     $parser->parse ($content, $parent);

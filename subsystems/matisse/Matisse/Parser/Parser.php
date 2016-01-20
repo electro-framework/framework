@@ -15,7 +15,7 @@ class Parser
   const NO_TRIM              = 0;
   const PARSE_ATTRS          = '# ([\w\-\:]+) \s* (?: = \s* ("|\') (.*?) \2 )? (\s|@) #sxu';
   const PARSE_DATABINDINGS   = '# (?: \{\{ | \{!! ) ( .*? ) (?: \}\} | !!\} ) #xu';
-  const PARSE_TAG            = '# (<) (/?) ([A-Z]\w+) \s* (.*?) (/?) (>) #sxu';
+  const PARSE_TAG            = '# (<) (/?) ([A-Z][\w\-]+) \s* (.*?) (/?) (>) #sxu';
   const TRIM                 = 3;
   const TRIM_LEFT            = 1; // @ is at the end of the attrs string and it's used as a marker.
   const TRIM_LEFT_CONTENT    = '# (?<=\>) \s+ (?=\s) #xu';
@@ -151,11 +151,12 @@ class Parser
       $sPos = 0;
       while (preg_match (self::PARSE_ATTRS, "$attrStr@", $match, PREG_OFFSET_CAPTURE, $sPos)) {
         list(, list($key), list($quote), list($value, $exists), list($marker, $next)) = $match;
+        $key = normalizeAttributeName ($key);
         if ($exists < 0)
           $value = 'true';
         if ($processBindings && strpos ($value, '{') !== false)
-          $bindings[renameAttribute ($key)] = $value;
-        else $attributes[renameAttribute ($key)] = $value;
+          $bindings[$key] = $value;
+        else $attributes[$key] = $value;
         $sPos = $next;
       }
     }
