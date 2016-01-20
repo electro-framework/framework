@@ -117,9 +117,9 @@ class Macro extends Component
           ];
         else if (!empty($script->getChildren ()))
           $o[] = [
-            'type'  => 'isc',
-            'name'  => $script->props->get ('name'),
-            'data'  => $script,
+            'type' => 'isc',
+            'name' => $script->props->get ('name'),
+            'data' => $script,
           ];
       }
     }
@@ -237,7 +237,7 @@ class Macro extends Component
 
   public function onParsingComplete ()
   {
-    $this->context->addMacro ($this->props->name, $this);
+    $this->context->addMacro ($this->props->name = normalizeTagName ($this->props->name), $this);
   }
 
   private function applyBinding (Component $component, $field, $exp, MacroInstance $instance, array & $components, & $i)
@@ -286,9 +286,9 @@ class Macro extends Component
 
             $newBinding = $instance->bindings[$prop];
             // Transfer remaining original expression, if any.
-            $pipe = get($match, 2);
+            $pipe = get ($match, 2);
             if (isset($pipe))
-              $newBinding = rtrim(substr($newBinding,0,-2)) . $pipe . substr($newBinding, -2);
+              $newBinding = rtrim (substr ($newBinding, 0, -2)) . $pipe . substr ($newBinding, -2);
 
             $component->addBinding ($field, $newBinding);
             return;
