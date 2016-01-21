@@ -88,7 +88,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   function done ($text)
   {
-    $this->nl ()->say ($text)->nl ();
+    $this->nl ()->say ("<info>$text</info>")->nl ();
     if (!empty($this->warnings))
       $this->writeln (implode (PHP_EOL, $this->warnings))->nl ();
   }

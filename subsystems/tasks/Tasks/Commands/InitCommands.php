@@ -21,6 +21,8 @@ trait InitCommands
   use ModuleConfigServiceTrait;
   use FileSystemStackServiceTrait;
 
+  private $nestedExec = false;
+
   /**
    * (private)
    * This is called by Composer on the post-install event.
@@ -50,6 +52,7 @@ trait InitCommands
     $io->clear ()
        ->banner ("Selenia Configuration Wizard")
        ->title ("Creating required files and directories...");
+    $this->nestedExec = true;
     $this->initStorage (['overwrite' => true]);
     $this->initConfig (['overwrite' => true]);
     $io->done ("Initialization completed successfully");
@@ -57,6 +60,8 @@ trait InitCommands
 
   /**
    * Initializes the application's configuration (.env file)
+   *
+   * <p>If a `.env.example` file exists, that file will be copied to `.env`, otherwise a new `.env` file is created.
    *
    * @param array $opts
    * @option $overwrite|o Discards the current .env file if it already exists
@@ -67,84 +72,96 @@ trait InitCommands
     $envPath = "{$this->app()->baseDirectory}/.env";
     if (file_exists ($envPath) && !get ($opts, 'overwrite'))
       $io->error (".env file already exists");
-    $this->fs ()->copy ("{$this->moduleConfig('scaffoldsPath')}/.env", $envPath, true)->run ();
 
-    $io->title ("Configuring the application...");
-
-    $LANG = $io->askDefault ("What is the application's main language? (en | pt | ...)", 'en');
-    do {
-      $DB_DRIVER =
-        $io->askDefault ("Which database kind are you going to use? (none | sqlite | mysql | pgsql)", 'none');
-    } while ($DB_DRIVER != 'sqlite' && $DB_DRIVER != 'mysql' && $DB_DRIVER != 'pgsql' && $DB_DRIVER != 'none');
-
-    $DB_DATABASE    = '';
-    $DB_HOST        = '';
-    $DB_USERNAME    = '';
-    $DB_PASSWORD    = '';
-    $DB_CHARSET     = '';
-    $DB_COLLATION   = '';
-    $DB_PORT        = '';
-    $DB_UNIX_SOCKET = '';
-
-    switch ($DB_DRIVER) {
-      case 'sqlite':
-        $DB_DATABASE = "private/storage/database/db.sqlite";
-        break;
-      case 'mysql':
-        $DB_DATABASE = $io->ask ("Database name");
-        if (!$DB_DATABASE) $io
-          ->comment ("Database name will be determined by MySQL from the username (if so configured)");
-        $DB_HOST     = $io->askDefault ("Database host domain", env ('DB_HOST', 'localhost'));
-        $DB_USERNAME = $io->askDefault ("Database username", env ('DB_USERNAME'));
-        $DB_PASSWORD = $io->askDefault ("Database password", env ('DB_PASSWORD'));
-        if ($io->confirm ("Do you whish to set advanced database connection options? [n]")) {
-          $DB_CHARSET     = $io->askDefault ("Database character set", 'utf8');
-          $DB_COLLATION   = $io->askDefault ("Database collation", 'utf8_unicode_ci');
-          $DB_PORT        = $io->ask ("Database port [disable]");
-          $DB_UNIX_SOCKET = $io->ask ("Database UNIX socket [disable]");
-        }
-        else {
-          $DB_CHARSET   = 'utf8';
-          $DB_COLLATION = 'utf8_unicode_ci';
-        }
-        break;
-      case 'pgsql':
-        do {
-          $DB_DATABASE = $io->ask ("Database name");
-          if (!$DB_DATABASE) $io->say ("You must specify a name");
-        } while (!$DB_DATABASE);
-        $DB_HOST     = $io->askDefault ("Database host domain", env ('DB_HOST', 'localhost'));
-        $DB_USERNAME = $io->askDefault ("Database username", env ('DB_USERNAME'));
-        $DB_PASSWORD = $io->askDefault ("Database password", env ('DB_PASSWORD'));
-        break;
+    $examplePath = "{$this->app()->baseDirectory}/.env.example";
+    if (file_exists ($examplePath)) {
+      $this->fs ()->copy ($examplePath, $envPath, true)->run ();
+      $io->nl ()
+         ->comment ("The application has been automatically configured from a project-specific predefined template")
+         ->comment ("Please edit the <info>.env</info> file to fill-in any missing required values (ex. database passwords)");
     }
-    $io->nl ();
-    (new Replace ($envPath))
-      ->from ([
-        '%LANG',
-        '%DB_DRIVER',
-        '%DB_DATABASE',
-        '%DB_HOST',
-        '%DB_USERNAME',
-        '%DB_PASSWORD',
-        '%DB_CHARSET',
-        '%DB_COLLATION',
-        '%DB_PORT',
-        '%DB_UNIX_SOCKET',
-      ])
-      ->to ([
-        $LANG,
-        $DB_DRIVER,
-        $DB_DATABASE,
-        $DB_HOST,
-        $DB_USERNAME,
-        $DB_PASSWORD,
-        $DB_CHARSET,
-        $DB_COLLATION,
-        $DB_PORT,
-        $DB_UNIX_SOCKET,
-      ])
-      ->run ();
+    else {
+      $this->fs ()->copy ("{$this->moduleConfig('scaffoldsPath')}/.env", $envPath, true)->run ();
+
+      $io->title ("Configuring the application...");
+
+      $LANG = $io->askDefault ("What is the application's main language? (en | pt | ...)", 'en');
+      do {
+        $DB_DRIVER =
+          $io->askDefault ("Which database kind are you going to use? (none | sqlite | mysql | pgsql)", 'none');
+      } while ($DB_DRIVER != 'sqlite' && $DB_DRIVER != 'mysql' && $DB_DRIVER != 'pgsql' && $DB_DRIVER != 'none');
+
+      $DB_DATABASE    = '';
+      $DB_HOST        = '';
+      $DB_USERNAME    = '';
+      $DB_PASSWORD    = '';
+      $DB_CHARSET     = '';
+      $DB_COLLATION   = '';
+      $DB_PORT        = '';
+      $DB_UNIX_SOCKET = '';
+
+      switch ($DB_DRIVER) {
+        case 'sqlite':
+          $DB_DATABASE = "private/storage/database/db.sqlite";
+          break;
+        case 'mysql':
+          $DB_DATABASE = $io->ask ("Database name");
+          if (!$DB_DATABASE) $io
+            ->comment ("Database name will be determined by MySQL from the username (if so configured)");
+          $DB_HOST     = $io->askDefault ("Database host domain", env ('DB_HOST', 'localhost'));
+          $DB_USERNAME = $io->askDefault ("Database username", env ('DB_USERNAME'));
+          $DB_PASSWORD = $io->askDefault ("Database password", env ('DB_PASSWORD'));
+          if ($io->confirm ("Do you whish to set advanced database connection options? [n]")) {
+            $DB_CHARSET     = $io->askDefault ("Database character set", 'utf8');
+            $DB_COLLATION   = $io->askDefault ("Database collation", 'utf8_unicode_ci');
+            $DB_PORT        = $io->ask ("Database port [disable]");
+            $DB_UNIX_SOCKET = $io->ask ("Database UNIX socket [disable]");
+          }
+          else {
+            $DB_CHARSET   = 'utf8';
+            $DB_COLLATION = 'utf8_unicode_ci';
+          }
+          break;
+        case 'pgsql':
+          do {
+            $DB_DATABASE = $io->ask ("Database name");
+            if (!$DB_DATABASE) $io->say ("You must specify a name");
+          } while (!$DB_DATABASE);
+          $DB_HOST     = $io->askDefault ("Database host domain", env ('DB_HOST', 'localhost'));
+          $DB_USERNAME = $io->askDefault ("Database username", env ('DB_USERNAME'));
+          $DB_PASSWORD = $io->askDefault ("Database password", env ('DB_PASSWORD'));
+          break;
+      }
+      $io->nl ();
+      (new Replace ($envPath))
+        ->from ([
+          '%LANG',
+          '%DB_DRIVER',
+          '%DB_DATABASE',
+          '%DB_HOST',
+          '%DB_USERNAME',
+          '%DB_PASSWORD',
+          '%DB_CHARSET',
+          '%DB_COLLATION',
+          '%DB_PORT',
+          '%DB_UNIX_SOCKET',
+        ])
+        ->to ([
+          $LANG,
+          $DB_DRIVER,
+          $DB_DATABASE,
+          $DB_HOST,
+          $DB_USERNAME,
+          $DB_PASSWORD,
+          $DB_CHARSET,
+          $DB_COLLATION,
+          $DB_PORT,
+          $DB_UNIX_SOCKET,
+        ])
+        ->run ();
+    }
+    if (!$this->nestedExec)
+      $io->done ("Initialization completed successfully");
   }
 
   /**
