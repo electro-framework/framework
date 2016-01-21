@@ -45,7 +45,6 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $app = $this->app;
     DebugConsole::registerPanel ('request', new PSR7RequestLogger ('Request', 'fa fa-paper-plane'));
     DebugConsole::registerPanel ('response', new PSR7ResponseLogger ('Response', 'fa fa-file'));
     DebugConsole::registerPanel ('routes', new ConsoleLogger ('Routing', 'fa fa-location-arrow'));
@@ -58,15 +57,17 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 //    DebugConsole::registerPanel ('exceptions', new ConsoleLogger ('Exceptions', 'fa fa-bug'));
     $trace = DebugConsole::registerLogger ('trace', new ConsoleLogger ('Trace', 'fa fa-clock-o big'));
 
+    if (getenv ('DEBUG_BAR') != 'true')
+      return $next ();
+    //------------------------------------------------------------------
+
     // Redirect logger to Inspector panel
     if (isset($this->logger))
       if ($this->logger instanceof Logger)
         $this->logger->pushHandler (new WebConsoleMonologHandler(getenv ('DEBUG_LEVEL') || Logger::DEBUG));
 
-    //------------------------------------------------------------------
     /** @var ResponseInterface $response */
     $response = $next ();
-    //------------------------------------------------------------------
 
     $contentType = $response->getHeaderLine ('Content-Type');
     if ($contentType && $contentType != 'text/html')
@@ -129,7 +130,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
       if ($navigation->request ())
         DebugConsole::logger ('navigation')->withFilter (function ($k, $v, $o) use ($navigation) {
           if ($k === 'parent' || $k === 'request') return '...';
-          if ($k === 'IDs' && $o != $navigation->rootLink()) return '...';
+          if ($k === 'IDs' && $o != $navigation->rootLink ()) return '...';
           return true;
         }, $navigation);
     }
@@ -137,7 +138,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     //------------------
     // Config. panel
     //------------------
-    DebugConsole::logger ('config')->inspect ($app);
+    DebugConsole::logger ('config')->inspect ($this->app);
 
     //------------------
     // Session panel
