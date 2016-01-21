@@ -296,7 +296,11 @@ class ModulesRegistry
    */
   function save ()
   {
-    $json = new JsonFile ($this->getRegistryPath (), true);
+    $filePath = $this->getRegistryPath ();
+    $path     = dirname ($filePath);
+    if (!file_exists ($path))
+      mkdir ($path, 0755, true);
+    $json = new JsonFile ($filePath, true);
     $json->assign (['modules' => $this->modules])->save ();
   }
 
