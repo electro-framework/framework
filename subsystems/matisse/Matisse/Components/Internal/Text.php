@@ -20,7 +20,7 @@ class TextProperties extends ComponentProperties
 
 }
 
-class Text extends Component
+final class Text extends Component
 {
   protected static $propertiesClass = TextProperties::class;
   /** @var TextProperties */
@@ -31,9 +31,8 @@ class Text extends Component
     parent::__construct ();
     if ($context)
       $this->setContext ($context);
-//    $this->page = $this;
     $this->setTagName ('Text');
-    $this->init ($props);
+    $this->setProps ($props);
   }
 
   public static function from (Context $context = null, $text)

@@ -291,11 +291,6 @@ class Application
    */
   public $storagePath = 'private/storage';
   /**
-   * A map of URI prefixes to application configuration files.
-   * @var array
-   */
-  public $subApplications = [];
-  /**
    * Registered Matisse tags.
    * @var array
    */

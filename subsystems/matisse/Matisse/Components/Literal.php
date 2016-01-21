@@ -46,7 +46,7 @@ class LiteralProperties extends PropertiesWithChangeTracking
  * <p>Instances of this type can be specified via a markup tag (unlike the Text component), but they can also be
  * generated automatically by the parser when it encounters a binding expression outside of a tag attribute.
  */
-class Literal extends Component
+final class Literal extends Component
 {
   const TAG_NAME = 'Literal';
   protected static $propertiesClass = LiteralProperties::class;
@@ -58,7 +58,7 @@ class Literal extends Component
   {
     $lit = new static ();
     $lit->setContext ($context);
-    $lit->init (['value' => $text]);
+    $lit->setProps (['value' => $text]);
   }
 
   protected function render ()

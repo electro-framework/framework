@@ -42,7 +42,8 @@ class Metadata extends Component
     $this->type = $type;
     $this->setContext ($context);
     $this->setTagName ($tagName);
-    $this->init ($props);
+    $this->setProps ($props);
+    $this->init ();
   }
 
   /**

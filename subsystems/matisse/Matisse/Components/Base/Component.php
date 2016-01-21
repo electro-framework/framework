@@ -122,7 +122,8 @@ abstract class Component
     $component->setContext ($parent->context);
     $component->bindings = $bindings;
     $component->onCreate ($props, $parent);
-    $component->init ($props);
+    $component->setProps ($props);
+    $component->init ();
     return $component;
   }
 
@@ -163,7 +164,6 @@ abstract class Component
         $props = [];
       $props['macro'] = $tagName;
       $component      = new MacroInstance;
-      $component->setContext ($context);
     }
 
     // Component class was found.
@@ -176,7 +176,8 @@ abstract class Component
     $component->setTagName ($tagName);
     $component->bindings = $bindings;
     $component->onCreate ($props, $parent);
-    $component->init ($props);
+    $component->setProps ($props);
+    $component->init ();
 
     return $component;
   }
@@ -333,34 +334,6 @@ abstract class Component
     return !empty($this->children);
   }
 
-  /**
-   * Initializes a newly created component instance.
-   *
-   * It applies to the instance the applicable registered presets, followed by the given properties, if any.
-   *
-   * > **Warning:** for some components this method will not be called (ex: Literal).
-   *
-   * @param array|null $props A map of the component's properties.
-   * @throws ComponentException
-   */
-  function init (array $props = null)
-  {
-    if ($this->supportsProperties) {
-      // Apply presets.
-
-      if ($this->context)
-        foreach ($this->context->presets as $preset)
-          if (method_exists ($preset, $this->className))
-            $preset->{$this->className} ($this);
-
-      // Apply properties.
-      if ($props)
-        $this->props->apply ($props);
-    }
-    else if ($props)
-      throw new ComponentException($this, 'This component does not support properties.');
-  }
-
   function inspect ($deep = true)
   {
     return ComponentInspector::inspect ($this, $deep);
@@ -443,6 +416,33 @@ abstract class Component
     $this->context = $context;
   }
 
+  /**
+   * Initializes a newly created component by applying to it the applicable registered presets, followed by the given
+   * properties, if any.
+   *
+   * > **Warning:** for some components this method will not be called (ex: Literal).
+   *
+   * @param array|null $props A map of the component's properties.
+   * @throws ComponentException
+   */
+  function setProps (array $props = null)
+  {
+    if ($this->supportsProperties) {
+      // Apply presets.
+
+      if ($this->context)
+        foreach ($this->context->presets as $preset)
+          if (method_exists ($preset, $this->className))
+            $preset->{$this->className} ($this);
+
+      // Apply properties.
+      if ($props)
+        $this->props->apply ($props);
+    }
+    else if ($props)
+      throw new ComponentException($this, 'This component does not support properties.');
+  }
+
   protected function getUniqueId ()
   {
     if (array_key_exists ($this->className, self::$uniqueIDs))
@@ -450,6 +450,18 @@ abstract class Component
     self::$uniqueIDs[$this->className] = 1;
 
     return 1;
+  }
+
+  /**
+   * Allows a component to perform additional initialization before the containing document (or document fragment)
+   * rendering begins.
+   *
+   * > <p>**Tip:** override this method on a component subclass to set its script and stylesheet dependencies, so that
+   * they are set before the rendering of the whole page starts.
+   */
+  protected function init ()
+  {
+    //nop
   }
 
   /**

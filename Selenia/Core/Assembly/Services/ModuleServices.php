@@ -46,6 +46,12 @@ class ModuleServices
    * @var callable[]
    */
   private $postConfigs = [];
+  /**
+   * Stores temporarily the module's base URL of its public directory, for use by the other setters.
+   *
+   * @var string
+   */
+  private $publicUrl = '';
 
   function __construct (Application $app,
                         InjectorInterface $injector)
@@ -158,21 +164,28 @@ class ModuleServices
     if (!$this->fileServerMappings)
       $this->fileServerMappings = $this->injector->make (FileServerMappings::class);
     $this->fileServerMappings->map ($v, "$this->path/{$this->app->modulePublicPath}");
+    $this->publicUrl = $v;
     return $this;
   }
 
   /**
    * A list of relative file paths of assets published by the module, relative to the module's public folder.
-   * The framework's build process may automatically concatenate and minify those assets for a release-grade build.
+   *
+   * <p>Registered assets will be automatically loaded by Matisse-rendered pages.
+   * <p>Also, if they are located on a sub-directory of `/resources` , the framework's build process may automatically
+   * concatenate and minify them for a release-grade build.
+   *
+   * > <p>**Important:** make sure to call {@see publishPublicDirAs()} before calling this method.
    *
    * @param string[] $v
    * @return $this
    */
   function registerAssets ($v)
   {
+    // TODO: handle assets on a sub-directory of resources.
     if ($v)
       array_mergeInto ($this->app->assets, array_map (function ($path) {
-        return "$this->path/$path";
+        return "$this->publicUrl/$path";
       }, $v));
     return $this;
   }

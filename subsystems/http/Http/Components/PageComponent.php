@@ -328,12 +328,26 @@ class PageComponent implements RequestHandlerInterface
     $engine = $view->getEngine ();
     if ($engine instanceof MatisseEngine) {
       $this->page      = $view->getCompiledView ();
+      $context         = $this->page->context;
       $title           = $this->getTitle ();
       $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
-      $this->page->context->addScript ("{$this->app->frameworkURI}/js/engine.js");
-      $flashMessage = $this->session->getFlashMessage ();
+      $flashMessage    = $this->session->getFlashMessage ();
       if ($flashMessage)
         $this->displayStatus ($flashMessage['type'], $flashMessage['message']);
+      foreach ($this->app->assets as $url) {
+        $p = strrpos ($url, '.');
+        if (!$p) continue;
+        $ext = substr ($url, $p + 1);
+        switch ($ext) {
+          case 'css':
+            $context->addStylesheet ($url);
+            break;
+          case 'js':
+            $context->addScript ($url);
+            break;
+        }
+      }
+      $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
     }
   }
 
@@ -414,6 +428,14 @@ class PageComponent implements RequestHandlerInterface
   }
 
   /**
+   * Override to do something after the page has been rendered.
+   */
+  protected function finalize ()
+  {
+    // no op
+  }
+
+  /**
    * Utility method for retrieving the value of a form field submitted via a `application/x-www-form-urlencoded` POST
    * request.
    *
@@ -424,14 +446,6 @@ class PageComponent implements RequestHandlerInterface
   protected function formField ($name, $def = null)
   {
     return get ($this->request->getParsedBody (), $name, $def);
-  }
-
-  /**
-   * Override to do something after the page has been rendered.
-   */
-  protected function finalize ()
-  {
-    // no op
   }
 
   protected function getActionAndParam (&$action, &$param)
