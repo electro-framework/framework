@@ -4,7 +4,6 @@ namespace Selenia\Tasks\Commands;
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
-use Selenia\Console\ConsoleApplication;
 use Selenia\Console\Traits\ApplicationServiceTrait;
 use Selenia\Console\Traits\ConsoleIOServiceTrait;
 use Selenia\Console\Traits\FileSystemStackServiceTrait;
@@ -22,17 +21,6 @@ trait InitCommands
   use FileSystemStackServiceTrait;
 
   private $nestedExec = false;
-
-  /**
-   * (private)
-   * This is called by Composer on the post-install event.
-   */
-  static function runInit ()
-  {
-    $tmp = updir (__DIR__, 5);
-    require "$tmp/packages/autoload.php";
-    ConsoleApplication::run (['', 'init']);
-  }
 
   /**
    * Initializes the application after installation, or reinitializes it afterwards

@@ -1,11 +1,15 @@
 #!/usr/bin/env php
 <?php
+use App\Init;
 use Selenia\Console\ConsoleApplication;
 use Selenia\Core\DependencyInjection\Injector;
 
 // Start the class autoloader.
 
 require "{$_SERVER['PWD']}/private/packages/autoload.php";
+
+// Setup the app.
+Init::init ();
 
 /*
  * Run the framework's Console subsystem, which then runs the terminal-based application.
