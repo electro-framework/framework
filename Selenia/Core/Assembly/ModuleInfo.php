@@ -31,7 +31,7 @@ class ModuleInfo implements AssignableInterface
    * An optional textual description (one line) of the module's purpose.
    * @var string
    */
-  public $description;
+  public $description = '';
   /**
    * When false, the module is ignored.
    * @var bool

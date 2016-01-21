@@ -316,7 +316,7 @@ class ModulesRegistry
    */
   private function getRegistryPath ()
   {
-    return "{$this->app->modulesPath}/registry.json";
+    return "{$this->app->storagePath}/modules.json";
   }
 
   private function loadModuleMetadata (ModuleInfo $module)
@@ -339,7 +339,6 @@ class ModulesRegistry
           $module->realPath = $rp;
       }
     }
-    else $module->description = '';
   }
 
   /**
@@ -358,9 +357,11 @@ class ModulesRegistry
   private function makeMainModule ()
   {
     return (new ModuleInfo)->_assign ([
-      'name' => 'App',
-      'path' => 'private/app',
-      'type' => ModuleInfo::TYPE_SUBSYSTEM,
+      'name'         => 'app-kernel',
+      'description'  => 'Application kernel',
+      'path'         => 'private/app-kernel',
+      'bootstrapper' => 'AppKernel\Config\AppKernelModule',
+      'type'         => ModuleInfo::TYPE_SUBSYSTEM,
     ]);
   }
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env php
 <?php
-use App\Init;
+use AppKernel\Init;
 use Selenia\Console\ConsoleApplication;
 use Selenia\Core\DependencyInjection\Injector;
 
