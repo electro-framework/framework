@@ -144,10 +144,12 @@ protected function htmlTemplate ($status, $title, $message)
         width: 100%;
         height: 100%;
         max-height: 400px;
+        max-width: 600px;
         color: #777;
         text-align: center;
         box-shadow: 1px 1px 5px 0 rgba(0, 0, 0, 0.3);
         border-radius: 5px;
+        margin: auto;
       }
 
       .row1, .row2 {

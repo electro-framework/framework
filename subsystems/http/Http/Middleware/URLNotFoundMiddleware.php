@@ -1,5 +1,6 @@
 <?php
 namespace Selenia\Http\Middleware;
+
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
@@ -20,11 +21,11 @@ class URLNotFoundMiddleware implements RequestHandlerInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $path = $request->getUri ()->getPath ();
-    $base = $request->getAttribute ('baseUri', '');
-    $l    = strlen ($base);
-    if ($l && substr ($path, 0, $l) == $base)
-      $path = substr ($path, $l);
-    return Http::send ($response, 404, "Invalid URL", "Virtual URL: <kbd>$path</kbd>");
+    $path = either ($request->getAttribute ('virtualUri', '<i>not set</i>'), '<i>empty</i>');
+    $realPath = $request->getUri ()->getPath ();
+    return Http::send ($response, 404, "Page Not Found", "<br><br><table align=center cellspacing=20 style='text-align:left'>
+<tr><th>Virtual URL:<td><kbd>$path</kbd>
+<tr><th>URL path:<td><kbd>$realPath</kbd>
+</table>");
   }
 }
