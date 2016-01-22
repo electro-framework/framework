@@ -17,7 +17,7 @@ class RoutingMiddleware extends MiddlewareStack
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     /** @var ServerRequestInterface $request */
-    $request = $request->withRequestTarget ($request->getAttribute ('virtualUri'));
+    $request = $request->withRequestTarget (either($request->getAttribute ('virtualUri'),'.'));
 
     return parent::__invoke ($request, $response, $next);
   }

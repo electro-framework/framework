@@ -234,8 +234,8 @@ abstract class BaseRouter implements RouterInterface
   {
     if ($this->routingEnabled && !is_int ($key)) {
       // Route matching:
-      if (!$this->matcher->match ($key, $request, $request)) // note: $request may be modified.
-        return $nextIteration ($request);
+      if (!$this->matcher->match ($key, $request, $request))  // note: $request may be modified.
+        return $this->iteration_stepNotMatchRoute ($key, $routable, $request, $response, $nextIteration);
 
       return $this->iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
     }
@@ -275,6 +275,23 @@ abstract class BaseRouter implements RouterInterface
                                                ResponseInterface $response, callable $nextIteration)
   {
     return $this->route ($routable, $request, $response, $nextIteration);
+  }
+
+  /**
+   * Invoked when a route iteration step doesn't match a route.
+   * > The main purpose of this method is to provide a router extension point and for debugging.
+   *
+   * @param string                 $key
+   * @param mixed                  $routable
+   * @param ServerRequestInterface $request
+   * @param ResponseInterface      $response
+   * @param callable               $nextIteration
+   * @return ResponseInterface
+   */
+  protected function iteration_stepNotMatchRoute ($key, $routable, ServerRequestInterface $request,
+                                               ResponseInterface $response, callable $nextIteration)
+  {
+    return $nextIteration ($request);
   }
 
   /**

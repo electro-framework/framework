@@ -9,12 +9,13 @@ use Selenia\Interfaces\Http\RouteMatcherInterface;
  */
 class RouteMatcher implements RouteMatcherInterface
 {
-  const SYNTAX = '/^ ([A-Z\|]+\s)? ( \. | \* | (?: [\w\-\/@]+) (?:\*|\.\.\.)? ) $/x';
+  const SYNTAX = '/^ ([A-Z\|]+\s)? ( \. | \* | \+ | (?: [\w\-\/@]+) (?:\*|\.\.\.)? ) $/x';
 
   function match ($pattern, ServerRequestInterface $request, ServerRequestInterface &$modifiedRequest)
   {
     $modifiedRequest = $request;
     $path            = $request->getRequestTarget ();
+    if ($path == '.') $path = '';
 
     if (!preg_match (self::SYNTAX, $pattern, $m))
       throw new ConfigException (sprintf ("Invalid route pattern matching expression: '<kbd>%s</kbd>'", $pattern));
@@ -27,6 +28,10 @@ class RouteMatcher implements RouteMatcherInterface
 
     // The asterisk matches any path.
     if ($pathPattern == '*')
+      return true;
+
+    // The plus matches any non-empty path.
+    if ($pathPattern == '+')
       return !!strlen ($path);
 
     // @parameters never match the empty path (which is encoded as a single dot)

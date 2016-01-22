@@ -450,6 +450,9 @@ pattern was the final one on the URL.
 - `*` matches any path (including an empty path) from that point until the path's end.
   A new request object is generated with its path set to `''`.
 
+- `+` matches any path (excluding an empty path) from that point until the path's end.
+  A new request object is generated with its path set to `''`.
+
 - `...` is similar to `*`, but it generates a new request object with a new path that is comprised of all characters
   matched by the dots. 
 

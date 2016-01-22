@@ -193,11 +193,19 @@ class BaseRouterWithLogging extends BaseRouter
   protected function iteration_stepMatchRoute ($key, $routable, ServerRequestInterface $request,
                                                ResponseInterface $response, callable $nextIteration)
   {
-    $this->routingLogger->writef ("<#row>Route pattern <b class=keyword>'$key'</b> matches request target " .
-                                  "<b class=keyword>'%s'</b></#row>",
+    $this->routingLogger->writef ("<#row><b class=keyword>'%s'</b> <b>matches</b> route pattern <b class=keyword>'$key'</b></#row>",
       self::$currentRequest->getRequestTarget ());
 
     return parent::iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
+  }
+
+  protected function iteration_stepNotMatchRoute ($key, $routable, ServerRequestInterface $request,
+                                                  ResponseInterface $response, callable $nextIteration)
+  {
+    $this->routingLogger->writef ("<#row><b class=keyword>'%s'</b> doesn't match route pattern <b class=keyword>'$key'</b></#row>",
+      self::$currentRequest->getRequestTarget ());
+
+    return parent::iteration_stepNotMatchRoute ($key, $routable, $request, $response, $nextIteration);
   }
 
   protected function iteration_stop (ServerRequestInterface $request, ResponseInterface $response, callable $next)
