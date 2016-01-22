@@ -2,8 +2,6 @@
 namespace Selenia\Lib;
 use PhpCode;
 use RuntimeException;
-use Selenia\Console\Lib\int;
-use Selenia\Console\Lib\string;
 use Selenia\Exceptions\HttpException;
 use Selenia\Traits\FluentTrait;
 
@@ -170,6 +168,7 @@ class PackagistAPI
     PhpCode::catchErrorsOn (function () use (&$stream, $url, $context) {
       $stream = fopen ($url, 'r', false, $context);
     }, function ($e) {
+      /** @var \Exception $e */
       $msg = preg_split ('/:\s*/', $e->getMessage ());
       throw new RuntimeException (end ($msg));
     }, false);
