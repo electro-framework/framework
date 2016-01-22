@@ -4,7 +4,7 @@ use Robo\Task\Bower;
 use Robo\Task\FileSystem\CleanDir;
 use Selenia\Console\Traits\ApplicationServiceTrait;
 use Selenia\Console\Traits\ConsoleIOServiceTrait;
-use Selenia\Core\Assembly\Services\ModulesManager;
+use Selenia\Core\Assembly\Services\ModulesLoader;
 
 /**
  * Implements the Selenia Task Runner's pre-set build commands.
@@ -28,7 +28,7 @@ trait BuildCommands
     // $this->cleanModules ();
     if (!$options['exclude-libs']) {
       //$this->cleanLibs ();
-      foreach (ModulesManager::get ()->modules () as $module) {
+      foreach (ModulesLoader::get ()->modules () as $module) {
         $path = "$module->path/bower.json";
         if (file_exists ($path))
           copy ($path, $this->app ()->baseDirectory . '/bower.json');

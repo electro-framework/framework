@@ -8,6 +8,7 @@ use Selenia\Console\Traits\ApplicationServiceTrait;
 use Selenia\Console\Traits\ConsoleIOServiceTrait;
 use Selenia\Console\Traits\FileSystemStackServiceTrait;
 use Selenia\Console\Traits\ModuleConfigServiceTrait;
+use Selenia\Core\Assembly\Services\ModulesRegistry;
 use Selenia\Tasks\Shared\ChmodEx;
 
 /**
@@ -34,15 +35,24 @@ trait InitCommands
   {
     $io      = $this->io ();
     $envPath = "{$this->app()->baseDirectory}/.env";
-    if (file_exists ($envPath) && !get ($opts, 'overwrite'))
-      $io->error ("The application is already initialized");
-
     $io->clear ()
-       ->banner ("Selenia Configuration Wizard")
-       ->title ("Creating required files and directories...");
-    $this->nestedExec = true;
-    $this->initStorage (['overwrite' => true]);
-    $this->initConfig (['overwrite' => true]);
+       ->banner ("Selenia Configuration Wizard");
+    if (file_exists ($envPath) && !get ($opts, 'overwrite'))
+      $io->nl ()->say ("The application is already initialized.")->comment ("Use -o to overwrite.");
+    else {
+      $io->title ("Creating required files and directories...");
+      $this->nestedExec = true;
+      $this->initStorage ();
+      $this->initConfig ();
+    }
+    $demoPath = "{$this->app()->modulesPath}/demo-company";
+    if (file_exists ($demoPath)) {
+      if (!$io->nl ()->confirm ("Do you wish keep the demonstration web pages? [n]")) {
+        /** @var ModuleCommands $this */
+        $this->moduleUninstall ('demo-company/demo-project');
+      }
+    }
+
     $io->done ("Initialization completed successfully");
   }
 
@@ -155,25 +165,22 @@ trait InitCommands
   /**
    * Scaffolds the storage directory's structure
    *
-   * This is automatically run after composer-create-project.
+   * <p>It discards the target directory if it already exists.
+   * > <p>This is automatically run after composer-create-project.
    * If you cloned the starter project by other means, run this command manually.
-   *
-   * @param array $opts
-   * @option $overwrite|o Discards the target directory if it already exists
    */
-  function initStorage ($opts = ['overwrite|o' => false])
+  function initStorage ()
   {
     $target = $this->app ()->storagePath;
-    if (file_exists ($target)) {
-      if (get ($opts, 'overwrite'))
-        (new DeleteDir ($target))->run ();
-      else $this->io ()
-                ->error ("Directory already exists. Use the -o|--overwrite option to re-create the storage directory.");
-    }
+    if (file_exists ($target))
+      (new DeleteDir ($target))->run ();
     (new CopyDir (["{$this->moduleConfig('scaffoldsPath')}/storage" => $target]))->run ();
     (new ChmodEx ($target))->dirs (0770)->files (0660)->run ();
 
-    $this->io ()->say ("Storage directory created");
+    (new ModulesRegistry($this->app ()))->rebuildRegistry ();
+
+    if (!$this->nestedExec)
+      $this->io ()->done ("Storage directory created");
   }
 
 }

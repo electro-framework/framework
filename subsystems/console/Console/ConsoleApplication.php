@@ -6,7 +6,7 @@ use Robo\Runner;
 use Robo\TaskInfo;
 use Selenia\Application;
 use Selenia\Console\Services\ConsoleIO;
-use Selenia\Core\Assembly\Services\ModulesManager;
+use Selenia\Core\Assembly\Services\ModulesLoader;
 use Selenia\Interfaces\InjectorInterface;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
@@ -69,8 +69,8 @@ class ConsoleApplication extends Runner
 
     // Bootstrap the application's modules.
 
-    /** @var ModulesManager $modulesApi */
-    $modulesManager = $injector->make (ModulesManager::class);
+    /** @var ModulesLoader $modulesApi */
+    $modulesManager = $injector->make (ModulesLoader::class);
     $modulesManager->bootModules ();
 
     // Setup the console.

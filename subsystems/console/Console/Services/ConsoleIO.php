@@ -81,6 +81,10 @@ class ConsoleIO implements ConsoleIOInterface
     return $this->say ("<comment>$text</comment>");
   }
 
+  /**
+   * @param string $question
+   * @return bool
+   */
   function confirm ($question)
   {
     return $this->doAsk (new ConfirmationQuestion($this->formatQuestion ($question . ' (y/n)'), false));

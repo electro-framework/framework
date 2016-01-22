@@ -7,9 +7,9 @@ use Selenia\Interfaces\ModuleInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
 
 /**
- * Provides an API for managing the application's modules.
+ * Loads and initializes the application's modules.
  */
-class ModulesManager
+class ModulesLoader
 {
   /**
    * @var Application

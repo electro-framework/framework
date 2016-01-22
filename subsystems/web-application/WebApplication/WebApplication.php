@@ -4,7 +4,7 @@ use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\DebugConsole\DebugConsoleSettings;
 use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 use Selenia\Application;
-use Selenia\Core\Assembly\Services\ModulesManager;
+use Selenia\Core\Assembly\Services\ModulesLoader;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\WebServer\WebServer;
@@ -79,8 +79,8 @@ class WebApplication
 
     // Bootstrap the application's modules.
 
-    /** @var ModulesManager $modulesApi */
-    $modulesManager = $this->injector->make (ModulesManager::class);
+    /** @var ModulesLoader $modulesApi */
+    $modulesManager = $this->injector->make (ModulesLoader::class);
     $modulesManager->bootModules ();
 
     // Post-assembly additional setup.

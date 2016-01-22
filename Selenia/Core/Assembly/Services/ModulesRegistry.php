@@ -250,14 +250,13 @@ class ModulesRegistry
       $this->importFrom ($json->load ()->data);
     else {
       $this->rebuildRegistry ();
-      $this->save ();
     }
   }
 
   /**
    * @return ModulesRegistry
    */
-  public function rebuildRegistry ()
+  function rebuildRegistry ()
   {
     $subsystems = $this->loadModulesMetadata ($this->scanSubsystems (), ModuleInfo::TYPE_SUBSYSTEM);
     $plugins    = $this->loadModulesMetadata ($this->scanPlugins (), ModuleInfo::TYPE_PLUGIN);
@@ -278,6 +277,7 @@ class ModulesRegistry
       }
       $this->modules [$module->name] = $module;
     }
+    $this->save ();
   }
 
   /**
@@ -286,9 +286,10 @@ class ModulesRegistry
    */
   function refresh ()
   {
+    // Delete existing registry (if any) to completely discard all information.
     unlink ($this->getRegistryPath ());
+    // Now build a fresh new registry.
     $this->rebuildRegistry ();
-    $this->save ();
   }
 
   /**
