@@ -37,13 +37,14 @@ trait InitCommands
     $envPath = "{$this->app()->baseDirectory}/.env";
     $io->clear ()
        ->banner ("Selenia Configuration Wizard");
-    if (file_exists ($envPath) && !get ($opts, 'overwrite'))
+    $overwrite = get ($opts, 'overwrite');
+    if (file_exists ($envPath) && !$overwrite)
       $io->nl ()->say ("The application is already initialized.")->comment ("Use -o to overwrite.");
     else {
       $io->title ("Creating required files and directories...");
       $this->nestedExec = true;
       $this->initStorage ();
-      $this->initConfig ();
+      $this->initConfig (['overwrite' => $overwrite]);
     }
     $demoPath = "{$this->app()->modulesPath}/demo-company";
     if (file_exists ($demoPath)) {
