@@ -15,7 +15,7 @@ use Selenia\Tasks\Commands\ModuleCommands;
 class CoreTasks
 {
   use InitCommands;
-  use BuildCommands;
+//  use BuildCommands;
   use ModuleCommands;
 
   /**

@@ -7,6 +7,8 @@ use Psr\Http\Message\ServerRequestInterface;
 interface RequestHandlerInterface
 {
   /**
+   * Handles an HTTP request.
+   *
    * @param ServerRequestInterface $request
    * @param ResponseInterface      $response
    * @param callable               $next A function with arguments

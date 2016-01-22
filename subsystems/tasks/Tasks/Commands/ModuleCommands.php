@@ -57,12 +57,11 @@ trait ModuleCommands
 
     $path = "{$this->app()->modulesPath}/$___MODULE___";
     (new CopyDir (["{$this->moduleConfig('scaffoldsPath')}/module" => $path]))->run ();
-    $this->fs ()->rename ("$path/src/Config/___CLASS___.php", "$path/src/Config/{$___CLASS___}Module.php")->run ();
+    $this->fs ()->rename ("$path/src/Config/___CLASS___.php", "$path/src/Config/$___CLASS___.php")->run ();
 
     foreach
     ([
-       "$path/src/Config/{$___CLASS___}Module.php",
-       "$path/bootstrap.php",
+       "$path/src/Config/$___CLASS___.php",
        "$path/composer.json",
      ]
      as $file) (new Replace ($file))

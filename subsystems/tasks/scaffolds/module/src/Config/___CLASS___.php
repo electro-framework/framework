@@ -10,14 +10,25 @@ use Selenia\Interfaces\ModuleInterface;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationProviderInterface;
 
-class ___CLASS___Module implements RequestHandlerInterface, ModuleInterface, NavigationProviderInterface
+class ___CLASS___ implements
+  ModuleInterface
+  , RequestHandlerInterface       // remove this if this module will not provide routing
+  , NavigationProviderInterface   // remove this if this module will not provide navigation
 {
   /** @var RouterInterface */
   private $router;
 
   /*
-   * Uncomment `registerRouter ($this)` on method `configure()` to enable this.
-   * Remove this (and the `implements RequestHandlerInterface`) if you don't need it.
+   * Remove this method if this module will not provide routing.
+   * Also remove:
+   *   * the line with `RequestHandlerInterface` on the `implements` list above
+   *   * the `private $router` property
+   *   * the following items on method `configure()`:
+   *     * `RouterInterface $router` method parameter
+   *     * `$this->router = $router;`
+   *     * `->registerRouter ($this)`
+   *
+   * Either way, you should also remove this comment block when it's no longer needed.
    */
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
@@ -29,17 +40,18 @@ class ___CLASS___Module implements RequestHandlerInterface, ModuleInterface, Nav
   }
 
   /*
-   * Uncomment, below, the lines that enable the features you need.
+   * Remove, below, what you don't need; it will improve performance and it's easy to add it back later by using your
+   * IDE's auto-completion (ex. by pressing Ctrl+Space after a ->).
    */
   function configure (ModuleServices $module, RouterInterface $router)
   {
     $this->router = $router;
     $module
-      //->publishPublicDirAs ('modules/___MODULE_PATH___')
-      //->provideMacros ()
-      //->provideViews ()
-      //->registerRouter ($this)
-      //->provideNavigation ($this)
+      ->publishPublicDirAs ('modules/___MODULE_PATH___')
+      ->provideMacros ()
+      ->provideViews ()
+      ->registerRouter ($this)
+      ->provideNavigation ($this)
       ->setDefaultConfig ([
         'main' => [
           'name'    => 'yourapp',       // session cookie name
@@ -50,8 +62,13 @@ class ___CLASS___Module implements RequestHandlerInterface, ModuleInterface, Nav
   }
 
   /*
-   * Uncomment `provideNavigation ($this)` on method `configure()` to enable this.
-   * Remove this (and the `implements NavigationProviderInterface`) if you don't need it.
+   * Remove this method if this module will not provide navigation.
+   * Also remove:
+   *   * the line with `NavigationProviderInterface` on the `implements` list above
+   *   * the following items on method `configure()`:
+   *     * `->provideNavigation ($this)`
+   *
+   * Either way, you should also remove this comment block when it's no longer needed.
    */
   function defineNavigation (NavigationInterface $navigation)
   {

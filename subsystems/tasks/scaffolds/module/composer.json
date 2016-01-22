@@ -8,7 +8,7 @@
   "license": "proprietary",
   "autoload": {
     "psr-4": {
-      "___PSR4_NAMESPACE___": "___MODULE_PATH___/src"
+      "___PSR4_NAMESPACE___": "src"
     }
   },
   "require": {

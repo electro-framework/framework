@@ -32,7 +32,6 @@ class AutoRoutingMiddleware implements RequestHandlerInterface
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     $URL = $request->getAttribute ('virtualUri');
-    inspect ($URL);
     if ($URL == '') $URL = '/';
     if (substr ($URL, -1) == '/') $URL = $URL . 'index';
 
