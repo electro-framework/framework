@@ -42,8 +42,11 @@ class ModulesUtil
     }
     else {
       $modules    = $this->registry->getApplicationModuleNames ($onlyEnabled);
-      $i          = $this->io->menu ("Select a module:", $modules);
-      $moduleName = $modules[$i];
+      if ($modules) {
+        $i          = $this->io->menu ("Select a module:", $modules);
+        $moduleName = $modules[$i];
+      }
+      else $this->io->error ("No modules are installed");
     }
   }
 
