@@ -34,7 +34,6 @@ class MacroInstanceProperties extends MetadataProperties
 
   function defines ($name, $asSubtag = false)
   {
-    inspect ($name);
     if (!$this->macroInstance) $this->noMacro ();
     return !is_null ($this->macroInstance->getParameter ($name));
   }

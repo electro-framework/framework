@@ -38,16 +38,19 @@ class Macro extends Component
     $transfer_binding = false;
     return preg_replace_callback (self::PARSE_MACRO_BINDING_EXP,
       function ($args) use ($instance, $transfer_binding) {
-        return self::evalScalarRef ($args[1], $instance, $transfer_binding);
+        return self::evalScalarRef ($args[1], get ($args, 2), $instance, $transfer_binding);
       }, $bindExp);
   }
 
-  private static function evalScalarRef ($ref, MacroInstance $instance, &$transfer_binding)
+  private static function evalScalarRef ($ref, $extra, MacroInstance $instance, &$transfer_binding)
   {
     if (isset($instance->bindings) && array_key_exists ($ref, $instance->bindings)) {
       $transfer_binding = true;
-
-      return $instance->bindings[$ref];
+      $exp              = $instance->bindings[$ref];
+      // Insert $extra after the evaluated value
+      preg_match ('/[\s}!]+$/', $exp, $m);
+      $p = strlen ($m[0]);
+      return $extra !== '' ? substr_replace ($exp, $extra, -$p, 0) : $exp;
     }
     $value = $instance->props->$ref;
     if (Parser::isBindingExpression ($value))
@@ -250,10 +253,8 @@ class Macro extends Component
           self::evalScalarExp ($exp, $instance)); //replace current binding
       }
       else {
-        if ($exp[0] != '{' || substr ($exp, -1) != '}' || strpos ($exp, '}') < strlen ($exp) - 2
-        ) {
+        if (self::isCompositeBinding ($exp)) {
           // Composite exp. (constant text + binding ref)
-
           $value = self::evalScalarExp ($exp, $instance, $transfer_binding);
           if ($transfer_binding)
             $component->addBinding ($field, $value); //replace current binding
