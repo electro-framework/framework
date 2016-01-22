@@ -39,10 +39,10 @@ trait ModuleCommands
   {
     $io = $this->io ();
 
-    $moduleName = $moduleName ?: $this->io ()->askDefault ("Module name", "vendor-name/product-name");
+    $moduleName = $moduleName ?: $this->io ()->askDefault ("Module name", "company-name/project-name");
 
     if (!$this->modulesRegistry ()->validateModuleName ($moduleName))
-      $io->error ("Invalid module name $moduleName. Correct syntax: vendor-name/product-name");
+      $io->error ("Invalid module name $moduleName. Correct syntax: company-name/project-name");
     if ($this->modulesRegistry ()->isInstalled ($moduleName))
       $io->error ("You can't use that name because a module named $moduleName already exists");
 
@@ -57,11 +57,11 @@ trait ModuleCommands
 
     $path = "{$this->app()->modulesPath}/$___MODULE___";
     (new CopyDir (["{$this->moduleConfig('scaffoldsPath')}/module" => $path]))->run ();
-    $this->fs ()->rename ("$path/src/___CLASS___.php", "$path/src/$___CLASS___.php")->run ();
+    $this->fs ()->rename ("$path/src/Config/___CLASS___.php", "$path/src/Config/{$___CLASS___}Module.php")->run ();
 
     foreach
     ([
-       "$path/src/$___CLASS___.php",
+       "$path/src/Config/{$___CLASS___}Module.php",
        "$path/bootstrap.php",
        "$path/composer.json",
      ]
