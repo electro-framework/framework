@@ -51,8 +51,10 @@ class Navigation implements NavigationInterface
   function add ($navigationMap, $prepend = false, $targetId = null)
   {
     if (isset($targetId)) {
-      if (!isset($this->IDs[$targetId]))
+      if (!isset($this->IDs[$targetId])) {
+        inspect ()->simpleTable (array_keys ($this->IDs), 'Registered link IDs');
         throw new Fault (Faults::LINK_NOT_FOUND, $targetId);
+      }
       $target = $this->IDs[$targetId];
     }
     else $target = $this->rootLink;

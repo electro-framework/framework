@@ -300,7 +300,7 @@ class ModulesRegistry
     $filePath = $this->getRegistryPath ();
     $path     = dirname ($filePath);
     if (!file_exists ($path))
-      mkdir ($path, 0755, true);
+      mkdir ($path, 0777, true);
     $json = new JsonFile ($filePath, true);
     $json->assign (['modules' => $this->modules])->save ();
   }
