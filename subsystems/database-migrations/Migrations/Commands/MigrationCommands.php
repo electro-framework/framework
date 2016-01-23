@@ -6,13 +6,14 @@ use Robo\Config;
 use Selenia\Console\Lib\ModulesUtil;
 use Selenia\Console\Services\ConsoleIO;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
+use Selenia\Migrations\Config\MigrationsSettings;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Input\ArrayInput;
 
 /**
  * Database migration commands.
  */
-class Commands
+class MigrationCommands
 {
   /**
    * @var string Used internally to pass information to config.php
@@ -38,13 +39,19 @@ class Commands
    * @var ModulesRegistry
    */
   private $registry;
+  /**
+   * @var MigrationsSettings
+   */
+  private $settings;
 
-  function __construct (ConsoleIO $io, ModulesRegistry $registry, ModulesUtil $modulesUtil, SymfonyConsole $console)
+  function __construct (MigrationsSettings $settings, ConsoleIO $io, ModulesRegistry $registry,
+                        ModulesUtil $modulesUtil, SymfonyConsole $console)
   {
     $this->io          = $io;
     $this->registry    = $registry;
     $this->modulesUtil = $modulesUtil;
     $this->console     = $console;
+    $this->settings    = $settings;
   }
 
   static protected function getConfigPath ()
@@ -150,11 +157,11 @@ class Commands
    * @param string $moduleName The target module (vendor-name/package-name syntax).
    *                           If not specified, the user will be prompted for it
    * @param array  $options
-   * @option $format|f      The output format: 'text' or 'json'
+   * @option $format|f      The output format. Allowed values: 'json'. If not specified, text is output.
    * @return int Status code
    */
   function migrationStatus ($moduleName = null, $options = [
-    'format|f' => 'text',
+    'format|f' => '',
   ])
   {
     $this->setupModule ($moduleName);
@@ -179,7 +186,7 @@ class Commands
    */
   protected function setupMigrationConfig ($moduleName)
   {
-    self::$migrationsPath  = $this->registry->getModule ($moduleName)->path . '/migrations';
+    self::$migrationsPath  = $this->registry->getModule ($moduleName)->path . '/' . $this->settings->migrationsPath ();
     self::$migrationsTable = 'migrations_of_' . str_replace ('/', '_', dehyphenate ($moduleName));
   }
 
