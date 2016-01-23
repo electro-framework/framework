@@ -7,18 +7,19 @@ use Robo\Task\FileSystem\DeleteDir;
 use Selenia\Console\Traits\ApplicationServiceTrait;
 use Selenia\Console\Traits\ConsoleIOServiceTrait;
 use Selenia\Console\Traits\FileSystemStackServiceTrait;
-use Selenia\Console\Traits\ModuleConfigServiceTrait;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
+use Selenia\Tasks\Config\TasksSettings;
 use Selenia\Tasks\Shared\ChmodEx;
 
 /**
  * Implements the Selenia Task Runner's pre-set init:xxx commands.
+ *
+ * @property TasksSettings $settings
  */
 trait InitCommands
 {
   use ConsoleIOServiceTrait;
   use ApplicationServiceTrait;
-  use ModuleConfigServiceTrait;
   use FileSystemStackServiceTrait;
 
   private $nestedExec = false;
@@ -80,7 +81,7 @@ trait InitCommands
          ->comment ("Please edit the <info>.env</info> file to fill-in any missing required values (ex. database passwords)");
     }
     else {
-      $this->fs ()->copy ("{$this->moduleConfig('scaffoldsPath')}/.env", $envPath, true)->run ();
+      $this->fs ()->copy ("{$this->settings->scaffoldsPath()}/.env", $envPath, true)->run ();
 
       $io->title ("Configuring the application...");
 
@@ -175,7 +176,7 @@ trait InitCommands
     $target = $this->app ()->storagePath;
     if (file_exists ($target))
       (new DeleteDir ($target))->run ();
-    (new CopyDir (["{$this->moduleConfig('scaffoldsPath')}/storage" => $target]))->run ();
+    (new CopyDir (["{$this->settings->scaffoldsPath()}/storage" => $target]))->run ();
     (new ChmodEx ($target))->dirs (0770)->files (0660)->run ();
 
     (new ModulesRegistry($this->app ()))->rebuildRegistry ();

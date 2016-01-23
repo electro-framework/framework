@@ -22,11 +22,6 @@ class Application
    */
   public $assets = [];
   /**
-   * The class to be instantiated when creating an automatic controller.
-   * @var string
-   */
-  public $autoControllerClass = 'Selenia\Http\Controllers\Controller';
-  /**
    * The file path of current main application's root directory.
    * @var string
    */
@@ -36,10 +31,6 @@ class Application
    * @var string
    */
   public $baseURI;
-  /**
-   * @var string
-   */
-  public $cachePath = 'private/storage/cache';
   /**
    * Whether to compress or not the HTTP response with gzip enconding.
    * @var bool
@@ -51,27 +42,6 @@ class Application
    */
   public $condenseLiterals;
   /**
-   * Configuration settings for registered modules.
-   * Each key is that name of a module and its value is the configuration array of that module.
-   * @var array
-   */
-  public $config;
-  /**
-   * The name of the file that contains the application's configuration settings.
-   * @var string
-   */
-  public $configFilename = 'application.ini.php';
-  /**
-   * Folder path for the configuration files.
-   * @var string
-   */
-  public $configPath = 'private/config';
-  /**
-   * Holds an array of multiple DataSourceInfo for each site page or null;
-   * @var array
-   */
-  public $dataSources;
-  /**
    * @var boolean
    */
   public $debugMode;
@@ -81,15 +51,6 @@ class Application
    * @var string
    */
   public $defaultLang = null;
-  /**
-   * The file path of current application's directory.
-   * @var string
-   */
-  public $directory;
-  /**
-   * @var boolean
-   */
-  public $enableCompression;
   /**
    * Favorite icon URL.
    * @var string
@@ -105,39 +66,10 @@ class Application
    */
   public $frameworkPath;
   /**
-   * @var Boolean True to generate the standard framework scripts.
-   */
-  public $frameworkScripts = true;
-  /**
    * The mapped public URI of the framework's public directory.
    * @var string
    */
   public $frameworkURI = 'framework';
-  /**
-   * Set to false to disable application-specific sessions and use a global scope.
-   * @var Boolean
-   */
-  public $globalSessions = false;
-  /**
-   * The homepage's breadcrumb icon class(es).
-   * @var string
-   */
-  public $homeIcon = '';
-  /**
-   * The homepage's breadcrumb title.
-   * @var string
-   */
-  public $homeTitle = 'Home';
-  /**
-   * The application's entry point URI.
-   *
-   * It is also the default URI to redirect to when none is specified on the URL.
-   * The URI locates an entry on the routing map where additional info. is used to
-   * load the default page.
-   * Set by application.ini.php
-   * @var String
-   */
-  public $homeURI = '';
   /**
    * @var string
    */
@@ -207,10 +139,6 @@ class Application
    * @var string
    */
   public $macrosPath = 'private/resources/macros';
-  /**
-   * @var string
-   */
-  public $modelPath = 'models';
   /**
    * The relative path of the language files' folder inside a module.
    * @var string
@@ -282,10 +210,6 @@ class Application
    * @var string[] A list of "preset" class names.
    */
   public $presets = [];
-  /**
-   * @var string
-   */
-  public $rootPath;
   /**
    * @var string
    */
@@ -379,7 +303,7 @@ class Application
       set_include_path ($this->includePath = $extra . $this->includePath);
       return;
     }
-    $path = $extra . $this->rootPath;
+    $path = $extra . $this->baseDirectory;
     set_include_path ($path);
     $this->includePath = $path;
   }
@@ -393,9 +317,7 @@ class Application
    */
   function setup ($rootDir)
   {
-    $this->directory     = $rootDir;
     $this->baseDirectory = $rootDir;
-    $this->rootPath      = $rootDir;
     $this->frameworkPath =
       "$rootDir/" . self::FRAMEWORK_PATH; // due to eventual symlinking, we can't use dirname(__DIR__) here
     $this->setIncludePath ();

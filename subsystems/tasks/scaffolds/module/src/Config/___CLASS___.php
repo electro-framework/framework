@@ -3,6 +3,7 @@ namespace ___NAMESPACE___\Config;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Application;
 use Selenia\Core\Assembly\Services\ModuleServices;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\RouterInterface;
@@ -43,22 +44,18 @@ class ___CLASS___ implements
    * Remove, below, what you don't need; it will improve performance and it's easy to add it back later by using your
    * IDE's auto-completion (ex. by pressing Ctrl+Space after a ->).
    */
-  function configure (ModuleServices $module, RouterInterface $router)
+  function configure (ModuleServices $module, RouterInterface $router, Application $app)
   {
     $this->router = $router;
+    $app->name    = 'yourapp';      // session cookie name
+    $app->appName = 'Your App';     // default page title; also displayed on title bar (optional)
+    $app->title   = '@ - Your App'; // @ = page title
     $module
       ->publishPublicDirAs ('modules/___MODULE_PATH___')
       ->provideMacros ()
       ->provideViews ()
       ->registerRouter ($this)
-      ->provideNavigation ($this)
-      ->setDefaultConfig ([
-        'main' => [
-          'name'    => 'yourapp',       // session cookie name
-          'appName' => 'Your App',      // default page title; also displayed on title bar (optional)
-          'title'   => '@ - Your App',  // @ = page title
-        ],
-      ]);
+      ->provideNavigation ($this);
   }
 
   /*

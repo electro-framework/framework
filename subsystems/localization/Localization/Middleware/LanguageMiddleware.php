@@ -26,22 +26,25 @@ class LanguageMiddleware implements RequestHandlerInterface
    * @var Session
    */
   private $session;
+  /**
+   * @var LocalizationSettings
+   */
+  private $settings;
 
-  function __construct (Session $session, Application $app, Locale $locale)
+  function __construct (Session $session, Application $app, Locale $locale, LocalizationSettings $settings)
   {
-    $this->session = $session;
-    $this->app     = $app;
-    $this->locale  = $locale;
+    $this->session  = $session;
+    $this->app      = $app;
+    $this->locale   = $locale;
+    $this->settings = $settings;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    /** @var LocalizationSettings $config */
-    $config = $this->app->config['selenia/localization'];
-    $lang   = property ($this->session, 'lang', $this->app->defaultLang);
+    $lang = property ($this->session, 'lang', $this->app->defaultLang);
     $this->locale
       ->setAvailable ($this->app->languages)
-      ->setSelectionMode ($config->selectionMode())
+      ->setSelectionMode ($this->settings->selectionMode ())
       ->setLocale ($lang);
 
     return $next();

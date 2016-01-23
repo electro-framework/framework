@@ -42,8 +42,7 @@ class SessionMiddleware implements RequestHandlerInterface
 
     // Start the sessions engine.
 
-    if (!$app->globalSessions)
-      session_name ($app->name);
+    session_name ($app->name);
     $name = session_name ();
     session_start ();
 

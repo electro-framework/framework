@@ -5,9 +5,11 @@ use Selenia\Application;
 use Selenia\Console\Lib\ModulesUtil;
 use Selenia\Console\Services\ConsoleIO;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
+use Selenia\Migrations\Config\MigrationsSettings;
 use Selenia\Tasks\Commands\BuildCommands;
 use Selenia\Tasks\Commands\InitCommands;
 use Selenia\Tasks\Commands\ModuleCommands;
+use Selenia\Tasks\Config\TasksSettings;
 
 /**
  * The preset Selenia console tasks configuration for Selenia's task runner.
@@ -22,9 +24,14 @@ class CoreTasks
    * @var Application
    */
   private $app;
-
-  /** @var ConsoleIO */
+  /**
+   * @var ConsoleIO
+   */
   private $io;
+  /**
+   * @var MigrationsSettings
+   */
+  private $migrationsSettings;
   /**
    * @var ModulesRegistry
    */
@@ -33,13 +40,20 @@ class CoreTasks
    * @var ModulesUtil
    */
   private $modulesUtil;
+  /**
+   * @var TasksSettings
+   */
+  private $settings;
 
-  function __construct (ConsoleIO $io, Application $app, ModulesUtil $modulesUtil, ModulesRegistry $modulesRegistry)
+  function __construct (ConsoleIO $io, Application $app, ModulesUtil $modulesUtil, ModulesRegistry $modulesRegistry,
+                        TasksSettings $settings,MigrationsSettings $migrationsSettings)
   {
     $this->io = $io;
     $this->modulesUtil = $modulesUtil;
     $this->app = $app;
     $this->modulesRegistry = $modulesRegistry;
+    $this->migrationsSettings = $migrationsSettings;
+    $this->settings = $settings;
   }
 
   protected function app ()
@@ -65,11 +79,6 @@ class CoreTasks
   protected function modulesUtil ()
   {
     return $this->modulesUtil;
-  }
-
-  protected function moduleConfig ($key)
-  {
-    return get ($this->app ()->config['core-tasks'], $key);
   }
 
 }

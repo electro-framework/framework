@@ -2,25 +2,16 @@
 namespace Selenia\Tasks\Config;
 
 use Selenia\Core\Assembly\Services\ModuleServices;
+use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\ModuleInterface;
 use Selenia\Tasks\Tasks\CoreTasks;
 
 class TasksModule implements ModuleInterface
 {
-  function boot () { }
-
-  function configure (ModuleServices $module)
+  function configure (ModuleServices $module, InjectorInterface $injector)
   {
     $module
-      ->registerTasksFromClass (CoreTasks::class)
-      ->setDefaultConfig ([
-        'core-tasks' => [
-          /**
-           * The path of the Core Tasks's scaffolds's directory, relative to the project's directory.
-           * @var string
-           */
-          'scaffoldsPath' => updir (__DIR__, 2) . '/scaffolds',
-        ],
-      ]);
+      ->registerTasksFromClass (CoreTasks::class);
+    $injector->share (TasksSettings::class);
   }
 }

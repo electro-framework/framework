@@ -1,5 +1,6 @@
 <?php
 namespace Selenia\Tasks\Commands;
+
 use PhpKit\Flow\FilesystemFlow;
 use Robo\Task\Composer\DumpAutoload;
 use Robo\Task\Composer\Update;
@@ -10,29 +11,33 @@ use Robo\Task\Vcs\GitStack;
 use Selenia\Console\Traits\ApplicationServiceTrait;
 use Selenia\Console\Traits\ConsoleIOServiceTrait;
 use Selenia\Console\Traits\FileSystemStackServiceTrait;
-use Selenia\Console\Traits\ModuleConfigServiceTrait;
 use Selenia\Console\Traits\ModulesRegistryServiceTrait;
 use Selenia\Console\Traits\ModulesUtilServiceTrait;
 use Selenia\Core\Assembly\ModuleInfo;
 use Selenia\Exceptions\HttpException;
 use Selenia\Lib\PackagistAPI;
+use Selenia\Migrations\Config\MigrationsSettings;
+use Selenia\Tasks\Config\TasksSettings;
 use Selenia\Tasks\Shared\InstallPackageTask;
 use Selenia\Tasks\Shared\UninstallPackageTask;
 
 /**
  * Implements the Selenia Task Runner's pre-set build commands.
+ *
+ * @property TasksSettings      $settings
+ * @property MigrationsSettings $migrationsSettings
  */
 trait ModuleCommands
 {
   use ConsoleIOServiceTrait;
   use ApplicationServiceTrait;
-  use ModuleConfigServiceTrait;
   use FileSystemStackServiceTrait;
   use ModulesUtilServiceTrait;
   use ModulesRegistryServiceTrait;
 
   /**
    * Scaffolds a new project module
+   *
    * @param string $moduleName The full name (vendor-name/module-name) of the module to be created
    */
   function moduleCreate ($moduleName = null)
@@ -56,7 +61,7 @@ trait ModuleCommands
     $___PSR4_NAMESPACE___ = str_replace ('\\', '\\\\', "$___NAMESPACE___\\");
 
     $path = "{$this->app()->modulesPath}/$___MODULE___";
-    (new CopyDir (["{$this->moduleConfig('scaffoldsPath')}/module" => $path]))->run ();
+    (new CopyDir (["{$this->settings->scaffoldsPath()}/module" => $path]))->run ();
     $this->fs ()->rename ("$path/src/Config/___CLASS___.php", "$path/src/Config/$___CLASS___.php")->run ();
 
     foreach
@@ -94,6 +99,7 @@ trait ModuleCommands
 
   /**
    * Installs a plugin module
+   *
    * @param string $moduleName If not specified, a list of installable plugins will be displayed for the user
    *                           to pick one
    * @param array  $opts
@@ -133,6 +139,10 @@ trait ModuleCommands
     // Register the module
 
     $this->moduleRefresh ();
+
+    // Run migrations (if any)
+
+    $this->runMigrationsOf ($moduleName);
 
     $io->done ("Plugin <info>$moduleName</info> is now installed");
   }
@@ -181,12 +191,12 @@ trait ModuleCommands
       $moduleUrl  = $module['repository'];
     }
     else {
-
       // Extract package information from packagist.org
 
       try {
         $info = (new PackagistAPI)->get ($moduleName);
-      } catch (HttpException $e) {
+      }
+      catch (HttpException $e) {
         $io->error ($e->getCode () == 404 ? "Module '$moduleName' was not found" : $e->getMessage ());
       }
       /** @noinspection PhpUndefinedVariableInspection */
@@ -212,6 +222,10 @@ trait ModuleCommands
 
     $this->moduleRefresh ();
 
+    // Run migrations (if any)
+
+    $this->runMigrationsOf ($moduleName);
+
     $io->done ("Template <info>$moduleName</info> is now installed on <info>$path</info>");
   }
 
@@ -225,6 +239,7 @@ trait ModuleCommands
 
   /**
    * Removes a module from the application
+   *
    * @param string $moduleName The full name (vendor-name/module-name) of the module to be uninstalled
    */
   function moduleUninstall ($moduleName = null)
@@ -236,8 +251,6 @@ trait ModuleCommands
     else $this->uninstallProjectModule ($moduleName);
   }
 
-  //--------------------------------------------------------------------------------------------------------------------
-
   protected function uninstallPlugin ($moduleName)
   {
     (new UninstallPackageTask($moduleName))->printed (false)->run ();
@@ -246,6 +259,8 @@ trait ModuleCommands
 
     $this->io ()->done ("Plugin module <info>$moduleName</info> was uninstalled");
   }
+
+  //--------------------------------------------------------------------------------------------------------------------
 
   protected function uninstallProjectModule ($moduleName)
   {
@@ -265,12 +280,12 @@ trait ModuleCommands
     $io->done ("Module <info>$moduleName</info> was uninstalled");
   }
 
-  //--------------------------------------------------------------------------------------------------------------------
-
   private function composerUpdate ()
   {
     (new Update)->printed (false)->run ();
   }
+
+  //--------------------------------------------------------------------------------------------------------------------
 
   private function dumpAutoLoad ()
   {
@@ -306,12 +321,13 @@ trait ModuleCommands
 
   /**
    * Check if a directory is empty.
+   *
    * @param string $path
    * @return bool
    */
   private function isDirectoryEmpty ($path)
   {
-    return !count (FilesystemFlow::from ($path)->onlyDirectories ()->all ());
+    return !count (FilesystemFlow::from ($path)->all ());
   }
 
   private function removeModuleDirectory ($path)
@@ -325,6 +341,15 @@ trait ModuleCommands
     }
     else $this->io ()
               ->warn ("No module files were deleted because none were found on the <info>modules</info> directory");
+  }
+
+  private function runMigrationsOf ($moduleName)
+  {
+    $path = "{$this->app()->modulesPath}/$moduleName/" . $this->migrationSettings->migrationsPath ();
+    if (fileExists ($path) && !$this->isDirectoryEmpty ($path)) {
+      $this->io ()->say ("Running migrations...");
+      //TODO run migrations
+    }
   }
 
 }

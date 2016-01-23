@@ -266,41 +266,6 @@ class ModuleServices
   }
 
   /**
-   * @param array $v Configuration default settings to be merged into the application config.
-   *                 Settings already defined will not be changed, except for Application settings.
-   * @return $this
-   * @throws ConfigException
-   */
-  function setDefaultConfig ($v)
-  {
-    foreach ($v as $section => $cfg) {
-      if ($section == 'main') {
-        foreach ($cfg as $k => $v)
-          $this->app->$k = $v;
-      }
-      else {
-        $appCfg = get ($this->app->config, $section);
-        if (is_null ($appCfg)) {
-          $this->app->config[$section] = $cfg;
-          continue;
-        }
-        elseif (is_array ($appCfg)) {
-          if (is_array ($cfg))
-            $appCfg = $appCfg + $cfg;
-          else if ($cfg instanceof AssignableInterface)
-            $appCfg = $appCfg + $cfg->_export ();
-          else self::throwInvalidConfigType ($cfg);
-        }
-        elseif ($appCfg instanceof AssignableInterface)
-          $appCfg->_defaults ($cfg);
-        else self::throwInvalidConfigType ($cfg);
-        $this->app->config[$section] = $appCfg;
-      }
-    }
-    return $this;
-  }
-
-  /**
    * Sets the root directory of the module, from where other relative directory paths will be computed.
    * > **You do not need to call this!**
    *
