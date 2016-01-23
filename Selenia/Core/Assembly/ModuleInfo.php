@@ -14,6 +14,10 @@ class ModuleInfo implements AssignableInterface
 {
   use AssignableTrait;
 
+  const KEEP_PROPS = [
+    'enabled'
+  ];
+
   /**
    * A sprintf-compatible formatting expression, where %s = module's short name.
    */

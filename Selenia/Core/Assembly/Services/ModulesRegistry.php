@@ -273,7 +273,8 @@ class ModulesRegistry
       $oldModule = get ($oldModules, $module->name);
       if ($oldModule) {
         // Keep user preferences.
-        $module->enabled = $oldModule->enabled;
+        foreach (ModuleInfo::KEEP_PROPS as $prop)
+          $module->$prop = $oldModule->$prop;
       }
       $this->modules [$module->name] = $module;
     }
