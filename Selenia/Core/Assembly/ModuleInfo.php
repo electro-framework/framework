@@ -14,59 +14,73 @@ class ModuleInfo implements AssignableInterface
 {
   use AssignableTrait;
 
-  const KEEP_PROPS = [
-    'enabled'
-  ];
-
   /**
    * A sprintf-compatible formatting expression, where %s = module's short name.
    */
   const BOOTSTRAPPER_CLASS_NAME_FMT = 'Config\\%sModule';
+  const KEEP_PROPS                  = [
+    'enabled', 'migrationStatus',
+  ];
+  const MIGRATIONS_DONE             = 2;
+  const MIGRATIONS_NONE             = 0;
+  const MIGRATIONS_PENDING          = 1;
   const TYPE_PLUGIN                 = 'plugin';
   const TYPE_PRIVATE                = 'private';
   const TYPE_SUBSYSTEM              = 'subsystem';
-  const ref                         = __CLASS__;
   /**
    * The module's service provider class name or null if none.
+   *
    * @var string|null
    */
   public $bootstrapper;
   /**
    * An optional textual description (one line) of the module's purpose.
+   *
    * @var string
    */
   public $description = '';
   /**
    * When false, the module is ignored.
+   *
    * @var bool
    */
   public $enabled = true;
   /**
+   * @var int One of the `self::MIGRATIONS` constants.
+   */
+  public $migrationStatus = self::MIGRATIONS_NONE;
+  /**
    * A Unique Identifier for the module.
    * Plugins and Project Modules have names with 'vendor-name/package-name' syntax.
    * Subsystems have names with syntax: 'module-name'.
+   *
    * @var string
    */
   public $name;
   /**
    * The file system path of the module's root folder, relative to the project's root folder.
+   *
    * @var string
    */
   public $path;
   /**
    * If set, maps `$path` to the real filesystem path. This is useful when modules are symlinked and we want to display
    * debugging paths as short paths relative to the application's root directory.
+   *
    * @var string
    */
   public $realPath;
   /**
    * The module type: plugin, subsystem or projectModule.
-   * @var string One of the self::TYPE constants.
+   * <p>One of the `self::TYPE` constants.
+   *
+   * @var string
    */
   public $type;
 
   /**
    * Converts a module name in `vendor-name/package-name` form to a valid PSR-4 namespace.
+   *
    * @param string $moduleName
    * @return string
    */
@@ -84,6 +98,7 @@ class ModuleInfo implements AssignableInterface
 
   /**
    * Returns this module's bootstrapper class name.
+   *
    * @return string
    */
   function getBootstrapperClass ()
@@ -93,6 +108,7 @@ class ModuleInfo implements AssignableInterface
 
   /**
    * Returns the module's parsed composer.json, if it is present.
+   *
    * @return null|ComposerConfigHandler `null` if no composer.json is available.
    */
   function getComposerConfig ()
@@ -103,6 +119,7 @@ class ModuleInfo implements AssignableInterface
 
   /**
    * Retrieve the module's PHP namespace from its composer.json (if present).
+   *
    * @param string $srcPath The argument gets assigned the source code path associated with the found namespace.
    * @return null|string `null` if no composer.json is available.
    * @throws \Exception If the module's composer.json is not a valid module config.
