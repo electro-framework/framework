@@ -4,6 +4,7 @@ namespace Selenia\Core\Assembly\Services;
 use PhpKit\Flow\FilesystemFlow;
 use Selenia\Application;
 use Selenia\Core\Assembly\ModuleInfo;
+use Selenia\Exceptions\ExceptionWithTitle;
 use Selenia\Lib\JsonFile;
 use Selenia\Traits\InspectionTrait;
 use SplFileInfo;
@@ -39,7 +40,30 @@ class ModulesRegistry
     $this->modulesInstaller = $installer;
   }
 
-  private static function hidrateModulesList (array $data)
+  /**
+   * @param ModuleInfo[] $modules
+   * @return string[]
+   */
+  static private function getNames (array $modules)
+  {
+    return map ($modules, function (ModuleInfo $module) { return $module->name; });
+  }
+
+  /**
+   * @param string[]     $names
+   * @param ModuleInfo[] $modules
+   * @return ModuleInfo[]
+   */
+  static private function getOnly (array $names, array $modules)
+  {
+    return map ($names, function ($name) use ($modules) {
+      list ($module, $i) = array_find ($modules, 'name', $name);
+      if (!$module) throw new \RuntimeException ("Module not found: $name");
+      return $module;
+    });
+  }
+
+  static private function hidrateModulesList (array $data)
   {
     return map ($data, function ($o) { return array_toClass ($o, ModuleInfo::class); });
   }
@@ -254,15 +278,25 @@ class ModulesRegistry
     if ($json->exists ())
       $this->importFrom ($json->load ()->data);
     else {
-      $this->rebuildRegistry ();
+      $this->rebuildRegistry (true);
     }
   }
 
   /**
+   * @param bool $noConfigYet true if no configuration file exists yet.
    * @return ModulesRegistry
+   * @throws ExceptionWithTitle
    */
-  function rebuildRegistry ()
+  function rebuildRegistry ($noConfigYet = false)
   {
+    if (!$this->app->isConsoleBased) {
+      if ($noConfigYet)
+      throw new ExceptionWithTitle ('The application\'s runtime configuration is not initialized.',
+        'Please run <kbd>selenia</kbd> on the command line.');
+      else throw new ExceptionWithTitle ('The application\'s runtime configuration must be updated.',
+        'Please run <kbd>selenia module:refresh</kbd> on the command line.');
+    }
+
     $subsystems = $this->loadModulesMetadata ($this->scanSubsystems (), ModuleInfo::TYPE_SUBSYSTEM);
     $plugins    = $this->loadModulesMetadata ($this->scanPlugins (), ModuleInfo::TYPE_PLUGIN);
     $private    = $this->loadModulesMetadata ($this->scanPrivateModules (), ModuleInfo::TYPE_PRIVATE);
@@ -271,19 +305,19 @@ class ModulesRegistry
 
     /** @var ModuleInfo[] $currentModules */
     $currentModules     = array_merge ([$main], $subsystems, $plugins, $private);
-    $currentModuleNames = $this->getNames ($currentModules);
+    $currentModuleNames = self::getNames ($currentModules);
 
     $prevModules     = $this->modules;
-    $prevModuleNames = $this->getNames ($prevModules);
+    $prevModuleNames = self::getNames ($prevModules);
 
     $removedModuleNames = array_diff ($prevModuleNames, $currentModuleNames);
-    $removedModules     = $this->getOnly ($removedModuleNames, $prevModules);
+    $removedModules     = self::getOnly ($removedModuleNames, $prevModules);
 
     $newModuleNames = array_diff ($currentModuleNames, $prevModuleNames);
-    $newModules     = $this->getOnly ($newModuleNames, $currentModules);
+    $newModules     = self::getOnly ($newModuleNames, $currentModules);
 
     $moduleNamesKept = array_intersect ($currentModuleNames, $prevModuleNames);
-    $modulesKept     = $this->getOnly ($moduleNamesKept, $currentModules);
+    $modulesKept     = self::getOnly ($moduleNamesKept, $currentModules);
 
     $this->modules = [];
     foreach ($currentModules as $module) {
@@ -335,29 +369,6 @@ class ModulesRegistry
   function validateModuleName ($name)
   {
     return (bool)preg_match ('#^[a-z0-9\-]+/[a-z0-9\-]+$#', $name);
-  }
-
-  /**
-   * @param ModuleInfo[] $modules
-   * @return string[]
-   */
-  private function getNames (array $modules)
-  {
-    return map ($modules, function (ModuleInfo $module) { return $module->name; });
-  }
-
-  /**
-   * @param string[]     $names
-   * @param ModuleInfo[] $modules
-   * @return ModuleInfo[]
-   */
-  private function getOnly (array $names, array $modules)
-  {
-    return map ($names, function ($name) use ($modules) {
-      list ($module, $i) = array_find ($modules, 'name', $name);
-      if (!$module) throw new \RuntimeException ("Module not found: $name");
-      return $module;
-    });
   }
 
   /**

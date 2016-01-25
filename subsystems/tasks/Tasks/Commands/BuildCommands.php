@@ -1,19 +1,19 @@
 <?php
 namespace Selenia\Tasks\Commands;
+
 use Robo\Task\Bower;
 use Robo\Task\FileSystem\CleanDir;
-use Selenia\Console\Traits\ApplicationServiceTrait;
-use Selenia\Console\Traits\ConsoleIOServiceTrait;
-use Selenia\Core\Assembly\Services\ModulesLoader;
+use Selenia\Application;
+use Selenia\Interfaces\ConsoleIOInterface;
 
 /**
  * Implements the Selenia Task Runner's pre-set build commands.
+ *
+ * @property Application        $app
+ * @property ConsoleIOInterface $io
  */
 trait BuildCommands
 {
-  use ConsoleIOServiceTrait;
-  use ApplicationServiceTrait;
-
   /**
    * Builds the whole project, including all modules
    * Use this command right after cloning a project or whenever modules are added, removed or updated.
@@ -28,12 +28,12 @@ trait BuildCommands
     // $this->cleanModules ();
     if (!$options['exclude-libs']) {
       //$this->cleanLibs ();
-      foreach (ModulesLoader::get ()->modules () as $module) {
-        $path = "$module->path/bower.json";
-        if (file_exists ($path))
-          copy ($path, $this->app ()->baseDirectory . '/bower.json');
-      }
-      (new Bower\Update())->dir ($this->app ()->baseDirectory)->run ();
+//      foreach (ModulesLoader::get ()->modules () as $module) {
+//        $path = "$module->path/bower.json";
+//        if (file_exists ($path))
+//          copy ($path, $this->app->baseDirectory . '/bower.json');
+//      }
+//      (new Bower\Update())->dir ($this->app->baseDirectory)->run ();
     }
   }
 
@@ -43,7 +43,7 @@ trait BuildCommands
    */
   function update ()
   {
-    $this->io ()->say ("Hello World!");
+    $this->io->say ("Hello World!");
   }
 
   /**

@@ -3,6 +3,7 @@ namespace Selenia\Tasks\Tasks;
 
 use Robo\Task\FileSystem\FilesystemStack;
 use Selenia\Application;
+use Selenia\Console\ConsoleApplication;
 use Selenia\Console\Lib\ModulesUtil;
 use Selenia\Console\Services\ConsoleIO;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
@@ -24,6 +25,14 @@ class CoreTasks
    */
   private $app;
   /**
+   * @var ConsoleApplication
+   */
+  private $consoleApp;
+  /**
+   * @var FilesystemStack
+   */
+  private $fs;
+  /**
    * @var ConsoleIO
    */
   private $io;
@@ -41,38 +50,15 @@ class CoreTasks
   private $settings;
 
   function __construct (ConsoleIO $io, Application $app, ModulesUtil $modulesUtil, ModulesRegistry $modulesRegistry,
-                        TasksSettings $settings)
+                        TasksSettings $settings, ConsoleApplication $consoleApp)
   {
     $this->io              = $io;
     $this->modulesUtil     = $modulesUtil;
     $this->app             = $app;
     $this->modulesRegistry = $modulesRegistry;
     $this->settings        = $settings;
-  }
-
-  protected function app ()
-  {
-    return $this->app;
-  }
-
-  protected function fs ()
-  {
-    return new FilesystemStack;
-  }
-
-  protected function io ()
-  {
-    return $this->io;
-  }
-
-  protected function modulesRegistry ()
-  {
-    return $this->modulesRegistry;
-  }
-
-  protected function modulesUtil ()
-  {
-    return $this->modulesUtil;
+    $this->consoleApp      = $consoleApp;
+    $this->fs              = new FilesystemStack;
   }
 
 }

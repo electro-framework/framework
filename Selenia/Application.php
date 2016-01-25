@@ -337,21 +337,6 @@ class Application
     ] : [];
   }
 
-  /**
-   * Runs the specified console command, with the given arguments.
-   * > <p>To run a comand without having the Application as a dependency, use
-   * {@see ConsoleApplication::runCommand}.
-   *
-   * @param string            $name
-   * @param string[]          $args
-   */
-  function runCommand ($name, array $args = [])
-  {
-    $consoleApp = ConsoleApplication::make ($this->injector);
-    $consoleApp->setupStandardIO (array_merge (['', $name], $args));
-    $consoleApp->execute ();
-  }
-
   function setIncludePath ($extra = '')
   {
     if (!empty($extra)) {

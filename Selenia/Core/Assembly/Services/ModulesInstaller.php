@@ -2,6 +2,7 @@
 namespace Selenia\Core\Assembly\Services;
 
 use Selenia\Application;
+use Selenia\Console\ConsoleApplication;
 use Selenia\Core\Assembly\ModuleInfo;
 use Selenia\Database\Connection;
 use Selenia\Interfaces\ConsoleIOInterface;
@@ -21,15 +22,19 @@ class ModulesInstaller
    */
   private $app;
   /**
+   * @var ConsoleApplication
+   */
+  private $consoleApp;
+  /**
    * @var ConsoleIOInterface
    */
   private $io;
 
-  public function __construct (Application $app)
+  public function __construct (Application $app, ConsoleApplication $consoleApp)
   {
-    $this->app = $app;
-    if ($app->isConsoleBased)
-      $this->io = $app->injector->make (ConsoleIOInterface::class);
+    $this->app        = $app;
+    $this->consoleApp = $consoleApp;
+    $this->io         = $consoleApp->getIO ();
   }
 
   /**
@@ -53,8 +58,8 @@ class ModulesInstaller
    */
   function updateModules (array $modules)
   {
-    $databaseIsAvailable = Connection::getFromEnviroment()->isAvailable();
-    $runMigrations = $databaseIsAvailable && $this->migrationsSettings;
+    $databaseIsAvailable = Connection::getFromEnviroment ()->isAvailable ();
+    $runMigrations       = $databaseIsAvailable && $this->migrationsSettings;
 
     foreach ($modules as $module) {
       if ($runMigrations)
@@ -66,9 +71,8 @@ class ModulesInstaller
   {
     $path = "$module->path/" . $this->migrationsSettings->migrationsPath ();
     if (fileExists ($path)) {
-      if ($this->io)
-        $this->io->nl ()->say ("Running migrations of module <info>$module->name</info>");
-      $this->app->runCommand ('migration:run', [$module->name, '-n']);
+      $this->io->nl ()->say ("Running migrations of module <info>$module->name</info>");
+      $this->consoleApp->run ('migration:run', [$module->name]);
     }
   }
 

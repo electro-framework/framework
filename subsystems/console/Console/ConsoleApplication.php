@@ -18,6 +18,10 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 class ConsoleApplication extends Runner
 {
   /**
+   * @var SymfonyConsole
+   */
+  public $console;
+  /**
    * @var ConsoleIO
    */
   protected $io;
@@ -25,10 +29,6 @@ class ConsoleApplication extends Runner
    * @var Application
    */
   private $app;
-  /**
-   * @var SymfonyConsole
-   */
-  private $console;
   /**
    * @var InjectorInterface
    */
@@ -73,10 +73,13 @@ class ConsoleApplication extends Runner
     $console = new SymfonyConsole ('Selenia Task Runner', self::VERSION);
     $io      = new ConsoleIO;
 
+    $app = new static ($io, $application, $console, $injector);
+
     $injector
       ->alias (ConsoleIOInterface::class, ConsoleIO::class)
       ->share ($io)
-      ->share ($console);
+      ->share ($console)
+      ->share ($app);
 
     // Bootstrap the application's modules.
 
@@ -84,16 +87,19 @@ class ConsoleApplication extends Runner
     $loader = $injector->make (ModulesLoader::class);
     $loader->bootModules ();
 
-    // Create and execute a runnable console instance.
+    // Return the initialized application.
 
-    return new static ($io, $application, $console, $injector);
+    return $app;
   }
 
   /**
-   * Runs the specified console command, with the given arguments.
+   * Creates a console app to run the specified console command, with the given arguments, and executes it.
    *
    * <p>You can call this method from anywhwere on your application, be it a console or a web based app,
    * the only dependency is an injector instance.
+   *
+   * <p>Unless you're running a web-based application, it's better to call {@see run()} on the current console
+   * application instance; it's faster and it reuses the current console configuration.
    *
    * @param InjectorInterface $injector
    * @param string            $name
@@ -136,6 +142,39 @@ class ConsoleApplication extends Runner
   }
 
   /**
+   * Returns the console application's underlying console instance.
+   *
+   * @return SymfonyConsole
+   */
+  function getConsole ()
+  {
+    return $this->console;
+  }
+
+  /**
+   * Returns the console application's input/output interface.
+   *
+   * @return ConsoleIOInterface
+   */
+  function getIO ()
+  {
+    return $this->io;
+  }
+
+  /**
+   * Runs the specified console command, with the given arguments, as if it was invoked from the command line.
+   *
+   * @param string   $name
+   * @param string[] $args
+   */
+  function run ($name, array $args = [])
+  {
+    $args  = array_merge (['', $name], $args);
+    $input = $this->prepareInput ($args);
+    $this->execute ($input);
+  }
+
+  /**
    * Creates the default console I/O channels.
    *
    * @param string[] $args
@@ -146,7 +185,7 @@ class ConsoleApplication extends Runner
     $hasColorSupport = in_array ('--ansi', $args) ? true : (in_array ('--no-ansi', $args) ? false : null);
 
     $input  = $this->prepareInput ($args);
-    $output = new ConsoleOutput(ConsoleOutput::VERBOSITY_NORMAL, $hasColorSupport);
+    $output = new ConsoleOutput (ConsoleOutput::VERBOSITY_NORMAL, $hasColorSupport);
     Config::setOutput ($output);
     $this->io->setInput ($input);
     $this->io->setOutput ($output);

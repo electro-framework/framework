@@ -104,6 +104,7 @@ interface ConsoleIOInterface
 
   /**
    * @param string $text
+   * @return $this
    */
   function say ($text);
 

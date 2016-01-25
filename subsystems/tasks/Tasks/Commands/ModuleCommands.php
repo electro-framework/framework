@@ -2,19 +2,18 @@
 namespace Selenia\Tasks\Commands;
 
 use PhpKit\Flow\FilesystemFlow;
-use Robo\Task\Composer\DumpAutoload;
 use Robo\Task\Composer\Update;
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
+use Robo\Task\FileSystem\FilesystemStack;
 use Robo\Task\Vcs\GitStack;
-use Selenia\Console\Traits\ApplicationServiceTrait;
-use Selenia\Console\Traits\ConsoleIOServiceTrait;
-use Selenia\Console\Traits\FileSystemStackServiceTrait;
-use Selenia\Console\Traits\ModulesRegistryServiceTrait;
-use Selenia\Console\Traits\ModulesUtilServiceTrait;
+use Selenia\Application;
+use Selenia\Console\Lib\ModulesUtil;
 use Selenia\Core\Assembly\ModuleInfo;
+use Selenia\Core\Assembly\Services\ModulesRegistry;
 use Selenia\Exceptions\HttpException;
+use Selenia\Interfaces\ConsoleIOInterface;
 use Selenia\Lib\PackagistAPI;
 use Selenia\Migrations\Config\MigrationsSettings;
 use Selenia\Tasks\Config\TasksSettings;
@@ -24,17 +23,16 @@ use Selenia\Tasks\Shared\UninstallPackageTask;
 /**
  * Implements the Selenia Task Runner's pre-set build commands.
  *
+ * @property Application        $app
  * @property TasksSettings      $settings
  * @property MigrationsSettings $migrationsSettings
+ * @property ConsoleIOInterface $io
+ * @property FilesystemStack    $fs
+ * @property ModulesUtil        $modulesUtil
+ * @property ModulesRegistry    $modulesRegistry
  */
 trait ModuleCommands
 {
-  use ConsoleIOServiceTrait;
-  use ApplicationServiceTrait;
-  use FileSystemStackServiceTrait;
-  use ModulesUtilServiceTrait;
-  use ModulesRegistryServiceTrait;
-
   /**
    * Scaffolds a new project module
    *
@@ -42,13 +40,13 @@ trait ModuleCommands
    */
   function moduleCreate ($moduleName = null)
   {
-    $io = $this->io ();
+    $io = $this->io;
 
-    $moduleName = $moduleName ?: $this->io ()->askDefault ("Module name", "company-name/project-name");
+    $moduleName = $moduleName ?: $io->askDefault ("Module name", "company-name/project-name");
 
-    if (!$this->modulesRegistry ()->validateModuleName ($moduleName))
+    if (!$this->modulesRegistry->validateModuleName ($moduleName))
       $io->error ("Invalid module name $moduleName. Correct syntax: company-name/project-name");
-    if ($this->modulesRegistry ()->isInstalled ($moduleName))
+    if ($this->modulesRegistry->isInstalled ($moduleName))
       $io->error ("You can't use that name because a module named $moduleName already exists");
 
     $___MODULE___    = $moduleName;
@@ -60,9 +58,9 @@ trait ModuleCommands
     }
     $___PSR4_NAMESPACE___ = str_replace ('\\', '\\\\', "$___NAMESPACE___\\");
 
-    $path = "{$this->app()->modulesPath}/$___MODULE___";
+    $path = "{$this->app->modulesPath}/$___MODULE___";
     (new CopyDir (["{$this->settings->scaffoldsPath()}/module" => $path]))->run ();
-    $this->fs ()->rename ("$path/src/Config/___CLASS___.php", "$path/src/Config/$___CLASS___.php")->run ();
+    $this->fs->rename ("$path/src/Config/___CLASS___.php", "$path/src/Config/$___CLASS___.php")->run ();
 
     foreach
     ([
@@ -104,7 +102,7 @@ trait ModuleCommands
    */
   function moduleInstallPlugin ($moduleName = null, $opts = ['search|s' => '', 'stars' => false])
   {
-    $io = $this->io ();
+    $io = $this->io;
     if (!$moduleName) {
 
       // Search
@@ -122,7 +120,7 @@ trait ModuleCommands
         array_getColumn ($modules, 'fname'), -1,
         array_getColumn ($modules, 'description'),
         function ($i) use ($modules) {
-          return !$this->modulesRegistry ()->isInstalled ($modules[$i]['name']) ?: "That module is already installed";
+          return !$this->modulesRegistry->isInstalled ($modules[$i]['name']) ?: "That module is already installed";
         }
       );
       $moduleName = $modules[$sel]['name'];
@@ -151,7 +149,7 @@ trait ModuleCommands
   function moduleInstallTemplate ($moduleName = null,
                                   $opts = ['keep-repo|k' => false, 'search|s' => '', 'stars' => false])
   {
-    $io = $this->io ();
+    $io = $this->io;
 
     if (!$moduleName) {
 
@@ -170,7 +168,7 @@ trait ModuleCommands
         array_getColumn ($modules, 'fname'), -1,
         array_getColumn ($modules, 'description'),
         function ($i) use ($modules) {
-          return !$this->modulesRegistry ()->isInstalled ($modules[$i]['name'])
+          return !$this->modulesRegistry->isInstalled ($modules[$i]['name'])
             ?: "A module with that name already exists on this project";
         }
       );
@@ -194,13 +192,13 @@ trait ModuleCommands
 
     // Clone the repo.
 
-    $path = "{$this->app()->modulesPath}/$moduleName";
+    $path = "{$this->app->modulesPath}/$moduleName";
     (new GitStack)->cloneRepo ($moduleUrl, $path)->printed (false)->run ();
 
     // Remove VCS history
 
     if (!$opts['keep-repo'])
-      $this->fs ()->remove ("$path/.git")->run ();
+      $this->fs->remove ("$path/.git")->run ();
 
     // Install the module's dependencies and register its namespaces
 
@@ -214,7 +212,7 @@ trait ModuleCommands
    */
   function moduleRefresh ()
   {
-    $this->modulesRegistry ()->refresh ();
+    $this->modulesRegistry->refresh ();
   }
 
   /**
@@ -224,9 +222,9 @@ trait ModuleCommands
    */
   function moduleUninstall ($moduleName = null)
   {
-    $this->modulesUtil ()->selectModule ($moduleName);
+    $this->modulesUtil->selectModule ($moduleName);
 
-    if ($this->modulesRegistry ()->isPlugin ($moduleName))
+    if ($this->modulesRegistry->isPlugin ($moduleName))
       $this->uninstallPlugin ($moduleName);
     else $this->uninstallProjectModule ($moduleName);
   }
@@ -235,16 +233,16 @@ trait ModuleCommands
   {
     (new UninstallPackageTask($moduleName))->printed (false)->run ();
 
-    $this->io ()->done ("Plugin module <info>$moduleName</info> was uninstalled");
+    $this->io->done ("Plugin module <info>$moduleName</info> was uninstalled");
   }
 
   //--------------------------------------------------------------------------------------------------------------------
 
   protected function uninstallProjectModule ($moduleName)
   {
-    $io = $this->io ();
+    $io = $this->io;
 
-    $path = "{$this->app()->modulesPath}/$moduleName";
+    $path = "{$this->app->modulesPath}/$moduleName";
     $this->removeModuleDirectory ($path);
 
     // Uninstall the module's dependencies and unregister its namespaces
@@ -259,13 +257,6 @@ trait ModuleCommands
     (new Update)->printed (false)->run ();
   }
 
-  //--------------------------------------------------------------------------------------------------------------------
-
-  private function dumpAutoLoad ()
-  {
-    (new DumpAutoload)->printed (false)->run ();
-  }
-
   private function formatModules (& $modules, $stars = false)
   {
     // Sort list
@@ -278,7 +269,7 @@ trait ModuleCommands
 
     $starsW = max (array_map ('strlen', array_column ($modules, 'favers')));
     array_walk ($modules, function (&$m) use ($starsW) {
-      $i = $this->modulesRegistry ()->isInstalled ($m['name']);
+      $i = $this->modulesRegistry->isInstalled ($m['name']);
       list ($vendor, $package) = explode ('/', $m['name']);
       $stats = "<comment>" .
                str_pad ($m['downloads'], 6, ' ', STR_PAD_LEFT) . "▾  " .
@@ -313,8 +304,8 @@ trait ModuleCommands
       if ($this->isDirectoryEmpty ($vendorPath))
         (new DeleteDir($vendorPath))->run ();
     }
-    else $this->io ()
-              ->warn ("No module files were deleted because none were found on the <info>modules</info> directory");
+    else $this->io
+      ->warn ("No module files were deleted because none were found on the <info>modules</info> directory");
   }
 
 }

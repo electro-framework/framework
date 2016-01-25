@@ -4,23 +4,24 @@ namespace Selenia\Tasks\Commands;
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
-use Selenia\Console\Traits\ApplicationServiceTrait;
-use Selenia\Console\Traits\ConsoleIOServiceTrait;
-use Selenia\Console\Traits\FileSystemStackServiceTrait;
+use Robo\Task\FileSystem\FilesystemStack;
+use Selenia\Application;
+use Selenia\Console\ConsoleApplication;
+use Selenia\Interfaces\ConsoleIOInterface;
 use Selenia\Tasks\Config\TasksSettings;
 use Selenia\Tasks\Shared\ChmodEx;
 
 /**
  * Implements the Selenia Task Runner's pre-set init:xxx commands.
  *
- * @property TasksSettings $settings
+ * @property Application        $app
+ * @property TasksSettings      $settings
+ * @property ConsoleApplication $consoleApp
+ * @property ConsoleIOInterface $io
+ * @property FilesystemStack    $fs
  */
 trait InitCommands
 {
-  use ConsoleIOServiceTrait;
-  use ApplicationServiceTrait;
-  use FileSystemStackServiceTrait;
-
   private $nestedExec = false;
 
   /**
@@ -33,8 +34,8 @@ trait InitCommands
    */
   function init ($opts = ['overwrite|o' => false])
   {
-    $io      = $this->io ();
-    $envPath = "{$this->app()->baseDirectory}/.env";
+    $io      = $this->io;
+    $envPath = "{$this->app->baseDirectory}/.env";
     $io->clear ()
        ->banner ("Selenia Configuration Wizard");
     $overwrite = get ($opts, 'overwrite');
@@ -46,7 +47,7 @@ trait InitCommands
       $this->initStorage ();
       $this->initConfig (['overwrite' => $overwrite]);
     }
-    $demoPath = "{$this->app()->modulesPath}/demo-company";
+    $demoPath = "{$this->app->modulesPath}/demo-company";
     if (file_exists ($demoPath)) {
       if (!$io->nl ()->confirm ("Do you wish keep the demonstration web pages? [n]")) {
         /** @var ModuleCommands $this */
@@ -67,20 +68,20 @@ trait InitCommands
    */
   function initConfig ($opts = ['overwrite|o' => false])
   {
-    $io      = $this->io ();
-    $envPath = "{$this->app()->baseDirectory}/.env";
+    $io      = $this->io;
+    $envPath = "{$this->app->baseDirectory}/.env";
     if (file_exists ($envPath) && !get ($opts, 'overwrite'))
       $io->error (".env file already exists");
 
-    $examplePath = "{$this->app()->baseDirectory}/.env.example";
+    $examplePath = "{$this->app->baseDirectory}/.env.example";
     if (file_exists ($examplePath)) {
-      $this->fs ()->copy ($examplePath, $envPath, true)->run ();
+      $this->fs->copy ($examplePath, $envPath, true)->run ();
       $io->nl ()
          ->comment ("The application has been automatically configured from a project-specific predefined template")
          ->comment ("Please edit the <info>.env</info> file to fill-in any missing required values (ex. database passwords)");
     }
     else {
-      $this->fs ()->copy ("{$this->settings->scaffoldsPath()}/.env", $envPath, true)->run ();
+      $this->fs->copy ("{$this->settings->scaffoldsPath()}/.env", $envPath, true)->run ();
 
       $io->title ("Configuring the application...");
 
@@ -179,16 +180,16 @@ trait InitCommands
    */
   function initStorage ()
   {
-    $target = $this->app ()->storagePath;
+    $target = $this->app->storagePath;
     if (file_exists ($target))
       (new DeleteDir ($target))->run ();
     (new CopyDir (["{$this->settings->scaffoldsPath()}/storage" => $target]))->run ();
     (new ChmodEx ($target))->dirs (0770)->files (0660)->run ();
 
-    $this->app ()->runCommand ('module:refresh');
+    $this->consoleApp->run ('module:refresh');
 
     if (!$this->nestedExec)
-      $this->io ()->done ("Storage directory created");
+      $this->io->done ("Storage directory created");
   }
 
 }
