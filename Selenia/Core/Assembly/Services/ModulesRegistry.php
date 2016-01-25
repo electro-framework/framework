@@ -28,10 +28,15 @@ class ModulesRegistry
    * @var ModuleInfo[]
    */
   private $modules = [];
+  /**
+   * @var ModulesInstaller
+   */
+  private $modulesInstaller;
 
-  function __construct (Application $app)
+  function __construct (Application $app, ModulesInstaller $installer)
   {
-    $this->app = $app;
+    $this->app              = $app;
+    $this->modulesInstaller = $installer;
   }
 
   private static function hidrateModulesList (array $data)
@@ -263,14 +268,27 @@ class ModulesRegistry
     $private    = $this->loadModulesMetadata ($this->scanPrivateModules (), ModuleInfo::TYPE_PRIVATE);
     $main       = $this->makeMainModule ();
     $this->loadModuleMetadata ($main);
-    /** @var ModuleInfo[] $all */
-    $all = array_merge ([$main], $subsystems, $plugins, $private);
 
-    $oldModules    = $this->modules;
+    /** @var ModuleInfo[] $currentModules */
+    $currentModules     = array_merge ([$main], $subsystems, $plugins, $private);
+    $currentModuleNames = $this->getNames ($currentModules);
+
+    $prevModules     = $this->modules;
+    $prevModuleNames = $this->getNames ($prevModules);
+
+    $removedModuleNames = array_diff ($prevModuleNames, $currentModuleNames);
+    $removedModules     = $this->getOnly ($removedModuleNames, $prevModules);
+
+    $newModuleNames = array_diff ($currentModuleNames, $prevModuleNames);
+    $newModules     = $this->getOnly ($newModuleNames, $currentModules);
+
+    $moduleNamesKept = array_intersect ($currentModuleNames, $prevModuleNames);
+    $modulesKept     = $this->getOnly ($moduleNamesKept, $currentModules);
+
     $this->modules = [];
-    foreach ($all as $module) {
+    foreach ($currentModules as $module) {
       /** @var ModuleInfo $oldModule */
-      $oldModule = get ($oldModules, $module->name);
+      $oldModule = get ($prevModules, $module->name);
       if ($oldModule) {
         // Keep user preferences.
         foreach (ModuleInfo::KEEP_PROPS as $prop)
@@ -278,6 +296,11 @@ class ModulesRegistry
       }
       $this->modules [$module->name] = $module;
     }
+
+    $this->modulesInstaller->cleanupRemovedModules ($removedModules);
+    $this->modulesInstaller->setupNewModules ($newModules);
+    $this->modulesInstaller->updateModules ($modulesKept);
+
     $this->save ();
   }
 
@@ -287,9 +310,6 @@ class ModulesRegistry
    */
   function refresh ()
   {
-    // Delete existing registry (if any) to completely discard all information.
-    unlink ($this->getRegistryPath ());
-    // Now build a fresh new registry.
     $this->rebuildRegistry ();
   }
 
@@ -315,6 +335,29 @@ class ModulesRegistry
   function validateModuleName ($name)
   {
     return (bool)preg_match ('#^[a-z0-9\-]+/[a-z0-9\-]+$#', $name);
+  }
+
+  /**
+   * @param ModuleInfo[] $modules
+   * @return string[]
+   */
+  private function getNames (array $modules)
+  {
+    return map ($modules, function (ModuleInfo $module) { return $module->name; });
+  }
+
+  /**
+   * @param string[]     $names
+   * @param ModuleInfo[] $modules
+   * @return ModuleInfo[]
+   */
+  private function getOnly (array $names, array $modules)
+  {
+    return map ($names, function ($name) use ($modules) {
+      list ($module, $i) = array_find ($modules, 'name', $name);
+      if (!$module) throw new \RuntimeException ("Module not found: $name");
+      return $module;
+    });
   }
 
   /**

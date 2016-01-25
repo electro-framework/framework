@@ -2,7 +2,8 @@
 namespace Selenia;
 
 use Monolog\Handler\HandlerInterface;
-use Selenia\Core\Assembly\Config\AssemblyServiceProvider;
+use Selenia\Console\ConsoleApplication;
+use Selenia\Core\Assembly\Config\AssemblyModule;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\InjectorInterface;
 
@@ -11,6 +12,7 @@ class Application
   const FRAMEWORK_PATH = 'private/packages/selenia/framework';
   /**
    * The real application name.
+   *
    * @var string
    */
   public $appName = 'Selenia framework';
@@ -18,26 +20,31 @@ class Application
    * A list of relative file paths of assets published by each module, relative to each module's public folder, in
    * order of precedence. The framework's build process may automatically concatenate and minify those assets for a
    * release-grade build.
+   *
    * @var string[]
    */
   public $assets = [];
   /**
    * The file path of current main application's root directory.
+   *
    * @var string
    */
   public $baseDirectory;
   /**
    * The URI of current main application's root directory.
+   *
    * @var string
    */
   public $baseURI;
   /**
    * Whether to compress or not the HTTP response with gzip enconding.
+   *
    * @var bool
    */
   public $compressOutput = false;
   /**
    * Remove white space around raw markup blocks?
+   *
    * @var boolean
    */
   public $condenseLiterals;
@@ -48,11 +55,13 @@ class Application
   /**
    * A two letter code for default site language. NULL if i18n is disabled.
    * <p>This is set on the environment (ex: .env).
+   *
    * @var string
    */
   public $defaultLang = null;
   /**
    * Favorite icon URL.
+   *
    * @var string
    */
   public $favicon = 'data:;base64,iVBORw0KGgo=';
@@ -62,11 +71,13 @@ class Application
   public $fileArchivePath = 'private/storage/files';
   /**
    * The path of the framework kernel's directory.
+   *
    * @var string
    */
   public $frameworkPath;
   /**
    * The mapped public URI of the framework's public directory.
+   *
    * @var string
    */
   public $frameworkURI = 'framework';
@@ -76,6 +87,7 @@ class Application
   public $imageArchivePath = 'private/storage/images';
   /**
    * Set to true to redirect the browser to the generated thumbnail instead of streaming it.
+   *
    * @var Boolean
    */
   public $imageRedirection = false;
@@ -85,6 +97,7 @@ class Application
   public $imagesCachePath = 'private/storage/cache/images';
   /**
    * The colon delimited list of directory paths.
+   *
    * @var string
    */
   public $includePath;
@@ -94,35 +107,41 @@ class Application
   public $injector;
   /**
    * If `true` the application is a console app, otherwise it may be a web app.
+   *
    * @see \Selenia\Application::$isWebBased
    * @var bool
    */
   public $isConsoleBased = false;
   /**
    * If `true` the application is a web app, otherwise it may be a console app.
+   *
    * @see \Selenia\Application::$isConsoleBased
    * @var bool
    */
   public $isWebBased = false;
   /**
    * Search paths for module language files, in order of precedence.
+   *
    * @var array
    */
   public $languageFolders = [];
   /**
    * List of locale names of languages enabled for this specific application.
    * > Ex: `['en', 'pt']` or `['en-US', 'pt-PT']`
+   *
    * @var string[]
    */
   public $languages = [];
   /**
    * A list of logger handler instances to push to the logger's handlers stack.
    * Set on application.ini
+   *
    * @var HandlerInterface[]
    */
   public $logHandlers = [];
   /**
    * The relative URL of the login form page.
+   *
    * @var string
    */
   public $loginFormUrl = 'login/login';
@@ -131,37 +150,44 @@ class Application
    * <p>They will be search in order until the requested macro is found.
    * <p>These paths will be registered on the templating engine.
    * <p>This is preinitialized to the application macro's path.
+   *
    * @var array
    */
   public $macrosDirectories = [];
   /**
    * Relative to the root folder.
+   *
    * @var string
    */
   public $macrosPath = 'private/resources/macros';
   /**
    * The relative path of the language files' folder inside a module.
+   *
    * @var string
    */
   public $moduleLangPath = 'resources/lang';
   /**
    * The relative path of the macros folder inside a module.
+   *
    * @var string
    */
   public $moduleMacrosPath = 'resources/macros';
   /**
    * The relative path of the public folder inside a module.
+   *
    * @var string
    */
   public $modulePublicPath = 'public';
   /**
    * The relative path of the views folder inside a module.
+   *
    * @var string
    */
   public $moduleViewsPath = 'resources/views';
   /**
    * A list of modules that are always bootstrapped when the framework boots.
    * <p>A `bootstrap.php` file will be executed on each registered module.
+   *
    * @var array
    */
   public $modules = [];
@@ -169,33 +195,39 @@ class Application
    * The folder where the framework will search for your application-specific modules.
    * <p>If a module is not found there, it will then search on `defaultModulesPath`.
    * <p>Set by application.ini.php.
+   *
    * @var String
    */
   public $modulesPath = 'private/modules';
   /**
    * The application name.
    * This should be composed only of alphanumeric characters. It is used as the session name.
+   *
    * @var string
    */
   public $name = 'selenia';
   /**
    * Maximum width and/or height for uploaded images.
    * Images exceeding this dimensions are resized to fit them.
+   *
    * @var int
    */
   public $originalImageMaxSize = 1024;
   /**
    * JPEG compression factor for resampled uploaded images.
+   *
    * @var int
    */
   public $originalImageQuality = 95;
   /**
    * The URL parameter name used for pagination.
+   *
    * @var string
    */
   public $pageNumberParam = 'p';
   /**
    * The default page size for the default data source.
+   *
    * @var number
    */
   public $pageSize = 99999;
@@ -203,6 +235,7 @@ class Application
    * <p>The fallback folder name where the framework will search for modules.
    * <p>Plugin modules installed as Composer packages will be found there.
    * <p>Set by application.ini.php.
+   *
    * @var String
    */
   public $pluginModulesPath = 'private/plugins';
@@ -216,17 +249,20 @@ class Application
   public $storagePath = 'private/storage';
   /**
    * Registered Matisse tags.
+   *
    * @var array
    */
   public $tags = [];
   /**
    * A list of task classes from each module that provides tasks to be merged on the main robofile.
+   *
    * @var string[]
    */
   public $taskClasses = [];
   /**
    * A site name that can be used on auto-generated window titles (using the title tag).
    * The symbol @ will be replaced by the current page's title.
+   *
    * @var string
    */
   public $title = '@';
@@ -234,22 +270,26 @@ class Application
    * Enables output post-processing for keyword replacement.
    * Disable this if the app is not multi-language to speed-up page rendering.
    * Keywords syntax: $keyword
+   *
    * @var bool
    */
   public $translation = false;
   /**
    * The FQN of the logged in user's model class.
+   *
    * @var string|null
    */
   public $userModel = null;
   /**
    * Relative to the root folder.
+   *
    * @var string
    */
   public $viewPath = 'private/resources/views';
   /**
    * Folders where views can be found.
    * <p>They will be search in order until the requested view is found.
+   *
    * @var array
    */
   public $viewsDirectories = [];
@@ -286,6 +326,7 @@ class Application
 
   /**
    * Gets an array of file path mappings for the core framework, to aid debugging symlinked directiories.
+   *
    * @return array
    */
   function getMainPathMap ()
@@ -294,6 +335,21 @@ class Application
     return $rp != $this->frameworkPath ? [
       $rp => self::FRAMEWORK_PATH,
     ] : [];
+  }
+
+  /**
+   * Runs the specified console command, with the given arguments.
+   * > <p>To run a comand without having the Application as a dependency, use
+   * {@see ConsoleApplication::runCommand}.
+   *
+   * @param string            $name
+   * @param string[]          $args
+   */
+  function runCommand ($name, array $args = [])
+  {
+    $consoleApp = ConsoleApplication::make ($this->injector);
+    $consoleApp->setupStandardIO (array_merge (['', $name], $args));
+    $consoleApp->execute ();
   }
 
   function setIncludePath ($extra = '')
@@ -312,6 +368,7 @@ class Application
    * Sets up the application configuration.
    * When overriding this method, always call the super() after running your own
    * code, so that paths computed here can take into account your changes.
+   *
    * @param string $rootDir
    * @throws ConfigException
    */
@@ -325,13 +382,14 @@ class Application
     if (getenv ('APP_DEFAULT_LANG'))
       $this->defaultLang = getenv ('APP_DEFAULT_LANG');
 
-    $assembly = new AssemblyServiceProvider;
-    $assembly->register ($this->injector);
+    $assemblyModule = new AssemblyModule;
+    $assemblyModule->register ($this->injector);
   }
 
   /**
    * Strips the base path from the given absolute path if it falls lies inside the applicatiohn.
    * Otherwise, it returns the given path unmodified.
+   *
    * @param string $path
    * @return string
    */

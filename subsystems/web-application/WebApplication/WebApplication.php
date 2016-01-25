@@ -80,8 +80,8 @@ class WebApplication
     // Bootstrap the application's modules.
 
     /** @var ModulesLoader $modulesApi */
-    $modulesManager = $this->injector->make (ModulesLoader::class);
-    $modulesManager->bootModules ();
+    $loader = $this->injector->make (ModulesLoader::class);
+    $loader->bootModules ();
 
     // Post-assembly additional setup.
 

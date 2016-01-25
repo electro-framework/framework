@@ -1,5 +1,6 @@
 <?php
 namespace Selenia\Console;
+
 use Robo\Config;
 use Robo\Result;
 use Robo\Runner;
@@ -7,6 +8,7 @@ use Robo\TaskInfo;
 use Selenia\Application;
 use Selenia\Console\Services\ConsoleIO;
 use Selenia\Core\Assembly\Services\ModulesLoader;
+use Selenia\Interfaces\ConsoleIOInterface;
 use Selenia\Interfaces\InjectorInterface;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
@@ -46,13 +48,12 @@ class ConsoleApplication extends Runner
    * <p>Boots a Selenia Application and creates a console command runner with a base configuration.
    * > You'll have to configure the IO channels (ex. calling `setupStandardIO()` on the runner) before running the
    * application.
+   *
    * @param InjectorInterface $injector Provide your favorite dependency injector.
    * @return static
    */
   static function make (InjectorInterface $injector)
   {
-    global $application; //TODO: remove this when feasible
-
     // Create and register the foundational framework services.
 
     $injector
@@ -67,20 +68,21 @@ class ConsoleApplication extends Runner
     $application->isConsoleBased = true;
     $application->setup (getcwd ());
 
-    // Bootstrap the application's modules.
-
-    /** @var ModulesLoader $modulesApi */
-    $modulesManager = $injector->make (ModulesLoader::class);
-    $modulesManager->bootModules ();
-
     // Setup the console.
 
     $console = new SymfonyConsole ('Selenia Task Runner', self::VERSION);
     $io      = new ConsoleIO;
 
     $injector
+      ->alias (ConsoleIOInterface::class, ConsoleIO::class)
       ->share ($io)
       ->share ($console);
+
+    // Bootstrap the application's modules.
+
+    /** @var ModulesLoader $modulesApi */
+    $loader = $injector->make (ModulesLoader::class);
+    $loader->bootModules ();
 
     // Create and execute a runnable console instance.
 
@@ -88,7 +90,25 @@ class ConsoleApplication extends Runner
   }
 
   /**
+   * Runs the specified console command, with the given arguments.
+   *
+   * <p>You can call this method from anywhwere on your application, be it a console or a web based app,
+   * the only dependency is an injector instance.
+   *
+   * @param InjectorInterface $injector
+   * @param string            $name
+   * @param string[]          $args
+   */
+  static function runCommand (InjectorInterface $injector, $name, array $args = [])
+  {
+    $consoleApp = self::make ($injector);
+    $consoleApp->setupStandardIO (array_merge (['', $name], $args));
+    $consoleApp->execute ();
+  }
+
+  /**
    * Runs the console.
+   *
    * @param InputInterface|null $input Overrides the input, if specified.
    */
   function execute ($input = null)
@@ -117,6 +137,7 @@ class ConsoleApplication extends Runner
 
   /**
    * Creates the default console I/O channels.
+   *
    * @param string[] $args
    */
   function setupStandardIO ($args)

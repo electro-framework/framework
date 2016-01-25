@@ -21,9 +21,6 @@ class ModuleInfo implements AssignableInterface
   const KEEP_PROPS                  = [
     'enabled', 'migrationStatus',
   ];
-  const MIGRATIONS_DONE             = 2;
-  const MIGRATIONS_NONE             = 0;
-  const MIGRATIONS_PENDING          = 1;
   const TYPE_PLUGIN                 = 'plugin';
   const TYPE_PRIVATE                = 'private';
   const TYPE_SUBSYSTEM              = 'subsystem';
@@ -45,10 +42,6 @@ class ModuleInfo implements AssignableInterface
    * @var bool
    */
   public $enabled = true;
-  /**
-   * @var int One of the `self::MIGRATIONS` constants.
-   */
-  public $migrationStatus = self::MIGRATIONS_NONE;
   /**
    * A Unique Identifier for the module.
    * Plugins and Project Modules have names with 'vendor-name/package-name' syntax.

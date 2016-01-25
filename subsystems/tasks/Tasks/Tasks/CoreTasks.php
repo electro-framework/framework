@@ -1,12 +1,11 @@
 <?php
 namespace Selenia\Tasks\Tasks;
+
 use Robo\Task\FileSystem\FilesystemStack;
 use Selenia\Application;
 use Selenia\Console\Lib\ModulesUtil;
 use Selenia\Console\Services\ConsoleIO;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
-use Selenia\Migrations\Config\MigrationsSettings;
-use Selenia\Tasks\Commands\BuildCommands;
 use Selenia\Tasks\Commands\InitCommands;
 use Selenia\Tasks\Commands\ModuleCommands;
 use Selenia\Tasks\Config\TasksSettings;
@@ -29,10 +28,6 @@ class CoreTasks
    */
   private $io;
   /**
-   * @var MigrationsSettings
-   */
-  private $migrationsSettings;
-  /**
    * @var ModulesRegistry
    */
   private $modulesRegistry;
@@ -46,14 +41,13 @@ class CoreTasks
   private $settings;
 
   function __construct (ConsoleIO $io, Application $app, ModulesUtil $modulesUtil, ModulesRegistry $modulesRegistry,
-                        TasksSettings $settings,MigrationsSettings $migrationsSettings)
+                        TasksSettings $settings)
   {
-    $this->io = $io;
-    $this->modulesUtil = $modulesUtil;
-    $this->app = $app;
+    $this->io              = $io;
+    $this->modulesUtil     = $modulesUtil;
+    $this->app             = $app;
     $this->modulesRegistry = $modulesRegistry;
-    $this->migrationsSettings = $migrationsSettings;
-    $this->settings = $settings;
+    $this->settings        = $settings;
   }
 
   protected function app ()
@@ -61,14 +55,14 @@ class CoreTasks
     return $this->app;
   }
 
-  protected function io ()
-  {
-    return $this->io;
-  }
-
   protected function fs ()
   {
     return new FilesystemStack;
+  }
+
+  protected function io ()
+  {
+    return $this->io;
   }
 
   protected function modulesRegistry ()

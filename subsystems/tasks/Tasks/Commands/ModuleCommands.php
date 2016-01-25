@@ -90,10 +90,6 @@ trait ModuleCommands
 
     $this->composerUpdate ();
 
-    // Register the module
-
-    $this->moduleRefresh ();
-
     $io->done ("Module <info>$___MODULE___</info> was created");
   }
 
@@ -135,14 +131,6 @@ trait ModuleCommands
     // Install module via Composer
 
     (new InstallPackageTask($moduleName))->printed (false)->run ();
-
-    // Register the module
-
-    $this->moduleRefresh ();
-
-    // Run migrations (if any)
-
-    $this->runMigrationsOf ($moduleName);
 
     $io->done ("Plugin <info>$moduleName</info> is now installed");
   }
@@ -218,14 +206,6 @@ trait ModuleCommands
 
     $this->composerUpdate ();
 
-    // Register the module
-
-    $this->moduleRefresh ();
-
-    // Run migrations (if any)
-
-    $this->runMigrationsOf ($moduleName);
-
     $io->done ("Template <info>$moduleName</info> is now installed on <info>$path</info>");
   }
 
@@ -255,8 +235,6 @@ trait ModuleCommands
   {
     (new UninstallPackageTask($moduleName))->printed (false)->run ();
 
-    $this->moduleRefresh ();
-
     $this->io ()->done ("Plugin module <info>$moduleName</info> was uninstalled");
   }
 
@@ -272,10 +250,6 @@ trait ModuleCommands
     // Uninstall the module's dependencies and unregister its namespaces
 
     $this->composerUpdate ();
-
-    // Unregister the module
-
-    $this->moduleRefresh ();
 
     $io->done ("Module <info>$moduleName</info> was uninstalled");
   }
@@ -341,15 +315,6 @@ trait ModuleCommands
     }
     else $this->io ()
               ->warn ("No module files were deleted because none were found on the <info>modules</info> directory");
-  }
-
-  private function runMigrationsOf ($moduleName)
-  {
-    $path = "{$this->app()->modulesPath}/$moduleName/" . $this->migrationSettings->migrationsPath ();
-    if (fileExists ($path) && !$this->isDirectoryEmpty ($path)) {
-      $this->io ()->say ("Running migrations...");
-      //TODO run migrations
-    }
   }
 
 }

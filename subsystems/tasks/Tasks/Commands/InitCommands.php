@@ -7,7 +7,6 @@ use Robo\Task\FileSystem\DeleteDir;
 use Selenia\Console\Traits\ApplicationServiceTrait;
 use Selenia\Console\Traits\ConsoleIOServiceTrait;
 use Selenia\Console\Traits\FileSystemStackServiceTrait;
-use Selenia\Core\Assembly\Services\ModulesRegistry;
 use Selenia\Tasks\Config\TasksSettings;
 use Selenia\Tasks\Shared\ChmodEx;
 
@@ -99,6 +98,7 @@ trait InitCommands
       $DB_COLLATION   = '';
       $DB_PORT        = '';
       $DB_UNIX_SOCKET = '';
+      $DB_PREFIX      = '';
 
       switch ($DB_DRIVER) {
         case 'sqlite':
@@ -116,6 +116,7 @@ trait InitCommands
             $DB_COLLATION   = $io->askDefault ("Database collation", 'utf8_unicode_ci');
             $DB_PORT        = $io->ask ("Database port [disable]");
             $DB_UNIX_SOCKET = $io->ask ("Database UNIX socket [disable]");
+            $DB_PREFIX      = $io->askDefault ("Prefix this application's tables", env ('DB_PREFIX'));
           }
           else {
             $DB_CHARSET   = 'utf8';
@@ -130,6 +131,9 @@ trait InitCommands
           $DB_HOST     = $io->askDefault ("Database host domain", env ('DB_HOST', 'localhost'));
           $DB_USERNAME = $io->askDefault ("Database username", env ('DB_USERNAME'));
           $DB_PASSWORD = $io->askDefault ("Database password", env ('DB_PASSWORD'));
+          if ($io->confirm ("Do you whish to set advanced database connection options? [n]")) {
+            $DB_PREFIX = $io->askDefault ("Prefix this application's tables", env ('DB_PREFIX'));
+          }
           break;
       }
       $io->nl ();
@@ -145,6 +149,7 @@ trait InitCommands
           '%DB_COLLATION',
           '%DB_PORT',
           '%DB_UNIX_SOCKET',
+          '%DB_PREFIX',
         ])
         ->to ([
           $LANG,
@@ -157,6 +162,7 @@ trait InitCommands
           $DB_COLLATION,
           $DB_PORT,
           $DB_UNIX_SOCKET,
+          $DB_PREFIX,
         ])
         ->run ();
     }
@@ -179,7 +185,7 @@ trait InitCommands
     (new CopyDir (["{$this->settings->scaffoldsPath()}/storage" => $target]))->run ();
     (new ChmodEx ($target))->dirs (0770)->files (0660)->run ();
 
-    (new ModulesRegistry($this->app ()))->rebuildRegistry ();
+    $this->app ()->runCommand ('module:refresh');
 
     if (!$this->nestedExec)
       $this->io ()->done ("Storage directory created");
