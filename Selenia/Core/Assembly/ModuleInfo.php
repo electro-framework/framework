@@ -41,6 +41,12 @@ class ModuleInfo implements AssignableInterface
    */
   public $enabled = true;
   /**
+   * If set, the module has been disabled because it could not be loaded. This property holds the error message.
+   *
+   * @var string
+   */
+  public $errorStatus;
+  /**
    * A Unique Identifier for the module.
    * Plugins and Project Modules have names with 'vendor-name/package-name' syntax.
    * Subsystems have names with syntax: 'module-name'.

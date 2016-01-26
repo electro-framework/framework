@@ -62,6 +62,7 @@ interface ConsoleIOInterface
 
   /**
    * Prints an error message and stops execution. Use only on commands, not on tasks.
+   *
    * @param string $text  The message.
    * @param int    $width Error box width.
    */
@@ -84,6 +85,7 @@ interface ConsoleIOInterface
 
   /**
    * Presents a list to the user, from which he/she must select an item.
+   *
    * @param string   $question
    * @param string[] $options
    * @param int      $defaultIndex The default answer if the user just presses return. -1 = no default (empty input is
@@ -95,7 +97,7 @@ interface ConsoleIOInterface
    * @return int The selected index (0 based).
    */
   function menu ($question, array $options, $defaultIndex = -1, array $secondColumn = null,
-                                    callable $validator = null);
+                 callable $validator = null);
 
   /**
    * @return $this
@@ -110,11 +112,22 @@ interface ConsoleIOInterface
 
   /**
    * Defines a tag for a custom color.
+   *
    * @param string                        $name
    * @param OutputFormatterStyleInterface $style
    * @return $this
    */
   function setColor ($name, $style);
+
+  /**
+   * Outputs data in a tabular format.
+   *
+   * @param string[]      $headers
+   * @param array         $data
+   * @param int[]         $widths
+   * @param string[]|null $align
+   */
+  function table (array $headers, array $data, array $widths, array $align = null);
 
   /**
    * @param string $text
@@ -124,6 +137,7 @@ interface ConsoleIOInterface
 
   /**
    * Adds a warning message to be displayed later when done() is called.
+   *
    * @param string $text
    * @return $this
    */

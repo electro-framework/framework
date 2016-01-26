@@ -1,5 +1,6 @@
 <?php
 namespace Selenia\Core\Assembly\Services;
+
 use Selenia\Application;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\InjectorInterface;
@@ -52,14 +53,24 @@ class ModulesLoader
 
     foreach ($this->modulesRegistry->getAllModules () as $name => $module) {
       if ($module->enabled && $module->bootstrapper) {
+        if (!class_exists ($module->bootstrapper)) {
+          $module->errorStatus = "Class <kbd>$module->bootstrapper</kbd> was not found.";
+          if ($this->app->debugMode)
+            inspect ()->error ($module->errorStatus);
+          $this->modulesRegistry->save ();
+          continue;
+        }
         $provider = new $module->bootstrapper;
-
         if ($provider instanceof ServiceProviderInterface)
           $provider->register ($this->injector);
 
         if ($provider instanceof ModuleInterface) {
           $providers[] = $provider;
           $paths[]     = $module->path;
+        }
+        if ($module->errorStatus) {
+          $module->errorStatus = null;
+          $this->modulesRegistry->save ();
         }
       }
     }
@@ -73,8 +84,8 @@ class ModulesLoader
     foreach ($providers as $i => $provider) {
       $moduleServices->setPath ($paths[$i]);
       $fn = [$provider, 'configure'];
-      if (is_callable($fn))
-        $this->injector->execute($fn);
+      if (is_callable ($fn))
+        $this->injector->execute ($fn);
     }
     $moduleServices->runPostConfig ();
 
@@ -82,8 +93,8 @@ class ModulesLoader
 
     foreach ($providers as $provider) {
       $fn = [$provider, 'boot'];
-      if (is_callable($fn))
-        $this->injector->execute($fn);
+      if (is_callable ($fn))
+        $this->injector->execute ($fn);
     }
   }
 

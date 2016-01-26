@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Console\Services;
 
+use InvalidArgumentException;
 use Selenia\Interfaces\ConsoleIOInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterStyleInterface;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -18,17 +19,38 @@ define ('CONSOLE_ALIGN_RIGHT', STR_PAD_LEFT);
  */
 class ConsoleIO implements ConsoleIOInterface
 {
-  private $warnings = [];
-
   private $input;
   private $output;
+  private $warnings = [];
 
-  function setInput (InputInterface $input) {
-    $this->input = $input;
-  }
-
-  function setOutput (OutputInterface $output) {
-    $this->output = $output;
+  private static function tabular (array $data, array $widths, array $align = null, $glue = ' ',
+                                   $pad = ' ', $overflow = '…')
+  {
+    $out = [];
+    if (empty($align))
+      $align = [];
+    foreach ($widths as $i => $w)
+      switch (get ($align, $i, 'L')) {
+        case 'L':
+          $align[$i] = STR_PAD_RIGHT;
+          break;
+        case 'R':
+          $align[$i] = STR_PAD_LEFT;
+          break;
+        case 'C':
+          $align[$i] = STR_PAD_BOTH;
+          break;
+        default:
+          throw new InvalidArgumentException ("Invalid value for align: $align[$i]");
+      }
+    foreach ($widths as $i => $w) {
+      $s = strval (get ($data, $i));
+      $l = mb_strlen ($s, 'UTF-8');
+      if ($l > $w)
+        $out[] = mb_strimwidth ($s, 0, $w - mb_strlen ($overflow, 'UTF-8')) . $overflow;
+      else $out[] = mb_str_pad ($s, $w, $pad, $align[$i]);
+    }
+    return implode ($glue, $out);
   }
 
   function ask ($question, $hideAnswer = false)
@@ -99,6 +121,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   /**
    * Prints an error message and stops execution. Use only on commands, not on tasks.
+   *
    * @param string $text  The message.
    * @param int    $width Error box width.
    */
@@ -121,6 +144,11 @@ class ConsoleIO implements ConsoleIOInterface
     return $this->input;
   }
 
+  function setInput (InputInterface $input)
+  {
+    $this->input = $input;
+  }
+
   /**
    * @return OutputInterface
    */
@@ -130,8 +158,14 @@ class ConsoleIO implements ConsoleIOInterface
     return $this->output;
   }
 
+  function setOutput (OutputInterface $output)
+  {
+    $this->output = $output;
+  }
+
   /**
    * Presents a list to the user, from which he/she must select an item.
+   *
    * @param string   $question
    * @param string[] $options
    * @param int      $defaultIndex The default answer if the user just presses return. -1 = no default (empty input is
@@ -188,6 +222,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   /**
    * Alias of `writeln()`.
+   *
    * @param string $text
    * @return $this
    */
@@ -198,6 +233,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   /**
    * Defines a tag for a custom color.
+   *
    * @param string                        $name
    * @param OutputFormatterStyleInterface $style
    * @return $this
@@ -221,6 +257,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   /**
    * Add a warning message to be displayed later, when `done()` is called.
+   *
    * @param string $text
    * @return $this
    */
@@ -248,6 +285,27 @@ class ConsoleIO implements ConsoleIOInterface
   {
     $this->getOutput ()->writeln ($text);
     return $this;
+  }
+
+  /**
+   * Outputs data in a tabular format.
+   *
+   * @param string[]      $headers
+   * @param array         $data
+   * @param int[]         $widths
+   * @param string[]|null $align
+   */
+  function table (array $headers, array $data, array $widths, array $align = null)
+  {
+    $this->writeln ('┌─' . self::tabular ([], $widths, null, '┬─', '─') . '┐');
+    $this->writeln ('│ <comment>' . self::tabular ($headers, $widths, null, '</comment>│ <comment>') .
+                    '</comment>│');
+    $this->writeln ('├─' . self::tabular ([], $widths, null, '┼─', '─') . '┤');
+    foreach ($data as $s) {
+      $row = array_values ($s);
+      $this->writeln ('│ ' . self::tabular ($row, $widths, $align, '│ ') . '│');
+    }
+    $this->writeln ('└─' . self::tabular ([], $widths, null, '┴─', '─') . '┘');
   }
 
   private function box ($text, $colors, $width = 0, $align = CONSOLE_ALIGN_CENTER)

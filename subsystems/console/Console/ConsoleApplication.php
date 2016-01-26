@@ -237,7 +237,8 @@ class ConsoleApplication extends Runner
     $this->io
       ->setColor ('title', new OutputFormatterStyle ('magenta'))
       ->setColor ('question', new OutputFormatterStyle ('cyan'))
-      ->setColor ('warning', new OutputFormatterStyle ('red', 'yellow'));
+      ->setColor ('warning', new OutputFormatterStyle ('red', 'yellow'))
+      ->setColor ('kbd', new OutputFormatterStyle ('green'));
   }
 
 }

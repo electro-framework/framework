@@ -216,6 +216,19 @@ trait ModuleCommands
   }
 
   /**
+   * Displays information about the application's current modules configuration
+   */
+  function moduleStatus ()
+  {
+    $modules = $this->modulesRegistry->getApplicationModules ();
+    $o       = [];
+    foreach ($modules as $module) {
+      $o[] = [$module->name, $module->enabled ? 'Y' : '<error>N</error>', $module->errorStatus];
+    }
+    $this->io->table (['Module', 'Enabled', 'Error status'], $o, [40, 8, 50], ['L', 'C']);
+  }
+
+  /**
    * Removes a module from the application
    *
    * @param string $moduleName The full name (vendor-name/module-name) of the module to be uninstalled
