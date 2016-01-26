@@ -1,5 +1,6 @@
 <?php
 namespace Selenia\WebServer;
+
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Exceptions\Fatal\ConfigException;
@@ -49,7 +50,7 @@ class WebServer
     $this->app                = $app;
     $this->fileServerMappings = $fileServerMappings;
     $this->middlewareStack    = $middlewareStack;
-    $this->responseSender = $responseSender;
+    $this->responseSender     = $responseSender;
   }
 
   /**
@@ -81,10 +82,10 @@ class WebServer
 
     // Process the request.
 
-    $request       = ServerRequestFactory::fromGlobals ();
-    $app->baseURI  = $this->getBaseUri ($request);
+    $request      = ServerRequestFactory::fromGlobals ();
+    $app->baseURI = $this->getBaseUri ($request);
     /** @var ServerRequestInterface $request */
-    $request       = $request->withAttribute ('originalUri', $request->getUri());
+    $request       = $request->withAttribute ('originalUri', $request->getUri ());
     $request       = $request->withAttribute ('baseUri', $app->baseURI);
     $this->request = $request->withAttribute ('virtualUri', $this->getVirtualUri ($request));
   }

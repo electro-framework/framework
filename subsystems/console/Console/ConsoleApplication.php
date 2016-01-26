@@ -58,28 +58,28 @@ class ConsoleApplication extends Runner
 
     $injector
       ->share ($injector)
-      ->alias ('Selenia\Interfaces\InjectorInterface', get_class ($injector));
+      ->alias (InjectorInterface::class, get_class ($injector));
 
-    /** @var Application $application */
-    $application = $injector
+    /** @var Application $app */
+    $app = $injector
       ->share (Application::class)
       ->make (Application::class);
 
-    $application->isConsoleBased = true;
-    $application->setup (getcwd ());
+    $app->isConsoleBased = true;
+    $app->setup (getcwd ());
 
     // Setup the console.
 
-    $console = new SymfonyConsole ('Selenia Task Runner', self::VERSION);
+    $console = new SymfonyConsole ('Selenia Console');
     $io      = new ConsoleIO;
 
-    $app = new static ($io, $application, $console, $injector);
+    $consoleApp = new static ($io, $app, $console, $injector);
 
     $injector
       ->alias (ConsoleIOInterface::class, ConsoleIO::class)
       ->share ($io)
       ->share ($console)
-      ->share ($app);
+      ->share ($consoleApp);
 
     // Bootstrap the application's modules.
 
@@ -89,7 +89,7 @@ class ConsoleApplication extends Runner
 
     // Return the initialized application.
 
-    return $app;
+    return $consoleApp;
   }
 
   /**

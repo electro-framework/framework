@@ -208,7 +208,7 @@ trait ModuleCommands
   }
 
   /**
-   * Syncs the registry.json file, thereby (re)registering all currently installed modules
+   * Updates the application's modules configuration to match those that are currently installed
    */
   function moduleRefresh ()
   {

@@ -1,5 +1,6 @@
 <?php
 namespace Selenia\WebApplication;
+
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\DebugConsole\DebugConsoleSettings;
 use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
@@ -35,12 +36,13 @@ class WebApplication
     $this->injector = $injector;
     $injector
       ->share ($injector)
-      ->alias ('Selenia\Interfaces\InjectorInterface', get_class ($injector));
+      ->alias (InjectorInterface::class, get_class ($injector));
   }
 
   /**
    * Last resort error handler.
    * <p>It is only activated if an error occurs outside of the HTTP handling pipeline.
+   *
    * @param \Exception|\Error $e
    */
   function exceptionHandler ($e)
@@ -55,27 +57,26 @@ class WebApplication
 
   /**
    * Bootstraps the application.
+   *
    * @param string $rootDir The application's root directory path.
    */
   function run ($rootDir)
   {
-    global $application; //TODO: remove this when feasible
-
     // Create and register the foundational framework services.
 
-    /** @var Application $application */
-    $application = $this->app = $this->injector
+    /** @var Application $app */
+    $app = $this->app = $this->injector
       ->share (Application::class)
       ->make (Application::class);
 
-    $application->isWebBased = true;
-    $application->setup ($rootDir);
+    $app->isWebBased = true;
+    $app->setup ($rootDir);
 
     // Pre-assembly setup.
 
     $this->setupDebugging ($rootDir);
     // Temporarily set framework path mapping here for errors thrown during modules loading.
-    ErrorConsole::setPathsMap ($application->getMainPathMap ());
+    ErrorConsole::setPathsMap ($app->getMainPathMap ());
 
     // Bootstrap the application's modules.
 
@@ -85,7 +86,7 @@ class WebApplication
 
     // Post-assembly additional setup.
 
-    if ($application->debugMode)
+    if ($app->debugMode)
       $this->setDebugPathsMap ($this->injector->make (ModulesRegistry::class));
 
     /** @var WebServer $webServer */
