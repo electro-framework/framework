@@ -1,6 +1,9 @@
 <?php
 namespace Selenia\Console;
 
+use Monolog\Handler\StreamHandler;
+use PhpKit\WebConsole\DebugConsole\DebugConsole;
+use PhpKit\WebConsole\ErrorConsole\ErrorHandler;
 use Robo\Config;
 use Robo\Result;
 use Robo\Runner;
@@ -68,6 +71,12 @@ class ConsoleApplication extends Runner
     $app->isConsoleBased = true;
     $app->setup (getcwd ());
 
+    // Setup debugging
+
+    ErrorHandler::init ();
+    DebugConsole::init ($app->debugMode);
+    $app->logHandlers[] = new StreamHandler('php://stderr');
+
     // Setup the console.
 
     $console = new SymfonyConsole ('Selenia Console');
@@ -90,26 +99,6 @@ class ConsoleApplication extends Runner
     // Return the initialized application.
 
     return $consoleApp;
-  }
-
-  /**
-   * Creates a console app to run the specified console command, with the given arguments, and executes it.
-   *
-   * <p>You can call this method from anywhwere on your application, be it a console or a web based app,
-   * the only dependency is an injector instance.
-   *
-   * <p>Unless you're running a web-based application, it's better to call {@see run()} on the current console
-   * application instance; it's faster and it reuses the current console configuration.
-   *
-   * @param InjectorInterface $injector
-   * @param string            $name
-   * @param string[]          $args
-   */
-  static function runCommand (InjectorInterface $injector, $name, array $args = [])
-  {
-    $consoleApp = self::make ($injector);
-    $consoleApp->setupStandardIO (array_merge (['', $name], $args));
-    $consoleApp->execute ();
   }
 
   /**

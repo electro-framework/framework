@@ -24,7 +24,7 @@ class ConsoleIO implements ConsoleIOInterface
   private $warnings = [];
 
   private static function tabular (array $data, array $widths, array $align = null, $glue = ' ',
-                                   $pad = ' ', $overflow = '…')
+                                   $pad = ' ', $marker = '…')
   {
     $out = [];
     if (empty($align))
@@ -45,10 +45,13 @@ class ConsoleIO implements ConsoleIOInterface
       }
     foreach ($widths as $i => $w) {
       $s = strval (get ($data, $i));
-      $l = mb_strlen ($s, 'UTF-8');
-      if ($l > $w)
-        $out[] = mb_strimwidth ($s, 0, $w - mb_strlen ($overflow, 'UTF-8')) . $overflow;
-      else $out[] = mb_str_pad ($s, $w, $pad, $align[$i]);
+      $l = taggedStrLen ($s);
+      if ($l > $w) {
+        $out[] = taggedStrCrop ($s, $w, $marker);
+//        echo taggedStrLen (taggedStrCrop ($s, $w - mb_strlen ($overflow, 'UTF-8')) . $overflow);
+
+      }
+      else $out[] = taggedStrPad ($s, $w, $align[$i], $pad);
     }
     return implode ($glue, $out);
   }
@@ -245,6 +248,27 @@ class ConsoleIO implements ConsoleIOInterface
   }
 
   /**
+   * Outputs data in a tabular format.
+   *
+   * @param string[]      $headers
+   * @param array         $data
+   * @param int[]         $widths
+   * @param string[]|null $align
+   */
+  function table (array $headers, array $data, array $widths, array $align = null)
+  {
+    $this->writeln ('┌─' . self::tabular ([], $widths, null, '┬─', '─') . '┐');
+    $this->writeln ('│ <comment>' . self::tabular ($headers, $widths, null, '</comment>│ <comment>') .
+                    '</comment>│');
+    $this->writeln ('├─' . self::tabular ([], $widths, null, '┼─', '─') . '┤');
+    foreach ($data as $s) {
+      $row = array_values ($s);
+      $this->writeln ('│ ' . self::tabular ($row, $widths, $align, '│ ') . '│');
+    }
+    $this->writeln ('└─' . self::tabular ([], $widths, null, '┴─', '─') . '┘');
+  }
+
+  /**
    * @param string $text
    * @return $this
    */
@@ -285,27 +309,6 @@ class ConsoleIO implements ConsoleIOInterface
   {
     $this->getOutput ()->writeln ($text);
     return $this;
-  }
-
-  /**
-   * Outputs data in a tabular format.
-   *
-   * @param string[]      $headers
-   * @param array         $data
-   * @param int[]         $widths
-   * @param string[]|null $align
-   */
-  function table (array $headers, array $data, array $widths, array $align = null)
-  {
-    $this->writeln ('┌─' . self::tabular ([], $widths, null, '┬─', '─') . '┐');
-    $this->writeln ('│ <comment>' . self::tabular ($headers, $widths, null, '</comment>│ <comment>') .
-                    '</comment>│');
-    $this->writeln ('├─' . self::tabular ([], $widths, null, '┼─', '─') . '┤');
-    foreach ($data as $s) {
-      $row = array_values ($s);
-      $this->writeln ('│ ' . self::tabular ($row, $widths, $align, '│ ') . '│');
-    }
-    $this->writeln ('└─' . self::tabular ([], $widths, null, '┴─', '─') . '┘');
   }
 
   private function box ($text, $colors, $width = 0, $align = CONSOLE_ALIGN_CENTER)

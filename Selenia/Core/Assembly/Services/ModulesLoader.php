@@ -1,7 +1,9 @@
 <?php
 namespace Selenia\Core\Assembly\Services;
 
+use Exception;
 use Selenia\Application;
+use Selenia\Core\Assembly\ModuleInfo;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\ModuleInterface;
@@ -48,29 +50,34 @@ class ModulesLoader
     $providers = [];
     /** @var string[] $paths */
     $paths = [];
+    /** @var ModuleInfo[] $providerModules */
+    $providerModules = [];
 
     // Providers registration phase
 
     foreach ($this->modulesRegistry->getAllModules () as $name => $module) {
       if ($module->enabled && $module->bootstrapper) {
         if (!class_exists ($module->bootstrapper)) {
-          $module->errorStatus = "Class <kbd>$module->bootstrapper</kbd> was not found.";
-          if ($this->app->debugMode)
-            inspect ()->error ($module->errorStatus);
-          $this->modulesRegistry->save ();
-          continue;
+          $this->logModuleError ($module, "Class <kbd>$module->bootstrapper</kbd> was not found.");
+          continue; // don't load this module.
         }
-        $provider = new $module->bootstrapper;
-        if ($provider instanceof ServiceProviderInterface)
-          $provider->register ($this->injector);
+        try {
+          $provider = new $module->bootstrapper;
+          if ($provider instanceof ServiceProviderInterface)
+            $provider->register ($this->injector);
 
-        if ($provider instanceof ModuleInterface) {
-          $providers[] = $provider;
-          $paths[]     = $module->path;
+          if ($provider instanceof ModuleInterface) {
+            $providers[]       = $provider;
+            $paths[]           = $module->path;
+            $providerModules[] = $module;
+          }
+          if ($module->errorStatus) {
+            $module->errorStatus = null;
+            $this->modulesRegistry->save ();
+          }
         }
-        if ($module->errorStatus) {
-          $module->errorStatus = null;
-          $this->modulesRegistry->save ();
+        catch (Exception $e) {
+          $this->logModuleError ($module, $e->getMessage (), $e);
         }
       }
     }
@@ -85,17 +92,36 @@ class ModulesLoader
       $moduleServices->setPath ($paths[$i]);
       $fn = [$provider, 'configure'];
       if (is_callable ($fn))
-        $this->injector->execute ($fn);
+        try {
+          $this->injector->execute ($fn);
+        }
+        catch (Exception $e) {
+          $this->logModuleError ($providerModules[$i], $e->getMessage (), $e);
+        }
     }
     $moduleServices->runPostConfig ();
 
     // Providers boot phase
 
-    foreach ($providers as $provider) {
+    foreach ($providers as $i => $provider) {
       $fn = [$provider, 'boot'];
       if (is_callable ($fn))
-        $this->injector->execute ($fn);
+        try {
+          $this->injector->execute ($fn);
+        }
+        catch (Exception $e) {
+          $this->logModuleError ($providerModules[$i], $e->getMessage (), $e);
+        }
     }
+  }
+
+  private function logModuleError (ModuleInfo $module, $message, Exception $e = null)
+  {
+    $module->errorStatus = $message;
+    _log()->error ($message, $e ? ['trace' => $e->getTrace ()] : []);
+    // Only save errorStatus if not on production, otherwise concurrency problems while saving might occur.
+    if ($this->app->debugMode)
+      $this->modulesRegistry->save ();
   }
 
 }

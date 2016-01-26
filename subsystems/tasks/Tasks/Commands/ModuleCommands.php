@@ -222,10 +222,19 @@ trait ModuleCommands
   {
     $modules = $this->modulesRegistry->getApplicationModules ();
     $o       = [];
-    foreach ($modules as $module) {
-      $o[] = [$module->name, $module->enabled ? 'Y' : '<error>N</error>', $module->errorStatus];
-    }
-    $this->io->table (['Module', 'Enabled', 'Error status'], $o, [40, 8, 50], ['L', 'C']);
+    foreach ($modules as $module)
+      $o[] = [
+        $module->name,
+        $module->enabled ? 'Yes' : '<error>No</error>',
+        $module->enabled && $module->bootstrapper && !$module->errorStatus ? 'Yes' : '<error>No</error>',
+        $module->errorStatus ?: '<info>OK</info>',
+      ];
+    $this->io->table ([
+      'Module',
+      'Enabled',
+      'Loaded',
+      'Status',
+    ], $o, [40, 8, 7, 70], ['L', 'C', 'C']);
   }
 
   /**
