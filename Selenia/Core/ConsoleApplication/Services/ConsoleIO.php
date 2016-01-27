@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Console\Services;
+namespace Selenia\Core\ConsoleApplication\Services;
 
 use InvalidArgumentException;
 use Selenia\Interfaces\ConsoleIOInterface;

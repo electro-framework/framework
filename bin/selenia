@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 use AppKernel\Init;
-use Selenia\Console\ConsoleApplication;
+use Selenia\Core\ConsoleApplication\ConsoleApplication;
 use Selenia\Core\DependencyInjection\Injector;
 
 // Start the class autoloader.

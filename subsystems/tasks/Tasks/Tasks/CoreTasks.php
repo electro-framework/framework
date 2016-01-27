@@ -3,10 +3,10 @@ namespace Selenia\Tasks\Tasks;
 
 use Robo\Task\FileSystem\FilesystemStack;
 use Selenia\Application;
-use Selenia\Console\ConsoleApplication;
-use Selenia\Console\Lib\ModulesUtil;
-use Selenia\Console\Services\ConsoleIO;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
+use Selenia\Core\ConsoleApplication\ConsoleApplication;
+use Selenia\Core\ConsoleApplication\Lib\ModulesUtil;
+use Selenia\Core\ConsoleApplication\Services\ConsoleIO;
 use Selenia\Tasks\Commands\InitCommands;
 use Selenia\Tasks\Commands\ModuleCommands;
 use Selenia\Tasks\Config\TasksSettings;

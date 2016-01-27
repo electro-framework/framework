@@ -3,9 +3,9 @@ namespace Selenia\Migrations\Commands;
 
 use Phinx\Console\Command;
 use Robo\Config;
-use Selenia\Console\Lib\ModulesUtil;
-use Selenia\Console\Services\ConsoleIO;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
+use Selenia\Core\ConsoleApplication\Lib\ModulesUtil;
+use Selenia\Core\ConsoleApplication\Services\ConsoleIO;
 use Selenia\Migrations\Config\MigrationsSettings;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Input\ArrayInput;

@@ -2,8 +2,8 @@
 namespace Selenia\Core\Assembly\Services;
 
 use Selenia\Application;
-use Selenia\Console\ConsoleApplication;
 use Selenia\Core\Assembly\ModuleInfo;
+use Selenia\Core\ConsoleApplication\ConsoleApplication;
 use Selenia\Database\Connection;
 use Selenia\Interfaces\ConsoleIOInterface;
 use Selenia\Migrations\Config\MigrationsSettings;

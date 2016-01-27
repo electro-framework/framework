@@ -22,7 +22,8 @@
     "php-kit/power-primitives": "dev-master",
     "php-kit/flow": "dev-master",
     "rdlowrey/auryn": "^1.1.0",
-    "monolog/monolog": "^1.17.1"
+    "monolog/monolog": "^1.17.1",
+    "codegyre/robo": "^0.5.3"
   },
   "replace": {
     "selenia-subsystems/assembly": "self.version",
@@ -67,5 +68,5 @@
       "dev-master": "1.x-dev"
     }
   },
-  "bin": ["subsystems/console/bin/selenia"]
+  "bin": ["bin/selenia"]
 }

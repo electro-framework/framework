@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Console;
+namespace Selenia\Core\ConsoleApplication;
 
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\ErrorConsole\ErrorHandler;
@@ -8,8 +8,8 @@ use Robo\Result;
 use Robo\Runner;
 use Robo\TaskInfo;
 use Selenia\Application;
-use Selenia\Console\Services\ConsoleIO;
 use Selenia\Core\Assembly\Services\ModulesLoader;
+use Selenia\Core\ConsoleApplication\Services\ConsoleIO;
 use Selenia\Interfaces\ConsoleIOInterface;
 use Selenia\Interfaces\InjectorInterface;
 use Symfony\Component\Console\Application as SymfonyConsole;

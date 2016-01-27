@@ -6,7 +6,7 @@ use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
 use Robo\Task\FileSystem\FilesystemStack;
 use Selenia\Application;
-use Selenia\Console\ConsoleApplication;
+use Selenia\Core\ConsoleApplication\ConsoleApplication;
 use Selenia\Interfaces\ConsoleIOInterface;
 use Selenia\Tasks\Config\TasksSettings;
 use Selenia\Tasks\Shared\ChmodEx;
