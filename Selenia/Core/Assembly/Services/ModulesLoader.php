@@ -2,6 +2,8 @@
 namespace Selenia\Core\Assembly\Services;
 
 use Exception;
+use PhpKit\WebConsole\Lib\Debug;
+use Psr\Log\LoggerInterface;
 use Selenia\Application;
 use Selenia\Core\Assembly\ModuleInfo;
 use Selenia\Exceptions\Fatal\ConfigException;
@@ -23,6 +25,10 @@ class ModulesLoader
    */
   private $injector;
   /**
+   * @var LoggerInterface
+   */
+  private $logger;
+  /**
    * @var ModulesRegistry
    */
   private $modulesRegistry;
@@ -31,12 +37,15 @@ class ModulesLoader
    * @param InjectorInterface $injector
    * @param Application       $app
    * @param ModulesRegistry   $modulesRegistry
+   * @param LoggerInterface   $logger
    */
-  function __construct (InjectorInterface $injector, Application $app, ModulesRegistry $modulesRegistry)
+  function __construct (InjectorInterface $injector, Application $app, ModulesRegistry $modulesRegistry,
+                        LoggerInterface $logger)
   {
     $this->app             = $app;
     $this->injector        = $injector;
     $this->modulesRegistry = $modulesRegistry;
+    $this->logger          = $logger;
   }
 
   /**
@@ -71,9 +80,10 @@ class ModulesLoader
             $paths[]           = $module->path;
             $providerModules[] = $module;
           }
+          // Clear module's previous error status (if any)
           if ($module->errorStatus) {
             $module->errorStatus = null;
-            $this->modulesRegistry->save ();
+            $this->modulesRegistry->save (); // Note: this only occurs on debug mode.
           }
         }
         catch (Exception $e) {
@@ -86,6 +96,7 @@ class ModulesLoader
 
     // Warning: this MUST NOT be injected on the constructor above!
     // This is a shared service.
+    /** @var ModuleServices $moduleServices */
     $moduleServices = $this->injector->make (ModuleServices::class);
 
     foreach ($providers as $i => $provider) {
@@ -99,26 +110,31 @@ class ModulesLoader
           $this->logModuleError ($providerModules[$i], $e->getMessage (), $e);
         }
     }
+
+    // From this point on, errors are not suppressed, as all modules are already loaded and initialized.
+
     $moduleServices->runPostConfig ();
 
     // Providers boot phase
 
     foreach ($providers as $i => $provider) {
-      $fn = [$provider, 'boot'];
-      if (is_callable ($fn))
-        try {
+      // Only boot modules that have not failed the initialization process.
+      if (!$providerModules[$i]->errorStatus) {
+        $fn = [$provider, 'boot'];
+        if (is_callable ($fn))
           $this->injector->execute ($fn);
-        }
-        catch (Exception $e) {
-          $this->logModuleError ($providerModules[$i], $e->getMessage (), $e);
-        }
+      }
     }
   }
 
   private function logModuleError (ModuleInfo $module, $message, Exception $e = null)
   {
+    // Errors on subsystem modules are considered to be always fatal.
+    if ($module->type == ModuleInfo::TYPE_SUBSYSTEM)
+      throw $e;
+
     $module->errorStatus = $message;
-    _log()->error ($message, $e ? ['trace' => $e->getTrace ()] : []);
+    Debug::logException ($this->logger, $e);
     // Only save errorStatus if not on production, otherwise concurrency problems while saving might occur.
     if ($this->app->debugMode)
       $this->modulesRegistry->save ();

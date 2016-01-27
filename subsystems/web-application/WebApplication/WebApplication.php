@@ -71,6 +71,7 @@ class WebApplication
 
     $app->isWebBased = true;
     $app->setup ($rootDir);
+    $app->preboot ();
 
     // Pre-assembly setup.
 

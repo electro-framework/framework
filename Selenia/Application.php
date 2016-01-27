@@ -1,9 +1,8 @@
 <?php
 namespace Selenia;
 
-use Monolog\Handler\HandlerInterface;
-use Selenia\Console\ConsoleApplication;
 use Selenia\Core\Assembly\Config\AssemblyModule;
+use Selenia\Core\Logging\Config\LoggingModule;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\InjectorInterface;
 
@@ -132,13 +131,6 @@ class Application
    * @var string[]
    */
   public $languages = [];
-  /**
-   * A list of logger handler instances to push to the logger's handlers stack.
-   * Set on application.ini
-   *
-   * @var HandlerInterface[]
-   */
-  public $logHandlers = [];
   /**
    * The relative URL of the login form page.
    *
@@ -337,6 +329,21 @@ class Application
     ] : [];
   }
 
+  /**
+   * Boots up the core framework modules.
+   *
+   * <p>This occurs before the framework's main boot up sequence.
+   * <p>Unlike the later, which is managed automatically, this pre-boot process is manually defined and consists of just
+   * a few core services that must be setup before any other module loads.
+   */
+  function preboot ()
+  {
+    $assemblyModule = new AssemblyModule;
+    $assemblyModule->register ($this->injector);
+    $loggingModule = new LoggingModule;
+    $loggingModule->register ($this->injector);
+  }
+
   function setIncludePath ($extra = '')
   {
     if (!empty($extra)) {
@@ -366,9 +373,6 @@ class Application
 
     if (getenv ('APP_DEFAULT_LANG'))
       $this->defaultLang = getenv ('APP_DEFAULT_LANG');
-
-    $assemblyModule = new AssemblyModule;
-    $assemblyModule->register ($this->injector);
   }
 
   /**

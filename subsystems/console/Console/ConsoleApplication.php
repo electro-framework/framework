@@ -1,7 +1,6 @@
 <?php
 namespace Selenia\Console;
 
-use Monolog\Handler\StreamHandler;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\ErrorConsole\ErrorHandler;
 use Robo\Config;
@@ -70,12 +69,12 @@ class ConsoleApplication extends Runner
 
     $app->isConsoleBased = true;
     $app->setup (getcwd ());
+    $app->preboot ();
 
     // Setup debugging
 
     ErrorHandler::init ();
     DebugConsole::init ($app->debugMode);
-    $app->logHandlers[] = new StreamHandler('php://stderr');
 
     // Setup the console.
 
@@ -226,7 +225,8 @@ class ConsoleApplication extends Runner
     $this->io
       ->setColor ('title', new OutputFormatterStyle ('magenta'))
       ->setColor ('question', new OutputFormatterStyle ('cyan'))
-      ->setColor ('warning', new OutputFormatterStyle ('red', 'yellow'))
+      ->setColor ('red', new OutputFormatterStyle ('red'))
+      ->setColor ('warning', new OutputFormatterStyle ('black', 'yellow'))
       ->setColor ('kbd', new OutputFormatterStyle ('green'));
   }
 

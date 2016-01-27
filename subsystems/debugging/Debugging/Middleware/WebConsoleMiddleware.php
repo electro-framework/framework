@@ -31,40 +31,18 @@ class WebConsoleMiddleware implements RequestHandlerInterface
    * @var InjectorInterface
    */
   private $injector;
-  /**
-   * @var LoggerInterface
-   */
-  private $logger;
 
-  function __construct (Application $app, InjectorInterface $injector, LoggerInterface $logger)
+  function __construct (Application $app, InjectorInterface $injector)
   {
     $this->app      = $app;
     $this->injector = $injector;
-    $this->logger   = $logger;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    DebugConsole::registerPanel ('request', new PSR7RequestLogger ('Request', 'fa fa-paper-plane'));
-    DebugConsole::registerPanel ('response', new PSR7ResponseLogger ('Response', 'fa fa-file'));
-    DebugConsole::registerPanel ('routes', new ConsoleLogger ('Routing', 'fa fa-location-arrow'));
-    DebugConsole::registerPanel ('navigation', new ConsoleLogger ('Navigation', 'fa fa-compass big'));
-    DebugConsole::registerPanel ('config', new ConsoleLogger ('Configuration', 'fa fa-cogs'));
-    DebugConsole::registerPanel ('session', new ConsoleLogger ('Session', 'fa fa-user'));
-    DebugConsole::registerPanel ('DOM', new ConsoleLogger ('Server-side DOM', 'fa fa-sitemap'));
-    DebugConsole::registerPanel ('vm', new ConsoleLogger ('View Model', 'fa fa-table'));
-    DebugConsole::registerPanel ('database', new ConsoleLogger ('Database', 'fa fa-database'));
-//    DebugConsole::registerPanel ('exceptions', new ConsoleLogger ('Exceptions', 'fa fa-bug'));
-    $trace = DebugConsole::registerLogger ('trace', new ConsoleLogger ('Trace', 'fa fa-clock-o big'));
-
     if (getenv ('DEBUG_BAR') != 'true')
       return $next ();
     //------------------------------------------------------------------
-
-    // Redirect logger to Inspector panel
-    if (isset($this->logger))
-      if ($this->logger instanceof Logger)
-        $this->logger->pushHandler (new WebConsoleMonologHandler(getenv ('DEBUG_LEVEL') || Logger::DEBUG));
 
     /** @var ResponseInterface $response */
     $response = $next ();
@@ -152,6 +130,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     //------------------
     // Tracing panel
     //------------------
+    $trace = DebugConsole::logger ('trace');
     if ($trace->hasContent ())
       DebugConsole::registerPanel ('trace', $trace);
 

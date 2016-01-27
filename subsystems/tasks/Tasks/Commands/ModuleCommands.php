@@ -217,22 +217,27 @@ trait ModuleCommands
 
   /**
    * Displays information about the application's current modules configuration
+   *
+   * @param array $opts
+   * @option $all|a When true, internal subsystem modules will also be displayed
    */
-  function moduleStatus ()
+  function moduleStatus ($opts = ['all|a' => false])
   {
-    $modules = $this->modulesRegistry->getApplicationModules ();
+    $modules = $opts['all']
+      ? $this->modulesRegistry->getAllModules()
+      : $this->modulesRegistry->getApplicationModules ();
     $o       = [];
     foreach ($modules as $module)
       $o[] = [
         $module->name,
         $module->enabled ? 'Yes' : '<error>No</error>',
-        $module->enabled && $module->bootstrapper && !$module->errorStatus ? 'Yes' : '<error>No</error>',
-        $module->errorStatus ?: '<info>OK</info>',
+        $module->enabled && $module->bootstrapper && !$module->errorStatus ? 'Yes' : '<red>No</red>',
+        $module->errorStatus ? "<error>$module->errorStatus</error>" : '<info>OK</info>',
       ];
     $this->io->table ([
       'Module',
       'Enabled',
-      'Loaded',
+      'Booted',
       'Status',
     ], $o, [40, 8, 7, 70], ['L', 'C', 'C']);
   }

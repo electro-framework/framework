@@ -5,7 +5,6 @@ use PhpKit\Flow\FilesystemFlow;
 use Selenia\Application;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\FileServer\Services\FileServerMappings;
-use Selenia\Interfaces\AssignableInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Selenia\Interfaces\InjectorInterface;
@@ -13,8 +12,8 @@ use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationProviderInterface;
 
 /**
- * Allows a module to notify the framework of which standard framework-specific services it provides (like routing,
- * navigation, translations, etc.).
+ * A service that allows a module to notify the framework of which standard framework-specific services it provides
+ * (like routing, navigation, translations, etc.).
  */
 class ModuleServices
 {
