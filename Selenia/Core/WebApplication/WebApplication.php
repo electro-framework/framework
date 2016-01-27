@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\WebApplication;
+namespace Selenia\Core\WebApplication;
 
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\DebugConsole\DebugConsoleSettings;
@@ -8,7 +8,6 @@ use Selenia\Application;
 use Selenia\Core\Assembly\Services\ModulesLoader;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\WebServer\WebServer;
 use Zend\Diactoros\Response;
 
 /**

@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\WebServer;
+namespace Selenia\Core\WebApplication;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
