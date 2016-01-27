@@ -42,6 +42,7 @@ class ConsoleApplication extends Runner
     $this->app      = $app;
     $this->console  = $console;
     $this->injector = $injector;
+    $console->setAutoExit (false);
   }
 
   /**
@@ -104,6 +105,7 @@ class ConsoleApplication extends Runner
    * Runs the console.
    *
    * @param InputInterface|null $input Overrides the input, if specified.
+   * @return int 0 if everything went fine, or an error code
    */
   function execute ($input = null)
   {
@@ -126,7 +128,7 @@ class ConsoleApplication extends Runner
 
     // Run the given command
 
-    $this->console->run ($input ?: $this->io->getInput (), $this->io->getOutput ());
+    return $this->console->run ($input ?: $this->io->getInput (), $this->io->getOutput ());
   }
 
   /**
@@ -154,12 +156,13 @@ class ConsoleApplication extends Runner
    *
    * @param string   $name
    * @param string[] $args
+   * @return int 0 if everything went fine, or an error code
    */
   function run ($name, array $args = [])
   {
     $args  = array_merge (['', $name], $args);
     $input = $this->prepareInput ($args);
-    $this->execute ($input);
+    return $this->execute ($input);
   }
 
   /**

@@ -45,7 +45,7 @@ trait InitCommands
       $io->title ("Creating required files and directories...");
       $this->nestedExec = true;
       $this->initStorage ();
-      $this->initConfig (['overwrite' => $overwrite]);
+      $this->initConfig (['overwrite' => true]);
     }
     $demoPath = "{$this->app->modulesPath}/demo-company";
     if (file_exists ($demoPath)) {

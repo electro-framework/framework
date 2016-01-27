@@ -1,10 +1,6 @@
 {
   "name": "___MODULE___",
   "description": "",
-  "keywords": [
-    "module",
-    "selenia framework"
-  ],
   "license": "proprietary",
   "autoload": {
     "psr-4": {
@@ -12,6 +8,5 @@
     }
   },
   "require": {
-    "php": ">=5.4.0"
   }
 }
