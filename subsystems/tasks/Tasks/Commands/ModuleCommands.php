@@ -33,6 +33,8 @@ use Selenia\Tasks\Shared\UninstallPackageTask;
  */
 trait ModuleCommands
 {
+  static $SHOW_COMPOSER_OUTPUT = true;
+
   /**
    * Scaffolds a new project module
    *
@@ -86,7 +88,7 @@ trait ModuleCommands
 
     // Register the module's namespace
 
-    $this->composerUpdate ();
+    $this->composerUpdate (); // It also updates the modules registry
 
     $io->done ("Module <info>$___MODULE___</info> was created");
   }
@@ -128,7 +130,11 @@ trait ModuleCommands
 
     // Install module via Composer
 
-    (new InstallPackageTask($moduleName))->printed (false)->run ();
+    (new InstallPackageTask($moduleName))->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
+
+    // Update the modules registry
+
+    $this->moduleRefresh ();
 
     $io->done ("Plugin <info>$moduleName</info> is now installed");
   }
@@ -204,6 +210,10 @@ trait ModuleCommands
 
     $this->composerUpdate ();
 
+    // Update the modules registry
+
+    $this->moduleRefresh ();
+
     $io->done ("Template <info>$moduleName</info> is now installed on <info>$path</info>");
   }
 
@@ -224,7 +234,7 @@ trait ModuleCommands
   function moduleStatus ($opts = ['all|a' => false])
   {
     $modules = $opts['all']
-      ? $this->modulesRegistry->getAllModules()
+      ? $this->modulesRegistry->getAllModules ()
       : $this->modulesRegistry->getApplicationModules ();
     $o       = [];
     foreach ($modules as $module)
@@ -258,7 +268,10 @@ trait ModuleCommands
 
   protected function uninstallPlugin ($moduleName)
   {
-    (new UninstallPackageTask($moduleName))->printed (false)->run ();
+    (new UninstallPackageTask($moduleName))->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
+
+    // Update the modules registry
+    $this->moduleRefresh ();
 
     $this->io->done ("Plugin module <info>$moduleName</info> was uninstalled");
   }
@@ -274,14 +287,14 @@ trait ModuleCommands
 
     // Uninstall the module's dependencies and unregister its namespaces
 
-    $this->composerUpdate ();
+    $this->composerUpdate (); // It also updates the modules registry
 
     $io->done ("Module <info>$moduleName</info> was uninstalled");
   }
 
   private function composerUpdate ()
   {
-    (new Update)->printed (false)->run ();
+    (new Update)->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
   }
 
   private function formatModules (& $modules, $stars = false)
