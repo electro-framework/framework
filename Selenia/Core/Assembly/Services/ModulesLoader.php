@@ -129,6 +129,8 @@ class ModulesLoader
 
   private function logModuleError (ModuleInfo $module, $message, Exception $e = null)
   {
+    if (!$e)
+      $e = new \RuntimeException ($message);
     // Errors on subsystem modules are considered to be always fatal.
     if ($module->type == ModuleInfo::TYPE_SUBSYSTEM)
       throw $e;
