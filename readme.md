@@ -10,7 +10,7 @@ By requiring this package on your project's `composer.json` file, you will insta
 
 You should not install this package on an empty project, as it doesn't provide the underlying files and directory structure required by a fully-working application.
 
-Use the [selenia project](https://github.com/selenia-framework/selenia) as your application's starting point.
+Use the [Selenia base installation](https://github.com/selenia-framework/selenia) as your application's starting point.
 
 ### Customized framework installation
 
