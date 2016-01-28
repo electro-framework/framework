@@ -317,6 +317,7 @@ class ModulesRegistry
     $newModules     = self::getOnly ($newModuleNames, $currentModules);
 
     $moduleNamesKept = array_intersect ($currentModuleNames, $prevModuleNames);
+    $moduleNamesKept = array_intersect ($moduleNamesKept, $this->getApplicationModuleNames());
     $modulesKept     = self::getOnly ($moduleNamesKept, $currentModules);
 
     $this->modules = [];

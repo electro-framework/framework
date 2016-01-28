@@ -42,7 +42,6 @@ class ConsoleApplication extends Runner
     $this->app      = $app;
     $this->console  = $console;
     $this->injector = $injector;
-    $console->setAutoExit (false);
   }
 
   /**
@@ -128,6 +127,7 @@ class ConsoleApplication extends Runner
 
     // Run the given command
 
+    $this->console->setAutoExit (false);
     return $this->console->run ($input ?: $this->io->getInput (), $this->io->getOutput ());
   }
 

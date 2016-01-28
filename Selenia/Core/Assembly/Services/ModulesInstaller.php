@@ -42,7 +42,10 @@ class ModulesInstaller
    */
   function cleanupRemovedModules (array $modules)
   {
-    //nothing yet
+    if ($modules)
+      $this->io->writeln ("<comment>REMOVED MODULES:</comment>\n<info>■</info> " .
+                          implode ("\n<info>■</info> ", $modules))
+               ->nl ();
   }
 
   /**
@@ -50,7 +53,9 @@ class ModulesInstaller
    */
   function setupNewModules (array $modules)
   {
-    //nothing yet
+    if ($modules)
+      $this->io->writeln ("<comment>NEW MODULES:</comment>\n<info>■</info> " . implode ("\n<info>■</info> ", $modules))
+               ->nl ();
   }
 
   /**
@@ -58,13 +63,20 @@ class ModulesInstaller
    */
   function updateModules (array $modules)
   {
+    if (!$modules) return;
+
+    $this->io->title ("Re-check modules");
+
     $databaseIsAvailable = Connection::getFromEnviroment ()->isAvailable ();
     $runMigrations       = $databaseIsAvailable && $this->migrationsSettings;
 
+//    var_dump($modules);exit;
     foreach ($modules as $module) {
+      $this->io->writeln ("<info>■</info> $module->name");
       if ($runMigrations)
         $this->updateMigrationsOf ($module);
     }
+    $this->io->nl ();
   }
 
   private function updateMigrationsOf (ModuleInfo $module)
@@ -73,6 +85,7 @@ class ModulesInstaller
     if (fileExists ($path)) {
       $this->io->nl ()->say ("Running migrations of module <info>$module->name</info>");
       $this->consoleApp->run ('migration:run', [$module->name]);
+      $this->io->nl ();
     }
   }
 

@@ -80,7 +80,6 @@ class MigrationCommands
     while (!$name) {
       $name = str_camelize ($this->io->ask ("Migration description:"), true);
     }
-
     $command = new Command\Create;
     $command->setApplication ($this->console);
     $input  = new ArrayInput(PA ([
@@ -91,8 +90,8 @@ class MigrationCommands
       $moduleName,
     ])->prune ()->A);
     $output = Config::get ('output');
-
-    return $command->run ($input, $output);
+    $command->run ($input, $output);
+    // DO NOT RETURN A VALUE OR NESTED COMMAND EXECUTION WILL STOP PREMATURELY
   }
 
   /**
@@ -109,7 +108,6 @@ class MigrationCommands
   ])
   {
     $this->setupModule ($moduleName);
-
     $command = new Command\Rollback;
     $command->setApplication ($this->console);
     $input  = new ArrayInput(PA ([
@@ -119,8 +117,8 @@ class MigrationCommands
       $moduleName,
     ])->prune ()->A);
     $output = Config::get ('output');
-
-    return $command->run ($input, $output);
+    $command->run ($input, $output);
+    // DO NOT RETURN A VALUE OR NESTED COMMAND EXECUTION WILL STOP PREMATURELY
   }
 
   /**
@@ -137,7 +135,6 @@ class MigrationCommands
   ])
   {
     $this->setupModule ($moduleName);
-
     $command = new Command\Migrate;
     $command->setApplication ($this->console);
     $input  = new ArrayInput(PA ([
@@ -147,8 +144,8 @@ class MigrationCommands
       $moduleName,
     ])->prune ()->A);
     $output = Config::get ('output');
-
-    return $command->run ($input, $output);
+    $command->run ($input, $output);
+    // DO NOT RETURN A VALUE OR NESTED COMMAND EXECUTION WILL STOP PREMATURELY
   }
 
   /**
@@ -165,7 +162,6 @@ class MigrationCommands
   ])
   {
     $this->setupModule ($moduleName);
-
     $command = new Command\Status;
     $command->setApplication ($this->console);
     $input  = new ArrayInput(PA ([
@@ -175,8 +171,8 @@ class MigrationCommands
       $moduleName,
     ])->prune ()->A);
     $output = Config::get ('output');
-
-    return $command->run ($input, $output);
+    $command->run ($input, $output);
+    // DO NOT RETURN A VALUE OR NESTED COMMAND EXECUTION WILL STOP PREMATURELY
   }
 
   /**
