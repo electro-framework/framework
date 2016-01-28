@@ -184,8 +184,8 @@ class BaseRouterWithLogging extends BaseRouter
   protected function iteration_step ($key, $routable, ServerRequestInterface $request = null,
                                      ResponseInterface $response = null, callable $nextIteration)
   {
-    if ($request && $request != self::$currentRequest)
-      throw new \RuntimeException ('NOT SUPPOSED TO HAPPEN?');
+    if ($request && $request != self::$currentRequest) //NOT SUPPOSED TO HAPPEN?
+      self::$currentRequest = $request;
 
     return parent::iteration_step ($key, $routable, $request, $response, $nextIteration);
   }

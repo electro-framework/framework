@@ -129,8 +129,8 @@ class PageComponent implements RequestHandlerInterface
    */
   protected $URI_noPage;
   /**
-   * Specifies the URL of the index page, to where the browser should naviagate upon the
-   * successful insertion / update of records.
+   * Specifies the URL of the index page, to where the browser should navigate upon the
+   * successful insertion / update / deletion of records.
    * If not defined on a subclass then the request will redisplay the same page.
    *
    * @var string
@@ -201,7 +201,7 @@ class PageComponent implements RequestHandlerInterface
     $this->virtualUrl = $request->getAttribute ('virtualUri');
     $this->redirection->setRequest ($request);
 
-    $this->currentLink = $this->navigation->request ($this->request)->selectedLink ();
+    $this->currentLink = $this->navigation->request ($this->request)->currentLink();
     if ($this->currentLink && $parent = $this->currentLink->parent ())
       $this->indexPage = $parent->url ();
 
