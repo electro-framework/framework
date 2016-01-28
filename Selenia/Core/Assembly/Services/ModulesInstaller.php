@@ -1,10 +1,10 @@
 <?php
 namespace Selenia\Core\Assembly\Services;
 
+use PhpKit\Connection;
 use Selenia\Application;
 use Selenia\Core\Assembly\ModuleInfo;
 use Selenia\Core\ConsoleApplication\ConsoleApplication;
-use Selenia\Database\Connection;
 use Selenia\Interfaces\ConsoleIOInterface;
 use Selenia\Migrations\Config\MigrationsSettings;
 

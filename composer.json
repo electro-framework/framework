@@ -24,7 +24,8 @@
     "rdlowrey/auryn": "^1.1.0",
     "monolog/monolog": "^1.17.1",
     "codegyre/robo": "^0.5.3",
-    "selenia/interop": "dev-master"
+    "selenia/interop": "dev-master",
+    "php-kit/ext-pdo": "dev-master"
   },
   "autoload": {
     "psr-4": {
