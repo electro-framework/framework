@@ -175,21 +175,26 @@ class ConsoleApplication extends Runner
    * Runs the specified console command, with the given arguments, as if it was invoked from the command line
    * and captures its output.
    *
-   * @param string   $name      Command name.
-   * @param string[] $args      Command arguments.
-   * @param string   $output    Captures the command's output.
-   * @param bool     $decorated Set to false to disable colorized output.
-   * @param int      $verbosity One of the OutputInterface::VERBOSITY constants.
+   * @param string          $name      Command name.
+   * @param string[]        $args      Command arguments.
+   * @param string          $outStr    Captures the command's output.
+   * @param OutputInterface $output    [optional] If set, the output configuration will be copied from it.
+   * @param bool            $decorated Set to false to disable colorized output.
+   * @param int             $verbosity One of the OutputInterface::VERBOSITY constants.
    * @return int 0 if everything went fine, or an error code
    * @throws \Exception
    */
-  function runAndCapture ($name, array $args = [], &$output, $decorated = true,
+  function runAndCapture ($name, array $args = [], &$outStr, OutputInterface $output = null, $decorated = true,
                           $verbosity = OutputInterface::VERBOSITY_NORMAL)
   {
-    $args   = array_merge (['', $name], $args);
+    $args = array_merge (['', $name], $args);
+    if ($output) {
+      $verbosity = $output->getVerbosity ();
+      $decorated = $output->isDecorated ();
+    }
     $out    = new BufferedOutput ($verbosity, $decorated);
     $r      = $this->console->run ($this->prepareInput ($args), $out);
-    $output = $out->fetch ();
+    $outStr = $out->fetch ();
     return $r;
   }
 
@@ -209,6 +214,8 @@ class ConsoleApplication extends Runner
     }
     $this->io->setInput ($input);
     $this->io->setOutput ($output);
+    // Robo Command classes can access the current output via Config::get('output')
+    Config::setOutput ($output);
   }
 
   /**
@@ -240,9 +247,12 @@ class ConsoleApplication extends Runner
         $args[] = $input->getOptions ();
 
         // Robo Command classes can access the current output via Config::get('output')
+        // This output may have been customized for a specific command, usually when being run internally with
+        // output capture.
         Config::setOutput ($output);
 
         $res = call_user_func_array ([$roboTasks, $commandName], $args);
+        // Restore the setting to the main output stream.
         Config::setOutput ($this->io->getOutput ());
         if (is_int ($res)) return $res;
         if (is_bool ($res)) return $res ? 0 : 1;

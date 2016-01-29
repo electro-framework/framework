@@ -63,9 +63,9 @@ class ModulesInstaller
       $migrations = $this->getMigrationsOf ($moduleName);
       if ($migrations) {
         $this->io->nl ()->say ("  Updating the database");
-        $status = $this->consoleApp->runAndCapture ('migration:rollback', ['-t', '0', $moduleName],
-          $out, true, $this->io->getOutput ()->getVerbosity ());
-        $this->io->indent (2)->write ($out)->indent ();
+        $status = $this->consoleApp->runAndCapture (
+          'migration:rollback', ['-t', '0', $moduleName], $outStr, $this->io->getOutput ());
+        $this->io->indent (2)->write ($outStr)->indent ();
       }
     }
     return $status;
@@ -109,8 +109,8 @@ class ModulesInstaller
    */
   private function getMigrationsOf ($moduleName)
   {
-    $this->consoleApp->runAndCapture ('migration:status', [$moduleName, '--format=json'], $out, false);
-    if (!preg_match ('/\{.*\}$/', $out, $m)) return [];
+    $this->consoleApp->runAndCapture ('migration:status', [$moduleName, '--format=json'], $outStr, null, false);
+    if (!preg_match ('/\{.*\}$/', $outStr, $m)) return [];
     return json_decode ($m[0])->migrations;
   }
 
@@ -147,9 +147,9 @@ class ModulesInstaller
       foreach ($migrations as $migration) {
         if ($migration->migration_status == 'down') {
           $this->io->nl ()->say ("    Updating the database");
-          $this->consoleApp->runAndCapture ('migration:run', [$module->name], $out, true,
-            $this->io->getOutput ()->getVerbosity ());
-          $this->io->indent (4)->write ($out)->indent ()->nl ();
+          $this->consoleApp->runAndCapture (
+            'migration:run', [$module->name], $outStr, $this->io->getOutput ());
+          $this->io->indent (4)->write ($outStr)->indent ()->nl ();
           break;
         }
       }
