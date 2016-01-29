@@ -19,7 +19,11 @@ define ('CONSOLE_ALIGN_RIGHT', STR_PAD_LEFT);
  */
 class ConsoleIO implements ConsoleIOInterface
 {
+  /** @var string */
+  private $indent = '';
+  /** @var InputInterface */
   private $input;
+  /** @var OutputInterface */
   private $output;
   private $warnings = [];
 
@@ -92,7 +96,7 @@ class ConsoleIO implements ConsoleIOInterface
    */
   function clear ()
   {
-    if ($this->getOutput ()->getFormatter ()->isDecorated ())
+    if ($this->output->getFormatter ()->isDecorated ())
       $this->write ("\033[0;0f\033[2J");
     return $this;
   }
@@ -164,6 +168,12 @@ class ConsoleIO implements ConsoleIOInterface
   function setOutput (OutputInterface $output)
   {
     $this->output = $output;
+  }
+
+  function indent ($level = 0)
+  {
+    $this->indent = str_repeat (' ', $level);
+    return $this;
   }
 
   /**
@@ -243,7 +253,7 @@ class ConsoleIO implements ConsoleIOInterface
    */
   function setColor ($name, $style)
   {
-    $this->getOutput ()->getFormatter ()->setStyle ($name, $style);
+    $this->output->getFormatter ()->setStyle ($name, $style);
     return $this;
   }
 
@@ -274,8 +284,7 @@ class ConsoleIO implements ConsoleIOInterface
    */
   function title ($text)
   {
-    $this->writeln ();
-    $this->say ("<title>$text</title>" . PHP_EOL);
+    $this->nl ()->writeln ("<title>$text</title>")->nl ();
     return $this;
   }
 
@@ -297,7 +306,9 @@ class ConsoleIO implements ConsoleIOInterface
    */
   function write ($text)
   {
-    $this->getOutput ()->write ($text);
+    if ($this->indent)
+      $text = preg_replace ('/^/m', $this->indent, $text);
+    $this->output->write ($text);
     return $this;
   }
 
@@ -307,7 +318,9 @@ class ConsoleIO implements ConsoleIOInterface
    */
   function writeln ($text = '')
   {
-    $this->getOutput ()->writeln ($text);
+    if ($this->indent)
+      $text = preg_replace ('/^/m', $this->indent, $text);
+    $this->output->writeln ($text);
     return $this;
   }
 
@@ -329,7 +342,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   private function doAsk (Question $question)
   {
-    return $this->getDialog ()->ask ($this->getInput (), $this->getOutput (), $question);
+    return $this->getDialog ()->ask ($this->input, $this->output, $question);
   }
 
   private function formatQuestion ($message)

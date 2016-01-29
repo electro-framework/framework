@@ -44,7 +44,7 @@ class ModulesRegistry
    * @param ModuleInfo[] $modules
    * @return string[]
    */
-  static private function getNames (array $modules)
+  static function getNames (array $modules)
   {
     return map ($modules, function (ModuleInfo $module) { return $module->name; });
   }
@@ -297,6 +297,8 @@ class ModulesRegistry
         'Please run <kbd>selenia module:refresh</kbd> on the command line.');
     }
 
+    $this->modulesInstaller->begin ();
+
     $subsystems = $this->loadModulesMetadata ($this->scanSubsystems (), ModuleInfo::TYPE_SUBSYSTEM);
     $plugins    = $this->loadModulesMetadata ($this->scanPlugins (), ModuleInfo::TYPE_PLUGIN);
     $private    = $this->loadModulesMetadata ($this->scanPrivateModules (), ModuleInfo::TYPE_PRIVATE);
@@ -335,6 +337,8 @@ class ModulesRegistry
     $this->modulesInstaller->cleanupRemovedModules ($removedModules);
     $this->modulesInstaller->setupNewModules ($newModules);
     $this->modulesInstaller->updateModules ($modulesKept);
+
+    $this->modulesInstaller->end ();
 
     $this->save ();
   }

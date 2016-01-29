@@ -2,6 +2,7 @@
 namespace Selenia\Migrations\Commands;
 
 use Phinx\Console\Command;
+use Phinx\Console\Command\AbstractCommand;
 use Robo\Config;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
 use Selenia\Core\ConsoleApplication\Lib\ModulesUtil;
@@ -9,6 +10,9 @@ use Selenia\Core\ConsoleApplication\Services\ConsoleIO;
 use Selenia\Migrations\Config\MigrationsSettings;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Database migration commands.
@@ -82,16 +86,14 @@ class MigrationCommands
     }
     $command = new Command\Create;
     $command->setApplication ($this->console);
-    $input  = new ArrayInput(PA ([
+    $input = new ArrayInput(PA ([
       '--configuration' => self::getConfigPath (),
       'name'            => $name,
       '--class'         => $options['class'],
       '--template'      => $options['template'],
       $moduleName,
     ])->prune ()->A);
-    $output = Config::get ('output');
-    $command->run ($input, $output);
-    // DO NOT RETURN A VALUE OR NESTED COMMAND EXECUTION WILL STOP PREMATURELY
+    return $this->runMigrationCommand ($command, $input);
   }
 
   /**
@@ -110,15 +112,13 @@ class MigrationCommands
     $this->setupModule ($moduleName);
     $command = new Command\Rollback;
     $command->setApplication ($this->console);
-    $input  = new ArrayInput(PA ([
+    $input = new ArrayInput(PA ([
       '--configuration' => self::getConfigPath (),
       '--target'        => $options['target'],
       '--environment'   => 'main',
       $moduleName,
     ])->prune ()->A);
-    $output = Config::get ('output');
-    $command->run ($input, $output);
-    // DO NOT RETURN A VALUE OR NESTED COMMAND EXECUTION WILL STOP PREMATURELY
+    return $this->runMigrationCommand ($command, $input);
   }
 
   /**
@@ -137,15 +137,13 @@ class MigrationCommands
     $this->setupModule ($moduleName);
     $command = new Command\Migrate;
     $command->setApplication ($this->console);
-    $input  = new ArrayInput(PA ([
+    $input = new ArrayInput(PA ([
       '--configuration' => self::getConfigPath (),
       '--target'        => $options['target'],
       '--environment'   => 'main',
       $moduleName,
     ])->prune ()->A);
-    $output = Config::get ('output');
-    $command->run ($input, $output);
-    // DO NOT RETURN A VALUE OR NESTED COMMAND EXECUTION WILL STOP PREMATURELY
+    return $this->runMigrationCommand ($command, $input);
   }
 
   /**
@@ -164,15 +162,13 @@ class MigrationCommands
     $this->setupModule ($moduleName);
     $command = new Command\Status;
     $command->setApplication ($this->console);
-    $input  = new ArrayInput(PA ([
+    $input = new ArrayInput(PA ([
       '--configuration' => self::getConfigPath (),
       '--format'        => $options['format'],
       '--environment'   => 'main',
       $moduleName,
     ])->prune ()->A);
-    $output = Config::get ('output');
-    $command->run ($input, $output);
-    // DO NOT RETURN A VALUE OR NESTED COMMAND EXECUTION WILL STOP PREMATURELY
+    return $this->runMigrationCommand ($command, $input);
   }
 
   /**
@@ -184,6 +180,17 @@ class MigrationCommands
   {
     self::$migrationsPath  = $this->registry->getModule ($moduleName)->path . '/' . $this->settings->migrationsPath ();
     self::$migrationsTable = 'migrations_of_' . str_replace ('/', '_', dehyphenate ($moduleName));
+  }
+
+  private function runMigrationCommand (AbstractCommand $command, InputInterface $input)
+  {
+    /** @var OutputInterface $output */
+    $output = Config::get ('output');
+    $buf    = new BufferedOutput ($output->getVerbosity (), $output->isDecorated (), $output->getFormatter ());
+    $r      = $command->run ($input, $buf);
+    $result = $this->suppressHeader ($buf->fetch ());
+    $output->write ($result);
+    return $r;
   }
 
   /**
@@ -198,6 +205,15 @@ class MigrationCommands
   {
     $this->modulesUtil->selectModule ($moduleName, true);
     $this->setupMigrationConfig ($moduleName);
+  }
+
+  private function suppressHeader ($text)
+  {
+    /** @var OutputInterface $output */
+    $output = Config::get ('output');
+    return $output->getVerbosity () == OutputInterface::VERBOSITY_NORMAL
+      ? preg_replace ('/^.*?\n\n/s', PHP_EOL, $text)
+      : $text;
   }
 
 }

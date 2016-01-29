@@ -37,15 +37,29 @@ class ModulesInstaller
     $this->io         = $consoleApp->getIO ();
   }
 
+  function begin ()
+  {
+    $this->io->banner ('Selenia Modules Installer');
+  }
+
   /**
    * @param ModuleInfo[] $modules
    */
   function cleanupRemovedModules (array $modules)
   {
     if ($modules)
-      $this->io->writeln ("<comment>REMOVED MODULES:</comment>\n<info>■</info> " .
-                          implode ("\n<info>■</info> ", $modules))
-               ->nl ();
+      $this->io
+        ->title ('Cleaning-up Removed Modules')
+        ->writeln ('  <info>■</info> ' . implode ("\n  <info>■</info> ",
+            ModulesRegistry::getNames ($modules)))
+        ->nl ();
+  }
+
+  function end ()
+  {
+    $this->io
+      ->writeln ('<info>Modules configuration completed</info>')
+      ->nl ();
   }
 
   /**
@@ -54,8 +68,11 @@ class ModulesInstaller
   function setupNewModules (array $modules)
   {
     if ($modules)
-      $this->io->writeln ("<comment>NEW MODULES:</comment>\n<info>■</info> " . implode ("\n<info>■</info> ", $modules))
-               ->nl ();
+      $this->io
+        ->title ('Configuring New Modules')
+        ->writeln ('  <info>■</info> ' . implode ("\n  <info>■</info> ",
+            ModulesRegistry::getNames ($modules)))
+        ->nl ();
   }
 
   /**
@@ -65,14 +82,14 @@ class ModulesInstaller
   {
     if (!$modules) return;
 
-    $this->io->title ("Re-check modules");
+    $this->io->title ("Re-check Installed Modules");
 
     $databaseIsAvailable = Connection::getFromEnviroment ()->isAvailable ();
     $runMigrations       = $databaseIsAvailable && $this->migrationsSettings;
 
 //    var_dump($modules);exit;
     foreach ($modules as $module) {
-      $this->io->writeln ("<info>■</info> $module->name");
+      $this->io->writeln ("  <info>■</info> $module->name");
       if ($runMigrations)
         $this->updateMigrationsOf ($module);
     }
@@ -83,9 +100,18 @@ class ModulesInstaller
   {
     $path = "$module->path/" . $this->migrationsSettings->migrationsPath ();
     if (fileExists ($path)) {
-      $this->io->nl ()->say ("Running migrations of module <info>$module->name</info>");
-      $this->consoleApp->run ('migration:run', [$module->name]);
-      $this->io->nl ();
+      $this->consoleApp->runAndCapture ('migration:status', [$module->name, '--format=json'], $out, false);
+      if (!preg_match ('/\{.*\}$/', $out, $m)) return;
+      $migrations = json_decode ($m[0]);
+      foreach ($migrations->migrations as $migration) {
+        if ($migration->migration_status == 'down') {
+          $this->io->nl ()->say ("    Updating the database");
+          $this->consoleApp->runAndCapture ('migration:run', [$module->name], $out, true,
+            $this->io->getOutput ()->getVerbosity ());
+          $this->io->indent (4)->write ($out)->indent ()->nl ();
+          break;
+        }
+      }
     }
   }
 

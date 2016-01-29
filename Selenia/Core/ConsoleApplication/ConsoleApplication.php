@@ -15,7 +15,9 @@ use Selenia\Interfaces\InjectorInterface;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class ConsoleApplication extends Runner
 {
@@ -42,6 +44,7 @@ class ConsoleApplication extends Runner
     $this->app      = $app;
     $this->console  = $console;
     $this->injector = $injector;
+    $console->setAutoExit (false);
   }
 
   /**
@@ -89,12 +92,6 @@ class ConsoleApplication extends Runner
       ->share ($console)
       ->share ($consoleApp);
 
-    // Bootstrap the application's modules.
-
-    /** @var ModulesLoader $modulesApi */
-    $loader = $injector->make (ModulesLoader::class);
-    $loader->bootModules ();
-
     // Return the initialized application.
 
     return $consoleApp;
@@ -102,6 +99,9 @@ class ConsoleApplication extends Runner
 
   /**
    * Runs the console.
+   *
+   * <p>This should be called **ONLY ONCE** per console application instance.
+   * <p>Use {@see run()} to run additional commands on the same console instance.
    *
    * @param InputInterface|null $input Overrides the input, if specified.
    * @return int 0 if everything went fine, or an error code
@@ -115,6 +115,12 @@ class ConsoleApplication extends Runner
     $this->stopOnFail ();
     $this->customizeColors ();
 
+    // Bootstrap the application's modules.
+
+    /** @var ModulesLoader $modulesApi */
+    $loader = $this->injector->make (ModulesLoader::class);
+    $loader->bootModules ();
+
     // Merge tasks from all registered task classes
 
     foreach ($this->app->taskClasses as $class) {
@@ -127,7 +133,6 @@ class ConsoleApplication extends Runner
 
     // Run the given command
 
-    $this->console->setAutoExit (false);
     return $this->console->run ($input ?: $this->io->getInput (), $this->io->getOutput ());
   }
 
@@ -154,15 +159,38 @@ class ConsoleApplication extends Runner
   /**
    * Runs the specified console command, with the given arguments, as if it was invoked from the command line.
    *
-   * @param string   $name
-   * @param string[] $args
+   * @param string   $name Command name.
+   * @param string[] $args Command arguments.
    * @return int 0 if everything went fine, or an error code
+   * @throws \Exception
    */
   function run ($name, array $args = [])
   {
     $args  = array_merge (['', $name], $args);
     $input = $this->prepareInput ($args);
     return $this->execute ($input);
+  }
+
+  /**
+   * Runs the specified console command, with the given arguments, as if it was invoked from the command line
+   * and captures its output.
+   *
+   * @param string   $name      Command name.
+   * @param string[] $args      Command arguments.
+   * @param string   $output    Captures the command's output.
+   * @param bool     $decorated Set to false to disable colorized output.
+   * @param int      $verbosity One of the OutputInterface::VERBOSITY constants.
+   * @return int 0 if everything went fine, or an error code
+   * @throws \Exception
+   */
+  function runAndCapture ($name, array $args = [], &$output, $decorated = true,
+                          $verbosity = OutputInterface::VERBOSITY_NORMAL)
+  {
+    $args   = array_merge (['', $name], $args);
+    $out    = new BufferedOutput ($verbosity, $decorated);
+    $r      = $this->console->run ($this->prepareInput ($args), $out);
+    $output = $out->fetch ();
+    return $r;
   }
 
   /**
@@ -177,7 +205,6 @@ class ConsoleApplication extends Runner
 
     $input  = $this->prepareInput ($args);
     $output = new ConsoleOutput (ConsoleOutput::VERBOSITY_NORMAL, $hasColorSupport);
-    Config::setOutput ($output);
     $this->io->setInput ($input);
     $this->io->setOutput ($output);
   }
@@ -200,7 +227,8 @@ class ConsoleApplication extends Runner
 
     foreach ($commandNames as $commandName) {
       $command = $this->createCommand (new TaskInfo($className, $commandName));
-      $command->setCode (function (InputInterface $input) use ($roboTasks, $commandName, $passThrough) {
+      $command->setCode (function (InputInterface $input, OutputInterface $output)
+      use ($roboTasks, $commandName, $passThrough) {
         // get passthru args
         $args = $input->getArguments ();
         array_shift ($args);
@@ -209,10 +237,15 @@ class ConsoleApplication extends Runner
         }
         $args[] = $input->getOptions ();
 
+        // Robo Command classes can access the current output via Config::get('output')
+        Config::setOutput ($output);
+
         $res = call_user_func_array ([$roboTasks, $commandName], $args);
-        if (is_int ($res)) exit($res);
-        if (is_bool ($res)) exit($res ? 0 : 1);
-        if ($res instanceof Result) exit($res->getExitCode ());
+        Config::setOutput ($this->io->getOutput ());
+        if (is_int ($res)) return $res;
+        if (is_bool ($res)) return $res ? 0 : 1;
+        if ($res instanceof Result) return $res->getExitCode ();
+        return $res;
       });
       $app->add ($command);
     }
