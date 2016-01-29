@@ -53,7 +53,7 @@ trait ModuleCommands
   {
     if ($this->modulesUtil->selectModule ($moduleName, false, true)) {
       $this->modulesRegistry->getInstaller ()->cleanUpModule ($moduleName);
-      $this->io->done ("Completed");
+      $this->io->done ("Cleanup completed");
     }
     else if (!$opts['suppress-errors'])
       $this->io->error ("<error-info>$moduleName</error-info> is not a module");

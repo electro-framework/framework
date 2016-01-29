@@ -306,8 +306,6 @@ class ModulesRegistry
         'Please run <kbd>selenia module:refresh</kbd> on the command line.');
     }
 
-    $this->modulesInstaller->begin ();
-
     $subsystems = $this->loadModulesMetadata ($this->scanSubsystems (), ModuleInfo::TYPE_SUBSYSTEM);
     $plugins    = $this->loadModulesMetadata ($this->scanPlugins (), ModuleInfo::TYPE_PLUGIN);
     $private    = $this->loadModulesMetadata ($this->scanPrivateModules (), ModuleInfo::TYPE_PRIVATE);
@@ -343,7 +341,7 @@ class ModulesRegistry
     $this->modulesInstaller->setupNewModules ($newModules);
     $this->modulesInstaller->updateModules ($modulesKept);
 
-    $this->modulesInstaller->end ();
+    $this->modulesInstaller->end();
 
     $this->save ();
   }

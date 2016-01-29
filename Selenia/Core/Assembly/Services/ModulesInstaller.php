@@ -44,11 +44,6 @@ class ModulesInstaller
     $this->io         = $consoleApp->getIO ();
   }
 
-  function begin ()
-  {
-    $this->io->banner ('Selenia Modules Installer');
-  }
-
   /**
    * Performs uninstallation clean up tasks before the module is actually uninstalled.
    *
@@ -71,11 +66,12 @@ class ModulesInstaller
     return $status;
   }
 
-  function end ()
+  /**
+   * Runs when module:refresh ends.
+   */
+  public function end ()
   {
-    $this->io
-      ->writeln ('<info>Modules configuration completed</info>')
-      ->nl ();
+    $this->io->nl ();
   }
 
   function setRegistry (ModulesRegistry $registry)
@@ -131,13 +127,11 @@ class ModulesInstaller
     $databaseIsAvailable = Connection::getFromEnviroment ()->isAvailable ();
     $runMigrations       = $databaseIsAvailable && $this->migrationsSettings;
 
-//    var_dump($modules);exit;
     foreach ($modules as $module) {
       $this->io->writeln ("  <info>■</info> $module->name");
       if ($runMigrations)
         $this->updateMigrationsOf ($module);
     }
-    $this->io->nl ();
   }
 
   private function updateMigrationsOf (ModuleInfo $module)
