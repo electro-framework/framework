@@ -58,12 +58,10 @@ class ModulesInstaller
     if ($this->moduleHasMigrations ($moduleName)) {
       $migrations = $this->getMigrationsOf ($moduleName);
       if ($migrations) {
-        $firstMigration = array_pop ($migrations);
-        $this->io->nl ()->say ("Updating the database (migration id $firstMigration->migration_id)");
-        $this->consoleApp->runAndCapture ('migration:rollback',
-          ['--target=' . $firstMigration->migration_id, $moduleName],
+        $this->io->nl ()->say ("  Updating the database");
+        $this->consoleApp->runAndCapture ('migration:rollback', ['-t', '0', $moduleName],
           $out, true, $this->io->getOutput ()->getVerbosity ());
-        $this->io->write ($out);
+        $this->io->indent (2)->write ($out)->indent ();
       }
     }
   }
