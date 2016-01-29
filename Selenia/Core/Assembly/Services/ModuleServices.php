@@ -88,9 +88,11 @@ class ModuleServices
   {
     if ($v) {
       $path = "$this->path/{$this->app->moduleMacrosPath}";
-      $all  = FilesystemFlow::from ($path)->onlyDirectories ()->keys ()->all ();
-      array_unshift ($all, $path);
-      $this->app->macrosDirectories = array_merge ($all, $this->app->macrosDirectories);
+      if (fileExists ($path)) {
+        $all = FilesystemFlow::from ($path)->onlyDirectories ()->keys ()->all ();
+        array_unshift ($all, $path);
+        $this->app->macrosDirectories = array_merge ($all, $this->app->macrosDirectories);
+      }
     }
     return $this;
   }

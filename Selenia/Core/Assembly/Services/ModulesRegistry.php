@@ -371,6 +371,21 @@ class ModulesRegistry
   }
 
   /**
+   * Removes a module from the registry. The module's files will not be affected.
+   *
+   * @param string $moduleName
+   * @return bool false if the module name does not match an installed module, or if it is a subsystem module.
+   */
+  function unregisterModule ($moduleName)
+  {
+    $module = $this->getModule ($moduleName);
+    if (!$module || $this->isSubsystem ($moduleName)) return false;
+    unset ($this->modules[$moduleName]);
+    $this->save ();
+    return true;
+  }
+
+  /**
    * Checks if the given name is a valid module name.
    *
    * @param string $name A module name in `vendor-name/package-name` format.

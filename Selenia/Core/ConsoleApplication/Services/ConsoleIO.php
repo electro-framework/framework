@@ -223,6 +223,7 @@ class ConsoleIO implements ConsoleIOInterface
       }
     } while (!$a);
 
+    $this->nl ();
     return $i - 1;
   }
 

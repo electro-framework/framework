@@ -180,11 +180,8 @@ trait ModuleCommands
 
     // Install module via Composer
 
+    // Note: this also updates the modules registry.
     (new InstallPackageTask($moduleName))->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
-
-    // Update the modules registry
-
-    $this->moduleRefresh ();
 
     $io->done ("Plugin <info>$moduleName</info> is now installed");
   }
@@ -259,11 +256,7 @@ trait ModuleCommands
 
     // Install the module's dependencies and register its namespaces
 
-    $this->composerUpdate ();
-
-    // Update the modules registry
-
-    $this->moduleRefresh ();
+    $this->composerUpdate (); // Note: this also updates the modules registry.
 
     $io->done ("Template <info>$moduleName</info> is now installed on <info>$path</info>");
   }
@@ -312,6 +305,8 @@ trait ModuleCommands
   {
     $this->modulesUtil->selectModule ($moduleName);
 
+    $this->io->writeln ("Uninstalling <info>$moduleName</info>")->nl ();
+
     if ($this->modulesRegistry->isPlugin ($moduleName))
       $this->uninstallPlugin ($moduleName);
     else $this->uninstallProjectModule ($moduleName);
@@ -321,7 +316,7 @@ trait ModuleCommands
   {
     (new UninstallPackageTask($moduleName))->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
 
-    // Update the modules registry
+    // Update the modules registry.
     $this->moduleRefresh ();
 
     $this->io->done ("Plugin module <info>$moduleName</info> was uninstalled");
@@ -334,13 +329,17 @@ trait ModuleCommands
     !$this->modulesRegistry->getInstaller ()->cleanUpModule ($moduleName) or exit (1);
 
     $io = $this->io;
+    $io->nl ();
+
+    // Unregister the module now, otherwise a class not found error will be displayed when moduleRefresh is called.
+    $this->modulesRegistry->unregisterModule ($moduleName) or exit (1);
 
     $path = "{$this->app->modulesPath}/$moduleName";
     $this->removeModuleDirectory ($path);
 
-    // Uninstall the module's dependencies and unregister its namespaces
+    // Uninstall the module's dependencies and unregister its namespaces.
 
-    $this->composerUpdate (); // It also updates the modules registry
+    $this->composerUpdate (); // Note: this also updates the modules registry.
 
     $io->done ("Module <info>$moduleName</info> was uninstalled");
   }

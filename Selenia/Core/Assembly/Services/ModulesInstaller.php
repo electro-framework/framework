@@ -88,12 +88,9 @@ class ModulesInstaller
    */
   function setupNewModules (array $modules)
   {
-    if ($modules)
-      $this->io
-        ->title ('Configuring New Modules')
-        ->writeln ('  <info>■</info> ' . implode ("\n  <info>■</info> ",
-            ModulesRegistry::getNames ($modules)))
-        ->nl ();
+    if (!$modules) return;
+    $this->io->title ('Configuring New Modules');
+    $this->setupModules ($modules);
   }
 
   /**
@@ -102,19 +99,8 @@ class ModulesInstaller
   function updateModules (array $modules)
   {
     if (!$modules) return;
-
     $this->io->title ("Re-check Installed Modules");
-
-    $databaseIsAvailable = Connection::getFromEnviroment ()->isAvailable ();
-    $runMigrations       = $databaseIsAvailable && $this->migrationsSettings;
-
-//    var_dump($modules);exit;
-    foreach ($modules as $module) {
-      $this->io->writeln ("  <info>■</info> $module->name");
-      if ($runMigrations)
-        $this->updateMigrationsOf ($module);
-    }
-    $this->io->nl ();
+    $this->setupModules ($modules);
   }
 
   /**
@@ -138,6 +124,20 @@ class ModulesInstaller
       $module = $this->registry->getModule ($module);
     $path = "$module->path/" . $this->migrationsSettings->migrationsPath ();
     return fileExists ($path);
+  }
+
+  private function setupModules (array $modules)
+  {
+    $databaseIsAvailable = Connection::getFromEnviroment ()->isAvailable ();
+    $runMigrations       = $databaseIsAvailable && $this->migrationsSettings;
+
+//    var_dump($modules);exit;
+    foreach ($modules as $module) {
+      $this->io->writeln ("  <info>■</info> $module->name");
+      if ($runMigrations)
+        $this->updateMigrationsOf ($module);
+    }
+    $this->io->nl ();
   }
 
   private function updateMigrationsOf (ModuleInfo $module)

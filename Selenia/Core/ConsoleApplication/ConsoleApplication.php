@@ -196,15 +196,17 @@ class ConsoleApplication extends Runner
   /**
    * Creates the default console I/O channels.
    *
-   * @param string[] $args
+   * @param string[]        $args   The command-line arguments.
+   * @param OutputInterface $output [optional] use this output interface, otherwise create a new one.
    */
-  function setupStandardIO ($args)
+  function setupStandardIO ($args, OutputInterface $output = null)
   {
-    // Color support manual override:
-    $hasColorSupport = in_array ('--ansi', $args) ? true : (in_array ('--no-ansi', $args) ? false : null);
-
-    $input  = $this->prepareInput ($args);
-    $output = new ConsoleOutput (ConsoleOutput::VERBOSITY_NORMAL, $hasColorSupport);
+    $input = $this->prepareInput ($args);
+    if (!$output) {
+      // Color support manual override:
+      $hasColorSupport = in_array ('--ansi', $args) ? true : (in_array ('--no-ansi', $args) ? false : null);
+      $output          = new ConsoleOutput (ConsoleOutput::VERBOSITY_NORMAL, $hasColorSupport);
+    }
     $this->io->setInput ($input);
     $this->io->setOutput ($output);
   }
