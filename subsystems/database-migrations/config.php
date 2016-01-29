@@ -1,11 +1,12 @@
 <?php
+use Selenia\Migrations\Commands\MigrationCommands;
 
 return [
   "paths"        => [
-    "migrations" => \Selenia\Migrations\Commands\MigrationCommands::$migrationsPath,
+    "migrations" => MigrationCommands::$migrationsPath,
   ],
   "environments" => [
-    "default_migration_table" => \Selenia\Migrations\Commands\MigrationCommands::$migrationsTable,
+    "default_migration_table" => MigrationCommands::$migrationsTable,
     "default_database"        => "main",
     "main"                    => [
       "adapter"     => env ('DB_DRIVER'),

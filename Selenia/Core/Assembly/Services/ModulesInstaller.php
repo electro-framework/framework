@@ -6,6 +6,7 @@ use Selenia\Application;
 use Selenia\Core\Assembly\ModuleInfo;
 use Selenia\Core\ConsoleApplication\ConsoleApplication;
 use Selenia\Interfaces\ConsoleIOInterface;
+use Selenia\Migrations\Commands\MigrationCommands;
 use Selenia\Migrations\Config\MigrationsSettings;
 
 /**
@@ -60,6 +61,13 @@ class ModulesInstaller
         $this->io->nl ()->say ("  Updating the database");
         $status = $this->consoleApp->runAndCapture (
           'migration:rollback', ['-t', '0', $moduleName], $outStr, $this->io->getOutput ());
+        if (!$status) {
+          // Drop migrations table.
+          $table = MigrationCommands::$migrationsTable;
+          $con   = Connection::getFromEnviroment ();
+          if ($con->isAvailable ())
+            $con->getPdo ()->query ("DROP TABLE $table");
+        }
         $this->io->indent (2)->write ($outStr)->indent ();
       }
     }
