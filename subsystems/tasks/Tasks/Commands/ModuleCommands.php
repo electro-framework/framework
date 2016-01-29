@@ -94,6 +94,38 @@ trait ModuleCommands
   }
 
   /**
+   * Disables a module
+   *
+   * @param string $moduleName The full name (vendor-name/module-name) of the module to be disabled.
+   */
+  function moduleDisable ($moduleName = null)
+  {
+    $this->modulesUtil->selectModule ($moduleName);
+
+    $module          = $this->modulesRegistry->getModule ($moduleName);
+    $module->enabled = false;
+    $this->modulesRegistry->save ();
+
+    $this->io->done ("Module <info>$moduleName</info> was disabled");
+  }
+
+  /**
+   * Enables a module
+   *
+   * @param string $moduleName The full name (vendor-name/module-name) of the module to be enabled.
+   */
+  function moduleEnable ($moduleName = null)
+  {
+    $this->modulesUtil->selectModule ($moduleName);
+
+    $module          = $this->modulesRegistry->getModule ($moduleName);
+    $module->enabled = true;
+    $this->modulesRegistry->save ();
+
+    $this->io->done ("Module <info>$moduleName</info> was enabled");
+  }
+
+  /**
    * Installs a plugin module
    *
    * @param string $moduleName If not specified, a list of installable plugins will be displayed for the user
@@ -240,8 +272,8 @@ trait ModuleCommands
     foreach ($modules as $module)
       $o[] = [
         $module->name,
-        $module->enabled ? 'Yes' : '<error>No</error>',
-        $module->enabled && $module->bootstrapper && !$module->errorStatus ? 'Yes' : '<red>No</red>',
+        $module->enabled ? '<info>Yes</info>' : '<red>No</red>',
+        $module->enabled && $module->bootstrapper && !$module->errorStatus ? '<info>Yes</info>' : '<red>No</red>',
         $module->errorStatus ? "<error>$module->errorStatus</error>" : '<info>OK</info>',
       ];
     $this->io->table ([
