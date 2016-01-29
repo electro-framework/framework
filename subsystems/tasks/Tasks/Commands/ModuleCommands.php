@@ -33,6 +33,13 @@ use Selenia\Tasks\Shared\UninstallPackageTask;
  */
 trait ModuleCommands
 {
+  /**
+   * @var bool Should install-plugin prefer stable versions?
+   */
+  static $INSTALL_STABLE = false;
+  /**
+   * @var bool Display the output of Composer commands?
+   */
   static $SHOW_COMPOSER_OUTPUT = true;
 
   /**
@@ -180,8 +187,9 @@ trait ModuleCommands
 
     // Install module via Composer
 
+    $version = self::$INSTALL_STABLE ? '' : ':dev-master';
     // Note: this also updates the modules registry.
-    (new InstallPackageTask($moduleName))->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
+    (new InstallPackageTask("$moduleName$version"))->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
 
     $io->done ("Plugin <info>$moduleName</info> is now installed");
   }
@@ -314,10 +322,8 @@ trait ModuleCommands
 
   protected function uninstallPlugin ($moduleName)
   {
+    // This also updates the modules registry.
     (new UninstallPackageTask($moduleName))->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
-
-    // Update the modules registry.
-    $this->moduleRefresh ();
 
     $this->io->done ("Plugin module <info>$moduleName</info> was uninstalled");
   }
