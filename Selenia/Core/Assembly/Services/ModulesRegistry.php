@@ -38,6 +38,7 @@ class ModulesRegistry
   {
     $this->app              = $app;
     $this->modulesInstaller = $installer;
+    $installer->setRegistry ($this);
   }
 
   /**
@@ -104,6 +105,14 @@ class ModulesRegistry
   function getApplicationModules ($onlyEnabled = false)
   {
     return array_merge ($this->getPlugins ($onlyEnabled), $this->getPrivateModules ($onlyEnabled));
+  }
+
+  /**
+   * @return ModulesInstaller
+   */
+  function getInstaller ()
+  {
+    return $this->modulesInstaller;
   }
 
   /**
@@ -291,8 +300,8 @@ class ModulesRegistry
   {
     if (!$this->app->isConsoleBased) {
       if ($noConfigYet)
-      throw new ExceptionWithTitle ('The application\'s runtime configuration is not initialized.',
-        'Please run <kbd>selenia</kbd> on the command line.');
+        throw new ExceptionWithTitle ('The application\'s runtime configuration is not initialized.',
+          'Please run <kbd>selenia</kbd> on the command line.');
       else throw new ExceptionWithTitle ('The application\'s runtime configuration must be updated.',
         'Please run <kbd>selenia module:refresh</kbd> on the command line.');
     }
@@ -319,7 +328,7 @@ class ModulesRegistry
     $newModules     = self::getOnly ($newModuleNames, $currentModules);
 
     $moduleNamesKept = array_intersect ($currentModuleNames, $prevModuleNames);
-    $moduleNamesKept = array_intersect ($moduleNamesKept, $this->getApplicationModuleNames());
+    $moduleNamesKept = array_intersect ($moduleNamesKept, $this->getApplicationModuleNames ());
     $modulesKept     = self::getOnly ($moduleNamesKept, $currentModules);
 
     $this->modules = [];
@@ -334,7 +343,7 @@ class ModulesRegistry
       $this->modules [$module->name] = $module;
     }
 
-    $this->modulesInstaller->cleanupRemovedModules ($removedModules);
+    $this->modulesInstaller->cleanUpRemovedModules ($removedModules);
     $this->modulesInstaller->setupNewModules ($newModules);
     $this->modulesInstaller->updateModules ($modulesKept);
 

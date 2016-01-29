@@ -36,6 +36,19 @@ trait ModuleCommands
   static $SHOW_COMPOSER_OUTPUT = true;
 
   /**
+   * Drops the database tables of the specified module
+   *
+   * @param string $moduleName [required] The full name (vendor-name/module-name) of the module to be cleaned
+   */
+  function moduleClean ($moduleName)
+  {
+    if ($this->modulesRegistry->isInstalled ($moduleName)) {
+      $this->modulesRegistry->getInstaller ()->cleanUpModule ($moduleName);
+      $this->io->done ("Completed");
+    }
+  }
+
+  /**
    * Scaffolds a new project module
    *
    * @param string $moduleName The full name (vendor-name/module-name) of the module to be created
@@ -96,7 +109,7 @@ trait ModuleCommands
   /**
    * Disables a module
    *
-   * @param string $moduleName The full name (vendor-name/module-name) of the module to be disabled.
+   * @param string $moduleName The full name (vendor-name/module-name) of the module to be disabled
    */
   function moduleDisable ($moduleName = null)
   {
@@ -112,7 +125,7 @@ trait ModuleCommands
   /**
    * Enables a module
    *
-   * @param string $moduleName The full name (vendor-name/module-name) of the module to be enabled.
+   * @param string $moduleName The full name (vendor-name/module-name) of the module to be enabled
    */
   function moduleEnable ($moduleName = null)
   {

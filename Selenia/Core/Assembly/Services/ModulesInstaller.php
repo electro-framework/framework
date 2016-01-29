@@ -29,8 +29,12 @@ class ModulesInstaller
    * @var ConsoleIOInterface
    */
   private $io;
+  /**
+   * @var ModulesRegistry
+   */
+  private $registry;
 
-  public function __construct (Application $app, ConsoleApplication $consoleApp)
+  function __construct (Application $app, ConsoleApplication $consoleApp)
   {
     $this->app        = $app;
     $this->consoleApp = $consoleApp;
@@ -43,9 +47,31 @@ class ModulesInstaller
   }
 
   /**
+   * Performs uninstallation clean up tasks before the module is actually uninstalled.
+   *
+   * @param string $moduleName
+   */
+  function cleanUpModule ($moduleName)
+  {
+    $this->io->writeln ("Cleaning up <info>$moduleName</info>");
+
+    if ($this->moduleHasMigrations ($moduleName)) {
+      $migrations = $this->getMigrationsOf ($moduleName);
+      if ($migrations) {
+        $firstMigration = array_pop ($migrations);
+        $this->io->nl ()->say ("Updating the database (migration id $firstMigration->migration_id)");
+        $this->consoleApp->runAndCapture ('migration:rollback',
+          ['--target=' . $firstMigration->migration_id, $moduleName],
+          $out, true, $this->io->getOutput ()->getVerbosity ());
+        $this->io->write ($out);
+      }
+    }
+  }
+
+  /**
    * @param ModuleInfo[] $modules
    */
-  function cleanupRemovedModules (array $modules)
+  function cleanUpRemovedModules (array $modules)
   {
     if ($modules)
       $this->io
@@ -60,6 +86,11 @@ class ModulesInstaller
     $this->io
       ->writeln ('<info>Modules configuration completed</info>')
       ->nl ();
+  }
+
+  function setRegistry (ModulesRegistry $registry)
+  {
+    $this->registry = $registry;
   }
 
   /**
@@ -96,14 +127,34 @@ class ModulesInstaller
     $this->io->nl ();
   }
 
+  /**
+   * @param string $moduleName
+   * @return \stdClass[]
+   */
+  private function getMigrationsOf ($moduleName)
+  {
+    $this->consoleApp->runAndCapture ('migration:status', [$moduleName, '--format=json'], $out, false);
+    if (!preg_match ('/\{.*\}$/', $out, $m)) return [];
+    return json_decode ($m[0])->migrations;
+  }
+
+  /**
+   * @param string|ModuleInfo $module
+   * @return bool
+   */
+  private function moduleHasMigrations ($module)
+  {
+    if (is_string ($module))
+      $module = $this->registry->getModule ($module);
+    $path = "$module->path/" . $this->migrationsSettings->migrationsPath ();
+    return fileExists ($path);
+  }
+
   private function updateMigrationsOf (ModuleInfo $module)
   {
-    $path = "$module->path/" . $this->migrationsSettings->migrationsPath ();
-    if (fileExists ($path)) {
-      $this->consoleApp->runAndCapture ('migration:status', [$module->name, '--format=json'], $out, false);
-      if (!preg_match ('/\{.*\}$/', $out, $m)) return;
-      $migrations = json_decode ($m[0]);
-      foreach ($migrations->migrations as $migration) {
+    if ($this->moduleHasMigrations ($module)) {
+      $migrations = $this->getMigrationsOf ($module->name);
+      foreach ($migrations as $migration) {
         if ($migration->migration_status == 'down') {
           $this->io->nl ()->say ("    Updating the database");
           $this->consoleApp->runAndCapture ('migration:run', [$module->name], $out, true,

@@ -103,10 +103,12 @@ class MigrationCommands
    *                           If not specified, the user will be prompted for it
    * @param array  $options
    * @option $target|t The version number to rollback to
+   * @option $date|d   The date to rollback to
    * @return int Status code
    */
   function migrationRollback ($moduleName = null, $options = [
     'target|t' => null,
+    'date|d'   => null,
   ])
   {
     $this->setupModule ($moduleName);
@@ -115,6 +117,7 @@ class MigrationCommands
     $input = new ArrayInput(PA ([
       '--configuration' => self::getConfigPath (),
       '--target'        => $options['target'],
+      '--date'          => $options['date'],
       '--environment'   => 'main',
       $moduleName,
     ])->prune ()->A);
