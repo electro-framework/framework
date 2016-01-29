@@ -29,25 +29,36 @@ class ModulesUtil
    *
    * <p>This method is available to console tasks only.
    *
-   * @param bool   $onlyEnabled Display only modules that are enabled.
-   * @param string $moduleName  A variable reference. If empty, it will be set to the selected module name.
+   * @param string $moduleName     A variable reference. If empty, it will be set to the selected module name.
+   * @param bool   $onlyEnabled    Display only modules that are enabled.
+   * @param bool   $suppressErrors Do not abort execution with an error message if the module name is not valid.
+   * @return bool false if the specified module name does not match an installed module
    */
-  function selectModule (& $moduleName, $onlyEnabled = false)
+  function selectModule (& $moduleName, $onlyEnabled = false, $suppressErrors = false)
   {
     if ($moduleName) {
-      if (!$this->registry->validateModuleName ($moduleName))
+      if (!$this->registry->validateModuleName ($moduleName)) {
+        if ($suppressErrors) return false;
         $this->io->error ("Invalid module name $moduleName. Correct syntax: vendor-name/product-name");
-      if (!$this->registry->isInstalled ($moduleName))
+      }
+      if (!$this->registry->isInstalled ($moduleName)) {
+        if ($suppressErrors) return false;
         $this->io->error ("Module $moduleName is not installed");
+      }
     }
     else {
       $modules    = $this->registry->getApplicationModuleNames ($onlyEnabled);
       if ($modules) {
         $i          = $this->io->menu ("Select a module:", $modules);
+        if ($i < 0) $this->io->cancel();
         $moduleName = $modules[$i];
       }
-      else $this->io->error ("No modules are installed");
+      else {
+        if ($suppressErrors) return false;
+        $this->io->error ("No modules are installed");
+      }
     }
+    return true;
   }
 
 }

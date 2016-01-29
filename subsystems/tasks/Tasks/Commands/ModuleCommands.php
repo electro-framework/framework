@@ -38,14 +38,18 @@ trait ModuleCommands
   /**
    * Drops the database tables of the specified module
    *
-   * @param string $moduleName [required] The full name (vendor-name/module-name) of the module to be cleaned
+   * @param string $moduleName [optional] The full name (vendor-name/module-name) of the module to be cleaned up
+   * @param array  $opts
+   * @option $suppress-errors|s Do not output an error if the module name doesn't mactch a valid module
    */
-  function moduleClean ($moduleName)
+  function moduleCleanUp ($moduleName = '', $opts = ['suppress-errors|s' => false])
   {
-    if ($this->modulesRegistry->isInstalled ($moduleName)) {
+    if ($this->modulesUtil->selectModule ($moduleName, false, true)) {
       $this->modulesRegistry->getInstaller ()->cleanUpModule ($moduleName);
       $this->io->done ("Completed");
     }
+    else if (!$opts['suppress-errors'])
+      $this->io->error ("<error-info>$moduleName</error-info> is not a module");
   }
 
   /**
@@ -163,13 +167,14 @@ trait ModuleCommands
 
       // Show menu
 
-      $sel        = $io->menu ('Select a plugin module to install:',
+      $sel = $io->menu ('Select a plugin module to install:',
         array_getColumn ($modules, 'fname'), -1,
         array_getColumn ($modules, 'description'),
         function ($i) use ($modules) {
           return !$this->modulesRegistry->isInstalled ($modules[$i]['name']) ?: "That module is already installed";
         }
       );
+      if ($sel < 0) $this->io->cancel ();
       $moduleName = $modules[$sel]['name'];
     }
 
@@ -215,7 +220,7 @@ trait ModuleCommands
 
       // Show menu
 
-      $sel        = $io->menu ('Select a template module to install:',
+      $sel = $io->menu ('Select a template module to install:',
         array_getColumn ($modules, 'fname'), -1,
         array_getColumn ($modules, 'description'),
         function ($i) use ($modules) {
@@ -223,6 +228,7 @@ trait ModuleCommands
             ?: "A module with that name already exists on this project";
         }
       );
+      if ($sel < 0) $this->io->cancel ();
       $module     = $modules[$sel];
       $moduleName = $module['name'];
       $moduleUrl  = $module['repository'];
@@ -325,6 +331,8 @@ trait ModuleCommands
 
   protected function uninstallProjectModule ($moduleName)
   {
+    !$this->modulesRegistry->getInstaller ()->cleanUpModule ($moduleName) or exit (1);
+
     $io = $this->io;
 
     $path = "{$this->app->modulesPath}/$moduleName";

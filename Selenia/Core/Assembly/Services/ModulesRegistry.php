@@ -321,9 +321,6 @@ class ModulesRegistry
     $prevModules     = $this->modules;
     $prevModuleNames = self::getNames ($prevModules);
 
-    $removedModuleNames = array_diff ($prevModuleNames, $currentModuleNames);
-    $removedModules     = self::getOnly ($removedModuleNames, $prevModules);
-
     $newModuleNames = array_diff ($currentModuleNames, $prevModuleNames);
     $newModules     = self::getOnly ($newModuleNames, $currentModules);
 
@@ -343,7 +340,6 @@ class ModulesRegistry
       $this->modules [$module->name] = $module;
     }
 
-    $this->modulesInstaller->cleanUpRemovedModules ($removedModules);
     $this->modulesInstaller->setupNewModules ($newModules);
     $this->modulesInstaller->updateModules ($modulesKept);
 

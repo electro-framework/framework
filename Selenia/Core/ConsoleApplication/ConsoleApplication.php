@@ -263,6 +263,7 @@ class ConsoleApplication extends Runner
       ->setColor ('question', new OutputFormatterStyle ('cyan'))
       ->setColor ('red', new OutputFormatterStyle ('red'))
       ->setColor ('warning', new OutputFormatterStyle ('black', 'yellow'))
+      ->setColor ('error-info', new OutputFormatterStyle ('green', 'red'))
       ->setColor ('kbd', new OutputFormatterStyle ('green'));
   }
 

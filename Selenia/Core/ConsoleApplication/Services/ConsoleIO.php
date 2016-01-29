@@ -181,17 +181,18 @@ class ConsoleIO implements ConsoleIOInterface
    *
    * @param string   $question
    * @param string[] $options
-   * @param int      $defaultIndex The default answer if the user just presses return. -1 = no default (empty input is
-   *                               not allowed.
+   * @param int      $defaultIndex The default answer if the user just presses return. -1 = no default (returns -1).
    * @param array    $secondColumn If specified, it contains the 2nd column for each option.
    * @param callable $validator    If specified, a function that validates the user's selection.
    *                               It receives the selected index (0 based) as argument and it should return `true`
    *                               if the selection is valid or an error message string if not.
-   * @return int The selected index (0 based).
+   * @return int The selected index (0 based) or -1 if no item was selected.
    */
   function menu ($question, array $options, $defaultIndex = -1, array $secondColumn = null,
                  callable $validator = null)
   {
+    if (!$this->getInput()->isInteractive())
+      return $defaultIndex;
     $pad   = strlen (count ($options));
     $width = empty ($options) ? 0 : max (array_map ('taggedStrLen', $options));
     $this->nl ()->writeln ("<question>$question</question>")->nl ();
@@ -205,6 +206,7 @@ class ConsoleIO implements ConsoleIOInterface
     $this->nl ();
     do {
       $a = $defaultIndex < 0 ? $this->ask ('') : $this->askDefault ('', $defaultIndex + 1);
+      if (!$a) return -1;
       $i = intval ($a);
       if ($i < 1 || $i > count ($options)) {
         $this->say ("<error>Please select a number from the list</error>");
@@ -222,6 +224,13 @@ class ConsoleIO implements ConsoleIOInterface
     } while (!$a);
 
     return $i - 1;
+  }
+
+  function cancel ()
+  {
+    if ($this->getInput()->isInteractive())
+      $this->error('Canceled');
+    exit (1);
   }
 
   /**

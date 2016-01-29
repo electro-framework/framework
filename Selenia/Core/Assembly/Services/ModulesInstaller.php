@@ -10,6 +10,9 @@ use Selenia\Migrations\Config\MigrationsSettings;
 
 /**
  * Manages modules installation, update and removal.
+ *
+ * > <p>**Warning:** no validation of module names is performed on methods of this class. It is assumed this service is
+ * only invoked for valid modules. Validation should be performed on the caller.
  */
 class ModulesInstaller
 {
@@ -50,33 +53,22 @@ class ModulesInstaller
    * Performs uninstallation clean up tasks before the module is actually uninstalled.
    *
    * @param string $moduleName
+   * @return int 0 for success.
    */
   function cleanUpModule ($moduleName)
   {
     $this->io->writeln ("Cleaning up <info>$moduleName</info>");
-
+    $status = 0;
     if ($this->moduleHasMigrations ($moduleName)) {
       $migrations = $this->getMigrationsOf ($moduleName);
       if ($migrations) {
         $this->io->nl ()->say ("  Updating the database");
-        $this->consoleApp->runAndCapture ('migration:rollback', ['-t', '0', $moduleName],
+        $status = $this->consoleApp->runAndCapture ('migration:rollback', ['-t', '0', $moduleName],
           $out, true, $this->io->getOutput ()->getVerbosity ());
         $this->io->indent (2)->write ($out)->indent ();
       }
     }
-  }
-
-  /**
-   * @param ModuleInfo[] $modules
-   */
-  function cleanUpRemovedModules (array $modules)
-  {
-    if ($modules)
-      $this->io
-        ->title ('Cleaning-up Removed Modules')
-        ->writeln ('  <info>■</info> ' . implode ("\n  <info>■</info> ",
-            ModulesRegistry::getNames ($modules)))
-        ->nl ();
+    return $status;
   }
 
   function end ()
