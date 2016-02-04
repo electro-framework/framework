@@ -49,7 +49,7 @@ class TranslationMiddleware implements RequestHandlerInterface
     /** @var ResponseInterface $response */
     $response = $next();
 
-    $lang = $this->locale->name;
+    $lang = $this->locale->locale ();
     // The check for app->translation is made here instead of conditionally adding this middleware
     // because loaded modules can change this setting.
     if (!$this->app->translation || !$lang)

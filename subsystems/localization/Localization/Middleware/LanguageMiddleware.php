@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Localization\Middleware;
 
+use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
@@ -41,12 +42,17 @@ class LanguageMiddleware implements RequestHandlerInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $lang = property ($this->session, 'lang', $this->app->defaultLang);
+    $mode = $this->settings->selectionMode ();
     $this->locale
-      ->setAvailable ($this->app->languages)
-      ->setSelectionMode ($this->settings->selectionMode ())
-      ->setLocale ($lang);
+      ->available ($this->app->languages)
+      ->selectionMode ($mode);
+    if ($mode == 'session') {
+      $lang = $this->session->getLang () ?: $this->app->defaultLang;
+      $this->locale->locale ($lang);
+    }
 
+    if ($this->app->debugMode)
+      DebugConsole::logger ('config')->inspect ($this->locale);
     return $next();
   }
 }

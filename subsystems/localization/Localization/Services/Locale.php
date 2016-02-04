@@ -2,9 +2,14 @@
 namespace Selenia\Localization\Services;
 
 use RuntimeException;
+use Selenia\Traits\InspectionTrait;
 
 class Locale
 {
+  use InspectionTrait;
+
+  static $INSPECTABLE = ['name', 'label', 'available', 'selectionMode'];
+
   private static $DEFAULTS = [
     'en' => 'en-US',
     'pt' => 'pt-PT',
@@ -14,26 +19,26 @@ class Locale
     'pt-PT' => ['name' => 'pt-PT', 'label' => 'Português', 'compatibleWith' => ['pt_PT', 'pt_PT.UTF-8', 'ptg']],
   ];
   /**
-   * @var string
-   */
-  public $label;
-  /**
-   * @var string
-   */
-  public $name;
-  /**
-   * How to automatically set the current locale.  Either 'session' or 'url'.
-   *
-   * @var string
-   */
-  public $selectionMode = 'session';
-  /**
    * A list of locale names supported by the application.
    * This setting is application-specific.
    *
    * @var string[]
    */
-  protected $available = [];
+  private $available = [];
+  /**
+   * @var string
+   */
+  private $label;
+  /**
+   * @var string
+   */
+  private $name;
+  /**
+   * How to automatically set the current locale.  Either 'session' or 'url'.
+   *
+   * @var string
+   */
+  private $selectionMode = 'session';
 
   /**
    * Returns a map of `$name => [...locale data...]` for all known locales.
@@ -80,30 +85,45 @@ class Locale
   }
 
   /**
-   * Returns a map of `$name => [...locale data...]` for all locales supported by the application.
+   * Sets or returns the list of locales supported by the application.
    *
-   * @return array
+   * @param string[] $names A list of locale names supported by the application.
+   *                        Each is either a 2 char or 5 char ISO identifier.
+   * @return $this|string[] $this for chaining, or the currently available locale names.
+   * @throws RuntimeException
    */
-  function getAvailable ()
+  function available (array $names = null)
+  {
+    if (is_null ($names))
+      return $this->available;
+    if (isset($names))
+      $this->available = map ($names, function ($name) {
+        $name = self::normalize ($name);
+        if (!$name || !isset(self::$LOCALES[$name]))
+          self::invalidName ($name);
+        return $name;
+      });
+    return $this;
+  }
+
+  /**
+   * Returns full locale information for all locales supported by the application.
+   *
+   * @return array A map of `$name => [...locale data...]`
+   */
+  function getAvailableExt ()
   {
     return map ($this->available, function ($name) { return self::$LOCALES[$name]; });
   }
 
   /**
-   * @param string[] $names A list of locale names supported by the application.
-   *                        Each is either a 2 char or 5 char ISO identifier.
-   * @return $this For chaining.
-   * @throws RuntimeException
+   * Returns the active locale human-friendly name.
+   *
+   * @return string
    */
-  function setAvailable (array $names)
+  function getLabel ()
   {
-    $this->available = map ($names, function ($name) {
-      $name = self::normalize ($name);
-      if (!$name || !isset(self::$LOCALES[$name]))
-        self::invalidName ($name);
-      return $name;
-    });
-    return $this;
+    return $this->label;
   }
 
   /**
@@ -120,15 +140,17 @@ class Locale
   }
 
   /**
-   * Sets the active locale for the application during processing of the current HTTP request.
+   * Gets or sets the active locale for the application during processing of the current HTTP request.
    * > This setting is not preserved between requests.
    *
    * @param string $name Locale name. Either a 2 char or 5 char ISO identifier.
-   * @return $this For chaining.
+   * @return $this|string $this for chaining, or the current locale name, after conversion.
    * @throws RuntimeException
    */
-  function setLocale ($name)
+  function locale ($name = null)
   {
+    if (is_null ($name))
+      return $this->name;
     $data = null;
     if ($name = self::normalize ($name))
       $data = get (self::$LOCALES, $name);
@@ -143,10 +165,12 @@ class Locale
 
   /**
    * @param string $mode Either 'session' or 'url'.
-   * @return $this
+   * @return $this|string
    */
-  function setSelectionMode ($mode)
+  function selectionMode ($mode = null)
   {
+    if (is_null ($mode))
+      return $this->selectionMode;
     $this->selectionMode = $mode;
     return $this;
   }
