@@ -40,7 +40,7 @@ trait InitCommands
        ->banner ("Selenia Configuration Wizard");
     $overwrite = get ($opts, 'overwrite');
     if (file_exists ($envPath) && !$overwrite)
-      $io->nl ()->say ("The application is already initialized.")->comment ("Use -o to overwrite.");
+      $io->nl ()->say ("<warning>The application is already configured</warning>")->comment ("Use -o to overwrite the current configuration");
     else {
       $io->title ("Creating required files and directories...");
       $this->nestedExec = true;
@@ -184,7 +184,7 @@ trait InitCommands
     if (file_exists ($target))
       (new DeleteDir ($target))->run ();
     (new CopyDir (["{$this->settings->scaffoldsPath()}/storage" => $target]))->run ();
-    (new ChmodEx ($target))->dirs (0770)->files (0660)->run ();
+    (new ChmodEx ($target))->dirs (0775)->files (0664)->run ();
 
     $this->consoleApp->run ('module:refresh');
 
