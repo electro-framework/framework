@@ -54,13 +54,6 @@ class Application
    */
   public $debugMode;
   /**
-   * A two letter code for default site language. NULL if i18n is disabled.
-   * <p>This is set on the environment (ex: .env).
-   *
-   * @var string
-   */
-  public $defaultLang = null;
-  /**
    * Favorite icon URL.
    *
    * @var string
@@ -126,13 +119,6 @@ class Application
    * @var array
    */
   public $languageFolders = [];
-  /**
-   * List of locale names of languages enabled for this specific application.
-   * > Ex: `['en', 'pt']` or `['en-US', 'pt-PT']`
-   *
-   * @var string[]
-   */
-  public $languages = [];
   /**
    * The relative URL of the login form page.
    *
@@ -383,9 +369,6 @@ class Application
     $this->frameworkPath =
       "$rootDir/" . self::FRAMEWORK_PATH; // due to eventual symlinking, we can't use dirname(__DIR__) here
     $this->setIncludePath ();
-
-    if (getenv ('APP_DEFAULT_LANG'))
-      $this->defaultLang = getenv ('APP_DEFAULT_LANG');
   }
 
   /**

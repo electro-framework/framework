@@ -1,5 +1,6 @@
 <?php
 namespace Selenia\Sessions\Middleware;
+
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
@@ -55,8 +56,6 @@ class SessionMiddleware implements RequestHandlerInterface
     // (Re)initialize some session settings.
 
     $session->name = $name;
-    if (is_null ($session->getLang ()))
-      $session->setLang ($app->defaultLang);
 
     // Setup current session to be saved on shutdown.
 
@@ -66,8 +65,9 @@ class SessionMiddleware implements RequestHandlerInterface
 
     try {
       return $next();
-    } catch (FlashMessageException $flash) {
-      $session->flashMessage ($flash->getMessage (), $flash->getCode (), $flash->getTitle());
+    }
+    catch (FlashMessageException $flash) {
+      $session->flashMessage ($flash->getMessage (), $flash->getCode (), $flash->getTitle ());
 
       $post = $request->getParsedBody ();
       if (is_array ($post))

@@ -41,9 +41,9 @@ class Script extends Component
     if (exists ($prop->src))
       $this->context->addScript ($prop->src);
     else {
-      $css = $this->getContent ();
-      if ($css != '')
-        $this->context->addInlineScript ($css, $prop->name);
+      $script = $this->getContent ();
+      if ($script != '')
+        $this->context->addInlineScript ($script, $prop->name);
     }
   }
 }

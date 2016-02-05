@@ -26,6 +26,13 @@ class Locale
    */
   private $available = [];
   /**
+   * A two letter code for default site language. NULL if i18n is disabled.
+   * <p>This is set on the environment (ex: .env).
+   *
+   * @var string
+   */
+  private $defaultLang = null;
+  /**
    * @var string
    */
   private $label;
@@ -86,6 +93,7 @@ class Locale
 
   /**
    * Sets or returns the list of locales supported by the application.
+   * > Ex: `['en', 'pt']` or `['en-US', 'pt-PT']`
    *
    * @param string[] $names A list of locale names supported by the application.
    *                        Each is either a 2 char or 5 char ISO identifier.
@@ -97,12 +105,28 @@ class Locale
     if (is_null ($names))
       return $this->available;
     if (isset($names))
-      $this->available = map ($names, function ($name) {
-        $name = self::normalize ($name);
+      $this->available = map ($names, function ($code) {
+        $name = self::normalize ($code);
         if (!$name || !isset(self::$LOCALES[$name]))
-          self::invalidName ($name);
+          self::invalidName ($code);
         return $name;
       });
+    return $this;
+  }
+
+  /**
+   * Gets or sets tjhe application's default language.
+   * > When reading it, if it is not set yet, it will be initialized to the APP_DEFAULT_LANG environment variable's
+   * value.
+   *
+   * @param string $lang Either a 2 letter or 5 character code. Ex: 'en' or 'en-US'.
+   * @return $this|string
+   */
+  function defaultLang ($lang = null)
+  {
+    if (is_null ($lang))
+      return $this->defaultLang ?: ($this->defaultLang = getenv ('APP_DEFAULT_LANG'));
+    $this->defaultLang = $lang;
     return $this;
   }
 
@@ -174,4 +198,5 @@ class Locale
     $this->selectionMode = $mode;
     return $this;
   }
+
 }

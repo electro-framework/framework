@@ -15,23 +15,41 @@ class HtmlComponent extends Component
    *
    * @var string
    */
-  public  $cssClassName = '';
+  public $cssClassName = '';
+  /**
+   * @var string[] A map of attribute names to attribute values,
+   */
+  public $htmlAttrs = [];
   /** @var HtmlComponentProperties */
   public $props;
+
   /**
    * Override to select a different tag as the component container.
    *
    * @var string
    */
   protected $containerTag = 'div';
-  private $originalCssClassName;
+  /**
+   * Set this to define the preset cssClassName value for each repeated rendering of the component.
+   *
+   * @var string
+   */
+  protected $originalCssClassName = '';
 
+  /**
+   * @param string $class
+   * @return $this
+   */
   function addClass ($class)
   {
-    $c = " {$this->cssClassName} ";
-    $c = str_replace (" $class ", ' ', $c);
-
-    $this->cssClassName = trim ("$c $class");
+    $class = trim ($class);
+    if ($class === '') return $this;
+    $l = explode (' ', $this->cssClassName);
+    $p = array_search ($class, $l);
+    if ($p !== false) return $this;
+    array_push ($l, $class);
+    $this->cssClassName = implode (' ', $l);
+    return $this;
   }
 
   protected function postRender ()
@@ -47,20 +65,23 @@ class HtmlComponent extends Component
     $this->attr ('id', $this->props->id);
     $this->attr ('class', enum (' ',
       $this->className,
-      $this->cssClassName,
       $this->props->class,
+      $this->cssClassName,
       $this->props->disabled ? 'disabled' : null
     ));
-    if (exists ($this->props->htmlAttrs))
+    if (!empty($this->props->htmlAttrs))
       echo ' ' . $this->props->htmlAttrs;
+    if ($this->htmlAttrs)
+      foreach ($this->htmlAttrs as $k => $v)
+        echo " $k=\"" . htmlspecialchars ($v) . '"';
   }
 
   function run ()
   {
-    if ($this->renderCount)
-      $this->cssClassName = $this->originalCssClassName;
-    else $this->originalCssClassName = $this->cssClassName;
+    if (!$this->renderCount && !$this->originalCssClassName)
+      $this->originalCssClassName = $this->cssClassName;
     parent::run ();
+    $this->cssClassName = $this->originalCssClassName;
   }
 
 }

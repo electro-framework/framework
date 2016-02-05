@@ -43,11 +43,9 @@ class LanguageMiddleware implements RequestHandlerInterface
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     $mode = $this->settings->selectionMode ();
-    $this->locale
-      ->available ($this->app->languages)
-      ->selectionMode ($mode);
+    $this->locale->selectionMode ($mode);
     if ($mode == 'session') {
-      $lang = $this->session->getLang () ?: $this->app->defaultLang;
+      $lang = $this->session->getLang () ?: $this->locale->defaultLang ();
       $this->locale->locale ($lang);
     }
 
