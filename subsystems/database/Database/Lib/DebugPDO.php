@@ -1,12 +1,12 @@
 <?php
-namespace Selenia\Database;
+namespace Selenia\Database\Lib;
 
 use PDOException;
 use PhpKit\ExtPDO;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use Selenia\Traits\DecoratorTrait;
 
-class DebugPDO extends ExtPDO
+class DebugPDO
 {
   use DecoratorTrait;
 
@@ -22,12 +22,12 @@ class DebugPDO extends ExtPDO
 
   public function exec ($query, $params = null)
   {
-    return $this->logQuery ($query, $params, [$this, 'parent::exec']);
+    return $this->logQuery ('exec', $query, $params, false);
   }
 
   public function query ($query, $params = null)
   {
-    return $this->logQuery ($query, $params, [$this, 'parent::query']);
+    return $this->logQuery ('query', $query, $params, true);
   }
 
   private function highlightQuery ($msg, array $keywords, $baseStyle)
@@ -37,33 +37,35 @@ class DebugPDO extends ExtPDO
     return "<#i>$msg</#i>";
   }
 
-  private function logQuery ($query, array $params = null, callable $execute)
+  private function logQuery ($method, $query, array $params = null, $isSelect)
   {
-    0/0;
-    $showQuery = function ($dur = null) use ($query, $params) {
+    /** @var \PDOStatement $st */
+    $st        = null;
+    $showQuery = function ($dur = null) use ($query, $params, &$st, $isSelect) {
       $query = trim ($query);
       DebugConsole::logger ('database')
                   ->inspect ('<#section|SQL QUERY>', $this->highlightQuery ($query, self::$SQL_KEYWORDS, 'identifier'));
       if (!empty($params))
-        DebugConsole::logger ('database')->inspect ("<#header>Parameters</#header>", $params);
-      if (isset($dur))
-        DebugConsole::logger ('database')->inspect ("<#footer>Query took <b>$dur</b> seconds.</#footer>");
-      DebugConsole::logger ('database')->inspect ('</#section>');
+        DebugConsole::logger ('database')->write ("<#header>Parameters</#header>")->inspect ($params);
+      DebugConsole::logger ('database')
+                  ->write (sprintf ("<#footer>Query took <b>%s</b> milliseconds" .
+                                    ($isSelect ? '' : ' and affected <b>%d</b> records') . "</#footer>",
+                    $dur * 1000, $st->rowCount ()));
+      DebugConsole::logger ('database')->write ('</#section>');
     };
 
     $start = microtime (true);
     try {
-      $st = $execute ($query, $params);
+      $st = $this->decorated->$method ($query, $params);
     }
     catch (PDOException $e) {
       $showQuery ();
-      DebugConsole::logger ('database')->inspect ('<#footer><#alert>Query failed!</#alert></#footer>');
+      DebugConsole::logger ('database')->write ('<#footer><#alert>Query failed!</#alert></#footer>');
       DebugConsole::throwErrorWithLog ($e);
     }
     $end = microtime (true);
     $dur = round ($end - $start, 4);
     $showQuery ($dur);
-    /** @noinspection PhpUndefinedVariableInspection */
     return $st;
   }
 

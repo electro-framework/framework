@@ -20,9 +20,6 @@
   "autoload": {
     "psr-4": {
       "Selenia\\Database\\": "Database"
-    },
-    "files": [
-      "database.php"
-    ]
+    }
   }
 }

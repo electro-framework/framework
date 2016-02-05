@@ -4,7 +4,9 @@ namespace Selenia;
 use Selenia\Core\Assembly\Config\AssemblyModule;
 use Selenia\Core\Logging\Config\LoggingModule;
 use Selenia\Exceptions\Fatal\ConfigException;
+use Selenia\Exceptions\FatalException;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\UserInterface;
 
 class Application
 {
@@ -289,6 +291,17 @@ class Application
   function __construct (InjectorInterface $injector)
   {
     $this->injector = $injector;
+  }
+
+  /**
+   * @return UserInterface
+   * @throws FatalException
+   */
+  function createUser ()
+  {
+    if (isset($this->userModel))
+      return $this->injector->make ($this->userModel);
+    throw new FatalException ('The user model class is not set');
   }
 
   function fromPathToURL ($path)

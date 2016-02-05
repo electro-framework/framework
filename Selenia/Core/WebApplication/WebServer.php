@@ -76,9 +76,7 @@ class WebServer
    */
   function setup ()
   {
-    global $application; //TODO remove this
-
-    $application = $app = $this->app;
+    $app = $this->app;
     $this->fileServerMappings->map ($app->frameworkURI,
       $app->frameworkPath . DIRECTORY_SEPARATOR . $app->modulePublicPath);
 

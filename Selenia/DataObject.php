@@ -6,6 +6,8 @@ use Exception;
 use Iterator;
 use PDO;
 use PDOStatement;
+use PhpKit\ConnectionInterface;
+use PhpKit\ExtPDO;
 use ReflectionObject;
 use Selenia\Exceptions\Fatal\DataModelException;
 use Selenia\Exceptions\Flash\ValidationException;
@@ -24,19 +26,20 @@ class DataObject
 {
   const MSG_UNSUPPORTED = "A operação não foi implementada.";
 
-  public static  $cacheObj          = [];
+  static         $cacheObj = [];
   private static $lastId;
 
-  public         $booleanFields;
-  public         $dateFields;
-  public         $dateTimeFields;
-  public         $disableValidation = false;
-  public         $fieldLabels;
-  public         $fieldNames;
-  public         $fileFields;
-  public         $filterFields;
+  public $booleanFields;
+  public $dateFields;
+  public $dateTimeFields;
+  public $disableValidation = false;
+  public $fieldLabels;
+  public $fieldNames;
+  public $fileFields;
+  public $filterFields;
   /**
    * Foreign keys. Only works with page modules.
+   *
    * @var array of ForeignKey
    */
   public $fk = null;
@@ -61,83 +64,27 @@ class DataObject
   public $tableName;
   public $titleField;
 
-  function __construct ($keyValue = null)
+  /** @var ExtPDO */
+  protected $pdo;
+
+  function __construct (ConnectionInterface $con)
   {
-    if (isset($keyValue))
-      $this->setPrimaryKeyValue ($keyValue);
-    /*
-        if (isset($this->dateFields))
-            foreach ($this->dateFields as $field)
-                if ($field != $this->primaryKeyName)
-                    $this->$field = date('Y-m-d');*/
+    $this->pdo = $con->getPdo ();
   }
 
-  public static function addInterval ($date, $delta = '+1 year')
-  {
-    return date ('Y-m-d', strtotime ($delta, strtotime ($date)));
-  }
-
-  public static function checkEmail ($email)
-  {
-
-    return preg_match ('#^[\w\-\.]+@[\w\-\.]+\.\w{1,5}$#', $email) == 1;
-  }
-
-  public static function dateIsAfter ($date, $compareTo)
-  {
-    return intval (database_query ("SELECT JULIANDAY(?)-JULIANDAY(?)", [$date, $compareTo])->fetchColumn (0)) > 0;
-  }
-
-  public static function dateIsBefore ($date, $compareTo)
-  {
-    return intval (database_query ("SELECT JULIANDAY(?)-JULIANDAY(?)", [$date, $compareTo])->fetchColumn (0)) < 0;
-  }
-
-  public static function daysDiff ($startDate, $endDate)
-  {
-    return intval (database_query ("SELECT JULIANDAY(?)-JULIANDAY(?)", [$endDate, $startDate])->fetchColumn (0));
-  }
-
-  public static function encodeDate ($date)
-  {
-    //return preg_replace('#(\\d{2})-(\\d{2})-(\\d{4})#','$3-$2-$1',$date);
-    return $date;
-  }
-
-  public static function getNewPrimaryKeyValue ()
+  static function getNewPrimaryKeyValue ()
   {
     $id           = self::$lastId;
     self::$lastId = null;
     return $id;
   }
 
-  public static function julianDay ($date)
-  {
-    return $date;
-    //return floatval(database_get("SELECT JULIANDAY(?)",array($date)));
-  }
-
-  public static function nextDay ($date)
-  {
-    return date ('Y-m-d', strtotime ('+1 day', strtotime ($date)));
-  }
-
-  public static function nextMonth ($date)
-  {
-    return date ('Y-m-d', strtotime ('+1 month', strtotime ($date)));
-  }
-
-  public static function now ()
+  static function now ()
   {
     return date ('Y-m-d H:i:s');
   }
 
-  public static function prevDay ($date)
-  {
-    return date ('Y-m-d', strtotime ('-1 day', strtotime ($date)));
-  }
-
-  public static function serializePropertiesToXML (array $data, array $fields, $tag = 'e')
+  static function serializePropertiesToXML (array $data, array $fields, $tag = 'e')
   {
     $output = "<$tag>";
     foreach ($fields as $fieldInfo) {
@@ -161,36 +108,30 @@ class DataObject
     return $output . "</$tag>";
   }
 
-  static function table ()
-  {
-    return (new static)->tableName;
-  }
-
-  public static function today ()
+  static function today ()
   {
     return date ('Y-m-d');
   }
 
-  public static function validateDate ($date)
+  static function validateDate ($date)
   {
     return empty($date) || (preg_match ('#^\d{4}-\d{2}-\d{2}$#', $date) && strtotime ($date));
   }
 
-  public static function validateDateTime ($date)
+  static function validateDateTime ($date)
   {
     return empty($date) || (preg_match ('#^\d{4}-\d{2}-\d{2}(?: \d{2}:\d{2}:\d{2})?$#', $date) && strtotime ($date));
   }
 
-  public static function validateEmail ($fieldName, $email)
+  function __sleep ()
   {
-
-    if (!self::checkEmail ($email))
-      throw new ValidationException(ValidationException::INVALID_EMAIL, $fieldName);
+    return $this->fieldNames;
   }
 
   /**
    * Returns all records from the corresponding database table.
    * An alias for {@see query()}.
+   *
    * @return array
    */
   function all ()
@@ -201,15 +142,16 @@ class DataObject
   /**
    * Removes the record in the database that matches this intance's primary key value.
    * Note: any associated files/images are also deleted.
+   *
    * @throws Exception
    * @global Application $application
    */
   function delete ()
   {
-    database_begin ();
+    $this->pdo->beginTransaction ();
     try {
       $this->beforeDelete ();
-      database_query ("DELETE FROM $this->tableName WHERE $this->primaryKeyName=?",
+      $this->pdo->query ("DELETE FROM $this->tableName WHERE $this->primaryKeyName=?",
         [$this->getPrimaryKeyValue ()]);
 
       //delete linked resources
@@ -222,49 +164,18 @@ class DataObject
           $this->deleteFile ($field);
 
       $this->afterDelete ();
-      database_commit ();
-    } catch (Exception $e) {
-      database_rollback ();
+      $this->pdo->commit ();
+    }
+    catch (Exception $e) {
+      $this->pdo->rollback ();
       throw $e;
-    }
-  }
-
-  function deleteFile ($fieldName)
-  {
-    if (!property_exists ($this, $fieldName))
-      throw new DataModelException($this, "Undefined field $fieldName.");
-    if (isset($this->$fieldName)) {
-      Media::deleteFile ($this->$fieldName);
-      $this->$fieldName = null;
-    }
-  }
-
-  function deleteGallery ()
-  {
-    $id = $this->getPrimaryKeyValue ();
-    if (isset($id)) {
-      $data = database_query (
-        "SELECT id FROM Images WHERE gallery=?",
-        [$id]
-      )->fetchAll (PDO::FETCH_NUM);
-      foreach ($data as $record)
-        Media::deleteImage ($record[0]);
-    }
-  }
-
-  function deleteImage ($fieldName)
-  {
-    if (!property_exists ($this, $fieldName))
-      throw new DataModelException($this, "Undefined field $fieldName.");
-    if (isset($this->$fieldName)) {
-      Media::deleteImage ($this->$fieldName);
-      $this->$fieldName = null;
     }
   }
 
   /**
    * Loads the record with the given id into the model object.
    * If the record is not found, the instance is not modified, which allows the insertion of a new record.
+   *
    * @param $id
    * @return $this
    * @throws DataModelException
@@ -277,31 +188,9 @@ class DataObject
   }
 
   /**
-   * Converts a property's value into a suitable value to be stored in a database.
-   * @param string $fieldName
-   * @return mixed
-   */
-  function fromPropertyToFieldValue ($fieldName)
-  {
-    $value = property ($this, $fieldName);
-    if ($this->isBoolean ($fieldName))
-      return $value ? 1 : 0;
-    if (is_null ($value) || $value === '')
-      return null;
-    if (is_numeric ($value)) {
-      $i = intval ($value);
-      if ($i == $value)
-        return $i;
-      $f = floatval ($value);
-      if ($f == $value)
-        return $f;
-    }
-    return $value;
-  }
-
-  /**
    * Returns the values currently saved on the database for the record with the
    * same primary key value as this object's primary key.
+   *
    * @return DataObject
    */
   function getCurrentValues ()
@@ -314,23 +203,6 @@ class DataObject
       return $current;
     }
     return null;
-  }
-
-  function getFilterSQLAndValues ($prefix = ' WHERE ')
-  {
-    if (isset($this->filterFields)) {
-      $where  = '';
-      $values = [];
-      foreach ($this->filterFields as $field) {
-        $value = property ($this, $field);
-        if (isset($value)) {
-          $values[] = $value;
-          $where .= ($where != '' ? ' AND ' : $prefix) . "$this->prefix.$field=?";
-        }
-      }
-      return [$where, $values];
-    }
-    return ['', []];
   }
 
   function getPrimaryKeyValue ()
@@ -358,6 +230,7 @@ class DataObject
 
   /**
    * Returns a map of field names and the corresponding values.
+   *
    * @return array
    */
   function getValues ()
@@ -366,54 +239,6 @@ class DataObject
     foreach ($this->fieldNames as $k)
       $o[$k] = $this->$k;
     return $o;
-  }
-
-  function handleFileInsert ($fileFieldName)
-  {
-    $this->$fileFieldName = Media::insertUploadedFile ($fileFieldName);
-  }
-
-  function handleFileUpdate ($fileFieldName)
-  {
-    $fileFormFieldName = $fileFieldName . '_file';
-    $current           = $this->getCurrentValues ();
-    if (Media::isFileUploaded ($fileFormFieldName)) {
-      if (isset($current->$fileFieldName))
-        Media::deleteFile ($current->$fileFieldName);
-      $this->handleFileInsert ($fileFieldName);
-    }
-    else if (is_null ($this->$fileFieldName) && isset($current->$fileFieldName))
-      Media::deleteFile ($current->$fileFieldName);
-  }
-
-  function handleImageInsert ($imageFieldName)
-  {
-    $this->$imageFieldName = Media::insertUploadedImage ($imageFieldName);
-  }
-
-  function handleImageUpdate ($imageFieldName)
-  {
-    $fileFormFieldName = $imageFieldName . '_file';
-    $current           = $this->getCurrentValues ();
-    if (Media::isFileUploaded ($fileFormFieldName)) {
-      Media::checkFileIsValidImage ($fileFormFieldName);
-      if (isset($current->$imageFieldName))
-        Media::deleteImage ($current->$imageFieldName);
-      $this->handleImageInsert ($imageFieldName);
-    }
-    else if (is_null ($this->$imageFieldName) && isset($current->$imageFieldName))
-      Media::deleteImage ($current->$imageFieldName);
-    else if (isset($this->$imageFieldName))
-      Media::updateImageInfo ($this->$imageFieldName, null, null);
-  }
-
-  function hidrate (PDOStatement $st)
-  {
-    global $lastModel;
-    $lastModel = $this;
-    return $st->fetchAll ();
-    //TODO: hidrate data
-    //$this->_data = $st->fetchAll (PDO::FETCH_CLASS, get_class ($this));
   }
 
   function initFromQueryString ()
@@ -434,16 +259,16 @@ class DataObject
   /**
    * Inserts the instance's fields into a new record in the database.
    * Note: the primary key value is included for it will only be null for autoincrement or trigger-filled fields.
+   *
    * @param bool $insertFiles
    * @throws Exception
    * @throws ValidationException
    */
   function insert ($insertFiles = true)
   {
-    global $db;
     $this->validate (true);
     $cache = $this->cache ();
-    database_begin ();
+    $this->pdo->beginTransaction ();
     try {
       if ($insertFiles) {
         if (isset($this->imageFields))
@@ -471,16 +296,17 @@ class DataObject
       }
       else foreach ($this->fieldNames as $k)
         $values[] = $this->fromPropertyToFieldValue ($k);
-      database_query ($cache->insertQuery, $values);
-      self::$lastId = $db->lastInsertId ();
-      database_commit ();
+      $this->pdo->query ($cache->insertQuery, $values);
+      self::$lastId = $this->pdo->lastInsertId ();
+      $this->pdo->commit ();
       if (isset($this->primaryKeyName)) {
         $keyValue = $this->getPrimaryKeyValue ();
         if (strlen ($keyValue) == 0)
           $this->setPrimaryKeyValue ($this->getNewPrimaryKeyValue ());
       }
-    } catch (Exception $e) {
-      database_rollback ();
+    }
+    catch (Exception $e) {
+      $this->pdo->rollback ();
       throw $e;
     }
   }
@@ -524,6 +350,7 @@ class DataObject
 
   /**
    * Generates and executes an SQL query with joined tables.
+   *
    * @param array  $joins
    * @param string $where
    * @param array  $params
@@ -543,7 +370,7 @@ class DataObject
     $where       = $where ? "WHERE $where" : '';
     $orderBy     = $orderBy ?: $this->primarySortField;
     $orderBy     = $orderBy ? "ORDER BY $orderBy" : '';
-    return database_query (
+    return $this->pdo->query (
       "SELECT * FROM $this->tableName A $where
         $joinClauses
         $orderBy", $params);
@@ -551,6 +378,7 @@ class DataObject
 
   /**
    * Loads this instance's properties with values read from the supplied database struct.
+   *
    * @param array $record
    */
   function loadFrom (array $record = null)
@@ -559,31 +387,6 @@ class DataObject
       foreach ($record as $name => $value)
         $this->setPropertyFromFieldValue ($name, $value);
     }
-  }
-
-  /**
-   * Loads the data object's fields from data sent on the HTTP request (either POST or GET).
-   * If $allowedFields is specified, only those fields will be loaded from the request,
-   * otherwhise all the object's fields will be loaded.
-   * Empty fields on the request will be stored as NULL values.
-   * Nonexisting fields on the request will not be stored, except if they are boolean fields
-   * (ex. from checkbox HTML fields).
-   * The loaded values will be escaped to avoid SQL injection. HTML content is not modified.
-   * @param array $data The request data.
-   * @param array $allowedFields A list of field names to load.
-   */
-  function safeLoadFrom (array $data, array $allowedFields = null)
-  {
-    if (isset($allowedFields)) {
-      foreach ($allowedFields as $name)
-        if (array_key_exists ($name, $data))
-          $this->setPropertyFromFieldValue ($name, $data[$name]);
-    }
-    else foreach ($this->fieldNames as $name)
-      if (array_key_exists ($name, $data))
-        $this->setPropertyFromFieldValue ($name, $data[$name]);
-      else if ($this->isBoolean ($name))
-        $this->setPropertyFromFieldValue ($name, 0);
   }
 
   /**
@@ -607,6 +410,7 @@ class DataObject
   /**
    * Executes the most common select type query for this kind of data.
    * Defauls to returning all fields from all records.
+   *
    * @return array
    */
   function query ()
@@ -620,7 +424,7 @@ class DataObject
       $sortBy = " ORDER BY $sortBy";
     $fields = $this->getQueryFieldNames ();
     list ($where, $values) = $this->getFilterSQLAndValues ();
-    return $this->hidrate (database_query ("SELECT $fields FROM {$this->tableName} $this->prefix$where$sortBy",
+    return $this->hidrate ($this->pdo->query ("SELECT $fields FROM {$this->tableName} $this->prefix$where$sortBy",
       $values));
   }
 
@@ -657,7 +461,7 @@ class DataObject
       $sortBy = $this->primarySortField;
     if (!empty($sortBy))
       $sortBy = " ORDER BY $sortBy";
-    return $this->hidrate (database_query ("SELECT $fields FROM {$this->tableName} $this->prefix$where$sortBy $limit",
+    return $this->hidrate ($this->pdo->query ("SELECT $fields FROM {$this->tableName} $this->prefix$where$sortBy $limit",
       $values));
   }
 
@@ -674,12 +478,38 @@ class DataObject
     //if (!isset($cache->readQuery))
     $cache->readQuery =
       'SELECT ' . $this->getQueryFieldNames () . " FROM $this->tableName $this->prefix WHERE $keyName=? LIMIT 1";
-    $record           = database_query ($cache->readQuery, [$keyValue])->fetch (PDO::FETCH_ASSOC);
+    $record           = $this->pdo->query ($cache->readQuery, [$keyValue])->fetch (PDO::FETCH_ASSOC);
     if ($record !== false) {
       $this->loadFrom ($record);
       return true;
     }
     return false;
+  }
+
+  /**
+   * Loads the data object's fields from data sent on the HTTP request (either POST or GET).
+   * If $allowedFields is specified, only those fields will be loaded from the request,
+   * otherwhise all the object's fields will be loaded.
+   * Empty fields on the request will be stored as NULL values.
+   * Nonexisting fields on the request will not be stored, except if they are boolean fields
+   * (ex. from checkbox HTML fields).
+   * The loaded values will be escaped to avoid SQL injection. HTML content is not modified.
+   *
+   * @param array $data          The request data.
+   * @param array $allowedFields A list of field names to load.
+   */
+  function safeLoadFrom (array $data, array $allowedFields = null)
+  {
+    if (isset($allowedFields)) {
+      foreach ($allowedFields as $name)
+        if (array_key_exists ($name, $data))
+          $this->setPropertyFromFieldValue ($name, $data[$name]);
+    }
+    else foreach ($this->fieldNames as $name)
+      if (array_key_exists ($name, $data))
+        $this->setPropertyFromFieldValue ($name, $data[$name]);
+      else if ($this->isBoolean ($name))
+        $this->setPropertyFromFieldValue ($name, 0);
   }
 
   function save ($insertFiles = true)
@@ -727,26 +557,12 @@ class DataObject
     return self::serializePropertiesToXML ((array)$this, $fields, $tag);
   }
 
-  /**
-   * Sets the specified field to the given value.
-   *
-   * Can be used for chaining calls.
-   * @param string $field
-   * @param mixed  $value
-   * @return $this
-   */
-  function set ($field, $value)
-  {
-    $this->$field = $value;
-    return $this;
-  }
-
   function setBoolField ($fieldName, $value, $filter = '')
   {
 
     if (!empty($filter))
       $filter = " WHERE $filter";
-    database_query (
+    $this->pdo->query (
       "UPDATE {$this->tableName} SET $fieldName=$value$filter"
     );
   }
@@ -756,29 +572,6 @@ class DataObject
     if (isset($this->primaryKeyName))
       $this->{$this->primaryKeyName} = $value;
     else throw new DataModelException($this, "There is no primary key defined.");
-  }
-
-  /**
-   * Loads a property with a value read from a database.
-   * @param string $fieldName
-   * @param mixed  $value
-   */
-  function setPropertyFromFieldValue ($fieldName, $value)
-  {
-    if ($this->isBoolean ($fieldName))
-      switch ($value) {
-        case 'false':
-          $value = false;
-          break;
-        case 'true':
-          $value = true;
-          break;
-        default:
-          $value = (boolean)$value;
-      }
-    elseif ($value === '')
-      $value = null;
-    $this->$fieldName = $value;
   }
 
   function unserialize ($data)
@@ -799,7 +592,7 @@ class DataObject
   {
     $this->validate (false);
     $cache = $this->cache ();
-    database_begin ();
+    $this->pdo->beginTransaction ();
     try {
       $this->beforeUpdate ();
       if (isset($this->imageFields))
@@ -827,11 +620,12 @@ class DataObject
         if ($k != $this->primaryKeyName)
           $values[] = $this->fromPropertyToFieldValue ($k);
       $values[] = $this->getPrimaryKeyValue ();
-      $count    = database_query ($cache->updateQuery, $values)->rowCount ();
+      $count    = $this->pdo->query ($cache->updateQuery, $values)->rowCount ();
       $this->afterUpdate ();
-      database_commit ();
-    } catch (Exception $e) {
-      database_rollback ();
+      $this->pdo->commit ();
+    }
+    catch (Exception $e) {
+      $this->pdo->rollback ();
       throw $e;
     }
     if (!$count) //if there's no record with the specified key, create one, but do not insert the same files again
@@ -864,6 +658,7 @@ class DataObject
 
   /**
    * Returns records matching a filter.
+   *
    * @param        $condition
    * @param array  $params
    * @param string $orderBy
@@ -909,6 +704,7 @@ class DataObject
 
   /**
    * Returns SQL query information for this class.
+   *
    * @return QueryCache
    */
   protected function cache ()
@@ -917,6 +713,39 @@ class DataObject
     if (isset(self::$cacheObj[$c]))
       return self::$cacheObj[$c];
     return self::$cacheObj[$c] = new QueryCache();
+  }
+
+  protected function deleteFile ($fieldName)
+  {
+    if (!property_exists ($this, $fieldName))
+      throw new DataModelException($this, "Undefined field $fieldName.");
+    if (isset($this->$fieldName)) {
+      Media::deleteFile ($this->$fieldName);
+      $this->$fieldName = null;
+    }
+  }
+
+  protected function deleteGallery ()
+  {
+    $id = $this->getPrimaryKeyValue ();
+    if (isset($id)) {
+      $data = $this->pdo->query (
+        "SELECT id FROM Images WHERE gallery=?",
+        [$id]
+      )->fetchAll (PDO::FETCH_NUM);
+      foreach ($data as $record)
+        Media::deleteImage ($record[0]);
+    }
+  }
+
+  protected function deleteImage ($fieldName)
+  {
+    if (!property_exists ($this, $fieldName))
+      throw new DataModelException($this, "Undefined field $fieldName.");
+    if (isset($this->$fieldName)) {
+      Media::deleteImage ($this->$fieldName);
+      $this->$fieldName = null;
+    }
   }
 
   protected function getQueryFieldNames ()
@@ -966,5 +795,118 @@ class DataObject
   {
     throw new FlashMessageException(self::MSG_UNSUPPORTED, 0, FlashType::ERROR);
   }
-}
 
+  /**
+   * Converts a property's value into a suitable value to be stored in a database.
+   *
+   * @param string $fieldName
+   * @return mixed
+   */
+  private function fromPropertyToFieldValue ($fieldName)
+  {
+    $value = property ($this, $fieldName);
+    if ($this->isBoolean ($fieldName))
+      return $value ? 1 : 0;
+    if (is_null ($value) || $value === '')
+      return null;
+    if (is_numeric ($value)) {
+      $i = intval ($value);
+      if ($i == $value)
+        return $i;
+      $f = floatval ($value);
+      if ($f == $value)
+        return $f;
+    }
+    return $value;
+  }
+
+  private function getFilterSQLAndValues ($prefix = ' WHERE ')
+  {
+    if (isset($this->filterFields)) {
+      $where  = '';
+      $values = [];
+      foreach ($this->filterFields as $field) {
+        $value = property ($this, $field);
+        if (isset($value)) {
+          $values[] = $value;
+          $where .= ($where != '' ? ' AND ' : $prefix) . "$this->prefix.$field=?";
+        }
+      }
+      return [$where, $values];
+    }
+    return ['', []];
+  }
+
+  private function handleFileInsert ($fileFieldName)
+  {
+    $this->$fileFieldName = Media::insertUploadedFile ($fileFieldName);
+  }
+
+  private function handleFileUpdate ($fileFieldName)
+  {
+    $fileFormFieldName = $fileFieldName . '_file';
+    $current           = $this->getCurrentValues ();
+    if (Media::isFileUploaded ($fileFormFieldName)) {
+      if (isset($current->$fileFieldName))
+        Media::deleteFile ($current->$fileFieldName);
+      $this->handleFileInsert ($fileFieldName);
+    }
+    else if (is_null ($this->$fileFieldName) && isset($current->$fileFieldName))
+      Media::deleteFile ($current->$fileFieldName);
+  }
+
+  private function handleImageInsert ($imageFieldName)
+  {
+    $this->$imageFieldName = Media::insertUploadedImage ($imageFieldName);
+  }
+
+  private function handleImageUpdate ($imageFieldName)
+  {
+    $fileFormFieldName = $imageFieldName . '_file';
+    $current           = $this->getCurrentValues ();
+    if (Media::isFileUploaded ($fileFormFieldName)) {
+      Media::checkFileIsValidImage ($fileFormFieldName);
+      if (isset($current->$imageFieldName))
+        Media::deleteImage ($current->$imageFieldName);
+      $this->handleImageInsert ($imageFieldName);
+    }
+    else if (is_null ($this->$imageFieldName) && isset($current->$imageFieldName))
+      Media::deleteImage ($current->$imageFieldName);
+    else if (isset($this->$imageFieldName))
+      Media::updateImageInfo ($this->$imageFieldName, null, null);
+  }
+
+  private function hidrate (PDOStatement $st)
+  {
+    global $lastModel;
+    $lastModel = $this;
+    return $st->fetchAll ();
+    //TODO: hidrate data
+    //$this->_data = $st->fetchAll (PDO::FETCH_CLASS, get_class ($this));
+  }
+
+  /**
+   * Loads a property with a value read from a database.
+   *
+   * @param string $fieldName
+   * @param mixed  $value
+   */
+  private function setPropertyFromFieldValue ($fieldName, $value)
+  {
+    if ($this->isBoolean ($fieldName))
+      switch ($value) {
+        case 'false':
+          $value = false;
+          break;
+        case 'true':
+          $value = true;
+          break;
+        default:
+          $value = (boolean)$value;
+      }
+    elseif ($value === '')
+      $value = null;
+    $this->$fieldName = $value;
+  }
+
+}

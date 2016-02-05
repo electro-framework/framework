@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Sessions\Services;
 
+use Selenia\Authentication\Lib\GenericUser;
 use Selenia\Exceptions\FlashType;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Interfaces\UserInterface;
@@ -13,22 +14,22 @@ class Session implements SessionInterface
 
   /**
    * For use with the InpectionTrait.
+   *
    * @var array
    */
-  private static $INSPECTABLE = ['isValid', 'lang', 'name', 'user', 'userRealName', 'data', 'prevFlash', 'newFlash'];
+  private static $INSPECTABLE = ['isValid', 'lang', 'name', 'user', 'data', 'prevFlash', 'newFlash'];
 
   public $isValid = false;
   /** @var string The session cookie name. */
   public $name;
-  /** @var UserInterface|null The logged-in user or null if not logged-in. */
+  /** @var GenericUser The logged-in user or null if not logged-in. */
   public $user;
-  /** @var string */
-  public $userRealName;
 
-  /** @var Array */
+  /** @var array */
   private $data;
   /**
    * The language code for the currently enabled language.
+   *
    * @var string|null
    */
   private $lang = null;
@@ -58,7 +59,7 @@ class Session implements SessionInterface
   function __sleep ()
   {
     $this->prevFlash = $this->newFlash;
-    return ['isValid', 'lang', 'name', 'user', 'userRealName', 'data', 'prevFlash'];
+    return ['isValid', 'lang', 'name', 'user', 'data', 'prevFlash'];
   }
 
   /**
@@ -210,9 +211,18 @@ class Session implements SessionInterface
 
   function setUser (UserInterface $user)
   {
-    $this->user         = $user;
-    $this->isValid      = true;
-    $this->userRealName = $user->realName ();
+    $this->user    = array_toClass ([
+      'id'               => $user->id (),
+      'active'           => $user->active (),
+      'username'         => $user->username (),
+      'password'         => $user->password (),
+      'token'            => $user->token (),
+      'registrationDate' => $user->registrationDate (),
+      'lastLogin'        => $user->lastLogin (),
+      'role'             => $user->role (),
+      'realName'         => $user->realName (),
+    ], GenericUser::class);
+    $this->isValid = true;
   }
 
   function token ()
