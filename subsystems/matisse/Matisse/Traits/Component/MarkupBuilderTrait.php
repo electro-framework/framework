@@ -170,6 +170,9 @@ trait MarkupBuilderTrait
     ob_start (null, 0);
   }
 
+  /**
+   * @return Literal
+   */
   protected function getLiteral ()
   {
     $this->beginContent ();

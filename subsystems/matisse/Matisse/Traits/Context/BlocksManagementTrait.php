@@ -28,7 +28,8 @@ trait BlocksManagementTrait
     if (is_string ($content))
       return $content === '' ? [] : [Text::from (null, $content)];
     else if (!is_array ($content))
-      throw new \InvalidArgumentException("Block content must be <kbd>string|Component[]</kbd>");
+      throw new \InvalidArgumentException(sprintf ("Block content must be <kbd>string|Component[]</kbd>, %s given",
+        typeInfoOf ($content)));
     return $content;
   }
 

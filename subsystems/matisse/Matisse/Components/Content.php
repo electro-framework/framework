@@ -2,6 +2,7 @@
 namespace Selenia\Matisse\Components;
 
 use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
@@ -26,6 +27,10 @@ class ContentProperties extends ComponentProperties
    * @var string
    */
   public $of = type::id;
+  /**
+   * @var bool If true, the content is rendered immediately when defined and stored as a string for later retrieval.
+   */
+  public $preRender = false;
   /**
    * The block name. If you set it via this property, the new content will be prepended to the saved content (if any).
    *
@@ -71,7 +76,12 @@ class Content extends Component
   protected function render ()
   {
     $prop    = $this->props;
-    $content = exists ($prop->value) ? $prop->value : $this->getChildren();
+    $content = exists ($prop->value) ? $prop->value : $this->getChildren ();
+
+    if ($prop->preRender && is_array ($content)) {
+      $content = $this->attachSetAndGetContent ($content);
+      inspect ($content);
+    }
 
     if (exists ($name = $prop->of)) {
       if ($prop->byDefault && $this->context->hasBlock ($name))

@@ -59,6 +59,7 @@ final class Literal extends Component
     $lit = new static ();
     $lit->setContext ($context);
     $lit->setProps (['value' => $text]);
+    return $lit;
   }
 
   protected function render ()
