@@ -46,6 +46,7 @@ class Redirection implements RedirectionInterface
   function setRequest (ServerRequestInterface $request)
   {
     $this->request = $request;
+    return $this;
   }
 
   function guest ($url, $status = 302)
