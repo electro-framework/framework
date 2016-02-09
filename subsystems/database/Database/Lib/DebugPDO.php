@@ -50,7 +50,7 @@ class DebugPDO
       DebugConsole::logger ('database')
                   ->write (sprintf ("<#footer>Query took <b>%s</b> milliseconds" .
                                     ($isSelect ? '' : ' and affected <b>%d</b> records') . "</#footer>",
-                    $dur * 1000, $st->rowCount ()));
+                    $dur * 1000, $st ? $st->rowCount () : 0));
       DebugConsole::logger ('database')->write ('</#section>');
     };
 
