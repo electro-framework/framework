@@ -67,7 +67,6 @@ class HtmlComponent extends Component
       $this->cssClassName,
       $this->props->disabled ? 'disabled' : null
     ));
-    $this->inactive = $this->props->disabled;
     if (!empty($this->props->htmlAttrs))
       echo ' ' . $this->props->htmlAttrs;
     if ($this->htmlAttrs)

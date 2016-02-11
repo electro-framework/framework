@@ -45,7 +45,7 @@ abstract class Component
    *
    * @var boolean
    */
-  public $inactive = false;
+  public $hidden = false;
   /**
    * The component's published properties (the ones which are settable through html attribute declarations on the source
    * markup). This property contains an object of class ComponentAttributes or of a subclass of it, depending on the
@@ -379,7 +379,7 @@ abstract class Component
    */
   function renderContent ()
   {
-    if (!$this->inactive) {
+    if (!$this->hidden) {
       $this->databind ();
       $this->preRender ();
       $this->renderChildren ();
@@ -396,7 +396,7 @@ abstract class Component
   function run ()
   {
     ++$this->renderCount;
-    if (!$this->inactive) {
+    if (!$this->hidden) {
       $this->databind ();
       if (!isset($this->props) || !isset($this->props->hidden) || !$this->props->hidden) {
         $this->preRender ();
