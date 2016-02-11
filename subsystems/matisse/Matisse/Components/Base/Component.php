@@ -458,10 +458,13 @@ abstract class Component
    *
    * > <p>**Tip:** override this method on a component subclass to set its script and stylesheet dependencies, so that
    * they are set before the rendering of the whole page starts.
+   *
+   * > <p>**Note:** you should call the parent method when overriding this.
    */
   protected function init ()
   {
-    //nop
+    if ($this->autoId)
+      $this->setAutoId ();
   }
 
   /**
@@ -478,12 +481,12 @@ abstract class Component
 
   protected function postRender ()
   {
-    //stub
+    //noop
   }
 
   protected function preRender ()
   {
-    //stub
+    //noop
   }
 
   /**
@@ -501,11 +504,11 @@ abstract class Component
 
   protected function setAutoId ()
   {
-    if ($this->regenerateId || (isset($this->props) && !isset($this->props->id))) {
+    if ($this->regenerateId || (isset($this->props) && !property($this->props, 'id'))) {
       $this->regenerateId = true; // if the component is re-rendered, always generate an id from now on.
       // Strip non alpha-numeric chars from generated name.
       $this->props->id =
-        preg_replace ('/\W/', '', property ($this->props, 'name', strtolower ($this->className))) .
+        preg_replace ('/\W/', '', property ($this->props, 'name') ?: lcfirst ($this->className)) .
         $this->getUniqueId ();
     }
 

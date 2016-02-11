@@ -9,9 +9,14 @@ use Selenia\Matisse\Properties\TypeSystem\type;
 class HtmlComponentProperties extends ComponentProperties
 {
   /**
-   * @var string
+   * @var string The CSS class name to apply to the container HMTL element.
    */
   public $class = '';
+  /**
+   * @var string If set, the container HMTL element will be assigned this ID, instead of the one from {@see id}
+   *      property.
+   */
+  public $containerId = '';
   /**
    * @var bool
    */

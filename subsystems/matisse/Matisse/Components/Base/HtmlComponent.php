@@ -59,16 +59,15 @@ class HtmlComponent extends Component
 
   protected function preRender ()
   {
-    if ($this->autoId)
-      $this->setAutoId ();
     $this->begin ($this->containerTag);
-    $this->attr ('id', $this->props->id);
+    $this->attr ('id', either ($this->props->containerId, $this->props->id));
     $this->attr ('class', enum (' ',
-      $this->className,
+      rtrim ($this->className, '_'),
       $this->props->class,
       $this->cssClassName,
       $this->props->disabled ? 'disabled' : null
     ));
+    $this->inactive = $this->props->disabled;
     if (!empty($this->props->htmlAttrs))
       echo ' ' . $this->props->htmlAttrs;
     if ($this->htmlAttrs)
