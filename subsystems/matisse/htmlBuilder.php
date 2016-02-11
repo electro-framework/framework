@@ -74,11 +74,15 @@ function html ($e, $d = 0)
     $o       = ($d ? "\n" : '') . "$s<$tag";
     foreach ($attrs as $k => $v) {
       if (is_null ($v)) continue;
-      if (is_array ($v)) {
-        0 / 0;
+      if (is_bool($v)) {
+        if ($v) $o .= " $k";
       }
-      $v = htmlspecialchars ($v);
-      $o .= " $k=\"$v\"";
+      elseif (!is_scalar ($v))
+        throw new \InvalidArgumentException("Non-scalar properties are not supported");
+      else {
+        $v = htmlspecialchars ($v);
+        $o .= " $k=\"$v\"";
+      }
     }
     $o .= ">";
     $c = isset($VOID_ELEMENTS[$tag]) ? '' : "</$tag>";

@@ -456,10 +456,10 @@ abstract class Component
    * Allows a component to perform additional initialization before the containing document (or document fragment)
    * rendering begins.
    *
-   * > <p>**Tip:** override this method on a component subclass to set its script and stylesheet dependencies, so that
-   * they are set before the rendering of the whole page starts.
+   * <p>**Note:** you **SHOULD** call the parent method when overriding this.
    *
-   * > <p>**Note:** you should call the parent method when overriding this.
+   * <p>Override this method on a component subclass to set its script and stylesheet dependencies, so that
+   * they are set before the rendering of the whole page starts.
    */
   protected function init ()
   {
@@ -502,9 +502,14 @@ abstract class Component
     //implementation is specific to each component type.
   }
 
+  /**
+   * Do not call this. Set {@see autoId} instead.
+   *
+   * @return int New component ID.
+   */
   protected function setAutoId ()
   {
-    if ($this->regenerateId || (isset($this->props) && !property($this->props, 'id'))) {
+    if ($this->regenerateId || (isset($this->props) && !property ($this->props, 'id'))) {
       $this->regenerateId = true; // if the component is re-rendered, always generate an id from now on.
       // Strip non alpha-numeric chars from generated name.
       $this->props->id =
