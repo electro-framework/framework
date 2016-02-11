@@ -182,7 +182,7 @@ trait DataBindingTrait
    * @return mixed
    * @throws DataBindingException
    */
-  protected function evalProp ($name)
+  protected function getComputedPropValue ($name)
   {
     if (isset($this->bindings[$name]))
       return $this->evalBinding ($this->bindings[$name]);
