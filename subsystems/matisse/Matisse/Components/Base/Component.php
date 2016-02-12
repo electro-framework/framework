@@ -2,7 +2,7 @@
 namespace Selenia\Matisse\Components\Base;
 
 use Selenia\Matisse\Components\GenericHtmlComponent;
-use Selenia\Matisse\Components\Macro\MacroInstance;
+use Selenia\Matisse\Components\Macro\MacroCall;
 use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Parser\Context;
@@ -163,7 +163,7 @@ abstract class Component
       if (is_null ($props))
         $props = [];
       $props['macro'] = $tagName;
-      $component      = new MacroInstance;
+      $component      = new MacroCall;
     }
 
     // Component class was found.
@@ -194,15 +194,16 @@ abstract class Component
         $component->run ();
   }
 
-  protected static function throwUnknownComponent (Context $context, $tagName, Component $parent)
+  protected static function throwUnknownComponent (Context $context, $tagName, Component $parent, $filename = null)
   {
     $paths = implode ('', map ($context->macrosDirectories,
       function ($dir) { return "<li><path>$dir</path></li>"; }));
+    $filename = $filename ? "<kbd>$filename</kbd>" : "it";
     throw new ComponentException (null,
       "<h3>Unknown component / macro: <b>$tagName</b></h3>
 <p>Neither a <b>class</b>, nor a <b>property</b>, nor a <b>macro</b> with the specified name were found.
 <p>If it's a component, perhaps you forgot to register the tag...
-<p>If it's a macro, Matisse is searching for it on these paths:<ul>$paths</ul>
+<p>If it's a macro, Matisse is searching for $filename on these paths:<ul>$paths</ul>
 <table>
   <th>Container component:<td><b>&lt;{$parent->getTagName()}></b>, of type <b>{$parent->className}</b>
 </table>

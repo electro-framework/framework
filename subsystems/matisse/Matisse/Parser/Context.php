@@ -3,7 +3,7 @@ namespace Selenia\Matisse\Parser;
 
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Matisse\Components;
-use Selenia\Matisse\Components\Macro\MacroInstance;
+use Selenia\Matisse\Components\Macro\MacroCall;
 use Selenia\Matisse\Lib\AssetsContext;
 use Selenia\Matisse\Traits\Context\AssetsManagementTrait;
 use Selenia\Matisse\Traits\Context\BlocksManagementTrait;
@@ -28,19 +28,18 @@ class Context
    * @var array string => string
    */
   private static $coreTags = [
-    'Apply'       => Components\Apply::class,
-    'AssetsGroup' => Components\AssetsGroup::class,
-    'Content'     => Components\Content::class,
-    'If'          => Components\If_::class,
-    'Include'     => Components\Include_::class,
-    Components\Literal::TAG_NAME
-                  => Components\Literal::class,
-    'Macro'       => Components\Macro\Macro::class,
-    'Script'      => Components\Script::class,
-    'Style'       => Components\Style::class,
-    'Repeat'      => Components\Repeat::class,
-    MacroInstance::TAG_NAME
-                  => MacroInstance::class,
+    'Apply'                      => Components\Apply::class,
+    'AssetsGroup'                => Components\AssetsGroup::class,
+    'Content'                    => Components\Content::class,
+    'If'                         => Components\If_::class,
+    'Include'                    => Components\Include_::class,
+    Components\Literal::TAG_NAME => Components\Literal::class,
+    'Macro'                      => Components\Macro\Macro::class,
+    'MacroParam'                 => Components\Macro\MacroParam::class,
+    'Script'                     => Components\Script::class,
+    'Style'                      => Components\Style::class,
+    'Repeat'                     => Components\Repeat::class,
+    MacroCall::TAG_NAME          => MacroCall::class,
   ];
 
   /**

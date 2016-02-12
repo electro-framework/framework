@@ -5,21 +5,20 @@ use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
-use Selenia\Matisse\Properties\Macro\MacroInstanceProperties;
+use Selenia\Matisse\Properties\Macro\MacroCallProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
 /**
- * A `MacroInstance` is a component that can be represented via any tag that has the same name as the macro it refers
- * to.
+ * A `MacroCall` is a component that can be represented via any tag that has the same name as the macro it refers to.
  */
-class MacroInstance extends Component
+class MacroCall extends Component
 {
   const TAG_NAME = 'Call';
 
-  protected static $propertiesClass = MacroInstanceProperties::class;
+  protected static $propertiesClass = MacroCallProperties::class;
 
   public $allowsChildren = true;
-  /** @var MacroInstanceProperties */
+  /** @var MacroCallProperties */
   public $props;
   /**
    * Points to the component that defines the macro for this instance.
@@ -46,15 +45,15 @@ class MacroInstance extends Component
     $this->parent = $parent;
     $name         = get ($props, 'macro');
     if (exists ($name)) {
-      $macro = $this->context->getMacro ($name);
+      $macro = $this->context->getMacro ($name, $this);
       if (is_null ($macro))
         try {
           // A macro with the given name is not defined yet.
           // Try to load it now.
-          $macro = $this->context->loadMacro ($name, $parent);
+          $macro = $this->context->loadMacro ($name, $parent, $filename);
         }
         catch (FileIOException $e) {
-          self::throwUnknownComponent ($this->context, $name, $parent);
+          self::throwUnknownComponent ($this->context, $name, $parent, $filename);
         }
 
       $this->setMacro ($macro);

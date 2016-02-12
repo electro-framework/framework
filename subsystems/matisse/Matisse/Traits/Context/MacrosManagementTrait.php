@@ -2,6 +2,7 @@
 namespace Selenia\Matisse\Traits\Context;
 
 use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Components\Macro\Macro;
 use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Exceptions\ParseException;
@@ -25,26 +26,42 @@ trait MacrosManagementTrait
   /**
    * A list of memorized macros for the current request.
    *
-   * @var Macro[]
+   * @var string[]
    */
   private $macros = [];
+  /**
+   * @var Macro
+   */
+  private $loadedMacro = null;
 
-  function addMacro ($name, Macro $macro)
+  function addMacro (Macro $macro)
   {
-    if (isset($this->macros[$name]))
-      throw new ParseException("Can't redefine the <kbd>$name</kbd> macro");
-    $this->macros[$name] = $macro;
+    $this->loadedMacro = $macro;
+//    if (isset($this->macros[$name]))
+//      throw new ParseException("Can't redefine the <kbd>$name</kbd> macro");
+//    $this->macros[$name] = $macro;
+
     // Remove macro from its original location. It now lives on only as a detached template.
     $macro->remove ();
   }
 
   /**
-   * @param string $name
+   * @param string    $name
+   * @param Component $parent
    * @return Macro
+   * @throws ParseException
    */
-  function getMacro ($name)
+  function getMacro ($name, Component $parent)
   {
-    return get ($this->macros, $name);
+    $content = get ($this->macros, $name);
+    if (!$content) return null;
+    $parser   = new Parser;
+    $root = new DocumentFragment;
+    $root->setContext ($this);
+    $parser->parse ($content, $root);
+    $macro = $this->loadedMacro;
+    $this->loadedMacro = null;
+    return $macro;
   }
 
   /**
@@ -52,21 +69,18 @@ trait MacrosManagementTrait
    *
    * @param string    $tagName
    * @param Component $parent
+   * @param string    $filename [optional] Outputs the filename that was searched for.
    * @return Macro
    * @throws FileIOException
    * @throws ParseException
    */
-  function loadMacro ($tagName, Component $parent)
+  function loadMacro ($tagName, Component $parent, &$filename = null)
   {
     $tagName  = normalizeTagName ($tagName);
     $filename = $tagName . $this->macrosExt;
     $content  = $this->loadMacroFile ($filename);
-    $parser   = new Parser;
-    $parser->parse ($content, $parent);
-    $macro = $this->getMacro ($tagName);
-    if (isset($macro))
-      return $macro;
-    throw new ParseException("File <b>$filename</b> does not define a macro named <b>$tagName</b>.");
+    $this->macros[$tagName] = $content;
+    return $this->getMacro ($tagName, $parent);
   }
 
   private function loadMacroFile ($filename)

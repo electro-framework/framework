@@ -3,11 +3,18 @@ namespace Selenia\Matisse\Components;
 
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Metadata;
+use Selenia\Matisse\Components\Macro\Macro;
+use Selenia\Matisse\Components\Macro\MacroCall;
+use Selenia\Matisse\Interfaces\MacroExtensionInterface;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
 class IfProperties extends ComponentProperties
 {
+  /**
+   * @var bool When true, the evaluateuation of the condition is performed at parsing-time.
+   */
+  public $atParsingTime = false;
   /**
    * @var Metadata[]
    */
@@ -19,7 +26,7 @@ class IfProperties extends ComponentProperties
   /**
    * @var string
    */
-  public $is = [type::string, null];
+  public $is = type::string;
   /**
    * @var bool
    */
@@ -78,7 +85,7 @@ class IfProperties extends ComponentProperties
  * </If>
  * ```
  */
-class If_ extends Component
+class If_ extends Component implements MacroExtensionInterface
 {
   protected static $propertiesClass = IfProperties::class;
 
@@ -86,7 +93,27 @@ class If_ extends Component
   /** @var IfProperties */
   public $props;
 
-  protected function render ()
+  function onMacroApply (Macro $macro, MacroCall $call, array &$components, &$index)
+  {
+    $prop = $this->props;
+
+    if (!$prop->atParsingTime)
+      return true;
+
+    $result = $this->evaluate ();
+    if ($result) {
+//      $this->replaceBy ($result);
+      array_splice ($components, $index, 1, $result);
+    }
+    else {
+//      $this->remove ();
+      array_splice ($components, $index, 1);
+    }
+    --$index;
+    return false;
+  }
+
+  protected function evaluate ()
   {
     $prop = $this->props;
 
@@ -99,47 +126,47 @@ class If_ extends Component
         $is = toBool ($is);
         $v  = true;
       }
-      if ($v === $is xor $not)
-        $this->renderChildren ();
-      else $this->renderChildren ('else');
-      return;
+      if ($v == $is xor $not)
+        return $this->getChildren ();
+      return $this->getChildren ('else');
     }
 
     if ($prop->isSet) {
       if (exists ($v) xor $not)
-        $this->renderChildren ();
-      else $this->renderChildren ('else');
-      return;
+        return $this->getChildren ();
+      return $this->getChildren ('else');
     }
 
     if ($prop->isTrue) {
       if (toBool ($v) xor $not)
-        $this->renderChildren ();
-      else $this->renderChildren ('else');
-      return;
+        return $this->getChildren ();
+      return $this->getChildren ('else');
     }
 
     if (exists ($prop->matches)) {
       if (preg_match ("%$prop->matches%", $v) xor $not)
-        $this->renderChildren ();
-      else $this->renderChildren ('else');
-      return;
+        return $this->getChildren ();
+      return $this->getChildren ('else');
     }
 
     if ($prop->case) {
       foreach ($prop->case as $param) {
-        if ($v == $param->props->is) {
-          $this->attachAndRenderSet ($param->getChildren ());
-          return;
-        }
+        if ($v == $param->props->is)
+          return $param->getChildren ();
       }
-      $this->renderChildren ('else');
-      return;
+      return $this->getChildren ('else');
     }
 
     if (toBool ($v) xor $not)
-      $this->renderChildren ();
-    else $this->renderChildren ('else');
+      return $this->getChildren ();
+
+    return $this->getChildren ('else');
   }
 
+  protected function render ()
+  {
+    $result = $this->evaluate ();
+    if ($result)
+      $this->renderSet ($result);
+  }
 }

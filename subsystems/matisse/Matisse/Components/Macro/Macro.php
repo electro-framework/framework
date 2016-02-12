@@ -5,6 +5,7 @@ use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Components\Literal;
 use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Interfaces\MacroExtensionInterface;
 use Selenia\Matisse\Parser\Parser;
 use Selenia\Matisse\Properties\Macro\MacroProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
@@ -33,7 +34,7 @@ class Macro extends Component
   /** @var MacroProperties */
   public $props;
 
-  private static function evalScalarExp ($bindExp, MacroInstance $instance, &$transfer_binding = null)
+  private static function evalScalarExp ($bindExp, MacroCall $instance, &$transfer_binding = null)
   {
     $transfer_binding = false;
     return preg_replace_callback (self::PARSE_MACRO_BINDING_EXP,
@@ -42,7 +43,7 @@ class Macro extends Component
       }, $bindExp);
   }
 
-  private static function evalScalarRef ($ref, $extra, MacroInstance $instance, &$transfer_binding)
+  private static function evalScalarRef ($ref, $extra, MacroCall $instance, &$transfer_binding)
   {
     if (isset($instance->bindings) && array_key_exists ($ref, $instance->bindings)) {
       $transfer_binding = true;
@@ -61,7 +62,7 @@ class Macro extends Component
     return $value;
   }
 
-  private static function parsingtimeDatabind (Component $component, MacroInstance $instance, $force = false)
+  private static function parsingtimeDatabind (Component $component, MacroCall $instance, $force = false)
   {
     if (isset($component->bindings))
       foreach ($component->bindings as $attrName => $bindExp) {
@@ -86,7 +87,7 @@ class Macro extends Component
         self::parsingtimeDatabind ($child, $instance, $force || $component instanceof Metadata);
   }
 
-  public function apply (MacroInstance $instance)
+  public function apply (MacroCall $instance)
   {
     $params = $this->getParametersNames ();
     if (in_array ('macro', $params))
@@ -149,31 +150,37 @@ class Macro extends Component
     return $cloned;
   }
 
-  public function applyTo (array &$components = null, MacroInstance $instance)
+  public function applyTo (array &$components = null, MacroCall $call)
   {
     if (!is_null ($components))
       for ($i = 0; $i < count ($components); ++$i) {
         /** @var Component $component */
         $component = $components[$i];
+
         if (!is_null ($component)) {
           if (isset($component->bindings)) {
             foreach ($component->bindings as $field => $exp)
-              $this->applyBinding ($component, $field, $exp, $instance, $components, $i);
+              $this->applyBinding ($component, $field, $exp, $call, $components, $i);
           }
           $props  = $component->props->getPropertiesOf (type::metadata);
           $values = array_values ($props);
-          $this->applyTo ($values, $instance);
+          $this->applyTo ($values, $call);
 
           $props  = $component->props->getPropertiesOf (type::content);
           $values = array_values ($props);
-          $this->applyTo ($values, $instance);
+          $this->applyTo ($values, $call);
 
           $props  = $component->props->getPropertiesOf (type::collection);
           $values = array_values ($props);
           foreach ($values as $paramArray)
-            $this->applyTo ($paramArray, $instance);
+            $this->applyTo ($paramArray, $call);
 
-          $this->applyTo ($component->getChildrenRef (), $instance);
+          /** @var MacroExtensionInterface|Component $component */
+          if ($component instanceof MacroExtensionInterface) {
+            if (!$component->onMacroApply ($this, $call, $components, $i))
+              continue;
+          }
+          $this->applyTo ($component->getChildrenRef (), $call);
         }
       }
   }
@@ -184,14 +191,17 @@ class Macro extends Component
    * @param string $name
    * @return Metadata|null null if not found.
    */
-  public function getParameter ($name)
+  public function getParameter ($name, &$found = false)
   {
     $params = $this->props->get ('param');
     if (!is_null ($params))
       foreach ($params as $param)
-        if ($param->props->name == $name)
+        if ($param->props->name == $name) {
+          $found = true;
           return $param;
+        }
 
+    $found = false;
     return null;
   }
 
@@ -240,10 +250,11 @@ class Macro extends Component
 
   public function onParsingComplete ()
   {
-    $this->context->addMacro ($this->props->name = normalizeTagName ($this->props->name), $this);
+    $this->props->name = normalizeTagName ($this->props->name);
+    $this->context->addMacro ($this);
   }
 
-  private function applyBinding (Component $component, $field, $exp, MacroInstance $instance, array & $components, & $i)
+  private function applyBinding (Component $component, $field, $exp, MacroCall $instance, array & $components, & $i)
   {
     if (preg_match (self::PARSE_MACRO_BINDING_EXP, $exp, $match)) {
       //evaluate macro binding expression

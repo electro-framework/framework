@@ -5,7 +5,7 @@ use Selenia\Matisse\Components\Macro\Macro;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\Base\MetadataProperties;
 
-class MacroInstanceProperties extends MetadataProperties
+class MacroCallProperties extends MetadataProperties
 {
   /**
    * The name of the macro to be loaded at parse time and inserted on the current view, replacing the `MacroInstance`
@@ -35,7 +35,8 @@ class MacroInstanceProperties extends MetadataProperties
   function defines ($name, $asSubtag = false)
   {
     if (!$this->macroInstance) $this->noMacro ();
-    return !is_null ($this->macroInstance->getParameter ($name));
+    $this->macroInstance->getParameter ($name, $found);
+    return $found;
   }
 
   function __set ($name, $value)
@@ -71,9 +72,10 @@ class MacroInstanceProperties extends MetadataProperties
 
   function getDefault ($name)
   {
-    if (!$this->macroInstance) $this->noMacro ();
-    $param = $this->macroInstance->getParameter ($name);
-    if (is_null ($param))
+    if (!$this->macroInstance)
+      $this->noMacro ();
+    $param = $this->macroInstance->getParameter ($name, $found);
+    if (!$found)
       throw new ComponentException($this->macroInstance, "Undefined parameter <kbd>$name</kbd>.");
 
     //TODO: test this
