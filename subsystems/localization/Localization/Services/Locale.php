@@ -13,10 +13,14 @@ class Locale
   private static $DEFAULTS = [
     'en' => 'en-US',
     'pt' => 'pt-PT',
+    'fr' => 'fr-FR',
+    'es' => 'es-ES',
   ];
   private static $LOCALES  = [
     'en-US' => ['name' => 'en-US', 'label' => 'English', 'compatibleWith' => ['en_US', 'en_US.UTF-8', 'us']],
     'pt-PT' => ['name' => 'pt-PT', 'label' => 'Português', 'compatibleWith' => ['pt_PT', 'pt_PT.UTF-8', 'ptg']],
+    'fr-FR' => ['name' => 'fr-FR', 'label' => 'Français', 'compatibleWith' => ['fr_FR', 'fr_FR.UTF-8', 'fr']],
+    'es-ES' => ['name' => 'es-ES', 'label' => 'Español', 'compatibleWith' => ['es_ES', 'es_ES.UTF-8', 'es']],
   ];
   /**
    * A list of locale names supported by the application.
