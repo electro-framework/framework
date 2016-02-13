@@ -6,9 +6,9 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
+use Selenia\Interfaces\SessionInterface;
 use Selenia\Localization\Config\LocalizationSettings;
 use Selenia\Localization\Services\Locale;
-use Selenia\Sessions\Services\Session;
 
 /**
  *
@@ -24,7 +24,7 @@ class LanguageMiddleware implements RequestHandlerInterface
    */
   private $locale;
   /**
-   * @var Session
+   * @var SessionInterface
    */
   private $session;
   /**
@@ -32,7 +32,7 @@ class LanguageMiddleware implements RequestHandlerInterface
    */
   private $settings;
 
-  function __construct (Session $session, Application $app, Locale $locale, LocalizationSettings $settings)
+  function __construct (SessionInterface $session, Application $app, Locale $locale, LocalizationSettings $settings)
   {
     $this->session  = $session;
     $this->app      = $app;
@@ -47,6 +47,7 @@ class LanguageMiddleware implements RequestHandlerInterface
     if ($mode == 'session') {
       $lang = $this->session->getLang () ?: $this->locale->defaultLang ();
       $this->locale->locale ($lang);
+      $this->session->setLang ($lang);
     }
 
     if ($this->app->debugMode)
