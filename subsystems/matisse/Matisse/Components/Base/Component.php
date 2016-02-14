@@ -434,7 +434,7 @@ abstract class Component
       if ($this->context)
         foreach ($this->context->presets as $preset)
           if (method_exists ($preset, $this->className))
-            $preset->{$this->className} ($this);
+            $preset->{$this->className} ($this, $props);
 
       // Apply properties.
       if ($props)

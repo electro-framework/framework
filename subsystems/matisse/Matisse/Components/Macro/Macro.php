@@ -66,25 +66,31 @@ class Macro extends Component
   {
     if (isset($component->bindings))
       foreach ($component->bindings as $attrName => $bindExp) {
-        $value            = self::evalScalarExp ($bindExp, $instance);
+        // Skip non-macro expressions.
+        if (!preg_match (self::PARSE_MACRO_BINDING_EXP, $bindExp))
+          continue;
+
+        $value = self::evalScalarExp ($bindExp, $instance);
+        // Check if the evaluated result is itself a binding expression.
         $transfer_binding = Parser::isBindingExpression ($value);
+        // If it is, update the binding on the component.
         if ($transfer_binding) {
-          if ($force) {
-            //$value = $component->evalBinding($value);
-            //$component->props()->$attrName = $value;
-            $component->removeBinding ($attrName);
-          }
+//          if ($force) {
+//            $value = $component->evalBinding($value);
+//            $component->props()->$attrName = $value;
+//            $component->removeBinding ($attrName);
+//          }
           $component->addBinding ($attrName, $value); //replace current binding
         }
         else {
-          //final value is not a binding exp.
+          // Otherwise, remove the binding from the component, as it already evaluated as a constant value.
           $component->props->$attrName = $value;
           $component->removeBinding ($attrName);
         }
       }
     if ($component->hasChildren ())
       foreach ($component->getChildren () as $child)
-        self::parsingtimeDatabind ($child, $instance, $force || $component instanceof Metadata);
+        self::parsingtimeDatabind ($child, $instance, $force /*|| $component instanceof Metadata*/);
   }
 
   public function apply (MacroCall $instance)

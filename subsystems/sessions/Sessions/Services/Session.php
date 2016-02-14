@@ -33,9 +33,9 @@ class Session implements SessionInterface
    * @var string|null
    */
   private $lang = null;
-  /** @var Array */
+  /** @var array */
   private $newFlash;
-  /** @var Array */
+  /** @var array */
   private $prevFlash;
 
   function __construct ()

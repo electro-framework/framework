@@ -4,6 +4,9 @@ namespace Selenia\Localization\Services;
 use RuntimeException;
 use Selenia\Traits\InspectionTrait;
 
+/**
+ * A service that provides localization settings that apply to the current URL.
+ */
 class Locale
 {
   use InspectionTrait;

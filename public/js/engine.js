@@ -150,7 +150,15 @@ function Form_onSubmit(ev)
   // HTML5 native validation integration.
   if ('validateInput' in window)
     $('input,textarea,select').each(function(){ validateInput(this) });
-  if (!$f().checkValidity()) return false;
+  if (!$f().checkValidity()) {
+    setTimeout (function () {
+      var e = document.activeElement;
+      if (!e) return;
+      var lang = $(e).attr('lang');
+      if (lang) setLang (lang, e);
+    },1);
+    return false;
+  }
 
   if (window.onSubmit) return window.onSubmit($f());
   return $f('_action').value != '';

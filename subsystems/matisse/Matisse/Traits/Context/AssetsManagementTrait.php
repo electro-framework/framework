@@ -29,8 +29,6 @@ trait AssetsManagementTrait
    */
   function addInlineCss ($css, $name = null, $prepend = false)
   {
-    if ($css instanceof Component)
-      $css = $css->getContent ();
     if (exists ($name))
       $this->assets->inlineCssStyles[$name] = $css;
     else if ($prepend)
@@ -49,8 +47,6 @@ trait AssetsManagementTrait
    */
   function addInlineScript ($code, $name = null, $prepend = false)
   {
-    if ($code instanceof Component)
-      $code = $code->getContent ();
     if (exists ($name))
       $this->assets->inlineScripts[$name] = $code;
     else if ($prepend)
@@ -112,7 +108,7 @@ trait AssetsManagementTrait
     if (!empty($this->assets->inlineScripts)) {
       echo "<script>";
       foreach ($this->assets->inlineScripts as $item)
-        echo $item;
+        echo is_string($item) ? $item : $item->getContent ();
       echo "</script>";
     }
   }
@@ -124,7 +120,7 @@ trait AssetsManagementTrait
     if (!empty($this->assets->inlineCssStyles)) {
       echo "<style>";
       foreach ($this->assets->inlineCssStyles as $item)
-        echo $item;
+        echo is_string($item) ? $item : $item->getContent ();
       echo "</style>";
     }
   }

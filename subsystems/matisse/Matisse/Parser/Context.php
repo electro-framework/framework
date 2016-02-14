@@ -66,6 +66,7 @@ class Context
    * Each preset is an instance of a class where methods are named after tags or preset names.
    * When components are being instantiated, if they match a tag name or preset name on any of the stacked presets,
    * they will be passed to the corresponding methods on the presets to be transformed.
+   * Callbacks also receive a nullable array argument with the properties being applied.
    *
    * @var array
    */
