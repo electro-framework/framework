@@ -206,11 +206,12 @@ class Application
    */
   public $pageNumberParam = 'p';
   /**
-   * The default page size for the default data source.
+   * The default page size for pagination (ex: on the DataGrid). It is only applicable when the user has not yet
+   * selected a custom page size.
    *
    * @var number
    */
-  public $pageSize = 99999;
+  public $pageSize = 15;
   /**
    * <p>The fallback folder name where the framework will search for modules.
    * <p>Plugin modules installed as Composer packages will be found there.
