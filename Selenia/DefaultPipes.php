@@ -14,14 +14,14 @@ class DefaultPipes
   }
 
   /**
-   * @param mixed $v
-   * @param string $true
-   * @param string $false
-   * @return string
+   * Alternating values for iterator indexes (0 or 1); allows for specific formatting of odd/even rows.
+   *
+   * @param int $v
+   * @return int
    */
-  function then ($v, $true = '', $false = '')
+  function alt ($v)
   {
-    return $v ? $true : $false;
+    return $v % 2;
   }
 
   /**
@@ -43,6 +43,17 @@ class DefaultPipes
   }
 
   /**
+   * Returns `true` if a number is even.
+   *
+   * @param int $v
+   * @return boolean
+   */
+  function even ($v)
+  {
+    return $v % 2 == 0;
+  }
+
+  /**
    * @param string $v
    * @return string
    */
@@ -61,36 +72,19 @@ class DefaultPipes
   }
 
   /**
-   * @param string $v
+   * Converts line breaks to `<br>` tags.
+   *
+   * @param $v
    * @return string
    */
-  function timePart ($v)
+  function nl2br ($v)
   {
-    return explode (' ', $v) [1];
-  }
-
-  /**
-   * The ordinal value of an iterator index.
-   * @param int $v
-   * @return int
-   */
-  function ord ($v)
-  {
-    return $v + 1;
-  }
-
-  /**
-   * Alternating values for iterator indexes (0 or 1); allows for specific formatting of odd/even rows.
-   * @param int $v
-   * @return int
-   */
-  function alt ($v)
-  {
-    return $v % 2;
+    return nl2br ($v);
   }
 
   /**
    * Returns `true` if a number is odd.
+   *
    * @param int $v
    * @return boolean
    */
@@ -100,13 +94,34 @@ class DefaultPipes
   }
 
   /**
-   * Returns `true` if a number is even.
+   * The ordinal value of an iterator index.
+   *
    * @param int $v
-   * @return boolean
+   * @return int
    */
-  function even ($v)
+  function ord ($v)
   {
-    return $v % 2 == 0;
+    return $v + 1;
+  }
+
+  /**
+   * @param mixed  $v
+   * @param string $true
+   * @param string $false
+   * @return string
+   */
+  function then ($v, $true = '', $false = '')
+  {
+    return $v ? $true : $false;
+  }
+
+  /**
+   * @param string $v
+   * @return string
+   */
+  function timePart ($v)
+  {
+    return explode (' ', $v) [1];
   }
 
 }
