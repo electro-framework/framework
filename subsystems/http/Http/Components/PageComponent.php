@@ -201,7 +201,7 @@ class PageComponent implements RequestHandlerInterface
     $this->virtualUrl = $request->getAttribute ('virtualUri');
     $this->redirection->setRequest ($request);
 
-    $this->currentLink = $this->navigation->request ($this->request)->currentLink();
+    $this->currentLink = $this->navigation->request ($this->request)->currentLink ();
     if ($this->currentLink && $parent = $this->currentLink->parent ())
       $this->indexPage = $parent->url ();
 
@@ -228,12 +228,12 @@ class PageComponent implements RequestHandlerInterface
         $res = $this->doFormAction ();
         if (!$res && !$this->renderOnAction)
           $res = $this->autoRedirect ();
-        $this->finalize ();
+        $this->finalize ($res);
         return $res;
     }
     $this->viewModel ();
-    $response = $this->processView ();
-    $this->finalize ();
+    $res = $this->processView ();
+    $this->finalize ($res);
     return $response;
   }
 
@@ -413,10 +413,10 @@ class PageComponent implements RequestHandlerInterface
    */
   protected function doFormAction ()
   {
-    if (count ($_POST) == 0 && count ($_FILES) == 0)
-      throw new FileException(FileException::FILE_TOO_BIG, ini_get ('upload_max_filesize'));
+//    if (count ($_POST) == 0 && count ($_FILES) == 0)
+//      throw new FileException(FileException::FILE_TOO_BIG, ini_get ('upload_max_filesize'));
     $this->getActionAndParam ($action, $param);
-    $class = new ReflectionObject($this);
+    $class = new ReflectionObject ($this);
     try {
       $method = $class->getMethod ('action_' . $action);
     }
@@ -428,9 +428,11 @@ class PageComponent implements RequestHandlerInterface
   }
 
   /**
-   * Override to do something after the page has been rendered.
+   * Override to do something after the response has been generated.
+   *
+   * @param ResponseInterface $response
    */
-  protected function finalize ()
+  protected function finalize (ResponseInterface $response)
   {
     // no op
   }
