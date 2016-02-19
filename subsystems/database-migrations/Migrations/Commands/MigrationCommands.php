@@ -68,7 +68,8 @@ class MigrationCommands
    *
    * @param string $moduleName The target module (vendor-name/package-name syntax).
    *                           If not specified, the user will be prompted for it
-   * @param string $name       The name of the migration (a valid PHP class name)
+   * @param string $name       The name of the migration (a human-friendly description, it may contain spaces, but not
+   *                           accented characters).
    *                           If not specified, the user will be prompted for it
    * @param array  $options
    * @option $class|l Use a class implementing "Phinx\Migration\CreationInterface" to generate the template
