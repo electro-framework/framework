@@ -8,6 +8,8 @@ use Selenia\Core\Assembly\Services\ModulesRegistry;
 use Selenia\Core\ConsoleApplication\Lib\ModulesUtil;
 use Selenia\Core\ConsoleApplication\Services\ConsoleIO;
 use Selenia\Migrations\Config\MigrationsSettings;
+use Selenia\Plugins\IlluminateDatabase\Database;
+use Selenia\Plugins\IlluminateDatabase\Migration;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
@@ -66,48 +68,119 @@ class MigrationCommands
   /**
    * Create a new database migration
    *
-   * @param string $moduleName The target module (vendor-name/package-name syntax).
+   * Note: if the Illuminate Database plugin is installed, the generated migration will use its schema builder instead
+   * of the one from Phinx.
+   *
+   * @param string $moduleName [optional] The target module (vendor-name/package-name syntax).
    *                           If not specified, the user will be prompted for it
-   * @param string $name       The name of the migration (a human-friendly description, it may contain spaces, but not
-   *                           accented characters).
-   *                           If not specified, the user will be prompted for it
+   * @param string $name       [optional] The name of the migration (a human-friendly description, it may contain
+   *                           spaces, but not accented characters). If not specified, the user will be prompted for it
    * @param array  $options
    * @option $class|l Use a class implementing "Phinx\Migration\CreationInterface" to generate the template
    * @option $template|t Use an alternative template
+   * @option $no-doc|d Do not generate a documentation block.
    * @return int Status code
    */
-  function migrationCreate ($moduleName = null, $name = null, $options = [
+  function makeMigration ($moduleName = null, $name = null, $options = [
     'class|l'    => null,
     'template|t' => null,
+    'no-doc|d'   => false,
   ])
   {
     $this->setupModule ($moduleName);
     while (!$name) {
       $name = str_camelize ($this->io->ask ("Migration description:"), true);
     }
+    $template = $options['template'];
+    $class    = $options['class'];
+    if (!$template && !$class) {
+      if (class_exists (Database::class))
+        $template = sprintf ('%s/templates/IlluminateMigration%s.php.template', updir (__DIR__, 2),
+          $options['no-doc'] ? '-nodoc' : '');
+    }
     $command = new Command\Create;
     $command->setApplication ($this->console);
     $input = new ArrayInput(PA ([
       '--configuration' => self::getConfigPath (),
       'name'            => $name,
-      '--class'         => $options['class'],
-      '--template'      => $options['template'],
+      '--class'         => $class,
+      '--template'      => $template,
+      $moduleName,
+    ])->prune ()->A);
+    $input->setInteractive (false);
+    return $this->runMigrationCommand ($command, $input);
+  }
+
+  /**
+   * Run all available migrations of a specific module, optionally up to a specific version
+   *
+   * @param string $moduleName [optional] The target module (vendor-name/package-name syntax).
+   *                           If not specified, the user will be prompted for it
+   * @param array  $options
+   * @option $target|t The version number to migrate to
+   * @return int Status code
+   */
+  function migrate ($moduleName = null, $options = [
+    'target|t' => null,
+  ])
+  {
+    $this->setupModule ($moduleName);
+    $command = new Command\Migrate;
+    $command->setApplication ($this->console);
+    $input = new ArrayInput(PA ([
+      '--configuration' => self::getConfigPath (),
+      '--target'        => $options['target'],
+      '--environment'   => 'main',
       $moduleName,
     ])->prune ()->A);
     return $this->runMigrationCommand ($command, $input);
   }
 
   /**
+   * Reset and re-run all migrations
+   *
+   * @param string $moduleName [optional] The target module (vendor-name/package-name syntax).
+   *                           If not specified, the user will be prompted for it
+   * @param array  $options
+   * @option $seed|The version number to migrate to
+   * @return int Status code
+   */
+  function migrateRefresh ($moduleName = null, $options = [
+    '--seed' => null,
+  ])
+  {
+    $r = $this->migrateRollback ($moduleName, ['target' => 0]);
+    if ($r) return $r;
+    $r = $this->migrate ($moduleName);
+    if ($r) return $r;
+    if ($options['seed'])
+      ; //TODO run seeders
+    return 0;
+  }
+
+  /**
+   * Rollback all database migrations
+   *
+   * @param string $moduleName [optional] The target module (vendor-name/package-name syntax).
+   *                           If not specified, the user will be prompted for it
+   * @return int Status code
+   */
+  function migrateReset ($moduleName = null)
+  {
+    return $this->migrateRollback ($moduleName, ['target' => 0]);
+  }
+
+  /**
    * Reverts the last migration of a specific module, or optionally up to a specific version
    *
-   * @param string $moduleName The target module (vendor-name/package-name syntax).
+   * @param string $moduleName [optional] The target module (vendor-name/package-name syntax).
    *                           If not specified, the user will be prompted for it
    * @param array  $options
    * @option $target|t The version number to rollback to
    * @option $date|d   The date to rollback to
    * @return int Status code
    */
-  function migrationRollback ($moduleName = null, $options = [
+  function migrateRollback ($moduleName = null, $options = [
     'target|t' => null,
     'date|d'   => null,
   ])
@@ -126,40 +199,15 @@ class MigrationCommands
   }
 
   /**
-   * Run all available migrations of a specific module, optionally up to a specific version
-   *
-   * @param string $moduleName The target module (vendor-name/package-name syntax).
-   *                           If not specified, the user will be prompted for it
-   * @param array  $options
-   * @option $target|t The version number to migrate to
-   * @return int Status code
-   */
-  function migrationRun ($moduleName = null, $options = [
-    'target|t' => null,
-  ])
-  {
-    $this->setupModule ($moduleName);
-    $command = new Command\Migrate;
-    $command->setApplication ($this->console);
-    $input = new ArrayInput(PA ([
-      '--configuration' => self::getConfigPath (),
-      '--target'        => $options['target'],
-      '--environment'   => 'main',
-      $moduleName,
-    ])->prune ()->A);
-    return $this->runMigrationCommand ($command, $input);
-  }
-
-  /**
    * Print a list of all migrations of a specific module, along with their current status
    *
-   * @param string $moduleName The target module (vendor-name/package-name syntax).
+   * @param string $moduleName [optional] The target module (vendor-name/package-name syntax).
    *                           If not specified, the user will be prompted for it
    * @param array  $options
    * @option $format|f      The output format. Allowed values: 'json'. If not specified, text is output.
    * @return int Status code
    */
-  function migrationStatus ($moduleName = null, $options = [
+  function migrateStatus ($moduleName = null, $options = [
     'format|f' => '',
   ])
   {

@@ -1,0 +1,26 @@
+<?php
+use Selenia\Plugins\IlluminateDatabase\Migration;
+
+class $className extends Migration
+{
+  /**
+   * Run the migration.
+   *
+   * @return void
+   */
+  function up ()
+  {
+
+  }
+
+  /**
+   * Reverse the migration.
+   *
+   * @return void
+   */
+  function down ()
+  {
+
+  }
+
+}

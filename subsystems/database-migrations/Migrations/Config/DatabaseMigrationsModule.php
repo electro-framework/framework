@@ -11,7 +11,7 @@ class DatabaseMigrationsModule implements ModuleInterface
   function configure (ModuleServices $module, InjectorInterface $injector)
   {
     $module->registerTasksFromClass (MigrationCommands::class);
-    //$injector->share (MigrationsSettings::class);
+    $injector->share (MigrationsSettings::class);
   }
 
 }

@@ -64,7 +64,7 @@ trait ModuleCommands
    *
    * @param string $moduleName The full name (vendor-name/module-name) of the module to be created
    */
-  function moduleCreate ($moduleName = null)
+  function makeModule ($moduleName = null)
   {
     $io = $this->io;
 
