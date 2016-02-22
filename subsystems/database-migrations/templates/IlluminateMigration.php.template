@@ -9,11 +9,11 @@ use Illuminate\Database\Schema\Blueprint;
  *
  * You can access the Illuminate Database API via the `db` property.
  *
- * You can also use the following shortcuts for accessing the most relevant methods for writing migrations:
+ * The most relevant methods for writing migrations:
  *
- * - `$this->getSchema()`      - returns an instance of the Illuminate Database schema builder.
- * - `$this->getQuery()`       - returns an instance of the Illuminate Database query builder.
- * - `$this->fromTable($name)` - a shortcut to `$this->getQuery()->table($name)`.
+ * - `$this->db->schema()`     - returns an instance of the Illuminate Database schema builder.
+ * - `$this->db->query()`      - returns an instance of the Illuminate Database query builder.
+ * - `$this->db->table($name)` - a shortcut to `$this->query()->from($name)`.
  *
  * ### Eloquent
  *
@@ -25,8 +25,8 @@ use Illuminate\Database\Schema\Blueprint;
  *
  * You can also use these Laravel-compatible facades:
  *
- * - `DB::method()`     - equivalent to `$this->getQuery()->method()`
- * - `Schema::method()` - equivalent to `$this->getSchema()->method()`
+ * - `DB::method()`     - equivalent to `$this->query()->method()`
+ * - `Schema::method()` - equivalent to `$this->schema()->method()`
  *
  * > **Note:** be sure to import the correct namespaces before using these facades:
  * > ``
@@ -63,7 +63,7 @@ class $className extends Migration
     // Pick one of the alternatives below (and delete the other one):
 
     // Create a new table
-    $this->getSchema ()->create ('tableName', function (Blueprint $table) {
+    $this->db->schema ()->create ('tableName', function (Blueprint $table) {
       $table->increments ('id');
       $table->timestamps ();
       // More columns...
@@ -72,7 +72,7 @@ class $className extends Migration
     // Or
 
     // Modify an existing table
-    $this->getSchema ()->table ('tableName', function (Blueprint $table) {
+    $this->db->schema ()->table ('tableName', function (Blueprint $table) {
       // Your code here
     });
   }
@@ -87,12 +87,12 @@ class $className extends Migration
     // Pick one of the alternatives below (and delete the other one):
 
     // Drop the table created on up()
-    $this->getSchema ()->drop ('tableName');
+    $this->db->schema ()->drop ('tableName');
 
     // Or
 
     // Undo the modifications made to the table on up()
-    $this->getSchema ()->table ('tableName', function (Blueprint $table) {
+    $this->db->schema ()->table ('tableName', function (Blueprint $table) {
       // Your code here
     });
   }

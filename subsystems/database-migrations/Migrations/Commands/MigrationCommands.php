@@ -8,7 +8,7 @@ use Selenia\Core\Assembly\Services\ModulesRegistry;
 use Selenia\Core\ConsoleApplication\Lib\ModulesUtil;
 use Selenia\Core\ConsoleApplication\Services\ConsoleIO;
 use Selenia\Migrations\Config\MigrationsSettings;
-use Selenia\Plugins\IlluminateDatabase\Database;
+use Selenia\Plugins\IlluminateDatabase\DatabaseAPI;
 use Selenia\Plugins\IlluminateDatabase\Migration;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -94,7 +94,7 @@ class MigrationCommands
     $template = $options['template'];
     $class    = $options['class'];
     if (!$template && !$class) {
-      if (class_exists (Database::class))
+      if (class_exists (DatabaseAPI::class))
         $template = sprintf ('%s/templates/IlluminateMigration%s.php.template', updir (__DIR__, 2),
           $options['no-doc'] ? '-nodoc' : '');
     }
