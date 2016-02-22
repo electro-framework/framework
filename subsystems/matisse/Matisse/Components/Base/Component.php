@@ -196,8 +196,9 @@ abstract class Component
 
   protected static function throwUnknownComponent (Context $context, $tagName, Component $parent, $filename = null)
   {
-    $paths = implode ('', map ($context->macrosDirectories,
-      function ($dir) { return "<li><path>$dir</path></li>"; }));
+    $paths    = implode ('', map ($context->macrosDirectories,
+      function ($dir) { return "<li><path>$dir</path></li>"; }
+    ));
     $filename = $filename ? "<kbd>$filename</kbd>" : "it";
     throw new ComponentException (null,
       "<h3>Unknown component / macro: <b>$tagName</b></h3>
@@ -376,7 +377,8 @@ abstract class Component
   /**
    * Renders all children.
    * ><p>**Note:** the component itself is not rendered.
-   * ><p>**Note:** usually, you should use this insted of {@see renderChildren()}.
+   * ><p>**Note:** usually, you should use this instead of {@see renderChildren()}, as it also calls `renderChildren`
+   * but it performs some additional operations.
    */
   function renderContent ()
   {
@@ -384,7 +386,7 @@ abstract class Component
       $this->databind ();
       $this->preRender ();
       $this->renderChildren ();
-      $this->postRender ();
+      $this->postRender (null);
     }
   }
 
@@ -393,18 +395,24 @@ abstract class Component
    *
    * Do not override! Use event handlers or override render() or renderChildren().
    * This method is called from run() or from renderChildren().
+   *
+   * @return mixed The rendered view or HTML response. Null if there is no output or if it has already been sent to the
+   *               output buffer.
    */
   function run ()
   {
     ++$this->renderCount;
     if (!$this->hidden) {
       $this->databind ();
-      if (!isset($this->props) || !isset($this->props->hidden) || !$this->props->hidden) {
+      if (!isset($this->props) || !isset($this->props->hidden) ||
+          !$this->props->hidden
+      ) { //hidden is defined on a subclass
         $this->preRender ();
-        $this->render ();
-        $this->postRender ();
+        $view = $this->render ();
+        return $this->postRender ($view);
       }
     }
+    return null;
   }
 
   /**
@@ -480,7 +488,11 @@ abstract class Component
     //noop
   }
 
-  protected function postRender ()
+  /**
+   * @param mixed $view The result from {@see render()}
+   * @return mixed The final view.
+   */
+  protected function postRender ($view)
   {
     //noop
   }
@@ -494,9 +506,10 @@ abstract class Component
    * Implements the component's visual rendering code.
    * Implementation code should also call render() for each of the
    * component's children, if any.
-   * DO NOT CALL DIRECTLY FROM YOUR COMPONENT!
    *
-   * @see run()
+   * <p>**DO NOT CALL DIRECTLY!**<p>Use {@see run()} instead.
+   *
+   * @return mixed Note: it may return nothing. The output may be directly sent to the output buffer.
    */
   protected function render ()
   {
