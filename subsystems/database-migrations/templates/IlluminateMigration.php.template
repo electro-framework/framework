@@ -1,5 +1,6 @@
 <?php
 use Selenia\Plugins\IlluminateDatabase\Migration;
+use Illuminate\Database\Schema\Blueprint;
 
 /**
  * A database migration that uses the Illuminate Database API for interacting with the database.
@@ -35,7 +36,8 @@ use Selenia\Plugins\IlluminateDatabase\Migration;
  * > Do not use the original Illuminate facades, they will not work!
  *
  * > **Note:** although facades are an anti-pattern and its use is discouraged by Selenia, migrations is one of those
- * few cases where they are ok to use, if you wish to.
+ * few cases where they are ok to use, if you wish to. Beware that you will NOT get IDE autocompletion and code analysis
+ * though.
  *
  * ### The Phinx API
  *
@@ -58,7 +60,21 @@ class $className extends Migration
    */
   function up ()
   {
+    // Pick one of the alternatives below (and delete the other one):
 
+    // Create a new table
+    $this->getSchema ()->create ('tableName', function (Blueprint $table) {
+      $table->increments ('id');
+      $table->timestamps ();
+      // More columns...
+    });
+
+    // Or
+
+    // Modify an existing table
+    $this->getSchema ()->table ('tableName', function (Blueprint $table) {
+      // Your code here
+    });
   }
 
   /**
@@ -68,7 +84,17 @@ class $className extends Migration
    */
   function down ()
   {
+    // Pick one of the alternatives below (and delete the other one):
 
+    // Drop the table created on up()
+    $this->getSchema ()->drop ('tableName');
+
+    // Or
+
+    // Undo the modifications made to the table on up()
+    $this->getSchema ()->table ('tableName', function (Blueprint $table) {
+      // Your code here
+    });
   }
 
 }

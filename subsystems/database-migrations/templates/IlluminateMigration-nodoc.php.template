@@ -1,5 +1,6 @@
 <?php
 use Selenia\Plugins\IlluminateDatabase\Migration;
+use Illuminate\Database\Schema\Blueprint;
 
 class $className extends Migration
 {
