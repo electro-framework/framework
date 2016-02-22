@@ -227,13 +227,6 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
     return $response;
   }
 
-  protected function postRender ($rendered)
-  {
-    $rendered = parent::postRender($rendered);
-    $this->response->getBody ()->write ($rendered);
-    return $this->response;
-  }
-
   /**
    * Responds to the standard 'delete' controller action.
    * The default procedure is to delete the object on the database.
@@ -310,52 +303,6 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
   function preset (array $data)
   {
     $this->presets = $data;
-  }
-
-  function setupView (ViewInterface $view)
-  {
-    $engine = $view->getEngine ();
-    if ($engine instanceof MatisseEngine) {
-      $this->document  = $view->getCompiledView ();
-      $context         = $this->document->context;
-      $title           = $this->getTitle ();
-      $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
-      $flashMessage    = $this->session->getFlashMessage ();
-      if ($flashMessage)
-        $this->displayStatus ($flashMessage['type'], $flashMessage['message']);
-      foreach ($this->app->assets as $url) {
-        $p = strrpos ($url, '.');
-        if (!$p) continue;
-        $ext = substr ($url, $p + 1);
-        switch ($ext) {
-          case 'css':
-            $context->addStylesheet ($url);
-            break;
-          case 'js':
-            $context->addScript ($url);
-            break;
-        }
-      }
-      $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
-    }
-    //------------------
-    // DOM panel
-    //------------------
-    if (DebugConsole::hasLogger ('DOM')) {
-      $insp = $this->document->inspect (true);
-      DebugConsole::logger ('DOM')->write ($insp);
-    }
-    //------------------
-    // View Model panel
-    //------------------
-    if (DebugConsole::hasLogger ('vm')) {
-      DebugConsole::logger ('vm')->withFilter (function ($k, $v, $o) {
-        if ($k === 'app' || $k === 'navigation' || $k === 'session' || $k === 'request' ||
-            $k === 'currentLink' || $k === 'page' || $v instanceof NavigationLinkInterface
-        ) return '...';
-        return true;
-      }, $this);
-    }
   }
 
   protected function autoRedirect ()
@@ -507,23 +454,6 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
   }
 
   /**
-   * Loads the record with the id specified on from the request URI into the model object.
-   *
-   * If the URI parameter is empty, the model is returned unmodified.
-   *
-   * @param DataObject $model
-   * @param string     $param The parameter name. As a convention, it is usually `id`.
-   * @return DataObject|false The input model on success, `false` if it was not found.
-   */
-  protected function loadRequested (DataObject $model, $param = 'id')
-  {
-    $id = $this->request->getAttribute ("@$param");
-    if (!$id) return $model;
-    $f = $model->find ($id);
-    return $f ? $model : false;
-  }
-
-  /**
    * @param array|object|DataObject $model
    * @param array|null              $data If `null` nothihg happens.
    * @throws FatalException
@@ -537,7 +467,7 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
       array_mergeExisting ($model, array_normalizeEmptyValues ($data));
     else if (is_object ($model))
       extendExisting ($model, array_normalizeEmptyValues ($data));
-    else throw new FatalException (sprintf ("Can't merge data into a model of type <kbd>11%s</kbd>", gettype ($model)));
+    else throw new FatalException (sprintf ("Can't merge data into a model of type <kbd>%s</kbd>", gettype ($model)));
   }
 
   /**
@@ -566,6 +496,59 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
         array_splice ($data, 0, $skip);
       }
       array_splice ($data, $pageSize);
+    }
+  }
+
+  protected function postRender ($rendered)
+  {
+    $rendered = parent::postRender ($rendered);
+    $this->response->getBody ()->write ($rendered);
+    return $this->response;
+  }
+
+  function setupView (ViewInterface $view)
+  {
+    $engine = $view->getEngine ();
+    if ($engine instanceof MatisseEngine) {
+      $this->document  = $view->getCompiledView ();
+      $context         = $this->document->context;
+      $title           = $this->getTitle ();
+      $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
+      $flashMessage    = $this->session->getFlashMessage ();
+      if ($flashMessage)
+        $this->displayStatus ($flashMessage['type'], $flashMessage['message']);
+      foreach ($this->app->assets as $url) {
+        $p = strrpos ($url, '.');
+        if (!$p) continue;
+        $ext = substr ($url, $p + 1);
+        switch ($ext) {
+          case 'css':
+            $context->addStylesheet ($url);
+            break;
+          case 'js':
+            $context->addScript ($url);
+            break;
+        }
+      }
+      $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
+    }
+    //------------------
+    // DOM panel
+    //------------------
+    if (DebugConsole::hasLogger ('DOM')) {
+      $insp = $this->document->inspect (true);
+      DebugConsole::logger ('DOM')->write ($insp);
+    }
+    //------------------
+    // View Model panel
+    //------------------
+    if (DebugConsole::hasLogger ('vm')) {
+      DebugConsole::logger ('vm')->withFilter (function ($k, $v, $o) {
+        if ($k === 'app' || $k === 'navigation' || $k === 'session' || $k === 'request' ||
+            $k === 'currentLink' || $k === 'page' || $v instanceof NavigationLinkInterface
+        ) return '...';
+        return true;
+      }, $this);
     }
   }
 
