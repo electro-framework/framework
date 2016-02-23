@@ -1,12 +1,9 @@
 <?php
 namespace Selenia\Matisse\Components;
 
-use Selenia\Interfaces\Views\ViewEngineInterface;
-use Selenia\Interfaces\Views\ViewInterface;
-use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Components\Base\CompositeComponent;
 use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
-use Selenia\ViewEngine\Engines\MatisseEngine;
 
 class IncludeProperties extends ComponentProperties
 {
@@ -53,37 +50,23 @@ class IncludeProperties extends ComponentProperties
  * <p>When rendering a view, the view's rendering context (and associated view model) come from the current rendering
  * context.
  */
-class Include_ extends Component
+class Include_ extends CompositeComponent
 {
   protected static $propertiesClass = IncludeProperties::class;
 
   /** @var IncludeProperties */
   public $props;
-  /**
-   * @var ViewInterface
-   */
-  private $view;
-
-  public function __construct (ViewInterface $view)
-  {
-    parent::__construct ();
-    $this->view = $view;
-    $this->view->configure (function (ViewEngineInterface $engine) {
-      if ($engine instanceof MatisseEngine)
-        $engine->configure ($this->context);
-    });
-  }
 
   protected function render ()
   {
     $prop = $this->props;
     if (exists ($prop->view)) {
-      $content = $this->view->loadFromFile ($prop->view)->getCompiledView ();
-      $content->run ();
+      $this->templateUrl = $prop->view;
+      parent::render ();
     }
     else if (exists ($prop->file)) {
       $fileContent = loadFile ($prop->file);
-      if (!$fileContent)
+      if ($fileContent === false)
         throw new FileIOException($prop->file, 'read', explode (PATH_SEPARATOR, get_include_path ()));
       echo $fileContent;
     }

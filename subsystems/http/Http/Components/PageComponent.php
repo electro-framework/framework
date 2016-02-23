@@ -2,6 +2,7 @@
 namespace Selenia\Http\Components;
 
 use Exception;
+use Illuminate\Database\Eloquent\Model;
 use PDOStatement;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use Psr\Http\Message\ResponseInterface;
@@ -22,7 +23,8 @@ use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Interfaces\Views\ViewInterface;
-use Selenia\Matisse\Components\Base\ViewableComponent;
+use Selenia\Interfaces\Views\ViewServiceInterface;
+use Selenia\Matisse\Components\Base\CompositeComponent;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Lib\PipeHandler;
 use Selenia\Routing\Services\Router;
@@ -32,7 +34,7 @@ use Selenia\ViewEngine\Engines\MatisseEngine;
 /**
  * The base class for components that are web pages.
  */
-class PageComponent extends ViewableComponent implements RequestHandlerInterface
+class PageComponent extends CompositeComponent implements RequestHandlerInterface
 {
   use PolymorphicInjectionTrait;
 
@@ -120,6 +122,12 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
    */
   protected $URI_noPage;
   /**
+   * When true and `$indexPage` is not set, upon a POST the page will redirect to the parent navigation link.
+   *
+   * @var bool
+   */
+  protected $autoRedirectUp = false;
+  /**
    * Specifies the URL of the index page, to where the browser should navigate upon the
    * successful insertion / update / deletion of records.
    * If not defined on a subclass then the request will redisplay the same page.
@@ -138,9 +146,9 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
    */
   protected $renderOnAction = false;
   /**
-   * @var ResponseInterface
+   * @var ViewServiceInterface
    */
-  protected $response;
+  protected $view;
   /**
    * @var InjectorInterface
    */
@@ -152,17 +160,18 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
    */
   private $presets = [];
 
-  function __construct (InjectorInterface $injector, ViewInterface $view, Application $app,
+  function __construct (InjectorInterface $injector, ViewServiceInterface $view, Application $app,
                         RedirectionInterface $redirection, SessionInterface $session, NavigationInterface $navigation,
                         PipeHandler $pipeHandler)
   {
-    parent::__construct ($view);
+    parent::__construct ();
 
     $this->injector    = $injector;
     $this->app         = $app;
     $this->redirection = $redirection;
     $this->session     = $session;
     $this->navigation  = $navigation;
+    $this->view        = $view;
     $pipeHandler->registerFallbackHandler ($this);
 
     // Inject extra dependencies into the subclasses' inject methods, if one or more exist.
@@ -187,12 +196,11 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
       throw new FatalException("Class <kbd class=type>" . get_class ($this) .
                                "</kbd>'s constructor forgot to call <kbd>parent::__construct()</kbd>");
     $this->request    = $request;
-    $this->response   = $response;
     $this->virtualUrl = $request->getAttribute ('virtualUri');
     $this->redirection->setRequest ($request);
 
     $this->currentLink = $this->navigation->request ($this->request)->currentLink ();
-    if ($this->currentLink && $parent = $this->currentLink->parent ())
+    if (!$this->indexPage && $this->autoRedirectUp && $this->currentLink && $parent = $this->currentLink->parent ())
       $this->indexPage = $parent->url ();
 
     // remove page number parameter
@@ -204,7 +212,7 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
 
     $this->model = $this->model ();
     $model       =& $this->model;
-    $this->mergeIntoModel ($model, $request->getAttributes ());
+    $this->mergeIntoModel ($model, $this->getParameters ());
     switch ($this->request->getMethod ()) {
       case 'GET':
         if ($model) $this->mergeIntoModel ($model, $this->presets);
@@ -212,8 +220,16 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
         break;
       /** @noinspection PhpMissingBreakStatementInspection */
       case 'POST':
-        if ($this->request->getHeaderLine ('Content-Type') == 'application/x-www-form-urlencoded')
+        if ($this->request->getHeaderLine ('Content-Type') == 'application/x-www-form-urlencoded') {
+//          dump (array_normalizeEmptyValues ( $this->request->getParsedBody ()));
+          /** @var Model $model */
+//          dump(typeOf($model));
+//          dump($model->attributesToArray());
+//          exit;
           $this->mergeIntoModel ($model, $this->request->getParsedBody ());
+//          dump ($model);
+//          exit;
+        }
       default:
         $res = $this->doFormAction ();
         if (!$res && !$this->renderOnAction)
@@ -222,8 +238,12 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
         return $res;
     }
     $this->viewModel ();
-    $res = $this->run ();
-    $this->finalize ($res);
+
+    // Render the component.
+
+    $out = $this->getRenderedComponent ();
+    $response->getBody ()->write ($out);
+    $this->finalize ($response);
     return $response;
   }
 
@@ -414,6 +434,17 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
     else $param = null;
   }
 
+  protected function getParameters ()
+  {
+    return mapAndFilter ($this->request->getAttributes (), function ($v, &$k) {
+      if ($k && $k[0] == '@') {
+        $k = substr ($k, 1);
+        return $v;
+      }
+      return null;
+    });
+  }
+
   protected function getRowOffset ()
   {
     return ($this->pageNumber - 1) * $this->app->pageSize;
@@ -465,8 +496,9 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
       $model->safeLoadFrom ($data, $this->defineDataFields ());
     else if (is_array ($model))
       array_mergeExisting ($model, array_normalizeEmptyValues ($data));
-    else if (is_object ($model))
+    else if (is_object ($model)) {
       extendExisting ($model, array_normalizeEmptyValues ($data));
+    }
     else throw new FatalException (sprintf ("Can't merge data into a model of type <kbd>%s</kbd>", gettype ($model)));
   }
 
@@ -483,34 +515,16 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
     return null;
   }
 
-  protected function paginate (array &$data, $pageSize = 0)
+  protected function newView ()
   {
-    if (!$pageSize)
-      $pageSize = $this->app->pageSize;
-    $this->pageNumber = get ($_REQUEST, $this->app->pageNumberParam, 1);
-    $count            = count ($data);
-    if ($count > $pageSize) {
-      $this->max = ceil ($count / $pageSize);
-      if ($this->pageNumber > 1) {
-        $skip = $this->getRowOffset ();
-        array_splice ($data, 0, $skip);
-      }
-      array_splice ($data, $pageSize);
-    }
-  }
-
-  protected function postRender ($rendered)
-  {
-    $rendered = parent::postRender ($rendered);
-    $this->response->getBody ()->write ($rendered);
-    return $this->response;
+    return $this->view->newInstance ();
   }
 
   function setupView (ViewInterface $view)
   {
     $engine = $view->getEngine ();
     if ($engine instanceof MatisseEngine) {
-      $this->document  = $view->getCompiledView ();
+      $this->document  = $view->getCompiled ();
       $context         = $this->document->context;
       $title           = $this->getTitle ();
       $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
@@ -531,6 +545,8 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
         }
       }
       $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
+      $context->getPipeHandler ()->registerFallbackHandler ($this);
+      $context->viewModel = $this;
     }
     //------------------
     // DOM panel
@@ -549,6 +565,22 @@ class PageComponent extends ViewableComponent implements RequestHandlerInterface
         ) return '...';
         return true;
       }, $this);
+    }
+  }
+
+  protected function paginate (array &$data, $pageSize = 0)
+  {
+    if (!$pageSize)
+      $pageSize = $this->app->pageSize;
+    $this->pageNumber = get ($_REQUEST, $this->app->pageNumberParam, 1);
+    $count            = count ($data);
+    if ($count > $pageSize) {
+      $this->max = ceil ($count / $pageSize);
+      if ($this->pageNumber > 1) {
+        $skip = $this->getRowOffset ();
+        array_splice ($data, 0, $skip);
+      }
+      array_splice ($data, $pageSize);
     }
   }
 

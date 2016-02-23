@@ -1,125 +1,91 @@
 <?php
 namespace Selenia\ViewEngine;
 
-use Selenia\Application;
-use Selenia\Exceptions\Fatal\FileNotFoundException;
-use Selenia\Exceptions\FatalException;
-use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\Views\ViewEngineInterface;
 use Selenia\Interfaces\Views\ViewInterface;
 
 class View implements ViewInterface
 {
   /**
-   * @var Application
-   */
-  private $app;
-  /**
    * @var mixed
    */
-  private $compiled;
+  private $compiled = null;
   /**
-   * @var callable The engine configuration callback.
+   * @var string
    */
-  private $configurator;
+  private $source = '';
   /**
    * @var ViewEngineInterface
    */
-  private $engine;
-  /**
-   * @var InjectorInterface
-   */
-  private $injector;
-  /**
-   * @var string[] A map of regular expression patterns to view engine class names.
-   */
-  private $patterns = [];
+  private $viewEngine;
 
-  function __construct (Application $app, InjectorInterface $injector)
+  public function __construct (ViewEngineInterface $viewEngine)
   {
-    $this->injector = $injector;
-    $this->app      = $app;
+    $this->viewEngine = $viewEngine;
   }
 
-  function configure (callable $callback)
+  /**
+   * Compiles the template.
+   *
+   * @return $this
+   */
+  function compile ()
   {
-    $this->configurator = $callback;
+    $this->compiled = $this->viewEngine->compile ($this->source);
+    return $this;
   }
 
-  function getCompiledView ()
+  /**
+   * Gets the compiled template, if any.
+   *
+   * @return mixed|null
+   */
+  function getCompiled ()
   {
     return $this->compiled;
   }
 
+  /**
+   * Gets the associated rendering engine instance, if any.
+   *
+   * @return ViewEngineInterface|null
+   */
   function getEngine ()
   {
-    return $this->engine;
-  }
-
-  function setEngine ($engineClass)
-  {
-    $this->engine = $this->injector->make ($engineClass);
-    if ($this->configurator) {
-      $fn = $this->configurator;
-      $fn ($this->engine);
-    }
-    return $this;
-  }
-
-  function loadFromFile ($path)
-  {
-    $this->setEngineFromFileName ($path);
-    $src = $this->loadView ($path);
-    $this->loadFromString ($src);
-    return $this;
-  }
-
-  function loadFromString ($src)
-  {
-    $this->compiled = $this->engine->compile ($src);
-    return $this;
-  }
-
-  function register ($engineClass, $filePattern)
-  {
-    $this->patterns[$filePattern] = $engineClass;
-    return $this;
-  }
-
-  function render ($data = null)
-  {
-    return $this->engine->render ($this->compiled, $data);
-  }
-
-  function setEngineFromFileName ($fileName)
-  {
-    foreach ($this->patterns as $pattern => $class)
-      if (preg_match ($pattern, $fileName))
-        return $this->setEngine ($class);
-    throw new FatalException ("None of the available view engines is capable of handling a file named <b>$fileName</b>.
-<p>Make sure the file name has one of the supported file extensions or matches a known pattern.");
+    return $this->viewEngine;
   }
 
   /**
-   * Attempts to load the specified view file.
+   * Gets the original source code (the template).
    *
-   * @param string $path
-   * @return string The file's content.
-   * @throws FileNotFoundException If the file was not found.
+   * @return string
    */
-  private function loadView ($path)
+  function getSource ()
   {
-    $dirs = $this->app->viewsDirectories;
-    foreach ($dirs as $dir) {
-      $p    = "$dir/$path";
-      $view = loadFile ($p);
-      if ($view)
-        return $view;
-    }
-    $paths = implode ('', map ($dirs, function ($path) {
-      return "<li><path>$path</path>";
-    }));
-    throw new FileNotFoundException($path, "<p>Search paths:<ul>$paths</ul>");
+    return $this->source;
   }
 
+  /**
+   * Sets the source code (the template).
+   *
+   * @param string $src
+   * @return $this
+   */
+  function setSource ($src)
+  {
+    $this->source   = $src;
+    $this->compiled = null;
+    return $this;
+  }
+
+  /**
+   * Renders the previously compiled template.
+   *
+   * @param array|object $data The view model; optional data for use by databinding expressions on the template.
+   * @return string The generated output (ex: HTML).
+   */
+  function render ($data = null)
+  {
+    return $this->viewEngine->render ($this->compiled, $data);
+  }
 }

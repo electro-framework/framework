@@ -118,13 +118,7 @@ abstract class Component
    */
   static function create (Component $parent, array $props = null, array $bindings = null)
   {
-    $component = new static;
-    $component->setContext ($parent->context);
-    $component->bindings = $bindings;
-    $component->onCreate ($props, $parent);
-    $component->setProps ($props);
-    $component->init ();
-    return $component;
+    return self::setup (new static, $parent, $parent->context, $props, $bindings);
   }
 
   /**
@@ -179,6 +173,30 @@ abstract class Component
     $component->setProps ($props);
     $component->init ();
 
+    return $component;
+  }
+
+  /**
+   * Initiazlies a component right after instantiation.
+   *
+   * @param Component      $component The component.
+   * @param Component|null $parent    The component's container component (if any).
+   * @param Context        $context   A rendering context.
+   * @param string[]       $props     A map of property names to property values.
+   *                                  Properties specified via this argument come only from markup attributes, not
+   *                                  from subtags.
+   * @param array|null     $bindings  A map of attribute names and corresponding databinding expressions.
+   * @return Component Component instance.
+   * @throws ComponentException
+   */
+  static function setup (Component $component, Component $parent = null, Context $context, array $props = null,
+                         array $bindings = null)
+  {
+    $component->setContext ($context);
+    $component->bindings = $bindings;
+    $component->onCreate ($props, $parent);
+    $component->setProps ($props);
+    $component->init ();
     return $component;
   }
 
@@ -408,11 +426,10 @@ abstract class Component
           !$this->props->hidden
       ) { //hidden is defined on a subclass
         $this->preRender ();
-        $view = $this->render ();
-        return $this->postRender ($view);
+        $this->render ();
+        $this->postRender ();
       }
     }
-    return null;
   }
 
   /**
@@ -480,23 +497,25 @@ abstract class Component
    * Allows a component to do something before it is initialized.
    * <p>The provided arguments have an informational purpose.
    *
-   * @param array|null $props
-   * @param Component  $parent
+   * @param array|null     $props
+   * @param Component|null $parent
    */
-  protected function onCreate (array $props = null, Component $parent)
+  protected function onCreate (array $props = null, Component $parent = null)
   {
     //noop
   }
 
   /**
-   * @param mixed $view The result from {@see render()}
-   * @return mixed The final view.
+   * Do something beofre the component renders (ex. prepend to the output).
    */
-  protected function postRender ($view)
+  protected function postRender ()
   {
     //noop
   }
 
+  /**
+   * Do something after the component renders (ex. append to the output).
+   */
   protected function preRender ()
   {
     //noop
@@ -504,12 +523,12 @@ abstract class Component
 
   /**
    * Implements the component's visual rendering code.
-   * Implementation code should also call render() for each of the
-   * component's children, if any.
+   * Implementation code should also call render() for each of the component's children, if any.
    *
-   * <p>**DO NOT CALL DIRECTLY!**<p>Use {@see run()} instead.
+   * <p>**DO NOT CALL DIRECTLY!**
+   * <p>Use {@see run()} instead.
    *
-   * @return mixed Note: it may return nothing. The output may be directly sent to the output buffer.
+   * > **Note:** this returns nothing; the output is sent directly to the output buffer.
    */
   protected function render ()
   {

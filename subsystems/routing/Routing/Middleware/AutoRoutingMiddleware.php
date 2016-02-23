@@ -7,6 +7,8 @@ use Selenia\Exceptions\Fatal\FileNotFoundException;
 use Selenia\Http\Components\PageComponent;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Parser\Context;
 
 /**
  * It allows a designer to rapidly prototype the application by automatically providing routing for URLs starting with
@@ -20,23 +22,29 @@ use Selenia\Interfaces\InjectorInterface;
 class AutoRoutingMiddleware implements RequestHandlerInterface
 {
   /**
+   * @var Context
+   */
+  private $context;
+  /**
    * @var InjectorInterface
    */
   private $injector;
 
-  public function __construct (InjectorInterface $injector)
+  public function __construct (InjectorInterface $injector, Context $context)
   {
     $this->injector = $injector;
+    $this->context  = $context;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     $URL = $request->getAttribute ('virtualUri');
-    if ($URL == '') $URL = '/';
-    if (substr ($URL, -1) == '/') $URL = $URL . 'index';
+    if ($URL == '') $URL = 'index';
+    elseif (substr ($URL, -1) == '/') $URL = $URL . 'index';
 
     /** @var PageComponent $page */
-    $page              = $this->injector->make (PageComponent::class);
+    $page = $this->injector->make (PageComponent::class);
+    Component::setup ($page, null, $this->context);
     $page->templateUrl = "$URL.html";
 
     try {

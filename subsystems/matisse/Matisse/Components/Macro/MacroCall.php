@@ -40,7 +40,7 @@ class MacroCall extends Component
    * @param array|null $props
    * @param Component  $parent
    */
-  protected function onCreate (array $props = null, Component $parent)
+  protected function onCreate (array $props = null, Component $parent = null)
   {
     $this->parent = $parent;
     $name         = get ($props, 'macro');

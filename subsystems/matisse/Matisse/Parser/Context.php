@@ -2,6 +2,7 @@
 namespace Selenia\Matisse\Parser;
 
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\Views\ViewServiceInterface;
 use Selenia\Matisse\Components;
 use Selenia\Matisse\Components\Macro\MacroCall;
 use Selenia\Matisse\Lib\AssetsContext;
@@ -79,6 +80,13 @@ class Context
    */
   public $viewModel = [];
   /**
+   * The view service that instantiated the current rendering engine and its associated rendering context (this
+   * instance).
+   *
+   * @var ViewServiceInterface|null
+   */
+  public $viewService;
+  /**
    * A class instance who's methods provide pipe implementations.
    *
    * The handler can be an instance of a proxy class, which dynamically resolves the pipe invocations trough a
@@ -130,6 +138,14 @@ class Context
   function setPipeHandler ($pipeHandler)
   {
     $this->pipeHandler = $pipeHandler;
+  }
+
+  /**
+   * @return object
+   */
+  function getPipeHandler ()
+  {
+    return $this->pipeHandler;
   }
 
 }
