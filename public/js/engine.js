@@ -50,7 +50,7 @@ function nop () {}
       var form = $ ('form')[0];
       $ (form).find ('input[name=_action]').val (name + (param ? ':' + param : ''));
       form.action = location.href; //update url (ex. the hash may have changed)
-      if (selenia.onSubmit ()) {
+      if (name != 'submit' || selenia.onSubmit ()) {
         form.submit ();
         $ (form).find ('button,input[type=button],input[type=submit]').prop ('disabled', true);
         return true;

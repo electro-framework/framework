@@ -50,7 +50,10 @@ function _g ($data, $key, $default = null)
       return $default;
     }
     if (is_callable ([$data, $key]))
-      return $data->$key ();
+      try {
+        return $data->$key ();
+      }
+      catch (BadMethodCallException $e) {}
     return $default;
   }
   if (is_array ($data))
