@@ -1,8 +1,7 @@
 <?php
 namespace Selenia\Matisse\Components\Base;
 
-use Selenia\Matisse\Components\GenericHtmlComponent;
-use Selenia\Matisse\Components\Macro\MacroCall;
+use Selenia\Interfaces\RenderableInterface;
 use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Parser\Context;
@@ -14,7 +13,7 @@ use Selenia\Matisse\Traits\Component\MarkupBuilderTrait;
 /**
  * The base class from which all components derive.
  */
-abstract class Component
+abstract class Component implements RenderableInterface
 {
   use MarkupBuilderTrait, DataBindingTrait, DOMNodeTrait;
 
@@ -106,7 +105,7 @@ abstract class Component
   }
 
   /**
-   * Creates a component from the static class from where this method was invoked from.
+   * Creates a component instance of the static class where this method was invoked on.
    *
    * @param Component  $parent   The component's container component.
    * @param string[]   $props    A map of property names to property values.
@@ -118,101 +117,10 @@ abstract class Component
    */
   static function create (Component $parent, array $props = null, array $bindings = null)
   {
-    return self::setup (new static, $parent, $parent->context, $props, $bindings);
+    return (new static)->setup ($parent, $parent->context, $props, $bindings);
   }
 
-  /**
-   * Creates a component corresponding to the specified tag and optionally sets its attributes.
-   *
-   * @param string     $tagName
-   * @param Component  $parent   The component's container component.
-   * @param string[]   $props    A map of property names to property values.
-   *                             Properties specified via this argument come only from markup attributes, not
-   *                             from subtags.
-   * @param array|null $bindings A map of attribute names and corresponding databinding expressions.
-   * @param bool       $generic  If true, an instance of GenericComponent is created.
-   * @param boolean    $strict   If true, failure to find a component class will throw an exception.
-   *                             If false, an attempt is made to load a macro with the same name,
-   * @return Component Component instance. For macros, an instance of Macro is returned.
-   * @throws ComponentException
-   */
-  static function createFromTag ($tagName, Component $parent, array $props = null,
-                                 array $bindings = null, $generic = false, $strict = false)
-  {
-    if ($generic) {
-      $component = new GenericHtmlComponent($tagName, $props);
-
-      return $component;
-    }
-    $context = $parent->context;
-    $class   = $context->getClassForTag ($tagName);
-    if (!$class) {
-      if ($strict)
-        self::throwUnknownComponent ($context, $tagName, $parent);
-
-      // Component class not found.
-      // Convert the tag to a MacroInstance component instance that will attempt to load a macro with the same
-      // name as the tag name.
-
-      if (is_null ($props))
-        $props = [];
-      $props['macro'] = $tagName;
-      $component      = new MacroCall;
-    }
-
-    // Component class was found.
-
-    else $component = $context->injector->make ($class);
-
-    // For both types of components:
-
-    $component->setContext ($context);
-    $component->setTagName ($tagName);
-    $component->bindings = $bindings;
-    $component->onCreate ($props, $parent);
-    $component->setProps ($props);
-    $component->init ();
-
-    return $component;
-  }
-
-  /**
-   * Initiazlies a component right after instantiation.
-   *
-   * @param Component      $component The component.
-   * @param Component|null $parent    The component's container component (if any).
-   * @param Context        $context   A rendering context.
-   * @param string[]       $props     A map of property names to property values.
-   *                                  Properties specified via this argument come only from markup attributes, not
-   *                                  from subtags.
-   * @param array|null     $bindings  A map of attribute names and corresponding databinding expressions.
-   * @return Component Component instance.
-   * @throws ComponentException
-   */
-  static function setup (Component $component, Component $parent = null, Context $context, array $props = null,
-                         array $bindings = null)
-  {
-    $component->setContext ($context);
-    $component->bindings = $bindings;
-    $component->onCreate ($props, $parent);
-    $component->setProps ($props);
-    $component->init ();
-    return $component;
-  }
-
-  /**
-   * Renders a set of components.
-   *
-   * @param Component[] $components The set of components to be rendered.
-   */
-  protected static function renderSet (array $components = null)
-  {
-    if (isset($components))
-      foreach ($components as $component)
-        $component->run ();
-  }
-
-  protected static function throwUnknownComponent (Context $context, $tagName, Component $parent, $filename = null)
+  static function throwUnknownComponent (Context $context, $tagName, Component $parent, $filename = null)
   {
     $paths    = implode ('', map ($context->macrosDirectories,
       function ($dir) { return "<li><path>$dir</path></li>"; }
@@ -227,6 +135,18 @@ abstract class Component
   <th>Container component:<td><b>&lt;{$parent->getTagName()}></b>, of type <b>{$parent->className}</b>
 </table>
 ");
+  }
+
+  /**
+   * Renders a set of components.
+   *
+   * @param Component[] $components The set of components to be rendered.
+   */
+  protected static function renderSet (array $components = null)
+  {
+    if (isset($components))
+      foreach ($components as $component)
+        $component->run ();
   }
 
   function __get ($name)
@@ -308,16 +228,21 @@ abstract class Component
     return ob_get_clean ();
   }
 
-  /**
-   * Renders the component and returns the resulting markup.
-   *
-   * @return string
-   */
-  function getRenderedComponent ()
+  function getContextClass ()
+  {
+    return Context::class;
+  }
+
+  function getRendering ()
   {
     ob_start (null, 0);
     $this->run ();
     return ob_get_clean ();
+  }
+
+  function setContext ($context)
+  {
+    $this->context = $context;
   }
 
   /**
@@ -433,16 +358,6 @@ abstract class Component
   }
 
   /**
-   * Sets the component's rendering context.
-   *
-   * @param Context $context
-   */
-  function setContext (Context $context)
-  {
-    $this->context = $context;
-  }
-
-  /**
    * Initializes a newly created component by applying to it the applicable registered presets, followed by the given
    * properties, if any.
    *
@@ -469,6 +384,31 @@ abstract class Component
       throw new ComponentException($this, 'This component does not support properties.');
   }
 
+  /**
+   * Initializes a component right after instantiation.
+   *
+   * <p>**Note:** this method may not be called on some circumstances, for ex, if the component is rendered from a
+   * middleware stack.
+   *
+   * @param Component|null $parent    The component's container component (if any).
+   * @param Context        $context   A rendering context.
+   * @param string[]       $props     A map of property names to property values.
+   *                                  Properties specified via this argument come only from markup attributes, not
+   *                                  from subtags.
+   * @param array|null     $bindings  A map of attribute names and corresponding databinding expressions.
+   * @return Component Component instance.
+   * @throws ComponentException
+   */
+  function setup (Component $parent = null, Context $context, array $props = null, array $bindings = null)
+  {
+    $this->setContext ($context);
+    $this->bindings = $bindings;
+    $this->onCreate ($props, $parent);
+    $this->setProps ($props);
+    $this->init ();
+    return $this;
+  }
+
   protected function getUniqueId ()
   {
     if (array_key_exists ($this->className, self::$uniqueIDs))
@@ -479,13 +419,13 @@ abstract class Component
   }
 
   /**
-   * Allows a component to perform additional initialization before the containing document (or document fragment)
-   * rendering begins.
+   * Allows a component to perform additional initialization after being created. At that stage, the containing
+   * document (or document fragment) rendering has not yet began.
    *
    * <p>**Note:** you **SHOULD** call the parent method when overriding this.
    *
-   * <p>Override this method on a component subclass to set its script and stylesheet dependencies, so that
-   * they are set before the rendering of the whole page starts.
+   * > <p>**Tip:** override this method on a component subclass to set its script and stylesheet dependencies, so that
+   * they are set before the page begins rendering.
    */
   protected function init ()
   {
@@ -506,7 +446,7 @@ abstract class Component
   }
 
   /**
-   * Do something beofre the component renders (ex. prepend to the output).
+   * Do something before the component renders (ex. prepend to the output).
    */
   protected function postRender ()
   {

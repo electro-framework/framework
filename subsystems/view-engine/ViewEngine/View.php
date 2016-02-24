@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\ViewEngine;
 
+use Selenia\Exceptions\FatalException;
 use Selenia\Interfaces\Views\ViewEngineInterface;
 use Selenia\Interfaces\Views\ViewInterface;
 
@@ -24,53 +25,29 @@ class View implements ViewInterface
     $this->viewEngine = $viewEngine;
   }
 
-  /**
-   * Compiles the template.
-   *
-   * @return $this
-   */
   function compile ()
   {
+    if (is_null ($this->source))
+      throw new FatalException ("No template is set for compilation");
     $this->compiled = $this->viewEngine->compile ($this->source);
     return $this;
   }
 
-  /**
-   * Gets the compiled template, if any.
-   *
-   * @return mixed|null
-   */
   function getCompiled ()
   {
     return $this->compiled;
   }
 
-  /**
-   * Gets the associated rendering engine instance, if any.
-   *
-   * @return ViewEngineInterface|null
-   */
   function getEngine ()
   {
     return $this->viewEngine;
   }
 
-  /**
-   * Gets the original source code (the template).
-   *
-   * @return string
-   */
   function getSource ()
   {
     return $this->source;
   }
 
-  /**
-   * Sets the source code (the template).
-   *
-   * @param string $src
-   * @return $this
-   */
   function setSource ($src)
   {
     $this->source   = $src;
@@ -78,14 +55,14 @@ class View implements ViewInterface
     return $this;
   }
 
-  /**
-   * Renders the previously compiled template.
-   *
-   * @param array|object $data The view model; optional data for use by databinding expressions on the template.
-   * @return string The generated output (ex: HTML).
-   */
   function render ($data = null)
   {
-    return $this->viewEngine->render ($this->compiled, $data);
+    if (!$this->compiled)
+      $this->compile ();
+    $template = $this->compiled ?: $this->source;
+    if (is_null ($template))
+      throw new FatalException ("No template is set for rendering");
+    return $this->viewEngine->render ($template, $data);
   }
+
 }

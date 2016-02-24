@@ -10,6 +10,7 @@ use Selenia\Http\Lib\Http;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
 use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\RenderableInterface;
 use Selenia\Traits\InspectionTrait;
 
 /**
@@ -138,7 +139,7 @@ abstract class BaseRouter implements RouterInterface
   }
 
   /**
-   * Invokes a handler.
+   * Invokes a request handler.
    *
    * <p>The router does not call handlers directly; instead, it does it trough this method, so that calls can be
    * intercepted, validated and logged.
@@ -154,6 +155,11 @@ abstract class BaseRouter implements RouterInterface
   protected function callHandler (callable $handler, ServerRequestInterface $request, ResponseInterface $response,
                                   callable $next)
   {
+    if ($handler instanceof RenderableInterface) {
+      $class = $handler->getContextClass ();
+      $handler->setContext ($this->injector->make ($class));
+    }
+
     try {
       $response = $handler ($request, $response, $next);
     }
@@ -289,7 +295,7 @@ abstract class BaseRouter implements RouterInterface
    * @return ResponseInterface
    */
   protected function iteration_stepNotMatchRoute ($key, $routable, ServerRequestInterface $request,
-                                               ResponseInterface $response, callable $nextIteration)
+                                                  ResponseInterface $response, callable $nextIteration)
   {
     return $nextIteration ($request);
   }

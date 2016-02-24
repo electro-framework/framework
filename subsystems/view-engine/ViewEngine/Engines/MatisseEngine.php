@@ -74,13 +74,14 @@ class MatisseEngine implements ViewEngineInterface
   {
     /** @var DocumentFragment $compiled */
     if (isset($data)) {
-      $previous                     = $compiled->context->viewModel;
-      $compiled->context->viewModel = $data;
-      $out                          = $compiled->getRenderedComponent ();
-      $compiled->context->viewModel = $previous;
+      $context            = $compiled->context;
+      $prevModel          = $context->viewModel;
+      $context->viewModel = $data;
+      $out                = $compiled->getRendering ();
+      $context->viewModel = $prevModel;
       return $out;
     }
-    return $compiled->getRenderedComponent ();
+    return $compiled->getRendering ();
   }
 
 }

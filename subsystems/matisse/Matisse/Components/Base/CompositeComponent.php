@@ -2,7 +2,6 @@
 namespace Selenia\Matisse\Components\Base;
 
 use Selenia\Interfaces\Views\ViewInterface;
-use Selenia\Interfaces\Views\ViewServiceInterface;
 use Selenia\ViewEngine\Engines\MatisseEngine;
 
 /**
@@ -31,14 +30,6 @@ class CompositeComponent extends Component
    * @var string
    */
   protected $viewEngineClass = MatisseEngine::class;
-
-  /**
-   * @return ViewServiceInterface
-   */
-  protected function newView ()
-  {
-    return $this->context->viewService->newInstance ();
-  }
 
   /**
    * Allows subclasses to generate the view's markup dinamically.

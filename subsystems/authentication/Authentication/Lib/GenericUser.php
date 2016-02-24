@@ -15,11 +15,16 @@ class GenericUser implements UserInterface
   public $token;
   public $username;
 
-  function active ($set = null)
+  function activeField ($set = null)
   {
     if (isset($set))
       $this->active = $set;
     return $this->active;
+  }
+
+  public function findById ($id)
+  {
+    return false;
   }
 
   public function findByName ($username)
@@ -27,14 +32,14 @@ class GenericUser implements UserInterface
     return false;
   }
 
-  function id ($set = null)
+  function idField ($set = null)
   {
     if (isset($set))
       $this->id = $set;
     return $this->id;
   }
 
-  function lastLogin ($set = null)
+  function lastLoginField ($set = null)
   {
     if (isset($set))
       $this->lastLogin = $set;
@@ -46,42 +51,42 @@ class GenericUser implements UserInterface
     $this->lastLogin = date ('Y-m-d H:i:s');
   }
 
-  function password ($set = null)
+  function passwordField ($set = null)
   {
     if (isset($set))
       $this->password = password_hash ($set, PASSWORD_BCRYPT);
     return $this->password;
   }
 
-  function realName ($set = null)
+  function realNameField ($set = null)
   {
     if (isset($set))
       return $this->realName = $set;
     return $this->realName;
   }
 
-  function registrationDate ($set = null)
+  function registrationDateField ($set = null)
   {
     if (isset($set))
       $this->registrationDate = $set;
     return $this->registrationDate;
   }
 
-  function role ($set = null)
+  function roleField ($set = null)
   {
     if (isset($set))
       $this->role = $set;
     return $this->role;
   }
 
-  function token ($set = null)
+  function tokenField ($set = null)
   {
     if (isset($set))
       $this->token = $set;
     return $this->token;
   }
 
-  function username ($set = null)
+  function usernameField ($set = null)
   {
     if (isset($set)) {
       $this->username = $set;

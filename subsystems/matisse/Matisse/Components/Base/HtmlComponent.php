@@ -52,7 +52,7 @@ class HtmlComponent extends Component
     return $this;
   }
 
-  protected function postRender ($view)
+  protected function postRender ()
   {
     $this->end ();
   }

@@ -4,12 +4,20 @@ namespace Selenia\Matisse\Parser;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\Views\ViewServiceInterface;
 use Selenia\Matisse\Components;
+use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Components\GenericHtmlComponent;
 use Selenia\Matisse\Components\Macro\MacroCall;
+use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Lib\AssetsContext;
 use Selenia\Matisse\Traits\Context\AssetsManagementTrait;
 use Selenia\Matisse\Traits\Context\BlocksManagementTrait;
 use Selenia\Matisse\Traits\Context\MacrosManagementTrait;
 
+/**
+ * A Matisse rendering context.
+ *
+ * <p>It is shared between all components on a view.
+ */
 class Context
 {
   use AssetsManagementTrait;
@@ -112,6 +120,55 @@ class Context
     $this->assets = $this->mainAssets = new AssetsContext;
   }
 
+  /**
+   * Creates a component corresponding to the specified tag and optionally sets its attributes.
+   *
+   * <p>This is called by the parser.
+   *
+   * @param string     $tagName
+   * @param Component  $parent   The component's container component.
+   * @param string[]   $props    A map of property names to property values.
+   *                             Properties specified via this argument come only from markup attributes, not
+   *                             from subtags.
+   * @param array|null $bindings A map of attribute names and corresponding databinding expressions.
+   * @param bool       $generic  If true, an instance of GenericComponent is created.
+   * @param boolean    $strict   If true, failure to find a component class will throw an exception.
+   *                             If false, an attempt is made to load a macro with the same name,
+   * @return Component Component instance. For macros, an instance of Macro is returned.
+   * @throws ComponentException
+   */
+  function createComponentFromTag ($tagName, Component $parent, array $props = null, array $bindings = null,
+                                   $generic = false, $strict = false)
+  {
+    if ($generic) {
+      $component = new GenericHtmlComponent($tagName, $props);
+      return $component;
+    }
+    $class = $this->getClassForTag ($tagName);
+    if (!$class) {
+      if ($strict)
+        Component::throwUnknownComponent ($this, $tagName, $parent);
+
+      // Component class not found.
+      // Convert the tag to a MacroInstance component instance that will attempt to load a macro with the same
+      // name as the tag name.
+
+      if (is_null ($props))
+        $props = [];
+      $props['macro'] = $tagName;
+      $component      = new MacroCall;
+    }
+
+    // Component class was found.
+
+    else $component = $this->injector->make ($class);
+
+    // For both types of components:
+
+    $component->setTagName ($tagName);
+    return $component->setup ($parent, $this, $props, $bindings);
+  }
+
   function getClassForTag ($tag)
   {
     return get ($this->tags, $tag);
@@ -130,9 +187,12 @@ class Context
     return [$this->pipeHandler, $name];
   }
 
-  function registerTags (array $tags)
+  /**
+   * @return object
+   */
+  function getPipeHandler ()
   {
-    $this->tags = array_merge ($this->tags, $tags);
+    return $this->pipeHandler;
   }
 
   function setPipeHandler ($pipeHandler)
@@ -140,12 +200,9 @@ class Context
     $this->pipeHandler = $pipeHandler;
   }
 
-  /**
-   * @return object
-   */
-  function getPipeHandler ()
+  function registerTags (array $tags)
   {
-    return $this->pipeHandler;
+    $this->tags = array_merge ($this->tags, $tags);
   }
 
 }

@@ -208,8 +208,7 @@ class Parser
 
     /** @var Metadata|boolean $defParam */
     $this->parse_attributes ($attrs, $attributes, $bindings, true);
-    $component =
-      Component::createFromTag ($tag, $this->current, $attributes, $bindings,
+    $component = $this->current->context->createComponentFromTag  ($tag, $this->current, $attributes, $bindings,
         false /*TODO: support HTML components*/);
 
     $this->current->addChild ($component);

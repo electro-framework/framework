@@ -241,7 +241,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
     // Render the component.
 
-    $out = $this->getRenderedComponent ();
+    $out = $this->getRendering ();
     $response->getBody ()->write ($out);
     $this->finalize ($response);
     return $response;
@@ -513,11 +513,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   protected function model ()
   {
     return null;
-  }
-
-  protected function newView ()
-  {
-    return $this->view->newInstance ();
   }
 
   function setupView (ViewInterface $view)

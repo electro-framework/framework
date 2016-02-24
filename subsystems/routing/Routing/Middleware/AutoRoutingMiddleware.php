@@ -44,7 +44,7 @@ class AutoRoutingMiddleware implements RequestHandlerInterface
 
     /** @var PageComponent $page */
     $page = $this->injector->make (PageComponent::class);
-    Component::setup ($page, null, $this->context);
+    $page->setup (null, $this->context);
     $page->templateUrl = "$URL.html";
 
     try {

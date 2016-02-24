@@ -40,10 +40,8 @@ class Metadata extends Component
   {
     parent::__construct ();
     $this->type = $type;
-    $this->setContext ($context);
     $this->setTagName ($tagName);
-    $this->setProps ($props);
-    $this->init ();
+    $this->setup (null, $context, $props);
   }
 
   /**

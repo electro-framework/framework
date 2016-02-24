@@ -281,13 +281,22 @@ class Application
   }
 
   /**
+   * @param int|null $id [optional]
    * @return UserInterface
    * @throws FatalException
    */
-  function createUser ()
+  function createUser ($id = null)
   {
-    if (isset($this->userModel))
-      return $this->injector->make ($this->userModel);
+    if (isset($this->userModel)) {
+      /** @var UserInterface $user */
+      $user = new $this->userModel;
+      if ($id) {
+        $f = $user->findById ($id);
+        if (!$f)
+          throw new FatalException ("User $id not found");
+      }
+      return $user;
+    }
     throw new FatalException ('The user model class is not set');
   }
 

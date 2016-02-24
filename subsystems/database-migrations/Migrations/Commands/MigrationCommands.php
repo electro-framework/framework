@@ -9,7 +9,6 @@ use Selenia\Core\ConsoleApplication\Lib\ModulesUtil;
 use Selenia\Core\ConsoleApplication\Services\ConsoleIO;
 use Selenia\Migrations\Config\MigrationsSettings;
 use Selenia\Plugins\IlluminateDatabase\DatabaseAPI;
-use Selenia\Plugins\IlluminateDatabase\Migration;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
@@ -129,7 +128,7 @@ class MigrationCommands
     $command->setApplication ($this->console);
     $input = new ArrayInput(PA ([
       '--configuration' => self::getConfigPath (),
-      '--target'        => $options['target'],
+      '--target'        => get ($options, 'target'),
       '--environment'   => 'main',
       $moduleName,
     ])->prune ()->A);
@@ -149,6 +148,7 @@ class MigrationCommands
     '--seed' => null,
   ])
   {
+    $this->setupModule ($moduleName);
     $r = $this->migrateRollback ($moduleName, ['target' => 0]);
     if ($r) return $r;
     $r = $this->migrate ($moduleName);
@@ -167,6 +167,7 @@ class MigrationCommands
    */
   function migrateReset ($moduleName = null)
   {
+    $this->setupModule ($moduleName);
     return $this->migrateRollback ($moduleName, ['target' => 0]);
   }
 
@@ -190,8 +191,8 @@ class MigrationCommands
     $command->setApplication ($this->console);
     $input = new ArrayInput(PA ([
       '--configuration' => self::getConfigPath (),
-      '--target'        => $options['target'],
-      '--date'          => $options['date'],
+      '--target'        => get ($options, 'target'),
+      '--date'          => get ($options, 'date'),
       '--environment'   => 'main',
       $moduleName,
     ])->prune ()->A);

@@ -39,8 +39,8 @@ function normalizeAttributeName ($name)
 function _g ($data, $key, $default = null)
 {
   if (is_object ($data)) {
-    if ($data instanceof \ArrayAccess)
-      return isset ($data[$key]) ? $data[$key] : null;
+    if ($data instanceof \ArrayAccess && isset ($data[$key]))
+      return $data[$key];
     if (property_exists ($data, $key)) {
       if (isset($data->$key))
         return $data->$key;
