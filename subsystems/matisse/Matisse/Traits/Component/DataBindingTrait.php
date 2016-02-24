@@ -7,7 +7,6 @@ use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Exceptions\HandlerNotFoundException;
 use Selenia\Matisse\Parser\Context;
-use Selenia\Matisse\Parser\Parser;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 
 /**
@@ -95,17 +94,11 @@ trait DataBindingTrait
    */
   protected function _f ($field)
   {
-    if (isset($this->viewModel)) {
-      $data = $this->viewModel;
-      if (is_array ($data)) {
-        if (array_key_exists ($field, $data))
-          return $data[$field];
-      }
-      else if (is_object ($data)) {
-        if (property_exists ($data, $field))
-          return $data->$field;
-      }
-      else $this->throwInvalidData ($data, $field);
+    $data = $this->viewModel;
+    if (isset($data)) {
+      $v = _g ($data, $field, $this);
+      if ($v !== $this)
+        return $v;
     }
 
     /** @var static $parent */
@@ -115,32 +108,23 @@ trait DataBindingTrait
 
     $data = $this->context->viewModel;
     if (isset($data)) {
-      if (is_array ($data)) {
-        if (array_key_exists ($field, $data))
-          return $data[$field];
-      }
-      else if (is_object ($data)) {
-        if (property_exists ($data, $field))
-          return $data->$field;
-      }
-      else $this->throwInvalidData ($data, $field);
+      $v = _g ($data, $field, $this);
+      if ($v !== $this)
+        return $v;
     }
-    return null;
-  }
 
-  protected function bindToAttribute ($name, $value)
-  {
-    if (is_object ($value))
-      $this->props->$name = $value;
-    else $this->props->set ($name, $value);
+    return null;
   }
 
   protected function databind ()
   {
     if (isset($this->bindings))
       foreach ($this->bindings as $attrName => $bindExp) {
-        $this->bindToAttribute ($attrName, $this->evalBinding ($bindExp));
-      };
+        $value = $this->evalBinding ($bindExp);
+        if (is_object ($value))
+          $this->props->$attrName = $value;
+        else $this->props->set ($attrName, $value);
+      }
   }
 
   protected function evalBinding ($bindExp)
@@ -148,25 +132,13 @@ trait DataBindingTrait
     if (!is_string ($bindExp))
       return $bindExp;
     try {
-      $z = 0;
-      do {
-        if (self::isCompositeBinding ($bindExp)) {
-          //composite expression
-          $bindExp = preg_replace_callback (self::$PARSE_BINDING_EXP, [$this, 'evalBindingExp'], $bindExp);
-          if (!Parser::isBindingExpression ($bindExp))
-            return $bindExp;
-        }
-        else {
-          //simple expression
-          preg_match (self::$PARSE_BINDING_EXP, $bindExp, $matches);
-          $bindExp = $this->evalBindingExp ($matches);
-          if (!Parser::isBindingExpression ($bindExp))
-            return $bindExp;
-        }
-        if (++$z > 10)
-          throw new DataBindingException($this,
-            "The maximum nesting depth for a data binding expression was exceeded.<p>The last evaluated expression is   <b>$bindExp</b>");
-      } while (true);
+      if (self::isCompositeBinding ($bindExp))
+        //composite expression
+        return preg_replace_callback (self::$PARSE_BINDING_EXP, [$this, 'evalBindingExp'], $bindExp);
+
+      //simple expression
+      preg_match (self::$PARSE_BINDING_EXP, $bindExp, $matches);
+      return $this->evalBindingExp ($matches);
     }
     catch (\InvalidArgumentException $e) {
       throw new DataBindingException($this, "Invalid databinding expression: $bindExp\n" . $e->getMessage (), $e);

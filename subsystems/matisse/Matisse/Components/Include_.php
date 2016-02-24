@@ -2,6 +2,7 @@
 namespace Selenia\Matisse\Components;
 
 use Selenia\Matisse\Components\Base\CompositeComponent;
+use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 
@@ -31,6 +32,10 @@ class IncludeProperties extends ComponentProperties
    */
   public $styles = false;
   /**
+   * @var string
+   */
+  public $template = '';
+  /**
    * The relative file path of the view to be loaded and rendered at the component's location.
    *
    * <p>Matisse will search for the view on all the view paths registered on the framework.
@@ -41,7 +46,6 @@ class IncludeProperties extends ComponentProperties
    * @var string
    */
   public $view = '';
-
 }
 
 /**
@@ -60,7 +64,15 @@ class Include_ extends CompositeComponent
   protected function render ()
   {
     $prop = $this->props;
-    if (exists ($prop->view)) {
+    if (exists ($prop->template)) {
+      $exp = get ($this->bindings, 'template');
+      if (str_beginsWith ($exp, '{{'))
+        throw new ComponentException($this,
+          "When binding a value to the <kbd>template</kbd> property, you must use the databinding-without-escaping syntax <kbd>{!! !!}</kbd>");
+      $this->template = $prop->template;
+      parent::render ();
+    }
+    elseif (exists ($prop->view)) {
       $this->templateUrl = $prop->view;
       parent::render ();
     }
