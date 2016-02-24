@@ -221,14 +221,9 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       /** @noinspection PhpMissingBreakStatementInspection */
       case 'POST':
         if ($this->request->getHeaderLine ('Content-Type') == 'application/x-www-form-urlencoded') {
-//          dump (array_normalizeEmptyValues ( $this->request->getParsedBody ()));
-          /** @var Model $model */
-//          dump(typeOf($model));
-//          dump($model->attributesToArray());
-//          exit;
-          $this->mergeIntoModel ($model, $this->request->getParsedBody ());
-//          dump ($model);
-//          exit;
+          $data = $this->request->getParsedBody ();
+          unset ($data['_action']);
+          $this->mergeIntoModel ($model, $data);
         }
       default:
         $res = $this->doFormAction ();
@@ -496,9 +491,8 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       $model->safeLoadFrom ($data, $this->defineDataFields ());
     else if (is_array ($model))
       array_mergeExisting ($model, array_normalizeEmptyValues ($data));
-    else if (is_object ($model)) {
+    else if (is_object ($model))
       extendExisting ($model, array_normalizeEmptyValues ($data));
-    }
     else throw new FatalException (sprintf ("Can't merge data into a model of type <kbd>%s</kbd>", gettype ($model)));
   }
 
