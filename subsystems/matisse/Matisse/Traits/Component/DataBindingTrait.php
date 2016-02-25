@@ -238,9 +238,9 @@ trait DataBindingTrait
     // Call a previously compiled expression or compile one now, cache it and call it.
 
     /** @var \Closure $compiled */
-    $compiled = get (Context::$expressions, $expression);
+    $compiled = get (Context::$compiledExpressions, $expression);
     if (!$compiled)
-      $compiled = Context::$expressions[$expression] = $this->compileExpression ($expression);
+      $compiled = Context::$compiledExpressions[$expression] = $this->compileExpression ($expression);
     // Compatible with PHP < 7
     $c = \Closure::bind ($compiled, $this, $this);
     $v = $c ();

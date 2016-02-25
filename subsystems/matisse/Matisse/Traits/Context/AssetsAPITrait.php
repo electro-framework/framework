@@ -7,7 +7,7 @@ use Selenia\Matisse\Lib\AssetsContext;
 /**
  * Manages external and embedded CSS stylesheets and javascripts.
  */
-trait AssetsManagementTrait
+trait AssetsAPITrait
 {
   /**
    * @var AssetsContext

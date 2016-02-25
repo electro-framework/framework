@@ -9,7 +9,7 @@ use Selenia\Matisse\Components\Internal\Text;
  *
  * > <p>Blocks are lazily evaluated, so they are not rendered when being defined.
  */
-trait BlocksManagementTrait
+trait BlocksAPITrait
 {
   /**
    * A map of block names => block contents.

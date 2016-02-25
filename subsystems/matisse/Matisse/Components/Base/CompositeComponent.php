@@ -6,45 +6,55 @@ use Selenia\ViewEngine\Engines\MatisseEngine;
 
 /**
  * A component that delegates its rendering to a separate template (either internal or external to the component),
- * which must be parsed, compiled and rendered by a view engine.
+ * which is parsed, compiled and (in some cases) rendered by a view engine.
  *
- * <p>Composite components are composed of both a "light DOM" and a "shadow DOM".
+ * <p>Composite components are composed of both a "source DOM" and a view (or "shadow DOM").
  *
- * <p>The light DOM is the set of original DOM subtrees (from children or from properties) provided to the component on
- * the document by its author. It can be used to provide metadata and/or document fragments for inclusion on the shadow
- * DOM. This is the only DOM that simple (non-composite) components can access.
+ * <p>The source DOM is the set of original DOM subtrees (from children or from properties) provided to the component
+ * on the document by its author. It can be used to provide metadata and/or document fragments for inclusion on the
+ * view. This is the DOM that simple (non-composite) components work with.
  *
- * <p>The shadow DOM renders the component's visual appearance and it's also called a View, which is parsed and/or
- * compiled from a template by a view engine and rendered by it.
+ * <p>Composite components do not render themselves directly, instead they delegate rendering to a view, which parses,
+ * compiles and renders a template with the help of a view engine.
  *
- * <p>The final rendered output is generated from combining these two DOMs.
+ * <p>The view engine can be Matisse, in which case the view is compiled to a "shadow DOM" of components that can
+ * render themselves, or it can be another templating engine, which usually is also responsible for rendering the
+ * template.
  *
- * > <p>**Note:** components on the View can, in turn, be composite components that have their own templates and so on
- * recursively. **But** the rendered output of a composite component must be final rendered markup, it can not be again
- * a template that requires further processing.
- *
+ * > <p>**Note:** Matisse components on the view can, in turn, be composite components that have their own templates,
+ * and so on recursively. **But** the rendered output of a composite component must be final rendered markup, it can
+ * not be again a template that requires further processing.
  */
 class CompositeComponent extends Component
 {
   /**
+   * An inline/embedded template to be rendered as the component's appearance.
+   *
+   * <p>The view engine to be used to handle the template is selected by {@see $viewEngineClass}.
+   *
    * @var string
    */
   public $template = '';
   /**
    * The URL of an external template to be loaded and rendered.
    *
+   * <p>If specified, it takes precedence over {@see $template}.
+   * <p>The view engine to be used to handle the external template is selected based on the file name extension.
+   *
    * @var string
    */
   public $templateUrl = '';
   /**
-   * When true, tdatabinding resolution on the component's view is unnafected by data from parent component's models or
+   * When true, databinding resolution on the component's view is unnafected by data from parent component's models or
    * from the shared document view model (which is set on {@see Context}); only the component's own view model is used.
+   *
+   * <p>TODO: this is not implemented yet.
    *
    * @var bool
    */
   protected $isolateViewModel = false;
   /**
-   * The engine to be used for parsing and rendering the view if {@see render()} returns an embedded one.
+   * The engine to be used for parsing and rendering the view if {@see $template} is set and {@see $templateUrl} is not.
    *
    * @var string
    */

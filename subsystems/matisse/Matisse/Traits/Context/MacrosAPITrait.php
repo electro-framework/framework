@@ -11,7 +11,7 @@ use Selenia\Matisse\Parser\Parser;
 /**
  * Manages macros loading, storage and retrieval.
  */
-trait MacrosManagementTrait
+trait MacrosAPITrait
 {
   /**
    * @var string[]
