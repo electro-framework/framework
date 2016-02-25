@@ -53,6 +53,7 @@ class ComponentInspector
     echo "<span style='color:$COLOR_TAG'>&lt;$tag</span>";
     if (!isset($component->parent) && !$component instanceof DocumentFragment)
       echo "&nbsp;<span style='color:$COLOR_INFO'>(detached)</span>";
+
     if ($component->supportsProperties) {
       echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";
       /** @var ComponentProperties $propsObj */
@@ -71,9 +72,12 @@ class ComponentInspector
             $tn = $component->props->getTypeNameOf ($k);
             echo "<tr><td style='color:$COLOR_PROP'>$k<td><i style='color:$COLOR_TYPE'>$tn</i><td>";
 
+            // Display data-binding
             $exp = self::inspectString (get ($component->bindings, $k, ''));
-            if ($exp != '')
+            if ($exp != '') {
               echo "<span style='color:$COLOR_BIND'>$exp</span> = ";
+              $v = $component->getComputedPropValue ($k);
+            }
 
             if (is_null ($v))
               echo "<i style='color:$COLOR_INFO'>null</i>";

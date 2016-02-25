@@ -63,19 +63,36 @@ trait DataBindingTrait
    * @param string $prop    The name of the bound attribute.
    * @param string $bindExp The binding expression.
    */
-  public final function addBinding ($prop, $bindExp)
+  public function addBinding ($prop, $bindExp)
   {
     if (!isset($this->bindings))
       $this->bindings = [];
     $this->bindings[$prop] = $bindExp;
   }
 
-  public final function isBound ($prop)
+  /**
+   * Returns the current value of an attribute, performing databinding if necessary.
+   *
+   * <p>This is only required on situation where you need a property's value before databinging has occured.
+   *
+   * @param string $name
+   * @return mixed
+   * @throws DataBindingException
+   */
+  public function getComputedPropValue ($name)
+  {
+    if (isset($this->bindings[$name]))
+      return $this->evalBindingExpression ($this->bindings[$name]);
+
+    return $this->props->get ($name);
+  }
+
+  public function isBound ($prop)
   {
     return isset($this->bindings) && array_key_exists ($prop, $this->bindings);
   }
 
-  public final function removeBinding ($prop)
+  public function removeBinding ($prop)
   {
     if (isset($this->bindings)) {
       unset($this->bindings[$prop]);
@@ -120,14 +137,14 @@ trait DataBindingTrait
   {
     if (isset($this->bindings))
       foreach ($this->bindings as $attrName => $bindExp) {
-        $value = $this->evalBinding ($bindExp);
+        $value = $this->evalBindingExpression ($bindExp);
         if (is_object ($value))
           $this->props->$attrName = $value;
         else $this->props->set ($attrName, $value);
       }
   }
 
-  protected function evalBinding ($bindExp)
+  protected function evalBindingExpression ($bindExp)
   {
     if (!is_string ($bindExp))
       return $bindExp;
@@ -143,23 +160,6 @@ trait DataBindingTrait
     catch (\InvalidArgumentException $e) {
       throw new DataBindingException($this, "Invalid databinding expression: $bindExp\n" . $e->getMessage (), $e);
     }
-  }
-
-  /**
-   * Returns the current value of an attribute, performing databinding if necessary.
-   *
-   * <p>This is only required on situation where you need a property's value before databinging has occured.
-   *
-   * @param string $name
-   * @return mixed
-   * @throws DataBindingException
-   */
-  protected function getComputedPropValue ($name)
-  {
-    if (isset($this->bindings[$name]))
-      return $this->evalBinding ($this->bindings[$name]);
-
-    return $this->props->get ($name);
   }
 
   protected function parseIteratorExp ($exp, & $idxVar, & $itVar)
