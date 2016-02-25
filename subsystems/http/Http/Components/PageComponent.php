@@ -9,7 +9,6 @@ use Psr\Http\Message\ServerRequestInterface;
 use ReflectionException;
 use ReflectionObject;
 use Selenia\Application;
-use Selenia\DataObject;
 use Selenia\Exceptions\Fatal\DataModelException;
 use Selenia\Exceptions\FatalException;
 use Selenia\Exceptions\Flash\FileException;
@@ -36,6 +35,8 @@ use Selenia\ViewEngine\Engines\MatisseEngine;
 class PageComponent extends CompositeComponent implements RequestHandlerInterface
 {
   use PolymorphicInjectionTrait;
+
+  const ACTION_FIELD = 'selenia-action';
 
   /**
    * @var Application
@@ -221,7 +222,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       case 'POST':
         if ($this->request->getHeaderLine ('Content-Type') == 'application/x-www-form-urlencoded') {
           $data = $this->request->getParsedBody ();
-          unset ($data['_action']);
+          unset ($data[self::ACTION_FIELD]);
           $this->mergeIntoModel ($model, $data);
         }
       default:
@@ -453,7 +454,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
   protected function getActionAndParam (&$action, &$param)
   {
-    $action = get ($_REQUEST, '_action', '');
+    $action = get ($_REQUEST, self::ACTION_FIELD, '');
     if (preg_match ('#(\w*):(.*)#', $action, $match)) {
       $action = $match[1];
       $param  = $match[2];

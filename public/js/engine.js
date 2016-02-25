@@ -4,8 +4,11 @@ function nop () {}
 
   // Private vars
 
-  var topics = {}
-    , form;
+  var
+    /** Pub/Sub topics registry */
+    topics = {},
+    /** The #selenia-form jQuery element */
+    form;
 
   // The Selenia API
 
@@ -48,7 +51,7 @@ function nop () {}
     },
 
     /**
-     * Sets the action and submits the form.
+     * Sets the POST action and submits the form.
      * @param {string} name
      * @param {string} param
      */
@@ -58,22 +61,50 @@ function nop () {}
     },
 
     /**
-     * Sets the action to be submitted.
+     * Sets the POST action for later submission.
      * @param {string} name
      * @param {string} param
      */
     setAction: function (name, param) {
-      form.find ('input[name=_action]').val (name + (param ? ':' + param : ''));
+      form.find ('input[name=selenia-action]').val (name + (param ? ':' + param : ''));
     },
 
-    onSubmit: function () {
+    /**
+     * Returns the POST action currently set for submission.
+     * @returns {*}
+     */
+    getAction: function () {
+      return form.find ('input[name=selenia-action]').val ().split (':')[0];
+    },
+
+    /**
+     * Is invoked before #selenia-form is submitted.
+     * Return false to cancel the submission.
+     * @param {Event} ev
+     * @returns {boolean|*}
+     */
+    onSubmit: function (ev) {
+      // Re-enable all buttons if form sbmission is aborted.
+      setTimeout (function () {
+        if (ev.isDefaultPrevented ())
+          selenia.enableButtons (true);
+      });
+      // Disable all buttons while for is being submitted.
+      selenia.enableButtons (false);
+      return selenia.getAction () != 'submit' || selenia.validateForm ();
+    },
+
+    /**
+     * Validates all form inputs that have validation rules.
+     * @returns {boolean} true if the for is valid and can be submitted.
+     */
+    validateForm: function () {
       var i18nInputs = $ ('input[lang]');
       i18nInputs.addClass ('validating'); // hide inputs but allow field validation
 
       // HTML5 native validation integration.
       if ('validateInput' in window)
         $ ('input,textarea,select').each (function () { validateInput (this) });
-      var form  = $ ('form');
       var valid = form[0].checkValidity ();
       if (!valid) {
         setTimeout (function () {
@@ -85,13 +116,26 @@ function nop () {}
         }, 0);
         return false;
       }
-
       // restore display:none state
       i18nInputs.removeClass ('validating');
-
-      // Disable all buttons while for is being submitted.
-      form.find ('button,input[type=button],input[type=submit]').prop ('disabled', true);
       return true;
+    },
+
+    /**
+     * Disables or re-enables all buttons, but re-enables only those that were not previously disabled.
+     * @param {boolean} enable
+     */
+    enableButtons: function (enable) {
+      form.find ('button,input[type=button],input[type=submit]').each (function () {
+        var btn      = $ (this)
+          , disabled = btn.prop ('disabled');
+        if (enable) {
+          if (this.wasDisabled)
+            return delete this.wasDisabled;
+        }
+        else this.wasDisabled = disabled;
+        btn.prop ('disabled', !enable);
+      });
     },
 
     go: function (url, ev) {
@@ -113,8 +157,11 @@ function nop () {}
       }, 1);
     },
 
-    // Multilingual fields support
-
+    /**
+     * Changes the active language for multilingual form inputs.
+     * @param {string} lang
+     * @param {boolean} inputsGroup
+     */
     setLang: function (lang, inputsGroup) {
       selenia.lang = lang;
 
@@ -137,11 +184,12 @@ function nop () {}
 
       selenia.topic ('languageChanged').send (lang);
     }
+
   };
 
   // FRAMEWORK INITIALIZATION CODE
 
-  form = $ ('<form method="post" action="' + location.pathname + '"></form>')
+  form = $ ('<form id="selenia-form" method="post" action="' + location.pathname + '"></form>')
     .submit (selenia.onSubmit);
 
   $ ('body')
@@ -155,6 +203,7 @@ function nop () {}
 
     .wrapInner (form);
 
-  form.prepend ('<input type="hidden" name="_action" value="submit">');
+  form = $ ('#selenia-form');
+  form.prepend ('<input type="hidden" name="selenia-action" value="submit">');
 
 } ();
