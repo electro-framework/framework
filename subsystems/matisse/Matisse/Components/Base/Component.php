@@ -20,13 +20,13 @@ abstract class Component implements RenderableInterface
   /**
    * @var string
    */
-  protected static $propertiesClass;
+  static protected $propertiesClass;
   /**
    * An array containing the instance creation counters for each component class name.
    *
    * @var array
    */
-  protected static $uniqueIDs = [];
+  static protected $uniqueIDs = [];
   /**
    * The component's PHP class name.
    *

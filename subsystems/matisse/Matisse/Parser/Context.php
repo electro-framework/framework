@@ -16,7 +16,7 @@ use Selenia\Matisse\Traits\Context\MacrosManagementTrait;
 /**
  * A Matisse rendering context.
  *
- * <p>It is shared between all components on a view.
+ * <p>It is shared between all components on a document.
  */
 class Context
 {

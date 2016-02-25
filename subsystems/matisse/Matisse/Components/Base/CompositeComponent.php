@@ -5,12 +5,24 @@ use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\ViewEngine\Engines\MatisseEngine;
 
 /**
- * A component that has an associated view, which is parsed and rendered with a specific view engine.
+ * A component that delegates its rendering to a separate template (either internal or external to the component),
+ * which must be parsed, compiled and rendered by a view engine.
  *
- * <p>The component has a dual nature, where in one hand we have the component itself, and on the other hand we have
- * (possibly) a tree of components which will render the component's appearance. This is why it is called "composite".
- * It could also be called "skinnable".
- * <p>The template is a parallel tree to the tree where the component is located (if the component is not standalone).
+ * <p>Composite components are composed of both a "light DOM" and a "shadow DOM".
+ *
+ * <p>The light DOM is the set of original DOM subtrees (from children or from properties) provided to the component on
+ * the document by its author. It can be used to provide metadata and/or document fragments for inclusion on the shadow
+ * DOM. This is the only DOM that simple (non-composite) components can access.
+ *
+ * <p>The shadow DOM renders the component's visual appearance and it's also called a View, which is parsed and/or
+ * compiled from a template by a view engine and rendered by it.
+ *
+ * <p>The final rendered output is generated from combining these two DOMs.
+ *
+ * > <p>**Note:** components on the View can, in turn, be composite components that have their own templates and so on
+ * recursively. **But** the rendered output of a composite component must be final rendered markup, it can not be again
+ * a template that requires further processing.
+ *
  */
 class CompositeComponent extends Component
 {
@@ -24,6 +36,13 @@ class CompositeComponent extends Component
    * @var string
    */
   public $templateUrl = '';
+  /**
+   * When true, tdatabinding resolution on the component's view is unnafected by data from parent component's models or
+   * from the shared document view model (which is set on {@see Context}); only the component's own view model is used.
+   *
+   * @var bool
+   */
+  protected $isolateViewModel = false;
   /**
    * The engine to be used for parsing and rendering the view if {@see render()} returns an embedded one.
    *
