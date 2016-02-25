@@ -1,14 +1,7 @@
 <Content of="master">
 
   <body>
-    {!! statusMessage !!}
-
-    <form method="post" onsubmit="return selenia.onSubmit()">
-      <input type="hidden" name="_action">
-
-      {!! #main !!}
-
-    </form>
+    {!! statusMessage !!} {!! #main !!}
     <Include scripts/>
   </body>
 

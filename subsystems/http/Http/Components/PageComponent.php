@@ -2,7 +2,6 @@
 namespace Selenia\Http\Components;
 
 use Exception;
-use Illuminate\Database\Eloquent\Model;
 use PDOStatement;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use Psr\Http\Message\ResponseInterface;
@@ -257,18 +256,9 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   function action_delete ($param = null)
   {
     if (!isset($this->model))
-      throw new FlashMessageException('Can\'t delete NULL DataObject.', FlashType::ERROR);
-    $data = $this->model;
-    if ($data instanceof DataObject) {
-      if (!isset($this->model->id) && isset($param)) {
-        $data->setPrimaryKeyValue ($param);
-        $data->read ();
-      }
-      $data->delete ();
-    }
-    else throw new FlashMessageException(sprintf ('Can\'t automatically delete object of type <kbd>%s</kbd>',
-      gettype ($data)),
-      FlashType::ERROR);
+      throw new FlashMessageException('Can\'t delete a NULL model.', FlashType::ERROR);
+    throw new FlashMessageException(sprintf ('Can\'t automatically delete object of type <kbd>%s</kbd>',
+      gettype ($this->model)), FlashType::ERROR);
   }
 
   /**
@@ -297,15 +287,9 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   function action_submit ($param = null)
   {
-    $data = $this->model;
-    if (!isset($data))
-      throw new FlashMessageException('Can\'t insert/update NULL DataObject.', FlashType::ERROR);
-    if ($data instanceof DataObject) {
-      if ($data->isNew ())
-        $this->insertData ($data);
-      else $this->updateData ($data);
-    }
-    else throw new FlashMessageException('Can\'t automatically insert/update object of type ' . gettype ($data),
+    if (!isset($this->model))
+      throw new FlashMessageException('Can\'t insert/update a NULL model.', FlashType::ERROR);
+    throw new FlashMessageException('Can\'t automatically insert/update an object of type ' . gettype ($this->model),
       FlashType::ERROR);
     // No return value means: auto-redirect
   }
@@ -318,6 +302,54 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   function preset (array $data)
   {
     $this->presets = $data;
+  }
+
+  function setupView (ViewInterface $view)
+  {
+    $engine = $view->getEngine ();
+    if ($engine instanceof MatisseEngine) {
+      $this->document  = $view->getCompiled ();
+      $context         = $this->document->context;
+      $title           = $this->getTitle ();
+      $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
+      $flashMessage    = $this->session->getFlashMessage ();
+      if ($flashMessage)
+        $this->displayStatus ($flashMessage['type'], $flashMessage['message']);
+      foreach ($this->app->assets as $url) {
+        $p = strrpos ($url, '.');
+        if (!$p) continue;
+        $ext = substr ($url, $p + 1);
+        switch ($ext) {
+          case 'css':
+            $context->addStylesheet ($url);
+            break;
+          case 'js':
+            $context->addScript ($url);
+            break;
+        }
+      }
+      $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
+      $context->getPipeHandler ()->registerFallbackHandler ($this);
+      $context->viewModel = $this;
+    }
+    //------------------
+    // DOM panel
+    //------------------
+    if (DebugConsole::hasLogger ('DOM')) {
+      $insp = $this->document->inspect (true);
+      DebugConsole::logger ('DOM')->write ($insp);
+    }
+    //------------------
+    // View Model panel
+    //------------------
+    if (DebugConsole::hasLogger ('vm')) {
+      DebugConsole::logger ('vm')->withFilter (function ($k, $v, $o) {
+        if ($k === 'app' || $k === 'navigation' || $k === 'session' || $k === 'request' ||
+            $k === 'currentLink' || $k === 'page' || $v instanceof NavigationLinkInterface
+        ) return '...';
+        return true;
+      }, $this);
+    }
   }
 
   protected function autoRedirect ()
@@ -507,54 +539,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   protected function model ()
   {
     return null;
-  }
-
-  function setupView (ViewInterface $view)
-  {
-    $engine = $view->getEngine ();
-    if ($engine instanceof MatisseEngine) {
-      $this->document  = $view->getCompiled ();
-      $context         = $this->document->context;
-      $title           = $this->getTitle ();
-      $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
-      $flashMessage    = $this->session->getFlashMessage ();
-      if ($flashMessage)
-        $this->displayStatus ($flashMessage['type'], $flashMessage['message']);
-      foreach ($this->app->assets as $url) {
-        $p = strrpos ($url, '.');
-        if (!$p) continue;
-        $ext = substr ($url, $p + 1);
-        switch ($ext) {
-          case 'css':
-            $context->addStylesheet ($url);
-            break;
-          case 'js':
-            $context->addScript ($url);
-            break;
-        }
-      }
-      $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
-      $context->getPipeHandler ()->registerFallbackHandler ($this);
-      $context->viewModel = $this;
-    }
-    //------------------
-    // DOM panel
-    //------------------
-    if (DebugConsole::hasLogger ('DOM')) {
-      $insp = $this->document->inspect (true);
-      DebugConsole::logger ('DOM')->write ($insp);
-    }
-    //------------------
-    // View Model panel
-    //------------------
-    if (DebugConsole::hasLogger ('vm')) {
-      DebugConsole::logger ('vm')->withFilter (function ($k, $v, $o) {
-        if ($k === 'app' || $k === 'navigation' || $k === 'session' || $k === 'request' ||
-            $k === 'currentLink' || $k === 'page' || $v instanceof NavigationLinkInterface
-        ) return '...';
-        return true;
-      }, $this);
-    }
   }
 
   protected function paginate (array &$data, $pageSize = 0)

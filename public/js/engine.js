@@ -4,14 +4,15 @@ function nop () {}
 
   // Private vars
 
-  var topics = {};
+  var topics = {}
+    , form;
 
   // The Selenia API
 
   window.selenia = {
 
     prevFocus: $ (),
-    lang: '',
+    lang:      '',
 
     /**
      * Selenia's Pub-Sub system.
@@ -46,26 +47,34 @@ function nop () {}
       return this;
     },
 
+    /**
+     * Sets the action and submits the form.
+     * @param {string} name
+     * @param {string} param
+     */
     doAction: function (name, param) {
-      var form = $ ('form')[0];
-      $ (form).find ('input[name=_action]').val (name + (param ? ':' + param : ''));
-      form.action = location.href; //update url (ex. the hash may have changed)
-      if (name != 'submit' || selenia.onSubmit ()) {
-        form.submit ();
-        $ (form).find ('button,input[type=button],input[type=submit]').prop ('disabled', true);
-        return true;
-      }
-      return false;
+      selenia.setAction (name, param);
+      form.submit ();
     },
 
-    onSubmit: function (ev) {
+    /**
+     * Sets the action to be submitted.
+     * @param {string} name
+     * @param {string} param
+     */
+    setAction: function (name, param) {
+      form.find ('input[name=_action]').val (name + (param ? ':' + param : ''));
+    },
+
+    onSubmit: function () {
       var i18nInputs = $ ('input[lang]');
-      i18nInputs.addClass ('validating'); // hide but allow field validation
+      i18nInputs.addClass ('validating'); // hide inputs but allow field validation
+
       // HTML5 native validation integration.
       if ('validateInput' in window)
         $ ('input,textarea,select').each (function () { validateInput (this) });
-      var form  = $ ('form')[0];
-      var valid = form.checkValidity ();
+      var form  = $ ('form');
+      var valid = form[0].checkValidity ();
       if (!valid) {
         setTimeout (function () {
           var e = document.activeElement;
@@ -76,8 +85,12 @@ function nop () {}
         }, 0);
         return false;
       }
-      i18nInputs.removeClass ('validating'); // restore display:none state
-      if (window.onSubmit) return window.onSubmit (form);
+
+      // restore display:none state
+      i18nInputs.removeClass ('validating');
+
+      // Disable all buttons while for is being submitted.
+      form.find ('button,input[type=button],input[type=submit]').prop ('disabled', true);
       return true;
     },
 
@@ -126,12 +139,22 @@ function nop () {}
     }
   };
 
-  // Memorize the previously focused input.
+  // FRAMEWORK INITIALIZATION CODE
 
-  $ ('body').focusout (function (ev) {
-    if (ev.target.tagName == 'INPUT' || ev.target.tagName == 'TEXTAREA')
-      selenia.prevFocus = $ (ev.target);
-    else selenia.prevFocus = $ ();
-  });
+  form = $ ('<form method="post" action="' + location.pathname + '"></form>')
+    .submit (selenia.onSubmit);
+
+  $ ('body')
+
+  // Memorize the previously focused input.
+    .focusout (function (ev) {
+      if (ev.target.tagName == 'INPUT' || ev.target.tagName == 'TEXTAREA')
+        selenia.prevFocus = $ (ev.target);
+      else selenia.prevFocus = $ ();
+    })
+
+    .wrapInner (form);
+
+  form.prepend ('<input type="hidden" name="_action" value="submit">');
 
 } ();
