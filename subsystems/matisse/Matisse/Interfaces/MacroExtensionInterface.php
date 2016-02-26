@@ -4,6 +4,9 @@ namespace Selenia\Matisse\Interfaces;
 use Selenia\Matisse\Components\Macro\Macro;
 use Selenia\Matisse\Components\Macro\MacroCall;
 
+/**
+ * Makes a component capable of performing macro transformations at template compile-time.
+ */
 interface MacroExtensionInterface
 {
   /**
