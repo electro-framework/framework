@@ -2,6 +2,7 @@
 
 /**
  * An array containing the names of the HTML tags which must not have a closing tag.
+ *
  * @var array
  */
 $VOID_ELEMENTS = [
@@ -26,16 +27,20 @@ $VOID_ELEMENTS = [
 /**
  * Creates an array representation of an html tag.
  *
- * @param string       $tagAndClasses Syntax: 'tag.class1.class2...classN', tag is optional.
- * @param array|string $attrs         Can also receive the value of $content, but BEWARE: the content array MUST have
- *                                    integer keys, otherwise it will be interpreted as an attributes array.
+ * @param string       $selector Syntax: 'tag#id.class1.class2...classN', all elements are optional. Default tag is
+ *                               'div'.
+ * @param array|string $attrs    Can also receive the value of $content, but BEWARE: the content array MUST have
+ *                               integer keys, otherwise it will be interpreted as an attributes array.
  * @param array|string $content
  * @return array
  */
-function h ($tagAndClasses, $attrs = [], $content = [])
+function h ($selector, $attrs = [], $content = [])
 {
-  $t   = explode ('.', $tagAndClasses, 2);
-  $tag = $t[0] ?: 'div';
+  $id      = str_extract ($selector, '/#([\w\-]*)/');
+  $classes = str_extract ($selector, '/\.([\w\-\.]*)/');
+  $tag     = $selector === '' ? 'div' : $selector;
+  $classes = array_filter (explode ('.', $classes));
+
   if (is_string ($attrs)) {
     $content = $attrs;
     $attrs   = [];
@@ -44,11 +49,23 @@ function h ($tagAndClasses, $attrs = [], $content = [])
     $content = $attrs;
     $attrs   = [];
   }
-  if (isset($t[1]))
-    $attrs['class'] = (isset($attrs['class']) ? $attrs['class'] . ' ' : '') . str_replace ('.', ' ', $t[1]);
+  if (isset($attrs['class'])) {
+    $classes = array_merge ($classes, explode (' ', $attrs['class']));
+    unset ($attrs['class']);
+  }
+
+  $outAttrs = [];
+  if ($id)
+    $outAttrs['id'] = $id;
+  if ($classes)
+    $outAttrs['class'] = implode (' ', $classes);
+  // Put ID and CLASS attributes first.
+  if ($outAttrs) $outAttrs = array_merge ($outAttrs, $attrs);
+  else $outAttrs = $attrs;
+
   return [
     '<' => $tag,
-    '@' => $attrs,
+    '@' => $outAttrs,
     '[' => $content,
   ];
 }
@@ -74,7 +91,7 @@ function html ($e, $d = 0)
     $o       = ($d ? "\n" : '') . "$s<$tag";
     foreach ($attrs as $k => $v) {
       if (is_null ($v)) continue;
-      if (is_bool($v)) {
+      if (is_bool ($v)) {
         if ($v) $o .= " $k";
       }
       elseif (!is_scalar ($v))

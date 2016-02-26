@@ -70,7 +70,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   public $max = 1;
   /**
-   * @var array|Object|DataObject The page's data model.
+   * @var array|Object The page's data model.
    */
   public $model;
   /** @var NavigationInterface */
@@ -220,7 +220,8 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
         break;
       /** @noinspection PhpMissingBreakStatementInspection */
       case 'POST':
-        if ($this->request->getHeaderLine ('Content-Type') == 'application/x-www-form-urlencoded') {
+        $contentType = $this->request->getHeaderLine ('Content-Type');
+        if ($contentType == 'application/x-www-form-urlencoded' || str_beginsWith($contentType, 'multipart/form-data')) {
           $data = $this->request->getParsedBody ();
           unset ($data[self::ACTION_FIELD]);
           $this->mergeIntoModel ($model, $data);

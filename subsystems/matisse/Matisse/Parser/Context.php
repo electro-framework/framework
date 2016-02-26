@@ -24,6 +24,8 @@ class Context
   use PipesAPITrait;
   use MacrosAPITrait;
 
+  const FORM_ID = 'selenia-form';
+
   /**
    * A map of databinding expressions to compiled functions.
    *
@@ -77,6 +79,17 @@ class Context
   {
     $this->tags   = self::$coreTags;
     $this->assets = $this->mainAssets = new AssetsContext;
+  }
+
+  /**
+   * Sets main form's `enctype` to `multipart/form-data`, allowing file upload fields.
+   *
+   * > <p>This can be called multiple times.
+   */
+  public function enableFileUpload ()
+  {
+    $FORM_ID = self::FORM_ID;
+    $this->addInlineScript ("$('#$FORM_ID').attr('enctype','multipart/form-data');", 'setEncType');
   }
 
 }

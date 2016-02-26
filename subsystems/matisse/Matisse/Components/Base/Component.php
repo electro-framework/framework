@@ -120,6 +120,19 @@ abstract class Component implements RenderableInterface
     return (new static)->setup ($parent, $parent->context, $props, $bindings);
   }
 
+  /**
+   * Creates and renders a component inline.
+   *
+   * @param Component  $parent
+   * @param array|null $props
+   * @param array|null $bindings
+   * @return string The rendered output.
+   */
+  static function inline (Component $parent, array $props = null, array $bindings = null)
+  {
+    return static::create ($parent, $props, $bindings)->getRendering ();
+  }
+
   static function throwUnknownComponent (Context $context, $tagName, Component $parent, $filename = null)
   {
     $paths    = implode ('', map ($context->macrosDirectories,

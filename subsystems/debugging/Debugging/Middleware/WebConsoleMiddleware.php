@@ -1,15 +1,9 @@
 <?php
 namespace Selenia\Debugging\Middleware;
 
-use Monolog\Logger;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
-use PhpKit\WebConsole\Loggers\ConsoleLogger;
-use PhpKit\WebConsole\Loggers\Handlers\WebConsoleMonologHandler;
-use PhpKit\WebConsole\Loggers\Specialized\PSR7RequestLogger;
-use PhpKit\WebConsole\Loggers\Specialized\PSR7ResponseLogger;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Psr\Log\LoggerInterface;
 use Selenia\Application;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\Shared\ApplicationRouterInterface;

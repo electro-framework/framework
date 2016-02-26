@@ -16,6 +16,10 @@ function nop () {}
 
     prevFocus: $ (),
     lang:      '',
+    /**
+     * Extensions and components plug-in into this namespace.
+     */
+    ext: {},
 
     /**
      * Selenia's Pub-Sub system.
