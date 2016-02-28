@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Matisse\Traits\Context;
 
+use Selenia\Interfaces\InjectorInterface;
 use Selenia\Matisse\Components;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\GenericHtmlComponent;
@@ -10,6 +11,8 @@ use Selenia\Matisse\Parser\Context;
 
 /**
  * Manages components on a rendering Context.
+ *
+ * @property InjectorInterface injector
  */
 trait ComponentsAPITrait
 {
@@ -40,6 +43,21 @@ trait ComponentsAPITrait
    * @var array string => string
    */
   private $tags;
+
+  /**
+   * Creates an injectable component instance of the given class.
+   *
+   * @param string     $class
+   * @param Component  $parent
+   * @param array|null $props
+   * @param array|null $bindings
+   * @return Component
+   */
+  function createComponent ($class, Component $parent, array $props = null, array $bindings = null)
+  {
+    $component = $this->injector->make ($class);
+    return $component->setup ($parent, $this, $props, $bindings);
+  }
 
   /**
    * Creates a component corresponding to the specified tag and optionally sets its published properties.
@@ -86,6 +104,10 @@ trait ComponentsAPITrait
     else $component = $this->injector->make ($class);
 
     // For both types of components:
+
+    if (!$component instanceof Component)
+      throw new ComponentException (null,
+        sprintf ("Class <kbd>%s</kbd> is not a subclass of <kbd>Component</kbd>", get_class ($component)));
 
     $component->setTagName ($tagName);
     return $component->setup ($parent, $this, $props, $bindings);

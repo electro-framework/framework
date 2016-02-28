@@ -9,6 +9,8 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class Http
 {
+  const ACTION_FIELD = 'selenia-action';
+
   /**
    * Checks if the HTTP client accepts the given content type.
    * @param ServerRequestInterface $request

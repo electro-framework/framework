@@ -105,7 +105,22 @@ abstract class Component implements RenderableInterface
   }
 
   /**
+   * Creates and renders a component inline.
+   *
+   * @param Component  $parent
+   * @param array|null $props
+   * @param array|null $bindings
+   * @return string The rendered output.
+   */
+  static function _ (Component $parent, array $props = null, array $bindings = null)
+  {
+    return static::create ($parent, $props, $bindings)->getRendering ();
+  }
+
+  /**
    * Creates a component instance of the static class where this method was invoked on.
+   *
+   * > This method does not support components that require constructor injection.
    *
    * @param Component  $parent   The component's container component.
    * @param string[]   $props    A map of property names to property values.
@@ -118,19 +133,6 @@ abstract class Component implements RenderableInterface
   static function create (Component $parent, array $props = null, array $bindings = null)
   {
     return (new static)->setup ($parent, $parent->context, $props, $bindings);
-  }
-
-  /**
-   * Creates and renders a component inline.
-   *
-   * @param Component  $parent
-   * @param array|null $props
-   * @param array|null $bindings
-   * @return string The rendered output.
-   */
-  static function inline (Component $parent, array $props = null, array $bindings = null)
-  {
-    return static::create ($parent, $props, $bindings)->getRendering ();
   }
 
   static function throwUnknownComponent (Context $context, $tagName, Component $parent, $filename = null)
@@ -322,6 +324,8 @@ abstract class Component implements RenderableInterface
    * Invokes doRender() recursively on the component's children (or a subset of).
    *
    * @param string|null $attrName [optional] An attribute name. If none, it renders all the component's children.
+   *
+   * @see renderContent()
    */
   function renderChildren ($attrName = null)
   {
@@ -332,9 +336,10 @@ abstract class Component implements RenderableInterface
 
   /**
    * Renders all children.
-   * ><p>**Note:** the component itself is not rendered.
-   * ><p>**Note:** usually, you should use this instead of {@see renderChildren()}, as it also calls `renderChildren`
-   * but it performs some additional operations.
+   * ><p>**Note:** the component itself is not rendered.<br><br>
+   * ><p>**Note:** you should use this instead of {@see renderChildren()} when the full rendering of the component is
+   * performed by its children. If the component does some rendering itself and additionally renders its children, call
+   * {@see renderChildren()} from inside the component's rendering code.
    */
   function renderContent ()
   {
@@ -342,7 +347,7 @@ abstract class Component implements RenderableInterface
       $this->databind ();
       $this->preRender ();
       $this->renderChildren ();
-      $this->postRender (null);
+      $this->postRender ();
     }
   }
 
@@ -359,6 +364,12 @@ abstract class Component implements RenderableInterface
   {
     ++$this->renderCount;
     if (!$this->hidden) {
+      // The default view model is the component instance itself.
+      // You can override it on viewModel(), for instance.
+      if (!isset($this->viewModel))
+        $this->viewModel = $this;
+
+      $this->viewModel ();
       $this->databind ();
       if (!isset($this->props) || !isset($this->props->hidden) ||
           !$this->props->hidden
@@ -504,6 +515,18 @@ abstract class Component implements RenderableInterface
     }
 
     return $this->props->id;
+  }
+
+  /**
+   * Override to set data on the component's view model.
+   *
+   * Data will usually be set on the component instance itself.
+   * <p>Ex:
+   * > `$this->data = ...`
+   */
+  protected function viewModel ()
+  {
+    //override
   }
 
 }

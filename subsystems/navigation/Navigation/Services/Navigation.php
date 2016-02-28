@@ -121,6 +121,13 @@ class Navigation implements NavigationInterface
     return $link;
   }
 
+  function divider ()
+  {
+    $link        = $this->link ()->title('-');
+    $link->group = true;
+    return $link;
+  }
+
   /**
    * Override this if you need to return another type of `NavigationLinkInterface`-compatible instance.
    *

@@ -2,7 +2,6 @@
 namespace Selenia\Http\Components;
 
 use Exception;
-use PDOStatement;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -14,6 +13,7 @@ use Selenia\Exceptions\FatalException;
 use Selenia\Exceptions\Flash\FileException;
 use Selenia\Exceptions\FlashMessageException;
 use Selenia\Exceptions\FlashType;
+use Selenia\Http\Lib\Http;
 use Selenia\Interfaces\Http\RedirectionInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\InjectorInterface;
@@ -35,8 +35,6 @@ use Selenia\ViewEngine\Engines\MatisseEngine;
 class PageComponent extends CompositeComponent implements RequestHandlerInterface
 {
   use PolymorphicInjectionTrait;
-
-  const ACTION_FIELD = 'selenia-action';
 
   /**
    * @var Application
@@ -146,6 +144,12 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   protected $renderOnAction = false;
   /**
+   * When set, the component's view model is made available on the shared view model under the specified key name.
+   *
+   * @var string
+   */
+  protected $shareViewModelAs = null;
+  /**
    * @var ViewServiceInterface
    */
   protected $view;
@@ -221,9 +225,11 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       /** @noinspection PhpMissingBreakStatementInspection */
       case 'POST':
         $contentType = $this->request->getHeaderLine ('Content-Type');
-        if ($contentType == 'application/x-www-form-urlencoded' || str_beginsWith($contentType, 'multipart/form-data')) {
+        if ($contentType == 'application/x-www-form-urlencoded' ||
+            str_beginsWith ($contentType, 'multipart/form-data')
+        ) {
           $data = $this->request->getParsedBody ();
-          unset ($data[self::ACTION_FIELD]);
+          unset ($data[Http::ACTION_FIELD]);
           $this->mergeIntoModel ($model, $data);
         }
       default:
@@ -233,7 +239,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
         $this->finalize ($res);
         return $res;
     }
-    $this->viewModel ();
 
     // Render the component.
 
@@ -308,6 +313,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
   function setupView (ViewInterface $view)
   {
+    parent::setupView ($view);
     $engine = $view->getEngine ();
     if ($engine instanceof MatisseEngine) {
       $this->document  = $view->getCompiled ();
@@ -332,7 +338,8 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       }
       $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
       $context->getPipeHandler ()->registerFallbackHandler ($this);
-      $context->viewModel = $this;
+      if (exists ($this->shareViewModelAs))
+        $context->viewModel[$this->shareViewModelAs] = $this->viewModel;
     }
     //------------------
     // DOM panel
@@ -345,13 +352,32 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     // View Model panel
     //------------------
     if (DebugConsole::hasLogger ('vm')) {
-      DebugConsole::logger ('vm')->withFilter (function ($k, $v, $o) {
-        if ($k === 'app' || $k === 'navigation' || $k === 'session' || $k === 'request' ||
+
+      $VMFilter = function ($k, $v, $o) {
+        if ($k === 'app' || $k === 'navigation' || $k === 'session' || $k === 'request' || $k === 'viewModel' ||
             $k === 'currentLink' || $k === 'page' || $v instanceof NavigationLinkInterface
         ) return '...';
         return true;
-      }, $this);
+      };
+
+      DebugConsole::logger ('vm')
+                  ->write ("<#section|{$this->className} View Model>")
+                  ->withFilter ($VMFilter, $this->viewModel)
+                  ->write ("</#section><#section|Shared View Model>")
+                  ->withFilter ($VMFilter, $this->context->viewModel)
+                  ->write ("</#section>");
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * <p>Note:
+   * > View models are available only on GET requests.
+   */
+  protected function viewModel ()
+  {
+    //Override.
   }
 
   protected function autoRedirect ()
@@ -455,7 +481,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
   protected function getActionAndParam (&$action, &$param)
   {
-    $action = get ($_REQUEST, self::ACTION_FIELD, '');
+    $action = get ($_REQUEST, Http::ACTION_FIELD, '');
     if (preg_match ('#(\w*):(.*)#', $action, $match)) {
       $action = $match[1];
       $param  = $match[2];
@@ -498,32 +524,14 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   }
 
   /**
-   * Responds to the standard 'submit' controller action when a primary key value is not present on the request.
-   * The default procedure is to create a new record on the database if the model is an ORM model.
-   * Override to implement your own saving algorithm.
-   *
-   * @param $model
-   * @throws FatalException
-   */
-  protected function insertData ($model)
-  {
-    if ($model instanceof DataObject)
-      $model->insert ();
-    else throw new FatalException (sprintf ("Don't know how to save a model of type <kbd class=type>%s</kbd>.<p>You should override <kbd>insertData()</kbd>.",
-      is_object ($model) ? get_class ($model) : gettype ($model)));
-  }
-
-  /**
-   * @param array|object|DataObject $model
-   * @param array|null              $data If `null` nothihg happens.
+   * @param array|object $model
+   * @param array|null   $data If `null` nothihg happens.
    * @throws FatalException
    */
   protected function mergeIntoModel (& $model, array $data = null)
   {
     if (is_null ($data) || is_null ($model)) return;
-    if ($model instanceof DataObject)
-      $model->safeLoadFrom ($data, $this->defineDataFields ());
-    else if (is_array ($model))
+    if (is_array ($model))
       array_mergeExisting ($model, array_normalizeEmptyValues ($data));
     else if (is_object ($model))
       extendExisting ($model, array_normalizeEmptyValues ($data));
@@ -536,7 +544,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    * > This model will be available on all request methods (GET, POST, etc) and it will also be set as the 'model' view
    * model.
    *
-   * @return DataObject|PDOStatement|array
+   * @return mixed
    */
   protected function model ()
   {
@@ -557,37 +565,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       }
       array_splice ($data, $pageSize);
     }
-  }
-
-  /**
-   * Responds to the standard 'submit' controller action when a primary key value is present on the request.
-   * The default procedure is to create a new record on the database if the model is an ORM model.
-   * Override to implement your own saving algorithm.
-   *
-   * @param $model
-   * @throws FatalException
-   */
-  protected function updateData ($model)
-  {
-    if ($model instanceof DataObject)
-      $model->update ();
-    else throw new FatalException (sprintf ("Don't know how to save a model of type <kbd class=type>%s</kbd>.<p>You should override <kbd>updateData()</kbd>.",
-      is_object ($model) ? get_class ($model) : gettype ($model)));
-  }
-
-  /**
-   * Override to set data on the controller's view model.
-   *
-   * Data will usually be set on the controller instance.
-   * <p>Ex:
-   * > `$this->data = ...`
-   *
-   * <p>Note:
-   * > View models are available only on GET requests.
-   */
-  protected function viewModel ()
-  {
-    //Override.
   }
 
 }

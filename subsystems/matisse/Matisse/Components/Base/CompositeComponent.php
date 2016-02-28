@@ -73,7 +73,8 @@ class CompositeComponent extends Component
       $view = $this->context->viewService->loadFromFile ($this->templateUrl);
     elseif ($this->template)
       $view = $this->context->viewService->loadFromString ($this->template, $this->viewEngineClass);
-    else return null;
+    else return;
+
     $view->compile ();
     $this->setupView ($view);
     echo $view->render ();
@@ -89,7 +90,12 @@ class CompositeComponent extends Component
    */
   protected function setupView (ViewInterface $view)
   {
-    //override
+    $engine = $view->getEngine ();
+    if ($engine instanceof MatisseEngine) {
+      /** @var Component $document */
+      $document = $view->getCompiled ();
+      $document->attachTo ($this);
+    }
   }
 
 }

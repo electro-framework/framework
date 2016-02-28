@@ -19,7 +19,7 @@ function nop () {}
     /**
      * Extensions and components plug-in into this namespace.
      */
-    ext: {},
+    ext:       {},
 
     /**
      * Selenia's Pub-Sub system.
@@ -191,23 +191,24 @@ function nop () {}
 
   };
 
-  // FRAMEWORK INITIALIZATION CODE
+  $ (function initSelenia () {
 
-  form = $ ('<form id="selenia-form" method="post" action="' + location.pathname + '"></form>')
-    .submit (selenia.onSubmit);
+    form = $ ('<form id="selenia-form" method="post" action="' + location.pathname + '"></form>')
+      .submit (selenia.onSubmit);
 
-  $ ('body')
+    $ ('body')
 
-  // Memorize the previously focused input.
-    .focusout (function (ev) {
-      if (ev.target.tagName == 'INPUT' || ev.target.tagName == 'TEXTAREA')
-        selenia.prevFocus = $ (ev.target);
-      else selenia.prevFocus = $ ();
-    })
+    // Memorize the previously focused input.
+      .focusout (function (ev) {
+        if (ev.target.tagName == 'INPUT' || ev.target.tagName == 'TEXTAREA')
+          selenia.prevFocus = $ (ev.target);
+        else selenia.prevFocus = $ ();
+      })
 
-    .wrapInner (form);
+      .wrapInner (form);
 
-  form = $ ('#selenia-form');
-  form.prepend ('<input type="hidden" name="selenia-action" value="submit">');
+    form = $ ('#selenia-form');
+    form.prepend ('<input type="hidden" name="selenia-action" value="submit">');
+  });
 
 } ();

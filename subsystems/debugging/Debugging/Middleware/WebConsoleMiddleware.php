@@ -117,7 +117,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     //------------------
     if ($this->injector->provides (SessionInterface::class)) {
       DebugConsole::logger ('session')
-                  ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="__doAction(\'logout\')">Log out</button>')
+                  ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="selenia.doAction(\'logout\')">Log out</button>')
                   ->inspect ($this->injector->make (SessionInterface::class));
     }
 

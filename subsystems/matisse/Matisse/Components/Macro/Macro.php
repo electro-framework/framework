@@ -163,7 +163,7 @@ class Macro extends Component
         /** @var Component $component */
         $component = $components[$i];
 
-        if (!is_null ($component)) {
+        if (isset ($component) && isset($component->props)) {
           if (isset($component->bindings)) {
             foreach ($component->bindings as $field => $exp)
               $this->applyBinding ($component, $field, $exp, $call, $components, $i);

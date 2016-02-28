@@ -8,6 +8,7 @@ use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Exceptions\HandlerNotFoundException;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
+use Selenia\Plugins\AdminInterface\Components\Layouts\Main;
 
 /**
  * Provides an API for handling data binding on a component's properties.
@@ -210,7 +211,6 @@ trait DataBindingTrait
       $exp = "$not$exp";
       if (!PhpCode::validateExpression ($exp))
         throw new DataBindingException($this, "Invalid expression <kbd>$expression</kbd>.");
-
       return $exp;
     }
 

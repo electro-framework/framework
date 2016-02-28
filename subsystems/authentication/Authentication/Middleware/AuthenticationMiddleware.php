@@ -4,6 +4,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Authentication\Exceptions\AuthenticationException;
+use Selenia\Http\Lib\Http;
 use Selenia\Interfaces\Http\RedirectionInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\SessionInterface;
@@ -38,7 +39,7 @@ class AuthenticationMiddleware implements RequestHandlerInterface
         break;
       case 'POST':
         $post   = $request->getParsedBody ();
-        $action = get ($post, '_action');
+        $action = get ($post, Http::ACTION_FIELD);
         switch ($action) {
           case 'logout':
             $this->session->logout ();
@@ -50,6 +51,9 @@ class AuthenticationMiddleware implements RequestHandlerInterface
   }
 
   /**
+   * TODO: authenticate via HTTP Basic Authentication
+   * This code was copy/pasted fom an old controller; it must be rewritten.
+   *
    * @return bool|string
    * <li> True is a login form should be displayed.
    * <li> False to proceed as a normal request.
