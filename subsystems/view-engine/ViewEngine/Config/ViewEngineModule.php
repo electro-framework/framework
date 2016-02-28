@@ -27,24 +27,27 @@ class ViewEngineModule implements ServiceProviderInterface, ModuleInterface
     $injector
       ->alias (ViewInterface::class, View::class)//note: this is not used by ViewService.
       ->alias (ViewServiceInterface::class, ViewService::class)
+      ->share (ViewServiceInterface::class)
+      // Register the built-in view engines:
       ->prepare (ViewServiceInterface::class, function (ViewServiceInterface $viewService) {
         $viewService->register (MatisseEngine::class, '/\.html$/');
       })
-      ->share (ViewServiceInterface::class)
       ->delegate (Context::class,
         function (Application $app, ViewServiceInterface $viewService) use ($injector) {
           $ctx = new Context;
           $ctx->registerTags ($app->tags);
           $ctx->setPipeHandler ($pipeHandler = new PipeHandler);
           $pipeHandler->registerPipes (new DefaultPipes ($app));
-          $ctx->condenseLiterals  = $app->condenseLiterals;
-          $ctx->debugMode         = $app->debugMode;
-          $ctx->macrosDirectories = $app->macrosDirectories;
-          $ctx->presets           = map ($app->presets,
+          $ctx->condenseLiterals     = $app->condenseLiterals;
+          $ctx->debugMode            = $app->debugMode;
+          $ctx->macrosDirectories    = $app->macrosDirectories;
+          $ctx->controllers          = $app->controllers;
+          $ctx->controllerNamespaces = $app->controllerNamespaces;
+          $ctx->presets              = map ($app->presets,
             function ($class) use ($app) { return $app->injector->make ($class); });
-          $ctx->macrosExt         = '.html';
-          $ctx->injector          = $injector;
-          $ctx->viewService       = $viewService;
+          $ctx->macrosExt            = '.html';
+          $ctx->injector             = $injector;
+          $ctx->viewService          = $viewService;
           return $ctx;
         })
       ->share (Context::class);

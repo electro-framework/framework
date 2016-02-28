@@ -41,6 +41,8 @@ trait DataBindingTrait
    * A map of attribute names and corresponding databinding expressions.
    * Equals NULL if no bindings are defined.
    *
+   * > <p>It has `public` visibility so that it can be inspected externally.
+   *
    * @var array
    */
   public $bindings = null;
@@ -51,7 +53,13 @@ trait DataBindingTrait
    *
    * @var mixed
    */
-  public $viewModel;
+  protected $viewModel;
+  /**
+   * When set, the component's view model is made available on the shared view model under the specified key name.
+   *
+   * @var string
+   */
+  protected $shareViewModelAs = null;
 
   static function isCompositeBinding ($exp)
   {

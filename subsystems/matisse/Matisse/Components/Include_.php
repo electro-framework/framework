@@ -1,29 +1,11 @@
 <?php
 namespace Selenia\Matisse\Components;
 
-use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Base\CompositeComponent;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 
-/**
- * The **Include** component is capable of rendering content from multiple source types.
- *
- * <p>With it, you can:
- *
- * 1. load raw markup files;
- * - load controller-less views;
- * - load view-less components;
- * - load composite components where each component determines its view;
- * - load composite components defining or overriding their view independently;
- * - inject managed scripts into the page;
- * - inject managed stylesheets into the page.
- *
- * <p>One common use of Include is to assign controllers to view partials/layouts, therefore encapsulating their
- * functionality and freeing your page controller code from having to handle each and all of them that are included on
- * the page.
- */
 class IncludeProperties extends ComponentProperties
 {
   /**
@@ -80,10 +62,21 @@ class IncludeProperties extends ComponentProperties
 }
 
 /**
- * Renders a dynamic view or an arbitrary static file.
+ * The **Include** component is capable of rendering content from multiple source types.
  *
- * <p>When rendering a view, the view's rendering context (and associated view model) come from the current rendering
- * context.
+ * <p>With it, you can:
+ *
+ * 1. load raw markup files;
+ * - load controller-less views;
+ * - load view-less components;
+ * - load composite components where each component determines its view;
+ * - load composite components defining or overriding their view independently;
+ * - inject managed scripts into the page;
+ * - inject managed stylesheets into the page.
+ *
+ * <p>One common use of Include is to assign controllers to view partials/layouts, therefore encapsulating their
+ * functionality and freeing your page controller code from having to handle each and all of them that are included on
+ * the page.
  */
 class Include_ extends CompositeComponent
 {
@@ -94,48 +87,62 @@ class Include_ extends CompositeComponent
 
   protected function render ()
   {
-    $prop = $this->props;
+    $prop       = $this->props;
+    $ctx        = $this->context;
+    $controller = $prop->class;
 
-    if (exists ($prop->class)) {
-      /** @var Component $class */
-      $class = $prop->class;
-      if (!class_exists ($class))
-        throw new ComponentException ($this, "Class <kbd>$class</kbd> was not found");
-      $component = $this->context->createComponent ($class, $this);
-      $this->addChild ($component);
-    }
-    else $component = $this;
+    // Resolve controller for the view (if applicable)
+
+    if (!exists ($controller) && exists ($prop->view))
+      $controller = $ctx->findControllerForView ($prop->view);
 
     if (exists ($prop->template)) {
       $exp = get ($this->bindings, 'template');
       if (str_beginsWith ($exp, '{{'))
         throw new ComponentException($this,
           "When binding a value to the <kbd>template</kbd> property, you must use the databinding-without-escaping syntax <kbd>{!! !!}</kbd>");
-      $component->template = $prop->template;
-      if ($component === $this)
+      if (exists ($controller)) {
+        $skin = $ctx->createComponent ($controller, $this);
+        if (!$skin instanceof CompositeComponent)
+          throw new ComponentException($this,
+            "Component <kbd>$controller</kbd> is not a <kbd>CompositeComponent</kbd> instance, so it can't be a controler");
+        $skin->template = $prop->template;
+        $this->attachAndRender ($skin);
+      }
+      else {
+        $this->template = $prop->template;
         parent::render ();
-      else $this->renderChildren ();
+      }
     }
+
     elseif (exists ($prop->view)) {
-      $component->templateUrl = $prop->view;
-      if ($component === $this)
+      if (exists ($controller)) {
+        $skin = $ctx->createComponent ($controller, $this);
+        if (!$skin instanceof CompositeComponent)
+          throw new ComponentException($this,
+            "Component <kbd>$controller</kbd> is not a <kbd>CompositeComponent</kbd> instance, so it can't be the controler of <kbd>$prop->view</kbd>");
+        $skin->templateUrl = $prop->view;
+        $this->attachAndRender ($skin);
+      }
+      else {
+        $this->templateUrl = $prop->view;
         parent::render ();
-      else $this->renderChildren ();
+      }
     }
+
     else if (exists ($prop->file)) {
       $fileContent = loadFile ($prop->file);
       if ($fileContent === false)
         throw new FileIOException($prop->file, 'read', explode (PATH_SEPARATOR, get_include_path ()));
       echo $fileContent;
     }
-    else if ($prop->styles)
-      $this->context->outputStyles ();
-    else if ($prop->scripts)
-      $this->context->outputScripts ();
-    else {
-      if ($component === $this)
-        parent::render ();
-      else $this->renderChildren ();
+
+    else if ($prop->styles) {
+      $ctx->outputStyles ();
+    }
+
+    else if ($prop->scripts) {
+      $ctx->outputScripts ();
     }
   }
 

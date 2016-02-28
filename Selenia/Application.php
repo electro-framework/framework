@@ -50,6 +50,23 @@ class Application
    */
   public $condenseLiterals;
   /**
+   * A mapping between modules view templates base directories and the corresponding PHP namespaces that will be
+   * used for resolving view template paths to PHP controller classes.
+   *
+   * <p>**Note:** paths must have a trailing slash.
+   *
+   * @var array
+   */
+  public $controllerNamespaces = [];
+  /**
+   * A map of absolute view file paths to PHP controller class names.
+   *
+   * <p>This is used by the `Include` component.
+   *
+   * @var array
+   */
+  public $controllers = [];
+  /**
    * @var boolean
    */
   public $debugMode;
@@ -261,12 +278,6 @@ class Application
    * @var string|null
    */
   public $userModel = null;
-  /**
-   * Relative to the root folder.
-   *
-   * @var string
-   */
-  public $viewPath = 'private/resources/views';
   /**
    * Folders where views can be found.
    * <p>They will be search in order until the requested view is found.

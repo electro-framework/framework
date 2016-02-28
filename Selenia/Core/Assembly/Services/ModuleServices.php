@@ -22,7 +22,7 @@ class ModuleServices
    */
   private $app;
   /**
-   * @var FileServerMappings
+   * @var FileServerMappings Note: lazy loaded.
    */
   private $fileServerMappings;
   /**
@@ -30,7 +30,11 @@ class ModuleServices
    */
   private $injector;
   /**
-   * @var NavigationInterface
+   * @var ModulesRegistry Note: lazy loaded.
+   */
+  private $modulesRegistry;
+  /**
+   * @var NavigationInterface Note: lazy loaded.
    */
   private $navigationInterface;
   /**
@@ -52,8 +56,7 @@ class ModuleServices
    */
   private $publicUrl = '';
 
-  function __construct (Application $app,
-                        InjectorInterface $injector)
+  function __construct (Application $app, InjectorInterface $injector)
   {
     $this->app      = $app;
     $this->injector = $injector;
@@ -63,6 +66,13 @@ class ModuleServices
   {
     throw new ConfigException(sprintf ("Unsupported configuration type: <kbd class=type>%s</kbd>",
       (is_object ($cfg) ? get_class ($cfg) : gettype ($cfg))));
+  }
+
+  private function getModulesRegistry ()
+  {
+    if (!$this->modulesRegistry)
+      $this->modulesRegistry = $this->injector->make (ModulesRegistry::class);
+    return $this->modulesRegistry;
   }
 
   /**
@@ -93,23 +103,6 @@ class ModuleServices
         array_unshift ($all, $path);
         $this->app->macrosDirectories = array_merge ($all, $this->app->macrosDirectories);
       }
-    }
-    return $this;
-  }
-
-  /**
-   * Registers a navigation provider on the application.
-   *
-   * @param NavigationProviderInterface $provider A class instance that provides a means to obtain a NavigationInterface
-   * @return $this
-   */
-  function provideNavigation (NavigationProviderInterface $provider)
-  {
-    if ($this->app->isWebBased) {
-      if (!$this->navigationInterface)
-        $this->navigationInterface = $this->injector->make (NavigationInterface::class);
-
-      $provider->defineNavigation ($this->navigationInterface);
     }
     return $this;
   }
@@ -198,6 +191,62 @@ class ModuleServices
   function registerComponents (array $v)
   {
     array_mergeInto ($this->app->tags, $v);
+    return $this;
+  }
+
+  /**
+   * Registers a map of relative view file paths to PHP controller class names.
+   *
+   * <p>The array keys are file paths which, by default, are relative to the current module's base directory.
+   * <p>Paths may also have the `[vendor/module]/path` syntax to define paths relative to other modules.
+   *
+   * @param array $mappings
+   * @return $this
+   */
+  function registerControllers (array $mappings)
+  {
+    $ctr =& $this->app->controllers;
+    foreach ($mappings as $path => $class) {
+      if ($path[0] == '[') {
+        $p          = strpos ($path, ']', 1);
+        $moduleName = substr ($path, 1, $p);
+        $path       = substr ($path, $p + 2);
+        $base       = $this->getModulesRegistry ()->getModule ($moduleName)->path;
+        $path       = "$base/{$this->app->moduleViewsPath}/$path";
+      }
+      else $path = "$this->path/{$this->app->moduleViewsPath}/$path";
+      $ctr[$path] = $class;
+    }
+    return $this;
+  }
+
+  /**
+   * Registers a mapping between the given PHP namespace and the module's view templates base directory that will be
+   * used for resolving view template paths to PHP controller classes.
+   *
+   * @param string $namespace
+   * @return $this
+   */
+  function registerControllersNamespace ($namespace)
+  {
+    $this->app->controllerNamespaces ["$this->path/{$this->app->moduleViewsPath}/"] = $namespace;
+    return $this;
+  }
+
+  /**
+   * Registers a navigation provider on the application.
+   *
+   * @param NavigationProviderInterface $provider A class instance that provides a means to obtain a NavigationInterface
+   * @return $this
+   */
+  function registerNavigation (NavigationProviderInterface $provider)
+  {
+    if ($this->app->isWebBased) {
+      if (!$this->navigationInterface)
+        $this->navigationInterface = $this->injector->make (NavigationInterface::class);
+
+      $provider->defineNavigation ($this->navigationInterface);
+    }
     return $this;
   }
 

@@ -63,17 +63,7 @@ class ViewService implements ViewServiceInterface
 
   public function loadViewTemplate ($path)
   {
-    $dirs = $this->app->viewsDirectories;
-    foreach ($dirs as $dir) {
-      $p    = "$dir/$path";
-      $view = loadFile ($p);
-      if ($view)
-        return $view;
-    }
-    $paths = implode ('', map ($dirs, function ($path) {
-      return "<li><path>$path</path>";
-    }));
-    throw new FileNotFoundException($path, "<p>Search paths:<ul>$paths</ul>");
+    return loadFile ($this->resolveTemplatePath ($path));
   }
 
   function newInstance ()
@@ -90,6 +80,20 @@ class ViewService implements ViewServiceInterface
   function render ($data = null)
   {
     return $this->engine->render ($this->compiled, $data);
+  }
+
+  public function resolveTemplatePath ($path)
+  {
+    $dirs = $this->app->viewsDirectories;
+    foreach ($dirs as $dir) {
+      $p = "$dir/$path";
+      if (fileExists ($p))
+        return $p;
+    }
+    $paths = implode ('', map ($dirs, function ($path) {
+      return "<li><path>$path</path>";
+    }));
+    throw new FileNotFoundException($path, "<p>Search paths:<ul>$paths</ul>");
   }
 
 }

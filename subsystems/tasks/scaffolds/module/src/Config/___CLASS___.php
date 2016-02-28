@@ -55,7 +55,7 @@ class ___CLASS___ implements
       ->provideMacros ()
       ->provideViews ()
       ->registerRouter ($this)
-      ->provideNavigation ($this);
+      ->registerNavigation ($this);
   }
 
   /*

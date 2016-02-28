@@ -9,6 +9,7 @@ use Selenia\Matisse\Traits\Context\BlocksAPITrait;
 use Selenia\Matisse\Traits\Context\ComponentsAPITrait;
 use Selenia\Matisse\Traits\Context\MacrosAPITrait;
 use Selenia\Matisse\Traits\Context\PipesAPITrait;
+use Selenia\Matisse\Traits\Context\ViewsAPITrait;
 
 /**
  * A Matisse rendering context.
@@ -23,6 +24,7 @@ class Context
   use ComponentsAPITrait;
   use PipesAPITrait;
   use MacrosAPITrait;
+  use ViewsAPITrait;
 
   const FORM_ID = 'selenia-form';
 
@@ -61,19 +63,6 @@ class Context
    * @var array
    */
   public $presets = [];
-  /**
-   * The shared view-model data for the current rendering context.
-   *
-   * @var array
-   */
-  public $viewModel = [];
-  /**
-   * The view service that instantiated the current rendering engine and its associated rendering context (this
-   * instance).
-   *
-   * @var ViewServiceInterface|null
-   */
-  public $viewService;
 
   function __construct ()
   {

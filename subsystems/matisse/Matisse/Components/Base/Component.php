@@ -343,7 +343,7 @@ abstract class Component implements RenderableInterface
    */
   function renderContent ()
   {
-    if (!$this->hidden) {
+    if ($this->isVisible ()) {
       $this->databind ();
       $this->preRender ();
       $this->renderChildren ();
@@ -363,21 +363,12 @@ abstract class Component implements RenderableInterface
   function run ()
   {
     ++$this->renderCount;
-    if (!$this->hidden) {
-      // The default view model is the component instance itself.
-      // You can override it on viewModel(), for instance.
-      if (!isset($this->viewModel))
-        $this->viewModel = $this;
-
-      $this->viewModel ();
+    if ($this->isVisible ()) {
+      $this->setupViewModel ();
       $this->databind ();
-      if (!isset($this->props) || !isset($this->props->hidden) ||
-          !$this->props->hidden
-      ) { //hidden is defined on a subclass
-        $this->preRender ();
-        $this->render ();
-        $this->postRender ();
-      }
+      $this->preRender ();
+      $this->render ();
+      $this->postRender ();
     }
   }
 
@@ -458,6 +449,14 @@ abstract class Component implements RenderableInterface
   }
 
   /**
+   * @return bool Returns false if the component's rendering is disabled via the `hidden` property.
+   */
+  protected function isVisible ()
+  {
+    return !$this->hidden && (!isset($this->props) || !isset($this->props->hidden) || !$this->props->hidden);
+  }
+
+  /**
    * Allows a component to do something before it is initialized.
    * <p>The provided arguments have an informational purpose.
    *
@@ -515,6 +514,23 @@ abstract class Component implements RenderableInterface
     }
 
     return $this->props->id;
+  }
+
+  /**
+   * Sets up the component's view model, right before the component is rendered.
+   *
+   * > <p>**Note:** The default view model is the component instance itself, but you can override this on the subclass'
+   * `viewModel()`.
+   */
+  protected function setupViewModel ()
+  {
+    if (!isset($this->viewModel))
+      $this->viewModel = $this;
+
+    $this->viewModel ();
+
+    if (exists ($this->shareViewModelAs))
+      $this->context->viewModel[$this->shareViewModelAs] = $this->viewModel;
   }
 
   /**

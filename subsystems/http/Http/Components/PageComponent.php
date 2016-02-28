@@ -143,12 +143,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    * @var bool
    */
   protected $renderOnAction = false;
-  /**
-   * When set, the component's view model is made available on the shared view model under the specified key name.
-   *
-   * @var string
-   */
-  protected $shareViewModelAs = null;
+
   /**
    * @var ViewServiceInterface
    */
@@ -320,9 +315,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       $context         = $this->document->context;
       $title           = $this->getTitle ();
       $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
-      $flashMessage    = $this->session->getFlashMessage ();
-      if ($flashMessage)
-        $this->displayStatus ($flashMessage['type'], $flashMessage['message']);
       foreach ($this->app->assets as $url) {
         $p = strrpos ($url, '.');
         if (!$p) continue;
@@ -338,8 +330,9 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       }
       $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
       $context->getPipeHandler ()->registerFallbackHandler ($this);
-      if (exists ($this->shareViewModelAs))
-        $context->viewModel[$this->shareViewModelAs] = $this->viewModel;
+      $flashMessage    = $this->session->getFlashMessage ();
+      if ($flashMessage)
+        $this->displayStatus ($flashMessage['type'], $flashMessage['message']);
     }
     //------------------
     // DOM panel
@@ -409,27 +402,25 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   protected function displayStatus ($status, $message)
   {
     if (!is_null ($status)) {
-      if ($this->document)
-        switch ($status) {
-          case FlashType::FATAL:
-            @ob_clean ();
-            echo '<html><head><meta http-equiv="Content-Type" content="text/html;charset=utf-8"></head><body><pre>' .
-                 $message .
-                 '</pre></body></html>';
-            exit;
-          case FlashType::ERROR:
-            $this->statusMessage =
-              '<div id="status" class="alert alert-danger" role="alert"><div>' . $message . '</div></div>';
-            break;
-          case FlashType::WARNING:
-            $this->statusMessage =
-              '<div id="status" class="alert alert-warning" role="alert"><div>' . $message . '</div></div>';
-            break;
-          default:
-            $this->statusMessage =
-              '<div id="status" class="alert alert-info" role="alert"><div>' . $message . '</div></div>';
-        }
-      else echo $message;
+      switch ($status) {
+        case FlashType::FATAL:
+          @ob_clean ();
+          echo '<html><head><meta http-equiv="Content-Type" content="text/html;charset=utf-8"></head><body><pre>' .
+               $message .
+               '</pre></body></html>';
+          exit;
+        case FlashType::ERROR:
+          $this->statusMessage =
+            '<div id="status" class="alert alert-danger" role="alert"><div>' . $message . '</div></div>';
+          break;
+        case FlashType::WARNING:
+          $this->statusMessage =
+            '<div id="status" class="alert alert-warning" role="alert"><div>' . $message . '</div></div>';
+          break;
+        default:
+          $this->statusMessage =
+            '<div id="status" class="alert alert-info" role="alert"><div>' . $message . '</div></div>';
+      }
     }
   }
 
