@@ -21,7 +21,6 @@ use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Interfaces\Views\ViewInterface;
-use Selenia\Interfaces\Views\ViewServiceInterface;
 use Selenia\Matisse\Components\Base\CompositeComponent;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Lib\PipeHandler;
@@ -145,10 +144,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   protected $renderOnAction = false;
 
   /**
-   * @var ViewServiceInterface
-   */
-  protected $view;
-  /**
    * @var InjectorInterface
    */
   private $injector;
@@ -159,7 +154,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   private $presets = [];
 
-  function __construct (InjectorInterface $injector, ViewServiceInterface $view, Application $app,
+  function __construct (InjectorInterface $injector, Application $app,
                         RedirectionInterface $redirection, SessionInterface $session, NavigationInterface $navigation,
                         PipeHandler $pipeHandler)
   {
@@ -170,7 +165,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     $this->redirection = $redirection;
     $this->session     = $session;
     $this->navigation  = $navigation;
-    $this->view        = $view;
     $pipeHandler->registerFallbackHandler ($this);
 
     // Inject extra dependencies into the subclasses' inject methods, if one or more exist.
@@ -330,7 +324,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       }
       $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
       $context->getPipeHandler ()->registerFallbackHandler ($this);
-      $flashMessage    = $this->session->getFlashMessage ();
+      $flashMessage = $this->session->getFlashMessage ();
       if ($flashMessage)
         $this->displayStatus ($flashMessage['type'], $flashMessage['message']);
     }
@@ -491,11 +485,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     });
   }
 
-  protected function getRowOffset ()
-  {
-    return ($this->pageNumber - 1) * $this->app->pageSize;
-  }
-
   protected function getTitle ()
     // override to return a dynamic title for the current page
   {
@@ -540,22 +529,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   protected function model ()
   {
     return null;
-  }
-
-  protected function paginate (array &$data, $pageSize = 0)
-  {
-    if (!$pageSize)
-      $pageSize = $this->app->pageSize;
-    $this->pageNumber = get ($_REQUEST, $this->app->pageNumberParam, 1);
-    $count            = count ($data);
-    if ($count > $pageSize) {
-      $this->max = ceil ($count / $pageSize);
-      if ($this->pageNumber > 1) {
-        $skip = $this->getRowOffset ();
-        array_splice ($data, 0, $skip);
-      }
-      array_splice ($data, $pageSize);
-    }
   }
 
 }
