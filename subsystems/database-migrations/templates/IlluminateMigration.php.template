@@ -60,10 +60,12 @@ class $className extends Migration
    */
   function up ()
   {
+    $schema = $this->db->schema ();
+
     // Pick one of the alternatives below (and delete the other one):
 
     // Create a new table
-    $this->db->schema ()->create ('tableName', function (Blueprint $table) {
+    $schema->create ('tableName', function (Blueprint $table) {
       $table->increments ('id');
       $table->timestamps ();
       // More columns...
@@ -72,7 +74,7 @@ class $className extends Migration
     // Or
 
     // Modify an existing table
-    $this->db->schema ()->table ('tableName', function (Blueprint $table) {
+    $schema->table ('tableName', function (Blueprint $table) {
       // Your code here
     });
   }
@@ -84,15 +86,18 @@ class $className extends Migration
    */
   function down ()
   {
+    $schema = $this->db->schema ();
+
     // Pick one of the alternatives below (and delete the other one):
 
     // Drop the table created on up()
-    $this->db->schema ()->drop ('tableName');
+    if ($schema->hasTable ('tableName'))
+      $schema->drop ('tableName');
 
     // Or
 
     // Undo the modifications made to the table on up()
-    $this->db->schema ()->table ('tableName', function (Blueprint $table) {
+    $schema->table ('tableName', function (Blueprint $table) {
       // Your code here
     });
   }
