@@ -13,6 +13,7 @@ class Http
 
   /**
    * Checks if the HTTP client accepts the given content type.
+   *
    * @param ServerRequestInterface $request
    * @param string                 $contentType Ex: <kbd>'text/html'</kbd>
    * @return boolean
@@ -23,7 +24,26 @@ class Http
   }
 
   /**
+   * Returns a map of routing parameters extracted from the request attributes (which mast have been set previously by
+   * a router).
+   *
+   * @param ServerRequestInterface $request
+   * @return array A map of name => value of all routing parameters set on the request.
+   */
+  static function getRouteParameters (ServerRequestInterface $request)
+  {
+    return mapAndFilter ($request->getAttributes (), function ($v, &$k) {
+      if ($k && $k[0] == '@') {
+        $k = substr ($k, 1);
+        return $v;
+      }
+      return null;
+    });
+  }
+
+  /**
    * Simplifies setting response object properties to return a simple HTTP response.
+   *
    * @param ResponseInterface $response    An existing, pristine, response object.
    * @param int               $status      HTTP status code.
    * @param string            $reason      The HTTP reason phrase.

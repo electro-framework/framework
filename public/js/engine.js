@@ -191,24 +191,21 @@ function nop () {}
 
   };
 
-  $ (function initSelenia () {
-
-    form = $ ('<form id="selenia-form" method="post" action="' + location.pathname + '"></form>')
-      .submit (selenia.onSubmit);
-
-    $ ('body')
+  (function initSelenia () {
 
     // Memorize the previously focused input.
+    var body = $ ('body')
       .focusout (function (ev) {
         if (ev.target.tagName == 'INPUT' || ev.target.tagName == 'TEXTAREA')
           selenia.prevFocus = $ (ev.target);
         else selenia.prevFocus = $ ();
-      })
+      });
 
-      .wrapInner (form);
-
-    form = $ ('#selenia-form');
-    form.prepend ('<input type="hidden" name="selenia-action" value="submit">');
-  });
+    form = $ ('<form id="selenia-form" method="post" action="' + location.pathname + '"></form>')
+      .submit (selenia.onSubmit)
+      .append ('<input type="hidden" name="selenia-action" value="submit">')
+      .append (body.children (':not(script)'))
+      .prependTo (body);
+  }) ();
 
 } ();

@@ -17,6 +17,7 @@ use Selenia\Http\Lib\Http;
 use Selenia\Interfaces\Http\RedirectionInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\ModelManagerInterface;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Interfaces\SessionInterface;
@@ -133,6 +134,10 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   protected $indexPage = null;
   /**
+   * @var ModelManagerInterface
+   */
+  protected $modelManager;
+  /**
    * @var RedirectionInterface
    */
   protected $redirection;
@@ -142,7 +147,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    * @var bool
    */
   protected $renderOnAction = false;
-
   /**
    * @var InjectorInterface
    */
@@ -156,15 +160,16 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
   function __construct (InjectorInterface $injector, Application $app,
                         RedirectionInterface $redirection, SessionInterface $session, NavigationInterface $navigation,
-                        PipeHandler $pipeHandler)
+                        PipeHandler $pipeHandler, ModelManagerInterface $modelManager)
   {
     parent::__construct ();
 
-    $this->injector    = $injector;
-    $this->app         = $app;
-    $this->redirection = $redirection;
-    $this->session     = $session;
-    $this->navigation  = $navigation;
+    $this->injector     = $injector;
+    $this->app          = $app;
+    $this->redirection  = $redirection;
+    $this->session      = $session;
+    $this->navigation   = $navigation;
+    $this->modelManager = $modelManager;
     $pipeHandler->registerFallbackHandler ($this);
 
     // Inject extra dependencies into the subclasses' inject methods, if one or more exist.
@@ -203,25 +208,14 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
     $this->initialize (); //custom setup
 
-    $this->model = $this->model ();
-    $model       =& $this->model;
-    $this->mergeIntoModel ($model, $this->getParameters ());
+    $this->modelManager->setModel ($this->model ());
+    $this->modelManager->loadFromRequest ($request);
     switch ($this->request->getMethod ()) {
       case 'GET':
-        if ($model) $this->mergeIntoModel ($model, $this->presets);
-        $this->mergeIntoModel ($model, $this->session->getOldInput ());
+        $this->modelManager->merge ($this->presets);
+        $this->model = $this->modelManager->getModel ();
         break;
-      /** @noinspection PhpMissingBreakStatementInspection */
       case 'POST':
-        $contentType = $this->request->getHeaderLine ('Content-Type');
-        if ($contentType == 'application/x-www-form-urlencoded' ||
-            str_beginsWith ($contentType, 'multipart/form-data')
-        ) {
-          $data = $this->request->getParsedBody ();
-          unset ($data[Http::ACTION_FIELD]);
-          $this->mergeIntoModel ($model, $data);
-        }
-      default:
         $res = $this->doFormAction ();
         if (!$res && !$this->renderOnAction)
           $res = $this->autoRedirect ();
@@ -275,8 +269,8 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
   /**
    * Responds to the standard 'submit' controller action.
-   * The default procedure is to either call insert() or update().
-   * Override to implement non-standard behaviour.
+   * The default procedure is to throw an error message.
+   * Override to implement the desired behaviour.
    *
    * @param null $param
    * @throws FlashMessageException
@@ -285,9 +279,9 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   {
     if (!isset($this->model))
       throw new FlashMessageException('Can\'t insert/update a NULL model.', FlashType::ERROR);
+
     throw new FlashMessageException('Can\'t automatically insert/update an object of type ' . gettype ($this->model),
       FlashType::ERROR);
-    // No return value means: auto-redirect
   }
 
   /**
@@ -452,8 +446,8 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   }
 
   /**
-   * Utility method for retrieving the value of a form field submitted via a `application/x-www-form-urlencoded` POST
-   * request.
+   * Utility method for retrieving the value of a form field submitted via a `application/x-www-form-urlencoded` or a
+   * `multipart/form-data` POST request.
    *
    * @param string $name
    * @param        mixed [optional] $def
@@ -474,17 +468,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     else $param = null;
   }
 
-  protected function getParameters ()
-  {
-    return mapAndFilter ($this->request->getAttributes (), function ($v, &$k) {
-      if ($k && $k[0] == '@') {
-        $k = substr ($k, 1);
-        return $v;
-      }
-      return null;
-    });
-  }
-
   protected function getTitle ()
     // override to return a dynamic title for the current page
   {
@@ -501,21 +484,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   protected function initialize ()
   {
-  }
-
-  /**
-   * @param array|object $model
-   * @param array|null   $data If `null` nothihg happens.
-   * @throws FatalException
-   */
-  protected function mergeIntoModel (& $model, array $data = null)
-  {
-    if (is_null ($data) || is_null ($model)) return;
-    if (is_array ($model))
-      array_mergeExisting ($model, array_normalizeEmptyValues ($data));
-    else if (is_object ($model))
-      extendExisting ($model, array_normalizeEmptyValues ($data));
-    else throw new FatalException (sprintf ("Can't merge data into a model of type <kbd>%s</kbd>", gettype ($model)));
   }
 
   /**
