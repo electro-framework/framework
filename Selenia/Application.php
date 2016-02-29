@@ -271,12 +271,6 @@ class Application
    */
   public $translation = false;
   /**
-   * The FQN of the logged in user's model class.
-   *
-   * @var string|null
-   */
-  public $userModel = null;
-  /**
    * Folders where views can be found.
    * <p>They will be search in order until the requested view is found.
    *
@@ -287,26 +281,6 @@ class Application
   function __construct (InjectorInterface $injector)
   {
     $this->injector = $injector;
-  }
-
-  /**
-   * @param int|null $id [optional]
-   * @return UserInterface
-   * @throws FatalException
-   */
-  function createUser ($id = null)
-  {
-    if (isset($this->userModel)) {
-      /** @var UserInterface $user */
-      $user = new $this->userModel;
-      if ($id) {
-        $f = $user->findById ($id);
-        if (!$f)
-          throw new FatalException ("User $id not found");
-      }
-      return $user;
-    }
-    throw new FatalException ('The user model class is not set');
   }
 
   function fromPathToURL ($path)
