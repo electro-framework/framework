@@ -14,8 +14,6 @@ trait ViewsAPITrait
    * A mapping between modules view templates base directories and the corresponding PHP namespaces that will be
    * used for resolving view template paths to PHP controller classes.
    *
-   * <p>**Note:** paths must have a trailing slash.
-   *
    * @var array
    */
   public $controllerNamespaces = [];
@@ -50,26 +48,29 @@ trait ViewsAPITrait
   function findControllerForView ($viewName)
   {
     /** @var Context $this */
-    $path = $this->viewService->resolveTemplatePath ($viewName);
+    $path = $this->viewService->resolveTemplatePath ($viewName, $base);
 
     if (isset($this->controllers[$path]))
       return $this->controllers[$path];
 
-    foreach ($this->controllerNamespaces as $base => $namespace)
-      if (str_beginsWith ($path, $base)) {
-        $segs = explode ('/', substr ($path, strlen ($base)));
+    if (isset($this->controllerNamespaces[$base])) {
+      $namespace = $this->controllerNamespaces[$base];
 
-        // Strip file extension(s) from filename
-        $file = array_pop ($segs);
-        if (($p = strpos ($file, '.')) !== false)
-          $file = substr ($file, 0, $p);
-        array_push ($segs, $file);
+      // Convert the remaining file path into a PHP sub-namespace.
+      $segs      = explode ('/', substr ($path, strlen ($base) + 1));
 
-        $sub   = implode ('\\', map ($segs, 'ucwords'));
-        $class = "$namespace\\$sub";
-        if (class_exists ($class))
-          return $class;
-      }
+      // Strip file extension(s) from filename
+      $file = array_pop ($segs);
+      if (($p = strpos ($file, '.')) !== false)
+        $file = substr ($file, 0, $p);
+      array_push ($segs, $file);
+
+      $sub   = implode ('\\', map ($segs, 'ucwords'));
+
+      $class = "$namespace\\$sub";
+      if (class_exists ($class))
+        return $class;
+    }
 
     return null;
   }

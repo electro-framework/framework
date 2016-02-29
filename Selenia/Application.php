@@ -53,8 +53,6 @@ class Application
    * A mapping between modules view templates base directories and the corresponding PHP namespaces that will be
    * used for resolving view template paths to PHP controller classes.
    *
-   * <p>**Note:** paths must have a trailing slash.
-   *
    * @var array
    */
   public $controllerNamespaces = [];

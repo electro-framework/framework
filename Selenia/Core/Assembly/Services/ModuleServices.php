@@ -229,7 +229,7 @@ class ModuleServices
    */
   function registerControllersNamespace ($namespace)
   {
-    $this->app->controllerNamespaces ["$this->path/{$this->app->moduleViewsPath}/"] = $namespace;
+    $this->app->controllerNamespaces ["$this->path/{$this->app->moduleViewsPath}"] = $namespace;
     return $this;
   }
 

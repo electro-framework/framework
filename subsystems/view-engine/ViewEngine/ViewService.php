@@ -77,16 +77,11 @@ class ViewService implements ViewServiceInterface
     return $this;
   }
 
-  function render ($data = null)
-  {
-    return $this->engine->render ($this->compiled, $data);
-  }
-
-  public function resolveTemplatePath ($path)
+  public function resolveTemplatePath ($path, &$base = null)
   {
     $dirs = $this->app->viewsDirectories;
-    foreach ($dirs as $dir) {
-      $p = "$dir/$path";
+    foreach ($dirs as $base) {
+      $p = "$base/$path";
       if (fileExists ($p))
         return $p;
     }
