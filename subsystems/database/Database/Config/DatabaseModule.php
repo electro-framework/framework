@@ -19,7 +19,8 @@ class DatabaseModule implements ServiceProviderInterface
         $con = $debugMode ? new DebugConnection : new Connection;
         return $con->getFromEnviroment ();
       })
-      ->alias (ModelControllerInterface::class, ModelController::class);
+      ->alias (ModelControllerInterface::class, ModelController::class)
+      ->share (ModelController::class);
   }
 
 }

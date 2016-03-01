@@ -4,9 +4,7 @@ namespace Selenia;
 use Selenia\Core\Assembly\Config\AssemblyModule;
 use Selenia\Core\Logging\Config\LoggingModule;
 use Selenia\Exceptions\Fatal\ConfigException;
-use Selenia\Exceptions\FatalException;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\UserInterface;
 
 class Application
 {
