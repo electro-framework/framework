@@ -5,6 +5,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Exceptions\FlashMessageException;
+use Selenia\Exceptions\FlashType;
+use Selenia\Http\Lib\Http;
 use Selenia\Interfaces\AssignableInterface;
 use Selenia\Interfaces\Http\RedirectionInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
@@ -54,12 +56,14 @@ class SessionMiddleware implements RequestHandlerInterface
       $this->session->_assign ($savedSession->_export ());
 
     // (Re)initialize some session settings.
-
     $session->name = $name;
 
     // Setup current session to be saved on shutdown.
-
     $_SESSION['#data'] = $session;
+
+    $flashMessage = $session->getFlashMessage ();
+    if ($flashMessage)
+      $this->renderFlashMessage ($request, $flashMessage['type'], $flashMessage['message']);
 
     // Run the next middleware, catching any flash message exceptions.
 
@@ -75,6 +79,41 @@ class SessionMiddleware implements RequestHandlerInterface
 
       return $this->redirection->refresh ();
     }
+  }
+
+  /**
+   * Sets the `statusMessage` property on the shared view model to a rendered HTML status message.
+   * <p>Override to define a different template or rendering mechanism.
+   *
+   * @param ServerRequestInterface $request
+   * @param int                    $status
+   * @param string                 $message
+   * @return ServerRequestInterface Mutated request.
+   */
+  protected function renderFlashMessage (ServerRequestInterface $request, $status, $message)
+  {
+    $viewModel = Http::getViewModel ($request);
+    if (!is_null ($status)) {
+      switch ($status) {
+        case FlashType::FATAL:
+          @ob_clean ();
+          echo '<html><head><meta http-equiv="Content-Type" content="text/html;charset=utf-8"></head><body><pre>' .
+               $message .
+               '</pre></body></html>';
+          exit;
+        case FlashType::ERROR:
+          $msg = '<div id="status" class="alert alert-danger" role="alert"><div>' . $message . '</div></div>';
+          break;
+        case FlashType::WARNING:
+          $msg = '<div id="status" class="alert alert-warning" role="alert"><div>' . $message . '</div></div>';
+          break;
+        default:
+          $msg = '<div id="status" class="alert alert-info" role="alert"><div>' . $message . '</div></div>';
+      }
+      $viewModel['statusMessage'] = $msg;
+      return Http::updateViewModel ($request, $viewModel);
+    }
+    return $request;
   }
 
 }

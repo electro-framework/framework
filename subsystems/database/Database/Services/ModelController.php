@@ -4,10 +4,10 @@ namespace Selenia\Database\Services;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Exceptions\FatalException;
 use Selenia\Http\Lib\Http;
-use Selenia\Interfaces\ModelManagerInterface;
+use Selenia\Interfaces\ModelControllerInterface;
 use Selenia\Interfaces\SessionInterface;
 
-class ModelManager implements ModelManagerInterface
+class ModelController implements ModelControllerInterface
 {
   /**
    * @var array|object
@@ -32,7 +32,6 @@ class ModelManager implements ModelManagerInterface
 
   public function __construct (SessionInterface $session)
   {
-
     $this->session = $session;
   }
 
@@ -46,7 +45,7 @@ class ModelManager implements ModelManagerInterface
     $this->model = $data;
   }
 
-  function loadFromRequest (ServerRequestInterface $request)
+  function handleRequest (ServerRequestInterface $request)
   {
     $this->merge (Http::getRouteParameters ($request));
     switch ($request->getMethod ()) {
@@ -112,7 +111,15 @@ class ModelManager implements ModelManagerInterface
 
   private function exec (callable $fn)
   {
-    return $fn ();
+    return $fn ($this);
   }
 
+  /**
+   * @param callable $plugin
+   * @return mixed
+   */
+  function registerPlugin (callable $plugin)
+  {
+    // TODO: Implement registerPlugin() method.
+  }
 }

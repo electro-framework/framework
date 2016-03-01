@@ -4,9 +4,9 @@ namespace Selenia\Database\Config;
 use PhpKit\Connection;
 use PhpKit\ConnectionInterface;
 use Selenia\Database\Lib\DebugConnection;
-use Selenia\Database\Services\ModelManager;
+use Selenia\Database\Services\ModelController;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\ModelManagerInterface;
+use Selenia\Interfaces\ModelControllerInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
 
 class DatabaseModule implements ServiceProviderInterface
@@ -19,7 +19,7 @@ class DatabaseModule implements ServiceProviderInterface
         $con = $debugMode ? new DebugConnection : new Connection;
         return $con->getFromEnviroment ();
       })
-      ->alias (ModelManagerInterface::class, ModelManager::class);
+      ->alias (ModelControllerInterface::class, ModelController::class);
   }
 
 }

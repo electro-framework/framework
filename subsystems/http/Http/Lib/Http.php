@@ -42,6 +42,17 @@ class Http
   }
 
   /**
+   * Returns the shared view model of the specified HTTP request.
+   *
+   * @param ServerRequestInterface $request
+   * @return array
+   */
+  static function getViewModel (ServerRequestInterface $request)
+  {
+    return $request->getAttribute ('viewModel', []);
+  }
+
+  /**
    * Simplifies setting response object properties to return a simple HTTP response.
    *
    * @param ResponseInterface $response    An existing, pristine, response object.
@@ -57,6 +68,17 @@ class Http
     if ($body)
       $response->getBody ()->write ($body);
     return $response->withStatus ($status, $reason)->withHeader ('Content-Type', $contentType);
+  }
+
+  /**
+   * Updates the shared view model of the specified HTTP request.
+   *
+   * @param ServerRequestInterface $request
+   * @return ServerRequestInterface
+   */
+  static function updateViewModel (ServerRequestInterface $request, array $viewModel)
+  {
+    return $request->withAttribute ('viewModel', $viewModel);
   }
 
 }

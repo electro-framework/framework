@@ -17,7 +17,7 @@ use Selenia\Http\Lib\Http;
 use Selenia\Interfaces\Http\RedirectionInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\ModelManagerInterface;
+use Selenia\Interfaces\ModelControllerInterface;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Interfaces\SessionInterface;
@@ -25,7 +25,6 @@ use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\Matisse\Components\Base\CompositeComponent;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Lib\PipeHandler;
-use Selenia\Routing\Services\Router;
 use Selenia\Traits\PolymorphicInjectionTrait;
 use Selenia\ViewEngine\Engines\MatisseEngine;
 
@@ -87,16 +86,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   public $pageTitle = null;
   /**
-   * @var ServerRequestInterface
-   */
-  public $request;
-  /**
-   * The loader which has loaded this controller.
-   *
-   * @var Router
-   */
-  public $router;
-  /**
    * @var SessionInterface
    */
   public $session;
@@ -106,12 +95,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    * @var string
    */
   public $statusMessage = '';
-  /**
-   * The HTTP request's virtual URL.
-   *
-   * @var string
-   */
-  public $virtualUrl;
   /**
    * The current request URI without the page number parameters.
    * This property is useful for databing with the expression {!controller.URI_noPage}.
@@ -134,9 +117,9 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   protected $indexPage = null;
   /**
-   * @var ModelManagerInterface
+   * @var ModelControllerInterface
    */
-  protected $modelManager;
+  protected $modelController;
   /**
    * @var RedirectionInterface
    */
@@ -148,28 +131,26 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   protected $renderOnAction = false;
   /**
+   * @var ServerRequestInterface
+   */
+  protected $request;
+  /**
    * @var InjectorInterface
    */
   private $injector;
-  /**
-   * Values to be automatically merged into the view model.
-   *
-   * @var array
-   */
-  private $presets = [];
 
   function __construct (InjectorInterface $injector, Application $app,
                         RedirectionInterface $redirection, SessionInterface $session, NavigationInterface $navigation,
-                        PipeHandler $pipeHandler, ModelManagerInterface $modelManager)
+                        PipeHandler $pipeHandler, ModelControllerInterface $modelController)
   {
     parent::__construct ();
 
-    $this->injector     = $injector;
-    $this->app          = $app;
-    $this->redirection  = $redirection;
-    $this->session      = $session;
-    $this->navigation   = $navigation;
-    $this->modelManager = $modelManager;
+    $this->injector        = $injector;
+    $this->app             = $app;
+    $this->redirection     = $redirection;
+    $this->session         = $session;
+    $this->navigation      = $navigation;
+    $this->modelController = $modelController;
     $pipeHandler->registerFallbackHandler ($this);
 
     // Inject extra dependencies into the subclasses' inject methods, if one or more exist.
@@ -193,8 +174,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     if (!$this->app)
       throw new FatalException("Class <kbd class=type>" . get_class ($this) .
                                "</kbd>'s constructor forgot to call <kbd>parent::__construct()</kbd>");
-    $this->request    = $request;
-    $this->virtualUrl = $request->getAttribute ('virtualUri');
+    $this->request = $request;
     $this->redirection->setRequest ($request);
 
     $this->currentLink = $this->navigation->request ($this->request)->currentLink ();
@@ -208,25 +188,25 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
     $this->initialize (); //custom setup
 
-    $this->modelManager->setModel ($this->model ());
-    $this->modelManager->loadFromRequest ($request);
+    $this->modelController->setModel ($this->model ());
+    $this->modelController->handleRequest ($request);
+    $this->model = $this->modelController->getModel ();
+
     switch ($this->request->getMethod ()) {
-      case 'GET':
-        $this->modelManager->merge ($this->presets);
-        $this->model = $this->modelManager->getModel ();
-        break;
+      /** @noinspection PhpMissingBreakStatementInspection */
       case 'POST':
-        $res = $this->doFormAction ();
-        if (!$res && !$this->renderOnAction)
-          $res = $this->autoRedirect ();
-        $this->finalize ($res);
-        return $res;
+        // Perform the requested action.
+        $response = $this->doFormAction ();
+        if (!$this->renderOnAction) {
+          if (!$response)
+            $response = $this->autoRedirect ();
+          break;
+        }
+      case 'GET':
+        // Render the component.
+        $out = $this->getRendering ();
+        $response->getBody ()->write ($out);
     }
-
-    // Render the component.
-
-    $out = $this->getRendering ();
-    $response->getBody ()->write ($out);
     $this->finalize ($response);
     return $response;
   }
@@ -284,25 +264,22 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       FlashType::ERROR);
   }
 
-  /**
-   * Merges data into the view model.
-   *
-   * @param array $data
-   */
-  function preset (array $data)
-  {
-    $this->presets = $data;
-  }
-
   function setupView (ViewInterface $view)
   {
     parent::setupView ($view);
     $engine = $view->getEngine ();
     if ($engine instanceof MatisseEngine) {
-      $this->document  = $view->getCompiled ();
-      $context         = $this->document->context;
-      $title           = $this->getTitle ();
-      $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
+      $this->document     = $view->getCompiled ();
+      $context            = $this->document->context;
+
+      // Copy the request's shared view model into the rendering context view model.
+      $context->viewModel = Http::getViewModel ($this->request);
+
+      $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
+      $context->getPipeHandler ()->registerFallbackHandler ($this);
+
+      $title              = $this->getTitle ();
+      $this->pageTitle    = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
       foreach ($this->app->assets as $url) {
         $p = strrpos ($url, '.');
         if (!$p) continue;
@@ -316,11 +293,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
             break;
         }
       }
-      $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
-      $context->getPipeHandler ()->registerFallbackHandler ($this);
-      $flashMessage = $this->session->getFlashMessage ();
-      if ($flashMessage)
-        $this->displayStatus ($flashMessage['type'], $flashMessage['message']);
     }
     //------------------
     // DOM panel
@@ -367,49 +339,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       return $this->redirection->to ($this->indexPage);
 
     return $this->redirection->refresh ();
-  }
-
-  /**
-   * Defines the set of fields which will be fetched to a data object from a POST request.
-   * All other values on the request will be ignored.
-   *
-   * @return array If NULL all the data object's fields fields will be fetched.
-   */
-  protected function defineDataFields ()
-  {
-    return null;
-  }
-
-  /**
-   * Sets the `statusMessage` view property to a rendered HTML status message.
-   * <p>Override to define a different template or rendering mechanism.
-   *
-   * @param int    $status
-   * @param string $message
-   */
-  protected function displayStatus ($status, $message)
-  {
-    if (!is_null ($status)) {
-      switch ($status) {
-        case FlashType::FATAL:
-          @ob_clean ();
-          echo '<html><head><meta http-equiv="Content-Type" content="text/html;charset=utf-8"></head><body><pre>' .
-               $message .
-               '</pre></body></html>';
-          exit;
-        case FlashType::ERROR:
-          $this->statusMessage =
-            '<div id="status" class="alert alert-danger" role="alert"><div>' . $message . '</div></div>';
-          break;
-        case FlashType::WARNING:
-          $this->statusMessage =
-            '<div id="status" class="alert alert-warning" role="alert"><div>' . $message . '</div></div>';
-          break;
-        default:
-          $this->statusMessage =
-            '<div id="status" class="alert alert-info" role="alert"><div>' . $message . '</div></div>';
-      }
-    }
   }
 
   /**
