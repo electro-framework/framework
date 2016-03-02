@@ -77,6 +77,10 @@ class Application
    */
   public $fileArchivePath = 'private/storage/files';
   /**
+   * @var string
+   */
+  public $fileBaseUrl = 'files';
+  /**
    * The path of the framework kernel's directory.
    *
    * @var string

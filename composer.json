@@ -25,7 +25,8 @@
     "monolog/monolog": "^1.17.1",
     "codegyre/robo": "^0.5.3",
     "selenia/interop": "dev-master",
-    "php-kit/ext-pdo": "dev-master"
+    "php-kit/ext-pdo": "dev-master",
+    "league/glide": "^1.0"
   },
   "autoload": {
     "psr-4": {
