@@ -286,9 +286,12 @@ class MigrationCommands
    */
   protected function setupMigrationConfig ($moduleName)
   {
-    self::$migrationsPath  = $this->registry->getModule ($moduleName)->path . '/' . $this->settings->migrationsPath ();
-    self::$migrationsTable = 'migrations_of_' . str_replace ('/', '_', dehyphenate ($moduleName));
-    self::$seedsPath       = $this->registry->getModule ($moduleName)->path . '/' . $this->settings->seedsPath ();
+    $module                = $this->registry->getModule ($moduleName);
+    $short                 = $module->getShortName ();
+    $uid                   = substr (md5 ($module->name), 0, 4);
+    self::$migrationsTable = sprintf ('_%s_migrations_%s', strtolower (dehyphenate ($short)), $uid);
+    self::$migrationsPath  = $module->path . '/' . $this->settings->migrationsPath ();
+    self::$seedsPath       = $module->path . '/' . $this->settings->seedsPath ();
   }
 
   private function runMigrationCommand (AbstractCommand $command, InputInterface $input)
