@@ -4,6 +4,7 @@ use Selenia\Migrations\Commands\MigrationCommands;
 return [
   "paths"        => [
     "migrations" => MigrationCommands::$migrationsPath,
+    "seeds" => MigrationCommands::$seedsPath,
   ],
   "environments" => [
     "default_migration_table" => MigrationCommands::$migrationsTable,

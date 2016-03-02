@@ -29,6 +29,10 @@ class MigrationCommands
    */
   static $migrationsTable;
   /**
+   * @var string Used internally to pass information to config.php
+   */
+  static $seedsPath;
+  /**
    * @var SymfonyConsole
    */
   private $console;
@@ -104,6 +108,32 @@ class MigrationCommands
       'name'            => $name,
       '--class'         => $class,
       '--template'      => $template,
+      $moduleName,
+    ])->prune ()->A);
+    $input->setInteractive (false);
+    return $this->runMigrationCommand ($command, $input);
+  }
+
+  /**
+   * Create a new database seeder
+   *
+   * @param string $moduleName [optional] The target module (vendor-name/package-name syntax).
+   *                           If not specified, the user will be prompted for it
+   * @param string $name       [optional] The name of the seeder (a human-friendly description, it may contain
+   *                           spaces, but not accented characters). If not specified, the user will be prompted for it
+   * @return int Status code
+   */
+  function makeSeeder ($moduleName = null, $name = null)
+  {
+    $this->setupModule ($moduleName);
+    while (!$name) {
+      $name = str_camelize ($this->io->ask ("Seeder name:"), true);
+    }
+    $command = new Command\SeedCreate;
+    $command->setApplication ($this->console);
+    $input = new ArrayInput(PA ([
+      '--configuration' => self::getConfigPath (),
+      'name'            => $name,
       $moduleName,
     ])->prune ()->A);
     $input->setInteractive (false);
@@ -200,6 +230,31 @@ class MigrationCommands
   }
 
   /**
+   * Run all available seeders of a specific module, or just a specific seeder
+   *
+   * @param string $moduleName [optional] The target module (vendor-name/package-name syntax).
+   *                           If not specified, the user will be prompted for it
+   * @param array  $options
+   * @option $seeder|s The name of the seeder (in camel case)
+   * @return int Status code
+   */
+  function migrateSeed ($moduleName = null, $options = [
+    'seeder|s' => null,
+  ])
+  {
+    $this->setupModule ($moduleName);
+    $command = new Command\SeedRun;
+    $command->setApplication ($this->console);
+    $input = new ArrayInput(PA ([
+      '--configuration' => self::getConfigPath (),
+      '--environment'   => 'main',
+      '--seed'          => get ($options, 'seeder'),
+      $moduleName,
+    ])->prune ()->A);
+    return $this->runMigrationCommand ($command, $input);
+  }
+
+  /**
    * Print a list of all migrations of a specific module, along with their current status
    *
    * @param string $moduleName [optional] The target module (vendor-name/package-name syntax).
@@ -233,6 +288,7 @@ class MigrationCommands
   {
     self::$migrationsPath  = $this->registry->getModule ($moduleName)->path . '/' . $this->settings->migrationsPath ();
     self::$migrationsTable = 'migrations_of_' . str_replace ('/', '_', dehyphenate ($moduleName));
+    self::$seedsPath       = $this->registry->getModule ($moduleName)->path . '/' . $this->settings->seedsPath ();
   }
 
   private function runMigrationCommand (AbstractCommand $command, InputInterface $input)
