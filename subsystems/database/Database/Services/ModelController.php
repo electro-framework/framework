@@ -95,7 +95,7 @@ class ModelController implements ModelControllerInterface
   {
     if (is_null ($data) || is_null ($this->model)) return;
     if (is_array ($this->model))
-      array_mergeExisting ($model, array_normalizeEmptyValues ($data));
+      array_mergeExisting ($this->model, array_normalizeEmptyValues ($data));
     else if (is_object ($this->model))
       extendExisting ($this->model, array_normalizeEmptyValues ($data));
     else throw new FatalException (sprintf ("Can't merge data into a model of type <kbd>%s</kbd>",

@@ -122,7 +122,12 @@ class ModulesLoader
       if (!$providerModules[$i]->errorStatus) {
         $fn = [$provider, 'boot'];
         if (is_callable ($fn))
-          $this->injector->execute ($fn);
+          try {
+            $this->injector->execute ($fn);
+          }
+          catch (Exception $e) {
+            $this->logModuleError ($providerModules[$i], $e->getMessage (), $e);
+          }
       }
     }
   }

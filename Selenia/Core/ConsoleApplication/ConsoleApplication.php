@@ -76,8 +76,10 @@ class ConsoleApplication extends Runner
 
     // Setup debugging
 
-    ErrorHandler::init ();
-    DebugConsole::init ($app->debugMode);
+//    ErrorHandler::init ();
+//    DebugConsole::init ($app->debugMode);
+//    $injector->defineParam ('debugMode', $app->debugMode);
+    $injector->defineParam ('debugMode', false);
 
     // Setup the console.
 
