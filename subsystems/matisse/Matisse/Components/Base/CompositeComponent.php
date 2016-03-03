@@ -1,7 +1,9 @@
 <?php
 namespace Selenia\Matisse\Components\Base;
 
+use Selenia\Interfaces\RenderableInterface;
 use Selenia\Interfaces\Views\ViewInterface;
+use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\ViewEngine\Engines\MatisseEngine;
 
 /**
@@ -69,10 +71,14 @@ class CompositeComponent extends Component
    */
   protected function render ()
   {
-    if ($this->templateUrl)
+    if ($this->templateUrl) {
+      $this->assertContext ();
       $view = $this->context->viewService->loadFromFile ($this->templateUrl);
-    elseif ($this->template)
+    }
+    elseif ($this->template) {
+      $this->assertContext ();
       $view = $this->context->viewService->loadFromString ($this->template, $this->viewEngineClass);
+    }
     else return;
 
     $view->compile ();
@@ -96,6 +102,14 @@ class CompositeComponent extends Component
       $document = $view->getCompiled ();
       $document->attachTo ($this);
     }
+  }
+
+  private function assertContext ()
+  {
+    if (!$this->context)
+      throw new ComponentException($this,
+        sprintf ("Can't render the component's template because the rendering context is not set.
+<p>See <kbd>%s</kbd>", formatClassName (RenderableInterface::class)));
   }
 
 }

@@ -86,6 +86,10 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   public $pageTitle = null;
   /**
+   * @var ServerRequestInterface This is always available for page components, and it is not injected.
+   */
+  public $request;
+  /**
    * @var SessionInterface
    */
   public $session;
@@ -130,10 +134,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    * @var bool
    */
   protected $renderOnAction = false;
-  /**
-   * @var ServerRequestInterface
-   */
-  protected $request;
   /**
    * @var InjectorInterface
    */
@@ -269,8 +269,8 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     parent::setupView ($view);
     $engine = $view->getEngine ();
     if ($engine instanceof MatisseEngine) {
-      $this->document     = $view->getCompiled ();
-      $context            = $this->document->context;
+      $this->document = $view->getCompiled ();
+      $context        = $this->document->context;
 
       // Copy the request's shared view model into the rendering context view model.
       $context->viewModel = Http::getViewModel ($this->request);
@@ -278,8 +278,8 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
       $context->getPipeHandler ()->registerFallbackHandler ($this);
 
-      $title              = $this->getTitle ();
-      $this->pageTitle    = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
+      $title           = $this->getTitle ();
+      $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
       foreach ($this->app->assets as $url) {
         $p = strrpos ($url, '.');
         if (!$p) continue;

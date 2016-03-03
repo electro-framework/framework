@@ -47,10 +47,12 @@ class ErrorHandlingSettings
    *
    * @param int    $status The HTTP status code.
    * @param string $class  The renderer class name; the class must implement {@see RequestHandlerInterface},
+   * @return $this For chaining.
    */
   function setCustomRenderer ($status, $class)
   {
     $this->customRenderers[$status] = $class;
+    return $this;
   }
 
 }

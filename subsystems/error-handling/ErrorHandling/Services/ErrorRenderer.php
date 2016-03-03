@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\ErrorHandling\Services;
 
-use PhpKit\WebConsole\ErrorConsole\ErrorConsole;use Psr\Http\Message\ResponseInterface;use Psr\Http\Message\ServerRequestInterface;use Selenia\Application;use Selenia\ErrorHandling\Config\ErrorHandlingSettings;use Selenia\Exceptions\HttpException;use Selenia\Http\Lib\Http;use Selenia\Interfaces\Http\ErrorRendererInterface;use Selenia\Interfaces\Http\ResponseFactoryInterface;
+use PhpKit\WebConsole\ErrorConsole\ErrorConsole;use Psr\Http\Message\ResponseInterface;use Psr\Http\Message\ServerRequestInterface;use Selenia\Application;use Selenia\ErrorHandling\Config\ErrorHandlingSettings;use Selenia\Exceptions\HttpException;use Selenia\Http\Lib\Http;use Selenia\Interfaces\Http\ErrorRendererInterface;use Selenia\Interfaces\Http\ResponseFactoryInterface;use Selenia\Interfaces\InjectorInterface;use Selenia\Interfaces\RenderableInterface;
 
 /**
  * Renders an error HTTP response into a format supported by the client.
@@ -9,14 +9,18 @@ use PhpKit\WebConsole\ErrorConsole\ErrorConsole;use Psr\Http\Message\ResponseInt
 class ErrorRenderer implements ErrorRendererInterface
 {
 protected $app;
+/** @var InjectorInterface It is required for instantiating custom error renderers. */
+private $injector;
 private $responseFactory;
 private $settings;
 
-function __construct (Application $app, ResponseFactoryInterface $responseFactory, ErrorHandlingSettings $settings)
+function __construct (Application $app, ResponseFactoryInterface $responseFactory, ErrorHandlingSettings $settings,
+                      InjectorInterface $injector)
 {
   $this->app             = $app;
   $this->responseFactory = $responseFactory;
   $this->settings        = $settings;
+  $this->injector        = $injector;
 }
 
 function render (ServerRequestInterface $request, ResponseInterface $response, $error = null)
@@ -56,8 +60,14 @@ function render (ServerRequestInterface $request, ResponseInterface $response, $
   if (Http::clientAccepts ($request, 'text/html')) {
     $response       = $response->withHeader ('Content-Type', 'text/html');
     $customRenderer = $this->settings->getCustomRenderer ($status);
-    if ($customRenderer)
+
+    if ($customRenderer) {
+      if ($customRenderer instanceof RenderableInterface) {
+        $class = $customRenderer->getContextClass ();
+        $customRenderer->setContext ($this->injector->make ($class));
+      }
       $response = $customRenderer($request, $response, nop ());
+    }
     else {
       ob_start ();
       $this->htmlTemplate ($status, $title, $message);
