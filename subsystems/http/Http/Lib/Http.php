@@ -24,6 +24,20 @@ class Http
   }
 
   /**
+   * Utility method for retrieving the value of a form field submitted via a `application/x-www-form-urlencoded` or a
+   * `multipart/form-data` POST request.
+   *
+   * @param ServerRequestInterface $request
+   * @param string                 $name The field name.
+   * @param mixed                  $def [optional] A default value.
+   * @return mixed
+   */
+  static function field (ServerRequestInterface $request, $name, $def = null)
+  {
+    return get ($request->getParsedBody (), $name, $def);
+  }
+
+  /**
    * Returns a map of routing parameters extracted from the request attributes (which mast have been set previously by
    * a router).
    *

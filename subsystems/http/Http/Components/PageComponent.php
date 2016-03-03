@@ -384,7 +384,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   protected function formField ($name, $def = null)
   {
-    return get ($this->request->getParsedBody (), $name, $def);
+    return Http::field ($this->request, $name, $def);
   }
 
   protected function getActionAndParam (&$action, &$param)
