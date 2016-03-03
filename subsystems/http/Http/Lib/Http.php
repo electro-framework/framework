@@ -57,17 +57,16 @@ class Http
    *
    * @param ResponseInterface $response    An existing, pristine, response object.
    * @param int               $status      HTTP status code.
-   * @param string            $reason      The HTTP reason phrase.
    * @param string            $body        Am optional HTML body content.
    * @param string            $contentType Defaults to 'text/html'.
    * @return ResponseInterface The same response object that was supplied.
    */
-  static function send (ResponseInterface $response, $status = 200, $reason = '', $body = '', $contentType =
+  static function send (ResponseInterface $response, $status = 200, $body = '', $contentType =
   'text/html')
   {
     if ($body)
       $response->getBody ()->write ($body);
-    return $response->withStatus ($status, $reason)->withHeader ('Content-Type', $contentType);
+    return $response->withStatus ($status)->withHeader ('Content-Type', $contentType);
   }
 
   /**

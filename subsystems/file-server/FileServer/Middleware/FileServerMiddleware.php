@@ -1,8 +1,10 @@
 <?php
 namespace Selenia\FileServer\Middleware;
+
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
+use Selenia\FileServer\Lib\FileUtil;
 use Selenia\FileServer\Services\FileServerMappings;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\ResponseFactoryInterface;
@@ -12,18 +14,6 @@ use Selenia\Interfaces\Http\ResponseFactoryInterface;
  */
 class FileServerMiddleware implements RequestHandlerInterface
 {
-  static private $MIME_TYPES = [
-    'js'    => 'application/javascript',
-    'css'   => 'text/css',
-    'woff'  => 'application/font-woff',
-    'woff2' => 'application/font-woff2',
-    'ttf'   => 'font/ttf',
-    'otf'   => 'font/otf',
-    'eot'   => 'application/vnd.ms-fontobject',
-    'jpg'   => 'image/jpeg',
-    'png'   => 'image/png',
-    'gif'   => 'image/gif',
-  ];
   /**
    * @var Application
    */
@@ -48,37 +38,35 @@ class FileServerMiddleware implements RequestHandlerInterface
   {
     $URI  = $request->getAttribute ('virtualUri', '');
     $path = $this->mappings->toFilePath ($URI, $isMapped);
-    if ($isMapped) {
+    if (!$isMapped)
+      return $next();
 
-      // Run PHP files
+    // Run PHP files (the .php extension is not present on the URL)
 
-      if (file_exists ($x = "$path.php")) {
-        try {
-          ob_start ();
-          require $x;
-          $response->getBody ()->write (ob_get_clean ());
-        } catch (\Exception $e) {
-          @ob_get_clean ();
-          throw $e;
-        }
-        return $response;
+    if (file_exists ($x = "$path.php")) {
+      try {
+        ob_start ();
+        require $x;
+        $response->getBody ()->write (ob_get_clean ());
       }
-
-      // Serve static files
-
-      $type     = get (self::$MIME_TYPES, substr ($path, strrpos ($path, '.') + 1), 'application/octet-stream');
-      $response = $response->withHeader ('Content-Type', $type);
-      if (!$this->app->debugMode) {
-        $response = $response
-          ->withHeader ('Expires', gmdate ('D, d M Y H:i:s \G\M\T', time () + 36000))// add 10 hours
-          ->withHeader ('Cache-Control', 'public, max-age=36000');
+      catch (\Exception $e) {
+        @ob_get_clean ();
+        throw $e;
       }
-      if (!file_exists ($path))
-        return $this->responseFactory->make (404, "Not found: $path", 'text/plain');
-      return $response->withBody ($this->responseFactory->makeBody ('', fopen ($path, 'rwb')));
+      return $response;
     }
 
-    return $next();
+    // Serve static files
+
+    if (!file_exists ($path))
+      return $this->responseFactory->make (404, "Not found: $path", 'text/plain');
+
+    return $this->responseFactory->makeStream (fopen ($path, 'rb'), 200, [
+      'Content-Type'   => FileUtil::getMimeType ($path),
+      'Content-Length' => (string)filesize ($path),
+      'Cache-Control'  => 'max-age=3600, public',
+      'Expires'        => date_create ('+1 hour')->format ('D, d M Y H:i:s') . ' GMT',
+    ]);
   }
 
 }

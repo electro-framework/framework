@@ -20,7 +20,7 @@ class ResponseFactory implements ResponseFactoryInterface
   function makeBody ($content = '', $stream = 'php://memory')
   {
     $s = new Stream($stream, 'wb+');
-    if ($content) $s->write ($content);
+    if (exists ($content)) $s->write ($content);
     return $s;
   }
 

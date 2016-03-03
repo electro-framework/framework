@@ -23,7 +23,7 @@ class URLNotFoundMiddleware implements RequestHandlerInterface
   {
     $path = either ($request->getAttribute ('virtualUri', '<i>not set</i>'), '<i>empty</i>');
     $realPath = $request->getUri ()->getPath ();
-    return Http::send ($response, 404, "Page Not Found", "<br><br><table align=center cellspacing=20 style='text-align:left'>
+    return Http::send ($response, 404, "<br><br><table align=center cellspacing=20 style='text-align:left'>
 <tr><th>Virtual URL:<td><kbd>$path</kbd>
 <tr><th>URL path:<td><kbd>$realPath</kbd>
 </table>");

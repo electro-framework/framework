@@ -6,7 +6,6 @@ use PhpKit\WebConsole\Lib\Debug;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Exceptions\HttpException;
-use Selenia\Http\Lib\Http;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
 use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\InjectorInterface;
@@ -165,7 +164,7 @@ abstract class BaseRouter implements RouterInterface
     }
     catch (HttpException $error) {
       // Convert HTTP exceptions to normal responses
-      return Http::send ($response, $error->getCode (), $error->getMessage () ?: $error->getTitle ());
+      return $response->withStatus ($error->getCode (), $error->getMessage () ?: $error->getTitle ());
     }
 
     if (!$response)
