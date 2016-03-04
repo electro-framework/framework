@@ -58,7 +58,9 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     //------------------
     // Request panel
     //------------------
-    DebugConsole::logger ('request')->setRequest ($request);
+    $log = DebugConsole::logger ('request');
+    if (!$log->hasRequest ())
+      $log->setRequest ($request);
 
     //------------------
     // Response panel

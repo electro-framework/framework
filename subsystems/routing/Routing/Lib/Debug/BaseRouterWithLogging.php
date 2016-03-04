@@ -2,6 +2,7 @@
 namespace Selenia\Routing\Lib\Debug;
 
 use Iterator;
+use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\Lib\Debug;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -98,6 +99,8 @@ class BaseRouterWithLogging extends BaseRouter
     /** Router $this */
     $this->routingLogger
       ->writef ("<#row>Call %s</#row>", Debug::getType ($handler));
+
+    DebugConsole::logger ('request')->setRequest ($request);
 
     if ($request && $request != self::$currentRequest) {
       $this->logRequest ($request, sprintf ('with another %s object:', Debug::getType ($request)));

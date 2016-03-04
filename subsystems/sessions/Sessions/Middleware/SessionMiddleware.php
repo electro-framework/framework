@@ -17,17 +17,11 @@ use Selenia\Interfaces\SessionInterface;
  */
 class SessionMiddleware implements RequestHandlerInterface
 {
-  /**
-   * @var Application
-   */
+  /** @var Application */
   private $app;
-  /**
-   * @var RedirectionInterface
-   */
+  /** @var RedirectionInterface */
   private $redirection;
-  /**
-   * @var SessionInterface
-   */
+  /** @var SessionInterface */
   private $session;
 
   function __construct (SessionInterface $session, Application $app, RedirectionInterface $redirection)
@@ -63,12 +57,12 @@ class SessionMiddleware implements RequestHandlerInterface
 
     $flashMessage = $session->getFlashMessage ();
     if ($flashMessage)
-      $this->renderFlashMessage ($request, $flashMessage['type'], $flashMessage['message']);
+      $request = $this->renderFlashMessage ($request, $flashMessage['type'], $flashMessage['message']);
 
     // Run the next middleware, catching any flash message exceptions.
 
     try {
-      return $next();
+      return $next($request);
     }
     catch (FlashMessageException $flash) {
       $session->flashMessage ($flash->getMessage (), $flash->getCode (), $flash->getTitle ());
