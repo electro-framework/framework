@@ -23,6 +23,16 @@ class MacroCallProperties extends MetadataProperties
    */
   private $macroInstance;
 
+  function getAll ()
+  {
+    $names = $this->getPropertyNames();
+    return map ($names, function ($v, &$k) {
+      $k = $v;
+      return $this->$k;
+    });
+  }
+
+
   function __get ($name)
   {
     if (array_key_exists ($name, $this->props))

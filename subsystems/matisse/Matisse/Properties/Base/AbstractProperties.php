@@ -14,6 +14,8 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
    * @var Component
    */
   protected $component;
+  /** @var array */
+  private $beingAssigned;
 
   function __construct (Component $ownerComponent)
   {
@@ -77,6 +79,7 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
 
   function apply (array $props)
   {
+    $this->beingAssigned = $props;
     foreach ($props as $k => $v)
       $this->set ($k, $v);
   }
@@ -105,6 +108,17 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
   function get ($propName, $default = null)
   {
     return property ($this, $propName, $default);
+  }
+
+  /**
+   * Returns the values being assigned to this instance. It is used for debugging; it's displayed when a validation
+   * error occurs while assigning the values.
+   *
+   * @return array
+   */
+  public function getBeingAssigned ()
+  {
+    return $this->beingAssigned;
   }
 
   /**

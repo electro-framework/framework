@@ -16,6 +16,8 @@ class ContentRepository implements ContentRepositoryInterface
 
   public function getImageUrl ($path, array $params = [])
   {
-    return rtrim (substr ($this->urlBuilder->getUrl ($path, $params), 1), '?');
+    if (exists ($path))
+      return rtrim (substr ($this->urlBuilder->getUrl ($path, $params), 1), '?');
+    return '';
   }
 }
