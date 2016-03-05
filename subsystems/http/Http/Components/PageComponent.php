@@ -188,7 +188,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
     $this->initialize (); //custom setup
 
-    $this->modelController->setModel ($this->model ());
+    $this->model ($this->modelController);
     $this->modelController->handleRequest ($request);
     $this->model = $this->modelController->getModel ();
 
@@ -416,16 +416,19 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   }
 
   /**
-   * Override to return the main model for the controller / view.
+   * Override to set the model for the controller / view.
    *
-   * > This model will be available on all request methods (GET, POST, etc) and it will also be set as the 'model' view
-   * model.
+   * > This model will be available on all request methods (GET, POST, etc) and it will also be set as the 'model'
+   * property of the view model.
    *
-   * @return mixed
+   * <p>You should set the model on the provided model controller, using one of these methods: `setModel()`,
+   * `loadModel()` or `loadRequested()`.
+   *
+   * @param ModelControllerInterface $modelController
    */
-  protected function model ()
+  protected function model (ModelControllerInterface $modelController)
   {
-    return null;
+    // override
   }
 
 }

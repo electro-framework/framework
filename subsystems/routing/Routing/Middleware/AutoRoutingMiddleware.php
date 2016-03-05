@@ -7,13 +7,13 @@ use Selenia\Exceptions\Fatal\FileNotFoundException;
 use Selenia\Http\Components\PageComponent;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Parser\Context;
 
 /**
- * It allows a designer to rapidly prototype the application by automatically providing routing for URLs starting with
- * a specific prefix, which will be routed to a generic controller that will load the corresponding view from the
- * registered view directories, from a relative file path derived from the URL.
+ * It allows a designer to rapidly prototype the application by automatically providing routing for URLs matching files
+ * on the views directories, which will be routed to a generic controller that will load the matched view.
+ *
+ * <p>**Note:** currently, this middleware only supports Matisse templates.
  *
  * <p>**This is NOT recommended for production!**
  *
@@ -44,7 +44,7 @@ class AutoRoutingMiddleware implements RequestHandlerInterface
 
     /** @var PageComponent $page */
     $page = $this->injector->make (PageComponent::class);
-    $page->setup (null, $this->context);
+    $page->setup (null, $this->context); // Here we assume the templating engine is always Matisse.
     $page->templateUrl = "$URL.html";
 
     try {

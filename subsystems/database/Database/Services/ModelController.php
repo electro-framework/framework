@@ -12,6 +12,15 @@ use Selenia\Interfaces\SessionInterface;
 class ModelController implements ModelControllerInterface
 {
   /**
+   * For composite models, this is a dot-separated path to the main model.
+   *
+   * <p>The main model is the target for automatic route parameters merging.
+   * <p>If it's an empty string, the whole model is the target.
+   *
+   * @var string
+   */
+  public $mainModelName = '';
+  /**
    * @var InjectorInterface
    */
   protected $injector;
@@ -68,25 +77,46 @@ class ModelController implements ModelControllerInterface
   function handleRequest (ServerRequestInterface $request)
   {
     $this->request = $request;
-    $this->merge (Http::getRouteParameters ($request));
+
+    // Merge route parameters.
+    $rp = Http::getRouteParameters ($request);
+    if ($rp) {
+      $o = [];
+      setAt ($o, $this->mainModelName, $rp);
+      $this->merge ($o);
+    }
+
     switch ($request->getMethod ()) {
+
       case 'GET':
-        $this->merge ($this->session->getOldInput ());
+        $old = $this->session->getOldInput ();
+        if ($old)
+          $this->merge ($this->parseFormData ($old));
         break;
+
       case 'POST':
-        $contentType = $request->getHeaderLine ('Content-Type');
-        if ($contentType == 'application/x-www-form-urlencoded' ||
-            str_beginsWith ($contentType, 'multipart/form-data')
-        ) {
-          $data = $request->getParsedBody ();
+        $data = $request->getParsedBody ();
+        if (isset($data)) {
+
+          $contentType = $request->getHeaderLine ('Content-Type');
+          if ($contentType == 'application/x-www-form-urlencoded' ||
+              str_beginsWith ($contentType, 'multipart/form-data')
+          )
+            $data = $this->parseFormData ($data);
+
           unset ($data[Http::ACTION_FIELD]);
           $this->merge ($data);
         }
     }
-    $this->runExtensions();
+    $this->runExtensions ();
   }
 
-  function loadRequested ($modelClass, $param = 'id')
+  function loadModel ($modelClass, $modelName = '', $id = null)
+  {
+    // does nothing
+  }
+
+  function loadRequested ($modelClass, $modelName = '', $param = 'id')
   {
     // does nothing
   }
@@ -94,10 +124,11 @@ class ModelController implements ModelControllerInterface
   function merge (array $data = null)
   {
     if (is_null ($data) || is_null ($this->model)) return;
+    $data = array_normalizeEmptyValues ($data, true);
     if (is_array ($this->model))
-      array_mergeExisting ($this->model, array_normalizeEmptyValues ($data));
+      array_recursiveMergeInto ($this->model, $data);
     else if (is_object ($this->model))
-      extendExisting ($this->model, array_normalizeEmptyValues ($data));
+      extend ($this->model, $data);
     else throw new FatalException (sprintf ("Can't merge data into a model of type <kbd>%s</kbd>",
       gettype ($this->model)));
   }
@@ -117,9 +148,24 @@ class ModelController implements ModelControllerInterface
     $this->extensions[] = $extensionClass;
   }
 
-  function saveModel ()
+  function saveModel (array $options = [])
   {
     // does nothing
+  }
+
+  protected function callEventHandlers (array $handlers)
+  {
+    array_walk ($handlers, [$this, 'exec']);
+  }
+
+  protected function parseFormData (array $data)
+  {
+    $o = [];
+    foreach ($data as $k => $v) {
+      $k = str_replace ('/', '.', $k);
+      setAt ($o, $k, $v, true);
+    }
+    return $o;
   }
 
   protected function runExtensions ()
@@ -128,11 +174,6 @@ class ModelController implements ModelControllerInterface
       $extension = is_string ($ext) ? $this->injector->make ($ext) : $ext;
       $extension->modelControllerExtension ($this);
     }
-  }
-
-  protected function callEventHandlers (array $handlers)
-  {
-    array_walk ($handlers, [$this, 'exec']);
   }
 
   /**
