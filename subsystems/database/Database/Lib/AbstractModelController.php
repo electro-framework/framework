@@ -74,6 +74,10 @@ abstract class AbstractModelController implements ModelControllerInterface
     $this->onSave (0, [$this, 'builtInSaveHandler']);
   }
 
+  abstract function loadData ($collection, $subModelPath = '', $id = null, $primaryKey = 'id');
+
+  abstract function loadModel ($modelClass, $subModelPath = '', $id = null);
+
   /**
    * Override to provide an implementation of beginning a database transaction.
    */
@@ -102,14 +106,18 @@ abstract class AbstractModelController implements ModelControllerInterface
    */
   abstract protected function save ($model, array $options = []);
 
-  function getModel ()
+  function getModel ($subModelPath = '')
   {
-    return $this->model;
+    if ($subModelPath === '')
+      return $this->model;
+    else return getAt ($this->model, $subModelPath);
   }
 
-  function setModel ($data)
+  function setModel ($data, $subModelPath = '')
   {
-    $this->model = $data;
+    if ($subModelPath === '')
+      $this->model = $data;
+    else setAt ($this->model, $subModelPath, $data);
   }
 
   function getRequest ()
@@ -158,10 +166,6 @@ abstract class AbstractModelController implements ModelControllerInterface
     }
     $this->runExtensions ();
   }
-
-  abstract function loadData ($collection, $subModelPath = '', $id = null, $primaryKey = 'id');
-
-  abstract function loadModel ($modelClass, $subModelPath = '', $id = null);
 
   function merge (array $data = null)
   {
@@ -288,7 +292,7 @@ abstract class AbstractModelController implements ModelControllerInterface
     foreach ($this->extensions as $ext) {
       if (is_string ($ext))
         $extension = new $ext;
-      elseif (is_callable($ext))
+      elseif (is_callable ($ext))
         $extension = $ext ();
       else $extension = $ext;
       $extension->modelControllerExtension ($this);

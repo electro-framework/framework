@@ -22,9 +22,11 @@ use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Interfaces\Views\ViewInterface;
+use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Base\CompositeComponent;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Lib\PipeHandler;
+use Selenia\Matisse\Parser\Context;
 use Selenia\Traits\PolymorphicInjectionTrait;
 use Selenia\ViewEngine\Engines\MatisseEngine;
 
@@ -189,7 +191,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     $this->initialize (); //custom setup
 
     $this->modelController->setRequest ($request);
-    $this->model ($this->modelController);
+    $this->model ();
     $this->modelController->handleRequest ();
     $this->model = $this->modelController->getModel ();
 
@@ -295,43 +297,65 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
         }
       }
     }
-    //------------------
-    // DOM panel
-    //------------------
-    if (DebugConsole::hasLogger ('DOM')) {
-      $insp = $this->document->inspect (true);
-      DebugConsole::logger ('DOM')->write ($insp);
-    }
-    //------------------
-    // View Model panel
-    //------------------
-    if (DebugConsole::hasLogger ('vm')) {
-
-      $VMFilter = function ($k, $v, $o) {
-        if ($k === 'app' || $k === 'navigation' || $k === 'session' || $k === 'request' || $k === 'viewModel' ||
-            $k === 'currentLink' || $k === 'page' || $v instanceof NavigationLinkInterface
-        ) return '...';
-        return true;
-      };
-
-      DebugConsole::logger ('vm')
-                  ->write ("<#section|{$this->className} View Model>")
-                  ->withFilter ($VMFilter, $this->viewModel)
-                  ->write ("</#section><#section|Shared View Model>")
-                  ->withFilter ($VMFilter, $this->context->viewModel)
-                  ->write ("</#section>");
-    }
   }
 
-  /**
-   * {@inheritdoc}
-   *
-   * <p>Note:
-   * > View models are available only on GET requests.
-   */
-  protected function viewModel ()
+  protected function afterRender (ViewInterface $view)
   {
-    //Override.
+    $engine = $view->getEngine ();
+    if ($engine instanceof MatisseEngine) {
+
+      //------------------
+      // DOM panel
+      //------------------
+      if (DebugConsole::hasLogger ('DOM')) {
+        $insp = $this->document->inspect (true);
+        DebugConsole::logger ('DOM')->write ($insp);
+      }
+      //------------------
+      // View Model panel
+      //------------------
+      if (DebugConsole::hasLogger ('view') && isset($this->viewModel->context)) {
+
+        $VMFilter = function ($k, $v, $o) {
+          if (
+            $v instanceof Context ||
+            $v instanceof Component ||
+            $k === 'parent' ||
+            $k === 'viewModel'
+          ) return '...';
+          return true;
+        };
+
+        DebugConsole::logger ('view')
+                    ->withFilter ($VMFilter, $this->viewModel->context);
+      }
+
+      if (DebugConsole::hasLogger ('model')) {
+
+        $VMFilter = function ($k, $v, $o) {
+          if ($v instanceof Application ||
+              $v instanceof NavigationInterface ||
+              $v instanceof NavigationLinkInterface ||
+              $v instanceof SessionInterface ||
+              $v instanceof ServerRequestInterface ||
+              $v instanceof Context ||
+              $v instanceof Component ||
+              $k === 'viewModel' ||
+              $k === 'model'
+          ) return '...';
+          return true;
+        };
+
+        DebugConsole::logger ('model')
+                    ->write ("<#section|MODEL>")
+                    ->inspect ($this->viewModel->model)
+                    ->write ("</#section><#section|VIEW MODEL>")
+                    ->withFilter ($VMFilter, $this->viewModel)
+                    ->write ("</#section><#section|SHARED VIEW MODEL>")
+                    ->withFilter ($VMFilter, $this->context->viewModel)
+                    ->write ("</#section>");
+      }
+    }
   }
 
   protected function autoRedirect ()
@@ -428,6 +452,17 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   protected function model ()
   {
     // override
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * <p>Note:
+   * > View models are available only on GET requests.
+   */
+  protected function viewModel ()
+  {
+    //Override.
   }
 
 }

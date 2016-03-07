@@ -26,7 +26,8 @@ class DebuggingModule implements ModuleInterface
     DebugConsole::registerPanel ('config', new ConsoleLogger ('Configuration', 'fa fa-cogs'));
     DebugConsole::registerPanel ('session', new ConsoleLogger ('Session', 'fa fa-user'));
     DebugConsole::registerPanel ('DOM', new ConsoleLogger ('Server-side DOM', 'fa fa-sitemap'));
-    DebugConsole::registerPanel ('vm', new ConsoleLogger ('View Model', 'fa fa-table'));
+    DebugConsole::registerPanel ('view', new ConsoleLogger ('View', 'fa fa-eye'));
+    DebugConsole::registerPanel ('model', new ConsoleLogger ('Model', 'fa fa-table'));
     DebugConsole::registerPanel ('database', new ConsoleLogger ('Database', 'fa fa-database'));
     DebugConsole::registerLogger ('trace', new ConsoleLogger ('Trace', 'fa fa-clock-o big'));
 //    DebugConsole::registerPanel ('exceptions', new ConsoleLogger ('Exceptions', 'fa fa-bug'));
