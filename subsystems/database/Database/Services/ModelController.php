@@ -29,25 +29,46 @@ class ModelController implements ModelControllerInterface
    */
   protected $model = [];
   /**
-   * A pipeline of operations to be performed on the model after saving it.
-   *
-   * @var callable[]
-   */
-  protected $postSaveHandlers = [];
-  /**
-   * A pipeline of operations to be performed on the model before saving it.
-   *
-   * @var callable[]
-   */
-  protected $preSaveHandlers = [];
-  /**
    * @var ServerRequestInterface
    */
   protected $request;
   /**
+   * @var array Driver/ORM-specific options for the default save handler.
+   */
+  private $defaultOptions;
+  /**
    * @var string[]|ModelControllerExtensionInterface[]
    */
   private $extensions = [];
+  /**
+   * A pipeline of operations to be performed after saving the model.
+   * At this point, the transaction has alread been commited, so no further database operations should be performed.
+   * You can, though, do other kinds of cleanup operations, like deleting files, for instance.
+   *
+   * @var callable[]
+   */
+  private $handlersForPostSave = [];
+  /**
+   * A pipeline of operations to be performed on the model before saving it.
+   * At this point, the transaction has not yet began, so no database operations should be performed yet.
+   * You can, though, do other kinds of operations, like preparing uploaded files, for instance.
+   *
+   * @var callable[]
+   */
+  private $handlersForPreSave = [];
+  /**
+   * A pipeline of operations to save the model.
+   * These are all performed within a database transaction.
+   * You mayn prepend callbacks, to perform database operations before the model is saved, or you may append callbacks,
+   * to perform operations after the model is saved. You may also replace the default model saver.
+   *
+   * @var callable[]
+   */
+  private $handlersForSave = [];
+  /**
+   * @var callable|null
+   */
+  private $overrideDefaultHandler = null;
   /**
    * @var SessionInterface
    */
@@ -57,6 +78,7 @@ class ModelController implements ModelControllerInterface
   {
     $this->session  = $session;
     $this->injector = $injector;
+    $this->onSave (0, [$this, 'builtInSaveHandler']);
   }
 
   function getModel ()
@@ -74,9 +96,14 @@ class ModelController implements ModelControllerInterface
     return $this->request;
   }
 
-  function handleRequest (ServerRequestInterface $request)
+  function setRequest (ServerRequestInterface $request)
   {
     $this->request = $request;
+  }
+
+  function handleRequest ()
+  {
+    $request = $this->request;
 
     // Merge route parameters.
     $rp = Http::getRouteParameters ($request);
@@ -111,7 +138,7 @@ class ModelController implements ModelControllerInterface
     $this->runExtensions ();
   }
 
-  function loadModel ($modelClass, $modelName = '', $id = null)
+  function loadModel ($modelClass, $path = '', $id = null)
   {
     // does nothing
   }
@@ -135,12 +162,21 @@ class ModelController implements ModelControllerInterface
 
   function onAfterSave (callable $task)
   {
-    $this->postSaveHandlers[] = $task;
+    $this->handlersForPostSave[] = $task;
   }
 
   function onBeforeSave (callable $task)
   {
-    $this->preSaveHandlers[] = $task;
+    $this->handlersForPreSave[] = $task;
+  }
+
+  function onSave ($priority, callable $task)
+  {
+    if (!$priority)
+      $this->overrideDefaultHandler = $task;
+    elseif ($priority > 0)
+      array_unshift ($this->handlersForSave, $task);
+    else $this->handlersForSave[] = $task;
   }
 
   function registerExtension ($extensionClass)
@@ -150,30 +186,92 @@ class ModelController implements ModelControllerInterface
 
   function saveModel (array $options = [])
   {
-    // does nothing
+    $this->defaultOptions = $options;
+    $this->callEventHandlers ($this->handlersForPreSave);
+    $this->beginTransaction ();
+    try {
+      $this->callEventHandlers ($this->handlersForSave);
+      $this->commit ();
+    }
+    catch (\Exception $e) {
+      $this->rollback ();
+      throw $e;
+    }
+    $this->callEventHandlers ($this->handlersForPostSave);
   }
 
-  protected function callEventHandlers (array $handlers)
+  /**
+   * Override to provide an implementation of beginning a database transaction.
+   */
+  protected function beginTransaction ()
+  {
+    //override
+  }
+
+  /**
+   * Override to provide an implementation of a database transaction commit.
+   */
+  protected function commit ()
+  {
+    //override
+  }
+
+  /**
+   * Override to provide an implementation of a database transaction rollback.
+   */
+  protected function rollback ()
+  {
+    //override
+  }
+
+  /**
+   * Attempts to save the given model on the database.
+   *
+   * <p>If the model type is unsupported by the specific controller implementation, the method will do nothing and
+   * return `false`.
+   * > <p>This is usually only overriden by controller subclasses that implement support for a specific ORM.
+   *
+   * @param mixed $model
+   * @param array $options Driver/ORM-specific options.
+   * @return bool true if the model was saved.
+   */
+  protected function save ($model, array $options = [])
+  {
+    return false;
+  }
+
+  /**
+   * Saves all sub-models on the model that can be automatically saved.
+   *
+   * <p>Although not common, you may override this if the model has some unsupported format that can not be handled by
+   * the default implementation. Arrays of models and objects with models on public properties are supported.
+   *
+   * @param array $options Driver/ORM-specific options.
+   * @return bool
+   */
+  protected function saveCompositeModel (array $options = [])
+  {
+    foreach ($this->model as $submodel)
+      if (!$this->save ($submodel, $options))
+        return false;
+    return true;
+  }
+
+  private function builtInSaveHandler ()
+  {
+    $def = $this->overrideDefaultHandler;
+    if ($def)
+      return $def ($this);
+
+    $model = $this->model;
+    if (!($s = $this->save ($model, $this->defaultOptions)))
+      $s = $this->saveCompositeModel ($this->defaultOptions);
+    return $s;
+  }
+
+  private function callEventHandlers (array $handlers)
   {
     array_walk ($handlers, [$this, 'exec']);
-  }
-
-  protected function parseFormData (array $data)
-  {
-    $o = [];
-    foreach ($data as $k => $v) {
-      $k = str_replace ('/', '.', $k);
-      setAt ($o, $k, $v, true);
-    }
-    return $o;
-  }
-
-  protected function runExtensions ()
-  {
-    foreach ($this->extensions as $ext) {
-      $extension = is_string ($ext) ? $this->injector->make ($ext) : $ext;
-      $extension->modelControllerExtension ($this);
-    }
   }
 
   /**
@@ -185,6 +283,24 @@ class ModelController implements ModelControllerInterface
   private function exec ($fn)
   {
     return $fn ($this);
+  }
+
+  private function parseFormData (array $data)
+  {
+    $o = [];
+    foreach ($data as $k => $v) {
+      $k = str_replace ('/', '.', $k);
+      setAt ($o, $k, $v, true);
+    }
+    return $o;
+  }
+
+  private function runExtensions ()
+  {
+    foreach ($this->extensions as $ext) {
+      $extension = is_string ($ext) ? $this->injector->make ($ext) : $ext;
+      $extension->modelControllerExtension ($this);
+    }
   }
 
 }
