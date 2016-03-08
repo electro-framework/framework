@@ -14,7 +14,9 @@ class ModelController extends AbstractModelController
   public function __construct (SessionInterface $session, ConnectionInterface $connection)
   {
     parent::__construct ($session);
-    $this->pdo = $connection->getPdo ();
+    $driver = $connection->driver ();
+    if ($driver && $driver != 'none')
+      $this->pdo = $connection->getPdo ();
   }
 
   /**
