@@ -13,9 +13,39 @@ class Parser
   const EXP_BEGIN            = '{{';
   const EXP_END              = '}}';
   const NO_TRIM              = 0;
-  const PARSE_ATTRS          = '# ([\w\-\:]+) \s* (?: = \s* ("|\') (.*?) \2 )? (\s|@) #sxu';
-  const PARSE_DATABINDINGS   = '# (?: \{\{ | \{!! ) ( .*? ) (?: \}\} | !!\} ) #xu';
-  const PARSE_TAG            = '# (<) (/?) ([A-Z][\w\-]+) \s* (.*?) (/?) (>) #sxu';
+  const PARSE_ATTRS          = '#
+   ([\w\-\:]+)
+   \s*
+   (?:
+     = \s*
+     (?|
+       "([^"]*)"
+       |
+       \'([^\']*)\'
+       |
+       (\{\{ \s* [^\}\s]+ \s* \}\})
+       |
+       (\{!! \s* [^\}\s]+ \s* !!\})
+       |
+       ([^>\s]+)
+     )
+   )?
+   (\s | @)
+   #sxu';
+  const PARSE_DATABINDINGS   = '#
+   (?: \{\{ | \{!! )
+   ( .*? )
+   (?: \}\} | !!\} )
+   #xu';
+  const PARSE_TAG            = '#
+   (<) (/?)
+   (
+     [A-Z][\w\-]+ (?: :[\w\-]+)?
+     |
+     [a-z]+:[\w\-]+
+   )
+   \s* (.*?) (/?) (>)
+   #sxu';
   const TRIM                 = 3;
   const TRIM_LEFT            = 1; // @ is at the end of the attrs string and it's used as a marker.
   const TRIM_LEFT_CONTENT    = '# (?<=\>) \s+ (?=\s) #xu';
@@ -150,7 +180,7 @@ class Parser
     if (!empty($attrStr)) {
       $sPos = 0;
       while (preg_match (self::PARSE_ATTRS, "$attrStr@", $match, PREG_OFFSET_CAPTURE, $sPos)) {
-        list(, list($key), list($quote), list($value, $exists), list($marker, $next)) = $match;
+        list(, list($key), list($value, $exists), list($marker, $next)) = $match;
         $key = normalizeAttributeName ($key);
         if ($exists < 0)
           $value = 'true';
@@ -208,8 +238,8 @@ class Parser
 
     /** @var Metadata|boolean $defParam */
     $this->parse_attributes ($attrs, $attributes, $bindings, true);
-    $component = $this->current->context->createComponentFromTag  ($tag, $this->current, $attributes, $bindings,
-        false /*TODO: support HTML components*/);
+    $component = $this->current->context->createComponentFromTag ($tag, $this->current, $attributes, $bindings,
+      false /*TODO: support HTML components*/);
 
     $this->current->addChild ($component);
     $this->current = $component;

@@ -7,6 +7,7 @@ use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\GenericHtmlComponent;
 use Selenia\Matisse\Components\Macro\MacroCall;
 use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Exceptions\MatisseException;
 use Selenia\Matisse\Parser\Context;
 
 /**
@@ -64,7 +65,7 @@ trait ComponentsAPITrait
    *
    * <p>This is called by the parser.
    *
-   * @param string     $tagName
+   * @param string     $tagName  It may contain an XML namespace prefix, ex: 'x:tag'
    * @param Component  $parent   The component's container component.
    * @param string[]   $props    A map of property names to property values.
    *                             Properties specified via this argument come only from markup attributes, not
@@ -75,10 +76,19 @@ trait ComponentsAPITrait
    *                             If false, an attempt is made to load a macro with the same name,
    * @return Component Component instance. For macros, an instance of Macro is returned.
    * @throws ComponentException
+   * @throws MatisseException
    */
   function createComponentFromTag ($tagName, Component $parent, array $props = null, array $bindings = null,
                                    $generic = false, $strict = false)
   {
+    $s = explode (':', $tagName, 2);
+    if (count ($s) > 1)
+      list ($prefix, $tagName) = $s;
+    else $prefix = '';
+
+    if ($prefix)
+      throw new MatisseException ("XML namespaces are not yet supported.<p>Tag: <kbd>&lt;<b>$prefix:</b>$tagName&gt;</kbd>");
+
     if ($generic) {
       $component = new GenericHtmlComponent($tagName, $props);
       return $component;

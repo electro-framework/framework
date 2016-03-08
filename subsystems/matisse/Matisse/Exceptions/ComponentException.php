@@ -12,7 +12,7 @@ class ComponentException extends MatisseException
       parent::__construct ($msg);
     else {
       $i     = $this->inspect ($component, $deep);
-      $props = $component->props->getBeingAssigned ();
+      $props = isset($component->props) ? $component->props->getBeingAssigned () : [];
       $o     = $props ? Debug::properties($props) : '';
       $id    = $component->supportsProperties && isset($component->props->id) ? $component->props->id : null;
       $class = typeInfoOf ($component);
