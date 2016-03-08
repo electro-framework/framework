@@ -58,7 +58,7 @@ abstract class AbstractModelController implements ModelControllerInterface
    *
    * @var callable[]
    */
-  private $handlersForSave = [];
+  private $handlersForSave;
   /**
    * @var callable|null
    */
@@ -70,13 +70,9 @@ abstract class AbstractModelController implements ModelControllerInterface
 
   public function __construct (SessionInterface $session)
   {
-    $this->session = $session;
-    $this->onSave (0, [$this, 'builtInSaveHandler']);
+    $this->session         = $session;
+    $this->handlersForSave = [[$this, 'builtInSaveHandler']];
   }
-
-  abstract function loadData ($collection, $subModelPath = '', $id = null, $primaryKey = 'id');
-
-  abstract function loadModel ($modelClass, $subModelPath = '', $id = null);
 
   /**
    * Override to provide an implementation of beginning a database transaction.
@@ -97,12 +93,13 @@ abstract class AbstractModelController implements ModelControllerInterface
    * Attempts to save the given model on the database.
    *
    * <p>If the model type is unsupported by the specific controller implementation, the method will do nothing and
-   * return `false`.
+   * return `null`.
+   * <p>If the model could not be save due to another reason, the method should returm `false`.
    * > <p>This is usually only overriden by controller subclasses that implement support for a specific ORM.
    *
    * @param mixed $model
    * @param array $options Driver/ORM-specific options.
-   * @return bool true if the model was saved.
+   * @return bool|null true if the model was saved.
    */
   abstract protected function save ($model, array $options = []);
 
@@ -166,6 +163,10 @@ abstract class AbstractModelController implements ModelControllerInterface
     }
     $this->runExtensions ();
   }
+
+  abstract function loadData ($collection, $subModelPath = '', $id = null, $primaryKey = 'id');
+
+  abstract function loadModel ($modelClass, $subModelPath = '', $id = null);
 
   function merge (array $data = null)
   {
@@ -257,7 +258,8 @@ abstract class AbstractModelController implements ModelControllerInterface
       return $def ($this);
 
     $model = $this->model;
-    if (!($s = $this->save ($model, $this->defaultOptions)))
+    $s     = $this->save ($model, $this->defaultOptions);
+    if (is_null ($s))
       $s = $this->saveCompositeModel ($this->defaultOptions);
     return $s;
   }

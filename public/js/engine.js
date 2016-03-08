@@ -107,16 +107,35 @@ function nop () {}
       i18nInputs.addClass ('validating'); // hide inputs but allow field validation
 
       // HTML5 native validation integration.
-      if ('validateInput' in window)
-        $ ('input,textarea,select').each (function () { validateInput (this) });
+      // Note: validateInput() is provided by the Input component.
+      var inputs = $ ('input,textarea,select');
+      inputs.each (function () {
+        $ (this).parents ('.Field').find ('.help-block').remove ();
+      });
+      if (selenia.validateInput)
+        inputs.each (function () { selenia.validateInput (this) });
       var valid = form[0].checkValidity ();
       if (!valid) {
+        var first = true;
         setTimeout (function () {
+          inputs.each (function () {
+            if (!this.checkValidity ()) {
+              if (first) {
+                $(this).focus ();
+                first = false;
+                var lang = $ (this).attr ('lang');
+                if (lang) selenia.setLang (lang, this);
+              }
+              var h = $ (this).parents ('.Field').find ('.help-block');
+              if (!h.length)
+                h = $ (this).parents ('.Field').append ('<span class="help-block"></span>').find ('.help-block');
+              h.text (this.validationMessage);
+            }
+          });
+
           var e = document.activeElement;
           i18nInputs.removeClass ('validating'); // restore display:none state
           if (!e) return;
-          var lang = $ (e).attr ('lang');
-          if (lang) selenia.setLang (lang, e);
         }, 0);
         return false;
       }
@@ -201,7 +220,7 @@ function nop () {}
         else selenia.prevFocus = $ ();
       });
 
-    form = $ ('<form id="selenia-form" method="post" action="' + location.pathname + '"></form>')
+    form = $ ('<form id="selenia-form" method="post" action="' + location.pathname + '" novalidate></form>')
       .submit (selenia.onSubmit)
       .append ('<input type="hidden" name="selenia-action" value="submit">')
       .append (body.children (':not(script)'))

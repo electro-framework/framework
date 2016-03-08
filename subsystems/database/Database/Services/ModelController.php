@@ -74,7 +74,7 @@ class ModelController extends AbstractModelController
   protected function save ($model, array $options = [])
   {
     // Does nothing; there's no automated saving support on this implementation yet.
-    return false;
+    return null;
   }
 
 }
