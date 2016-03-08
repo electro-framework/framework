@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Database\Services;
 
+use PhpKit\ConnectionInterface;
 use PhpKit\ExtPDO;
 use Selenia\Database\Lib\ABstractModelController;
 use Selenia\Interfaces\SessionInterface;
@@ -10,10 +11,10 @@ class ModelController extends AbstractModelController
   /** @var ExtPDO */
   private $pdo;
 
-  public function __construct (SessionInterface $session, ExtPDO $pdo)
+  public function __construct (SessionInterface $session, ConnectionInterface $connection)
   {
     parent::__construct ($session);
-    $this->pdo = $pdo;
+    $this->pdo = $connection->getPdo ();
   }
 
   /**
