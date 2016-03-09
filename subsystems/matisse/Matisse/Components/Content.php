@@ -2,7 +2,6 @@
 namespace Selenia\Matisse\Components;
 
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;

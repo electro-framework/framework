@@ -78,9 +78,9 @@ class IfProperties extends ComponentProperties
  * <If the="value" not matches="regexp"> content if value doesn't matche the regular expression </If>
  *
  * <If the="value">
- *   <p:case is="value1"> content if value == value1 </p:case>
+ *   <Case is="value1"> content if value == value1 </Case>
  *   ...
- *   <p:case is="valueN"> content if value == valueN </p:case>
+ *   <Case is="valueN"> content if value == valueN </Case>
  *   <Else> content if no match </Else>
  * </If>
  * ```
