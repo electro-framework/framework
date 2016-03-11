@@ -4,9 +4,9 @@ namespace Selenia\Matisse\Components;
 use Selenia\Matisse\Components\Base\CompositeComponent;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
-use Selenia\Matisse\Properties\Base\ComponentProperties;
+use Selenia\Matisse\Properties\Base\MetadataProperties;
 
-class IncludeProperties extends ComponentProperties
+class IncludeProperties extends MetadataProperties
 {
   /**
    * The fully qualified PHP class name of the component class to load as a child of the Include.
@@ -42,8 +42,8 @@ class IncludeProperties extends ComponentProperties
   /**
    * Defines an inline template for the view.
    *
-   * <p>This is usually used with a databinding expression with the `{!! !!}` syntax to inject a dynamic template from a
-   * viewModel property or from a content block.
+   * <p>This is usually used with a databinding expression with the `{!! expr !!}` syntax to insert a dynamic template
+   * from a viewModel property, or with the `{!! #block }}` syntax to insert a template from a content block.
    *
    * @var string
    */
@@ -62,21 +62,24 @@ class IncludeProperties extends ComponentProperties
 }
 
 /**
- * The **Include** component is capable of rendering content from multiple source types.
+ * The **Include** component is capable of rendering content from multiple types of sources.
  *
  * <p>With it, you can:
  *
  * 1. load raw markup files;
  * - load controller-less views;
  * - load view-less components;
- * - load composite components where each component determines its view;
- * - load composite components defining or overriding their view independently;
- * - inject managed scripts into the page;
- * - inject managed stylesheets into the page.
+ * - load composite components where each component chooses its view;
+ * - load composite components and define or override their view;
+ * - insert managed scripts into the page;
+ * - insert managed stylesheets into the page.
+ * - render dynamically generated templates loaded from the viewModel or from content blocks.
  *
  * <p>One common use of Include is to assign controllers to view partials/layouts, therefore encapsulating their
- * functionality and freeing your page controller code from having to handle each and all of them that are included on
- * the page.
+ * functionality and freeing your page controller code from having to handle each and all that are included on the page.
+ *
+ * <p>You can also define the view model of the `Include` component from markup, by specifying an attribute for each model
+ * property you wish to set; the attribute name must be prefixed by `@`.
  */
 class Include_ extends CompositeComponent
 {
@@ -90,6 +93,16 @@ class Include_ extends CompositeComponent
     $prop       = $this->props;
     $ctx        = $this->context;
     $controller = $prop->class;
+
+    $extra = $prop->getAll ();
+    if ($extra) {
+      $vm = [];
+      foreach ($extra as $k => $v)
+        if ($k[0] != '@')
+          throw new ComponentException ($this, "Invalid property name: <kdb>$k</kdb>");
+        else $vm[substr ($k, 1)] = $v;
+      $this->viewModel = $vm;
+    }
 
     // Resolve controller for the view (if applicable)
 

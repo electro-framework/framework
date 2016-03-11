@@ -14,7 +14,7 @@ class Parser
   const EXP_END              = '}}';
   const NO_TRIM              = 0;
   const PARSE_ATTRS          = '#
-   ([\w\-\:]+)
+   (@?[\w\-\:]+)
    \s*
    (?:
      = \s*
