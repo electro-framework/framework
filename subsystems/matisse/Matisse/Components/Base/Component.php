@@ -356,9 +356,6 @@ abstract class Component implements RenderableInterface
    *
    * Do not override! Use event handlers or override render() or renderChildren().
    * This method is called from run() or from renderChildren().
-   *
-   * @return mixed The rendered view or HTML response. Null if there is no output or if it has already been sent to the
-   *               output buffer.
    */
   function run ()
   {

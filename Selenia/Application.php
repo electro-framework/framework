@@ -5,6 +5,7 @@ use Selenia\Core\Assembly\Config\AssemblyModule;
 use Selenia\Core\Logging\Config\LoggingModule;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\Navigation\NavigationProviderInterface;
 
 class Application
 {
@@ -203,6 +204,13 @@ class Application
    * @var string
    */
   public $name = 'selenia';
+  /**
+   * All registered navigation providers.
+   * <p>This will be read when the Navigation service is injected for the first time.
+   *
+   * @var NavigationProviderInterface[]
+   */
+  public $navigationProviders = [];
   /**
    * Maximum width and/or height for uploaded images.
    * Images exceeding this dimensions are resized to fit them.

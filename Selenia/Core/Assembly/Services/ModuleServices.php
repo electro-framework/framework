@@ -241,12 +241,8 @@ class ModuleServices
    */
   function registerNavigation (NavigationProviderInterface $provider)
   {
-    if ($this->app->isWebBased) {
-      if (!$this->navigationInterface)
-        $this->navigationInterface = $this->injector->make (NavigationInterface::class);
-
-      $provider->defineNavigation ($this->navigationInterface);
-    }
+    if ($this->app->isWebBased)
+      $this->app->navigationProviders[] = $provider;
     return $this;
   }
 
