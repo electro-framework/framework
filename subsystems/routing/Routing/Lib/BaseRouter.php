@@ -131,7 +131,7 @@ abstract class BaseRouter implements RouterInterface
           getType ($routable)));
       }
       else throw new \RuntimeException (sprintf ("Invalid routable type <span class=type>%s</span>.",
-        getType ($routable)));
+        typeOf ($routable)));
     }
 
     return $response;

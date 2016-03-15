@@ -48,13 +48,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   public $currentLink;
   /**
-   * The controller's data sources (view model)
-   * The 'default' data source corresponds to the **model**.
-   *
-   * @var array
-   */
-  public $dataSources = [];
-  /**
    * It's only set when using Matisse.
    *
    * @var DocumentFragment
@@ -299,6 +292,16 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       }
     }
   }
+
+  protected function setupViewModel ()
+  {
+    // Defaults the view model to the component itself.
+    if (!isset($this->viewModel))
+      $this->viewModel = $this;
+
+    parent::setupViewModel ();
+  }
+
 
   protected function afterRender (ViewInterface $view)
   {

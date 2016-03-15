@@ -54,7 +54,7 @@ abstract class Component implements RenderableInterface
    */
   public $props;
   /**
-   * Indicates if the component supports the IAttributes interface.
+   * Indicates if the component supports a properties object.
    *
    * @var boolean
    */
@@ -521,9 +521,6 @@ abstract class Component implements RenderableInterface
    */
   protected function setupViewModel ()
   {
-    if (!isset($this->viewModel))
-      $this->viewModel = $this;
-
     $this->viewModel ();
 
     if (exists ($this->shareViewModelAs))

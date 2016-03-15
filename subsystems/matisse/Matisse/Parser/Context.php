@@ -2,7 +2,6 @@
 namespace Selenia\Matisse\Parser;
 
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\Views\ViewServiceInterface;
 use Selenia\Matisse\Lib\AssetsContext;
 use Selenia\Matisse\Traits\Context\AssetsAPITrait;
 use Selenia\Matisse\Traits\Context\BlocksAPITrait;

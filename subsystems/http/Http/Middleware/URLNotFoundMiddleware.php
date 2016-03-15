@@ -26,6 +26,6 @@ class URLNotFoundMiddleware implements RequestHandlerInterface
     return Http::send ($response, 404, "<br><br><table align=center cellspacing=20 style='text-align:left'>
 <tr><th>Virtual URL:<td><kbd>$path</kbd>
 <tr><th>URL path:<td><kbd>$realPath</kbd>
-</table>");
+</table>", 'text/html');
   }
 }
