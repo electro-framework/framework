@@ -173,7 +173,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     if (!$this->app)
       throw new FatalException("Class <kbd class=type>" . get_class ($this) .
                                "</kbd>'s constructor forgot to call <kbd>parent::__construct()</kbd>");
-    $this->request = $request;
+    $this->request  = $request;
     $this->response = $response;
     $this->redirection->setRequest ($request);
 
@@ -198,13 +198,16 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       /** @noinspection PhpMissingBreakStatementInspection */
       case 'POST':
         // Perform the requested action.
-        $response = $this->doFormAction ();
-        if (!$this->renderOnAction) {
-          if (!$response)
-            $response = $this->autoRedirect ();
-          elseif (!$response instanceof ResponseInterface)
+        $res = $this->doFormAction ();
+        if ($res) {
+          if ($res instanceof ResponseInterface)
             throw new FatalException (sprintf ("Invalid HTTP response type: %s<p>Expected: <kbd>ResponseInterface</kbd>",
-              typeInfoOf ($response)));
+              typeInfoOf ($res)));
+          $response = $res;
+        }
+        if (!$this->renderOnAction) {
+          if (!$res)
+            $response = $this->autoRedirect ();
           break;
         }
       case 'GET':
