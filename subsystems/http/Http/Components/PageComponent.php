@@ -130,6 +130,10 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   protected $renderOnAction = false;
   /**
+   * @var ResponseInterface
+   */
+  protected $response;
+  /**
    * @var InjectorInterface
    */
   private $injector;
@@ -170,10 +174,11 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       throw new FatalException("Class <kbd class=type>" . get_class ($this) .
                                "</kbd>'s constructor forgot to call <kbd>parent::__construct()</kbd>");
     $this->request = $request;
+    $this->response = $response;
     $this->redirection->setRequest ($request);
 
     $this->currentLink = $this->navigation->request ($this->request)->currentLink ();
-    $this->navigation->getCurrentTrail();
+    $this->navigation->getCurrentTrail ();
     if (!$this->indexPage && $this->autoRedirectUp && $this->currentLink && $parent = $this->currentLink->parent ())
       $this->indexPage = $parent->url ();
 
@@ -197,6 +202,9 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
         if (!$this->renderOnAction) {
           if (!$response)
             $response = $this->autoRedirect ();
+          elseif (!$response instanceof ResponseInterface)
+            throw new FatalException (sprintf ("Invalid HTTP response type: %s<p>Expected: <kbd>ResponseInterface</kbd>",
+              typeInfoOf ($response)));
           break;
         }
       case 'GET':
@@ -261,48 +269,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       FlashType::ERROR);
   }
 
-  function setupView (ViewInterface $view)
-  {
-    parent::setupView ($view);
-    $engine = $view->getEngine ();
-    if ($engine instanceof MatisseEngine) {
-      $this->document = $view->getCompiled ();
-      $context        = $this->document->context;
-
-      // Copy the request's shared view model into the rendering context view model.
-      $context->viewModel = Http::getViewModel ($this->request);
-
-      $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
-      $context->getPipeHandler ()->registerFallbackHandler ($this);
-
-      $title           = $this->getTitle ();
-      $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
-      foreach ($this->app->assets as $url) {
-        $p = strrpos ($url, '.');
-        if (!$p) continue;
-        $ext = substr ($url, $p + 1);
-        switch ($ext) {
-          case 'css':
-            $context->addStylesheet ($url);
-            break;
-          case 'js':
-            $context->addScript ($url);
-            break;
-        }
-      }
-    }
-  }
-
-  protected function setupViewModel ()
-  {
-    // Defaults the view model to the component itself.
-    if (!isset($this->viewModel))
-      $this->viewModel = $this;
-
-    parent::setupViewModel ();
-  }
-
-
   protected function afterRender (ViewInterface $view)
   {
     $engine = $view->getEngine ();
@@ -360,6 +326,49 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
                     ->write ("</#section>");
       }
     }
+  }
+
+  function setupView (ViewInterface $view)
+  {
+    parent::setupView ($view);
+    $engine = $view->getEngine ();
+    if ($engine instanceof MatisseEngine) {
+      $this->document = $view->getCompiled ();
+      $context        = $this->document->context;
+
+      // Copy the request's shared view model into the rendering context view model.
+      $context->viewModel = Http::getViewModel ($this->request);
+
+      $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
+      $context->getPipeHandler ()->registerFallbackHandler ($this);
+
+      $title           = $this->getTitle ();
+      $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
+      foreach ($this->app->assets as $url) {
+        $p = strrpos ($url, '.');
+        if (!$p) continue;
+        $ext = substr ($url, $p + 1);
+        switch ($ext) {
+          case 'css':
+            $context->addStylesheet ($url);
+            break;
+          case 'js':
+            $context->addScript ($url);
+            break;
+        }
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * <p>Note:
+   * > View models are available only on GET requests.
+   */
+  protected function viewModel ()
+  {
+    //Override.
   }
 
   protected function autoRedirect ()
@@ -456,17 +465,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   protected function model ()
   {
     // override
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * <p>Note:
-   * > View models are available only on GET requests.
-   */
-  protected function viewModel ()
-  {
-    //Override.
   }
 
 }

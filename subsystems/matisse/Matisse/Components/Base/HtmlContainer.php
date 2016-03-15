@@ -7,12 +7,12 @@ class HtmlContainer extends HtmlComponent
 {
   protected static $propertiesClass = HtmlContainerProperties::class;
 
-  public $defaultAttribute = 'content';
+  public $defaultProperty = 'content';
 
   protected function render ()
   {
     $this->beginContent ();
-    $this->renderChildren ($this->hasChildren () ? null : $this->defaultAttribute);
+    $this->renderChildren ($this->hasChildren () ? null : $this->defaultProperty);
   }
 
 }
