@@ -48,13 +48,13 @@ class Repeat extends Component
 
   protected function render ()
   {
-    $attr            = $this->props;
-    $count           = $attr->get ('count', -1);
+    $prop            = $this->props;
+    $count           = $prop->get ('count', -1);
     $this->viewModel = [];
-    if (exists ($attr->as))
-      $this->parseIteratorExp ($attr->as, $idxVar, $itVar);
+    if (exists ($prop->as))
+      $this->parseIteratorExp ($prop->as, $idxVar, $itVar);
     else $idxVar = $itVar = null;
-    if (!is_null ($for = $attr->get ('for'))) {
+    if (!is_null ($for = $prop->for)) {
       $first = true;
       foreach ($for as $i => $v) {
         if ($idxVar)
@@ -68,7 +68,9 @@ class Repeat extends Component
         $this->renderChildren ();
         if (!--$count) break;
       }
-      if (!$first) $this->renderChildren ('footer');
+      if ($first)
+        $this->renderChildren ('noData');
+      else $this->renderChildren ('footer');
       return;
     }
     if ($count > 0) {

@@ -29,7 +29,7 @@ class Http
    *
    * @param ServerRequestInterface $request
    * @param string                 $name The field name.
-   * @param mixed                  $def [optional] A default value.
+   * @param mixed                  $def  [optional] A default value.
    * @return mixed
    */
   static function field (ServerRequestInterface $request, $name, $def = null)
@@ -64,6 +64,20 @@ class Http
   static function getViewModel (ServerRequestInterface $request)
   {
     return $request->getAttribute ('viewModel', []);
+  }
+
+  /**
+   * Decodes a JSON response.
+   *
+   * @param ResponseInterface $response
+   * @param bool              $assoc [optional] Return an associative array?
+   * @return mixed
+   */
+  static function json (ResponseInterface $response, $assoc = false)
+  {
+    if ($response->getHeaderLine ('Content-Type') != 'application/json')
+      throw new \RuntimeException ("HTTP response is not of type JSON");
+    return json_decode ($response->getBody (), $assoc);
   }
 
   /**

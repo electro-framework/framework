@@ -3,7 +3,7 @@ namespace Selenia\Database\Services;
 
 use PhpKit\ConnectionInterface;
 use PhpKit\ExtPDO;
-use Selenia\Database\Lib\ABstractModelController;
+use Selenia\Database\Lib\AbstractModelController;
 use Selenia\Interfaces\SessionInterface;
 
 class ModelController extends AbstractModelController
