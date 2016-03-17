@@ -178,16 +178,12 @@ class NavigationLink implements NavigationLinkInterface
      */
     foreach (iterator ($navigationMap) as $key => $link) {
       $link->parent ($this);
-      if (is_string ($key) && !$link->rawUrl ())
+      if (is_string ($key) && !exists ($link->rawUrl ()))
         $link->url ($key);
     }
     if ($prepend)
       $this->links = array_merge ($navigationMap, $this->links);
     else $this->links = array_merge ($this->links, $navigationMap);
-//    foreach (iterator ($navigationMap) as $key => $link) {
-//      $this->links[$key] = $link->parent ($this); // assigns $link and sets its parent
-//      if (is_string ($key)) $link->url ($key);
-//    }
     return $this;
   }
 

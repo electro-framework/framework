@@ -48,6 +48,25 @@ class Navigation implements NavigationInterface
     return $this->IDs;
   }
 
+  function __debugInfo ()
+  {
+    $linkToUrl = function (NavigationLinkInterface $link) {
+      return $link->rawUrl ();
+    };
+    return [
+      'All IDs<sup>*</sup>'        => PA ($this->IDs)->keys ()->sort ()->join (', '),
+      'All URLs<sup>*</sup><br>' .
+      '<i>(in scanning order)</i>' => map ($this->rootLink->getDescendants (),
+        function (NavigationLinkInterface $link) {
+          return $link->rawUrl ();
+        }),
+      'Trail<sup>*</sup>'          => map ($this->getCurrentTrail (), $linkToUrl),
+      'Visible trail<sup>*</sup>'  => map ($this->getVisibleTrail (), $linkToUrl),
+      'Navigation map<sup>*</sup>' => iterator_to_array ($this->rootLink),
+      'request'                    => $this->request (),
+    ];
+  }
+
   function add ($navigationMap, $prepend = false, $targetId = null)
   {
     if (isset($targetId)) {
@@ -66,6 +85,13 @@ class Navigation implements NavigationInterface
   {
     if (!isset($this->cachedTrail)) $this->getCurrentTrail ();
     return $this->currentLink;
+  }
+
+  function divider ()
+  {
+    $link        = $this->link ()->title ('-');
+    $link->group = true;
+    return $link;
   }
 
   function getCurrentTrail ($offset = 0)
@@ -121,13 +147,6 @@ class Navigation implements NavigationInterface
     return $link;
   }
 
-  function divider ()
-  {
-    $link        = $this->link ()->title('-');
-    $link->group = true;
-    return $link;
-  }
-
   /**
    * Override this if you need to return another type of `NavigationLinkInterface`-compatible instance.
    *
@@ -162,7 +181,8 @@ class Navigation implements NavigationInterface
 
   function request (ServerRequestInterface $request = null)
   {
-    if (is_null ($request)) return $this->rootLink->request ();
+    if (is_null ($request))
+      return $this->rootLink->request ();
     $this->rootLink->request ($request);
     return $this;
   }
@@ -180,25 +200,6 @@ class Navigation implements NavigationInterface
     return $this->selectedLink;
   }
 
-  function __debugInfo ()
-  {
-    $linkToUrl = function (NavigationLinkInterface $link) {
-      return $link->rawUrl ();
-    };
-    return [
-      'All IDs<sup>*</sup>'        => PA ($this->IDs)->keys ()->sort ()->join (', '),
-      'All URLs<sup>*</sup><br>' .
-      '<i>(in scanning order)</i>' => map ($this->rootLink->getDescendants (),
-        function ($link) {
-          return $link->rawUrl ();
-        }),
-      'Trail<sup>*</sup>'          => map ($this->getCurrentTrail (), $linkToUrl),
-      'Visible trail<sup>*</sup>'  => map ($this->getVisibleTrail (), $linkToUrl),
-      'Navigation map<sup>*</sup>' => iterator_to_array ($this->rootLink),
-      'request'                    => $this->request (),
-    ];
-  }
-
   private function buildTrail (NavigationLinkInterface $link, array & $trail, $url)
   {
     /** @var NavigationLinkInterface $child */
@@ -210,28 +211,19 @@ class Navigation implements NavigationInterface
           $this->selectedLink = $child;
         $child->setState (true, false, false);
         $this->buildTrail ($child, $trail, $url);
-        // Special case for the home link (URL=='') when the URL to match is not ''
-        if ($url !== '' && $child->rawUrl () === '') {
-          if (count ($trail) > 1) return;
-          // No trail was built, so do not match the home link and proceed to the next root link.
-          array_pop ($trail);
-          $this->selectedLink = null;
-        }
-        else return;
+        return;
       }
     }
   }
 
   private function linkIsActive (NavigationLinkInterface $link, $url)
   {
+    inspect ($url, $link->url (), $link->id ());
     $linkUrl = $link->url ();
-    if (is_null ($linkUrl)) return false;
-    if ($linkUrl == $url) return true;
+    if ($linkUrl === $url) return true;
     foreach ($link->links () as $sub)
       if ($this->linkIsActive ($sub, $url)) return true;
     return false;
-//    $linkUrl = preg_quote ($myUrl);
-//    return preg_match ("#^$myUrl(?:/|$)#", $url);
   }
 
 }
