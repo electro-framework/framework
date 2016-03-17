@@ -13,15 +13,14 @@ class NavigationModule implements ServiceProviderInterface
 {
   function register (InjectorInterface $injector)
   {
-    /** @var Application $app */
-    $app = $injector->make (Application::class);
     $injector
-      ->share (NavigationInterface::class)
-      ->alias (NavigationInterface::class, Navigation::class)
-      ->prepare (Navigation::class, function (Navigation $navigation) use ($app) {
+      ->delegate (NavigationInterface::class, function (Application $app) {
+        $navigation = new Navigation;
         foreach ($app->navigationProviders as $provider)
           $provider->defineNavigation ($navigation);
+        return $navigation;
       })
+      ->share (NavigationInterface::class)
       ->alias (NavigationLinkInterface::class, NavigationLink::class);
   }
 

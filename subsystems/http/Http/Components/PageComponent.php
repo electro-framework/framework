@@ -52,11 +52,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    *
    * @var DocumentFragment
    */
-  public $document;
-  /**
-   * @var array|null
-   */
-  public $flashMessage = null;
+  public $viewRootComponent;
   /**
    * @var int Maximum number of pages.
    */
@@ -88,12 +84,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    * @var SessionInterface
    */
   public $session;
-  /**
-   * An HTML fragment to display a status message or an empty string if no status message exists.
-   *
-   * @var string
-   */
-  public $statusMessage = '';
   /**
    * The current request URI without the page number parameters.
    * This property is useful for databing with the expression {!controller.URI_noPage}.
@@ -140,7 +130,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
   function __construct (InjectorInterface $injector, Application $app,
                         RedirectionInterface $redirection, SessionInterface $session, NavigationInterface $navigation,
-                        PipeHandler $pipeHandler, ModelControllerInterface $modelController)
+                        ModelControllerInterface $modelController)
   {
     parent::__construct ();
 
@@ -150,7 +140,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     $this->session         = $session;
     $this->navigation      = $navigation;
     $this->modelController = $modelController;
-    $pipeHandler->registerFallbackHandler ($this);
 
     // Inject extra dependencies into the subclasses' inject methods, if one or more exist.
 
@@ -176,7 +165,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     $this->request  = $request;
     $this->response = $response;
     $this->redirection->setRequest ($request);
-
     $this->currentLink = $this->navigation->request ($this->request)->currentLink ();
     $this->navigation->getCurrentTrail ();
     if (!$this->indexPage && $this->autoRedirectUp && $this->currentLink && $parent = $this->currentLink->parent ())
@@ -252,7 +240,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   {
     $this->renderOnAction = true;
     if ($param)
-      $this->document->context->addInlineScript ("$('$param').focus()");
+      $this->viewRootComponent->context->addInlineScript ("$('$param').focus()");
   }
 
   /**
@@ -281,7 +269,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       // DOM panel
       //------------------
       if (DebugConsole::hasLogger ('DOM')) {
-        $insp = $this->document->inspect (true);
+        $insp = $this->viewRootComponent->inspect (true);
         DebugConsole::logger ('DOM')->write ($insp);
       }
       //------------------
@@ -336,8 +324,8 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     parent::setupView ($view);
     $engine = $view->getEngine ();
     if ($engine instanceof MatisseEngine) {
-      $this->document = $view->getCompiled ();
-      $context        = $this->document->context;
+      $this->viewRootComponent = $view->getCompiled ();
+      $context                 = $this->viewRootComponent->context;
 
       // Copy the request's shared view model into the rendering context view model.
       $context->viewModel = Http::getViewModel ($this->request);

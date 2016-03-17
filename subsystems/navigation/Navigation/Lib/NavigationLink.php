@@ -200,15 +200,7 @@ class NavigationLink implements NavigationLinkInterface
 
   function rawUrl ()
   {
-    if (isset($this->cachedUrl))
-      return $this->cachedUrl;
-    if (is_callable ($url = $this->url))
-      $url = $url();
-    if (isset($url) && $this->parent && !str_beginsWith ($url, 'http') && ($url === '' || $url[0] != '/')) {
-      $base = $this->parent->url ();
-      $url  = exists ($base) ? (exists ($url) ? "$base/$url" : $base) : $url;
-    }
-    return $this->cachedUrl = $url;
+    return $this->url;
   }
 
   function request (ServerRequestInterface $request = null)
@@ -237,9 +229,22 @@ class NavigationLink implements NavigationLinkInterface
   function url ($url = null)
   {
     if (is_null ($url)) {
-      $url = $this->rawUrl ();
+      if (isset($this->cachedUrl))
+        return $this->cachedUrl;
+
+      if (is_callable ($url = $this->url))
+        $url = $url();
+
+      if (isset($url) && $this->parent && !str_beginsWith ($url, 'http') && ($url === '' || $url[0] != '/')) {
+        $base = $this->parent->url ();
+        $url  = exists ($base) ? (exists ($url) ? "$base/$url" : $base) : $url;
+      }
+
+      $this->cachedUrl = $url;
+
       if (exists ($url))
         $url = $this->evaluateUrl ($url);
+
       return $url;
     }
     //else DO NOT CACHE IT YET!
@@ -264,9 +269,11 @@ class NavigationLink implements NavigationLinkInterface
 
   private function evaluateUrl ($url)
   {
-    $request         = $this->getRequest ();
+    $request         = null;
     $this->available = true;
     $url             = preg_replace_callback ('/@\w+/', function ($m) use ($request) {
+      if (!$request)
+        $request = $this->getRequest (); // Call only if it's truly required.
       $v = $request->getAttribute ($m[0]);
       if (is_null ($v)) {
         $this->available = false;
