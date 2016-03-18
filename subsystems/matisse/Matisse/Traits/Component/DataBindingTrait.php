@@ -8,7 +8,6 @@ use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Exceptions\HandlerNotFoundException;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
-use Selenia\Plugins\AdminInterface\Components\Layouts\Main;
 
 /**
  * Provides an API for handling data binding on a component's properties.
@@ -47,6 +46,12 @@ trait DataBindingTrait
    */
   public $bindings = null;
   /**
+   * When set, the component's view model is made available on the shared view model under the specified key name.
+   *
+   * @var string
+   */
+  protected $shareViewModelAs = null;
+  /**
    * The component's own view model.
    * <p>Do not confuse this with {@see Context::viewModel}, the later will be effective only if a field is not found on
    * any of the cascaded component view models.
@@ -54,12 +59,6 @@ trait DataBindingTrait
    * @var mixed
    */
   protected $viewModel;
-  /**
-   * When set, the component's view model is made available on the shared view model under the specified key name.
-   *
-   * @var string
-   */
-  protected $shareViewModelAs = null;
 
   static function isCompositeBinding ($exp)
   {
@@ -179,6 +178,19 @@ trait DataBindingTrait
     list (, $idxVar, $itVar) = $m;
   }
 
+  /**
+   * Compiles a databinding expression.
+   *
+   * <p>Valid expression sytaxes:
+   *   - `x.y.z`
+   *   - `!a && b || c || !e`
+   *   - `a + b + 'c'`
+   *   - `#block`
+   *   - `@`prop
+   *
+   * @param $expression
+   * @return \Closure
+   */
   private function compileExpression ($expression)
   {
     if ($expression[0] == '#') {
@@ -190,8 +202,8 @@ trait DataBindingTrait
       };
     }
     $exp = PA (preg_split ('/ (?= \|\| | && | \+ ) /xu', $expression))
-      ->map (function ($x) { return trim ($x); })
       ->map (function ($x) {
+        $x = trim ($x);
         if (str_beginsWith ($x, '||') || str_beginsWith ($x, '&&'))
           return substr ($x, 0, 2) . $this->compileSubexpression (trim (substr ($x, 2)));
         if (str_beginsWith ($x, '+'))
@@ -203,25 +215,24 @@ trait DataBindingTrait
 
   private function compileSubexpression ($expression)
   {
-    {
-      $exp  = $not = '';
-      $segs = explode ('.', $expression);
-      foreach ($segs as $i => $seg)
-        if ($i)
-          $exp = "_g($exp,'$seg')";
-        else {
-          if ($seg[0] == '!') {
-            $not = '!';
-            $seg = substr ($seg, 1);
-          }
-          $exp = $seg[0] == '"' ? $seg : "\$this->_f('$seg')";
+    $exp  = $not = '';
+    $segs = explode ('.', $expression);
+    foreach ($segs as $i => $seg)
+      if ($i)
+        $exp = "_g($exp,'$seg')";
+      else {
+        if ($seg[0] == '!') {
+          $not = '!';
+          $seg = substr ($seg, 1);
         }
-      $exp = "$not$exp";
-      if (!PhpCode::validateExpression ($exp))
-        throw new DataBindingException($this, "Invalid expression <kbd>$expression</kbd>.");
-      return $exp;
-    }
-
+        elseif ($seg[0] == '@')
+          $seg = 'props.' . substr ($seg, 1);
+        $exp = $seg[0] == '"' ? $seg : "\$this->_f('$seg')";
+      }
+    $exp = "$not$exp";
+    if (!PhpCode::validateExpression ($exp))
+      throw new DataBindingException($this, "Invalid expression <kbd>$expression</kbd>.");
+    return $exp;
   }
 
   private function evalBindingExp ($matches)

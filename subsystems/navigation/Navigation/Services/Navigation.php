@@ -218,7 +218,6 @@ class Navigation implements NavigationInterface
 
   private function linkIsActive (NavigationLinkInterface $link, $url)
   {
-    inspect ($url, $link->url (), $link->id ());
     $linkUrl = $link->url ();
     if ($linkUrl === $url) return true;
     foreach ($link->links () as $sub)
