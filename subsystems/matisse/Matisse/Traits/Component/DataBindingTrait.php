@@ -183,7 +183,7 @@ trait DataBindingTrait
    *
    * <p>Valid expression sytaxes:
    *   - `x.y.z`
-   *   - `!a && b || c || !e`
+   *   - `!a && b || c`
    *   - `a + b + 'c'`
    *   - `#block`
    *   - `@`prop
@@ -215,9 +215,11 @@ trait DataBindingTrait
 
   private function compileSubexpression ($expression)
   {
+    if ($expression[0] == '@')
+      $expression = 'props.' . substr ($expression, 1);
     $exp  = $not = '';
     $segs = explode ('.', $expression);
-    foreach ($segs as $i => $seg)
+    foreach ($segs as $i => $seg) {
       if ($i)
         $exp = "_g($exp,'$seg')";
       else {
@@ -225,10 +227,9 @@ trait DataBindingTrait
           $not = '!';
           $seg = substr ($seg, 1);
         }
-        elseif ($seg[0] == '@')
-          $seg = 'props.' . substr ($seg, 1);
         $exp = $seg[0] == '"' ? $seg : "\$this->_f('$seg')";
       }
+    }
     $exp = "$not$exp";
     if (!PhpCode::validateExpression ($exp))
       throw new DataBindingException($this, "Invalid expression <kbd>$expression</kbd>.");
