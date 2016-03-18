@@ -22,7 +22,7 @@ class ComponentException extends MatisseException
       parent::__construct (
         !$component->props || !$component->props->getAll ()
           ? "On a $class instance.<br><br><blockquote>$msg</blockquote>$o"
-          : "<blockquote>$msg</blockquote>$o<p>$class instance's current attributes values:</p>$i"
+          : "<blockquote>$msg</blockquote>$o&nbsp;<p>Component: $class<p>Current attributes values:</p>$i"
         ,
         $id
           ?

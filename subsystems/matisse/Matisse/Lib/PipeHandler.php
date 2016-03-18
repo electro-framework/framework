@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Lib;
 
-use Selenia\Matisse\Exceptions\HandlerNotFoundException;
+use Selenia\Matisse\Exceptions\PipeHandlerNotFoundException;
 use Selenia\Traits\InspectionTrait;
 
 /**
@@ -33,15 +33,15 @@ class PipeHandler
 
   function __call ($name, $args)
   {
-    if (isset($this->pipes[$name]))
-      return call_user_func_array ($this->pipes[$name], $args);
+    $method = "pipe_$name";
+    if (isset($this->pipes[$method]))
+      return call_user_func_array ($this->pipes[$method], $args);
 
     if (isset($this->fallbackHandler)) {
-      $method = $name . '_pipe';
       if (method_exists ($this->fallbackHandler, $method))
         return call_user_func_array ([$this->fallbackHandler, $method], $args);
     }
-    throw new HandlerNotFoundException;
+    throw new PipeHandlerNotFoundException;
   }
 
   function registerFallbackHandler ($handler)

@@ -3,6 +3,8 @@ namespace Selenia;
 
 /**
  * Predefined pipes provided by the framework.
+ *
+ * ><p>**Note:** the `pipe_` prefix allows pipe functions to have any name without conflicting with PHP reserved keywords.
  */
 class DefaultPipes
 {
@@ -19,7 +21,7 @@ class DefaultPipes
    * @param int $v
    * @return int
    */
-  function alt ($v)
+  function pipe_alt ($v)
   {
     return $v % 2;
   }
@@ -28,7 +30,7 @@ class DefaultPipes
    * @param string $v
    * @return string
    */
-  function currency ($v)
+  function pipe_currency ($v)
   {
     return formatMoney ($v) . ' €';
   }
@@ -37,7 +39,7 @@ class DefaultPipes
    * @param string $v
    * @return string
    */
-  function datePart ($v)
+  function pipe_datePart ($v)
   {
     return explode (' ', $v) [0];
   }
@@ -48,7 +50,7 @@ class DefaultPipes
    * @param int $v
    * @return boolean
    */
-  function even ($v)
+  function pipe_even ($v)
   {
     return $v % 2 == 0;
   }
@@ -57,7 +59,7 @@ class DefaultPipes
    * @param string $v
    * @return string
    */
-  function fileURL ($v)
+  function pipe_fileURL ($v)
   {
     return $this->app->getFileDownloadURI ($v);
   }
@@ -66,7 +68,7 @@ class DefaultPipes
    * @param mixed $v
    * @return string
    */
-  function json ($v)
+  function pipe_json ($v)
   {
     return json_encode ($v, JSON_PRETTY_PRINT);
   }
@@ -77,7 +79,7 @@ class DefaultPipes
    * @param $v
    * @return string
    */
-  function nl2br ($v)
+  function pipe_nl2br ($v)
   {
     return nl2br ($v);
   }
@@ -88,9 +90,21 @@ class DefaultPipes
    * @param int $v
    * @return boolean
    */
-  function odd ($v)
+  function pipe_odd ($v)
   {
     return $v % 2 == 1;
+  }
+
+  /**
+   * Returns the same value if it's not null, false or an empty string, otherwise returns the specified default value.
+   *
+   * @param mixed  $v
+   * @param string $default
+   * @return string
+   */
+  function pipe_or ($v, $default = '')
+  {
+    return isset ($v) && $v !== '' && $v !== false ? $v : $default;
   }
 
   /**
@@ -99,7 +113,7 @@ class DefaultPipes
    * @param int $v
    * @return int
    */
-  function ord ($v)
+  function pipe_ord ($v)
   {
     return $v + 1;
   }
@@ -110,7 +124,7 @@ class DefaultPipes
    * @param string $false
    * @return string
    */
-  function then ($v, $true = '', $false = '')
+  function pipe_then ($v, $true = '', $false = '')
   {
     return $v ? $true : $false;
   }
@@ -119,7 +133,7 @@ class DefaultPipes
    * @param string $v
    * @return string
    */
-  function timePart ($v)
+  function pipe_timePart ($v)
   {
     return explode (' ', $v) [1];
   }

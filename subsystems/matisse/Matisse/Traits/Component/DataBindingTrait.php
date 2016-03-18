@@ -5,7 +5,7 @@ use PhpCode;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\DataBindingException;
-use Selenia\Matisse\Exceptions\HandlerNotFoundException;
+use Selenia\Matisse\Exceptions\PipeHandlerNotFoundException;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 
@@ -76,6 +76,27 @@ trait DataBindingTrait
     if (!isset($this->bindings))
       $this->bindings = [];
     $this->bindings[$prop] = $bindExp;
+  }
+
+  /**
+   * Evaluates the given binding expression without compiling it.
+   *
+   * <p>Only simple expressions are supported, i.e. without operators or pipes.
+   *
+   * @param string $exp A binding expression, without enclosing brackets.
+   * @return mixed
+   */
+  function evalSimpleExp ($exp)
+  {
+    $v = PhpCode::evalConstant ($exp, $ok);
+    if ($ok)
+      return $v;
+    $o = explode ('.', $exp);
+    $t = $this;
+    foreach ($o as $seg) {
+      $t = $t->_f ($seg);
+    }
+    return $t;
   }
 
   /**
@@ -181,12 +202,19 @@ trait DataBindingTrait
   /**
    * Compiles a databinding expression.
    *
-   * <p>Valid expression sytaxes:
+   * <p>Valid expression syntaxes:
    *   - `x.y.z`
    *   - `!a && b || c`
    *   - `a + b + 'c' + "d" + 123`
    *   - `#block`
    *   - `@`prop
+   *
+   * <p>Valid constants:
+   *   - 123 or 123.4
+   *   - "string" or 'string'
+   *   - true, false, null
+   *   - any PHP constant defined via `define()` or `const`
+   *   - namespace\class::constant (`self` or `static` or not valid)
    *
    * @param $expression
    * @return \Closure
@@ -279,6 +307,7 @@ trait DataBindingTrait
         list ($name, $args) = explode ('(', substr ($name, 0, -1));
         $name   = trim ($name);
         $args   = explode (',', $args);
+        $args   = map ($args, [$this, 'evalSimpleExp']);
         $fnArgs = array_from ($v, ...$args);
       }
       else $fnArgs = [$v];
@@ -287,8 +316,8 @@ trait DataBindingTrait
       try {
         $v = call_user_func_array ($pipe, $fnArgs);
       }
-      catch (HandlerNotFoundException $e) {
-        throw new ComponentException ($this, "Pipe <b>$name</b> was not found.");
+      catch (PipeHandlerNotFoundException $e) {
+        throw new ComponentException ($this, "Pipe function <kbd>$name</kbd> was not found.");
       }
     }
 

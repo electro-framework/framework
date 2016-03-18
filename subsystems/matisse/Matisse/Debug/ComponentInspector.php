@@ -6,13 +6,23 @@ use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
+use SplObjectStorage;
 
 class ComponentInspector
 {
+  private static $inspecting = false;
+  /** @var SplObjectStorage */
+  private static $recursionMap;
+
   static function inspect (Component $component, $deep = true)
   {
-    ob_start (null, 0);
+    if (self::$inspecting)
+      return '';
+    self::$inspecting   = true;
+    self::$recursionMap = new SplObjectStorage;
+    ob_start ();
     self::_inspect ($component, $deep);
+    self::$inspecting = false;
     return "<code>" . ob_get_clean () . "</code>";
   }
 
@@ -24,9 +34,14 @@ class ComponentInspector
    */
   static function inspectSet (array $components = null, $deep = false, $nested = false)
   {
-    ob_start (null, 0);
+    if (self::$inspecting)
+      return '';
+    self::$inspecting   = true;
+    self::$recursionMap = new SplObjectStorage;
+    ob_start ();
     foreach ($components as $component)
       self::_inspect ($component, $deep);
+    self::$inspecting = false;
     return $nested ? ob_get_clean () : "<code>" . ob_get_clean () . "</code>";
   }
 
@@ -39,6 +54,12 @@ class ComponentInspector
    */
   private static function _inspect (Component $component, $deep = true)
   {
+    if (self::$recursionMap->contains ($component)) {
+      echo "<i>recursion</i>";
+      return;
+    }
+    self::$recursionMap->attach ($component);
+
     $COLOR_BIND  = '#5AA';
     $COLOR_CONST = '#5A5';
     $COLOR_INFO  = '#CCC';
@@ -76,7 +97,17 @@ class ComponentInspector
             $exp = self::inspectString (get ($component->bindings, $k, ''));
             if ($exp != '') {
               echo "<span style='color:$COLOR_BIND'>$exp</span> = ";
-              $v = $component->getComputedPropValue ($k);
+              try {
+                $v = $component->getComputedPropValue ($k);
+              }
+              catch (\Exception $e) {
+                echo "<b style='color:red'>ERROR</b>";
+                break;
+              }
+              if ($v && $v instanceof Component) {
+                echo typeInfoOf ($v);
+                break;
+              }
             }
 
             if (is_null ($v))
