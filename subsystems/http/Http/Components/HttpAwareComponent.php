@@ -93,6 +93,38 @@ class HttpAwareComponent extends CompositeComponent implements RequestHandlerInt
     return $response;
   }
 
+  /**
+   * Retrieves a route parameter from the current HTTP request.
+   *
+   * ><p>**Note:** this is a shortcut method. You can also read parameters directly from the request object.
+   *
+   * @param string $name
+   * @return string
+   */
+  function param ($name)
+  {
+    return $this->request->getAttribute ("@$name");
+  }
+
+  /**
+   * Retrieves a list of route parameters from the current HTTP request.
+   *
+   * ><p>**Note:** this is a shortcut method. You can also read parameters directly from the request object.
+   *
+   * ><p>**Hint:** you can use the `list` operator to assign the result to multiple variables.
+   * ><p>Ex:
+   * ```
+   *   list ($a,$b) = $this->params ('a','b');
+   * ```
+   *
+   * @param string[] $names
+   * @return string[]
+   */
+  function params (...$names)
+  {
+    return map ($names, function ($name) { return $this->request->getAttribute ("@$name"); });
+  }
+
   function setupView (ViewInterface $view)
   {
     parent::setupView ($view);

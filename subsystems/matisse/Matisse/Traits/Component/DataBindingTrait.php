@@ -184,7 +184,7 @@ trait DataBindingTrait
    * <p>Valid expression sytaxes:
    *   - `x.y.z`
    *   - `!a && b || c`
-   *   - `a + b + 'c'`
+   *   - `a + b + 'c' + "d" + 123`
    *   - `#block`
    *   - `@`prop
    *
@@ -227,7 +227,10 @@ trait DataBindingTrait
           $not = '!';
           $seg = substr ($seg, 1);
         }
-        $exp = $seg[0] == '"' ? $seg : "\$this->_f('$seg')";
+        // If not a constant value, convert it to a property access expression fragment.
+        $exp = $seg[0] == '"' || $seg[0] == "'" || ctype_digit ($seg)
+          ? $seg
+          : "\$this->_f('$seg')";
       }
     }
     $exp = "$not$exp";
