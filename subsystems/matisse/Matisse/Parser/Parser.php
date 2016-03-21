@@ -24,17 +24,15 @@ class Parser
        |
        (\{\{ \s* [^\}\s]+ \s* \}\})
        |
-       (\{!! \s* [^\}\s]+ \s* !!\})
-       |
        ([^>\s]+)
      )
    )?
    (\s | @)
    #sxu';
   const PARSE_DATABINDINGS   = '#
-   (?: \{\{ | \{!! )
+   \{\{
    ( .*? )
-   (?: \}\} | !!\} )
+   \}\}
    #xu';
   const PARSE_TAG            = '#
    (<) (/?)
@@ -101,7 +99,7 @@ class Parser
 
   public static function isBindingExpression ($exp)
   {
-    return is_string ($exp) ? strpos ($exp, '{{') !== false || strpos ($exp, '{!!') !== false : false;
+    return is_string ($exp) ? strpos ($exp, '{{') !== false : false;
   }
 
   /*********************************************************************************************************************

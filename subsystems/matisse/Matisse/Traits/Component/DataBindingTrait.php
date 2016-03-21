@@ -25,16 +25,16 @@ trait DataBindingTrait
    * > Note: the u modifier allows unicode white space to be properly matched.
    */
   static private $PARSE_BINDING_EXP = '/
-    ( \{ (?: \{ | !! ))       # opens with {{ or {!!
+    \{\{            # opens with {{
     \s*
     (
-      (?:                     # repeat
-        (?! \s*\} | \s*!! )   # not a } or a !!
+      (?:           # repeat
+        (?! \s*\})  # not space followed by a }
         .
       )*
     )
     \s*
-    ( \}\} | !!\} )           # closes with }} or !!}
+    \}\}            # closes with }}
   /xu';
   /**
    * A map of attribute names and corresponding databinding expressions.
@@ -62,7 +62,7 @@ trait DataBindingTrait
 
   static function isCompositeBinding ($exp)
   {
-    return $exp[0] != '{' || substr ($exp, -1) != '}' || strpos ($exp, '{{', 2) > 0 || strpos ($exp, '{!!', 2) > 0;
+    return $exp[0] != '{' || substr ($exp, -1) != '}' || strpos ($exp, '{{', 2) > 0;
   }
 
   /**
@@ -271,11 +271,7 @@ trait DataBindingTrait
   {
     if (empty($matches))
       throw new \InvalidArgumentException;
-    list($full, $openDelim, $expression, $closeDelim) = $matches;
-    if ($openDelim == '{{' && $closeDelim != '}}' || $openDelim == '{!!' && $closeDelim != '!!}')
-      throw new DataBindingException($this,
-        "Invalid databinding expression: <kbd>$full</kbd><p>Closing delimiter does not match the open delimiter.");
-
+    list($full, $expression) = $matches;
     if ($expression == '')
       return null;
 
