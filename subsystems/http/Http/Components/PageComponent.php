@@ -25,7 +25,6 @@ use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Base\CompositeComponent;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
-use Selenia\Matisse\Lib\FilterHandler;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Traits\PolymorphicInjectionTrait;
 use Selenia\ViewEngine\Engines\MatisseEngine;
@@ -47,12 +46,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    * @var NavigationLinkInterface
    */
   public $currentLink;
-  /**
-   * It's only set when using Matisse.
-   *
-   * @var DocumentFragment
-   */
-  public $viewRootComponent;
   /**
    * @var int Maximum number of pages.
    */
@@ -84,6 +77,12 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    * @var SessionInterface
    */
   public $session;
+  /**
+   * It's only set when using Matisse.
+   *
+   * @var DocumentFragment
+   */
+  public $viewRootComponent;
   /**
    * The current request URI without the page number parameters.
    * This property is useful for databing with the expression {!controller.URI_noPage}.
@@ -260,6 +259,38 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       FlashType::ERROR);
   }
 
+  function setupView (ViewInterface $view)
+  {
+    parent::setupView ($view);
+    $engine = $view->getEngine ();
+    if ($engine instanceof MatisseEngine) {
+      $this->viewRootComponent = $view->getCompiled ();
+      $context                 = $this->viewRootComponent->context;
+
+      // Copy the request's shared view model into the rendering context view model.
+      $context->viewModel = Http::getViewModel ($this->request);
+
+      $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
+      $context->getFilterHandler ()->registerFallbackHandler ($this);
+
+      $title           = $this->getTitle ();
+      $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
+      foreach ($this->app->assets as $url) {
+        $p = strrpos ($url, '.');
+        if (!$p) continue;
+        $ext = substr ($url, $p + 1);
+        switch ($ext) {
+          case 'css':
+            $context->addStylesheet ($url);
+            break;
+          case 'js':
+            $context->addScript ($url);
+            break;
+        }
+      }
+    }
+  }
+
   protected function afterRender (ViewInterface $view)
   {
     $engine = $view->getEngine ();
@@ -317,49 +348,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
                     ->write ("</#section>");
       }
     }
-  }
-
-  function setupView (ViewInterface $view)
-  {
-    parent::setupView ($view);
-    $engine = $view->getEngine ();
-    if ($engine instanceof MatisseEngine) {
-      $this->viewRootComponent = $view->getCompiled ();
-      $context                 = $this->viewRootComponent->context;
-
-      // Copy the request's shared view model into the rendering context view model.
-      $context->viewModel = Http::getViewModel ($this->request);
-
-      $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
-      $context->getFilterHandler ()->registerFallbackHandler ($this);
-
-      $title           = $this->getTitle ();
-      $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
-      foreach ($this->app->assets as $url) {
-        $p = strrpos ($url, '.');
-        if (!$p) continue;
-        $ext = substr ($url, $p + 1);
-        switch ($ext) {
-          case 'css':
-            $context->addStylesheet ($url);
-            break;
-          case 'js':
-            $context->addScript ($url);
-            break;
-        }
-      }
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * <p>Note:
-   * > View models are available only on GET requests.
-   */
-  protected function viewModel ()
-  {
-    //Override.
   }
 
   protected function autoRedirect ()
@@ -456,6 +444,17 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   protected function model ()
   {
     // override
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * <p>Note:
+   * > View models are available only on GET requests.
+   */
+  protected function viewModel ()
+  {
+    //Override.
   }
 
 }

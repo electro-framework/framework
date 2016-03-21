@@ -32,13 +32,14 @@ class RawText
 }
 
 /**
- * Outputs escaped text, except if the given argument is a {@see RawText} instance.
+ * Returns escaped text, except if the given argument is a {@see RawText} instance.
  *
  * @param string|RawText $s
+ * @return string
  */
 function _e ($s)
 {
-  echo $s instanceof RawText ? $s->toString() : htmlentities ($s, ENT_QUOTES, 'UTF-8', false);
+  return $s instanceof RawText ? $s->toString() : htmlentities ($s, ENT_QUOTES, 'UTF-8', false);
 }
 
 /**

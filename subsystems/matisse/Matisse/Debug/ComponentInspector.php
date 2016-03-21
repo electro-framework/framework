@@ -14,7 +14,7 @@ class ComponentInspector
   /** @var SplObjectStorage */
   private static $recursionMap;
 
-  static function inspect (Component $component, $deep = true)
+  static function inspect (Component $component, $deep = false)
   {
     if (self::$inspecting)
       return '';
@@ -133,8 +133,10 @@ class ComponentInspector
                   echo sprintf ("<i style='color:$COLOR_CONST'>%s</i>", typeInfoOf ($v));
                 elseif (is_array ($v))
                   echo sprintf ("<i style='color:$COLOR_CONST'>array(%d)</i>", count ($v));
-                else
+                else {
+                  $v = _e ($v);
                   echo "$Q$v$Q";
+                }
             }
           }
         }

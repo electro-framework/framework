@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Matisse\Components\Base;
 
+use Selenia\Interfaces\CustomInspectionInterface;
 use Selenia\Interfaces\RenderableInterface;
 use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
@@ -13,7 +14,7 @@ use Selenia\Matisse\Traits\Component\MarkupBuilderTrait;
 /**
  * The base class from which all components derive.
  */
-abstract class Component implements RenderableInterface
+abstract class Component implements RenderableInterface, CustomInspectionInterface
 {
   use MarkupBuilderTrait, DataBindingTrait, DOMNodeTrait;
 
@@ -255,11 +256,6 @@ abstract class Component implements RenderableInterface
     return ob_get_clean ();
   }
 
-  function setContext ($context)
-  {
-    $this->context = $context;
-  }
-
   /**
    * Returns name of the tag that represents the component.
    * If the name is not set then it generates it from the class name and caches it.
@@ -294,7 +290,7 @@ abstract class Component implements RenderableInterface
     return !empty($this->children);
   }
 
-  function inspect ($deep = true)
+  function inspect ($deep = false)
   {
     return ComponentInspector::inspect ($this, $deep);
   }
@@ -367,6 +363,11 @@ abstract class Component implements RenderableInterface
       $this->render ();
       $this->postRender ();
     }
+  }
+
+  function setContext ($context)
+  {
+    $this->context = $context;
   }
 
   /**
