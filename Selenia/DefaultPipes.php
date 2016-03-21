@@ -102,7 +102,7 @@ class DefaultPipes
    * @param string $default
    * @return string
    */
-  function pipe_or ($v, $default = '')
+  function pipe_else ($v, $default = '')
   {
     return isset ($v) && $v !== '' && $v !== false ? $v : $default;
   }

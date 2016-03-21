@@ -24,18 +24,18 @@ trait DataBindingTrait
    * Finds binding expressions and extracts information from them.
    * > Note: the u modifier allows unicode white space to be properly matched.
    */
-  static private $PARSE_BINDING_EXP = '#
-    ( \{ (?: \{ | !! ))
+  static private $PARSE_BINDING_EXP = '/
+    ( \{ (?: \{ | !! ))       # opens with {{ or {!!
     \s*
     (
-      (?:
-        (?! \s*\} | \s*!! )
+      (?:                     # repeat
+        (?! \s*\} | \s*!! )   # not a } or a !!
         .
       )*
     )
     \s*
-    ( \}\} | !!\} )
-  #xu';
+    ( \}\} | !!\} )           # closes with }} or !!}
+  /xu';
   /**
    * A map of attribute names and corresponding databinding expressions.
    * Equals NULL if no bindings are defined.
@@ -298,19 +298,13 @@ trait DataBindingTrait
 
     // Apply pipes to expression result
 
-    foreach ($pipes as $name) {
-      $name = trim ($name);
+    foreach ($pipes as $exp) {
 
-      // Parse pipe expression, with syntax: pipe(args1,...argN)
+      // Parse each consecutive pipe expression, with syntax: pipe arg1,...argN
 
-      if (substr ($name, -1) == ')') {
-        list ($name, $args) = explode ('(', substr ($name, 0, -1));
-        $name   = trim ($name);
-        $args   = explode (',', $args);
-        $args   = map ($args, [$this, 'evalSimpleExp']);
-        $fnArgs = array_from ($v, ...$args);
-      }
-      else $fnArgs = [$v];
+      list ($name, $args) = str_extractSegment ($exp, '/\s+/');
+      $args   = map (explode (',', $args), [$this, 'evalSimpleExp']);
+      $fnArgs = array_from ($v, ...$args);
 
       $pipe = $this->context->getPipe ($name);
       try {
