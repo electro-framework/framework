@@ -457,7 +457,7 @@ does not support the specified parameter <b>$tag</b>.
   }
 
   /**
-   * Merges adjacent Literal or Text children of the specified container whenever that merge can be safely done.
+   * Merges adjacent Text children of the specified container whenever that merge can be safely done.
    *
    * > Note: Although the parser doesn't generate redundant literals, they may occur after macro substitutions are
    * performed.

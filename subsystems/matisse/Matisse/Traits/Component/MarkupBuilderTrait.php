@@ -1,7 +1,6 @@
 <?php
 namespace Selenia\Matisse\Traits\Component;
 
-use Selenia\Matisse\Components\Literal;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Parser\Tag;
@@ -24,6 +23,7 @@ trait MarkupBuilderTrait
     'area', 'base', 'br', 'col', 'command', 'embed', 'hr', 'img', 'input', 'keygen', 'link', 'meta', 'param', 'source',
     'track', 'wbr',
   ];
+  
   private $tag;
   private $tags = [];
 
@@ -92,33 +92,6 @@ trait MarkupBuilderTrait
     }
   }
 
-  protected function beginAttr ($name, $value = null, $attrSep = ' ')
-  {
-    if (strlen ($value) == 0) {
-      $this->tag->attrName     = " $name=\"";
-      $this->tag->isFirstValue = true;
-    }
-    else
-      echo " $name=\"$value";
-    $this->tag->attrSep = $attrSep;
-  }
-
-  protected function beginCapture ()
-  {
-    ob_start (null, 0);
-  }
-
-  /**
-   * Always call this before outputting any content inside the wrapper tag.
-   */
-  protected function beginContent ()
-  {
-    if (isset($this->tag) && !$this->tag->isContentSet) {
-      echo '>';
-      $this->tag->isContentSet = true;
-    }
-  }
-
   protected function begin ($name, array $attributes = null)
   {
     if (isset($this->tag)) {
@@ -133,20 +106,26 @@ trait MarkupBuilderTrait
         $this->attr ($k, $v);
   }
 
-  protected function endAttr ()
+  protected function beginAttr ($name, $value = null, $attrSep = ' ')
   {
-    if ($this->tag->attrName != '')
-      $this->tag->attrName = '';
+    if (strlen ($value) == 0) {
+      $this->tag->attrName     = " $name=\"";
+      $this->tag->isFirstValue = true;
+    }
     else
-      echo '"';
-    $this->tag->isFirstValue = false;
+      echo " $name=\"$value";
+    $this->tag->attrSep = $attrSep;
   }
 
-  protected function endCapture ()
+  /**
+   * Always call this before outputting any content inside the wrapper tag.
+   */
+  protected function beginContent ()
   {
-    $literal = $this->getLiteral ();
-    if (isset($literal))
-      $this->addChild ($literal);
+    if (isset($this->tag) && !$this->tag->isContentSet) {
+      echo '>';
+      $this->tag->isContentSet = true;
+    }
   }
 
   protected function end ()
@@ -164,23 +143,13 @@ trait MarkupBuilderTrait
     $this->tag = array_pop ($this->tags);
   }
 
-  protected function flushCapture ()
+  protected function endAttr ()
   {
-    $this->endCapture ();
-    ob_start (null, 0);
-  }
-
-  /**
-   * @return Literal
-   */
-  protected function getLiteral ()
-  {
-    $this->beginContent ();
-    $text = ob_get_clean ();
-    if (strlen ($text))
-      return Literal::from ($this->context, $text);
-
-    return null;
+    if ($this->tag->attrName != '')
+      $this->tag->attrName = '';
+    else
+      echo '"';
+    $this->tag->isFirstValue = false;
   }
 
   protected function setContent ($content)

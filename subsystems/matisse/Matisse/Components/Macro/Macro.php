@@ -314,24 +314,6 @@ class Macro extends Component
 
           $value = $content instanceof Metadata ? $content->getValue () : $content;
 
-          if ($component instanceof Literal) {
-            if (is_array ($value)) {
-
-              // Replace literal by a component set.
-
-              array_splice ($components, $i, 1, $value);
-              $i += count ($value) - 1;
-              return;
-            }
-//            if (!Parser::isBindingExpression ($value))
-//
-//              // Convert boolean value to string, only for literals.
-//
-//              if ($instance->props->getTypeOf ($attrName) == type::bool)
-//                $value = $this->props->typecastPropertyValue (type::bool, $value)
-//                  ? 'true' : 'false';
-          }
-
           if (Parser::isBindingExpression ($value)) {
 
             // Assign new binding expression to target component.

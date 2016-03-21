@@ -34,7 +34,6 @@ trait ComponentsAPITrait
     'Script'                     => Components\Script::class,
     'Style'                      => Components\Style::class,
     'Repeat'                     => Components\Repeat::class,
-    Components\Literal::TAG_NAME => Components\Literal::class,
     MacroCall::TAG_NAME          => MacroCall::class,
   ];
 
