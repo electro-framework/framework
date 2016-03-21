@@ -136,7 +136,7 @@ class HttpAwareComponent extends CompositeComponent implements RequestHandlerInt
       // Copy the request's shared view model into the rendering context view model.
       $context->viewModel = Http::getViewModel ($this->request);
 
-      $context->getPipeHandler ()->registerFallbackHandler ($this);
+      $context->getFilterHandler ()->registerFallbackHandler ($this);
     }
   }
 

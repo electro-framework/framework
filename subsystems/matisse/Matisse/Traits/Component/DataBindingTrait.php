@@ -5,7 +5,7 @@ use PhpCode;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\DataBindingException;
-use Selenia\Matisse\Exceptions\PipeHandlerNotFoundException;
+use Selenia\Matisse\Exceptions\FilterHandlerNotFoundException;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 
@@ -81,7 +81,7 @@ trait DataBindingTrait
   /**
    * Evaluates the given binding expression without compiling it.
    *
-   * <p>Only simple expressions are supported, i.e. without operators or pipes.
+   * <p>Only simple expressions are supported, i.e. without operators or filters.
    *
    * @param string $exp A binding expression, without enclosing brackets.
    * @return mixed
@@ -275,10 +275,10 @@ trait DataBindingTrait
     if ($expression == '')
       return null;
 
-    // Parse pipes
+    // Parse filters
 
-    $pipes      = preg_split ('/\s*(?<!\|)\|(?!\|)\s*/', $expression);
-    $expression = array_shift ($pipes);
+    $filters      = preg_split ('/\s*(?<!\|)\|(?!\|)\s*/', $expression);
+    $expression = array_shift ($filters);
     $v          = null;
 
     // Call a previously compiled expression or compile one now, cache it and call it.
@@ -291,11 +291,11 @@ trait DataBindingTrait
     $c = \Closure::bind ($compiled, $this, $this);
     $v = $c ();
 
-    // Apply pipes to expression result
+    // Apply filters to expression result
 
-    foreach ($pipes as $exp) {
+    foreach ($filters as $exp) {
 
-      // Parse each consecutive pipe expression, with syntax: pipe arg1,...argN
+      // Parse each consecutive filter expression, with syntax: filter arg1,...argN
 
       list ($name, $args) = str_extractSegment ($exp, '/\s+/');
       $args   = $args !== '' ? map (explode (',', $args), [$this, 'evalSimpleExp']) : [];
@@ -303,16 +303,16 @@ trait DataBindingTrait
 
       if ($name == '*') {
         if ($args) throw new ComponentException ($this,
-          "Raw output pipe function <kbd>*</kbd> must have no arguments.");
+          "Raw output filter function <kbd>*</kbd> must have no arguments.");
         if (is_null ($v)) continue; // optimization
-        $pipe = function ($v) { return new \RawText ($v); };
+        $filter = function ($v) { return new \RawText ($v); };
       }
-      else $pipe = $this->context->getPipe ($name);
+      else $filter = $this->context->getFilter ($name);
       try {
-        $v = call_user_func_array ($pipe, $fnArgs);
+        $v = call_user_func_array ($filter, $fnArgs);
       }
-      catch (PipeHandlerNotFoundException $e) {
-        throw new ComponentException ($this, "Pipe function <kbd>$name</kbd> was not found.");
+      catch (FilterHandlerNotFoundException $e) {
+        throw new ComponentException ($this, "Filter function <kbd>$name</kbd> was not found.");
       }
     }
 

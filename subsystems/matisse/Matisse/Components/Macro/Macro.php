@@ -304,9 +304,9 @@ class Macro extends Component
 
             $newBinding = $instance->bindings[$prop];
             // Transfer remaining original expression, if any.
-            $pipe = get ($match, 2);
-            if (isset($pipe))
-              $newBinding = rtrim (substr ($newBinding, 0, -2)) . $pipe . substr ($newBinding, -2);
+            $filter = get ($match, 2);
+            if (isset($filter))
+              $newBinding = rtrim (substr ($newBinding, 0, -2)) . $filter . substr ($newBinding, -2);
 
             $component->addBinding ($field, $newBinding);
             return;

@@ -2,11 +2,12 @@
 namespace Selenia;
 
 /**
- * Predefined pipes provided by the framework.
+ * Predefined filters provided by the framework.
  *
- * ><p>**Note:** the `pipe_` prefix allows pipe functions to have any name without conflicting with PHP reserved keywords.
+ * ><p>**Note:** the `filter_` prefix allows filter functions to have any name without conflicting with PHP reserved
+ * keywords.
  */
-class DefaultPipes
+class DefaultFilters
 {
   private $app;
 
@@ -21,7 +22,7 @@ class DefaultPipes
    * @param int $v
    * @return int
    */
-  function pipe_alt ($v)
+  function filter_alt ($v)
   {
     return $v % 2;
   }
@@ -30,7 +31,7 @@ class DefaultPipes
    * @param string $v
    * @return string
    */
-  function pipe_currency ($v)
+  function filter_currency ($v)
   {
     return formatMoney ($v) . ' €';
   }
@@ -39,9 +40,21 @@ class DefaultPipes
    * @param string $v
    * @return string
    */
-  function pipe_datePart ($v)
+  function filter_datePart ($v)
   {
     return explode (' ', $v) [0];
+  }
+
+  /**
+   * Returns the same value if it's not null, false or an empty string, otherwise returns the specified default value.
+   *
+   * @param mixed  $v
+   * @param string $default
+   * @return string
+   */
+  function filter_else ($v, $default = '')
+  {
+    return isset ($v) && $v !== '' && $v !== false ? $v : $default;
   }
 
   /**
@@ -50,7 +63,7 @@ class DefaultPipes
    * @param int $v
    * @return boolean
    */
-  function pipe_even ($v)
+  function filter_even ($v)
   {
     return $v % 2 == 0;
   }
@@ -59,7 +72,7 @@ class DefaultPipes
    * @param string $v
    * @return string
    */
-  function pipe_fileURL ($v)
+  function filter_fileURL ($v)
   {
     return $this->app->getFileDownloadURI ($v);
   }
@@ -68,7 +81,7 @@ class DefaultPipes
    * @param mixed $v
    * @return string
    */
-  function pipe_json ($v)
+  function filter_json ($v)
   {
     return json_encode ($v, JSON_PRETTY_PRINT);
   }
@@ -79,7 +92,7 @@ class DefaultPipes
    * @param $v
    * @return string
    */
-  function pipe_nl2br ($v)
+  function filter_nl2br ($v)
   {
     return nl2br ($v);
   }
@@ -90,21 +103,9 @@ class DefaultPipes
    * @param int $v
    * @return boolean
    */
-  function pipe_odd ($v)
+  function filter_odd ($v)
   {
     return $v % 2 == 1;
-  }
-
-  /**
-   * Returns the same value if it's not null, false or an empty string, otherwise returns the specified default value.
-   *
-   * @param mixed  $v
-   * @param string $default
-   * @return string
-   */
-  function pipe_else ($v, $default = '')
-  {
-    return isset ($v) && $v !== '' && $v !== false ? $v : $default;
   }
 
   /**
@@ -113,7 +114,7 @@ class DefaultPipes
    * @param int $v
    * @return int
    */
-  function pipe_ord ($v)
+  function filter_ord ($v)
   {
     return $v + 1;
   }
@@ -124,7 +125,7 @@ class DefaultPipes
    * @param string $false
    * @return string
    */
-  function pipe_then ($v, $true = '', $false = '')
+  function filter_then ($v, $true = '', $false = '')
   {
     return $v ? $true : $false;
   }
@@ -133,7 +134,7 @@ class DefaultPipes
    * @param string $v
    * @return string
    */
-  function pipe_timePart ($v)
+  function filter_timePart ($v)
   {
     return explode (' ', $v) [1];
   }

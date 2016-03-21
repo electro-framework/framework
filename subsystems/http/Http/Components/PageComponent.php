@@ -25,7 +25,7 @@ use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Base\CompositeComponent;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
-use Selenia\Matisse\Lib\PipeHandler;
+use Selenia\Matisse\Lib\FilterHandler;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Traits\PolymorphicInjectionTrait;
 use Selenia\ViewEngine\Engines\MatisseEngine;
@@ -331,7 +331,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       $context->viewModel = Http::getViewModel ($this->request);
 
       $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
-      $context->getPipeHandler ()->registerFallbackHandler ($this);
+      $context->getFilterHandler ()->registerFallbackHandler ($this);
 
       $title           = $this->getTitle ();
       $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;

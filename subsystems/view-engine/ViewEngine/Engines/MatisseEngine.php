@@ -7,7 +7,7 @@ use Selenia\Interfaces\Views\ViewEngineInterface;
 use Selenia\Interfaces\Views\ViewServiceInterface;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Exceptions\MatisseException;
-use Selenia\Matisse\Lib\PipeHandler;
+use Selenia\Matisse\Lib\FilterHandler;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Parser\Parser;
 
@@ -30,18 +30,18 @@ class MatisseEngine implements ViewEngineInterface
    */
   private $injector;
   /**
-   * @var PipeHandler
+   * @var FilterHandler
    */
-  private $pipeHandler;
+  private $filterHandler;
   /**
    * @var ViewServiceInterface
    */
   private $view;
 
-  function __construct (PipeHandler $pipeHandler, Application $app, InjectorInterface $injector,
+  function __construct (FilterHandler $filterHandler, Application $app, InjectorInterface $injector,
                         ViewServiceInterface $view, Context $context)
   {
-    $this->pipeHandler = $pipeHandler;
+    $this->filterHandler = $filterHandler;
     $this->app         = $app;
     $this->injector    = $injector;
     $this->view        = $view; // The view is always the owner if this engine, as long as the parameter is called $view

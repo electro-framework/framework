@@ -2,13 +2,13 @@
 namespace Selenia\ViewEngine\Config;
 
 use Selenia\Application;
-use Selenia\DefaultPipes;
+use Selenia\DefaultFilters;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\ModuleInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
 use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\Interfaces\Views\ViewServiceInterface;
-use Selenia\Matisse\Lib\PipeHandler;
+use Selenia\Matisse\Lib\FilterHandler;
 use Selenia\Matisse\Parser\Context;
 use Selenia\ViewEngine\Engines\MatisseEngine;
 use Selenia\ViewEngine\View;
@@ -16,7 +16,7 @@ use Selenia\ViewEngine\ViewService;
 
 class ViewEngineModule implements ServiceProviderInterface, ModuleInterface
 {
-  function boot (Application $app = null, PipeHandler $pipeHandler = null)
+  function boot (Application $app = null, FilterHandler $filterHandler = null)
   {
     $app->condenseLiterals = !$app->debugMode;
     $app->compressOutput   = !$app->debugMode;
@@ -36,8 +36,8 @@ class ViewEngineModule implements ServiceProviderInterface, ModuleInterface
         function (Application $app, ViewServiceInterface $viewService) use ($injector) {
           $ctx = new Context;
           $ctx->registerTags ($app->tags);
-          $ctx->setPipeHandler ($pipeHandler = new PipeHandler);
-          $pipeHandler->registerPipes (new DefaultPipes ($app));
+          $ctx->setFilterHandler ($filterHandler = new FilterHandler);
+          $filterHandler->registerFilters (new DefaultFilters ($app));
           $ctx->condenseLiterals     = $app->condenseLiterals;
           $ctx->debugMode            = $app->debugMode;
           $ctx->macrosDirectories    = $app->macrosDirectories;

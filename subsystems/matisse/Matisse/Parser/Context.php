@@ -7,7 +7,7 @@ use Selenia\Matisse\Traits\Context\AssetsAPITrait;
 use Selenia\Matisse\Traits\Context\BlocksAPITrait;
 use Selenia\Matisse\Traits\Context\ComponentsAPITrait;
 use Selenia\Matisse\Traits\Context\MacrosAPITrait;
-use Selenia\Matisse\Traits\Context\PipesAPITrait;
+use Selenia\Matisse\Traits\Context\FiltersAPITrait;
 use Selenia\Matisse\Traits\Context\ViewsAPITrait;
 
 /**
@@ -21,7 +21,7 @@ class Context
   use AssetsAPITrait;
   use BlocksAPITrait;
   use ComponentsAPITrait;
-  use PipesAPITrait;
+  use FiltersAPITrait;
   use MacrosAPITrait;
   use ViewsAPITrait;
 
