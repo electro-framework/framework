@@ -9,8 +9,6 @@ use Selenia\Matisse\Properties\TypeSystem\type;
 
 class Parser
 {
-  const EXP_BEGIN            = '{{';
-  const EXP_END              = '}}';
   const NO_TRIM              = 0;
   const PARSE_ATTRS          = '#
    (@?[\w\-\:]+)
@@ -22,7 +20,7 @@ class Parser
        |
        \'([^\']*)\'
        |
-       (\{\{ \s* [^\}\s]+ \s* \}\})
+       (\{ \s* [^\}\s]+ \s* \})
        |
        ([^>\s]+)
      )
@@ -30,9 +28,9 @@ class Parser
    (\s | @)
    #sxu';
   const PARSE_DATABINDINGS   = '#
-   \{\{
+   \{
    ( .*? )
-   \}\}
+   \}
    #xu';
   const PARSE_TAG            = '#
    (<) (/?)
@@ -99,7 +97,7 @@ class Parser
 
   public static function isBindingExpression ($exp)
   {
-    return is_string ($exp) ? strpos ($exp, '{{') !== false : false;
+    return is_string ($exp) ? strpos ($exp, '{') !== false : false;
   }
 
   /*********************************************************************************************************************

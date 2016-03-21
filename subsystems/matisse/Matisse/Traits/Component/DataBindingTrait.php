@@ -25,7 +25,7 @@ trait DataBindingTrait
    * > Note: the u modifier allows unicode white space to be properly matched.
    */
   static private $PARSE_BINDING_EXP = '/
-    \{\{            # opens with {{
+    \{              # opens with {
     \s*
     (
       (?:           # repeat
@@ -34,7 +34,7 @@ trait DataBindingTrait
       )*
     )
     \s*
-    \}\}            # closes with }}
+    \}              # closes with }
   /xu';
   /**
    * A map of attribute names and corresponding databinding expressions.
@@ -62,7 +62,7 @@ trait DataBindingTrait
 
   static function isCompositeBinding ($exp)
   {
-    return $exp[0] != '{' || substr ($exp, -1) != '}' || strpos ($exp, '{{', 2) > 0;
+    return $exp[0] != '{' || substr ($exp, -1) != '}' || strpos ($exp, '{', 1) > 0;
   }
 
   /**
