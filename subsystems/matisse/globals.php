@@ -1,8 +1,45 @@
 <?php
-
 //------------------------------
 //  Matisse-specific functions
 //------------------------------
+use Selenia\Matisse\Exceptions\MatisseException;
+
+/**
+ * Represents text that should not be HTML-escaped when output.
+ */
+class RawText
+{
+  private $s;
+
+  function __construct ($s)
+  {
+    $this->s = $s;
+  }
+
+  /**
+   * Note: this is not `__toString` on purpose.
+   *
+   * @return string
+   * @throws MatisseException
+   */
+  function toString ()
+  {
+    if (is_string ($this->s))
+      return $this->s;
+    throw new MatisseException ("A <kbd>RawText</kbd> instance must hold a string value, not a " .
+                                typeInfoOf ($this->s));
+  }
+}
+
+/**
+ * Outputs escaped text, except if the given argument is a {@see RawText} instance.
+ *
+ * @param string|RawText $s
+ */
+function _e ($s)
+{
+  echo $s instanceof RawText ? $s->toString() : htmlentities ($s, ENT_QUOTES, 'UTF-8', false);
+}
 
 /**
  * Converts a dash-separated tag name into a camel case tag name.
@@ -53,7 +90,8 @@ function _g ($data, $key, $default = null)
       try {
         return $data->$key ();
       }
-      catch (BadMethodCallException $e) {}
+      catch (BadMethodCallException $e) {
+      }
     return $default;
   }
   if (is_array ($data))

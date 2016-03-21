@@ -284,7 +284,6 @@ trait DataBindingTrait
     $pipes      = preg_split ('/\s*(?<!\|)\|(?!\|)\s*/', $expression);
     $expression = array_shift ($pipes);
     $v          = null;
-    $rawOutput  = $openDelim == '{!!';
 
     // Call a previously compiled expression or compile one now, cache it and call it.
 
@@ -303,10 +302,16 @@ trait DataBindingTrait
       // Parse each consecutive pipe expression, with syntax: pipe arg1,...argN
 
       list ($name, $args) = str_extractSegment ($exp, '/\s+/');
-      $args   = map (explode (',', $args), [$this, 'evalSimpleExp']);
+      $args   = $args !== '' ? map (explode (',', $args), [$this, 'evalSimpleExp']) : [];
       $fnArgs = array_from ($v, ...$args);
 
-      $pipe = $this->context->getPipe ($name);
+      if ($name == '*') {
+        if ($args) throw new ComponentException ($this,
+          "Raw output pipe function <kbd>*</kbd> must have no arguments.");
+        if (is_null ($v)) continue; // optimization
+        $pipe = function ($v) { return new \RawText ($v); };
+      }
+      else $pipe = $this->context->getPipe ($name);
       try {
         $v = call_user_func_array ($pipe, $fnArgs);
       }
@@ -316,14 +321,7 @@ trait DataBindingTrait
     }
 
     // Return the computed value
-
-    return $rawOutput || !is_scalar ($v) ? $v : e ($v);
-  }
-
-  private function throwInvalidData ($data, $field)
-  {
-    throw new DataBindingException ($this,
-      "Can't get property <kbd>$field</kbd> from a value of type <kbd>" . gettype ($data) . "</kbd>");
+    return $v;
   }
 
 }

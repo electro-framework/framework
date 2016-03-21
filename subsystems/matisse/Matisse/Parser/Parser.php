@@ -4,7 +4,6 @@ namespace Selenia\Matisse\Parser;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Components\Internal\Text;
-use Selenia\Matisse\Components\Literal;
 use Selenia\Matisse\Exceptions\ParseException;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
@@ -448,7 +447,7 @@ does not support the specified parameter <b>$tag</b>.
           'value' => $content,
         ];
         if ($content[0] == '{') {
-          $lit           = Literal::create ($this->current);
+          $lit           = new Text ($this->current->context);
           $lit->bindings = $v;
         }
         else $lit = new Text ($this->current->context, $v);
@@ -472,14 +471,13 @@ does not support the specified parameter <b>$tag</b>.
     if ($c->hasChildren ())
       foreach ($c->getChildren () as $child) {
         if ($prev
-            && ($prev instanceof Literal || $prev instanceof Text)
+            && $prev instanceof Text
             && empty ($prev->bindings)
-            && ($child instanceof Literal || $child instanceof Text)
+            && $child instanceof Text
             && empty($child->bindings)
-            && !$prev->props->isModified ()
-            && !$child->props->isModified ()
         ) {
           // safe to merge
+//inspect ($prev->props->value, $child->props->value);
           $prev->props->value .= $child->props->value;
           continue;
         }

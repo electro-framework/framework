@@ -4,20 +4,11 @@ namespace Selenia\Matisse\Components\Internal;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
+use Selenia\Matisse\Properties\TypeSystem\type;
 
 class TextProperties extends ComponentProperties
 {
-  public $value = '';
-
-  /**
-   * @see PropertiesWithChangeTracking::isModified
-   * @return bool
-   */
-  function isModified ()
-  {
-    return false;
-  }
-
+  public $value = ['', type::any];
 }
 
 final class Text extends Component
@@ -38,6 +29,11 @@ final class Text extends Component
   public static function from (Context $context = null, $text)
   {
     return new Text($context, ['value' => $text]);
+  }
+
+  protected function evalBindingExpression ($exp)
+  {
+    return _e (parent::evalBindingExpression ($exp));
   }
 
   protected function render ()
