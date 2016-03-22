@@ -40,6 +40,10 @@ class IfProperties extends ComponentProperties
    */
   public $matches = '';
   /**
+   * @var bool Assigned via the `<If {exp}>` syntax.
+   */
+  public $nameless = type::bool;
+  /**
    * > **Mote:** it doesn't work with databinding.
    *
    * @var bool
@@ -116,6 +120,12 @@ class If_ extends Component implements MacroExtensionInterface
   protected function evaluate ()
   {
     $prop = $this->props;
+
+    if (isset($prop->nameless)) {
+      if ($prop->nameless)
+        return $this->getChildren ();
+      return $this->getChildren ('else');
+    }
 
     $v   = $prop->get ('the');
     $is  = $prop->get ('is');
