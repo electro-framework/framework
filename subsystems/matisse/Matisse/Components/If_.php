@@ -24,19 +24,7 @@ class IfProperties extends ComponentProperties
    */
   public $else = type::content;
   /**
-   * @var string
-   */
-  public $is = type::string;
-  /**
-   * @var bool
-   */
-  public $isSet = false;
-  /**
-   * @var bool
-   */
-  public $isTrue = false;
-  /**
-   * @var string
+   * @var string A regular expression.
    */
   public $matches = '';
   /**
@@ -52,7 +40,7 @@ class IfProperties extends ComponentProperties
   /**
    * @var mixed
    */
-  public $the = type::any;
+  public $value = type::any;
 }
 
 /**
@@ -60,28 +48,20 @@ class IfProperties extends ComponentProperties
  *
  * ##### Syntax:
  * ```
- * <If the="value1" is="value2">
- *   content if true
- *   <Else> content if false </Else>
+ * <If {exp}>
+ *   content if truthy (not null nor an empty string)
+ *   <Else> content if falsy </Else>
  * </If>
  *
- * <If is="value"> content if value is truthy </If>
+ * <If value="value"> content if value is truthy </If>    // this is the same as <If {value}>
  *
- * <If not is="value"> content if value is falsy </If>
+ * <If not value="value"> content if value is falsy </If> // this is the same as <If {!value}>
  *
- * <If the="value" isTrue> content if value is truthy </If>
+ * <If value="value" matches="regexp"> content if value matches the regular expression </If>
  *
- * <If the="value" not isTrue> content if value is falsy </If>
+ * <If value="value" not matches="regexp"> content if value doesn't match the regular expression </If>
  *
- * <If the="value" isSet> content if value is different from both null and the empty string </If>
- *
- * <If the="value" not isSet> content if value is equal to null or to an empty string </If>
- *
- * <If the="value" matches="regexp"> content if value matches the regular expression </If>
- *
- * <If the="value" not matches="regexp"> content if value doesn't matche the regular expression </If>
- *
- * <If the="value">
+ * <If value="value">
  *   <Case is="value1"> content if value == value1 </Case>
  *   ...
  *   <Case is="valueN"> content if value == valueN </Case>
@@ -127,31 +107,8 @@ class If_ extends Component implements MacroExtensionInterface
       return $this->getChildren ('else');
     }
 
-    $v   = $prop->get ('the');
-    $is  = $prop->get ('is');
+    $v   = $prop->get ('value');
     $not = $prop->not;
-
-    if (isset($is)) {
-      if (!isset($v)) {
-        $is = toBool ($is);
-        $v  = true;
-      }
-      if ($v == $is xor $not)
-        return $this->getChildren ();
-      return $this->getChildren ('else');
-    }
-
-    if ($prop->isSet) {
-      if (exists ($v) xor $not)
-        return $this->getChildren ();
-      return $this->getChildren ('else');
-    }
-
-    if ($prop->isTrue) {
-      if (toBool ($v) xor $not)
-        return $this->getChildren ();
-      return $this->getChildren ('else');
-    }
 
     if (exists ($prop->matches)) {
       if (preg_match ("%$prop->matches%", $v) xor $not)
