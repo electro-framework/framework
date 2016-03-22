@@ -12,7 +12,7 @@ class Parser
   const NAMELESS_PROP      = 'nameless';
   const NO_TRIM            = 0;
   const PARSE_ATTRS        = '#
-   ([^ =]+)
+   ([^\s=]+)
    \s*
    (?:
      = \s*
