@@ -6,24 +6,20 @@ use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
-class RepeatProperties extends ComponentProperties
+class ForProperties extends ComponentProperties
 {
-  /**
-   * @var string Syntax: 'index:var' or 'var' or not set
-   */
-  public $as = '';
   /**
    * @var int
    */
   public $count = 0;
   /**
+   * @var string Syntax: 'index:var' or 'var' or not set
+   */
+  public $each = '';
+  /**
    * @var Metadata|null
    */
   public $footer = type::content;
-  /**
-   * @var mixed
-   */
-  public $for = type::data;
   /**
    * @var Metadata|null
    */
@@ -35,15 +31,22 @@ class RepeatProperties extends ComponentProperties
   /**
    * @var Metadata|null
    */
-  public $noData = type::content;
+  public $else = type::content;
+  /**
+   * @var mixed
+   */
+  public $of = type::data;
 }
 
-class Repeat extends Component
+/**
+ * Iterates a dataset repeating a block of content for each item.
+ */
+class For_ extends Component
 {
-  protected static $propertiesClass = RepeatProperties::class;
+  protected static $propertiesClass = ForProperties::class;
 
   public $allowsChildren = true;
-  /** @var RepeatProperties */
+  /** @var ForProperties */
   public $props;
 
   protected function render ()
@@ -51,10 +54,10 @@ class Repeat extends Component
     $prop            = $this->props;
     $count           = $prop->get ('count', -1);
     $this->viewModel = [];
-    if (exists ($prop->as))
-      $this->parseIteratorExp ($prop->as, $idxVar, $itVar);
+    if (exists ($prop->each))
+      $this->parseIteratorExp ($prop->each, $idxVar, $itVar);
     else $idxVar = $itVar = null;
-    if (!is_null ($for = $prop->for)) {
+    if (!is_null ($for = $prop->of)) {
       $first = true;
       foreach ($for as $i => $v) {
         if ($idxVar)

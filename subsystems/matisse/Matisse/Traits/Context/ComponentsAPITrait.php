@@ -33,7 +33,7 @@ trait ComponentsAPITrait
     'MacroParam'                 => Components\Macro\MacroParam::class,
     'Script'                     => Components\Script::class,
     'Style'                      => Components\Style::class,
-    'Repeat'                     => Components\Repeat::class,
+    'For'                        => Components\For_::class,
     MacroCall::TAG_NAME          => MacroCall::class,
   ];
 
