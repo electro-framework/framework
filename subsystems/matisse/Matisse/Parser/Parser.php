@@ -478,7 +478,6 @@ does not support the specified parameter <b>$tag</b>.
             && empty($child->bindings)
         ) {
           // safe to merge
-//inspect ($prev->props->value, $child->props->value);
           $prev->props->value .= $child->props->value;
           continue;
         }

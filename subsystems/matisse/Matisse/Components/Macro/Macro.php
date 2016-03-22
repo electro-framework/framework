@@ -24,9 +24,9 @@ use Selenia\Matisse\Properties\TypeSystem\type;
 class Macro extends Component
 {
   /** Finds binding expressions which are not macro parameter bindings. */
-  const FIND_NON_MACRO_EXP = '#\{\{\s*(?=\S)[^@]#u';
+  const FIND_NON_MACRO_EXP = '#\{\s*(?=\S)[^@]#u';
   /** Finds macro binding expressions. */
-  const PARSE_MACRO_BINDING_EXP = '#\{\{\s*@([\w\-]*)\s*([|.][^\}]*)?\s*\}\}#u';
+  const PARSE_MACRO_BINDING_EXP = '#\{\s*@([\w\-]*)\s*([|.][^\}]*)?\s*\}#u';
 
   protected static $propertiesClass = MacroProperties::class;
 
@@ -166,7 +166,8 @@ class Macro extends Component
         if (isset ($component) && isset($component->props)) {
           if (isset($component->bindings)) {
             foreach ($component->bindings as $field => $exp)
-              $this->applyBinding ($component, $field, $exp, $call, $components, $i);
+              if ($this->applyBinding ($component, $field, $exp, $call, $components, $i))
+                continue 2;
           }
           $props  = $component->props->getPropertiesOf (type::metadata);
           $values = array_values ($props);
@@ -321,8 +322,17 @@ class Macro extends Component
             $component->addBinding ($field, $value);
           }
           else {
-            $component->props->set ($field, $value);
-            $component->removeBinding ($field);
+            if (is_array ($value)) {
+              // Replace current component by the macro substitution's set of components.
+              array_splice ($components, $i, 1, $value);
+              --$i;
+              return true;
+            }
+            else {
+              // Update the property value to the result of the macro param.
+              $component->props->set ($field, $value);
+              $component->removeBinding ($field);
+            }
           }
         }
       }
