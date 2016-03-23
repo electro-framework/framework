@@ -1,13 +1,14 @@
 <?php
 namespace Selenia\Matisse\Properties\Base;
 
+use JsonSerializable;
 use Selenia\Matisse\Properties\TypeSystem\type;
 use Selenia\Traits\InspectionTrait;
 
 /**
  * Properties of a Metadata component.
  */
-class MetadataProperties extends AbstractProperties
+class MetadataProperties extends AbstractProperties implements JsonSerializable
 {
   use InspectionTrait;
 
@@ -35,6 +36,11 @@ class MetadataProperties extends AbstractProperties
     return isset ($this->props[$name]);
   }
 
+  function __unset ($name)
+  {
+    unset ($this->props[$name]);
+  }
+
   function defines ($name, $asSubtag = false)
   {
     return true;
@@ -47,6 +53,17 @@ class MetadataProperties extends AbstractProperties
 
   function getAll ()
   {
+    return array_merge (object_publicProps ($this), $this->props);
+  }
+
+  /**
+   * Gets a map of the dynamic (non-predefined) properties of the component.
+   * <p>Properties declared on the class are excluded.
+   *
+   * @return array A map of property names to property values.
+   */
+  function getDynamic ()
+  {
     return $this->props;
   }
 
@@ -57,7 +74,7 @@ class MetadataProperties extends AbstractProperties
 
   function getPropertyNames ()
   {
-    return array_keys ($this->props);
+    return array_merge (object_propNames ($this), array_keys ($this->props));
   }
 
   function getRelatedTypeOf ($propName)
@@ -78,6 +95,16 @@ class MetadataProperties extends AbstractProperties
   function isScalar ($name)
   {
     return isset($this->name) ? is_scalar ($this->name) : true;
+  }
+
+  /**
+   * **Note:** this is useful for the `json` filter, for instance.
+   *
+   * @return array
+   */
+  function jsonSerialize ()
+  {
+    return $this->getAll ();
   }
 
   function set ($propName, $value)

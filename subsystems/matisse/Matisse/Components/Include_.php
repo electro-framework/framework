@@ -76,10 +76,11 @@ class IncludeProperties extends MetadataProperties
  * - render dynamically generated templates loaded from the viewModel or from content blocks.
  *
  * <p>One common use of Include is to assign controllers to view partials/layouts, therefore encapsulating their
- * functionality and freeing your page controller code from having to handle each and all that are included on the page.
+ * functionality and freeing your page controller code from having to handle each and all that are included on the
+ * page.
  *
- * <p>You can also define the view model of the `Include` component from markup, by specifying an attribute for each model
- * property you wish to set; the attribute name must be prefixed by `@`.
+ * <p>You can also define the view model of the `Include` component from markup, by specifying an attribute for each
+ * model property you wish to set; the attribute name must be prefixed by `@`.
  */
 class Include_ extends CompositeComponent
 {
@@ -88,37 +89,57 @@ class Include_ extends CompositeComponent
   /** @var IncludeProperties */
   public $props;
 
+  private $skin;
+
+  function getSkin ()
+  {
+    inspect ($this->skin);
+    return $this->skin ?: parent::getSkin ();
+  }
+
+  protected function init ()
+  {
+    parent::init ();
+    $prop = $this->props;
+
+    // Validate dynamic properties and rename them.
+
+    $extra = $prop->getDynamic ();
+    if ($extra) {
+      foreach ($extra as $k => $v)
+        if ($k[0] != '@')
+          throw new ComponentException ($this, "Invalid property name: <kbd>$k</kbd>");
+        else {
+          $o = substr ($k, 1);
+          if (isset($prop->$o))
+            throw new ComponentException ($this,
+              "Dynamic property <kbd>$k</kbd> conflicts with predefined property <kbd>$o</kbd>.");
+          $prop->$o = $v;
+          unset ($prop->$k);
+        }
+    }
+  }
+
   protected function render ()
   {
     $prop       = $this->props;
     $ctx        = $this->context;
     $controller = $prop->class;
 
-    $extra = $prop->getAll ();
-    if ($extra) {
-      $vm = [];
-      foreach ($extra as $k => $v)
-        if ($k[0] != '@')
-          throw new ComponentException ($this, "Invalid property name: <kdb>$k</kdb>");
-        else $vm[substr ($k, 1)] = $v;
-      $this->viewModel = $vm;
-    }
-
-    // Resolve controller for the view (if applicable)
+    // Resolve controller for the view (if applicable).
 
     if (!exists ($controller) && exists ($prop->view))
       $controller = $ctx->findControllerForView ($prop->view);
 
     if (exists ($prop->template)) {
-      $exp = get ($this->bindings, 'template');
-      if (str_beginsWith ($exp, '{{'))
-        throw new ComponentException($this,
-          "When binding a value to the <kbd>template</kbd> property, you must use the databinding-without-escaping syntax <kbd>{!! !!}</kbd>");
       if (exists ($controller)) {
-        $skin = $ctx->createComponent ($controller, $this);
+        $this->skin = $skin = $ctx->createComponent ($controller, $this);
         if (!$skin instanceof CompositeComponent)
           throw new ComponentException($this,
             "Component <kbd>$controller</kbd> is not a <kbd>CompositeComponent</kbd> instance, so it can't be a controler");
+        // If the skin has its own properties, merge the Include's dynamic properties with them.
+        if ($skin->props)
+          $skin->props->apply ($prop->getDynamic ());
         $skin->template = $prop->template;
         $this->attachAndRender ($skin);
       }
@@ -130,10 +151,13 @@ class Include_ extends CompositeComponent
 
     elseif (exists ($prop->view)) {
       if (exists ($controller)) {
-        $skin = $ctx->createComponent ($controller, $this);
+        $this->skin = $skin = $ctx->createComponent ($controller, $this);
         if (!$skin instanceof CompositeComponent)
           throw new ComponentException($this,
             "Component <kbd>$controller</kbd> is not a <kbd>CompositeComponent</kbd> instance, so it can't be the controler of <kbd>$prop->view</kbd>");
+        // If the skin has its own properties, merge the Include's dynamic properties with them.
+        if ($skin->props)
+          $skin->props->apply ($prop->getDynamic ());
         $skin->templateUrl = $prop->view;
         $this->attachAndRender ($skin);
       }

@@ -2,6 +2,7 @@
 namespace Selenia\Matisse\Debug;
 
 use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Components\Base\CompositeComponent;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
@@ -98,9 +99,13 @@ class ComponentInspector
             if ($exp != '') {
               echo "<span style='color:$COLOR_BIND'>$exp</span> = ";
               try {
+                $l = ob_get_level ();
                 $v = $component->getComputedPropValue ($k);
               }
               catch (\Exception $e) {
+                /** @noinspection PhpUndefinedVariableInspection */
+                while (ob_get_level () > $l)
+                  ob_end_clean ();
                 echo "<b style='color:red'>ERROR</b>";
                 break;
               }
@@ -181,8 +186,16 @@ class ComponentInspector
     if ($deep) {
       if ($component->hasChildren ()) {
         $hasContent = true;
+        $content    = $component->getChildren ();
+      }
+      elseif ($component instanceof CompositeComponent && ($skin = $component->getSkin ())) {
+        $hasContent = true;
+        $content    = [$skin];
+      }
+      if ($hasContent) {
         echo "<span style='color:$COLOR_TAG'>&gt;</span><div style=\"margin:0 0 0 30px\">";
-        foreach ($component->getChildren () as $c)
+        /** @noinspection PhpUndefinedVariableInspection */
+        foreach ($content as $c)
           self::_inspect ($c, true);
         echo '</div>';
       }

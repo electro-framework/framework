@@ -6,6 +6,7 @@ use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Components\Macro\Macro;
 use Selenia\Matisse\Components\Macro\MacroCall;
 use Selenia\Matisse\Interfaces\MacroExtensionInterface;
+use Selenia\Matisse\Parser\Parser;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
@@ -100,9 +101,10 @@ class If_ extends Component implements MacroExtensionInterface
   protected function evaluate ()
   {
     $prop = $this->props;
+    $np = Parser::NAMELESS_PROP;
 
-    if (isset($prop->nameless)) {
-      if ($prop->nameless)
+    if (isset($prop->$np)) {
+      if ($prop->$np)
         return $this->getChildren ();
       return $this->getChildren ('else');
     }

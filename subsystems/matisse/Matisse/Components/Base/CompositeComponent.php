@@ -47,6 +47,14 @@ class CompositeComponent extends Component
    */
   public $templateUrl = '';
   /**
+   * The component's view, which renders the component's appearance.
+   *
+   * <p>This should not be set externally.
+   *
+   * @var ViewInterface
+   */
+  public $view;
+  /**
    * When true, databinding resolution on the component's view is unnafected by data from parent component's models or
    * from the shared document view model (which is set on {@see Context}); only the component's own view model is used.
    *
@@ -61,6 +69,21 @@ class CompositeComponent extends Component
    * @var string
    */
   protected $viewEngineClass = MatisseEngine::class;
+
+  /**
+   * When the component's view is a matisse template, this returns the root of the parsed template, otherwise it returns
+   * `null`.
+   *
+   * <p>Subclasses may override this to return a skin other than the component's default one.
+   *
+   * > <p>This is also used by {@see ComponentInspector} for inspecting a composite component's children.
+   *
+   * @return Component|null A {@see DocumentFragment}, but it may also be any other component type.
+   */
+  function getSkin ()
+  {
+    return $this->view && $this->view->getEngine () instanceof MatisseEngine ? $this->view->getCompiled () : null;
+  }
 
   /**
    * Allows access to the view after the page is rendered.
@@ -85,27 +108,18 @@ class CompositeComponent extends Component
   {
     if ($this->templateUrl) {
       $this->assertContext ();
-      $view = $this->context->viewService->loadFromFile ($this->templateUrl);
+      $this->view = $this->context->viewService->loadFromFile ($this->templateUrl);
     }
     elseif ($this->template) {
       $this->assertContext ();
-      $view = $this->context->viewService->loadFromString ($this->template, $this->viewEngineClass);
+      $this->view = $this->context->viewService->loadFromString ($this->template, $this->viewEngineClass);
     }
     else return;
 
-    $view->compile ();
-    $this->setupView ($view);
-    echo $view->render ();
-    $this->afterRender ($view);
-  }
-
-  protected function setupViewModel ()
-  {
-    // Defaults the view model to the component itself.
-    if (!isset($this->viewModel))
-      $this->viewModel = $this;
-
-    parent::setupViewModel ();
+    $this->view->compile ();
+    $this->setupView ($this->view);
+    echo $this->view->render ();
+    $this->afterRender ($this->view);
   }
 
   /**
@@ -124,6 +138,15 @@ class CompositeComponent extends Component
       $document = $view->getCompiled ();
       $document->attachTo ($this);
     }
+  }
+
+  protected function setupViewModel ()
+  {
+    // Defaults the view model to the component itself.
+    if (!isset($this->viewModel))
+      $this->viewModel = $this;
+
+    parent::setupViewModel ();
   }
 
   private function assertContext ()

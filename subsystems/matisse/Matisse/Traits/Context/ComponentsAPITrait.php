@@ -9,6 +9,7 @@ use Selenia\Matisse\Components\Macro\MacroCall;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\MatisseException;
 use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Properties\Base\AbstractProperties;
 
 /**
  * Manages components on a rendering Context.
@@ -24,17 +25,17 @@ trait ComponentsAPITrait
    * @var array string => string
    */
   private static $coreTags = [
-    'Apply'                      => Components\Apply::class,
-    'AssetsGroup'                => Components\AssetsGroup::class,
-    'Content'                    => Components\Content::class,
-    'If'                         => Components\If_::class,
-    'Include'                    => Components\Include_::class,
-    'Macro'                      => Components\Macro\Macro::class,
-    'MacroParam'                 => Components\Macro\MacroParam::class,
-    'Script'                     => Components\Script::class,
-    'Style'                      => Components\Style::class,
-    'For'                        => Components\For_::class,
-    MacroCall::TAG_NAME          => MacroCall::class,
+    'Apply'             => Components\Apply::class,
+    'AssetsGroup'       => Components\AssetsGroup::class,
+    'Content'           => Components\Content::class,
+    'If'                => Components\If_::class,
+    'Include'           => Components\Include_::class,
+    'Macro'             => Components\Macro\Macro::class,
+    'MacroParam'        => Components\Macro\MacroParam::class,
+    'Script'            => Components\Script::class,
+    'Style'             => Components\Style::class,
+    'For'               => Components\For_::class,
+    MacroCall::TAG_NAME => MacroCall::class,
   ];
 
   /**
@@ -47,15 +48,20 @@ trait ComponentsAPITrait
   /**
    * Creates an injectable component instance of the given class.
    *
-   * @param string     $class
-   * @param Component  $parent
-   * @param array|null $props
-   * @param array|null $bindings
+   * @param string                        $class    Class name of the component to be created.
+   * @param Component                     $parent   The component's container component (if any).
+   * @param array|AbstractProperties|null $props    A map of property names to property values.
+   *                                                Properties specified via this argument come only from markup
+   *                                                attributes, not from subtags.
+   * @param array|null                    $bindings A map of attribute names and corresponding databinding
+   *                                                expressions.
    * @return Component
    */
-  function createComponent ($class, Component $parent, array $props = null, array $bindings = null)
+  function createComponent ($class, Component $parent, $props = null, array $bindings = null)
   {
+    /** @var Component $component */
     $component = $this->injector->make ($class);
+    /** @var Context $this */
     return $component->setup ($parent, $this, $props, $bindings);
   }
 

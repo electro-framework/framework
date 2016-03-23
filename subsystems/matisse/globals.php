@@ -39,7 +39,7 @@ class RawText
  */
 function _e ($s)
 {
-  return $s instanceof RawText ? $s->toString() : htmlentities ($s, ENT_QUOTES, 'UTF-8', false);
+  return $s instanceof RawText ? $s->toString () : htmlentities ($s, ENT_QUOTES, 'UTF-8', false);
 }
 
 /**
@@ -79,15 +79,10 @@ function _g ($data, $key, $default = null)
   if (is_object ($data)) {
     if ($data instanceof \ArrayAccess && isset ($data[$key]))
       return $data[$key];
-    if (property_exists ($data, $key)) {
-      if (isset($data->$key))
-        return $data->$key;
-      // Property may be private/protected, try to call a getter method with the same name
-      if (method_exists ($data, $key) || method_exists ($data, '__call'))
-        return $data->$key ();
-      return $default;
-    }
-    if (is_callable ([$data, $key]))
+    if (isset($data->$key))
+      return $data->$key;
+    // Property may be private/protected or virtual, try to call a getter method with the same name
+    if (method_exists ($data, $key) || method_exists ($data, '__call'))
       try {
         return $data->$key ();
       }

@@ -403,17 +403,22 @@ abstract class Component implements RenderableInterface, CustomInspectionInterfa
    * <p>**Note:** this method may not be called on some circumstances, for ex, if the component is rendered from a
    * middleware stack.
    *
-   * @param Component|null $parent    The component's container component (if any).
-   * @param Context        $context   A rendering context.
-   * @param string[]       $props     A map of property names to property values.
-   *                                  Properties specified via this argument come only from markup attributes, not
-   *                                  from subtags.
-   * @param array|null     $bindings  A map of attribute names and corresponding databinding expressions.
+   * @param Component|null                $parent   The component's container component (if any).
+   * @param Context                       $context  A rendering context.
+   * @param array|AbstractProperties|null $props    A map of property names to property values.
+   *                                                Properties specified via this argument come only from markup
+   *                                                attributes, not from subtags.
+   * @param array|null                    $bindings A map of attribute names and corresponding databinding
+   *                                                expressions.
    * @return Component Component instance.
    * @throws ComponentException
    */
-  function setup (Component $parent = null, Context $context, array $props = null, array $bindings = null)
+  function setup (Component $parent = null, Context $context, $props = null, array $bindings = null)
   {
+    if (is_object ($props)) {
+      $this->props = $props;
+      $props       = [];
+    }
     $this->setContext ($context);
     $this->bindings = $bindings;
     $this->onCreate ($props, $parent);
