@@ -93,7 +93,6 @@ class Include_ extends CompositeComponent
 
   function getSkin ()
   {
-    inspect ($this->skin);
     return $this->skin ?: parent::getSkin ();
   }
 

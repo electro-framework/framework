@@ -15,9 +15,8 @@ class RawText
   {
     if (is_null ($s))
       $this->s = '';
-    elseif (!is_string ($this->s))
-      throw new MatisseException ("A <kbd>RawText</kbd> instance must hold a string value, not a " .
-                                  typeInfoOf ($this->s));
+    elseif (!is_string ($s))
+      throw new MatisseException ("A <kbd>RawText</kbd> instance must hold a string value, not a " . typeInfoOf ($s));
     $this->s = $s;
   }
 

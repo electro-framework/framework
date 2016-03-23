@@ -146,12 +146,14 @@ trait DataBindingTrait
   /**
    * Executes a filter with the given arguments.
    *
+   * <p>This is used by compiled databinding expressions.
+   *
    * @param string $name    Filter name.
    * @param array  ...$args Filter arguments. The first argument is always the filter implicit argument.
    * @return mixed
    * @throws ComponentException
    */
-  protected function callFilter ($name, ...$args)
+  protected function filter ($name, ...$args)
   {
     $filter = $this->context->getFilter ($name);
     try {

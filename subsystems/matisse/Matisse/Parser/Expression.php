@@ -6,9 +6,48 @@ use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\DataBindingException;
 
 /**
- * Represents a Matisse data-binding expression.
+ * Represents a Matisse databinding expression.
  *
- * <p>It allows the parsing and compilation of such expressions.
+ * <p>An instance of this class represents one expression and it provides functionality for:
+ * - parsing it;
+ * - translating it to PHP source code;
+ * - compiling it to native code.
+ *
+ * ### Databinding expressions features and syntax
+ * An expression is composed of two parts:
+ * - the main expression;
+ * - a sequence of filter sub-expressions, each one prefixed by the pipe (`|`) operator.
+ *
+ * The main expression is similar to a PHP expression, but with the following differences:
+ * - The dot (`.`) operator provides access to a property, array index, or getter function of the left operand.
+ *   The right operand must be an unquoted symbol.<br>
+ *   Ex: `'obj.prop1.prop2'`
+ * - The first element of a dot-delimited sequence is searched for in a stack of nested view models, starting on the
+ *   current component.
+ * - Consecutive segments are evaluated in a way that is resilient to errors; dereferencing null or accessing
+ *   non-existing indexes or properties is valid and evaluates to an empty string.
+ * - The plus (`+`) operator concatenates strings. This means you cannot use it to perform numerical calculations.
+ *   If you need them, pre-compute the values on the controller (that's the right place to do it).
+ * - `'#block'` evaluates to the rendering of the specified block; it cannot be followed by a dot.
+ * - '&#64;prop' evaluates to the specified property of the current composite component container.
+ *
+ * ### Constants
+ * Expressions can contain one or more constants between operators.
+ * <p>Valid constants are:
+ *   - 123 or 123.4
+ *   - `"string"` or `'string'`
+ *   - `true, false, null`
+ *   - any PHP constant defined via `define()` or `const`
+ *   - `namespace\class::constant` (`self::` or `static::` are not valid)
+ *
+ * ### Filters
+ * Syntax: `filterName arg1,...argN`
+ *
+ * <p>Ex:
+ * ```
+ *   "obj.prop | then 'true','false'"
+ *   "onj.prop | format '%.3f' | json"
+ * ```
  */
 class Expression
 {
@@ -22,7 +61,7 @@ class Expression
    */
   const PARSE_SIMPLE_EXPR = '/
     ^\s*                      # ignore white space at the beginning
-    (                         # either
+    (                         # capture either
       [@#]?[:\w]+             # a constant name, a property name (ex: "prop", "@prop"), a block name (ex: "#prop") or a class constant (ex: MyClass::myConstant)
       |                       # or
       \'(?:(?<!\\\\)[^\'])*\' # a quoted string constant (supports escaped quotes inside the string)
@@ -31,8 +70,8 @@ class Expression
       |                       # or
       !                       # the unary `not` operator, which will became part of the captured segment
     )
-    \s*
-    (                         # capture the next operator, if one is present, including the the first filter\'s pipe op.
+    \s*                       # ignore white space
+    (                         # capture the next operator, if one is present, including the the first filter\'s pipe
       \|(?!\|)                # capture the pipe operator (but not the || operator)
       |                                 # or
       [,\|\.\/\-\(\)\[\]\{\}%&=?*+<>]+  # one of the other allowed operators
@@ -50,20 +89,24 @@ class Expression
    */
   static private $PARSE_BINDING_EXP = '/
     \{              # opens with {
-    \s*
-    (
-      (?:           # repeat
-        (?! \s*\})  # not space followed by a }
-        .
-      )*
-    )
-    \s*
+    \s*             # ignore white space
+    (               # begin capture
+      (?:           # begin loop
+        (?! \s*\})  # if not white space followed by a }
+        .           # consume character
+      )*            # repeat
+    )               # end capture
+    \s*             # ignore white space
     \}              # closes with }
   /xu';
   /**
-   * @var \Closure A function that receives a context argument and returns the evaluated value.
+   * @var \Closure|null A function that receives a context argument and returns the evaluated value.
    */
   public $compiled = null;
+  /**
+   * @var string|null The original expression translated to PHP code.
+   */
+  public $translated = null;
   /**
    * The original, unparsed, expression.
    *
@@ -76,11 +119,11 @@ class Expression
   function __construct ($expression)
   {
     if (Expression::isCompositeBinding ($expression))
-      throw new DataBindingException(null, "Multiple binding expressions on a string are not supported: <kbd>$expression</kbd>
+      throw new DataBindingException("Multiple binding expressions on a string are not supported: <kbd>$expression</kbd>
 <p>Convert it to a single expression using the <kbd>+</kbd> string concatenation operator.");
 
     if (!preg_match (self::$PARSE_BINDING_EXP, $expression, $matches))
-      throw new DataBindingException($this, "Invalid databinding expression: $expression");
+      throw new DataBindingException("Invalid databinding expression: $expression");
 
     list ($full, $this->expression) = $matches;
   }
@@ -110,7 +153,7 @@ class Expression
    * @return string
    * @throws DataBindingException
    */
-  static function preCompileSimpleExpSegs (array $segments)
+  static function translateSimpleExpSegs (array $segments)
   {
     if (count ($segments) == 1) {
       $seg = $segments[0];
@@ -124,7 +167,6 @@ class Expression
 
     if ($segments[0][0] == '@')
       array_splice ($segments, 0, 1, ['props', substr ($segments[0], 1)]);
-    inspect ("SEGMENTS", $segments);
 
     $exp = $not = '';
     foreach ($segments as $i => $seg) {
@@ -143,26 +185,12 @@ class Expression
     }
     $exp = "$not$exp";
     if (!PhpCode::validateExpression ($exp))
-      throw new DataBindingException(null, sprintf ("Invalid expression <kbd>%s</kbd>.", implode ('.', $segments)));
+      throw new DataBindingException(sprintf ("Invalid expression <kbd>%s</kbd>.", implode ('.', $segments)));
     return $exp;
   }
 
   /**
    * Compiles a databinding expression.
-   *
-   * <p>Valid expression syntaxes:
-   *   - `x.y.z`
-   *   - `!a && b || c`
-   *   - `a + b + 'c' + "d" + 123`
-   *   - `#block`
-   *   - `@`prop
-   *
-   * <p>Valid constants:
-   *   - 123 or 123.4
-   *   - "string" or 'string'
-   *   - true, false, null
-   *   - any PHP constant defined via `define()` or `const`
-   *   - namespace\class::constant (`self` or `static` or not valid)
    *
    * @param string $expression
    * @return \Closure
@@ -170,45 +198,18 @@ class Expression
   static private function compile ($expression)
   {
     inspect ("Compile $expression");
-    list ($main, $op) = self::parseSimpleExpression ($expression);
+    list ($main, $op) = self::translateSimpleExpression ($expression);
 
     $exp = $main;
     if ($op == '|') {
       $filters = preg_split (self::PARSE_FILTER, $expression);
-      inspect ("FILTERS", $filters);
       if ($filters)
         foreach ($filters as $filter)
-          $exp = self::preCompileFilter ($filter, $exp);
+          $exp = self::translateFilter ($filter, $exp);
     }
 
     inspect ($exp);
     return PhpCode::compile ($exp);
-  }
-
-  /**
-   * @param string $expression [reference] The parsed sub-expression will be removed from the input expression.
-   * @return string[] The extracted sub-expression and the next operator (if any).
-   * @throws DataBindingException
-   */
-  static private function parseSimpleExpression (& $expression)
-  {
-    $op         = $subExp = '';
-    $segs       = [];
-    $expression = trim ($expression);
-    while ($expression !== '' && preg_match (self::PARSE_SIMPLE_EXPR, $expression, $m)) {
-      inspect ($m);
-      $m[] = '';
-      list ($all, $seg, $op) = $m;
-      $expression = trim (substr ($expression, strlen ($all)));
-      $segs[]     = $seg;
-      if ($op == '.') continue;
-      if ($op == '|' || $op == ',') break;
-      $subExp .= self::preCompileSimpleExpSegs ($segs) . $op;
-      $segs = [];
-    }
-    if ($segs)
-      $subExp .= self::preCompileSimpleExpSegs ($segs);
-    return [$subExp, $op];
   }
 
   /**
@@ -220,28 +221,52 @@ class Expression
    * @return string
    * @throws DataBindingException
    */
-  static private function preCompileFilter ($filter, $input)
+  static private function translateFilter ($filter, $input)
   {
-    inspect ("FILTER $filter << $input");
     // Filter expressions syntax: filter arg1,...argN
 
     list ($name, $argsStr) = str_extractSegment ($filter, '/\s+/');
     $args = [];
 
     while ($argsStr !== '') {
-      list ($subExp, $op) = self::parseSimpleExpression ($argsStr);
+      list ($subExp, $op) = self::translateSimpleExpression ($argsStr);
       if ($op && $op != ',')
-        throw new DataBindingException (null, "Filter arguments must be simple expressions; operators are not allowed.
+        throw new DataBindingException ("Filter arguments must be simple expressions; operators are not allowed.
 <p>Expression: <kbd>$filter</kbd>, invalid operator: <kbd>$op</kbd>");
       $args[] = $subExp;
     }
 
     if ($name == '*') {
-      if ($args) throw new DataBindingException (null,
-        "Raw output filter function <kbd>*</kbd> must have no arguments.");
-      return "(new \\RawText ($input))";
+      if ($args) throw new DataBindingException ("Raw output filter function <kbd>*</kbd> must have no arguments.");
+      return "(new RawText($input))";
     }
-    return sprintf ('$this->callFilter(\'%s\',%s%s%s)', $name, $input, $args ? ',' : '', implode (',', $args));
+    return sprintf ('$this->filter(\'%s\',%s%s%s)', $name, $input, $args ? ',' : '', implode (',', $args));
+  }
+
+  /**
+   * @param string $expression [reference] The parsed sub-expression will be removed from the input expression.
+   * @return string[] The extracted sub-expression and the next operator (if any).
+   * @throws DataBindingException
+   */
+  static private function translateSimpleExpression (& $expression)
+  {
+    $op         = $subExp = '';
+    $segs       = [];
+    $expression = trim ($expression);
+    while ($expression !== '' && preg_match (self::PARSE_SIMPLE_EXPR, $expression, $m)) {
+      $m[] = '';
+      list ($all, $seg, $op) = $m;
+      $expression = trim (substr ($expression, strlen ($all)));
+      $segs[]     = $seg;
+      if ($op == '.') continue;
+      if ($op == '|' || $op == ',') break;
+      if ($op == '+') $op = '.';
+      $subExp .= self::translateSimpleExpSegs ($segs) . $op;
+      $segs = [];
+    }
+    if ($segs)
+      $subExp .= self::translateSimpleExpSegs ($segs);
+    return [$subExp, $op];
   }
 
   /**
