@@ -9,9 +9,9 @@ use Selenia\Matisse\Properties\TypeSystem\type;
 
 class Parser
 {
-  const NAMELESS_PROP      = 'nameless';
-  const NO_TRIM            = 0;
-  const PARSE_ATTRS        = '#
+  const NAMELESS_PROP        = 'nameless';
+  const NO_TRIM              = 0;
+  const PARSE_ATTRS          = '#
    ([^\s=]+)
    \s*
    (?:
@@ -28,12 +28,12 @@ class Parser
    )?
    (\s | @)
    #sxu';
-  const PARSE_DATABINDINGS = '#
+  const PARSE_DATABINDINGS   = '#
    \{
    ( .*? )
    \}
    #xu';
-  const PARSE_TAG          = '#
+  const PARSE_TAG            = '#
    (<) (/?)
    (
      [A-Z][\w\-]+ (?: :[\w\-]+)?
@@ -42,7 +42,7 @@ class Parser
    )
    \s* (.*?) (/?) (>)
    #sxu';
-  const TRIM               = 3;
+  const TRIM                 = 3;
   const TRIM_LEFT            = 1; // @ is at the end of the attrs string and it's used as a marker.
   const TRIM_LEFT_CONTENT    = '# (?<=\>) \s+ (?=\s) #xu';
   const TRIM_LITERAL_CONTENT = '# (?<=\>) \s+ (?=\s) | (?<=\s) \s+ (?=\<) #xu';
@@ -95,11 +95,6 @@ class Parser
    * @var string The source markup being parsed.
    */
   private $source;
-
-  public static function isBindingExpression ($exp)
-  {
-    return is_string ($exp) ? strpos ($exp, '{') !== false : false;
-  }
 
   /*********************************************************************************************************************
    * THE MAIN PARSING LOOP
@@ -179,13 +174,13 @@ class Parser
         list(, list($key), list($value, $exists), list($marker, $next)) = $match;
         if ($key[0] == '{') {
           $value = $key;
-          $key = self::NAMELESS_PROP;
+          $key   = self::NAMELESS_PROP;
         }
         $key = normalizeAttributeName ($key);
         if ($exists < 0)
           $value = 'true';
-        if ($processBindings && strpos ($value, '{') !== false)
-          $bindings[$key] = $value;
+        if ($processBindings && Expression::isBindingExpression ($value))
+          $bindings[$key] = new Expression ($value);
         else $attributes[$key] = $value;
         $sPos = $next;
       }
@@ -259,8 +254,8 @@ class Parser
       $this->currentScalarProperty = null;
       $this->currentScalarValue    = '';
 
-      if (self::isBindingExpression ($v))
-        $this->current->bindings[$prop] = $v;
+      if (Expression::isBindingExpression ($v))
+        $this->current->bindings[$prop] = new Expression ($v);
       else $this->current->props->$prop = $v;
     }
     else {
@@ -427,7 +422,8 @@ does not support the specified parameter <b>$tag</b>.
 
   private function text_addComponent ($content, $trim = self::NO_TRIM)
   {
-    if ($this->current->context->condenseLiterals)
+    $context = $this->current->context;
+    if ($context->condenseLiterals)
       switch ($trim) {
         case self::TRIM_LEFT:
           $content = preg_replace (self::TRIM_LEFT_CONTENT, '', $content);
@@ -444,14 +440,11 @@ does not support the specified parameter <b>$tag</b>.
         $this->currentScalarValue .= $content; //Note: databinding will be taken care of later.
       }
       else {
-        $v = [
-          'value' => $content,
-        ];
         if ($content[0] == '{') {
-          $lit           = new Text ($this->current->context);
-          $lit->bindings = $v;
+          $lit           = new Text ($context);
+          $lit->bindings = ['value' => new Expression ($content)];
         }
-        else $lit = new Text ($this->current->context, $v);
+        else $lit = new Text ($context, ['value' => $content]);
         $this->current->addChild ($lit);
       }
     }

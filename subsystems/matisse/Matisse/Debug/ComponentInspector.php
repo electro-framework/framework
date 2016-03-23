@@ -5,6 +5,7 @@ use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Base\CompositeComponent;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Parser\Expression;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
 use SplObjectStorage;
@@ -95,8 +96,10 @@ class ComponentInspector
             echo "<tr><td style='color:$COLOR_PROP'>$k<td><i style='color:$COLOR_TYPE'>$tn</i><td>";
 
             // Display data-binding
-            $exp = self::inspectString (get ($component->bindings, $k, ''));
-            if ($exp != '') {
+            /** @var Expression $exp */
+            $exp = get ($component->bindings, $k);
+            if (isset($exp)) {
+              $exp = self::inspectString ((string)$exp);
               echo "<span style='color:$COLOR_BIND'>$exp</span> = ";
               try {
                 $l = ob_get_level ();
@@ -155,10 +158,12 @@ class ComponentInspector
             $tn = $component->props->getTypeNameOf ($k);
             echo "<tr><td style='color:$COLOR_PROP'>$k<td><i style='color:$COLOR_TYPE'>$tn</i><td>";
 
-            $exp = self::inspectString (get ($component->bindings, $k, ''));
-            if ($exp != '')
+            /** @var Expression $exp */
+            $exp = get ($component->bindings, $k);
+            if (isset($exp)) {
+              $exp = self::inspectString ((string)$exp);
               echo "<span style='color:$COLOR_BIND'>$exp</span> = ";
-
+            }
             switch ($t) {
               case type::content:
                 echo $v ? "<tr><td><td colspan=2>" . self::inspect ($v, $deep)

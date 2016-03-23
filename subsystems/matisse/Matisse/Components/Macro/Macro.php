@@ -6,7 +6,7 @@ use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Components\Literal;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Interfaces\MacroExtensionInterface;
-use Selenia\Matisse\Parser\Parser;
+use Selenia\Matisse\Parser\Expression;
 use Selenia\Matisse\Properties\Macro\MacroProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
@@ -54,7 +54,7 @@ class Macro extends Component
       return $extra !== '' ? substr_replace ($exp, $extra, -$p, 0) : $exp;
     }
     $value = $instance->props->$ref;
-    if (Parser::isBindingExpression ($value))
+    if (Expression::isBindingExpression ($value))
       return $value;
     if (is_null ($value) || $value === '')
       $value = $instance->props->getDefault ($ref);
@@ -72,7 +72,7 @@ class Macro extends Component
 
         $value = self::evalScalarExp ($bindExp, $instance);
         // Check if the evaluated result is itself a binding expression.
-        $transfer_binding = Parser::isBindingExpression ($value);
+        $transfer_binding = Expression::isBindingExpression ($value);
         // If it is, update the binding on the component.
         if ($transfer_binding) {
 //          if ($force) {
@@ -271,7 +271,7 @@ class Macro extends Component
           self::evalScalarExp ($exp, $instance)); //replace current binding
       }
       else {
-        if (self::isCompositeBinding ($exp)) {
+        if (Expression::isCompositeBinding ($exp)) {
           // Composite exp. (constant text + binding ref)
           $value = self::evalScalarExp ($exp, $instance, $transfer_binding);
           if ($transfer_binding)
@@ -315,7 +315,7 @@ class Macro extends Component
 
           $value = $content instanceof Metadata ? $content->getValue () : $content;
 
-          if (Parser::isBindingExpression ($value)) {
+          if (Expression::isBindingExpression ($value)) {
 
             // Assign new binding expression to target component.
 

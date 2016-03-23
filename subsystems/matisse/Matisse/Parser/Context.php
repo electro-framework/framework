@@ -6,8 +6,8 @@ use Selenia\Matisse\Lib\AssetsContext;
 use Selenia\Matisse\Traits\Context\AssetsAPITrait;
 use Selenia\Matisse\Traits\Context\BlocksAPITrait;
 use Selenia\Matisse\Traits\Context\ComponentsAPITrait;
-use Selenia\Matisse\Traits\Context\MacrosAPITrait;
 use Selenia\Matisse\Traits\Context\FiltersAPITrait;
+use Selenia\Matisse\Traits\Context\MacrosAPITrait;
 use Selenia\Matisse\Traits\Context\ViewsAPITrait;
 
 /**
@@ -27,12 +27,6 @@ class Context
 
   const FORM_ID = 'selenia-form';
 
-  /**
-   * A map of databinding expressions to compiled functions.
-   *
-   * @var array [string => Closure]
-   */
-  static $compiledExpressions = [];
   /**
    * Remove white space around raw markup blocks.
    *

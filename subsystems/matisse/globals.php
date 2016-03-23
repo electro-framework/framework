@@ -13,6 +13,11 @@ class RawText
 
   function __construct ($s)
   {
+    if (is_null ($s))
+      $this->s = '';
+    elseif (!is_string ($this->s))
+      throw new MatisseException ("A <kbd>RawText</kbd> instance must hold a string value, not a " .
+                                  typeInfoOf ($this->s));
     $this->s = $s;
   }
 
@@ -24,10 +29,7 @@ class RawText
    */
   function toString ()
   {
-    if (is_string ($this->s))
-      return $this->s;
-    throw new MatisseException ("A <kbd>RawText</kbd> instance must hold a string value, not a " .
-                                typeInfoOf ($this->s));
+    return $this->s;
   }
 }
 

@@ -3,6 +3,7 @@ namespace Selenia\Matisse\Components\Internal;
 
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Parser\Expression;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
@@ -31,9 +32,10 @@ final class Text extends Component
     return new Text($context, ['value' => $text]);
   }
 
-  protected function evalBindingExpression ($exp)
+  protected function evalBinding (Expression $exp)
   {
-    return _e (parent::evalBindingExpression ($exp));
+    inspect ("EVAL $exp");
+    return _e (parent::evalBinding ($exp));
   }
 
   protected function render ()
