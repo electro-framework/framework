@@ -58,6 +58,22 @@ trait DataBindingTrait
   }
 
   /**
+   * Executes a filter with the given arguments.
+   *
+   * <p>This is used by compiled databinding expressions.
+   *
+   * @param string $name    Filter name.
+   * @param array  ...$args Filter arguments. The first argument is always the filter's implicit argument.
+   * @return mixed
+   * @throws FilterHandlerNotFoundException if the filter is not found.
+   */
+  function filter ($name, ...$args)
+  {
+    $filter = $this->context->getFilter ($name);
+    return call_user_func_array ($filter, $args);
+  }
+
+  /**
    * Returns the current value of an attribute, performing databinding if necessary.
    *
    * <p>This is only required on situation where you need a property's value before databinging has occured.
@@ -86,6 +102,75 @@ trait DataBindingTrait
   }
 
   /**
+   * Checks if an array offset exists.
+   *
+   * @link  http://php.net/manual/en/arrayaccess.offsetexists.php
+   * @param mixed $offset
+   * @return bool
+   */
+  function offsetExists (/** @noinspection PhpUnusedParameterInspection */
+    $offset)
+  {
+    return false;
+  }
+
+  /**
+   * Gets a field from the current databinding context.
+   *
+   * > <p>**Note:** this is meant for internal use by compiled databinding expressions.
+   *
+   * @param string $field
+   * @return mixed
+   * @throws DataBindingException
+   */
+  function offsetGet ($field)
+  {
+    $data = $this->viewModel;
+    if (isset($data)) {
+      $v = _g ($data, $field, $this);
+      if ($v !== $this)
+        return $v;
+    }
+
+    /** @var static $parent */
+    $parent = $this->parent;
+    if (isset($parent))
+      return $parent[$field];
+
+    $data = $this->context->viewModel;
+    if (isset($data)) {
+      $v = _g ($data, $field, $this);
+      if ($v !== $this)
+        return $v;
+    }
+
+    return null;
+  }
+
+  /**
+   * Array offset to set
+   *
+   * @link  http://php.net/manual/en/arrayaccess.offsetset.php
+   * @param mixed $offset
+   * @param mixed $value
+   */
+  function offsetSet ($offset, $value)
+  {
+    //no-op
+  }
+
+  /**
+   * Array offset to unset
+   *
+   * @link  http://php.net/manual/en/arrayaccess.offsetunset.php
+   * @param mixed $offset
+   */
+  function offsetUnset ($offset)
+  {
+    //no-op
+  }
+
+  /**
    * Removes the binding from a given property, if one exists.
    *
    * @param string $prop A property name.
@@ -108,64 +193,14 @@ trait DataBindingTrait
   function renderBlock ($name)
   {
     $block = $this->context->getBlock ($name);
+    /** @var Component $this */
     return $this->attachSetAndGetContent ($block);
   }
 
   /**
-   * Gets a field from the current data-binding context.
-   * > This is reserved for internal use by compiled data-binding expressions.
-   *
-   * @param string $field
-   * @return mixed
-   * @throws DataBindingException
-   */
-  protected function _f ($field)
-  {
-    $data = $this->viewModel;
-    if (isset($data)) {
-      $v = _g ($data, $field, $this);
-      if ($v !== $this)
-        return $v;
-    }
-
-    /** @var static $parent */
-    $parent = $this->parent;
-    if (isset($parent))
-      return $parent->_f ($field);
-
-    $data = $this->context->viewModel;
-    if (isset($data)) {
-      $v = _g ($data, $field, $this);
-      if ($v !== $this)
-        return $v;
-    }
-
-    return null;
-  }
-
-  /**
-   * Executes a filter with the given arguments.
-   *
-   * <p>This is used by compiled databinding expressions.
-   *
-   * @param string $name    Filter name.
-   * @param array  ...$args Filter arguments. The first argument is always the filter implicit argument.
-   * @return mixed
-   * @throws ComponentException
-   */
-  protected function filter ($name, ...$args)
-  {
-    $filter = $this->context->getFilter ($name);
-    try {
-      return call_user_func_array ($filter, $args);
-    }
-    catch (FilterHandlerNotFoundException $e) {
-      throw new ComponentException ($this, "Filter function <kbd>$name</kbd> was not found.");
-    }
-  }
-
-  /**
    * Evaluates all of the component's bindings.
+   *
+   * @throws ComponentException
    */
   protected function databind ()
   {
@@ -181,7 +216,7 @@ trait DataBindingTrait
   /**
    * Evaluates the given binding expression on the component's context.
    *
-   * <p>This method allows a subclass to modify the evaluation result.
+   * <p>This method is an **extension hook** that allows a subclass to modify the evaluation result.
    * > <p>**Ex.** see the {@see Text} component.
    *
    * @param Expression $bindExp
@@ -191,8 +226,13 @@ trait DataBindingTrait
    */
   protected function evalBinding (Expression $bindExp)
   {
-    /** @var Component $this */
-    return $bindExp->evaluate ($this);
+    try {
+      /** @var Component $this */
+      return $bindExp->evaluate ($this);
+    }
+    catch (FilterHandlerNotFoundException $e) {
+      throw new ComponentException ($this, $e->getMessage ());
+    }
   }
 
   /**

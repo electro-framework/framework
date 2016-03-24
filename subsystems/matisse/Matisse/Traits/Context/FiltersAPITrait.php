@@ -2,6 +2,7 @@
 namespace Selenia\Matisse\Traits\Context;
 
 use Selenia\Matisse\Components;
+use Selenia\Matisse\Exceptions\FilterHandlerNotFoundException;
 
 /**
  * Manages Matisse rendering filters.
@@ -25,14 +26,16 @@ trait FiltersAPITrait
   /**
    * @param string $name
    * @return callable A function that implements the filter.
-   *                  <p>Note: the function may throw an {@see HandlerNotFoundException} if it can't handle
-   *                  the required filter.
+   * @throws FilterHandlerNotFoundException if the filter is not found or if no filter handler is set.
    */
   function getFilter ($name)
   {
     if (!isset($this->filterHandler))
-      throw new \RuntimeException ("Can't use filters if no filter handler is set.");
-    return [$this->filterHandler, $name];
+      throw new FilterHandlerNotFoundException ("Can't use filters if no filter handler is set.");
+    $handler = [$this->filterHandler, $name];
+    if (is_callable ($handler))
+      return $handler;
+    throw new FilterHandlerNotFoundException ("Filter <kbd>$name</kbd> was not found.");
   }
 
   /**

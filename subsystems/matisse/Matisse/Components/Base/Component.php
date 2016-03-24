@@ -5,6 +5,7 @@ use Selenia\Interfaces\CustomInspectionInterface;
 use Selenia\Interfaces\RenderableInterface;
 use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Interfaces\ExpressionContextInterface;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
 use Selenia\Matisse\Traits\Component\DataBindingTrait;
@@ -14,7 +15,7 @@ use Selenia\Matisse\Traits\Component\MarkupBuilderTrait;
 /**
  * The base class from which all components derive.
  */
-abstract class Component implements RenderableInterface, CustomInspectionInterface
+abstract class Component implements RenderableInterface, ExpressionContextInterface, CustomInspectionInterface
 {
   use MarkupBuilderTrait, DataBindingTrait, DOMNodeTrait;
 

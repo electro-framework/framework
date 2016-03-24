@@ -4,6 +4,7 @@ namespace Selenia\Matisse\Parser;
 use PhpCode;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\DataBindingException;
+use Selenia\Matisse\Interfaces\ExpressionContextInterface;
 
 /**
  * Represents a Matisse databinding expression.
@@ -25,7 +26,7 @@ use Selenia\Matisse\Exceptions\DataBindingException;
  * - The first element of a dot-delimited sequence is searched for in a stack of nested view models, starting on the
  *   current component.
  * - Consecutive segments are evaluated in a way that is resilient to errors; dereferencing null or accessing
- *   non-existing indexes or properties is valid and evaluates to an empty string.
+ *   non-existing indexes or properties is valid and evaluates to null, which displays as an empty string.
  * - The plus (`+`) operator concatenates strings. This means you cannot use it to perform numerical calculations.
  *   If you need them, pre-compute the values on the controller (that's the right place to do it).
  * - `'#block'` evaluates to the rendering of the specified block; it cannot be followed by a dot.
@@ -180,7 +181,7 @@ class Expression
         // If not a constant value, convert it to a property access expression fragment.
         $exp = $seg[0] == '"' || $seg[0] == "'" || ctype_digit ($seg)
           ? $seg
-          : "\$this->_f('$seg')";
+          : "\$this['$seg']";
       }
     }
     $exp = "$not$exp";
@@ -284,10 +285,10 @@ class Expression
    *
    * <p>This automatically compiles and caches the expression, if it's not already so.
    *
-   * @param Component $component
+   * @param ExpressionContextInterface $context
    * @return mixed
    */
-  function evaluate (Component $component)
+  function evaluate (ExpressionContextInterface $context)
   {
     if (!($fn = $this->compiled)) {
       $fn = get (self::$cache, $this->expression);
@@ -299,7 +300,7 @@ class Expression
         Expression::$cache[$this->expression] = $fn;
       }
     }
-    $fn = \Closure::bind ($fn, $component, $component);
+    $fn = \Closure::bind ($fn, $context, $context);
     return $fn ();
   }
 
