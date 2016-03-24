@@ -34,7 +34,6 @@ final class Text extends Component
 
   protected function evalBinding (Expression $exp)
   {
-    inspect ("EVAL $exp");
     return _e (parent::evalBinding ($exp));
   }
 

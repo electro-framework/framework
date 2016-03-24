@@ -2,7 +2,6 @@
 namespace Selenia\Matisse\Parser;
 
 use PhpCode;
-use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Interfaces\ExpressionContextInterface;
 
@@ -101,11 +100,11 @@ class Expression
     \}              # closes with }
   /xu';
   /**
-   * @var \Closure|null A function that receives a context argument and returns the evaluated value.
+   * @var \Closure|null A function that receives a context argument and returns the evaluated value. Read-only.
    */
   public $compiled = null;
   /**
-   * @var string|null The original expression translated to PHP code.
+   * @var string|null The original expression translated to PHP code. Read-only.
    */
   public $translated = null;
   /**
@@ -191,14 +190,13 @@ class Expression
   }
 
   /**
-   * Compiles a databinding expression.
+   * Translates a databinding expression to PHP source code.
    *
    * @param string $expression
-   * @return \Closure
+   * @return string
    */
-  static private function compile ($expression)
+  static private function translate ($expression)
   {
-    inspect ("Compile $expression");
     list ($main, $op) = self::translateSimpleExpression ($expression);
 
     $exp = $main;
@@ -209,8 +207,7 @@ class Expression
           $exp = self::translateFilter ($filter, $exp);
     }
 
-    inspect ($exp);
-    return PhpCode::compile ($exp);
+    return $exp;
   }
 
   /**
@@ -295,7 +292,10 @@ class Expression
       if ($fn)
         $this->compiled = $fn;
       else {
-        $fn = $this->compiled = self::compile ($this->expression);
+        // translate to PHP.
+        $this->translated = self::translate ($this->expression);
+        // Compile to native code.
+        $fn = $this->compiled = PhpCode::compile ($this->translated);
         // Cache the compiled expression.
         Expression::$cache[$this->expression] = $fn;
       }
