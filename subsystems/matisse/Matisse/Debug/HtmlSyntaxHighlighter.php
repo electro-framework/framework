@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Debug;
 
-class HtmlColorizer
+class HtmlSyntaxHighlighter
 {
   const EXPECT_ATTR                = 'ATT';
   const EXPECT_OPEN_TAG            = 'OPE';
@@ -37,7 +37,7 @@ REGEX
   (?P<t>
     /?              # optional /
     (?:             # either
-      !-- .*? -->   # HTML comment
+      ! .*? >       # HTML comment or PI
       |             # or
       [\w\-\:]+     # tag name, with optional prefix
     )
@@ -83,17 +83,43 @@ REGEX
     ,
   ];
 
-  static function colorize ($s)
+  const STYLES = <<<'CSS'
+.html-syntax u {
+  text-decoration: none;
+}
+.html-syntax u[tag] {
+  color: #991590;
+}
+.html-syntax u[attr] {
+  color: #AC7B53;
+}
+.html-syntax u[val] {
+  color: #1A1A99;
+}
+.html-syntax u[com] {
+  color: #29802A;
+}
+CSS;
+
+  static $stylesWereOutput = false;
+
+  static function highlight ($s)
   {
+    if (!self::$stylesWereOutput) {
+      self::$stylesWereOutput = true;
+      // output stylesheet inline.
+      $o = '<style>' . self::STYLES . '</style>';
+    }
+    else $o = '';
+
     $state = self::EXPECT_TEXT;
 
     // Check if the input starts midway a tag.
     if (preg_match (self::IS_STARTING_INSIDE_TAG, $s, $m)) {
       // Output markup up to the tag end as normal text, as we can't parse it correctly.
-      $o = htmlentities ($m[0], ENT_QUOTES, 'UTF-8', false);
+      $o .= htmlentities ($m[0], ENT_QUOTES, 'UTF-8', false);
       $s = substr ($s, strlen ($m[0]));
     }
-    else $o = '';
 
     while (preg_match (self::MATCH[$state], $s, $m)) {
 
@@ -110,7 +136,7 @@ REGEX
             $state = self::EXPECT_TEXT;
           }
           else {
-            $o .= "<span style=\"color:#AC7B53\">$e</span>";
+            $o .= "<u attr>$e</u>";
             $state = self::EXPECT_VALUE_OR_ATTR;
           }
           break;
@@ -122,11 +148,11 @@ REGEX
 
         case self::EXPECT_TAG_NAME_OR_COMMENT:
           if ($v[0] == '!') {
-            $o .= "<span style=\"color:#29802A\">$e</span>";
+            $o .= "<u com>$e</u>";
             $state = self::EXPECT_TEXT;
           }
           else {
-            $o .= "<span style=\"color:#991590\">$e</span>";
+            $o .= "<u tag>$e</u>";
             $state = self::EXPECT_ATTR;
           }
           break;
@@ -138,7 +164,7 @@ REGEX
 
         case self::EXPECT_VALUE_OR_ATTR:
           if ($v[0] == '=') {
-            $o .= '=<span style="color:#1A1A99">' . substr ($e, 1) . '</span>';
+            $o .= '=<u val>' . substr ($e, 1) . '</u>';
             $state = self::EXPECT_ATTR;
           }
           elseif ($v[0] == '/' || $v == '>') {
@@ -146,7 +172,7 @@ REGEX
             $state = self::EXPECT_TEXT;
           }
           else {
-            $o .= "<span style=\"color:#AC7B53\">$e</span>";
+            $o .= "<u prop>$e</u>";
             $state = self::EXPECT_VALUE_OR_ATTR;
           }
           break;
@@ -156,7 +182,7 @@ REGEX
     // output remaining unparsed (syntactically invalid) markup
     if ($s !== '')
       $o .= htmlentities ($s, ENT_QUOTES, 'UTF-8', false);
-    return $o;
+    return "<span class=html-syntax>$o</span>";
   }
 
 }

@@ -82,21 +82,30 @@ class ComponentInspector
 
     if ($component instanceof Text) {
       echo "<span style='color:$COLOR_TAG'>&gt;</span><div style='margin:0 0 0 15px'>";
-      if ($component->isBound('value')) {
-        /** @var Expression $exp */
-        $exp = $component->bindings['value'];
-        $exp = self::inspectString ((string)$exp);
-        echo "<span style='color:$COLOR_BIND'>$exp</span> = ";
+      try {
+        if ($component->isBound ('value')) {
+          /** @var Expression $exp */
+          $exp = $component->bindings['value'];
+          $exp = self::inspectString ((string)$exp);
+          echo "<span style='color:$COLOR_BIND'>$exp</span> = ";
 
-        $v = self::displayBindingValue ('value', $component, $error);
-        if ($error) {
-          echo $v;
-          return;
+          $v = self::getBindingValue ('value', $component, $error);
+          if ($error) {
+            echo $v;
+            return;
+          }
+          if (!is_string ($v)) {
+            echo typeInfoOf ($v);
+            return;
+          }
         }
+        else $v = $component->props->value;
+        $v = strlen (trim ($v)) ? HtmlSyntaxHighlighter::highlight ($v) : "<i>'$v'</i>";
+        echo $v;
       }
-      else $v = $component->props->value;
-      $v = HtmlColorizer::colorize($v);
-      echo "$v</div><span style='color:$COLOR_TAG'>&lt;/$tag&gt;<br></span>";
+      finally {
+        echo "</div><span style='color:$COLOR_TAG'>&lt;/$tag&gt;<br></span>";
+      }
       return;
     }
 
@@ -127,7 +136,7 @@ class ComponentInspector
               $exp = self::inspectString ((string)$exp);
               echo "<span style='color:$COLOR_BIND'>$exp</span> = ";
 
-              echo self::displayBindingValue ($k, $component, $error);
+              $v = self::getBindingValue ($k, $component, $error);
               if ($error)
                 break;
             }
@@ -212,7 +221,7 @@ class ComponentInspector
         $content    = [$skin];
       }
       if ($hasContent) {
-        echo "<span style='color:$COLOR_TAG'>&gt;</span><div style=\"margin:0 0 0 30px\">";
+        echo "<span style='color:$COLOR_TAG'>&gt;</span><div style=\"margin:0 0 0 15px\">";
         /** @noinspection PhpUndefinedVariableInspection */
         foreach ($content as $c)
           self::_inspect ($c, true);
@@ -222,21 +231,19 @@ class ComponentInspector
     echo "<span style='color:$COLOR_TAG'>" . ($hasContent ? "&lt;/$tag&gt;<br>" : "/&gt;<br>") . "</span>";
   }
 
-  private static function displayBindingValue ($prop, Component $component, &$error) {
-    $error = false;
+  private static function getBindingValue ($prop, Component $component, &$error)
+  {
+    $error = $l = false;
     try {
       $l = ob_get_level ();
       $v = $component->getComputedPropValue ($prop);
     }
     catch (\Exception $e) {
       $error = true;
-      /** @noinspection PhpUndefinedVariableInspection */
       while (ob_get_level () > $l)
         ob_end_clean ();
       return "<b style='color:red'>ERROR</b>";
     }
-    if ($v && $v instanceof Component)
-      return typeInfoOf ($v);
     return $v;
   }
 
