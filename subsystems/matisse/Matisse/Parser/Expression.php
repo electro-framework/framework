@@ -274,7 +274,7 @@ class Expression
    */
   function __toString ()
   {
-    return $this->expression;
+    return "{{$this->expression}}";
   }
 
   /**

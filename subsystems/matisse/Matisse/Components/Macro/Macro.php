@@ -261,8 +261,10 @@ class Macro extends Component
     $this->context->addMacro ($this);
   }
 
-  private function applyBinding (Component $component, $field, $exp, MacroCall $instance, array & $components, & $i)
+  private function applyBinding (Component $component, $field, Expression $expression, MacroCall $instance,
+                                 array & $components, & $i)
   {
+    $exp = (string)$expression;
     if (preg_match (self::PARSE_MACRO_BINDING_EXP, $exp, $match)) {
       //evaluate macro binding expression
       if (preg_match (self::FIND_NON_MACRO_EXP, $exp)) {
