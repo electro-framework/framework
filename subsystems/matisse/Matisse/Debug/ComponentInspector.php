@@ -4,6 +4,7 @@ namespace Selenia\Matisse\Debug;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Base\CompositeComponent;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
+use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Parser\Expression;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
@@ -77,7 +78,16 @@ class ComponentInspector
     if (!isset($component->parent) && !$component instanceof DocumentFragment)
       echo "&nbsp;<span style='color:$COLOR_INFO'>(detached)</span>";
 
-    if ($component->supportsProperties) {
+    if ($component instanceof Text) {
+      echo "<span style='color:$COLOR_TAG'>&gt;</span><div style='margin:0 0 0 15px'>";
+      $v = $component->props->value;
+      $v = HtmlColorizer::colorize($v);
+      echo "$v</div>
+<span style='color:$COLOR_TAG'>&lt;/$tag&gt;<br></span>";
+      return;
+    }
+
+    elseif ($component->supportsProperties) {
       echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";
       /** @var ComponentProperties $propsObj */
       $propsObj = $component->props;
