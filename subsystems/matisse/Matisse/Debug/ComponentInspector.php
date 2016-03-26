@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Matisse\Debug;
 
+use PhpKit\Html5Tools\HtmlSyntaxHighlighter;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Base\CompositeComponent;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
