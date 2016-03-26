@@ -78,14 +78,29 @@ class ComponentInspector
     if (!isset($component->parent) && !$component instanceof DocumentFragment)
       echo "&nbsp;<span style='color:$COLOR_INFO'>(detached)</span>";
 
+    // Handle text node
+
     if ($component instanceof Text) {
       echo "<span style='color:$COLOR_TAG'>&gt;</span><div style='margin:0 0 0 15px'>";
-      $v = $component->props->value;
+      if ($component->isBound('value')) {
+        /** @var Expression $exp */
+        $exp = $component->bindings['value'];
+        $exp = self::inspectString ((string)$exp);
+        echo "<span style='color:$COLOR_BIND'>$exp</span> = ";
+
+        $v = self::displayBindingValue ('value', $component, $error);
+        if ($error) {
+          echo $v;
+          return;
+        }
+      }
+      else $v = $component->props->value;
       $v = HtmlColorizer::colorize($v);
-      echo "$v</div>
-<span style='color:$COLOR_TAG'>&lt;/$tag&gt;<br></span>";
+      echo "$v</div><span style='color:$COLOR_TAG'>&lt;/$tag&gt;<br></span>";
       return;
     }
+
+    // Handle other node types
 
     elseif ($component->supportsProperties) {
       echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";
@@ -106,26 +121,15 @@ class ComponentInspector
             echo "<tr><td style='color:$COLOR_PROP'>$k<td><i style='color:$COLOR_TYPE'>$tn</i><td>";
 
             // Display data-binding
-            /** @var Expression $exp */
-            $exp = get ($component->bindings, $k);
-            if (isset($exp)) {
+            if (isset($component->bindings[$k])) {
+              /** @var Expression $exp */
+              $exp = get ($component->bindings, $k);
               $exp = self::inspectString ((string)$exp);
               echo "<span style='color:$COLOR_BIND'>$exp</span> = ";
-              try {
-                $l = ob_get_level ();
-                $v = $component->getComputedPropValue ($k);
-              }
-              catch (\Exception $e) {
-                /** @noinspection PhpUndefinedVariableInspection */
-                while (ob_get_level () > $l)
-                  ob_end_clean ();
-                echo "<b style='color:red'>ERROR</b>";
+
+              echo self::displayBindingValue ($k, $component, $error);
+              if ($error)
                 break;
-              }
-              if ($v && $v instanceof Component) {
-                echo typeInfoOf ($v);
-                break;
-              }
             }
 
             if (is_null ($v))
@@ -216,6 +220,24 @@ class ComponentInspector
       }
     }
     echo "<span style='color:$COLOR_TAG'>" . ($hasContent ? "&lt;/$tag&gt;<br>" : "/&gt;<br>") . "</span>";
+  }
+
+  private static function displayBindingValue ($prop, Component $component, &$error) {
+    $error = false;
+    try {
+      $l = ob_get_level ();
+      $v = $component->getComputedPropValue ($prop);
+    }
+    catch (\Exception $e) {
+      $error = true;
+      /** @noinspection PhpUndefinedVariableInspection */
+      while (ob_get_level () > $l)
+        ob_end_clean ();
+      return "<b style='color:red'>ERROR</b>";
+    }
+    if ($v && $v instanceof Component)
+      return typeInfoOf ($v);
+    return $v;
   }
 
   private static function inspectString ($s)
