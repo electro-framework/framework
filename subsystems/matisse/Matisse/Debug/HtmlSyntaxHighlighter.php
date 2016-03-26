@@ -128,6 +128,7 @@ CSS;
 
       $v = $m['t'];
       $e = htmlentities ($v, ENT_QUOTES, 'UTF-8', false);
+
       switch ($state) {
 
         case self::EXPECT_ATTR:
@@ -173,7 +174,7 @@ CSS;
           }
           else {
             $o .= "<u prop>$e</u>";
-            $state = self::EXPECT_VALUE_OR_ATTR;
+            // Keep the same state.
           }
           break;
       }
