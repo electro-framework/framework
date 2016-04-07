@@ -11,23 +11,27 @@ class Parser
 {
   const NAMELESS_PROP        = 'nameless';
   const NO_TRIM              = 0;
-  const PARSE_ATTRS          = '#
-   ([^\s=]+)
+  const PARSE_ATTRS          = '%
+   (                            # capture attribute name
+    (?= \{)                     # skip attribute name if it is a nameless attribute expression (capture an empty name)
+    |                           # or
+    [^\s=]+                     # match anything up to a space or an =
+   )
    \s*
-   (?:
-     = \s*
-     (?|
-       "([^"]*)"
+   (?:                          # match optional value
+     (?: = \s* | (?= \{))       # either match an = or continue if it is a nameless attribute expression
+     (?|                        # capture on of:
+       "([^"]*)"                # a double quoted value
        |
-       \'([^\']*)\'
+       \'([^\']*)\'             # a single quoted value
        |
-       (\{ \s* [^\}\s]+ \s* \})
+       (\{ \s* [^\}]+? \s* \})  # a quoteless data-binding expression
        |
-       ([^>\s]+)
+       ([^>\s]+)                # a quoteless constant (up to the next white space)
      )
    )?
    (\s | @)
-   #sxu';
+   %sxu';
   const PARSE_DATABINDINGS   = '#
    \{
    ( .*? )
@@ -172,7 +176,7 @@ class Parser
       $sPos = 0;
       while (preg_match (self::PARSE_ATTRS, "$attrStr@", $match, PREG_OFFSET_CAPTURE, $sPos)) {
         list(, list($key), list($value, $exists), list($marker, $next)) = $match;
-        if ($key[0] == '{') {
+        if ($key === '') {
           $value = $key;
           $key   = self::NAMELESS_PROP;
         }
