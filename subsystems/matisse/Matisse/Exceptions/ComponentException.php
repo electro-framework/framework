@@ -13,7 +13,7 @@ class ComponentException extends MatisseException
     else {
       $i     = $this->inspect ($component, $deep);
       $props = isset($component->props) ? $component->props->getBeingAssigned () : [];
-      $o     = $props ? Debug::properties($props) : '';
+      $o     = $props ? Debug::properties($props).'&nbsp;' : '';
       $id    = $component->supportsProperties && isset($component->props->id) ? $component->props->id : null;
       $class = typeInfoOf ($component);
       // Append a period, if applicable.
@@ -22,7 +22,7 @@ class ComponentException extends MatisseException
       parent::__construct (
         !$component->props || !$component->props->getAll ()
           ? "On a $class instance.<br><br><blockquote>$msg</blockquote>$o"
-          : "<blockquote>$msg</blockquote>$o&nbsp;<p>Component: $class<p>Current attributes values:</p>$i"
+          : "<div>$msg</div>$o<p>Component: $class<p>Current attributes values:</p>$i"
         ,
         $id
           ?

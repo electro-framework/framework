@@ -302,14 +302,13 @@ class Macro extends Component
           else $content = $instance->props->$prop;
 
           if (isset($instance->bindings) && array_key_exists ($prop, $instance->bindings)) {
-
             // Transfer binding from the macro instance to the component.
 
             $newBinding = $instance->bindings[$prop];
             // Transfer remaining original expression, if any.
             $filter = get ($match, 2);
             if (isset($filter))
-              $newBinding = rtrim (substr ($newBinding, 0, -2)) . $filter . substr ($newBinding, -2);
+              $newBinding = new Expression (rtrim (substr ($newBinding, 0, -1)) . $filter . substr ($newBinding, -1));
 
             $component->addBinding ($field, $newBinding);
             return;

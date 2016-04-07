@@ -1,6 +1,8 @@
 <?php
 namespace Selenia\Matisse\Traits\Component;
 
+use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
+use PhpKit\WebConsole\Lib\Debug;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\DataBindingException;
@@ -47,10 +49,10 @@ trait DataBindingTrait
   /**
    * Registers a data binding.
    *
-   * @param string $prop    The name of the bound attribute.
-   * @param string $bindExp The binding expression.
+   * @param string     $prop    The name of the bound property.
+   * @param Expression $bindExp The binding expression.
    */
-  function addBinding ($prop, $bindExp)
+  function addBinding ($prop, Expression $bindExp)
   {
     if (!isset($this->bindings))
       $this->bindings = [];
@@ -231,7 +233,14 @@ trait DataBindingTrait
       return $bindExp->evaluate ($this);
     }
     catch (FilterHandlerNotFoundException $e) {
-      throw new ComponentException ($this, $e->getMessage ());
+      throw new ComponentException ($this,
+        Debug::grid ([
+          'Expression' => "<kbd>$bindExp</kbd>",
+          'Error'      => typeInfoOf ($e) . ' ' . $e->getMessage (),
+          'At'         => ErrorConsole::errorLink ($e->getFile (), $e->getLine ()) .
+                          ', line <b>' . $e->getLine () . '</b>',
+        ], 'Error while evaluating data-binding expression')
+      );
     }
   }
 
