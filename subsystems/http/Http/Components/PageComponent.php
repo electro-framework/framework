@@ -187,9 +187,9 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
         // Perform the requested action.
         $res = $this->doFormAction ();
         if ($res) {
-          if ($res instanceof ResponseInterface)
-            throw new FatalException (sprintf ("Invalid HTTP response type: %s<p>Expected: <kbd>ResponseInterface</kbd>",
-              typeInfoOf ($res)));
+          if (!$res instanceof ResponseInterface)
+            throw new FatalException (sprintf ("Invalid HTTP response type: %s<p>Expected: <kbd>%s</kbd>",
+              typeInfoOf ($res),formatClassName (ResponseInterface::class)));
           $response = $res;
         }
         if (!$this->renderOnAction) {
