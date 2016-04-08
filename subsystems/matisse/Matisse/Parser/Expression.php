@@ -190,6 +190,18 @@ class Expression
   }
 
   /**
+   * Throws a filter error.
+   *
+   * @param string $filter
+   * @param string $message
+   * @throws DataBindingException
+   */
+  static private function filterSyntaxError ($filter, $message)
+  {
+    throw new DataBindingException ("<h5>Filter Syntax Error</h5><p>$message<p>On filter: <kbd>$filter</kbd>");
+  }
+
+  /**
    * Translates a databinding expression to PHP source code.
    *
    * @param string $expression
@@ -223,22 +235,25 @@ class Expression
   {
     // Filter expressions syntax: filter arg1,...argN
 
+    if (preg_match ('/^\S+\s*?\(/', $filter))
+      self::filterSyntaxError ($filter, "Filter arguments must not be enclosed in <kbd>()</kbd>");
     list ($name, $argsStr) = str_extractSegment ($filter, '/\s+/');
+    inspect ($name, $argsStr);
     $args = [];
 
     while ($argsStr !== '') {
       list ($subExp, $op) = self::translateSimpleExpression ($argsStr);
       if ($op && $op != ',')
-        throw new DataBindingException ("Filter arguments must be simple expressions; operators are not allowed.
-<p>Expression: <kbd>$filter</kbd>, invalid operator: <kbd>$op</kbd>");
+        self::filterSyntaxError ($filter, "Filter arguments must be simple expressions; operators are not allowed.
+<p>Offending character: <kbd>$op</kbd>");
       $args[] = $subExp;
     }
 
     if ($name == '*') {
-      if ($args) throw new DataBindingException ("Raw output filter function <kbd>*</kbd> must have no arguments.");
+      if ($args) self::filterSyntaxError ($filter, "Raw output filter function <kbd>*</kbd> must have no arguments.");
       return "(new RawText($input))";
     }
-    return sprintf ('$this->filter(\'%s\',%s%s%s)', $name, $input, $args ? ',' : '', implode (',', $args));
+    return sprintf ('$this->filter(\'%s\',%s%s%s)', addslashes ($name), $input, $args ? ',' : '', implode (',', $args));
   }
 
   /**
