@@ -2,6 +2,7 @@
 namespace Selenia\Matisse\Parser;
 
 use PhpCode;
+use RuntimeException;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Interfaces\ExpressionContextInterface;
 
@@ -198,7 +199,7 @@ class Expression
    */
   static private function filterSyntaxError ($filter, $message)
   {
-    throw new DataBindingException ("<h5>Filter Syntax Error</h5><p>$message<p>On filter: <kbd>$filter</kbd>");
+    throw new DataBindingException ("<h5>Filter Syntax Error</h5><p>Expression: <kbd>$filter</kbd><p>$message");
   }
 
   /**
@@ -310,7 +311,12 @@ class Expression
         // translate to PHP.
         $this->translated = self::translate ($this->expression);
         // Compile to native code.
-        $fn = $this->compiled = PhpCode::compile ($this->translated);
+        try {
+          $fn = $this->compiled = PhpCode::compile ($this->translated);
+        }
+        catch (RuntimeException $e) {
+          self::filterSyntaxError ($this->expression, '<hr>'.$e->getMessage ());
+        }
         // Cache the compiled expression.
         Expression::$cache[$this->expression] = $fn;
       }

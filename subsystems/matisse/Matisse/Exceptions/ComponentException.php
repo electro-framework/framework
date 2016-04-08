@@ -1,7 +1,6 @@
 <?php
 namespace Selenia\Matisse\Exceptions;
 
-use PhpKit\WebConsole\Lib\Debug;
 use Selenia\Matisse\Components\Base\Component;
 
 class ComponentException extends MatisseException
@@ -13,17 +12,19 @@ class ComponentException extends MatisseException
     else {
       $i     = $this->inspect ($component, $deep);
       $props = isset($component->props) ? $component->props->getBeingAssigned () : [];
-      $o     = $props ? Debug::properties($props).'&nbsp;' : '';
+      $o     = $props ? self::properties ($props) : '';
       $id    = $component->supportsProperties && isset($component->props->id) ? $component->props->id : null;
       $class = typeInfoOf ($component);
       // Append a period, if applicable.
       if (ctype_alnum (substr ($msg, -1)))
         $msg .= '.';
+      $o = (!$component->props || !$component->props->getAll ()
+          ? ''
+          : "<h6>Properties</h6>$i")
+           . $o;
+
       parent::__construct (
-        !$component->props || !$component->props->getAll ()
-          ? "On a $class instance.<br><br><blockquote>$msg</blockquote>$o"
-          : "<div>$msg</div>$o<p>Component: $class<p>Current attributes values:</p>$i"
-        ,
+        "<div>$msg</div><hr><h6>Component class</h6>$class$o</fieldset>",
         $id
           ?
           "Error on $class component <b>$id</b>"
@@ -31,6 +32,23 @@ class ComponentException extends MatisseException
           "Error on a $class component"
       );
     }
+  }
+
+  /**
+   * Returns a formatted properties table.
+   *
+   * @param array $props
+   * @return string
+   */
+  static private function properties (array $props)
+  {
+    return "<h6>Assigned properties</h6>
+<table class=grid>
+" . str_replace ("'", "<i>'</i>", implode ('',
+      map ($props, function ($v, $k) {
+        return "<tr><th>$k<td>" . var_export ($v, true);
+      })), $o) . "
+</table>";
   }
 
 }

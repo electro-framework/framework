@@ -83,6 +83,8 @@ class Content extends Component
     }
 
     if (exists ($name = $prop->of)) {
+      if (!preg_match ('/^\w+$/', $name))
+        throw new ComponentException($this, "Invalid block name: <kbd>$name</kbd>");
       if ($prop->byDefault && $this->context->hasBlock ($name))
         return;
       $this->context->setBlock ($name, $content);
