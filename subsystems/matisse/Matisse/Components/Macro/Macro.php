@@ -3,7 +3,6 @@ namespace Selenia\Matisse\Components\Macro;
 
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Metadata;
-use Selenia\Matisse\Components\Literal;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Interfaces\MacroExtensionInterface;
 use Selenia\Matisse\Parser\Expression;
@@ -23,10 +22,26 @@ use Selenia\Matisse\Properties\TypeSystem\type;
  */
 class Macro extends Component
 {
-  /** Finds binding expressions which are not macro parameter bindings. */
-  const FIND_NON_MACRO_EXP = '#\{\s*(?=\S)[^@]#u';
+  /** Finds binding expressions which have macro parameter bindings. */
+  const FIND_MACRO_EXP = '%
+    \{
+    [^\n\r]         # if line break then it is not an expression
+    [^@\}]+         # not @ or }
+    @               # if it is @ then the expression has a macro param ref.
+    [^\}]+
+    \}              # make sure the expression is closed
+  %xu';
   /** Finds macro binding expressions. */
-  const PARSE_MACRO_BINDING_EXP = '#\{\s*@([\w\-]*)\s*([|.][^\}]*)?\s*\}#u';
+  const PARSE_SIMPLE_MACRO_BINDING_EXP = '%
+    \{
+    [^\n\r]         # if line break then it is not an expression
+    \s*
+    @               # must have a macro param ref.
+    ([\w\-]*)       # capture the macro param name
+    \s*
+    (\| [^\}]* )?   # capture filters (if any)
+    \}
+  %xu';
 
   protected static $propertiesClass = MacroProperties::class;
 
@@ -264,80 +279,76 @@ class Macro extends Component
   private function applyBinding (Component $component, $field, Expression $expression, MacroCall $instance,
                                  array & $components, & $i)
   {
+//        $component->addBinding ($field,
+//          self::evalScalarExp ($exp, $instance)); //replace current binding
     $exp = (string)$expression;
-    if (preg_match (self::PARSE_MACRO_BINDING_EXP, $exp, $match)) {
-      //evaluate macro binding expression
-      if (preg_match (self::FIND_NON_MACRO_EXP, $exp)) {
-        //mixed (data/macro) binding
-        $component->addBinding ($field,
-          self::evalScalarExp ($exp, $instance)); //replace current binding
-      }
-      else {
-        if (Expression::isCompositeBinding ($exp)) {
-          // Composite exp. (constant text + binding ref)
-          $value = self::evalScalarExp ($exp, $instance, $transfer_binding);
-          if ($transfer_binding)
-            $component->addBinding ($field, $value); //replace current binding
-          else {
-            //final value is not a binding exp.
-            $component->props->$field = $value;
-            $component->removeBinding ($field);
-          }
+    // Handle the expression only if it has macro parameter ref.
+    if (preg_match (self::FIND_MACRO_EXP, $exp)) {
+      // Check if it is an expression with a single parameter ref.
+      if (preg_match (self::PARSE_SIMPLE_MACRO_BINDING_EXP, $exp, $match)) {
+        // It is, so just apply the binding.
+
+        $prop    = normalizeAttributeName ($match[1]);
+
+        if (isset($instance->bindings) && array_key_exists ($prop, $instance->bindings)) {
+          // Transfer binding from the macro instance to the component.
+
+          $newBinding = $instance->bindings[$prop];
+          // Transfer remaining original expression, if any.
+          $filter = get ($match, 2);
+          if (isset($filter))
+            $newBinding = new Expression (rtrim (substr ($newBinding, 0, -1)) . $filter . substr ($newBinding, -1));
+
+          $component->addBinding ($field, $newBinding);
+          return;
+        }
+
+        $content = $this->getParamValue ($instance, $prop);
+        $value = $content instanceof Metadata ? $content->getValue () : $content;
+
+        if (Expression::isBindingExpression ($value)) {
+
+          // Assign new binding expression to target component.
+
+          $component->addBinding ($field, $value);
         }
         else {
-          // Simple exp. (binding ref. only}
-
-          $prop = normalizeAttributeName ($match[1]);
-          if (!$instance->props->defines ($prop)) {
-            $s = join (', ', $instance->props->getPropertyNames ());
-            throw new ComponentException($instance,
-              "<p>The macro parameter <b>$prop</b>, specified on a call to the <b>{$this->props->name}</b> macro, is not defined on that macro.</p>
-<table>
-  <th>Expected parameters:<td>$s
-  <tr><th>Instance:<td>{$instance->getTagName ()}
-</table>");
-          }
-          if (isset($this->bindings) && array_key_exists ($prop, $this->bindings))
-            $content = $this->bindings[$prop];
-          else $content = $instance->props->$prop;
-
-          if (isset($instance->bindings) && array_key_exists ($prop, $instance->bindings)) {
-            // Transfer binding from the macro instance to the component.
-
-            $newBinding = $instance->bindings[$prop];
-            // Transfer remaining original expression, if any.
-            $filter = get ($match, 2);
-            if (isset($filter))
-              $newBinding = new Expression (rtrim (substr ($newBinding, 0, -1)) . $filter . substr ($newBinding, -1));
-
-            $component->addBinding ($field, $newBinding);
-            return;
-          }
-
-          $value = $content instanceof Metadata ? $content->getValue () : $content;
-
-          if (Expression::isBindingExpression ($value)) {
-
-            // Assign new binding expression to target component.
-
-            $component->addBinding ($field, $value);
+          if (is_array ($value)) {
+            // Replace current component by the macro substitution's set of components.
+            array_splice ($components, $i, 1, $value);
+            --$i;
+            return true;
           }
           else {
-            if (is_array ($value)) {
-              // Replace current component by the macro substitution's set of components.
-              array_splice ($components, $i, 1, $value);
-              --$i;
-              return true;
-            }
-            else {
-              // Update the property value to the result of the macro param.
-              $component->props->set ($field, $value);
-              $component->removeBinding ($field);
-            }
+            // Update the property value to the result of the macro param.
+            $component->props->set ($field, $value);
+            $component->removeBinding ($field);
           }
         }
       }
     }
+  }
+
+  /**
+   * @param MacroCall $instance
+   * @param string    $prop
+   * @return Expression|mixed
+   * @throws ComponentException
+   */
+  private function getParamValue (MacroCall $instance, $prop)
+  {
+    if (!$instance->props->defines ($prop)) {
+      $s = join (', ', $instance->props->getPropertyNames ());
+      throw new ComponentException($instance,
+        "<p>The macro parameter <b>$prop</b>, specified on a call to the <b>{$this->props->name}</b> macro, is not defined on that macro.</p>
+<table>
+  <th>Expected parameters:<td>$s
+  <tr><th>Instance:<td>{$instance->getTagName ()}
+</table>");
+    }
+    if (isset($instance->bindings) && array_key_exists ($prop, $instance->bindings))
+      return $instance->bindings[$prop];
+    else return $instance->props->$prop;
   }
 
 }

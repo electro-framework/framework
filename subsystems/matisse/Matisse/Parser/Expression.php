@@ -239,7 +239,6 @@ class Expression
     if (preg_match ('/^\S+\s*?\(/', $filter))
       self::filterSyntaxError ($filter, "Filter arguments must not be enclosed in <kbd>()</kbd>");
     list ($name, $argsStr) = str_extractSegment ($filter, '/\s+/');
-    inspect ($name, $argsStr);
     $args = [];
 
     while ($argsStr !== '') {
@@ -312,7 +311,9 @@ class Expression
         $this->translated = self::translate ($this->expression);
         // Compile to native code.
         try {
+//          inspect ($this->expression);
           $fn = $this->compiled = PhpCode::compile ($this->translated);
+//          inspect ($this->translated);
         }
         catch (RuntimeException $e) {
           self::filterSyntaxError ($this->expression, '<hr>'.$e->getMessage ());
