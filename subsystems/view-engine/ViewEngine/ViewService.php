@@ -66,11 +66,6 @@ class ViewService implements ViewServiceInterface
     return loadFile ($this->resolveTemplatePath ($path));
   }
 
-  function newInstance ()
-  {
-    return $this->injector->make (get_class ());
-  }
-
   function register ($engineClass, $filePattern)
   {
     $this->patterns[$filePattern] = $engineClass;
