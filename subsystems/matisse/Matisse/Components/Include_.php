@@ -42,8 +42,8 @@ class IncludeProperties extends MetadataProperties
   /**
    * Defines an inline template for the view.
    *
-   * <p>This is usually used with a databinding expression with the `{!! expr !!}` syntax to insert a dynamic template
-   * from a viewModel property, or with the `{!! #block }}` syntax to insert a template from a content block.
+   * <p>This is usually used with a databinding expression with the `{expr|*}` syntax to insert a dynamic template
+   * from a viewModel property, or with the `{#block|*}` syntax to insert a template from a content block.
    *
    * @var string
    */

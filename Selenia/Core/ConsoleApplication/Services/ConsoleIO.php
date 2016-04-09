@@ -91,6 +91,13 @@ class ConsoleIO implements ConsoleIOInterface
     return $this;
   }
 
+  function cancel ()
+  {
+    if ($this->getInput ()->isInteractive ())
+      $this->error ('Canceled');
+    exit (1);
+  }
+
   /**
    * @return $this
    */
@@ -121,7 +128,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   function done ($text)
   {
-    $this->nl ()->say ("<info>$text</info>")->nl ();
+    $this->nl ()->say (strpos ($text, '<info') === false ? "<info>$text</info>" : $text)->nl ();
     if (!empty($this->warnings))
       $this->writeln (implode (PHP_EOL, $this->warnings))->nl ();
   }
@@ -191,7 +198,7 @@ class ConsoleIO implements ConsoleIOInterface
   function menu ($question, array $options, $defaultIndex = -1, array $secondColumn = null,
                  callable $validator = null)
   {
-    if (!$this->getInput()->isInteractive())
+    if (!$this->getInput ()->isInteractive ())
       return $defaultIndex;
     $pad   = strlen (count ($options));
     $width = empty ($options) ? 0 : max (array_map ('taggedStrLen', $options));
@@ -225,13 +232,6 @@ class ConsoleIO implements ConsoleIOInterface
 
     $this->nl ();
     return $i - 1;
-  }
-
-  function cancel ()
-  {
-    if ($this->getInput()->isInteractive())
-      $this->error('Canceled');
-    exit (1);
   }
 
   /**
