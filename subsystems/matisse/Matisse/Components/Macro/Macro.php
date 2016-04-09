@@ -72,7 +72,7 @@ class Macro extends Component
     if (Expression::isBindingExpression ($value))
       return $value;
     if (is_null ($value) || $value === '')
-      $value = $instance->props->getDefault ($ref);
+      $value = $instance->props->getDefaultValue ($ref);
 
     return $value;
   }

@@ -126,9 +126,11 @@ class ComponentInspector
       if ($props)
         foreach ($props as $k => $v) {
           $t = $component->props->getTypeOf ($k);
+          $isDefault = $component->props->getDefaultValue($k) === $v;
+          $modifStyle = $isDefault ? ' style="opacity:0.5"' : ' style="background:#FFE"';
           if ($t != type::content && $t != type::collection && $t != type::metadata) {
             $tn = $component->props->getTypeNameOf ($k);
-            echo "<tr><td style='color:$COLOR_PROP'>$k<td><i style='color:$COLOR_TYPE'>$tn</i><td>";
+            echo "<tr$modifStyle><td style='color:$COLOR_PROP'>$k<td><i style='color:$COLOR_TYPE'>$tn</i><td>";
 
             // Display data-binding
             if (isset($component->bindings[$k])) {

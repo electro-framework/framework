@@ -56,6 +56,16 @@ class MetadataProperties extends AbstractProperties implements JsonSerializable
     return array_merge (object_publicProps ($this), $this->props);
   }
 
+  function getDefaultValue ($propName)
+  {
+    if (property_exists ($this, $propName)) {
+      $c     = new \ReflectionClass($this);
+      $props = $c->getDefaultProperties ();
+      return isset($props[$propName]) ? $props[$propName] : null;
+    }
+    return null;
+  }
+
   /**
    * Gets a map of the dynamic (non-predefined) properties of the component.
    * <p>Properties declared on the class are excluded.

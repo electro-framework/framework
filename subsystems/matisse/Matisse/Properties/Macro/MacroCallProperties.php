@@ -39,7 +39,7 @@ class MacroCallProperties extends MetadataProperties
       return $this->props [$name];
 
     // The parameter was not set, so return the declared default value (if any).
-    return $this->getDefault ($name);
+    return $this->getDefaultValue ($name);
   }
 
   function defines ($name, $asSubtag = false)
@@ -80,7 +80,7 @@ class MacroCallProperties extends MetadataProperties
     return !is_null ($this->macroInstance->getParameterEnum ($propName));
   }
 
-  function getDefault ($name)
+  function getDefaultValue ($name)
   {
     if (!$this->macroInstance)
       $this->noMacro ();

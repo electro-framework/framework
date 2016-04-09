@@ -41,6 +41,13 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
 
   /**
    * @param string $propName Property name.
+   * @return mixed
+   * @throws \Selenia\Matisse\Exceptions\ReflectionPropertyException
+   */
+  abstract function getDefaultValue ($propName);
+
+  /**
+   * @param string $propName Property name.
    * @return array Always returns an array, even if no enumeration is defined for the target property.
    * @throws \Selenia\Matisse\Exceptions\ReflectionPropertyException
    */

@@ -45,6 +45,11 @@ class ComponentProperties extends AbstractProperties
     return $r;
   }
 
+  function getDefaultValue ($propName)
+  {
+    return $this->metadata->getProperty ($propName)->default;
+  }
+
   function getEnumOf ($propName)
   {
     return $this->metadata->getProperty ($propName)->enum ?: [];
