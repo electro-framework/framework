@@ -58,4 +58,11 @@ class Metadata extends Component
     return $this->value;
   }
 
+  protected function render ()
+  {
+    if ($this->type == type::content)
+      $this->renderChildren ();
+  }
+
+
 }

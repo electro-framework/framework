@@ -19,6 +19,8 @@ abstract class Component implements RenderableInterface, ExpressionContextInterf
 {
   use MarkupBuilderTrait, DataBindingTrait, DOMNodeTrait;
 
+  const ERR_NO_CONTEXT = "<h4>Rendering context not set</h4>The component was not initialized correctly.";
+
   /**
    * @var string
    */
@@ -340,6 +342,8 @@ abstract class Component implements RenderableInterface, ExpressionContextInterf
    */
   function renderContent ()
   {
+    if (!$this->context)
+      throw new ComponentException($this, self::ERR_NO_CONTEXT);
     if ($this->isVisible ()) {
       $this->databind ();
       $this->preRender ();
@@ -349,13 +353,15 @@ abstract class Component implements RenderableInterface, ExpressionContextInterf
   }
 
   /**
-   * Executes the component and any relevant children.
+   * Renders the component and any relevant children.
    *
    * Do not override! Use event handlers or override render() or renderChildren().
    * This method is called from run() or from renderChildren().
    */
   function run ()
   {
+    if (!$this->context)
+      throw new ComponentException($this, self::ERR_NO_CONTEXT);
     ++$this->renderCount;
     if ($this->isVisible ()) {
       $this->setupViewModel ();

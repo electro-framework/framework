@@ -18,6 +18,14 @@ class ComponentInspector
   /** @var SplObjectStorage */
   private static $recursionMap;
 
+  /**
+   * Returns a textual representation of the component, suitable for debugging purposes.
+   *
+   * @param Component $component
+   * @param bool      $deep
+   * @return string
+   * @throws ComponentException
+   */
   static function inspect (Component $component, $deep = false)
   {
     if (self::$inspecting)
@@ -31,6 +39,8 @@ class ComponentInspector
   }
 
   /**
+   * Inspects the given set of components.
+   *
    * @param Component[] $components
    * @param bool        $deep
    * @param bool        $nested True if no `<code>` block should be output.
@@ -50,13 +60,13 @@ class ComponentInspector
   }
 
   /**
-   * Returns a textual representation of the component, suitable for debugging purposes.
+   * For internal use.
    *
    * @param Component $component
    * @param bool      $deep
    * @throws ComponentException
    */
-  private static function _inspect (Component $component, $deep = true)
+  static private function _inspect (Component $component, $deep = true)
   {
     if (self::$recursionMap->contains ($component)) {
       echo "<i>recursion</i>";
@@ -113,7 +123,6 @@ class ComponentInspector
     // Handle other node types
 
     elseif ($component->supportsProperties) {
-      echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";
       /** @var ComponentProperties $propsObj */
       $propsObj = $component->props;
       if ($propsObj) $props = $propsObj->getAll ();
@@ -121,12 +130,15 @@ class ComponentInspector
       if ($props)
         ksort ($props);
 
-      // Display all scalar properties.
 
-      if ($props)
+      if ($props) {
+        echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";
+
+        // Display all scalar properties.
+
         foreach ($props as $k => $v) {
-          $t = $component->props->getTypeOf ($k);
-          $isDefault = $component->props->getDefaultValue($k) === $v;
+          $t          = $component->props->getTypeOf ($k);
+          $isDefault  = $component->props->getDefaultValue ($k) === $v;
           $modifStyle = $isDefault ? ' style="opacity:0.5"' : ' style="background:#FFE"';
           if ($t != type::content && $t != type::collection && $t != type::metadata) {
             $tn = $component->props->getTypeNameOf ($k);
@@ -175,9 +187,8 @@ class ComponentInspector
           }
         }
 
-      // Display all slot properties.
+        // Display all slot properties.
 
-      if ($props)
         foreach ($props as $k => $v) {
           $t = $component->props->getTypeOf ($k);
           if ($t == type::content || $t == type::collection || $t == type::metadata) {
@@ -189,51 +200,86 @@ class ComponentInspector
             if (isset($exp)) {
               $exp = self::inspectString ((string)$exp);
               echo "<span style='color:$COLOR_BIND'>$exp</span> = ";
+              $v = self::getBindingValue ($k, $component, $error);
+              if ($error) {
+                echo $v;
+                break;
+              }
             }
-            switch ($t) {
-              case type::content:
-                echo $v ? "<tr><td><td colspan=2>" . self::inspect ($v, $deep)
-                  : "<i style='color:$COLOR_INFO'>null</i>";
-                break;
-              case type::metadata:
-                echo $v ? "<tr><td><td colspan=2>" . self::inspect ($v, $deep)
-                  : "<i style='color:$COLOR_INFO'>null</i>";
-                break;
-              case type::collection:
-                echo "of <i style='color:$COLOR_TYPE'>", $component->props->getRelatedTypeNameOf ($k), '</i>';
-                echo $v ? "<tr><td><td colspan=2>" . self::inspectSet ($v, true, true)
-                  : " = <i style='color:$COLOR_INFO'>[]</i>";
-                break;
-            }
+            if ($v && ($v instanceof Component || is_array ($v)))
+              switch ($t) {
+                case type::content:
+                  if ($v) {
+                    echo "<tr><td><td colspan=2>";
+                    self::_inspect ($v, $deep);
+                  }
+                  else echo "<i style='color:$COLOR_INFO'>null</i>";
+                  break;
+                case type::metadata:
+                  if ($v) {
+                    echo "<tr><td><td colspan=2>";
+                    self::_inspect ($v, $deep);
+                  }
+                  else echo "<i style='color:$COLOR_INFO'>null</i>";
+                  break;
+                case type::collection:
+                  echo "of <i style='color:$COLOR_TYPE'>", $component->props->getRelatedTypeNameOf ($k), '</i>';
+                  if ($v) {
+                    echo "<tr><td><td colspan=2>";
+                    self::_inspectSet ($v, true);
+                  }
+                  else echo " = <i style='color:$COLOR_INFO'>[]</i>";
+                  break;
+              }
+            else if (is_array ($v))
+              echo "<i style='color:$COLOR_INFO'>[]</i>";
+            else if (isset($v))
+              printf ("<b style='color:red'>WRONG TYPE: %s</b>", typeInfoOf ($v));
+            else echo "<i style='color:$COLOR_INFO'>null</i>";
             echo '</tr>';
           }
         }
 
-      echo "</table>";
+        echo "</table>";
+      }
     }
 
     // If deep inspection is enabled, recursively inspect all children components.
 
     if ($deep) {
-      if ($component->hasChildren ()) {
-        $hasContent = true;
-        $content    = $component->getChildren ();
-      }
-      elseif ($component instanceof CompositeComponent && ($skin = $component->getSkin ())) {
-        $hasContent = true;
-        $content    = [$skin];
-      }
-      if ($hasContent) {
+      $content = null;
+      if ($component->hasChildren ())
+        $content = $component->getChildren ();
+      elseif ($component instanceof CompositeComponent && ($skin = $component->getSkin ()))
+        $content = [$skin];
+      if ($content) {
         echo "<span style='color:$COLOR_TAG'>&gt;</span><div style=\"margin:0 0 0 15px\">";
-        /** @noinspection PhpUndefinedVariableInspection */
-        foreach ($content as $c)
-          self::_inspect ($c, true);
+        self::_inspectSet ($content, $deep);
         echo '</div>';
+        $hasContent = true;
       }
     }
     echo "<span style='color:$COLOR_TAG'>" . ($hasContent ? "&lt;/$tag&gt;<br>" : "/&gt;<br>") . "</span>";
   }
 
+  /**
+   * For internal use.
+   *
+   * @param Component[] $components
+   * @param bool        $deep
+   */
+  static private function _inspectSet (array $components, $deep)
+  {
+    foreach ($components as $component)
+      self::_inspect ($component, $deep);
+  }
+
+  /**
+   * @param string    $prop
+   * @param Component $component
+   * @param bool      $error
+   * @return mixed
+   */
   private static function getBindingValue ($prop, Component $component, &$error)
   {
     $error = $l = false;
@@ -242,6 +288,7 @@ class ComponentInspector
       $v = $component->getComputedPropValue ($prop);
     }
     catch (\Exception $e) {
+      inspect ($e->getTraceAsString ());
       $error = true;
       while (ob_get_level () > $l)
         ob_end_clean ();
@@ -250,6 +297,10 @@ class ComponentInspector
     return $v;
   }
 
+  /**
+   * @param string $s
+   * @return string
+   */
   private static function inspectString ($s)
   {
     return str_replace ("\n", '&#8626;', htmlspecialchars ($s));

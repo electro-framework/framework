@@ -54,6 +54,7 @@ class Navigation implements NavigationInterface
       return $link->rawUrl ();
     };
     return [
+      'Current link'               => $this->currentLink (),
       'All IDs<sup>*</sup>'        => PA ($this->IDs)->keys ()->sort ()->join (', '),
       'All URLs<sup>*</sup><br>' .
       '<i>(in scanning order)</i>' => map ($this->rootLink->getDescendants (),

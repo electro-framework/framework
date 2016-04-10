@@ -139,4 +139,13 @@ class DefaultFilters
     return explode (' ', $v) [1];
   }
 
+  /**
+   * @param mixed $v
+   * @return string
+   */
+  function filter_type ($v)
+  {
+    return typeOf ($v);
+  }
+
 }

@@ -44,9 +44,9 @@ class ComponentException extends MatisseException
   {
     return "<h6>Assigned properties</h6>
 <table class=grid>
-" . str_replace ("'", "<i>'</i>", implode ('',
+" . str_replace (["'", '...'], ["<i>'</i>", '<i>...</i>'], implode ('',
       map ($props, function ($v, $k) {
-        return "<tr><th>$k<td>" . var_export ($v, true);
+        return "<tr><th>$k<td>" . (is_string ($v) ? "'" . htmlspecialchars (trimText($v, 300, '...')) . "'" : var_export ($v, true));
       })), $o) . "
 </table>";
   }

@@ -2,6 +2,8 @@
 namespace Selenia\Matisse\Components\Macro;
 
 use Selenia\Matisse\Components\Base\Component;
+use Selenia\Matisse\Components\Base\CompositeComponent;
+use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
@@ -11,7 +13,7 @@ use Selenia\Matisse\Properties\TypeSystem\type;
 /**
  * A `MacroCall` is a component that can be represented via any tag that has the same name as the macro it refers to.
  */
-class MacroCall extends Component
+class MacroCall extends CompositeComponent
 {
   const TAG_NAME = 'Call';
 
@@ -27,11 +29,45 @@ class MacroCall extends Component
    */
   protected $macroInstance;
 
+  function onParsingComplete ()
+  {
+    // Move children to default parameter.
+
+    if ($this->hasChildren ()) {
+      $def = $this->getDefaultParam ();
+      if (!empty($def)) {
+        if (!$this->props->defines ($def))
+          throw new ComponentException($this, "Invalid default property <kbd>$def</kbd>");
+
+        $type = $this->props->getTypeOf ($def);
+        if ($type != type::content && $type != type::metadata)
+          throw new ComponentException($this, sprintf (
+            "The macro's default parameter <kbd>$def</kbd> can't hold content because its type is <kbd>%s</kbd>.",
+            type::getNameOf ($type)));
+
+        $param = new Metadata($this->context, ucfirst ($def), $type);
+        $param->attachTo ($this);
+        $this->props->$def = $param;
+        $param->addChildren ($this->removeChildren ());
+      }
+      else throw new ComponentException ($this,
+        'You may not specify content for this tag because it has no default property');
+    }
+  }
+
   function setMacro (Macro $macro)
   {
     $this->macroInstance = $macro;
     if (isset($this->props))
       $this->props->setMacro ($macro);
+    $this->skin = new DocumentFragment;
+    $this->skin->attachTo ($this); // this MUST be called before adding children!
+    $this->skin->addChildren ($macro->getClonedChildren ());
+  }
+
+  protected function getDefaultParam ()
+  {
+    return $this->macroInstance->props->defaultParam;
   }
 
   /**
@@ -67,34 +103,6 @@ class MacroCall extends Component
 //      $this->expectingView  = true;
 //    }
     parent::onCreate ($props, $parent);
-  }
-
-  function onParsingComplete ()
-  {
-    // Move children to default parameter.
-
-    if ($this->hasChildren ()) {
-      $def = $this->macroInstance->props->defaultParam;
-      if (!empty($def)) {
-        $param = $this->macroInstance->getParameter ($def);
-        if (!$param)
-          throw new ComponentException($this, "Invalid default parameter <kbd>$def</kbd>");
-        $type = $this->props->getTypeOf ($def);
-        if ($type != type::content && $type != type::metadata)
-          throw new ComponentException($this, sprintf (
-            "The macro's default parameter <kbd>$def</kbd> can't hold content because its type is <kbd>%s</kbd>.",
-            type::getNameOf ($type)));
-        $param             = new Metadata($this->context, ucfirst ($def), $type);
-        $this->props->$def = $param;
-        $param->attachTo ($this);
-        $param->setChildren ($this->removeChildren ());
-      }
-    }
-
-    // Perform macro-expansion.
-
-    $content = $this->macroInstance->apply ($this);
-    $this->replaceBy ($content);
   }
 
 }

@@ -89,13 +89,6 @@ class Include_ extends CompositeComponent
   /** @var IncludeProperties */
   public $props;
 
-  private $skin;
-
-  function getSkin ()
-  {
-    return $this->skin ?: parent::getSkin ();
-  }
-
   protected function init ()
   {
     parent::init ();
@@ -132,7 +125,7 @@ class Include_ extends CompositeComponent
 
     if (exists ($prop->template)) {
       if (exists ($controller)) {
-        $this->skin = $skin = $ctx->createComponent ($controller, $this);
+        $this->setSkin ($skin = $ctx->createComponent ($controller, $this));
         if (!$skin instanceof CompositeComponent)
           throw new ComponentException($this,
             "Component <kbd>$controller</kbd> is not a <kbd>CompositeComponent</kbd> instance, so it can't be a controler");
@@ -140,17 +133,15 @@ class Include_ extends CompositeComponent
         if ($skin->props)
           $skin->props->apply ($prop->getDynamic ());
         $skin->template = $prop->template;
-        $this->attachAndRender ($skin);
+        $this->attach ($skin);
       }
-      else {
-        $this->template = $prop->template;
-        parent::render ();
-      }
+      else $this->template = $prop->template;
+      parent::render ();
     }
 
     elseif (exists ($prop->view)) {
       if (exists ($controller)) {
-        $this->skin = $skin = $ctx->createComponent ($controller, $this);
+        $this->setSkin ($skin = $ctx->createComponent ($controller, $this));
         if (!$skin instanceof CompositeComponent)
           throw new ComponentException($this,
             "Component <kbd>$controller</kbd> is not a <kbd>CompositeComponent</kbd> instance, so it can't be the controler of <kbd>$prop->view</kbd>");
@@ -158,12 +149,10 @@ class Include_ extends CompositeComponent
         if ($skin->props)
           $skin->props->apply ($prop->getDynamic ());
         $skin->templateUrl = $prop->view;
-        $this->attachAndRender ($skin);
+        $this->attach ($skin);
       }
-      else {
-        $this->templateUrl = $prop->view;
-        parent::render ();
-      }
+      else $this->templateUrl = $prop->view;
+      parent::render ();
     }
 
     else if (exists ($prop->file)) {

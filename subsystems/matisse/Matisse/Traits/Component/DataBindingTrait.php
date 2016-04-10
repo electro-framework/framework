@@ -139,12 +139,12 @@ trait DataBindingTrait
     if (isset($parent))
       return $parent[$field];
 
-    $data = $this->context->viewModel;
-    if (isset($data)) {
-      $v = _g ($data, $field, $this);
-      if ($v !== $this)
-        return $v;
-    }
+      $data = $this->context->viewModel;
+      if (isset($data)) {
+        $v = _g ($data, $field, $this);
+        if ($v !== $this)
+          return $v;
+      }
 
     return null;
   }
@@ -232,15 +232,11 @@ trait DataBindingTrait
       /** @var Component $this */
       return $bindExp->evaluate ($this);
     }
-    catch (FilterHandlerNotFoundException $e) {
-      throw new ComponentException ($this,
-        Debug::grid ([
-          'Expression' => "<kbd>$bindExp</kbd>",
-          'Error'      => typeInfoOf ($e) . ' ' . $e->getMessage (),
-          'At'         => ErrorConsole::errorLink ($e->getFile (), $e->getLine ()) .
-                          ', line <b>' . $e->getLine () . '</b>',
-        ], 'Error while evaluating data-binding expression')
-      );
+    catch (\Exception $e) {
+      self::evalError ($e, $bindExp);
+    }
+    catch (\Error $e) {
+      self::evalError ($e, $bindExp);
     }
   }
 
@@ -258,6 +254,24 @@ trait DataBindingTrait
       throw new ComponentException($this,
         "Invalid value for attribute <kbd>as</kbd>.<p>Expected syntax: <kbd>'var'</kbd> or <kbd>'index:var'</kbd>");
     list (, $idxVar, $itVar) = $m;
+  }
+
+  /**
+   * @param \Error|\Exception $e
+   * @param Expression        $exp
+   * @throws ComponentException
+   */
+  private function evalError ($e, Expression $exp)
+  {
+    throw new ComponentException ($this,
+      Debug::grid ([
+        'Expression' => "<kbd>$exp</kbd>",
+        'Compiled'   => sprintf ('<code>%s</code>', \PhpCode::highlight ("$exp->translated")),
+        'Error'      => typeInfoOf ($e) . ' ' . $e->getMessage (),
+        'At'         => ErrorConsole::errorLink ($e->getFile (), $e->getLine ()) .
+                        ', line <b>' . $e->getLine () . '</b>',
+      ], 'Error while evaluating data-binding expression')
+    );
   }
 
 }

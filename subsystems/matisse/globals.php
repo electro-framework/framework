@@ -2,6 +2,7 @@
 //------------------------------
 //  Matisse-specific functions
 //------------------------------
+use Selenia\Interfaces\RenderableInterface;
 use Selenia\Matisse\Exceptions\MatisseException;
 
 /**
@@ -15,6 +16,10 @@ class RawText
   {
     if (is_null ($s))
       $this->s = '';
+    elseif ($s instanceof RenderableInterface) {
+      $this->s = $s->getRendering ();
+      return;
+    }
     elseif (!is_string ($s))
       throw new MatisseException ("A <kbd>RawText</kbd> instance must hold a string value, not a " . typeInfoOf ($s));
     $this->s = $s;
@@ -40,7 +45,20 @@ class RawText
  */
 function _e ($s)
 {
-  return $s instanceof RawText ? $s->toString () : htmlentities ($s, ENT_QUOTES, 'UTF-8', false);
+  if (!is_scalar ($s)) {
+    if (is_null ($s)) return '';
+    if ($s instanceof RawText) return $s->toString ();
+    if ($s instanceof RenderableInterface)
+      $s = $s->getRendering ();
+    elseif (is_object ($s) && method_exists ($s, '__toString'))
+      $s = (string)$s;
+    else {
+      if (is_iterable ($s))
+        return iteratorOf ($s)->current ();
+      return sprintf ('[%s]', typeOf ($s));
+    }
+  }
+  return htmlentities ($s, ENT_QUOTES, 'UTF-8', false);
 }
 
 /**
@@ -78,8 +96,6 @@ function normalizeAttributeName ($name)
 function _g ($data, $key, $default = null)
 {
   if (is_object ($data)) {
-    if ($data instanceof \ArrayAccess && isset ($data[$key]))
-      return $data[$key];
     if (isset($data->$key))
       return $data->$key;
     // Property may be private/protected or virtual, try to call a getter method with the same name
@@ -89,6 +105,8 @@ function _g ($data, $key, $default = null)
       }
       catch (BadMethodCallException $e) {
       }
+    if ($data instanceof \ArrayAccess && isset ($data[$key]))
+      return $data[$key];
     return $default;
   }
   if (is_array ($data))

@@ -64,6 +64,12 @@ class CompositeComponent extends Component
    */
   protected $isolateViewModel = false;
   /**
+   * A Matisse component that will be used as this component's renderable view.
+   *
+   * @var Component
+   */
+  protected $skin = null;
+  /**
    * The engine to be used for parsing and rendering the view if {@see $template} is set and {@see $templateUrl} is not.
    *
    * @var string
@@ -82,13 +88,30 @@ class CompositeComponent extends Component
    */
   function getSkin ()
   {
-    return $this->view && $this->view->getEngine () instanceof MatisseEngine ? $this->view->getCompiled () : null;
+    return $this->skin
+      ?: ($this->view && $this->view->getEngine () instanceof MatisseEngine
+        ? $this->view->getCompiled ()
+        : null);
+  }
+
+  /**
+   * Sets the given Matisse component as this component's renderable view.
+   *
+   * <p>If set, this will override {@see template} and {@see templateUrl}.
+   *
+   * @param Component $skin
+   */
+  function setSkin (Component $skin)
+  {
+    $this->skin = $skin;
   }
 
   /**
    * Allows access to the view after the page is rendered.
    *
    * <p>Override to add debug logging, for instance.
+   *
+   * ><p>**Note:** this will not be called for skins set via {@see setSkin}.
    *
    * @param ViewInterface $view
    */
@@ -106,6 +129,10 @@ class CompositeComponent extends Component
    */
   protected function render ()
   {
+    if ($skin = $this->getSkin ()) {
+      $skin->run ();
+      return;
+    }
     if ($this->templateUrl) {
       $this->assertContext ();
       $this->view = $this->context->viewService->loadFromFile ($this->templateUrl);

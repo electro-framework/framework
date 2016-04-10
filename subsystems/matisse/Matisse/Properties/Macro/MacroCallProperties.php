@@ -1,9 +1,12 @@
 <?php
 namespace Selenia\Matisse\Properties\Macro;
 
+use Selenia\Matisse\Components\Internal\Metadata;
+use Selenia\Matisse\Components\Internal\Text;
 use Selenia\Matisse\Components\Macro\Macro;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\Base\MetadataProperties;
+use Selenia\Matisse\Properties\TypeSystem\type;
 
 class MacroCallProperties extends MetadataProperties
 {
@@ -23,16 +26,6 @@ class MacroCallProperties extends MetadataProperties
    */
   private $macroInstance;
 
-  function getAll ()
-  {
-    $names = $this->getPropertyNames();
-    return map ($names, function ($v, &$k) {
-      $k = $v;
-      return $this->$k;
-    });
-  }
-
-
   function __get ($name)
   {
     if (array_key_exists ($name, $this->props))
@@ -42,6 +35,13 @@ class MacroCallProperties extends MetadataProperties
     return $this->getDefaultValue ($name);
   }
 
+  function __set ($name, $value)
+  {
+    if (!$this->defines ($name))
+      throw new ComponentException($this->macroInstance, "Undefined parameter <kbd>$name</kbd>.");
+    $this->setPropertyValue ($name, $value);
+  }
+
   function defines ($name, $asSubtag = false)
   {
     if (!$this->macroInstance) $this->noMacro ();
@@ -49,11 +49,30 @@ class MacroCallProperties extends MetadataProperties
     return $found;
   }
 
-  function __set ($name, $value)
+  function getAll ()
   {
-    if (!$this->defines($name))
+    $names = $this->getPropertyNames ();
+    return map ($names, function ($v, &$k) {
+      $k = $v;
+      return $this->$k;
+    });
+  }
+
+  function getDefaultValue ($name)
+  {
+    if (!$this->macroInstance)
+      $this->noMacro ();
+    $param = $this->macroInstance->getParameter ($name, $found);
+    if (!$found)
       throw new ComponentException($this->macroInstance, "Undefined parameter <kbd>$name</kbd>.");
-    $this->setPropertyValue($name, $value);
+
+    $v = $param->getComputedPropValue ('default');
+    if ($param->props->type == 'content') {
+      $meta = new Metadata($this->macroInstance->context, ucfirst ($name), type::content);
+      $meta->addChild (Text::from ($this->macroInstance->context, $v));
+      return $meta;
+    }
+    return $v;
   }
 
   function getEnumOf ($propName)
@@ -78,20 +97,6 @@ class MacroCallProperties extends MetadataProperties
   {
     if (!$this->macroInstance) $this->noMacro ();
     return !is_null ($this->macroInstance->getParameterEnum ($propName));
-  }
-
-  function getDefaultValue ($name)
-  {
-    if (!$this->macroInstance)
-      $this->noMacro ();
-    $param = $this->macroInstance->getParameter ($name, $found);
-    if (!$found)
-      throw new ComponentException($this->macroInstance, "Undefined parameter <kbd>$name</kbd>.");
-
-    //TODO: test this
-    if (isset($param->bindings) && array_key_exists ('default', $param->bindings))
-      return $param->bindings['default'];
-    return $param->props->default; // Return the parameter's `default` property.
   }
 
   /**

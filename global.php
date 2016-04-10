@@ -54,6 +54,7 @@ function dump ()
     list (, $space, $prop) = $m;
     return $space . str_pad ("$prop:", 30, ' ');
   }, ob_get_clean ());
+  echo "</pre>";
 }
 
 function trace ()

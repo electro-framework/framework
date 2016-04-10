@@ -1,6 +1,7 @@
 function nop () {}
-
-!function () {
+document.addEventListener ("DOMContentLoaded", function () {
+  if (!('$' in window))
+    return console.error ("jQuery is required");
 
   // Private vars
 
@@ -121,8 +122,8 @@ function nop () {}
           inputs.each (function () {
             if (!this.checkValidity ()) {
               if (first) {
-                $(this).focus ();
-                first = false;
+                $ (this).focus ();
+                first    = false;
                 var lang = $ (this).attr ('lang');
                 if (lang) selenia.setLang (lang, this);
               }
@@ -227,4 +228,4 @@ function nop () {}
       .prependTo (body);
   }) ();
 
-} ();
+});
