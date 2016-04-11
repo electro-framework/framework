@@ -53,14 +53,16 @@ class ModulesInstaller
    */
   function cleanUpModule ($moduleName)
   {
-    $this->io->writeln ("Cleaning up <info>$moduleName</info>");
+    $io = $this->io;
+    $io->writeln ("Cleaning up <info>$moduleName</info>");
     $status = 0;
     if ($this->moduleHasMigrations ($moduleName)) {
       $migrations = $this->getMigrationsOf ($moduleName);
       if ($migrations) {
-        $this->io->nl ()->say ("  Updating the database");
+        $io->nl ()->say ("  Updating the database");
         $status = $this->consoleApp->runAndCapture (
-          'migration:rollback', ['-t', '0', $moduleName], $outStr, $this->io->getOutput ());
+          'migrate:reset', [$moduleName], $outStr, $io->getOutput ()
+        );
         if (!$status) {
           // Drop migrations table.
           $table = MigrationCommands::$migrationsTable;
@@ -68,7 +70,8 @@ class ModulesInstaller
           if ($con->isAvailable ())
             $con->getPdo ()->query ("DROP TABLE $table");
         }
-        $this->io->indent (2)->write ($outStr)->indent ();
+        else $io->error ("Error while rolling back migrations. Status $status");
+        $io->indent (2)->write ($outStr)->indent ();
       }
     }
     return $status;
@@ -145,13 +148,17 @@ class ModulesInstaller
   private function updateMigrationsOf (ModuleInfo $module)
   {
     if ($this->moduleHasMigrations ($module)) {
+      $io         = $this->io;
       $migrations = $this->getMigrationsOf ($module->name);
       foreach ($migrations as $migration) {
         if ($migration->migration_status == 'down') {
-          $this->io->nl ()->say ("    Updating the database");
-          $this->consoleApp->runAndCapture (
-            'migration:run', [$module->name], $outStr, $this->io->getOutput ());
-          $this->io->indent (4)->write ($outStr)->indent ()->nl ();
+          $io->nl ()->say ("    Updating the database");
+          $status = $this->consoleApp->runAndCapture (
+            'migrate', [$module->name], $outStr, $io->getOutput ()
+          );
+          if ($status)
+            $io->error ("Error while migrating. Status $status");
+          $io->indent (4)->write ($outStr)->indent ()->nl ();
           break;
         }
       }
