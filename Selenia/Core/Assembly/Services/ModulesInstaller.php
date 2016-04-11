@@ -80,7 +80,7 @@ class ModulesInstaller
         }
       }
       if (!$found)
-        $io->say ("    No reverse migrations were run.");
+        $io->say ("    No reverse migrations were run.")->nl ();
     }
     return $status;
   }
@@ -188,7 +188,7 @@ class ModulesInstaller
         }
       }
       if (!$found)
-        $io->say ("    No migrations were run.");
+        $io->say ("    No migrations were run.")->nl ();
     }
   }
 
