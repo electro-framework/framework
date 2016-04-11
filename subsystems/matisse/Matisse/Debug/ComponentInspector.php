@@ -138,8 +138,8 @@ class ComponentInspector
 
         foreach ($props as $k => $v) {
           $t          = $component->props->getTypeOf ($k);
-          $isDefault  = $component->props->getDefaultValue ($k) === $v;
-          $modifStyle = $isDefault ? ' style="opacity:0.5"' : ' style="background:#FFE"';
+          $isModified = $component->props->isModified ($k);
+          $modifStyle = $isModified ? ' style="background:#FFE"' : ' style="opacity:0.5"';
           if ($t != type::content && $t != type::collection && $t != type::metadata) {
             $tn = $component->props->getTypeNameOf ($k);
             echo "<tr$modifStyle><td style='color:$COLOR_PROP'>$k<td><i style='color:$COLOR_TYPE'>$tn</i><td>";
@@ -192,8 +192,10 @@ class ComponentInspector
         foreach ($props as $k => $v) {
           $t = $component->props->getTypeOf ($k);
           if ($t == type::content || $t == type::collection || $t == type::metadata) {
-            $tn = $component->props->getTypeNameOf ($k);
-            echo "<tr><td style='color:$COLOR_PROP'>$k<td><i style='color:$COLOR_TYPE'>$tn</i><td>";
+            $tn         = $component->props->getTypeNameOf ($k);
+            $isModified = $component->props->isModified ($k);
+            $modifStyle = $isModified ? ' style="background:#FFE"' : ' style="opacity:0.5"';
+            echo "<tr$modifStyle><td style='color:$COLOR_PROP'>$k<td><i style='color:$COLOR_TYPE'>$tn</i><td>";
 
             /** @var Expression $exp */
             $exp = get ($component->bindings, $k);
@@ -210,14 +212,14 @@ class ComponentInspector
               switch ($t) {
                 case type::content:
                   if ($v) {
-                    echo "<tr><td><td colspan=2>";
+                    echo "<tr$modifStyle><td><td colspan=2>";
                     self::_inspect ($v, $deep);
                   }
                   else echo "<i style='color:$COLOR_INFO'>null</i>";
                   break;
                 case type::metadata:
                   if ($v) {
-                    echo "<tr><td><td colspan=2>";
+                    echo "<tr$modifStyle><td><td colspan=2>";
                     self::_inspect ($v, $deep);
                   }
                   else echo "<i style='color:$COLOR_INFO'>null</i>";
@@ -225,7 +227,7 @@ class ComponentInspector
                 case type::collection:
                   echo "of <i style='color:$COLOR_TYPE'>", $component->props->getRelatedTypeNameOf ($k), '</i>';
                   if ($v) {
-                    echo "<tr><td><td colspan=2>";
+                    echo "<tr$modifStyle><td><td colspan=2>";
                     self::_inspectSet ($v, true);
                   }
                   else echo " = <i style='color:$COLOR_INFO'>[]</i>";

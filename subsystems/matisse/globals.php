@@ -105,11 +105,14 @@ function _g ($data, $key, $default = null)
       }
       catch (BadMethodCallException $e) {
       }
-    if ($data instanceof \ArrayAccess && isset ($data[$key]))
+    // No getter was found, so if the property exists, it is either inaccessible or it is null, either way return the default
+    if (property_exists ($data, $key))
+      return $default;
+    // There's no property, but the object may be indexable
+    if ($data instanceof \ArrayAccess && $data->offsetExists ($key))
       return $data[$key];
-    return $default;
   }
-  if (is_array ($data))
+  elseif (is_array ($data))
     return array_key_exists ($key, $data) ? $data[$key] : $default;
   return $default;
 }

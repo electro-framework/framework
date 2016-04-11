@@ -47,7 +47,7 @@ class MacroCall extends CompositeComponent
 
         $param = new Metadata($this->context, ucfirst ($def), $type);
         $param->attachTo ($this);
-        $this->props->$def = $param;
+        $this->props->set ($def, $param);
         $param->addChildren ($this->removeChildren ());
       }
       else throw new ComponentException ($this,

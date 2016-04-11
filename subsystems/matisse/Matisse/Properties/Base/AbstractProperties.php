@@ -112,6 +112,22 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
     return false;
   }
 
+  /**
+   * Throws an exception if the specified property is not available.
+   *
+   * @param $propName
+   * @throws ComponentException
+   */
+  function ensurePropertyExists ($propName)
+  {
+    if (!$this->defines ($propName)) {
+      throw new ComponentException(
+        $this->component,
+        sprintf ("Invalid property <kbd>%s</kbd> specified for a %s instance.", $propName, typeInfoOf ($this))
+      );
+    }
+  }
+
   function get ($propName, $default = null)
   {
     return property ($this, $propName, $default);
@@ -170,6 +186,17 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
   }
 
   /**
+   * Checks if a property's value is different from the default one, or if it has been explicitly set.
+   *
+   * @param string $propName Property name.
+   * @return bool
+   */
+  function isModified ($propName)
+  {
+    return $this->$propName != $this->getDefaultValue ($propName);
+  }
+
+  /**
    * Checks if a property is of a scalar type.
    *
    * @param string $propName
@@ -191,7 +218,10 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
   function set ($propName, $value)
   {
     $this->ensurePropertyExists ($propName);
-    $this->setPropertyValue ($propName, $value);
+    $this->$propName = $this->typecastPropertyValue ($propName, $value);
+
+    if ($this->isModified ($propName))
+      $this->onPropertyChange ($propName);
   }
 
   /**
@@ -226,8 +256,11 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
    */
   function typecastPropertyValue ($name, $v)
   {
+    if ($this->isScalar ($name) && $this->isEnum ($name))
+      $this->validateEnum ($name, $v);
+
     $type = $this->getTypeOf ($name);
-    if (!type::validate ($type, $v))
+    if ($type && !type::validate ($type, $v))
       throw new ComponentException ($this->component,
         sprintf (
           "%s is not a valid value for the <kbd>$name</kbd> property, which is of type <kbd>%s</kbd>",
@@ -241,22 +274,6 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
   }
 
   /**
-   * Throws an exception if the specified property is not available.
-   *
-   * @param $propName
-   * @throws ComponentException
-   */
-  protected function ensurePropertyExists ($propName)
-  {
-    if (!$this->defines ($propName)) {
-      throw new ComponentException(
-        $this->component,
-        sprintf ("Invalid property <kbd>%s</kbd> specified for a %s instance.", $propName, typeInfoOf ($this))
-      );
-    }
-  }
-
-  /**
    * Called whenever a property's value changes.
    *
    * @param string $propName
@@ -264,28 +281,6 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
   protected function onPropertyChange ($propName)
   {
     // noop
-  }
-
-  /**
-   * Sets a property's value, typecasting that value and/or transforming it as necessary.
-   *
-   * <p>This is meant to be called by subclasses' property setters.
-   *
-   * @param string $propName
-   * @param mixed  $v
-   * @throws ComponentException
-   */
-  protected function setPropertyValue ($propName, $v)
-  {
-    if ($this->isScalar ($propName) && $this->isEnum ($propName))
-      $this->validateEnum ($propName, $v);
-
-    $newV = $this->typecastPropertyValue ($propName, $v);
-
-    if ($this->$propName !== $newV) {
-      $this->$propName = $newV;
-      $this->onPropertyChange ($propName);
-    }
   }
 
   /**

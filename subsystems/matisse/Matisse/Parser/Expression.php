@@ -85,6 +85,14 @@ class Expression
    */
   public static $cache = [];
   /**
+   * A map of databinding expressions to pre-compiled PHP expressions.
+   *
+   * ><p>This is meant for debugging only.
+   *
+   * @var string[] [string => string]
+   */
+  public static $inspectionMap = [];
+  /**
    * Finds binding expressions and extracts information from them.
    * > Note: the u modifier allows unicode white space to be properly matched.
    */
@@ -311,15 +319,14 @@ class Expression
         $this->translated = self::translate ($this->expression);
         // Compile to native code.
         try {
-//          inspect ($this->expression);
           $fn = $this->compiled = PhpCode::compile ($this->translated);
-//          inspect ($this->translated);
         }
         catch (RuntimeException $e) {
-          self::filterSyntaxError ($this->expression, '<hr>'.$e->getMessage ());
+          self::filterSyntaxError ($this->expression, '<hr>' . $e->getMessage ());
         }
         // Cache the compiled expression.
-        Expression::$cache[$this->expression] = $fn;
+        self::$cache[$this->expression]         = $fn;
+        self::$inspectionMap[$this->expression] = $this->translated;
       }
     }
     $fn = \Closure::bind ($fn, $context, $context);

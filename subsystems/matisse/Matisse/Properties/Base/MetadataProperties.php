@@ -2,6 +2,7 @@
 namespace Selenia\Matisse\Properties\Base;
 
 use JsonSerializable;
+use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\TypeSystem\type;
 use Selenia\Traits\InspectionTrait;
 
@@ -23,17 +24,17 @@ class MetadataProperties extends AbstractProperties implements JsonSerializable
 
   function __get ($name)
   {
-    return isset($this->props[$name]) ? $this->props[$name] : null;
+    return $this->get ($name);
   }
 
   function __set ($name, $value)
   {
-    $this->props[$name] = $value;
+    $this->set ($name, $value);
   }
 
   function __isset ($name)
   {
-    return isset ($this->props[$name]);
+    return $this->defines ($name) && !is_null ($this->get ($name));
   }
 
   function __unset ($name)
@@ -46,9 +47,13 @@ class MetadataProperties extends AbstractProperties implements JsonSerializable
     return true;
   }
 
-  function get ($propName, $default = null)
+  function get ($name, $default = null)
   {
-    return get ($this->props, $propName, $default);
+    if (property_exists ($this, $name))
+      return $this->$name;
+    if (array_key_exists ($name, $this->props))
+      return $this->props [$name];
+    return $default;
   }
 
   function getAll ()
@@ -56,12 +61,12 @@ class MetadataProperties extends AbstractProperties implements JsonSerializable
     return array_merge (object_publicProps ($this), $this->props);
   }
 
-  function getDefaultValue ($propName)
+  function getDefaultValue ($name)
   {
-    if (property_exists ($this, $propName)) {
+    if (property_exists ($this, $name)) {
       $c     = new \ReflectionClass($this);
       $props = $c->getDefaultProperties ();
-      return isset($props[$propName]) ? $props[$propName] : null;
+      return isset($props[$name]) ? $props[$name] : null;
     }
     return null;
   }
@@ -77,7 +82,7 @@ class MetadataProperties extends AbstractProperties implements JsonSerializable
     return $this->props;
   }
 
-  function getEnumOf ($propName)
+  function getEnumOf ($name)
   {
     return [];
   }
@@ -87,17 +92,17 @@ class MetadataProperties extends AbstractProperties implements JsonSerializable
     return array_merge (object_propNames ($this), array_keys ($this->props));
   }
 
-  function getRelatedTypeOf ($propName)
+  function getRelatedTypeOf ($name)
   {
     return type::content;
   }
 
-  function getTypeOf ($propName)
+  function getTypeOf ($name)
   {
     return null;
   }
 
-  function isEnum ($propName)
+  function isEnum ($name)
   {
     return false;
   }
@@ -117,9 +122,20 @@ class MetadataProperties extends AbstractProperties implements JsonSerializable
     return $this->getAll ();
   }
 
-  function set ($propName, $value)
+  function set ($name, $value)
   {
-    $this->$propName = $value;
+    // This is relevant only to subclasses.
+    if (!$this->defines ($name))
+      throw new ComponentException(null, "Undefined parameter <kbd>$name</kbd>.");
+
+    $value = $this->typecastPropertyValue ($name, $value);
+
+    if (property_exists ($this, $name))
+      $this->$name = $value;
+    else $this->props[$name] = $value;
+
+    if ($this->isModified ($name))
+      $this->onPropertyChange ($name);
   }
 
 }

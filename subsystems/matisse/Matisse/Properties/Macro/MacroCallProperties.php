@@ -26,27 +26,32 @@ class MacroCallProperties extends MetadataProperties
    */
   private $macroInstance;
 
-  function __get ($name)
+  function defines ($name, $asSubtag = false)
   {
+    if (property_exists ($this, $name))
+      return true;
+    if (!$this->macroInstance)
+      $this->noMacro ();
+    $this->macroInstance->getParameter ($name, $found);
+    return $found;
+  }
+
+  /**
+   * This is overriden so that default values can be correctly found.
+   *
+   * @param string $name
+   * @param mixed  $default [optional] If set, it takes precedence over the parameter's default value.
+   * @return mixed
+   */
+  function get ($name, $default = null)
+  {
+    if (property_exists ($this, $name))
+      return $this->$name;
     if (array_key_exists ($name, $this->props))
       return $this->props [$name];
 
-    // The parameter was not set, so return the declared default value (if any).
+    if (isset($default)) return $default;
     return $this->getDefaultValue ($name);
-  }
-
-  function __set ($name, $value)
-  {
-    if (!$this->defines ($name))
-      throw new ComponentException($this->macroInstance, "Undefined parameter <kbd>$name</kbd>.");
-    $this->setPropertyValue ($name, $value);
-  }
-
-  function defines ($name, $asSubtag = false)
-  {
-    if (!$this->macroInstance) $this->noMacro ();
-    $this->macroInstance->getParameter ($name, $found);
-    return $found;
   }
 
   function getAll ()
@@ -97,6 +102,11 @@ class MacroCallProperties extends MetadataProperties
   {
     if (!$this->macroInstance) $this->noMacro ();
     return !is_null ($this->macroInstance->getParameterEnum ($propName));
+  }
+
+  function isModified ($propName)
+  {
+    return array_key_exists ($propName, $this->props);
   }
 
   /**

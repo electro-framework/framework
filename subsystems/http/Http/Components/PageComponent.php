@@ -26,6 +26,7 @@ use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Base\CompositeComponent;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Parser\Expression;
 use Selenia\Traits\PolymorphicInjectionTrait;
 use Selenia\ViewEngine\Engines\MatisseEngine;
 
@@ -189,7 +190,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
         if ($res) {
           if (!$res instanceof ResponseInterface)
             throw new FatalException (sprintf ("Invalid HTTP response type: %s<p>Expected: <kbd>%s</kbd>",
-              typeInfoOf ($res),formatClassName (ResponseInterface::class)));
+              typeInfoOf ($res), formatClassName (ResponseInterface::class)));
           $response = $res;
         }
         if (!$this->renderOnAction) {
@@ -319,7 +320,10 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
         };
 
         DebugConsole::logger ('view')
-                    ->withFilter ($VMFilter, $this->viewModel->context);
+                    ->withFilter ($VMFilter, $this->viewModel->context)
+                    ->write ('<#section|Compiled expressions>')
+                    ->inspect (Expression::$inspectionMap)
+                    ->write ('</#section>');
       }
 
       if (DebugConsole::hasLogger ('model')) {
