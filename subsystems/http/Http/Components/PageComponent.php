@@ -270,7 +270,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
       // Copy the request's shared view model into the rendering context view model.
       $context->viewModel = Http::getViewModel ($this->request);
-
       $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
       $context->getFilterHandler ()->registerFallbackHandler ($this);
 

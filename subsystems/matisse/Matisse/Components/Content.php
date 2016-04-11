@@ -77,10 +77,8 @@ class Content extends Component
     $prop    = $this->props;
     $content = exists ($prop->value) ? $prop->value : $this->getChildren ();
 
-    if ($prop->preRender && is_array ($content)) {
+    if ($prop->preRender && is_array ($content))
       $content = $this->attachSetAndGetContent ($content);
-      inspect ($content);
-    }
 
     if (exists ($name = $prop->of)) {
       if (!preg_match ('/^\w+$/', $name))

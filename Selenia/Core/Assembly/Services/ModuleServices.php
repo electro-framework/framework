@@ -225,11 +225,14 @@ class ModuleServices
    * used for resolving view template paths to PHP controller classes.
    *
    * @param string $namespace
+   * @param string $basePath [optional] A base path for mapping, relative to the module's view templates directory.
    * @return $this
    */
-  function registerControllersNamespace ($namespace)
+  function registerControllersNamespace ($namespace, $basePath = '')
   {
-    $this->app->controllerNamespaces ["$this->path/{$this->app->moduleViewsPath}"] = $namespace;
+    if ($basePath)
+      $basePath = "/$basePath";
+    $this->app->controllerNamespaces ["$this->path/{$this->app->moduleViewsPath}$basePath"] = $namespace;
     return $this;
   }
 

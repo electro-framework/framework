@@ -56,10 +56,11 @@ trait AssetsAPITrait
 
   function addScript ($uri, $prepend = false)
   {
-    if (array_search ($uri, $this->assets->scripts) === false)
+    if (array_search ($uri, $this->assets->scripts) === false) {
       if ($prepend)
         array_unshift ($this->assets->scripts, $uri);
       else $this->assets->scripts[] = $uri;
+    }
   }
 
   function addStylesheet ($uri, $prepend = false)

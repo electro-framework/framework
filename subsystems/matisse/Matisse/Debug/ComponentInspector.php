@@ -212,14 +212,14 @@ class ComponentInspector
               switch ($t) {
                 case type::content:
                   if ($v) {
-                    echo "<tr$modifStyle><td><td colspan=2>";
+                    echo "<tr><td><td colspan=2>";
                     self::_inspect ($v, $deep);
                   }
                   else echo "<i style='color:$COLOR_INFO'>null</i>";
                   break;
                 case type::metadata:
                   if ($v) {
-                    echo "<tr$modifStyle><td><td colspan=2>";
+                    echo "<tr><td><td colspan=2>";
                     self::_inspect ($v, $deep);
                   }
                   else echo "<i style='color:$COLOR_INFO'>null</i>";
@@ -227,7 +227,7 @@ class ComponentInspector
                 case type::collection:
                   echo "of <i style='color:$COLOR_TYPE'>", $component->props->getRelatedTypeNameOf ($k), '</i>';
                   if ($v) {
-                    echo "<tr$modifStyle><td><td colspan=2>";
+                    echo "<tr><td><td colspan=2>";
                     self::_inspectSet ($v, true);
                   }
                   else echo " = <i style='color:$COLOR_INFO'>[]</i>";
@@ -290,7 +290,6 @@ class ComponentInspector
       $v = $component->getComputedPropValue ($prop);
     }
     catch (\Exception $e) {
-      inspect ($e->getTraceAsString ());
       $error = true;
       while (ob_get_level () > $l)
         ob_end_clean ();

@@ -49,7 +49,7 @@ trait ViewsAPITrait
   {
     /** @var Context $this */
     $path = $this->viewService->resolveTemplatePath ($viewName, $base);
-
+    inspect ($viewName,$base);
     if (isset($this->controllers[$path]))
       return $this->controllers[$path];
 
