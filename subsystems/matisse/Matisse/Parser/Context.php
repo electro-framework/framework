@@ -3,6 +3,7 @@ namespace Selenia\Matisse\Parser;
 
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Matisse\Lib\AssetsContext;
+use Selenia\Matisse\Lib\DataBinder;
 use Selenia\Matisse\Traits\Context\AssetsAPITrait;
 use Selenia\Matisse\Traits\Context\BlocksAPITrait;
 use Selenia\Matisse\Traits\Context\ComponentsAPITrait;
@@ -34,6 +35,10 @@ class Context
    */
   public $condenseLiterals = false;
   /**
+   * @var DataBinder
+   */
+  public $dataBinder;
+  /**
    * Set to true to generate pretty-printed markup.
    *
    * @var bool
@@ -59,8 +64,9 @@ class Context
 
   function __construct ()
   {
-    $this->tags   = self::$coreTags;
-    $this->assets = $this->mainAssets = new AssetsContext;
+    $this->tags       = self::$coreTags;
+    $this->assets     = $this->mainAssets = new AssetsContext;
+    $this->dataBinder = new DataBinder;
   }
 
   /**

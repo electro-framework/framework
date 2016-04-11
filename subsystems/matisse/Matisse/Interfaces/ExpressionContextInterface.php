@@ -9,7 +9,7 @@ use Selenia\Matisse\Exceptions\FilterHandlerNotFoundException;
  * <p>A databinding expression context is an object that will be used as a starting point for evaluating expressions.
  * > <p>**Note:** Matisse components implement this interface.
  */
-interface ExpressionContextInterface extends \ArrayAccess
+interface ExpressionContextInterface
 {
   /**
    * Executes a filter with the given arguments.
