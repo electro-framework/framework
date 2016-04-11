@@ -1,8 +1,6 @@
 <?php
 namespace Selenia\Core\ConsoleApplication;
 
-use PhpKit\WebConsole\DebugConsole\DebugConsole;
-use PhpKit\WebConsole\ErrorConsole\ErrorHandler;
 use Robo\Config;
 use Robo\Result;
 use Robo\Runner;
@@ -45,6 +43,7 @@ class ConsoleApplication extends Runner
     $this->console  = $console;
     $this->injector = $injector;
     $console->setAutoExit (false);
+    $io->terminalSize ($console->getTerminalDimensions ());
   }
 
   /**

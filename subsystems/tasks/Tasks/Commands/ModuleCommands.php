@@ -301,7 +301,7 @@ trait ModuleCommands
       'Enabled',
       'Booted',
       'Status',
-    ], $o, [40, 8, 7, 70], ['L', 'C', 'C']);
+    ], $o, [40, 8, 7, 0], ['L', 'C', 'C']);
   }
 
   /**

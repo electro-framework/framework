@@ -25,6 +25,8 @@ class ConsoleIO implements ConsoleIOInterface
   private $input;
   /** @var OutputInterface */
   private $output;
+  /** @var array A list of width and height. */
+  private $terminalSize;
   private $warnings = [];
 
   private static function tabular (array $data, array $widths, array $align = null, $glue = ' ',
@@ -272,11 +274,14 @@ class ConsoleIO implements ConsoleIOInterface
    *
    * @param string[]      $headers
    * @param array         $data
-   * @param int[]         $widths
+   * @param int[]         $widths Each width that is 0 will be assigned the remaining horizontal space on the terminal,
+   *                              divided by the number of columns set to 0.
    * @param string[]|null $align
    */
   function table (array $headers, array $data, array $widths, array $align = null)
   {
+    self::adjustColumnWidths ($widths);
+
     $this->writeln ('┌─' . self::tabular ([], $widths, null, '┬─', '─') . '┐');
     $this->writeln ('│ <comment>' . self::tabular ($headers, $widths, null, '</comment>│ <comment>') .
                     '</comment>│');
@@ -286,6 +291,13 @@ class ConsoleIO implements ConsoleIOInterface
       $this->writeln ('│ ' . self::tabular ($row, $widths, $align, '│ ') . '│');
     }
     $this->writeln ('└─' . self::tabular ([], $widths, null, '┴─', '─') . '┘');
+  }
+
+  public function terminalSize (array $terminalSize = null)
+  {
+    if ($terminalSize)
+      $this->terminalSize = $terminalSize;
+    return $this->terminalSize;
   }
 
   /**
@@ -332,6 +344,38 @@ class ConsoleIO implements ConsoleIOInterface
       $text = preg_replace ('/^/m', $this->indent, $text);
     $this->output->writeln ($text);
     return $this;
+  }
+
+  /**
+   * Computes the width of columns that are set to 0 width (which means: auto).
+   *
+   * <p>Each width that is 0 will be assigned the remaining horizontal space on the terminal, divided by the number of
+   * columns set to 0.
+   *
+   * @param array $widths
+   */
+  protected function adjustColumnWidths (array  &$widths)
+  {
+    $t  = $c = 0;
+    $li = -1;
+    foreach ($widths as $i => $w)
+      if ($w) $t += $w + 2;
+      else {
+        ++$c;
+        if ($i > $li) $li = $i;
+      }
+    $t += 1;
+    if ($c) {
+      $maxW      = $this->terminalSize[0];
+      $remaining = $maxW - $t;
+      $f         = floor ($remaining / $c) - 2;
+      if ($f < 2) $f = 2;
+      $adjust = $remaining - ($f + 2) * $c;
+      if ($adjust < 0) $adjust = 0;
+      foreach ($widths as $i => &$w) {
+        if (!$w) $w = $f + ($i == $li ? $adjust : 0);
+      }
+    }
   }
 
   private function box ($text, $colors, $width = 0, $align = CONSOLE_ALIGN_CENTER)
