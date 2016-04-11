@@ -43,23 +43,6 @@ trait ModuleCommands
   static $SHOW_COMPOSER_OUTPUT = true;
 
   /**
-   * Drops the database tables of the specified module
-   *
-   * @param string $moduleName [optional] The full name (vendor-name/module-name) of the module to be cleaned up
-   * @param array  $opts
-   * @option $suppress-errors|s Do not output an error if the module name doesn't mactch a valid module
-   */
-  function moduleCleanUp ($moduleName = '', $opts = ['suppress-errors|s' => false])
-  {
-    if ($this->modulesUtil->selectModule ($moduleName, false, true)) {
-      $this->modulesRegistry->getInstaller ()->cleanUpModule ($moduleName);
-      $this->io->done ("Cleanup completed");
-    }
-    else if (!$opts['suppress-errors'])
-      $this->io->error ("<error-info>$moduleName</error-info> is not a module");
-  }
-
-  /**
    * Scaffolds a new project module
    *
    * @param string $moduleName The full name (vendor-name/module-name) of the module to be created
@@ -115,6 +98,25 @@ trait ModuleCommands
     $this->composerUpdate (); // It also updates the modules registry
 
     $io->done ("Module <info>$___MODULE___</info> was created");
+  }
+
+  /**
+   * Runs a module's post-uninstallation tasks
+   *
+   * <p>This drops the database tables of the specified module (if any).
+   *
+   * @param string $moduleName [optional] The full name (vendor-name/module-name) of the module to be cleaned up
+   * @param array  $opts
+   * @option $suppress-errors|s Do not output an error if the module name doesn't mactch a valid module
+   */
+  function moduleCleanup ($moduleName = '', $opts = ['suppress-errors|s' => false])
+  {
+    if ($this->modulesUtil->selectModule ($moduleName, false, true)) {
+      $this->modulesRegistry->getInstaller ()->cleanUpModule ($moduleName);
+      $this->io->done ("Cleanup complete");
+    }
+    else if (!$opts['suppress-errors'])
+      $this->io->error ("<error-info>$moduleName</error-info> is not a module");
   }
 
   /**
@@ -270,20 +272,50 @@ trait ModuleCommands
   }
 
   /**
-   * Updates the application's modules configuration to match those that are currently installed
+   * (Re)runs a module's post-installation tasks
    */
-  function moduleRefresh ()
+  function moduleReinit ()
+  {
+    if ($this->modulesUtil->selectModule ($moduleName, false, true)) {
+      $this->modulesRegistry->getInstaller ()->setupModule ($moduleName);
+      $this->io->done ("Reinitialization complete");
+    }
+  }
+
+  /**
+   * Removes a module from the application
+   *
+   * @param string $moduleName The full name (vendor-name/module-name) of the module to be uninstalled
+   */
+  function moduleUninstall ($moduleName = null)
+  {
+    $this->modulesUtil->selectModule ($moduleName);
+
+    $this->io->writeln ("Uninstalling <info>$moduleName</info>")->nl ();
+
+    if ($this->modulesRegistry->isPlugin ($moduleName))
+      $this->uninstallPlugin ($moduleName);
+    else $this->uninstallProjectModule ($moduleName);
+  }
+
+  /**
+   * Forces an update of the module registry
+   *
+   * <p>It updates the configuration to register those modules that are currently installed and unregister those that
+   * are no longer installed.
+   */
+  function registryRecheck ()
   {
     $this->modulesRegistry->refresh ();
   }
 
   /**
-   * Displays information about the application's current modules configuration
+   * Displays information about the currently registered modules
    *
    * @param array $opts
    * @option $all|a When true, internal subsystem modules will also be displayed
    */
-  function moduleStatus ($opts = ['all|a' => false])
+  function registryStatus ($opts = ['all|a' => false])
   {
     $modules = $opts['all']
       ? $this->modulesRegistry->getAllModules ()
@@ -302,22 +334,6 @@ trait ModuleCommands
       'Booted',
       'Status',
     ], $o, [40, 8, 7, 0], ['L', 'C', 'C']);
-  }
-
-  /**
-   * Removes a module from the application
-   *
-   * @param string $moduleName The full name (vendor-name/module-name) of the module to be uninstalled
-   */
-  function moduleUninstall ($moduleName = null)
-  {
-    $this->modulesUtil->selectModule ($moduleName);
-
-    $this->io->writeln ("Uninstalling <info>$moduleName</info>")->nl ();
-
-    if ($this->modulesRegistry->isPlugin ($moduleName))
-      $this->uninstallPlugin ($moduleName);
-    else $this->uninstallProjectModule ($moduleName);
   }
 
   protected function uninstallPlugin ($moduleName)

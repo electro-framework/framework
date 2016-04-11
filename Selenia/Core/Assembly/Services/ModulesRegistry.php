@@ -303,7 +303,7 @@ class ModulesRegistry
         throw new ExceptionWithTitle ('The application\'s runtime configuration is not initialized.',
           'Please run <kbd>selenia</kbd> on the command line.');
       else throw new ExceptionWithTitle ('The application\'s runtime configuration must be updated.',
-        'Please run <kbd>selenia module:refresh</kbd> on the command line.');
+        'Please run <kbd>selenia registry:recheck</kbd> on the command line.');
     }
 
     $subsystems = $this->loadModulesMetadata ($this->scanSubsystems (), ModuleInfo::TYPE_SUBSYSTEM);

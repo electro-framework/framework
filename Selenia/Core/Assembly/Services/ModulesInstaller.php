@@ -57,28 +57,36 @@ class ModulesInstaller
     $io->writeln ("Cleaning up <info>$moduleName</info>");
     $status = 0;
     if ($this->moduleHasMigrations ($moduleName)) {
+      $io->nl ()->comment ("    The module has migrations.");
       $migrations = $this->getMigrationsOf ($moduleName);
-      if ($migrations) {
-        $io->nl ()->say ("  Updating the database");
-        $status = $this->consoleApp->runAndCapture (
-          'migrate:reset', [$moduleName], $outStr, $io->getOutput ()
-        );
-        if (!$status) {
-          // Drop migrations table.
-          $table = MigrationCommands::$migrationsTable;
-          $con   = Connection::getFromEnviroment ();
-          if ($con->isAvailable ())
-            $con->getPdo ()->query ("DROP TABLE $table");
+      $found      = false;
+      foreach ($migrations as $migration) {
+        if ($migration->migration_status == 'up') {
+          $found = true;
+          $io->say ("    Updating the database...");
+          $status = $this->consoleApp->runAndCapture (
+            'migrate:reset', [$moduleName], $outStr, $io->getOutput ()
+          );
+          if (!$status) {
+            // Drop migrations table.
+            $table = MigrationCommands::$migrationsTable;
+            $con   = Connection::getFromEnviroment ();
+            if ($con->isAvailable ())
+              $con->getPdo ()->query ("DROP TABLE $table");
+          }
+          else $io->error ("Error while rolling back migrations. Exit code $status");
+          $io->indent (2)->write ($outStr)->indent ();
+          break;
         }
-        else $io->error ("Error while rolling back migrations. Status $status");
-        $io->indent (2)->write ($outStr)->indent ();
       }
+      if (!$found)
+        $io->say ("    No reverse migrations were run.");
     }
     return $status;
   }
 
   /**
-   * Runs when module:refresh ends.
+   * Runs when registry:recheck ends.
    */
   public function end ()
   {
@@ -88,6 +96,22 @@ class ModulesInstaller
   function setRegistry (ModulesRegistry $registry)
   {
     $this->registry = $registry;
+  }
+
+  /**
+   * @param string|ModuleInfo $module
+   * @return bool
+   */
+  function setupModule ($module)
+  {
+    if (is_string ($module))
+      $module = $this->registry->getModule ($module);
+
+    $databaseIsAvailable = Connection::getFromEnviroment ()->isAvailable ();
+    $runMigrations       = $databaseIsAvailable && $this->migrationsSettings;
+
+    if ($runMigrations)
+      $this->updateMigrationsOf ($module);
   }
 
   /**
@@ -116,7 +140,7 @@ class ModulesInstaller
    */
   private function getMigrationsOf ($moduleName)
   {
-    $this->consoleApp->runAndCapture ('migration:status', [$moduleName, '--format=json'], $outStr, null, false);
+    $this->consoleApp->runAndCapture ('migrate:status', [$moduleName, '--format=json'], $outStr, null, false);
     if (!preg_match ('/\{.*\}$/', $outStr, $m)) return [];
     return json_decode ($m[0])->migrations;
   }
@@ -135,33 +159,36 @@ class ModulesInstaller
 
   private function setupModules (array $modules)
   {
-    $databaseIsAvailable = Connection::getFromEnviroment ()->isAvailable ();
-    $runMigrations       = $databaseIsAvailable && $this->migrationsSettings;
-
     foreach ($modules as $module) {
       $this->io->writeln ("  <info>■</info> $module->name");
-      if ($runMigrations)
-        $this->updateMigrationsOf ($module);
+      $this->setupModule ($module);
     }
   }
 
   private function updateMigrationsOf (ModuleInfo $module)
   {
     if ($this->moduleHasMigrations ($module)) {
-      $io         = $this->io;
+      $io = $this->io;
+      $io->nl ()->comment ("    The module has migrations.");
       $migrations = $this->getMigrationsOf ($module->name);
+      $found      = false;
       foreach ($migrations as $migration) {
         if ($migration->migration_status == 'down') {
-          $io->nl ()->say ("    Updating the database");
+          $found = true;
+          $io->say ("    Updating the database...");
           $status = $this->consoleApp->runAndCapture (
             'migrate', [$module->name], $outStr, $io->getOutput ()
           );
-          if ($status)
-            $io->error ("Error while migrating. Status $status");
+          if ($status) {
+            $io->writeln ($outStr);
+            $io->error ("Error while migrating. Exit code $status");
+          }
           $io->indent (4)->write ($outStr)->indent ()->nl ();
           break;
         }
       }
+      if (!$found)
+        $io->say ("    No migrations were run.");
     }
   }
 

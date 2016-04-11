@@ -186,7 +186,7 @@ trait InitCommands
     (new CopyDir (["{$this->settings->scaffoldsPath()}/storage" => $target]))->run ();
     (new ChmodEx ($target))->dirs (0775)->files (0664)->run ();
 
-    $this->consoleApp->run ('module:refresh');
+    $this->consoleApp->run ('registry:recheck');
 
     if (!$this->nestedExec)
       $this->io->done ("Storage directory created");
