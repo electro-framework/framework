@@ -5,6 +5,7 @@ use Selenia\Interfaces\CustomInspectionInterface;
 use Selenia\Interfaces\RenderableInterface;
 use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Lib\IsolateViewModel;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
 use Selenia\Matisse\Traits\Component\DataBindingTrait;
@@ -19,7 +20,13 @@ abstract class Component implements RenderableInterface, CustomInspectionInterfa
   use MarkupBuilderTrait, DataBindingTrait, DOMNodeTrait;
 
   const ERR_NO_CONTEXT = "<h4>Rendering context not set</h4>The component was not initialized correctly.";
-
+  /**
+   * When true, data-binding resolution on the component's view is unaffected by data from the shared document view
+   * model (which is set on {@see Context}); only the component's own view model is used.
+   *
+   * @var bool
+   */
+  const isolatedViewModel = false;
   /**
    * @var string
    */
@@ -251,15 +258,19 @@ abstract class Component implements RenderableInterface, CustomInspectionInterfa
    * Called by a rendering / inspection process when it descends into a child node on the DOM, before that node is
    * rendered / inspected.
    *
-   * <p>Use this method to establish a new data-binding scope if the component provides one.
+   * <p>This method is used to establish a new data-binding scope if the component provides one.
    *
-   * <p>Do NOT use this method to render anything; use {@see preRender} instead.
+   * <p>Do NOT override this method to render anything; use {@see preRender} instead.
    *
-   * > <p>**Note:** usually, only composite components provide a data-binding scope.
+   * > <p>**Note:** usually, only composite components provide a data-binding scope, with a few exceptions
+   * (ex: the For component).
    */
   function enter ()
   {
-    // override
+    if (isset($this->viewModel))
+      $this->context->getDataBinder ()->push (static::isolatedViewModel
+        ? new IsolateViewModel ($this->viewModel)
+        : $this->viewModel);
   }
 
   /**
@@ -346,15 +357,16 @@ abstract class Component implements RenderableInterface, CustomInspectionInterfa
    * Called by a rendering / inspection process process when it returns to the parent node on the DOM, after all the
    * child nodes are rendered / inspected.
    *
-   * <p>Use this method to discard a data-binding scope, if the component provides one.
+   * <p>This method discards a data-binding scope, if the component provides one.
    *
-   * <p>Do NOT use this method to render anything; use {@see postRender} instead.
+   * <p>Do NOT override this method to render anything; use {@see postRender} instead.
    *
    * > <p>**Note:** usually, only composite components provide a data-binding scope.
    */
   function leave ()
   {
-    // override
+    if (isset($this->viewModel))
+      $this->context->getDataBinder ()->pop ();
   }
 
   /**
@@ -412,13 +424,14 @@ abstract class Component implements RenderableInterface, CustomInspectionInterfa
       throw new ComponentException($this, self::ERR_NO_CONTEXT);
     ++$this->renderCount;
     if ($this->isVisible ()) {
-      $this->enter ();
       $this->setupViewModel ();
+      $this->enter ();
       $this->databind ();
       $this->preRender ();
       $this->render ();
       $this->postRender ();
       $this->leave ();
+      $this->afterRender ();
     }
   }
 
@@ -477,6 +490,16 @@ abstract class Component implements RenderableInterface, CustomInspectionInterfa
     $this->setProps ($props);
     $this->init ();
     return $this;
+  }
+
+  /**
+   * Called after the component is fully rendered.
+   *
+   * <p>Override to add debug logging, for instance.
+   */
+  protected function afterRender ()
+  {
+    //override
   }
 
   protected function getUniqueId ()

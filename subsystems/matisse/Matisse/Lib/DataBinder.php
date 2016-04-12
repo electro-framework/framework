@@ -4,24 +4,31 @@ namespace Selenia\Matisse\Lib;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Interfaces\DataBinderInterface;
 use Selenia\Matisse\Parser\Context;
+use Selenia\Traits\InspectionTrait;
 
 /**
  * Manages the view's data-binding context.
  */
 class DataBinder implements DataBinderInterface
 {
+  use InspectionTrait;
+
+  static $INSPECTABLE = [
+    'viewModelStack',
+  ];
+
   /**
    * @var Context
    */
   private $context;
   /**
-   * @var array|object
+   * @var array|object|false False if the stack is empty.
    */
-  private $scope;
+  private $viewModel = false;
   /**
    * @var array
    */
-  private $scopeStack = [];
+  private $viewModelStack = [];
 
   public function __construct (Context $context)
   {
@@ -36,14 +43,15 @@ class DataBinder implements DataBinderInterface
 
   function get ($key)
   {
-    if (!$this->scope)
-      throw new DataBindingException ("Can't access an empty scope stack");
+    if ($this->viewModel === false)
+      throw new DataBindingException ("Can't data-bind on an empty view model stack.<p>" .
+                                      count ($this->viewModelStack));
 
-    $v = _g ($this->scope, $key, $this);
+    $v = _g ($this->viewModel, $key, $this);
     if ($v !== $this)
       return $v;
 
-    if (!$this->scope instanceof IsolateViewModel) {
+    if (!$this->viewModel instanceof IsolateViewModel) {
       $data = $this->context->viewModel;
       if (isset($data)) {
         $v = _g ($data, $key, $this);
@@ -55,22 +63,38 @@ class DataBinder implements DataBinderInterface
     return null;
   }
 
-  function pop ()
+  function getViewModel ()
   {
-    array_pop ($this->scopeStack);
-    $this->scope = last ($this->scopeStack);
+    return $this->viewModel;
   }
 
-  function push ($scope)
+  function pop ()
   {
-    if (is_object ($scope) || is_array ($scope))
-      $this->scopeStack[] = $this->scope = $scope;
-    else throw new DataBindingException ("Only arrays and objects can be used as scopes");
+    if (!$this->viewModelStack)
+      throw new DataBindingException ("Can't pop a view model from an empty stack
+<blockquote>Proabably, a component has set its view model <b>after</b> the <kbd>setupViewModel</kbd> call.</blockquote>");
+    array_pop ($this->viewModelStack);
+    $this->viewModel = last ($this->viewModelStack);
+//    inspect ("POP #" . count ($this->viewModelStack), shortTypeOf($this->viewModel));
+  }
+
+  function push ($viewModel)
+  {
+    if (is_object ($viewModel) || is_array ($viewModel))
+      $this->viewModelStack[] = $this->viewModel = $viewModel;
+    else throw new DataBindingException ("Only arrays and objects can be used as view models");
+//    inspect ("PUSH #" . count ($this->viewModelStack), shortTypeOf($this->viewModel));
   }
 
   function renderBlock ($name)
   {
     return $this->context->renderBlock ($name);
+  }
+
+  function reset ()
+  {
+//    inspect ("RESET STACK");
+    $this->viewModelStack = [];
   }
 
 }

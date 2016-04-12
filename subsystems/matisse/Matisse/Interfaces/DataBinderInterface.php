@@ -22,7 +22,7 @@ interface DataBinderInterface
   function filter ($name, ...$args);
 
   /**
-   * Gets a value with the given name from the scope.
+   * Gets a value with the given name from the stack's top view model.
    *
    * @param string $key
    * @return mixed null if not found.
@@ -31,19 +31,26 @@ interface DataBinderInterface
   function get ($key);
 
   /**
-   * Removes a scope from the stack.
+   * Gets the stack's top view model.
+   *
+   * @return array|object|null null if the stack is empty..
+   */
+  function getViewModel ();
+
+  /**
+   * Removes a view model from the stack.
    *
    * @return void
    */
   function pop ();
 
   /**
-   * Pushes a scope to the stack.
+   * Pushes a view model to the stack.
    *
-   * @param array|object $scope
+   * @param array|object $viewModel
    * @return void
    */
-  function push ($scope);
+  function push ($viewModel);
 
   /**
    * Renders a content block for a {#block} reference on an expression.
@@ -52,5 +59,12 @@ interface DataBinderInterface
    * @return string The rendered markup.
    */
   function renderBlock ($name);
+
+  /**
+   * Clears the view model stack.
+   *
+   * @return void
+   */
+  function reset ();
 
 }

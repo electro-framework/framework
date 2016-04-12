@@ -38,12 +38,15 @@ trait DataBindingTrait
   protected $shareViewModelAs = null;
   /**
    * The component's own view model.
-   * <p>Do not confuse this with {@see Context::viewModel}, the later will be effective only if a field is not found on
+   *
+   * <p>Subclasses should only set this if the respective component provides a view model.
+   *
+   * > <p>Do not confuse this with {@see Context::viewModel}, the later will be effective only if a field is not found on
    * any of the cascaded component view models.
    *
-   * @var mixed
+   * @var array|object|null
    */
-  protected $viewModel;
+  protected $viewModel = null;
 
   /**
    * Registers a data binding.
@@ -131,7 +134,7 @@ trait DataBindingTrait
   {
     try {
       /** @var Component $this */
-      return $bindExp->evaluate ($this);
+      return $bindExp->evaluate ($this->context->getDataBinder());
     }
     catch (\Exception $e) {
       self::evalError ($e, $bindExp);

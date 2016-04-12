@@ -53,6 +53,10 @@ use Selenia\Matisse\Interfaces\DataBinderInterface;
 class Expression
 {
   /**
+   * The name of the parameter variable used on an compiled function.
+   */
+  const BINDER_PARAM = '$b';
+  /**
    * Splits the filters part of an expression into a sequential list of filter expressions.
    */
   const PARSE_FILTER = '/\s*(?<!\|)\|(?!\|)\s*/';
@@ -168,7 +172,7 @@ class Expression
       $seg = $segments[0];
 
       if ($seg[0] == '#')
-        return '$this->renderBlock("' . substr ($seg, 1) . '")';
+        return self::BINDER_PARAM . '->renderBlock("' . substr ($seg, 1) . '")';
 
       PhpCode::evalConstant ($seg, $ok);
       if ($ok) return $seg;
@@ -189,7 +193,7 @@ class Expression
         // If not a constant value, convert it to a property access expression fragment.
         $exp = $seg[0] == '"' || $seg[0] == "'" || ctype_digit ($seg)
           ? $seg
-          : "\$this['$seg']";
+          : self::BINDER_PARAM . "->get('$seg')";
       }
     }
     $exp = "$not$exp";
@@ -261,7 +265,8 @@ class Expression
       if ($args) self::filterSyntaxError ($filter, "Raw output filter function <kbd>*</kbd> must have no arguments.");
       return "(new RawText($input))";
     }
-    return sprintf ('$this->filter(\'%s\',%s%s%s)', addslashes ($name), $input, $args ? ',' : '', implode (',', $args));
+    return sprintf ('%s->filter(\'%s\',%s%s%s)', self::BINDER_PARAM, addslashes ($name), $input, $args ? ',' : '',
+      implode (',', $args));
   }
 
   /**
@@ -305,10 +310,10 @@ class Expression
    *
    * <p>This automatically compiles and caches the expression, if it's not already so.
    *
-   * @param DataBinderInterface $context
+   * @param DataBinderInterface $binder
    * @return mixed
    */
-  function evaluate (DataBinderInterface $context)
+  function evaluate (DataBinderInterface $binder)
   {
     if (!($fn = $this->compiled)) {
       $fn = get (self::$cache, $this->expression);
@@ -319,7 +324,8 @@ class Expression
         $this->translated = self::translate ($this->expression);
         // Compile to native code.
         try {
-          $fn = $this->compiled = PhpCode::compile ($this->translated);
+          $fn = $this->compiled = PhpCode::compile ($this->translated,
+            DataBinderInterface::class . ' ' . self::BINDER_PARAM);
         }
         catch (RuntimeException $e) {
           self::filterSyntaxError ($this->expression, '<hr>' . $e->getMessage ());
@@ -329,8 +335,7 @@ class Expression
         self::$inspectionMap[$this->expression] = $this->translated;
       }
     }
-    $fn = \Closure::bind ($fn, $context, $context);
-    return $fn ();
+    return $fn ($binder);
   }
 
 }

@@ -10,6 +10,7 @@ use Selenia\Matisse\Traits\Context\ComponentsAPITrait;
 use Selenia\Matisse\Traits\Context\FiltersAPITrait;
 use Selenia\Matisse\Traits\Context\MacrosAPITrait;
 use Selenia\Matisse\Traits\Context\ViewsAPITrait;
+use Selenia\Traits\InspectionTrait;
 
 /**
  * A Matisse rendering context.
@@ -19,6 +20,7 @@ use Selenia\Matisse\Traits\Context\ViewsAPITrait;
  */
 class Context
 {
+  use InspectionTrait;
   use AssetsAPITrait;
   use BlocksAPITrait;
   use ComponentsAPITrait;
@@ -27,6 +29,22 @@ class Context
   use ViewsAPITrait;
 
   const FORM_ID = 'selenia-form';
+
+  static $INSPECTABLE = [
+    'assets',
+    'blocks',
+    'condenseLiterals',
+    'controllerNamespaces',
+    'controllers',
+    'debugMode',
+    'macrosDirectories',
+    'macrosExt',
+    'mainAssets',
+    'presets',
+    'viewModel',
+    'viewService',
+    'dataBinder',
+  ];
 
   /**
    * Remove white space around raw markup blocks.
@@ -64,20 +82,8 @@ class Context
 
   function __construct ()
   {
-    $this->tags   = self::$coreTags;
-    $this->assets = $this->mainAssets = new AssetsContext;
-  }
-
-  /**
-   * Signals the start of a rendering session, which encompasses the rendering of a complete document fragment.
-   *
-   * <p>This resets the rendering context before the rendering starts.
-   *
-   * <p>You MUST call this before rendering a view.
-   * <p>Do NOT call this when rendering a single component from a larger document.
-   */
-  public function beginRendering ()
-  {
+    $this->tags       = self::$coreTags;
+    $this->assets     = $this->mainAssets = new AssetsContext;
     $this->dataBinder = new DataBinder ($this);
   }
 
@@ -90,15 +96,6 @@ class Context
   {
     $FORM_ID = self::FORM_ID;
     $this->addInlineScript ("$('#$FORM_ID').attr('enctype','multipart/form-data');", 'setEncType');
-  }
-
-  /**
-   * Ends a rendering session begun with a previous call to {@see beginRendering}, discarding any changes made to the
-   * rendering context during the rendering process.
-   */
-  public function endRendering ()
-  {
-    $this->dataBinder = null;
   }
 
   /**

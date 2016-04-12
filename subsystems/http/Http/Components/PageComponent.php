@@ -291,21 +291,13 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     }
   }
 
-  protected function afterRender (ViewInterface $view)
+  protected function afterRender ()
   {
-    $engine = $view->getEngine ();
-    if ($engine instanceof MatisseEngine) {
-
-      //------------------
-      // DOM panel
-      //------------------
-      if (DebugConsole::hasLogger ('DOM')) {
-        $insp = $this->viewRootComponent->inspect (true);
-        DebugConsole::logger ('DOM')->write ($insp);
-      }
-      //------------------
+    if ($this->viewRootComponent) {
+      //----------------------------------------------------------------------------------------
       // View Model panel
-      //------------------
+      // (MUST run before the DOM panel to capture the data-binding stack at its current state)
+      //----------------------------------------------------------------------------------------
       if (DebugConsole::hasLogger ('view') && isset($this->viewModel->context)) {
 
         $VMFilter = function ($k, $v, $o) {
@@ -323,6 +315,15 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
                     ->write ('<#section|Compiled expressions>')
                     ->inspect (Expression::$inspectionMap)
                     ->write ('</#section>');
+      }
+
+      //-----------
+      // DOM panel
+      //-----------
+      if (DebugConsole::hasLogger ('DOM')) {
+        $this->context->getDataBinder ()->reset ();
+        $insp = $this->inspect (true);
+        DebugConsole::logger ('DOM')->write ($insp);
       }
 
       if (DebugConsole::hasLogger ('model')) {

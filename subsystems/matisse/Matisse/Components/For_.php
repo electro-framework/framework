@@ -49,14 +49,9 @@ class For_ extends Component
   /** @var ForProperties */
   public $props;
 
-  function enter ()
+  protected function viewModel ()
   {
-    $this->context->getDataBinder ()->push ($this->viewModel = []);
-  }
-
-  function leave ()
-  {
-    $this->context->getDataBinder ()->pop ();
+    $this->viewModel = [];
   }
 
   protected function render ()
