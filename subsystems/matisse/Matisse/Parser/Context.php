@@ -35,10 +35,6 @@ class Context
    */
   public $condenseLiterals = false;
   /**
-   * @var DataBinder
-   */
-  public $dataBinder;
-  /**
    * Set to true to generate pretty-printed markup.
    *
    * @var bool
@@ -61,12 +57,28 @@ class Context
    * @var array
    */
   public $presets = [];
+  /**
+   * @var DataBinder|null
+   */
+  private $dataBinder = null;
 
   function __construct ()
   {
-    $this->tags       = self::$coreTags;
-    $this->assets     = $this->mainAssets = new AssetsContext;
-    $this->dataBinder = new DataBinder;
+    $this->tags   = self::$coreTags;
+    $this->assets = $this->mainAssets = new AssetsContext;
+  }
+
+  /**
+   * Signals the start of a rendering session, which encompasses the rendering of a complete document fragment.
+   *
+   * <p>This resets the rendering context before the rendering starts.
+   *
+   * <p>You MUST call this before rendering a view.
+   * <p>Do NOT call this when rendering a single component from a larger document.
+   */
+  public function beginRendering ()
+  {
+    $this->dataBinder = new DataBinder ($this);
   }
 
   /**
@@ -78,6 +90,25 @@ class Context
   {
     $FORM_ID = self::FORM_ID;
     $this->addInlineScript ("$('#$FORM_ID').attr('enctype','multipart/form-data');", 'setEncType');
+  }
+
+  /**
+   * Ends a rendering session begun with a previous call to {@see beginRendering}, discarding any changes made to the
+   * rendering context during the rendering process.
+   */
+  public function endRendering ()
+  {
+    $this->dataBinder = null;
+  }
+
+  /**
+   * Returns an API for the view's data-binding context.
+   *
+   * @return DataBinder
+   */
+  public function getDataBinder ()
+  {
+    return $this->dataBinder;
   }
 
 }

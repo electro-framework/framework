@@ -49,11 +49,20 @@ class For_ extends Component
   /** @var ForProperties */
   public $props;
 
+  function enter ()
+  {
+    $this->context->getDataBinder ()->push ($this->viewModel = []);
+  }
+
+  function leave ()
+  {
+    $this->context->getDataBinder ()->pop ();
+  }
+
   protected function render ()
   {
     $prop            = $this->props;
     $count           = $prop->get ('count', -1);
-    $this->viewModel = [];
     if (exists ($prop->each))
       $this->parseIteratorExp ($prop->each, $idxVar, $itVar);
     else $idxVar = $itVar = null;

@@ -1,59 +1,76 @@
 <?php
 namespace Selenia\Matisse\Lib;
 
-use Selenia\Matisse\Interfaces\ExpressionContextInterface;
+use Selenia\Matisse\Exceptions\DataBindingException;
+use Selenia\Matisse\Interfaces\DataBinderInterface;
+use Selenia\Matisse\Parser\Context;
 
 /**
  * Manages the view's data-binding context.
  */
-class DataBinder
+class DataBinder implements DataBinderInterface
 {
   /**
-   * @var ExpressionContextInterface[]
+   * @var Context
    */
-  public $contextStack = [];
-
-  function push (ExpressionContextInterface $context)
-  {
-    $this->contextStack[] = $context;
-  }
-
-  function pop ()
-  {
-    array_pop ($this->contextStack);
-  }
-
+  private $context;
   /**
-   * Gets a field from the current databinding context.
-   *
-   * > <p>**Note:** this is meant for internal use by compiled databinding expressions.
-   *
-   * @param string $field
-   * @return mixed
+   * @var array|object
    */
-  function offsetGet ($field)
+  private $scope;
+  /**
+   * @var array
+   */
+  private $scopeStack = [];
+
+  public function __construct (Context $context)
   {
-    $data = $this->viewModel;
-    if (isset($data)) {
-      $v = _g ($data, $field, $this);
-      if ($v !== $this)
-        return $v;
-    }
+    $this->context = $context;
+  }
 
-    /** @var static $parent */
-    $parent = $this->parent;
-    if (isset($parent))
-      return $parent[$field];
+  function filter ($name, ...$args)
+  {
+    $filter = $this->context->getFilter ($name);
+    return call_user_func_array ($filter, $args);
+  }
 
-    $data = $this->context->viewModel;
-    if (isset($data)) {
-      $v = _g ($data, $field, $this);
-      if ($v !== $this)
-        return $v;
+  function get ($key)
+  {
+    if (!$this->scope)
+      throw new DataBindingException ("Can't access an empty scope stack");
+
+    $v = _g ($this->scope, $key, $this);
+    if ($v !== $this)
+      return $v;
+
+    if (!$this->scope instanceof IsolateViewModel) {
+      $data = $this->context->viewModel;
+      if (isset($data)) {
+        $v = _g ($data, $key, $this);
+        if ($v !== $this)
+          return $v;
+      }
     }
 
     return null;
   }
 
+  function pop ()
+  {
+    array_pop ($this->scopeStack);
+    $this->scope = last ($this->scopeStack);
+  }
+
+  function push ($scope)
+  {
+    if (is_object ($scope) || is_array ($scope))
+      $this->scopeStack[] = $this->scope = $scope;
+    else throw new DataBindingException ("Only arrays and objects can be used as scopes");
+  }
+
+  function renderBlock ($name)
+  {
+    return $this->context->renderBlock ($name);
+  }
 
 }

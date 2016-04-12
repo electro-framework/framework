@@ -6,7 +6,6 @@ use PhpKit\WebConsole\Lib\Debug;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\DataBindingException;
-use Selenia\Matisse\Exceptions\FilterHandlerNotFoundException;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Parser\Expression;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
@@ -60,22 +59,6 @@ trait DataBindingTrait
   }
 
   /**
-   * Executes a filter with the given arguments.
-   *
-   * <p>This is used by compiled databinding expressions.
-   *
-   * @param string $name    Filter name.
-   * @param array  ...$args Filter arguments. The first argument is always the filter's implicit argument.
-   * @return mixed
-   * @throws FilterHandlerNotFoundException if the filter is not found.
-   */
-  function filter ($name, ...$args)
-  {
-    $filter = $this->context->getFilter ($name);
-    return call_user_func_array ($filter, $args);
-  }
-
-  /**
    * Returns the current value of an attribute, performing databinding if necessary.
    *
    * <p>This is only required on situation where you need a property's value before databinging has occured.
@@ -115,19 +98,6 @@ trait DataBindingTrait
       if (empty($this->bindings))
         $this->bindings = null;
     }
-  }
-
-  /**
-   * Renders a content block. This is reserved for use by compiled databinding expressions.
-   *
-   * @param string $name The block name.
-   * @return string
-   */
-  function renderBlock ($name)
-  {
-    $block = $this->context->getBlock ($name);
-    /** @var Component $this */
-    return $this->attachSetAndGetContent ($block);
   }
 
   /**

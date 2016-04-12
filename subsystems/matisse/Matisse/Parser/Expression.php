@@ -4,7 +4,7 @@ namespace Selenia\Matisse\Parser;
 use PhpCode;
 use RuntimeException;
 use Selenia\Matisse\Exceptions\DataBindingException;
-use Selenia\Matisse\Interfaces\ExpressionContextInterface;
+use Selenia\Matisse\Interfaces\DataBinderInterface;
 
 /**
  * Represents a Matisse databinding expression.
@@ -305,10 +305,10 @@ class Expression
    *
    * <p>This automatically compiles and caches the expression, if it's not already so.
    *
-   * @param ExpressionContextInterface $context
+   * @param DataBinderInterface $context
    * @return mixed
    */
-  function evaluate (ExpressionContextInterface $context)
+  function evaluate (DataBinderInterface $context)
   {
     if (!($fn = $this->compiled)) {
       $fn = get (self::$cache, $this->expression);

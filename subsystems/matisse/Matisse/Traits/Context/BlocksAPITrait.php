@@ -84,6 +84,18 @@ trait BlocksAPITrait
   }
 
   /**
+   * Renders a content block.
+   *
+   * @param string $name The block name.
+   * @return string The rendered markup.
+   */
+  function renderBlock ($name)
+  {
+    $block = get ($this->blocks, $name, []);
+    return Component::getRenderingOfSet ($block);
+  }
+
+  /**
    * Saves a string on a specific block, overriding the previous content of it.
    *
    * @param string $name An arbitrary block name.

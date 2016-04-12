@@ -136,6 +136,6 @@ class If_ extends Component implements MacroExtensionInterface
   {
     $result = $this->evaluate ();
     if ($result)
-      $this->renderSet ($result);
+      self::renderSet ($result);
   }
 }

@@ -5,7 +5,6 @@ use Selenia\Interfaces\CustomInspectionInterface;
 use Selenia\Interfaces\RenderableInterface;
 use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
-use Selenia\Matisse\Interfaces\ExpressionContextInterface;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
 use Selenia\Matisse\Traits\Component\DataBindingTrait;
@@ -15,7 +14,7 @@ use Selenia\Matisse\Traits\Component\MarkupBuilderTrait;
 /**
  * The base class from which all components derive.
  */
-abstract class Component implements RenderableInterface, ExpressionContextInterface, CustomInspectionInterface
+abstract class Component implements RenderableInterface, CustomInspectionInterface
 {
   use MarkupBuilderTrait, DataBindingTrait, DOMNodeTrait;
 
@@ -139,6 +138,32 @@ abstract class Component implements RenderableInterface, ExpressionContextInterf
     return (new static)->setup ($parent, $parent->context, $props, $bindings);
   }
 
+  /**
+   * Renders a set of components.
+   *
+   * @param Component[] $components The set of components to be rendered.
+   */
+  static function getRenderingOfSet (array $components = null)
+  {
+    ob_start (null, 0);
+    if (isset($components))
+      foreach ($components as $component)
+        $component->run ();
+    return ob_get_clean ();
+  }
+
+  /**
+   * Renders a set of components.
+   *
+   * @param Component[] $components The set of components to be rendered.
+   */
+  static function renderSet (array $components = null)
+  {
+    if (isset($components))
+      foreach ($components as $component)
+        $component->run ();
+  }
+
   static function throwUnknownComponent (Context $context, $tagName, Component $parent, $filename = null)
   {
     $paths    = implode ('', map ($context->macrosDirectories,
@@ -154,18 +179,6 @@ abstract class Component implements RenderableInterface, ExpressionContextInterf
   <th>Container component:<td><b>&lt;{$parent->getTagName()}></b>, of type <b>{$parent->className}</b>
 </table>
 ");
-  }
-
-  /**
-   * Renders a set of components.
-   *
-   * @param Component[] $components The set of components to be rendered.
-   */
-  protected static function renderSet (array $components = null)
-  {
-    if (isset($components))
-      foreach ($components as $component)
-        $component->run ();
   }
 
   function __get ($name)
@@ -235,6 +248,21 @@ abstract class Component implements RenderableInterface, ExpressionContextInterf
   }
 
   /**
+   * Called by a rendering / inspection process when it descends into a child node on the DOM, before that node is
+   * rendered / inspected.
+   *
+   * <p>Use this method to establish a new data-binding scope if the component provides one.
+   *
+   * <p>Do NOT use this method to render anything; use {@see preRender} instead.
+   *
+   * > <p>**Note:** usually, only composite components provide a data-binding scope.
+   */
+  function enter ()
+  {
+    // override
+  }
+
+  /**
    * Renders all children and returns the resulting markup.
    * ><p>**Note:** the component itself is not rendered.
    *
@@ -257,6 +285,11 @@ abstract class Component implements RenderableInterface, ExpressionContextInterf
     ob_start (null, 0);
     $this->run ();
     return ob_get_clean ();
+  }
+
+  function setContext ($context)
+  {
+    $this->context = $context;
   }
 
   /**
@@ -307,6 +340,21 @@ abstract class Component implements RenderableInterface, ExpressionContextInterf
   function isAttributeSet ($fieldName)
   {
     return isset($this->props->$fieldName) || $this->isBound ($fieldName);
+  }
+
+  /**
+   * Called by a rendering / inspection process process when it returns to the parent node on the DOM, after all the
+   * child nodes are rendered / inspected.
+   *
+   * <p>Use this method to discard a data-binding scope, if the component provides one.
+   *
+   * <p>Do NOT use this method to render anything; use {@see postRender} instead.
+   *
+   * > <p>**Note:** usually, only composite components provide a data-binding scope.
+   */
+  function leave ()
+  {
+    // override
   }
 
   /**
@@ -364,17 +412,14 @@ abstract class Component implements RenderableInterface, ExpressionContextInterf
       throw new ComponentException($this, self::ERR_NO_CONTEXT);
     ++$this->renderCount;
     if ($this->isVisible ()) {
+      $this->enter ();
       $this->setupViewModel ();
       $this->databind ();
       $this->preRender ();
       $this->render ();
       $this->postRender ();
+      $this->leave ();
     }
-  }
-
-  function setContext ($context)
-  {
-    $this->context = $context;
   }
 
   /**
@@ -479,7 +524,7 @@ abstract class Component implements RenderableInterface, ExpressionContextInterf
   }
 
   /**
-   * Do something before the component renders (ex. prepend to the output).
+   * Do something after the component renders (ex. prepend to the output).
    */
   protected function postRender ()
   {
@@ -487,7 +532,7 @@ abstract class Component implements RenderableInterface, ExpressionContextInterf
   }
 
   /**
-   * Do something after the component renders (ex. append to the output).
+   * Do something before the component renders (ex. append to the output).
    */
   protected function preRender ()
   {
