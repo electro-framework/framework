@@ -4,7 +4,6 @@ namespace Selenia\Matisse\Components\Base;
 use Selenia\Interfaces\RenderableInterface;
 use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\Matisse\Exceptions\ComponentException;
-use Selenia\Matisse\Lib\IsolateViewModel;
 use Selenia\ViewEngine\Engines\MatisseEngine;
 
 /**
@@ -30,6 +29,8 @@ use Selenia\ViewEngine\Engines\MatisseEngine;
  */
 class CompositeComponent extends Component
 {
+  const publishProperties = true;
+
   /**
    * An inline/embedded template to be rendered as the component's appearance.
    *
@@ -54,7 +55,7 @@ class CompositeComponent extends Component
    *
    * @var ViewInterface
    */
-  public $view;
+  public $view = null;
   /**
    * A Matisse component that will be used as this component's renderable view.
    *
@@ -67,34 +68,6 @@ class CompositeComponent extends Component
    * @var string
    */
   protected $viewEngineClass = MatisseEngine::class;
-
-  /**
-   * Allows subclasses to generate the view's markup dinamically.
-   * If not overriden, the default behaviour is to load the view from an external file, if one is defined on
-   * `$templateUrl`. If not, the content of `$template` is returned, if set, otherwise no output is generated.
-   *
-   * > **Note:** this returns nothing; the output is sent directly to the output buffer.
-   */
-  protected function render ()
-  {
-    if ($skin = $this->getSkin ()) {
-      $skin->run ();
-      return;
-    }
-    if ($this->templateUrl) {
-      $this->assertContext ();
-      $this->view = $this->context->viewService->loadFromFile ($this->templateUrl);
-    }
-    elseif ($this->template) {
-      $this->assertContext ();
-      $this->view = $this->context->viewService->loadFromString ($this->template, $this->viewEngineClass);
-    }
-    else return;
-
-    $this->view->compile ();
-    $this->setupView ($this->view);
-    echo $this->view->render ();
-  }
 
   /**
    * When the component's view is a matisse template, this returns the root of the parsed template, otherwise it returns
@@ -115,7 +88,7 @@ class CompositeComponent extends Component
   }
 
   /**
-   * Sets the given Matisse component as this component's renderable view.
+   * Sets the given Matisse component to be this component's renderable view. It also attaches it to this component.
    *
    * <p>If set, this will override {@see template} and {@see templateUrl}.
    *
@@ -124,6 +97,59 @@ class CompositeComponent extends Component
   function setSkin (Component $skin)
   {
     $this->skin = $skin;
+    $skin->attachTo ($this);
+  }
+
+  /**
+   * Allows subclasses to generate the view's markup dinamically.
+   * If not overriden, the default behaviour is to load the view from an external file, if one is defined on
+   * `$templateUrl`. If not, the content of `$template` is returned, if set, otherwise no output is generated.
+   *
+   * > **Note:** this returns nothing; the output is sent directly to the output buffer.
+   */
+  protected function render ()
+  {
+    if ($this->skin)
+      $this->skin->run ();
+    elseif ($this->view)
+      echo $this->view->render ();
+  }
+
+  protected function setupViewModel ()
+  {
+    parent::setupViewModel ();
+
+    if (!isset($this->skin)) {
+      if ($this->templateUrl) {
+        $this->assertContext ();
+        $this->view = $this->context->viewService->loadFromFile ($this->templateUrl);
+        $this->view->compile ();
+        $this->setupView ($this->view);
+      }
+      elseif ($this->template) {
+        $this->assertContext ();
+        $this->view = $this->context->viewService->loadFromString ($this->template, $this->viewEngineClass);
+        $this->view->compile ();
+        $this->setupView ($this->view);
+      }
+    }
+    // else assume the skin is already attached to this; it will be if set via setSkin().
+
+    // The skin may have been set directly or indirectly via the loaded view.
+    $this->skin = $this->getSkin ();
+    // When there is a skin, transfer the data binding context to it.
+    if ($this->skin) {
+      inspect ("SET A NEW BINDER FOR SKIN OF ".$this->getTagName());
+      if (!$this->dataBinder) {
+        inspect ("SETUPVIEWMODEL WITH DATABINDER NOT SET FOR ".$this->getTagName());
+        return;
+      }
+      $this->skin->setDataBinder ($this->dataBinder);
+      inspect ( $this->skin->getDataBinder());
+      // Now reset the component's binding context.
+      if ($this->parent)
+        $this->dataBinder = $this->parent->getDataBinder ();
+    }
   }
 
   /**

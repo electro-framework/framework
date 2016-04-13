@@ -1,47 +1,43 @@
 <?php
 namespace Selenia\Matisse\Lib;
 
-use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Exceptions\DataBindingException;
+use PhpKit\WebConsole\Lib\Debug;
+use Selenia\Interfaces\CustomInspectionInterface;
 use Selenia\Matisse\Interfaces\DataBinderInterface;
 use Selenia\Matisse\Parser\Context;
-use Selenia\Traits\InspectionTrait;
+use Selenia\Matisse\Properties\Base\AbstractProperties;
 
 /**
  * Manages the view's data-binding context.
+ *
+ * <p>Instances of this class are immutable.
  */
-class DataBinder implements DataBinderInterface
+class DataBinder implements DataBinderInterface, CustomInspectionInterface
 {
-  use InspectionTrait;
-
-  static $INSPECTABLE = [
-    'viewModelStack',
-  ];
-
-  /**
-   * @var Component
-   */
-  private $component = null;
-  /**
-   * @var Component[]
-   */
-  private $componentsStack = [];
   /**
    * @var Context
    */
   private $context;
+  private $isolatedViewModel = false;
   /**
-   * @var array|object|false False if the stack is empty.
+   * @var AbstractProperties|null
    */
-  private $viewModel = false;
+  private $props;
   /**
-   * @var array Type (object|array)[]
+   * @var object|array
    */
-  private $viewModelStack = [];
+  private $viewModel;
 
-  public function __construct (Context $context)
+  /**
+   * @param Context                 $context
+   * @param object|array            $viewModel
+   * @param AbstractProperties|null $props
+   */
+  public function __construct (Context $context, $viewModel, AbstractProperties $props = null)
   {
-    $this->context = $context;
+    $this->viewModel = $viewModel;
+    $this->props     = $props;
+    $this->context   = $context;
   }
 
   function filter ($name, ...$args)
@@ -52,15 +48,12 @@ class DataBinder implements DataBinderInterface
 
   function get ($key)
   {
-    if ($this->viewModel === false)
-      throw new DataBindingException ("Can't data-bind on an empty view model stack.<p>" .
-                                      count ($this->viewModelStack));
-
+    inspect ("PROP $key on " . typeInfoOf ($this->viewModel));
     $v = _g ($this->viewModel, $key, $this);
     if ($v !== $this)
       return $v;
 
-    if (!$this->viewModel instanceof IsolateViewModel) {
+    if (!$this->isolatedViewModel) {
       $data = $this->context->viewModel;
       if (isset($data)) {
         $v = _g ($data, $key, $this);
@@ -72,36 +65,21 @@ class DataBinder implements DataBinderInterface
     return null;
   }
 
+  function getProps ()
+  {
+    return $this->props;
+  }
+
   function getViewModel ()
   {
     return $this->viewModel;
   }
 
-  function getProps ()
+  function prop ($key)
   {
-    return $this->component->props;
-  }
-
-  function pop ()
-  {
-    if (!$this->viewModelStack)
-      throw new DataBindingException ("Can't pop a view model from an empty stack
-<blockquote>Proabably, a component has set its view model <b>after</b> the <kbd>setupViewModel</kbd> call.</blockquote>");
-    array_pop ($this->viewModelStack);
-    array_pop ($this->componentsStack);
-    $this->viewModel = last ($this->viewModelStack);
-    $this->component = last ($this->componentsStack);
-//    inspect ("POP #" . count ($this->viewModelStack), shortTypeOf($this->viewModel));
-  }
-
-  function push ($viewModel, Component $component)
-  {
-    if (is_object ($viewModel) || is_array ($viewModel)) {
-      $this->viewModelStack[]  = $this->viewModel = $viewModel;
-      $this->componentsStack[] = $this->component = $component;
-    }
-    else throw new DataBindingException ("Only arrays and objects can be used as view models");
-//    inspect ("PUSH #" . count ($this->viewModelStack), shortTypeOf($this->viewModel));
+    inspect ("PROP $key on " . typeOf ($this->props));
+    $p = $this->props;
+    return $p ? $p->get ($key) : null;
   }
 
   function renderBlock ($name)
@@ -109,11 +87,40 @@ class DataBinder implements DataBinderInterface
     return $this->context->getBlock ($name)->render ();
   }
 
-  function reset ()
+  function withIsolation ($isolated = true)
   {
-//    inspect ("RESET STACK");
-    $this->viewModelStack  = [];
-    $this->componentsStack = [];
+    if ($isolated == $this->isolatedViewModel)
+      return $this;
+    $o                    = clone $this;
+    $o->isolatedViewModel = $isolated;
+    return $o;
+  }
+
+  function withProps (AbstractProperties $props = null)
+  {
+    if ($props === $this->props)
+      return $this;
+    $o        = clone $this;
+    $o->props = $props;
+    return $o;
+  }
+
+  function withViewModel ($viewModel)
+  {
+    if ($viewModel === $this->viewModel)
+      return $this;
+    $o            = clone $this;
+    $o->viewModel = $viewModel;
+    return $o;
+  }
+
+  function inspect ()
+  {
+    return Debug::grid ([
+      "View Model" => Debug::getType ($this->viewModel),
+      "Properties" => Debug::getType ($this->props),
+      "Isolation"  => $this->isolatedViewModel ? 'true' : 'false',
+    ]);
   }
 
 }

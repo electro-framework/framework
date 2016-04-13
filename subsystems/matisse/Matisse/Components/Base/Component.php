@@ -1,11 +1,11 @@
 <?php
 namespace Selenia\Matisse\Components\Base;
 
-use Selenia\Interfaces\CustomInspectionInterface;
 use Selenia\Interfaces\RenderableInterface;
 use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
-use Selenia\Matisse\Lib\IsolateViewModel;
+use Selenia\Matisse\Interfaces\DataBinderInterface;
+use Selenia\Matisse\Lib\DataBinder;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
 use Selenia\Matisse\Traits\Component\DataBindingTrait;
@@ -27,6 +27,13 @@ abstract class Component implements RenderableInterface
    * @var bool
    */
   const isolatedViewModel = false;
+  /**
+   * When true, the component's properties will be set on its data binder, so that data binding expressions can access
+   * them via the `@`property syntax.
+   *
+   * @var bool;
+   */
+  const publishProperties = false;
   /**
    * @var string
    */
@@ -188,6 +195,15 @@ abstract class Component implements RenderableInterface
 ");
   }
 
+  function __debugInfo ()
+  {
+    $props = object_publicProps ($this);
+    unset ($props['parent']);
+    unset ($props['context']);
+    unset ($props['children']);
+    return $props;
+  }
+
   function __get ($name)
   {
     throw new ComponentException($this, "Can't read from non existing property <b>$name</b>.");
@@ -255,25 +271,6 @@ abstract class Component implements RenderableInterface
   }
 
   /**
-   * Called by a rendering / inspection process when it descends into a child node on the DOM, before that node is
-   * rendered / inspected.
-   *
-   * <p>This method is used to establish a new data-binding scope if the component provides one.
-   *
-   * <p>Do NOT override this method to render anything; use {@see preRender} instead.
-   *
-   * > <p>**Note:** usually, only composite components provide a data-binding scope, with a few exceptions
-   * (ex: the For component).
-   */
-  function enter ()
-  {
-    if (isset($this->viewModel))
-      $this->context->getDataBinder ()->push (static::isolatedViewModel
-        ? new IsolateViewModel ($this->viewModel)
-        : $this->viewModel);
-  }
-
-  /**
    * Renders all children and returns the resulting markup.
    * ><p>**Note:** the component itself is not rendered.
    *
@@ -301,6 +298,16 @@ abstract class Component implements RenderableInterface
   function setContext ($context)
   {
     $this->context = $context;
+  }
+
+  /**
+   * Gets the component's data binder.
+   *
+   * @return DataBinder
+   */
+  function getDataBinder ()
+  {
+    return $this->dataBinder;
   }
 
   /**
@@ -351,22 +358,6 @@ abstract class Component implements RenderableInterface
   function isAttributeSet ($fieldName)
   {
     return isset($this->props->$fieldName) || $this->isBound ($fieldName);
-  }
-
-  /**
-   * Called by a rendering / inspection process process when it returns to the parent node on the DOM, after all the
-   * child nodes are rendered / inspected.
-   *
-   * <p>This method discards a data-binding scope, if the component provides one.
-   *
-   * <p>Do NOT override this method to render anything; use {@see postRender} instead.
-   *
-   * > <p>**Note:** usually, only composite components provide a data-binding scope.
-   */
-  function leave ()
-  {
-    if (isset($this->viewModel))
-      $this->context->getDataBinder ()->pop ();
   }
 
   /**
@@ -424,15 +415,24 @@ abstract class Component implements RenderableInterface
       throw new ComponentException($this, self::ERR_NO_CONTEXT);
     ++$this->renderCount;
     if ($this->isVisible ()) {
-      $this->setupViewModel ();
-      $this->databind (); // Yhis is done on data binding context of the component's parent.
-      $this->enter ();    // Now the binding context may change.
+      $this->databind ();       // This is done on the data binding context of the component's parent.
+      $this->setupViewModel (); // Here the component may setup its data binder.
       $this->preRender ();
       $this->render ();
       $this->postRender ();
-      $this->leave ();
       $this->afterRender ();
     }
+  }
+
+  /**
+   * Sets the component's data binder.
+   *
+   * @param DataBinderInterface $binder
+   * @return void
+   */
+  function setDataBinder (DataBinderInterface $binder)
+  {
+    $this->dataBinder = $binder;
   }
 
   /**
@@ -604,8 +604,28 @@ abstract class Component implements RenderableInterface
   {
     $this->viewModel ();
 
-    if (exists ($this->shareViewModelAs))
-      $this->context->viewModel[$this->shareViewModelAs] = $this->viewModel;
+    if (isset($this->viewModel)) {
+      if ($this->dataBinder)
+        $this->dataBinder = $this->dataBinder->withViewModel ($this->viewModel);
+      else $this->dataBinder = new DataBinder ($this->context, $this->viewModel,
+        static::publishProperties ? $this->props : null);
+
+      if (exists ($this->shareViewModelAs))
+        $this->context->viewModel[$this->shareViewModelAs] = $this->viewModel;
+    }
+    else if (static::publishProperties) {
+      inspect ("PUBLISH PROPS ".$this->getTagName());
+      if (!$this->dataBinder) {
+        inspect ("SETUPVIEWMODEL WITH DATABINDER NOT SET FOR ".$this->getTagName());
+        return;
+      }
+      $this->dataBinder = $this->dataBinder->withProps ($this->props);
+      inspect ($this->dataBinder);
+    }
+
+    if ($this->dataBinder)
+      $this->dataBinder = $this->dataBinder->withIsolation (static::isolatedViewModel);
+    else inspect ("SETUPVIEWMODEL WITH DATABINDER NOT SET FOR ".$this->getTagName());
   }
 
   /**

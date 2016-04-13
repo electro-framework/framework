@@ -3,11 +3,10 @@ namespace Selenia\Matisse\Interfaces;
 
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Exceptions\FilterHandlerNotFoundException;
+use Selenia\Matisse\Properties\Base\AbstractProperties;
 
 /**
- * An API for the view's data-binding context.
- *
- * It provides a data context for evaluating expressions and methods to manage that context.
+ * Provides a data context for evaluating expressions and methods to manage that context.
  */
 interface DataBinderInterface
 {
@@ -22,7 +21,7 @@ interface DataBinderInterface
   function filter ($name, ...$args);
 
   /**
-   * Gets a value with the given name from the stack's top view model.
+   * Gets a value with the given name from the view model.
    *
    * @param string $key
    * @return mixed null if not found.
@@ -31,26 +30,27 @@ interface DataBinderInterface
   function get ($key);
 
   /**
-   * Gets the stack's top view model.
+   * Gets the bound component properties.
    *
-   * @return array|object|null null if the stack is empty..
+   * @return $this|null|AbstractProperties
+   */
+  function getProps ();
+
+  /**
+   * Gets the bound view model.
+   *
+   * @return $this|null|object|array
    */
   function getViewModel ();
 
   /**
-   * Removes a view model from the stack.
+   * Gets a value with the given name from the bound component properties.
    *
-   * @return void
+   * @param string $key
+   * @return mixed null if not found.
+   * @throws DataBindingException
    */
-  function pop ();
-
-  /**
-   * Pushes a view model to the stack.
-   *
-   * @param array|object $viewModel
-   * @return void
-   */
-  function push ($viewModel);
+  function prop ($key);
 
   /**
    * Renders a content block for a {#block} reference on an expression.
@@ -61,10 +61,27 @@ interface DataBinderInterface
   function renderBlock ($name);
 
   /**
-   * Clears the view model stack.
+   * Gets a new binder instance with the given view isolation mode.
    *
-   * @return void
+   * @param bool $isolated
+   * @return static
    */
-  function reset ();
+  function withIsolation ($isolated = true);
+
+  /**
+   * Gets a new binder instance with the given component properties.
+   *
+   * @param AbstractProperties|null $props
+   * @return static
+   */
+  function withProps (AbstractProperties $props = null);
+
+  /**
+   * Gets a new binder instance with the given component properties.
+   *
+   * @param object|array|null $viewModel
+   * @return static
+   */
+  function withViewModel ($viewModel);
 
 }

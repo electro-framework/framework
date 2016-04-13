@@ -60,9 +60,9 @@ class MacroCall extends CompositeComponent
     $this->macroInstance = $macro;
     if (isset($this->props))
       $this->props->setMacro ($macro);
-    $this->skin = new DocumentFragment;
-    $this->skin->attachTo ($this); // this MUST be called before adding children!
+    $this->setSkin (new DocumentFragment); // this also attaches it, which MUST be done before adding children!
     $this->skin->addChildren ($macro->getClonedChildren ());
+    inspect ("MACRO SET SKIN for ".$this->getTagName());
   }
 
   protected function getDefaultParam ()

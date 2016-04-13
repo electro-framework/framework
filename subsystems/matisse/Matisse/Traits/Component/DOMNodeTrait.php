@@ -114,10 +114,12 @@ trait DOMNodeTrait
     }
   }
 
-  public function attachTo (Component $parent = null)
+  public function attachTo (Component $parent)
   {
     $this->parent = $parent;
     $this->context = $parent->context;
+    if (!$this->dataBinder)
+      $this->dataBinder = $parent->getDataBinder();
   }
 
   public function detach ()

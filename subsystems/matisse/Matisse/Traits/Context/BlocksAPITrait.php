@@ -26,7 +26,7 @@ trait BlocksAPITrait
    */
   function getBlock ($name)
   {
-    return get ($this->blocks, $name) ?: $this->blocks[$name] = new Block ($this->dataBinder);
+    return get ($this->blocks, $name) ?: $this->blocks[$name] = new Block;
   }
 
   /**

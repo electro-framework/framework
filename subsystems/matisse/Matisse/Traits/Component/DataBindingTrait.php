@@ -6,6 +6,8 @@ use PhpKit\WebConsole\Lib\Debug;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\DataBindingException;
+use Selenia\Matisse\Interfaces\DataBinderInterface;
+use Selenia\Matisse\Lib\DataBinder;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Parser\Expression;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
@@ -15,9 +17,9 @@ use Selenia\Matisse\Properties\Base\ComponentProperties;
  *
  * It's applicable to the Component class.
  *
- * @property Context             $context  The rendering context.
- * @property ComponentProperties $props    The component's attributes.
- * @property Component           $parent   The component's parent.
+ * @property Context             $context    The rendering context.
+ * @property ComponentProperties $props      The component's attributes.
+ * @property DataBinder          $dataBinder The component's data binder.
  */
 trait DataBindingTrait
 {
@@ -31,18 +33,24 @@ trait DataBindingTrait
    */
   public $bindings = null;
   /**
+   * The data binder for view scope resolution when rendering this component.
+   *
+   * @var DataBinderInterface
+   */
+  protected $dataBinder = null;
+  /**
    * When set, the component's view model is made available on the shared view model under the specified key name.
    *
    * @var string
    */
   protected $shareViewModelAs = null;
   /**
-   * The component's own view model.
+   * The component's view model (its own or an inherited one).
    *
    * <p>Subclasses should only set this if the respective component provides a view model.
    *
-   * > <p>Do not confuse this with {@see Context::viewModel}, the later will be effective only if a field is not found on
-   * any of the cascaded component view models.
+   * > <p>Do not confuse this with {@see Context::viewModel}, the later will be effective only if a field is not found
+   * on any of the cascaded component view models.
    *
    * @var array|object|null
    */
@@ -76,6 +84,26 @@ trait DataBindingTrait
       return $this->evalBinding ($this->bindings[$name]);
 
     return $this->props->get ($name);
+  }
+
+  /**
+   * Returns the component's view model (its own or an inherited one).
+   *
+   * @return array|null|object
+   */
+  function getViewModel ()
+  {
+    return $this->viewModel;
+  }
+
+  /**
+   * Sets the component's view model.
+   *
+   * @param array|null|object $viewModel
+   */
+  function setViewModel ($viewModel)
+  {
+    $this->viewModel = $viewModel;
   }
 
   /**
@@ -132,10 +160,16 @@ trait DataBindingTrait
    */
   protected function evalBinding (Expression $bindExp)
   {
+    if (!$this->dataBinder) {
+      inspect ("EXPR EVAL SKIPPED");
+      return null;
+    }
     try {
       /** @var Component $this */
-      $z = $bindExp->evaluate ($this, $this->context->getDataBinder());
-      inspect ("Eval",$bindExp->translated,"=",typeOf($z), "ON", typeOf($this));
+      inspect ("Eval on " . typeOf ($this) . " VM=" . typeOf ($this->viewModel));
+      $z = $bindExp->evaluate ($this->dataBinder);
+      inspect ("Eval exp = " . $bindExp->translated);
+      inspect ("Eval result = " . typeOf ($z) . " ON " . typeOf ($this), $this->dataBinder);
       return $z;
     }
     catch (\Exception $e) {

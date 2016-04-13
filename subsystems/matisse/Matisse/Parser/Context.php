@@ -3,7 +3,6 @@ namespace Selenia\Matisse\Parser;
 
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Matisse\Lib\AssetsContext;
-use Selenia\Matisse\Lib\DataBinder;
 use Selenia\Matisse\Traits\Context\AssetsAPITrait;
 use Selenia\Matisse\Traits\Context\BlocksAPITrait;
 use Selenia\Matisse\Traits\Context\ComponentsAPITrait;
@@ -43,7 +42,6 @@ class Context
     'presets',
     'viewModel',
     'viewService',
-    'dataBinder',
   ];
 
   /**
@@ -75,16 +73,11 @@ class Context
    * @var array
    */
   public $presets = [];
-  /**
-   * @var DataBinder|null
-   */
-  private $dataBinder = null;
 
   function __construct ()
   {
-    $this->tags       = self::$coreTags;
-    $this->assets     = $this->mainAssets = new AssetsContext;
-    $this->dataBinder = new DataBinder ($this);
+    $this->tags   = self::$coreTags;
+    $this->assets = $this->mainAssets = new AssetsContext;
   }
 
   /**
@@ -96,16 +89,6 @@ class Context
   {
     $FORM_ID = self::FORM_ID;
     $this->addInlineScript ("$('#$FORM_ID').attr('enctype','multipart/form-data');", 'setEncType');
-  }
-
-  /**
-   * Returns an API for the view's data-binding context.
-   *
-   * @return DataBinder
-   */
-  public function getDataBinder ()
-  {
-    return $this->dataBinder;
   }
 
 }

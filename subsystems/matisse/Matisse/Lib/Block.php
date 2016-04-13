@@ -19,19 +19,6 @@ class Block
    * @var array Type (Component[]|string)[]
    */
   private $contents = [];
-  /**
-   * @var DataBinder
-   */
-  private $dataBinder;
-  /**
-   * @var array Type (object|array)[]
-   */
-  private $viewModels = [];
-
-  public function __construct (DataBinder $dataBinder)
-  {
-    $this->dataBinder = $dataBinder;
-  }
 
   /**
    * @param string|Component[] $content
@@ -60,8 +47,7 @@ class Block
    */
   function append ($content)
   {
-    $this->contents[]   = self::checkContent ($content);
-    $this->viewModels[] = $this->dataBinder->getViewModel ();
+    $this->contents[] = self::checkContent ($content);
   }
 
   /**
@@ -72,7 +58,6 @@ class Block
   function prepend ($content)
   {
     array_unshift ($this->contents, self::checkContent ($content));
-    array_unshift ($this->viewModels, $this->dataBinder->getViewModel ());
   }
 
   /**
@@ -84,10 +69,8 @@ class Block
   {
     $out = '';
     for ($i = 0, $c = count ($this->contents); $i < $c; ++$i) {
-      $this->dataBinder->push ($this->viewModels[$i]);
       $content = $this->contents[$i];
       $out .= is_string ($content) ? $content : Component::getRenderingOfSet ($content);
-      $this->dataBinder->pop ();
     }
     return $out;
   }
@@ -99,8 +82,7 @@ class Block
    */
   public function set ($content)
   {
-    $this->contents   = [self::checkContent ($content)];
-    $this->viewModels = [$this->dataBinder->getViewModel ()];
-    $this->components = [$this->dataBinder->getComponent ()];
+    $this->contents = [self::checkContent ($content)];
   }
+  
 }

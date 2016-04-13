@@ -3,7 +3,6 @@ namespace Selenia\Matisse\Parser;
 
 use PhpCode;
 use RuntimeException;
-use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Interfaces\DataBinderInterface;
 
@@ -57,10 +56,6 @@ class Expression
    * The name of the parameter of type DataBinder used on an compiled function.
    */
   const BINDER_PARAM = '$b';
-  /**
-   * The name of the parameter of type component used on an compiled function.
-   */
-  const COMPONENT_PARAM = '$c';
   /**
    * Splits the filters part of an expression into a sequential list of filter expressions.
    */
@@ -196,7 +191,7 @@ class Expression
         if ($seg[0] == '"' || $seg[0] == "'" || ctype_digit ($seg))
           $exp = $seg;
         else $exp = $seg[0] == '@'
-          ? sprintf ("%s->props->get('%s')", self::COMPONENT_PARAM, substr ($seg, 1))
+          ? sprintf ("%s->prop('%s')", self::BINDER_PARAM, substr ($seg, 1))
           : self::BINDER_PARAM . "->get('$seg')";
       }
     }
@@ -314,12 +309,12 @@ class Expression
    *
    * <p>This automatically compiles and caches the expression, if it's not already so.
    *
-   * @param Component           $component The host component where the data binding is being performed.
-   * @param DataBinderInterface $binder    The data binder for the current rendering context.
+   * @param DataBinderInterface $binder The data binder that provides a data context as a starting point for resolving
+   *                                    property accesses.
    * @return mixed
    * @throws DataBindingException
    */
-  function evaluate (Component $component, DataBinderInterface $binder)
+  function evaluate (DataBinderInterface $binder)
   {
     if (!($fn = $this->compiled)) {
       $fn = get (self::$cache, $this->expression);
@@ -331,8 +326,7 @@ class Expression
         // Compile to native code.
         try {
           $fn = $this->compiled = PhpCode::compile ($this->translated,
-            sprintf ('%s %s,%s %s',
-              Component::class, self::COMPONENT_PARAM,
+            sprintf ('%s %s',
               DataBinderInterface::class, self::BINDER_PARAM
             ));
         }
@@ -344,7 +338,7 @@ class Expression
         self::$inspectionMap[$this->expression] = $this->translated;
       }
     }
-    return $fn ($component, $binder);
+    return $fn ($binder);
   }
 
 }
