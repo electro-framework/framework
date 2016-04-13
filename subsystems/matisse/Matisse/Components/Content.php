@@ -85,17 +85,17 @@ class Content extends Component
         throw new ComponentException($this, "Invalid block name: <kbd>$name</kbd>");
       if ($prop->byDefault && $this->context->hasBlock ($name))
         return;
-      $this->context->setBlock ($name, $content);
+      $this->context->getBlock ($name)->set ($content);
     }
     elseif (exists ($name = $prop->appendTo)) {
       if ($prop->byDefault && $this->context->hasBlock ($name))
         return;
-      $this->context->appendToBlock ($name, $content);
+      $this->context->getBlock ($name)->append ($content);
     }
     elseif (exists ($name = $prop->prependTo)) {
       if ($prop->byDefault && $this->context->hasBlock ($name))
         return;
-      $this->context->prependToBlock ($name, $content);
+      $this->context->getBlock ($name)->prepend ($content);
     }
     else throw new ComponentException($this,
       "One of these properties must be set:<p><kbd>of | appendTo | prependTo</kbd>");

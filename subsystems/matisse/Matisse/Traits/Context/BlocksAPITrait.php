@@ -1,8 +1,7 @@
 <?php
 namespace Selenia\Matisse\Traits\Context;
 
-use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Internal\Text;
+use Selenia\Matisse\Lib\Block;
 
 /**
  * Manages blocks of document fragments.
@@ -15,47 +14,19 @@ trait BlocksAPITrait
    * A map of block names => block contents.
    * > This must be public to be accessible for databiding.
    *
-   * @var Component[][]
+   * @var Block[]
    */
   public $blocks = [];
-
-  /**
-   * @param string|Component[] $content
-   * @return Component[]
-   */
-  static private function normalizeContent ($content)
-  {
-    if (is_string ($content))
-      return $content === '' ? [] : [Text::from (null, $content)];
-    else if (!is_array ($content))
-      throw new \InvalidArgumentException(sprintf ("Block content must be <kbd>string|Component[]</kbd>, %s given",
-        typeInfoOf ($content)));
-    return $content;
-  }
-
-  /**
-   * Appends content to a specific block.
-   *
-   * @param string             $name An arbitrary block name.
-   * @param string|Component[] $content
-   */
-  function appendToBlock ($name, $content)
-  {
-    $content = self::normalizeContent ($content);
-    if (!isset($this->blocks[$name]))
-      $this->blocks[$name] = $content;
-    else array_mergeInto ($this->blocks[$name], $content);
-  }
 
   /**
    * Returns the content of a specific block.
    *
    * @param string $name An arbitrary block name.
-   * @returns Component[]
+   * @returns Block
    */
   function getBlock ($name)
   {
-    return get ($this->blocks, $name, []);
+    return get ($this->blocks, $name) ?: $this->blocks[$name] = new Block ($this->dataBinder);
   }
 
   /**
@@ -69,41 +40,4 @@ trait BlocksAPITrait
     return isset ($this->blocks[$name]);
   }
 
-  /**
-   * Prepends content to a specific block.
-   *
-   * @param string $name An arbitrary block name.
-   * @param string $content
-   */
-  function prependToBlock ($name, $content)
-  {
-    $content = self::normalizeContent ($content);
-    if (!isset($this->blocks[$name]))
-      $this->blocks[$name] = $content;
-    else $this->blocks[$name] = array_merge ($content, $this->blocks[$name]);
-  }
-
-  /**
-   * Renders a content block.
-   *
-   * @param string $name The block name.
-   * @return string The rendered markup.
-   */
-  function renderBlock ($name)
-  {
-    $block = get ($this->blocks, $name, []);
-    return Component::getRenderingOfSet ($block);
-  }
-
-  /**
-   * Saves a string on a specific block, overriding the previous content of it.
-   *
-   * @param string $name An arbitrary block name.
-   * @param string $content
-   */
-  function setBlock ($name, $content)
-  {
-    $content             = self::normalizeContent ($content);
-    $this->blocks[$name] = $content;
-  }
 }

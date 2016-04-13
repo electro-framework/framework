@@ -15,7 +15,7 @@ use Selenia\Matisse\Traits\Component\MarkupBuilderTrait;
 /**
  * The base class from which all components derive.
  */
-abstract class Component implements RenderableInterface, CustomInspectionInterface
+abstract class Component implements RenderableInterface
 {
   use MarkupBuilderTrait, DataBindingTrait, DOMNodeTrait;
 
@@ -425,8 +425,8 @@ abstract class Component implements RenderableInterface, CustomInspectionInterfa
     ++$this->renderCount;
     if ($this->isVisible ()) {
       $this->setupViewModel ();
-      $this->enter ();
-      $this->databind ();
+      $this->databind (); // Yhis is done on data binding context of the component's parent.
+      $this->enter ();    // Now the binding context may change.
       $this->preRender ();
       $this->render ();
       $this->postRender ();

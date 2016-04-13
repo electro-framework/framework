@@ -134,21 +134,10 @@ class HttpAwareComponent extends CompositeComponent implements RequestHandlerInt
       $context                 = $this->viewRootComponent->context;
 
       // Copy the request's shared view model into the rendering context view model.
-      $context->viewModel = Http::getViewModel ($this->request);
+      array_merge ($context->viewModel, Http::getViewModel ($this->request));
 
       $context->getFilterHandler ()->registerFallbackHandler ($this);
     }
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * <p>Note:
-   * > View models are available only on GET requests.
-   */
-  protected function viewModel ()
-  {
-    //Override.
   }
 
   /**
@@ -236,6 +225,17 @@ class HttpAwareComponent extends CompositeComponent implements RequestHandlerInt
   protected function model ()
   {
     // override
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * <p>Note:
+   * > View models are available only on GET requests.
+   */
+  protected function viewModel ()
+  {
+    //Override.
   }
 
 }

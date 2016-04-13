@@ -3,6 +3,7 @@ namespace Selenia\Matisse\Parser;
 
 use PhpCode;
 use RuntimeException;
+use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Interfaces\DataBinderInterface;
 
@@ -53,9 +54,13 @@ use Selenia\Matisse\Interfaces\DataBinderInterface;
 class Expression
 {
   /**
-   * The name of the parameter variable used on an compiled function.
+   * The name of the parameter of type DataBinder used on an compiled function.
    */
   const BINDER_PARAM = '$b';
+  /**
+   * The name of the parameter of type component used on an compiled function.
+   */
+  const COMPONENT_PARAM = '$c';
   /**
    * Splits the filters part of an expression into a sequential list of filter expressions.
    */
@@ -178,9 +183,6 @@ class Expression
       if ($ok) return $seg;
     }
 
-    if ($segments[0][0] == '@')
-      array_splice ($segments, 0, 1, ['props', substr ($segments[0], 1)]);
-
     $exp = $not = '';
     foreach ($segments as $i => $seg) {
       if ($i)
@@ -191,8 +193,10 @@ class Expression
           $seg = substr ($seg, 1);
         }
         // If not a constant value, convert it to a property access expression fragment.
-        $exp = $seg[0] == '"' || $seg[0] == "'" || ctype_digit ($seg)
-          ? $seg
+        if ($seg[0] == '"' || $seg[0] == "'" || ctype_digit ($seg))
+          $exp = $seg;
+        else $exp = $seg[0] == '@'
+          ? sprintf ("%s->props->get('%s')", self::COMPONENT_PARAM, substr ($seg, 1))
           : self::BINDER_PARAM . "->get('$seg')";
       }
     }
@@ -310,10 +314,12 @@ class Expression
    *
    * <p>This automatically compiles and caches the expression, if it's not already so.
    *
-   * @param DataBinderInterface $binder
+   * @param Component           $component The host component where the data binding is being performed.
+   * @param DataBinderInterface $binder    The data binder for the current rendering context.
    * @return mixed
+   * @throws DataBindingException
    */
-  function evaluate (DataBinderInterface $binder)
+  function evaluate (Component $component, DataBinderInterface $binder)
   {
     if (!($fn = $this->compiled)) {
       $fn = get (self::$cache, $this->expression);
@@ -325,7 +331,10 @@ class Expression
         // Compile to native code.
         try {
           $fn = $this->compiled = PhpCode::compile ($this->translated,
-            DataBinderInterface::class . ' ' . self::BINDER_PARAM);
+            sprintf ('%s %s,%s %s',
+              Component::class, self::COMPONENT_PARAM,
+              DataBinderInterface::class, self::BINDER_PARAM
+            ));
         }
         catch (RuntimeException $e) {
           self::filterSyntaxError ($this->expression, '<hr>' . $e->getMessage ());
@@ -335,7 +344,7 @@ class Expression
         self::$inspectionMap[$this->expression] = $this->translated;
       }
     }
-    return $fn ($binder);
+    return $fn ($component, $binder);
   }
 
 }

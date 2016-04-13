@@ -134,7 +134,9 @@ trait DataBindingTrait
   {
     try {
       /** @var Component $this */
-      return $bindExp->evaluate ($this->context->getDataBinder());
+      $z = $bindExp->evaluate ($this, $this->context->getDataBinder());
+      inspect ("Eval",$bindExp->translated,"=",typeOf($z), "ON", typeOf($this));
+      return $z;
     }
     catch (\Exception $e) {
       self::evalError ($e, $bindExp);

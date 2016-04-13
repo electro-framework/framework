@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Matisse\Lib;
 
+use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Interfaces\DataBinderInterface;
 use Selenia\Matisse\Parser\Context;
@@ -18,6 +19,14 @@ class DataBinder implements DataBinderInterface
   ];
 
   /**
+   * @var Component
+   */
+  private $component = null;
+  /**
+   * @var Component[]
+   */
+  private $componentsStack = [];
+  /**
    * @var Context
    */
   private $context;
@@ -26,7 +35,7 @@ class DataBinder implements DataBinderInterface
    */
   private $viewModel = false;
   /**
-   * @var array
+   * @var array Type (object|array)[]
    */
   private $viewModelStack = [];
 
@@ -68,33 +77,43 @@ class DataBinder implements DataBinderInterface
     return $this->viewModel;
   }
 
+  function getProps ()
+  {
+    return $this->component->props;
+  }
+
   function pop ()
   {
     if (!$this->viewModelStack)
       throw new DataBindingException ("Can't pop a view model from an empty stack
 <blockquote>Proabably, a component has set its view model <b>after</b> the <kbd>setupViewModel</kbd> call.</blockquote>");
     array_pop ($this->viewModelStack);
+    array_pop ($this->componentsStack);
     $this->viewModel = last ($this->viewModelStack);
+    $this->component = last ($this->componentsStack);
 //    inspect ("POP #" . count ($this->viewModelStack), shortTypeOf($this->viewModel));
   }
 
-  function push ($viewModel)
+  function push ($viewModel, Component $component)
   {
-    if (is_object ($viewModel) || is_array ($viewModel))
-      $this->viewModelStack[] = $this->viewModel = $viewModel;
+    if (is_object ($viewModel) || is_array ($viewModel)) {
+      $this->viewModelStack[]  = $this->viewModel = $viewModel;
+      $this->componentsStack[] = $this->component = $component;
+    }
     else throw new DataBindingException ("Only arrays and objects can be used as view models");
 //    inspect ("PUSH #" . count ($this->viewModelStack), shortTypeOf($this->viewModel));
   }
 
   function renderBlock ($name)
   {
-    return $this->context->renderBlock ($name);
+    return $this->context->getBlock ($name)->render ();
   }
 
   function reset ()
   {
 //    inspect ("RESET STACK");
-    $this->viewModelStack = [];
+    $this->viewModelStack  = [];
+    $this->componentsStack = [];
   }
 
 }

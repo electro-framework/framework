@@ -5,8 +5,10 @@ use Exception;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use ReflectionClass;
 use ReflectionException;
 use ReflectionObject;
+use ReflectionProperty;
 use Selenia\Application;
 use Selenia\Exceptions\Fatal\DataModelException;
 use Selenia\Exceptions\FatalException;
@@ -55,7 +57,9 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    * @var array|Object The page's data model.
    */
   public $model;
-  /** @var NavigationInterface */
+  /**
+   * @var NavigationInterface
+   */
   public $navigation;
   /**
    * @var int Current page number.
@@ -78,12 +82,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    * @var SessionInterface
    */
   public $session;
-  /**
-   * It's only set when using Matisse.
-   *
-   * @var DocumentFragment
-   */
-  public $viewRootComponent;
   /**
    * The current request URI without the page number parameters.
    * This property is useful for databing with the expression {!controller.URI_noPage}.
@@ -124,6 +122,12 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   protected $response;
   /**
+   * It's only set when using Matisse.
+   *
+   * @var DocumentFragment
+   */
+  protected $viewRootComponent;
+  /**
    * @var InjectorInterface
    */
   private $injector;
@@ -144,6 +148,16 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     // Inject extra dependencies into the subclasses' inject methods, if one or more exist.
 
     $this->polyInject ();
+  }
+
+  function __debugInfo ()
+  {
+    $baseProps = map ((new ReflectionClass(CompositeComponent::class))->getProperties (ReflectionProperty::IS_PUBLIC),
+      function (ReflectionProperty $p) { return $p->getName (); });
+    $allProps  = map ((new ReflectionClass($this))->getProperties (ReflectionProperty::IS_PUBLIC),
+      function (ReflectionProperty $p) { return $p->getName (); });
+    $ownProps  = array_diff ($allProps, $baseProps);
+    return object_only ($this, $ownProps);
   }
 
   /**
@@ -263,13 +277,17 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   function setupView (ViewInterface $view)
   {
     parent::setupView ($view);
+
+    $this->context->viewModel['app'] = $this->app;
+    $this->context->viewModel['navigation'] = $this->navigation;
+
     $engine = $view->getEngine ();
     if ($engine instanceof MatisseEngine) {
       $this->viewRootComponent = $view->getCompiled ();
       $context                 = $this->viewRootComponent->context;
 
       // Copy the request's shared view model into the rendering context view model.
-      $context->viewModel = Http::getViewModel ($this->request);
+      array_merge ($context->viewModel, Http::getViewModel ($this->request));
       $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
       $context->getFilterHandler ()->registerFallbackHandler ($this);
 
@@ -291,6 +309,15 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     }
   }
 
+  protected function setupViewModel ()
+  {
+    // Defaults the view model to the component itself.
+    if (!isset($this->viewModel))
+      $this->viewModel = $this;
+
+    parent::setupViewModel ();
+  }
+
   protected function afterRender ()
   {
     if ($this->viewRootComponent) {
@@ -309,11 +336,13 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
           ) return '...';
           return true;
         };
+        $expMap = Expression::$inspectionMap;
+        ksort ($expMap);
 
         DebugConsole::logger ('view')
                     ->withFilter ($VMFilter, $this->viewModel->context)
                     ->write ('<#section|Compiled expressions>')
-                    ->inspect (Expression::$inspectionMap)
+                    ->inspect ($expMap)
                     ->write ('</#section>');
       }
 
@@ -439,11 +468,13 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   /**
    * Override to set the model for the controller / view.
    *
-   * > This model will be available on all request methods (GET, POST, etc) and it will also be set as the 'model'
+   * > <p>This model will be available on all request methods (GET, POST, etc) and it will also be set as the 'model'
    * property of the view model.
    *
    * <p>You should set the model on the component's {@see $modelController}, using one of these methods: `setModel()`,
    * `loadModel()` or `loadRequested()`.
+   *
+   * @return void
    */
   protected function model ()
   {
