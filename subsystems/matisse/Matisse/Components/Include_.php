@@ -112,7 +112,7 @@ class Include_ extends CompositeComponent
     }
   }
 
-  protected function render ()
+  protected function createView ()
   {
     $prop       = $this->props;
     $ctx        = $this->context;
@@ -136,7 +136,6 @@ class Include_ extends CompositeComponent
         $this->attach ($skin);
       }
       else $this->template = $prop->template;
-      parent::render ();
     }
 
     elseif (exists ($prop->view)) {
@@ -152,7 +151,6 @@ class Include_ extends CompositeComponent
         $this->attach ($skin);
       }
       else $this->templateUrl = $prop->view;
-      parent::render ();
     }
 
     else if (exists ($prop->file)) {
@@ -160,15 +158,20 @@ class Include_ extends CompositeComponent
       if ($fileContent === false)
         throw new FileIOException($prop->file, 'read', explode (PATH_SEPARATOR, get_include_path ()));
       echo $fileContent;
+      return;
     }
 
     else if ($prop->styles) {
       $ctx->outputStyles ();
+      return;
     }
 
     else if ($prop->scripts) {
       $ctx->outputScripts ();
+      return;
     }
+    
+    parent::createView ();
   }
 
 }

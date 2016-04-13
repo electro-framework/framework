@@ -11,10 +11,7 @@ use Selenia\Exceptions\FlashMessageException;
 use Selenia\Exceptions\FlashType;
 use Selenia\Http\Lib\Http;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\Matisse\Components\Base\CompositeComponent;
-use Selenia\Matisse\Components\Internal\DocumentFragment;
-use Selenia\ViewEngine\Engines\MatisseEngine;
 
 /**
  * The base class for components that are standalone HTML document fragments.
@@ -31,12 +28,6 @@ class HttpAwareComponent extends CompositeComponent implements RequestHandlerInt
    * @var ServerRequestInterface This is always available for page components, and it is not injected.
    */
   public $request;
-  /**
-   * It's only set when using Matisse.
-   *
-   * @var DocumentFragment
-   */
-  public $viewRootComponent;
   /**
    * If set to true, the view will be rendered on the POST request without a redirection taking place.
    *
@@ -125,19 +116,11 @@ class HttpAwareComponent extends CompositeComponent implements RequestHandlerInt
     return map ($names, function ($name) { return $this->request->getAttribute ("@$name"); });
   }
 
-  function setupView (ViewInterface $view)
+  function setupView ()
   {
-    parent::setupView ($view);
-    $engine = $view->getEngine ();
-    if ($engine instanceof MatisseEngine) {
-      $this->viewRootComponent = $view->getCompiled ();
-      $context                 = $this->viewRootComponent->context;
+    parent::setupView ();
 
-      // Copy the request's shared view model into the rendering context view model.
-      array_merge ($context->viewModel, Http::getViewModel ($this->request));
-
-      $context->getFilterHandler ()->registerFallbackHandler ($this);
-    }
+    $this->context->getFilterHandler ()->registerFallbackHandler ($this);
   }
 
   /**

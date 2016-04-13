@@ -23,14 +23,11 @@ use Selenia\Interfaces\ModelControllerInterface;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Interfaces\SessionInterface;
-use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Base\CompositeComponent;
-use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Parser\Expression;
 use Selenia\Traits\PolymorphicInjectionTrait;
-use Selenia\ViewEngine\Engines\MatisseEngine;
 
 /**
  * The base class for components that are web pages.
@@ -121,12 +118,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    * @var ResponseInterface
    */
   protected $response;
-  /**
-   * It's only set when using Matisse.
-   *
-   * @var DocumentFragment
-   */
-  protected $viewRootComponent;
   /**
    * @var InjectorInterface
    */
@@ -254,7 +245,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   {
     $this->renderOnAction = true;
     if ($param)
-      $this->viewRootComponent->context->addInlineScript ("$('$param').focus()");
+      $this->context->addInlineScript ("$('$param').focus()");
   }
 
   /**
@@ -274,53 +265,33 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       FlashType::ERROR);
   }
 
-  function setupView (ViewInterface $view)
+  function setupView ()
   {
-    parent::setupView ($view);
+    parent::setupView ();
 
-    $this->context->viewModel['app'] = $this->app;
-    $this->context->viewModel['navigation'] = $this->navigation;
+    $this->context->addScript ("{$this->app->frameworkURI}/js/engine.js");
+    $this->context->getFilterHandler ()->registerFallbackHandler ($this);
 
-    $engine = $view->getEngine ();
-    if ($engine instanceof MatisseEngine) {
-      $this->viewRootComponent = $view->getCompiled ();
-      $context                 = $this->viewRootComponent->context;
-
-      // Copy the request's shared view model into the rendering context view model.
-      array_merge ($context->viewModel, Http::getViewModel ($this->request));
-      $context->addScript ("{$this->app->frameworkURI}/js/engine.js");
-      $context->getFilterHandler ()->registerFallbackHandler ($this);
-
-      $title           = $this->getTitle ();
-      $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
-      foreach ($this->app->assets as $url) {
-        $p = strrpos ($url, '.');
-        if (!$p) continue;
-        $ext = substr ($url, $p + 1);
-        switch ($ext) {
-          case 'css':
-            $context->addStylesheet ($url);
-            break;
-          case 'js':
-            $context->addScript ($url);
-            break;
-        }
+    $title           = $this->getTitle ();
+    $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
+    foreach ($this->app->assets as $url) {
+      $p = strrpos ($url, '.');
+      if (!$p) continue;
+      $ext = substr ($url, $p + 1);
+      switch ($ext) {
+        case 'css':
+          $this->context->addStylesheet ($url);
+          break;
+        case 'js':
+          $this->context->addScript ($url);
+          break;
       }
     }
   }
 
-  protected function setupViewModel ()
-  {
-    // Defaults the view model to the component itself.
-    if (!isset($this->viewModel))
-      $this->viewModel = $this;
-
-    parent::setupViewModel ();
-  }
-
   protected function afterRender ()
   {
-    if ($this->viewRootComponent) {
+    if ($this->skin) {
       //----------------------------------------------------------------------------------------
       // View Model panel
       // (MUST run before the DOM panel to capture the data-binding stack at its current state)
@@ -336,7 +307,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
           ) return '...';
           return true;
         };
-        $expMap = Expression::$inspectionMap;
+        $expMap   = Expression::$inspectionMap;
         ksort ($expMap);
 
         DebugConsole::logger ('view')
@@ -372,7 +343,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
         DebugConsole::logger ('model')
                     ->write ("<#section|MODEL>")
-                    ->inspect ($this->viewModel->model)
+                    ->inspect ($this->viewModel ? $this->viewModel->model : null)
                     ->write ("</#section><#section|VIEW MODEL>")
                     ->withFilter ($VMFilter, $this->viewModel)
                     ->write ("</#section><#section|SHARED VIEW MODEL>")
@@ -478,6 +449,19 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   protected function model ()
   {
     // override
+  }
+
+  protected function setupViewModel ()
+  {
+    parent::setupViewModel ();
+
+    // Merge the request's shared view model into the rendering context view model.
+    $this->context->share (Http::getViewModel ($this->request));
+
+    $this->context->share ([
+      'app'        => $this->app,
+      'navigation' => $this->navigation,
+    ]);
   }
 
   /**

@@ -28,6 +28,8 @@ trait ViewsAPITrait
   /**
    * The shared view-model data for the current rendering context.
    *
+   * <p>This is always an array, and the same array is always kept.
+   *
    * @var array
    */
   public $viewModel = [];
@@ -49,7 +51,7 @@ trait ViewsAPITrait
   {
     /** @var Context $this */
     $path = $this->viewService->resolveTemplatePath ($viewName, $base);
-    inspect ($viewName,$base);
+    inspect ($viewName, $base);
     if (isset($this->controllers[$path]))
       return $this->controllers[$path];
 
@@ -57,7 +59,7 @@ trait ViewsAPITrait
       $namespace = $this->controllerNamespaces[$base];
 
       // Convert the remaining file path into a PHP sub-namespace.
-      $segs      = explode ('/', substr ($path, strlen ($base) + 1));
+      $segs = explode ('/', substr ($path, strlen ($base) + 1));
 
       // Strip file extension(s) from filename
       $file = array_pop ($segs);
@@ -65,7 +67,7 @@ trait ViewsAPITrait
         $file = substr ($file, 0, $p);
       array_push ($segs, $file);
 
-      $sub   = implode ('\\', map ($segs, 'ucwords'));
+      $sub = implode ('\\', map ($segs, 'ucwords'));
 
       $class = "$namespace\\$sub";
       if (class_exists ($class))
@@ -73,6 +75,16 @@ trait ViewsAPITrait
     }
 
     return null;
+  }
+
+  /**
+   * Shares data on the shared view model.
+   *
+   * @param array $data A map of named values to be shared.
+   */
+  function share (array $data)
+  {
+    array_mergeInto ($this->viewModel, $data);
   }
   
 }
