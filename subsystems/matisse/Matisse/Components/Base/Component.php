@@ -375,6 +375,28 @@ abstract class Component implements RenderableInterface
   }
 
   /**
+   * Performs all setup required for rendering the component.
+   *
+   * <p>After a call to this method, the component is ready to be rendered.
+   */
+  function preRun ()
+  {
+    $firstRendering = !$this->renderCount++;
+    if ($this->isVisible ()) {
+      if ($firstRendering)
+        $this->setupFirstRun ();
+      else $this->setupRepeatedRun ();
+      $this->setupInheritedViewModel ();
+      $this->databind ();       // This is done on the data binding context of the component's parent.
+      if ($firstRendering) {
+        $this->createView ();
+        $this->setupView ();
+      }
+      $this->setupViewModel (); // Here, the component may setup its view model and data binder.
+    }
+  }
+
+  /**
    * Renders the component.
    *
    * <p>This performs all the setup and data binding logic required for a successful render.
@@ -391,18 +413,15 @@ abstract class Component implements RenderableInterface
   {
     if (!$this->context)
       throw new ComponentException($this, self::ERR_NO_CONTEXT);
-    ++$this->renderCount;
     if ($this->isVisible ()) {
-      $this->setupInheritedViewModel ();
-      $this->databind ();       // This is done on the data binding context of the component's parent.
-      $this->createView ();
-      $this->setupViewModel (); // Here, the component may setup its view model and data binder.
-      $this->setupView ();
+      $this->preRun ();
+      //---- Rendering code ----
       $this->preRender ();
       if ($onlyContent)
         $this->runChildren ();
       else $this->render ();
       $this->postRender ();
+      //---- /Rendering code ----
       $this->afterRender ();
     }
   }
@@ -518,6 +537,24 @@ abstract class Component implements RenderableInterface
     $this->setProps ($props);
     $this->init ();
     return $this;
+  }
+
+  /**
+   * This is an extensibility point that is called by {@see run} just before it performs its work.
+   * This is only called the first time the component is run, not for subsequent repetitions.
+   */
+  function setupFirstRun ()
+  {
+    // override
+  }
+
+  /**
+   * This is an extensibility point that is called by {@see run} just before it performs its work.
+   * <p>This is not called the first time the component is run, it is only called for subsequent repetitions.
+   */
+  function setupRepeatedRun ()
+  {
+    // override
   }
 
   /**

@@ -51,9 +51,18 @@ trait ViewsAPITrait
   {
     /** @var Context $this */
     $path = $this->viewService->resolveTemplatePath ($viewName, $base);
-    inspect ($viewName, $base);
+    inspect ($viewName, $base, $path, $this->controllerNamespaces);
     if (isset($this->controllers[$path]))
       return $this->controllers[$path];
+
+    foreach ($this->controllerNamespaces as $p => $ns)
+      if (str_beginsWith($p, $base)) {
+        $remaining = substr($p, strlen($base));
+        $p = explode ('/', $remaining);
+        $p = array_map ('ucfirst', $p);
+        $p = implode ('\\', $p);
+        inspect ($p);
+    }
 
     if (isset($this->controllerNamespaces[$base])) {
       $namespace = $this->controllerNamespaces[$base];
@@ -86,5 +95,5 @@ trait ViewsAPITrait
   {
     array_mergeInto ($this->viewModel, $data);
   }
-  
+
 }

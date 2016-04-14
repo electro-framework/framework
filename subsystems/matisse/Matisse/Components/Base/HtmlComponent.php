@@ -52,6 +52,11 @@ class HtmlComponent extends Component
     return $this;
   }
 
+  function afterRender ()
+  {
+    $this->cssClassName = $this->originalCssClassName;
+  }
+
   protected function postRender ()
   {
     $this->end ();
@@ -74,12 +79,10 @@ class HtmlComponent extends Component
         echo " $k=\"" . htmlspecialchars ($v) . '"';
   }
 
-  function run ()
+  function setupFirstRun ()
   {
-    if (!$this->renderCount && !$this->originalCssClassName)
+    if (!$this->originalCssClassName)
       $this->originalCssClassName = $this->cssClassName;
-    parent::run ();
-    $this->cssClassName = $this->originalCssClassName;
   }
 
 }

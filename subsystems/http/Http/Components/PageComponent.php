@@ -146,7 +146,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   function __debugInfo ()
   {
     // Exclude inherited properties.
-    
+
     $baseProps = map ((new ReflectionClass(CompositeComponent::class))->getProperties (ReflectionProperty::IS_PUBLIC),
       function (ReflectionProperty $p) { return $p->getName (); });
     $allProps  = map ((new ReflectionClass($this))->getProperties (ReflectionProperty::IS_PUBLIC),
@@ -295,6 +295,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
   protected function afterRender ()
   {
+    parent::afterRender();
     if ($this->skin) {
       //----------------------------------------------------------------------------------------
       // View Model panel

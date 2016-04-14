@@ -202,6 +202,16 @@ trait DOMNodeTrait
   }
 
   /**
+   * Returns the first child component, if any.
+   *
+   * @return null|Component
+   */
+  public function getFirstChild ()
+  {
+    return $this->children ? $this->children[0] : null;
+  }
+
+  /**
    * Returns the ordinal index of this component on the parent's child list.
    *
    * @return int|boolean

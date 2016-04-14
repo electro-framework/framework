@@ -170,7 +170,7 @@ class Include_ extends CompositeComponent
       $ctx->outputScripts ();
       return;
     }
-    
+
     parent::createView ();
   }
 
