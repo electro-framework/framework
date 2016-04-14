@@ -29,6 +29,8 @@ abstract class Component implements RenderableInterface
   /**
    * Set to true for component classes whose instances will be rendered om a detached state.
    *
+   * <p>This suppresses the logging of a warning message when a detached component is rendered.
+   *
    * @var bool;
    */
   const isRootComponent = false;
@@ -285,19 +287,6 @@ abstract class Component implements RenderableInterface
     return ob_get_clean ();
   }
 
-  /**
-   * Renders all children and returns the resulting markup.
-   * ><p>**Note:** the component itself is not rendered.
-   *
-   * @return string
-   */
-  function getContent ()
-  {
-    ob_start (null, 0);
-    $this->runContent ();
-    return ob_get_clean ();
-  }
-
   function getContextClass ()
   {
     return Context::class;
@@ -386,20 +375,6 @@ abstract class Component implements RenderableInterface
   }
 
   /**
-   * Invokes doRender() recursively on the component's children (or a subset of).
-   *
-   * @param string|null $attrName [optional] An attribute name. If none, it renders all the component's children.
-   *
-   * @see runContent()
-   */
-  function renderChildren ($attrName = null)
-  {
-    $children = isset($attrName) ? $this->getChildren ($attrName) : $this->children;
-    foreach ($children as $child)
-      $child->run ();
-  }
-
-  /**
    * Renders the component.
    *
    * <p>This performs all the setup and data binding logic required for a successful render.
@@ -425,7 +400,7 @@ abstract class Component implements RenderableInterface
       $this->setupView ();
       $this->preRender ();
       if ($onlyContent)
-        $this->renderChildren ();
+        $this->runChildren ();
       else $this->render ();
       $this->postRender ();
       $this->afterRender ();
@@ -433,7 +408,40 @@ abstract class Component implements RenderableInterface
   }
 
   /**
-   * Renders all children.
+   * Similar to {@see getRendering}, but it returns only the component's children's rendering.
+   *
+   * ><p>**Note:** the component itself is not rendered.
+   *
+   * @return string
+   */
+  function runAndGetContent ()
+  {
+    ob_start (null, 0);
+    $this->runContent ();
+    return ob_get_clean ();
+  }
+
+  /**
+   * Invokes doRender() recursively on the component's children (or a subset of).
+   *
+   * @param string|null $attrName [optional] A property name. If none, it renders all of the component's direct
+   *                              children.
+   *
+   * @see runContent()
+   */
+  function runChildren ($attrName = null)
+  {
+    $children = isset($attrName) ? $this->getChildren ($attrName) : $this->children;
+    foreach ($children as $child)
+      $child->run ();
+  }
+
+  /**
+   * Similar to {@see run}, but it renders only the component's children.
+   *
+   * <p>Use this if the component has no rendering of its own and all rendering is performed by children.
+   * <p>This is usually called from within a component's {@see render} method.
+   *
    * ><p>**Note:** the component itself is not rendered.<br><br>
    * ><p>**Note:** you should use this instead of {@see renderChildren()} when the full rendering of the component is
    * performed by its children. If the component does some rendering itself and additionally renders its children, call

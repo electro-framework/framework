@@ -109,7 +109,7 @@ trait AssetsAPITrait
     if (!empty($this->assets->inlineScripts)) {
       echo "<script>";
       foreach ($this->assets->inlineScripts as $item)
-        echo is_string($item) ? $item : $item->getContent ();
+        echo $item instanceof Component ? $item->runAndGetContent () : $item ;
       echo "</script>";
     }
   }
@@ -121,7 +121,7 @@ trait AssetsAPITrait
     if (!empty($this->assets->inlineCssStyles)) {
       echo "<style>";
       foreach ($this->assets->inlineCssStyles as $item)
-        echo is_string($item) ? $item : $item->getContent ();
+        echo $item instanceof Component ? $item->runAndGetContent () : $item ;
       echo "</style>";
     }
   }

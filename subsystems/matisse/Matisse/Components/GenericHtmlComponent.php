@@ -32,7 +32,7 @@ class GenericHtmlComponent extends HtmlComponent
       }
     }
     $this->beginContent ();
-    $this->runContent ();
+    $this->runChildren ();
     $this->end ();
   }
 

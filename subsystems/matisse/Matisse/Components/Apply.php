@@ -57,7 +57,7 @@ class Apply extends Component
         $child->props->apply ($props);
     }
     else $this->scan ($this, $this->props->where, $props);
-    $this->renderChildren ();
+    $this->runChildren ();
   }
 
   private function scan (Component $parent, $where, $attrs)

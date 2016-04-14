@@ -12,7 +12,7 @@ class HtmlContainer extends HtmlComponent
   protected function render ()
   {
     $this->beginContent ();
-    $this->renderChildren ($this->hasChildren () ? null : $this->defaultProperty);
+    $this->runChildren ($this->hasChildren () ? null : $this->defaultProperty);
   }
 
 }

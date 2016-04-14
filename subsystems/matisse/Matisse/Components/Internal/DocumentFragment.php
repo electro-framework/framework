@@ -12,7 +12,7 @@ class DocumentFragment extends Component
 
   protected function render ()
   {
-    $this->renderChildren ();
+    $this->runChildren ();
   }
 
 }

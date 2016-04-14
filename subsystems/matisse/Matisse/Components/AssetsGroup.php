@@ -27,7 +27,7 @@ class AssetsGroup extends Component
   protected function render ()
   {
     $this->context->beginAssetsContext ($this->props->prepend);
-    $this->runContent ();
+    $this->runChildren ();
     $this->context->endAssetsContext ();
   }
 

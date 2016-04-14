@@ -62,7 +62,7 @@ class Metadata extends Component
   protected function render ()
   {
     if ($this->type == type::content)
-      $this->renderChildren ();
+      $this->runChildren ();
   }
 
 

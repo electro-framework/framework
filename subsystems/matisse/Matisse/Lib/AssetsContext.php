@@ -1,18 +1,20 @@
 <?php
 namespace Selenia\Matisse\Lib;
 
+use Selenia\Matisse\Components\Base\Component;
+
 class AssetsContext
 {
   /**
    * Array of strings (or components with child content) containing inline css code.
    *
-   * @var array
+   * @var string[]|Component[]
    */
   public $inlineCssStyles = [];
   /**
    * Array of strings (or components with child content) containing inline javascripts.
    *
-   * @var array
+   * @var string[]|Component[]
    */
   public $inlineScripts = [];
   /**
@@ -24,13 +26,13 @@ class AssetsContext
   /**
    * Array of strings containing URLs of scripts to be loaded during the page loading process.
    *
-   * @var array
+   * @var string[]
    */
   public $scripts = [];
   /**
    * Array of strings containing URLs of CSS stylesheets to be loaded during the page loading process.
    *
-   * @var array
+   * @var string[]
    */
   public $stylesheets = [];
 }

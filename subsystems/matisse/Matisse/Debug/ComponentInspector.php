@@ -118,7 +118,7 @@ class ComponentInspector
       finally {
         echo "</div><span style='color:$COLOR_TAG'>&lt;/$tag&gt;<br></span>";
       }
-//      self::inspectInternalProps ($component);
+      self::inspectInternalProps ($component);
 
       return;
     }
@@ -249,7 +249,7 @@ class ComponentInspector
       }
     }
 
-//    self::inspectInternalProps ($component);
+    self::inspectInternalProps ($component);
 
     // If deep inspection is enabled, recursively inspect all children components.
 

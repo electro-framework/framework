@@ -44,9 +44,9 @@ class ForProperties extends ComponentProperties
 class For_ extends Component
 {
   const allowsChildren = true;
-  
+
   const propertiesClass = ForProperties::class;
-  
+
   /** @var ForProperties */
   public $props;
 
@@ -65,31 +65,31 @@ class For_ extends Component
         $this->viewModel[$itVar] = $v;
         if ($first) {
           $first = false;
-          $this->renderChildren ('header');
+          $this->runChildren ('header');
         }
-        else $this->renderChildren ('glue');
-        $this->renderChildren ();
+        else $this->runChildren ('glue');
+        $this->runChildren ();
         if (!--$count) break;
       }
       if ($first)
-        $this->renderChildren ('noData');
-      else $this->renderChildren ('footer');
+        $this->runChildren ('noData');
+      else $this->runChildren ('footer');
       return;
     }
     if ($count > 0) {
       for ($i = 0; $i < $count; ++$i) {
         $this->viewModel[$idxVar] = $this->viewModel[$itVar] = $i;
         if ($i == 0)
-          $this->renderChildren ('header');
-        else $this->renderChildren ('glue');
-        $this->renderChildren ();
+          $this->runChildren ('header');
+        else $this->runChildren ('glue');
+        $this->runChildren ();
       }
       if ($i) {
-        $this->renderChildren ('footer');
+        $this->runChildren ('footer');
         return;
       }
     }
-    $this->renderChildren ('noData');
+    $this->runChildren ('noData');
   }
 
   protected function viewModel ()
