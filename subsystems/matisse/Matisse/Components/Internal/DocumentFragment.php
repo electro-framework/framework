@@ -8,11 +8,11 @@ use Selenia\Matisse\Components\Base\Component;
  */
 class DocumentFragment extends Component
 {
-  public $allowsChildren = true;
+  const allowsChildren = true;
 
   protected function render ()
   {
-    $this->renderContent();
+    $this->renderChildren ();
   }
 
 }

@@ -26,9 +26,10 @@ class ScriptProperties extends ComponentProperties
 
 class Script extends Component
 {
+  const allowsChildren = true;
+  
   protected static $propertiesClass = ScriptProperties::class;
-
-  public $allowsChildren = true;
+  
   /** @var ScriptProperties */
   public $props;
 

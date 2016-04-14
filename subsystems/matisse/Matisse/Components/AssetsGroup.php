@@ -14,9 +14,10 @@ class AssetsGroupProperties extends ComponentProperties
 
 class AssetsGroup extends Component
 {
+  const allowsChildren = true;
+  
   protected static $propertiesClass = AssetsGroupProperties::class;
-
-  public $allowsChildren = true;
+  
   /** @var AssetsGroupProperties */
   public $props;
 
@@ -26,7 +27,7 @@ class AssetsGroup extends Component
   protected function render ()
   {
     $this->context->beginAssetsContext ($this->props->prepend);
-    $this->renderContent ();
+    $this->runContent ();
     $this->context->endAssetsContext ();
   }
 

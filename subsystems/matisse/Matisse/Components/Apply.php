@@ -40,9 +40,10 @@ class ApplyProperties extends ComponentProperties
  */
 class Apply extends Component
 {
+  const allowsChildren = true;
+  
   protected static $propertiesClass = ApplyProperties::class;
-
-  public $allowsChildren = true;
+  
   /** @var ApplyProperties */
   public $props;
 

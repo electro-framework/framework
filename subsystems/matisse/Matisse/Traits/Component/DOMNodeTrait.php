@@ -19,11 +19,6 @@ use Selenia\Matisse\Properties\Base\ComponentProperties;
 trait DOMNodeTrait
 {
   /**
-   * Can this component have children?
-   * @var bool
-   */
-  public $allowsChildren = false;
-  /**
    * Points to the parent component in the page hierarchy.
    * It is set to NULL if the component is the top one (a Page instance) or if it's standalone.
    *
@@ -74,6 +69,15 @@ trait DOMNodeTrait
       $child->detach ();
   }
 
+  /**
+   * @param Component[] $components
+   */
+  static public function removeAll (array $components)
+  {
+    foreach ($components as $c)
+      $c->remove ();
+  }
+
   public function __clone ()
   {
     if (isset($this->props)) {
@@ -84,6 +88,9 @@ trait DOMNodeTrait
       $this->children = self::cloneComponents ($this->children, $this);
   }
 
+  /**
+   * @param Component $child
+   */
   public function addChild (Component $child)
   {
     if ($child) {
@@ -92,6 +99,9 @@ trait DOMNodeTrait
     }
   }
 
+  /**
+   * @param Component[]|null $children
+   */
   public function addChildren (array $children = null)
   {
     if ($children) {
@@ -114,12 +124,20 @@ trait DOMNodeTrait
     }
   }
 
+  /**
+   * @param Component $parent
+   */
   public function attachTo (Component $parent)
   {
-    $this->parent = $parent;
+    $this->parent  = $parent;
     $this->context = $parent->context;
   }
 
+  /**
+   * Detaches the component from its parent.
+   *
+   * <p>This does **not** remove the component from the children set of the parent.
+   */
   public function detach ()
   {
     $this->parent = null;
@@ -148,20 +166,15 @@ trait DOMNodeTrait
   /**
    * Replaces the current children with the supplied ones.
    *
-   * > <p>**Warning:** the previou children (if any) will be detached.
-   * > <p>If some/all of them are in the new assigned list, problems will occur; in that case, use {@see
-   * getChildrenRef()} instead.
+   * > <p>**Warning:** the previou children (if any) will be detached and removed from their respective parents.
    *
-   * @param array $children
-   * @param bool  $attach
+   * @param array $components
    */
-  public function setChildren (array $children = [], $attach = true)
+  public function setChildren (array $components = [])
   {
-    if ($this->children)
-      $this->removeChildren ();
-    $this->children = $children;
-    if ($attach)
-      $this->attach ($children);
+    self::removeAll ($components);
+    $this->children = $components;
+    $this->attach ($components);
   }
 
   /**
@@ -178,6 +191,11 @@ trait DOMNodeTrait
     return $this->children;
   }
 
+  /**
+   * @param string|null $attrName
+   * @return Component[]
+   * @throws ComponentException
+   */
   public function getClonedChildren ($attrName = null)
   {
     return self::cloneComponents ($this->getChildren ($attrName));
@@ -212,6 +230,7 @@ trait DOMNodeTrait
 
   /**
    * Removes the component from its parent's children list.
+   *
    * @throws ComponentException
    */
   public function remove ()

@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Matisse\Components\Internal;
 
+use PhpKit\WebConsole\Lib\Debug;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Parser\Expression;

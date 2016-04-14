@@ -9,12 +9,14 @@ use Selenia\Matisse\Properties\TypeSystem\type;
 abstract class AbstractProperties implements ComponentPropertiesInterface
 {
   /**
-   * The component that owns these properties.
+   * The component who owns these properties.
    *
    * @var Component
    */
   protected $component;
-  /** @var array */
+  /**
+   * @var array
+   */
   private $beingAssigned;
 
   function __construct (Component $ownerComponent)

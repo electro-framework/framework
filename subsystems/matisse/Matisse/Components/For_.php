@@ -19,6 +19,10 @@ class ForProperties extends ComponentProperties
   /**
    * @var Metadata|null
    */
+  public $else = type::content;
+  /**
+   * @var Metadata|null
+   */
   public $footer = type::content;
   /**
    * @var Metadata|null
@@ -28,10 +32,6 @@ class ForProperties extends ComponentProperties
    * @var Metadata|null
    */
   public $header = type::content;
-  /**
-   * @var Metadata|null
-   */
-  public $else = type::content;
   /**
    * @var mixed
    */
@@ -43,21 +43,17 @@ class ForProperties extends ComponentProperties
  */
 class For_ extends Component
 {
+  const allowsChildren = true;
+  
   protected static $propertiesClass = ForProperties::class;
-
-  public $allowsChildren = true;
+  
   /** @var ForProperties */
   public $props;
 
-  protected function viewModel ()
-  {
-    $this->viewModel = [];
-  }
-
   protected function render ()
   {
-    $prop            = $this->props;
-    $count           = $prop->get ('count', -1);
+    $prop  = $this->props;
+    $count = $prop->get ('count', -1);
     if (exists ($prop->each))
       $this->parseIteratorExp ($prop->each, $idxVar, $itVar);
     else $idxVar = $itVar = null;
@@ -94,6 +90,11 @@ class For_ extends Component
       }
     }
     $this->renderChildren ('noData');
+  }
+
+  protected function viewModel ()
+  {
+    $this->viewModel = [];
   }
 
 }

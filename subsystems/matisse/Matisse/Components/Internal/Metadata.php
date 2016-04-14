@@ -17,9 +17,10 @@ use Selenia\Matisse\Properties\TypeSystem\type;
  */
 class Metadata extends Component
 {
+  const allowsChildren = true;
+  
   protected static $propertiesClass = MetadataProperties::class;
-
-  public $allowsChildren = true;
+  
   /** @var MetadataProperties */
   public $props;
   /**

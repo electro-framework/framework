@@ -26,9 +26,10 @@ class StyleProperties extends ComponentProperties
 
 class Style extends Component
 {
+  const allowsChildren = true;
+  
   protected static $propertiesClass = StyleProperties::class;
-
-  public $allowsChildren = true;
+  
   /** @var StyleProperties */
   public $props;
 
@@ -40,7 +41,7 @@ class Style extends Component
     $prop = $this->props;
     if (exists ($prop->src))
       $this->context->addStylesheet ($prop->src);
-    else if ($this->hasChildren())
+    else if ($this->hasChildren ())
       $this->context->addInlineCss ($this, $prop->name);
   }
 }

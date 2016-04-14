@@ -36,6 +36,8 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 {
   use PolymorphicInjectionTrait;
 
+  const isRootComponent = true;
+
   /**
    * @var Application
    */
@@ -143,6 +145,8 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
   function __debugInfo ()
   {
+    // Exclude inherited properties.
+    
     $baseProps = map ((new ReflectionClass(CompositeComponent::class))->getProperties (ReflectionProperty::IS_PUBLIC),
       function (ReflectionProperty $p) { return $p->getName (); });
     $allProps  = map ((new ReflectionClass($this))->getProperties (ReflectionProperty::IS_PUBLIC),
@@ -472,7 +476,9 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   protected function viewModel ()
   {
-    //Override.
+    // Defaults the view model to the component itself.
+    if (!isset($this->viewModel))
+      $this->viewModel = $this;
   }
 
 }

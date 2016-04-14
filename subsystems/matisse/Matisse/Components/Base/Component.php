@@ -21,6 +21,18 @@ abstract class Component implements RenderableInterface
 
   const ERR_NO_CONTEXT = "<h4>Rendering context not set</h4>The component was not initialized correctly.";
   /**
+   * Can this component have children?
+   *
+   * @var bool
+   */
+  const allowsChildren = false;
+  /**
+   * Set to true for component classes whose instances will be rendered om a detached state.
+   *
+   * @var bool;
+   */
+  const isRootComponent = false;
+  /**
    * When true, data-binding resolution on the component's view is unaffected by data from the shared document view
    * model (which is set on {@see Context}); only the component's own view model is used.
    *
@@ -229,6 +241,16 @@ abstract class Component implements RenderableInterface
   }
 
   /**
+   * Can this component have children?
+   *
+   * @return bool
+   */
+  public function allowsChildren ()
+  {
+    return static::allowsChildren;
+  }
+
+  /**
    * Runs a private child component that does not belong to the hierarchy.
    *
    * <p>**Warning:** the component will **not** be detached after begin rendered.
@@ -279,13 +301,25 @@ abstract class Component implements RenderableInterface
   function getContent ()
   {
     ob_start (null, 0);
-    $this->renderContent ();
+    $this->runContent ();
     return ob_get_clean ();
   }
 
   function getContextClass ()
   {
     return Context::class;
+  }
+
+  function getRendering ()
+  {
+    ob_start (null, 0);
+    $this->run ();
+    return ob_get_clean ();
+  }
+
+  function setContext ($context)
+  {
+    $this->context = $context;
   }
 
   /**
@@ -296,13 +330,6 @@ abstract class Component implements RenderableInterface
   function getDataBinder ()
   {
     return $this->dataBinder;
-  }
-
-  function getRendering ()
-  {
-    ob_start (null, 0);
-    $this->run ();
-    return ob_get_clean ();
   }
 
   /**
@@ -370,7 +397,7 @@ abstract class Component implements RenderableInterface
    *
    * @param string|null $attrName [optional] An attribute name. If none, it renders all the component's children.
    *
-   * @see renderContent()
+   * @see runContent()
    */
   function renderChildren ($attrName = null)
   {
@@ -380,31 +407,19 @@ abstract class Component implements RenderableInterface
   }
 
   /**
-   * Renders all children.
-   * ><p>**Note:** the component itself is not rendered.<br><br>
-   * ><p>**Note:** you should use this instead of {@see renderChildren()} when the full rendering of the component is
-   * performed by its children. If the component does some rendering itself and additionally renders its children, call
-   * {@see renderChildren()} from inside the component's rendering code.
-   */
-  function renderContent ()
-  {
-    if (!$this->context)
-      throw new ComponentException($this, self::ERR_NO_CONTEXT);
-    if ($this->isVisible ()) {
-      $this->databind ();
-      $this->preRender ();
-      $this->renderChildren ();
-      $this->postRender ();
-    }
-  }
-
-  /**
-   * Renders the component and any relevant children.
+   * Renders the component.
    *
-   * Do not override! Use event handlers or override render() or renderChildren().
-   * This method is called from run() or from renderChildren().
+   * <p>This performs all the setup and data binding logic required for a successful render.
+   * It is the correct method that should be called for rendering, **not** {@see render}, as the later is meant for
+   * subclasses to provide the actual rendering process.
+   *
+   * <p>**You can't override this!** But there are many extension points meant for overriding specific parts of the
+   * rendering process. See the documentation to find out which suits your needs.
+   *
+   * @param bool $onlyContent If true, {@see render} will not be called and, instead, each child will be rendered.
+   * @throws ComponentException
    */
-  function run ()
+  final function run ($onlyContent = false)
   {
     if (!$this->context)
       throw new ComponentException($this, self::ERR_NO_CONTEXT);
@@ -416,15 +431,24 @@ abstract class Component implements RenderableInterface
       $this->setupViewModel (); // Here, the component may setup its view model and data binder.
       $this->setupView ();
       $this->preRender ();
-      $this->render ();
+      if ($onlyContent)
+        $this->renderChildren ();
+      else $this->render ();
       $this->postRender ();
       $this->afterRender ();
     }
   }
 
-  function setContext ($context)
+  /**
+   * Renders all children.
+   * ><p>**Note:** the component itself is not rendered.<br><br>
+   * ><p>**Note:** you should use this instead of {@see renderChildren()} when the full rendering of the component is
+   * performed by its children. If the component does some rendering itself and additionally renders its children, call
+   * {@see renderChildren()} from inside the component's rendering code.
+   */
+  function runContent ()
   {
-    $this->context = $context;
+    $this->run (true);
   }
 
   /**
@@ -609,8 +633,14 @@ abstract class Component implements RenderableInterface
 
   protected function setupInheritedViewModel ()
   {
-    if (!$this->dataBinder && $this->parent)
-      $this->dataBinder = $this->parent->dataBinder;
+    if ($this->parent) {
+      if (!$this->dataBinder)
+        $this->dataBinder = $this->parent->dataBinder;
+    }
+    else {
+      if (!static::isRootComponent)
+        _log ()->warning ("Rendering detached component <kbd>" . shortTypeOf ($this) . '</kbd>');
+    }
   }
 
   /**
@@ -649,18 +679,14 @@ abstract class Component implements RenderableInterface
         $this->context->viewModel[$this->shareViewModelAs] = $this->viewModel;
     }
     else if (static::publishProperties) {
-      inspect ("PUBLISH PROPS " . $this->getTagName ());
       if (!$this->dataBinder) {
-        inspect ("SETUPVIEWMODEL WITH DATABINDER NOT SET FOR " . $this->getTagName ());
         return;
       }
       $this->dataBinder = $this->dataBinder->withProps ($this->props);
-      inspect ($this->dataBinder);
     }
 
     if ($this->dataBinder)
       $this->dataBinder = $this->dataBinder->withIsolation (static::isolatedViewModel);
-    else inspect ("SETUPVIEWMODEL WITH DATABINDER NOT SET FOR " . $this->getTagName ());
   }
 
   /**

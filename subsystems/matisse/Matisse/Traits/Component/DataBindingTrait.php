@@ -161,16 +161,12 @@ trait DataBindingTrait
   protected function evalBinding (Expression $bindExp)
   {
     if (!$this->dataBinder) {
-      inspect ("EXPR EVAL SKIPPED");
+      _log ()->warning ("No binder is set for evaluating an expression on a " . $this->getTagName () . " component");
       return null;
     }
     try {
       /** @var Component $this */
-      inspect ("Eval on " . typeOf ($this) . " VM=" . typeOf ($this->viewModel));
-      $z = $bindExp->evaluate ($this->dataBinder);
-      inspect ("Eval exp = " . $bindExp->translated);
-      inspect ("Eval result = " . typeOf ($z) . " ON " . typeOf ($this), $this->dataBinder);
-      return $z;
+      return $bindExp->evaluate ($this->dataBinder);
     }
     catch (\Exception $e) {
       self::evalError ($e, $bindExp);

@@ -4,7 +4,6 @@ namespace Selenia\Matisse\Components\Macro;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\Metadata;
 use Selenia\Matisse\Exceptions\ComponentException;
-use Selenia\Matisse\Parser\Expression;
 use Selenia\Matisse\Properties\Macro\MacroProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
@@ -41,10 +40,10 @@ class Macro extends Component
     (\| [^\}]* )?   # capture filters (if any)
     \}
   %xu';
-
+  const allowsChildren = true;
+  
   protected static $propertiesClass = MacroProperties::class;
-
-  public $allowsChildren = true;
+  
   /** @var MacroProperties */
   public $props;
 

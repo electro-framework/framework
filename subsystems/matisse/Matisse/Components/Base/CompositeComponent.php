@@ -149,13 +149,10 @@ class CompositeComponent extends Component
 
     // When there is a skin, transfer the data binding context to it.
     if ($this->skin) {
-      inspect ("SET A NEW BINDER FOR SKIN OF " . $this->getTagName ());
       if (!$this->dataBinder) {
-        inspect ("SETUPVIEWMODEL WITH DATABINDER NOT SET FOR " . $this->getTagName ());
         return;
       }
       $this->skin->setDataBinder ($this->dataBinder);
-      inspect ($this->skin->getDataBinder ());
       // Now reset the component's binding context.
       if ($this->parent)
         $this->dataBinder = $this->parent->getDataBinder ();

@@ -232,7 +232,7 @@ class Parser
    */
   private function parse_componentTag ($tag, $attrs)
   {
-    if (!$this->current->allowsChildren)
+    if (!$this->current->allowsChildren ())
       $this->parsingError ("Neither the <b>{$this->current->getTagName()}</b> tag allows children, neither <b>$tag</b> is a subtag of <b>{$this->current->getTagName()}</b>");
 
     /** @var Metadata|boolean $defParam */
@@ -325,7 +325,7 @@ does not support the specified parameter <b>$tag</b>.
   {
     if (!empty($text)) {
 
-      if ($this->current->allowsChildren) {
+      if ($this->current->allowsChildren ()) {
         $sPos = 0;
         //process data bindings
         while (preg_match (self::PARSE_DATABINDINGS, $text, $match, PREG_OFFSET_CAPTURE, $sPos)) {

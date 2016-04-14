@@ -30,12 +30,12 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
 
   /**
    * @param Context                 $context
-   * @param object|array            $viewModel
+   * @param object|array            $viewModel A view model reference.
    * @param AbstractProperties|null $props
    */
-  public function __construct (Context $context, $viewModel, AbstractProperties $props = null)
+  public function __construct (Context $context, &$viewModel, AbstractProperties $props = null)
   {
-    $this->viewModel = $viewModel;
+    $this->viewModel =& $viewModel;
     $this->props     = $props;
     $this->context   = $context;
   }
@@ -48,7 +48,6 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
 
   function get ($key)
   {
-    inspect ("PROP $key on " . typeInfoOf ($this->viewModel));
     $v = _g ($this->viewModel, $key, $this);
     if ($v !== $this)
       return $v;
@@ -77,7 +76,6 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
 
   function prop ($key)
   {
-    inspect ("PROP $key on " . typeOf ($this->props));
     $p = $this->props;
     return $p ? $p->get ($key) : null;
   }
@@ -110,7 +108,7 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
     if ($viewModel === $this->viewModel)
       return $this;
     $o            = clone $this;
-    $o->viewModel = $viewModel;
+    $o->viewModel =& $viewModel;
     return $o;
   }
 

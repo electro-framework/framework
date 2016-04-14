@@ -118,6 +118,8 @@ class ComponentInspector
       finally {
         echo "</div><span style='color:$COLOR_TAG'>&lt;/$tag&gt;<br></span>";
       }
+//      self::inspectInternalProps ($component);
+
       return;
     }
 
@@ -247,24 +249,7 @@ class ComponentInspector
       }
     }
 
-    // Display some of the component instance class properties
-
-    echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";
-
-    // Display view model
-
-    $tn = Debug::getType($component->getViewModel());
-    echo "<tr><td style='color:$COLOR_PROP'>View Model<sup>*</sup><td><i style='color:$COLOR_TYPE'>$tn</i></tr>";
-
-    // Display dta binder
-
-    $db = $component->getDataBinder();
-    $tn = Debug::getType($db);
-    $tv = $db ? $db->inspect () : '';
-    echo "<tr><td style='color:$COLOR_PROP'>Data Binder<sup>*</sup><td><i style='color:$COLOR_TYPE'>$tn</i><td>$tv</tr>";
-
-    echo "</table>";
-
+//    self::inspectInternalProps ($component);
 
     // If deep inspection is enabled, recursively inspect all children components.
 
@@ -316,6 +301,31 @@ class ComponentInspector
       return "<b style='color:red'>ERROR</b>";
     }
     return $v;
+  }
+
+  private static function inspectInternalProps (Component $component)
+  {
+    $COLOR_TYPE  = '#55A';
+    $COLOR_VALUE = '#333';
+    $COLOR_PROP  = '#B00';
+
+    // Display some of the component instance class properties
+
+    echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";
+
+    // Display view model
+
+    $tn = Debug::getType ($component->getViewModel ());
+    echo "<tr><td style='color:$COLOR_PROP'>View Model<sup>*</sup><td><i style='color:$COLOR_TYPE'>$tn</i></tr>";
+
+    // Display dta binder
+
+    $db = $component->getDataBinder ();
+    $tn = Debug::getType ($db);
+    $tv = $db ? $db->inspect () : '';
+    echo "<tr><td style='color:$COLOR_PROP'>Data Binder<sup>*</sup><td><i style='color:$COLOR_TYPE'>$tn</i><td>$tv</tr>";
+
+    echo "</table>";
   }
 
   /**
