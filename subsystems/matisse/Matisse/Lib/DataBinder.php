@@ -69,7 +69,7 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
     return $this->props;
   }
 
-  function getViewModel ()
+  function &getViewModel ()
   {
     return $this->viewModel;
   }
@@ -103,7 +103,7 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
     return $o;
   }
 
-  function withViewModel ($viewModel)
+  function withViewModel (&$viewModel)
   {
     if ($viewModel === $this->viewModel)
       return $this;

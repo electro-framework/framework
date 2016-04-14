@@ -37,11 +37,16 @@ interface DataBinderInterface
   function getProps ();
 
   /**
-   * Gets the bound view model.
+   * Gets a reference to the bound view model.
    *
-   * @return $this|null|object|array
+   * <p>The model is returned by reference, so that changes to binder's model will be reflected on the original model,
+   * and vice-versa. But, if you assign it to a variable,  you must assign the reference.
+   *
+   * > Ex: `$vm =& $binder->getViewModel()`.
+   *
+*@return $this|null|object|array A reference to the view model. Changes to it will be reflecg
    */
-  function getViewModel ();
+  function &getViewModel ();
 
   /**
    * Gets a value with the given name from the bound component properties.
@@ -77,11 +82,14 @@ interface DataBinderInterface
   function withProps (AbstractProperties $props = null);
 
   /**
-   * Gets a new binder instance with the given component properties.
+   * Gets a new binder instance with the given view model.
+   *
+   * <p>The model is copied by reference, so that changes to binder's model will be reflected on the original model, and
+   * vice-versa.
    *
    * @param object|array|null $viewModel
    * @return static
    */
-  function withViewModel ($viewModel);
+  function withViewModel (&$viewModel);
 
 }
