@@ -28,7 +28,7 @@ class Script extends Component
 {
   const allowsChildren = true;
   
-  protected static $propertiesClass = ScriptProperties::class;
+  const propertiesClass = ScriptProperties::class;
   
   /** @var ScriptProperties */
   public $props;

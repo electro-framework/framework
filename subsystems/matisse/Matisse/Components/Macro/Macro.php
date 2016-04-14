@@ -42,7 +42,7 @@ class Macro extends Component
   %xu';
   const allowsChildren = true;
   
-  protected static $propertiesClass = MacroProperties::class;
+  const propertiesClass = MacroProperties::class;
   
   /** @var MacroProperties */
   public $props;

@@ -84,7 +84,7 @@ class IncludeProperties extends MetadataProperties
  */
 class Include_ extends CompositeComponent
 {
-  protected static $propertiesClass = IncludeProperties::class;
+  const propertiesClass = IncludeProperties::class;
 
   /** @var IncludeProperties */
   public $props;

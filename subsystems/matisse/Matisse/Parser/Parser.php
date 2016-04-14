@@ -291,7 +291,7 @@ class Parser
 
       // Move the tag's content to the corresponding slot property.
 
-      if (!$this->current->supportsProperties)
+      if (!$this->current->supportsProperties ())
         $this->parsingError ("The component <b>&lt;{$this->current->getTagName()}&gt;</b> does not support parameters.");
 
       $this->parse_attributes ($attrs, $attributes, $bindings);
@@ -342,7 +342,7 @@ does not support the specified parameter <b>$tag</b>.
       }
 
       else {
-        $props = $this->current->supportsProperties ? $this->current->props->getPropertyNames () : [];
+        $props = $this->current->supportsProperties () ? $this->current->props->getPropertyNames () : [];
         $s     = $props
           ? '&lt;' . join ('>, &lt;', array_map ('ucfirst', $props)) . '>'
           : 'none';
@@ -382,7 +382,7 @@ does not support the specified parameter <b>$tag</b>.
     }
     // If the current component defines an property with the same name as the tag being checked, and if that property
     // supports begin specified as a tag, the tag is a subtag.
-    return $this->current->supportsProperties && $this->current->props->defines ($propName, true);
+    return $this->current->supportsProperties () && $this->current->props->defines ($propName, true);
   }
 
   private function subtag_createSlotContent ($propName, $tagName, array $attributes = null, array $bindings = null)

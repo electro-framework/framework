@@ -65,7 +65,7 @@ class Content extends Component
 {
   const allowsChildren = true;
   
-  protected static $propertiesClass = ContentProperties::class;
+  const propertiesClass = ContentProperties::class;
   
   /** @var ContentProperties */
   public $props;

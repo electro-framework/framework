@@ -125,7 +125,7 @@ class ComponentInspector
 
     // Handle other node types
 
-    elseif ($component->supportsProperties) {
+    elseif ($component->supportsProperties ()) {
       /** @var ComponentProperties $propsObj */
       $propsObj = $component->props;
       if ($propsObj) $props = $propsObj->getAll ();

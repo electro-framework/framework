@@ -15,7 +15,7 @@ class TextProperties extends ComponentProperties
 
 final class Text extends Component
 {
-  protected static $propertiesClass = TextProperties::class;
+  const propertiesClass = TextProperties::class;
   /** @var TextProperties */
   public $props;
 

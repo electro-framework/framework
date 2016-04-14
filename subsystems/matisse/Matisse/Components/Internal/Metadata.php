@@ -19,7 +19,7 @@ class Metadata extends Component
 {
   const allowsChildren = true;
   
-  protected static $propertiesClass = MetadataProperties::class;
+  const propertiesClass = MetadataProperties::class;
   
   /** @var MetadataProperties */
   public $props;

@@ -40,16 +40,16 @@ abstract class Component implements RenderableInterface
    */
   const isolatedViewModel = false;
   /**
+   * @var string|null Null if the component does not supports properties.
+   */
+  const propertiesClass = null;
+  /**
    * When true, the component's properties will be set on its data binder, so that data binding expressions can access
    * them via the `@`property syntax.
    *
    * @var bool;
    */
   const publishProperties = false;
-  /**
-   * @var string
-   */
-  static protected $propertiesClass;
   /**
    * An array containing the instance creation counters for each component class name.
    *
@@ -82,12 +82,6 @@ abstract class Component implements RenderableInterface
    * @var AbstractProperties
    */
   public $props;
-  /**
-   * Indicates if the component supports a properties object.
-   *
-   * @var boolean
-   */
-  public $supportsProperties;
   /**
    * Set to true on a component class definition to automatically assign an ID to instances.
    *
@@ -123,12 +117,11 @@ abstract class Component implements RenderableInterface
    */
   function __construct ()
   {
-    $class                    = get_class ($this);
-    $s                        = explode ('\\', $class);
-    $this->className          = end ($s);
-    $this->supportsProperties = isset($class::$propertiesClass);
-    if ($this->supportsProperties) {
-      $propClass   = $class::$propertiesClass;
+    $class           = get_class ($this);
+    $s               = explode ('\\', $class);
+    $this->className = end ($s);
+    if ($this->supportsProperties ()) {
+      $propClass   = $class::propertiesClass;
       $this->props = new $propClass ($this);
     }
   }
@@ -473,7 +466,7 @@ abstract class Component implements RenderableInterface
    */
   function setProps (array $props = null)
   {
-    if ($this->supportsProperties) {
+    if ($this->supportsProperties ()) {
       // Apply presets.
 
       if ($this->context)
@@ -517,6 +510,16 @@ abstract class Component implements RenderableInterface
     $this->setProps ($props);
     $this->init ();
     return $this;
+  }
+
+  /**
+   * Indicates if the component supports properties set via markup, which are represented by a properties object.
+   *
+   * @return bool
+   */
+  function supportsProperties ()
+  {
+    return (bool)static::propertiesClass;
   }
 
   /**

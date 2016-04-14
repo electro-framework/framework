@@ -5,7 +5,7 @@ use Selenia\Matisse\Properties\Base\HtmlComponentProperties;
 
 class HtmlComponent extends Component
 {
-  protected static $propertiesClass = HtmlComponentProperties::class;
+  const propertiesClass = HtmlComponentProperties::class;
   /**
    * The component's runtime CSS classes.
    *

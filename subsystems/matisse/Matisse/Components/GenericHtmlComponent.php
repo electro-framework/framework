@@ -6,7 +6,7 @@ use Selenia\Matisse\Properties\Base\GenericProperties;
 
 class GenericHtmlComponent extends HtmlComponent
 {
-  protected static $propertiesClass = GenericProperties::class;
+  const propertiesClass = GenericProperties::class;
 
   /** @var GenericProperties */
   public $props;

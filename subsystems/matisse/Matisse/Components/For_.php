@@ -45,7 +45,7 @@ class For_ extends Component
 {
   const allowsChildren = true;
   
-  protected static $propertiesClass = ForProperties::class;
+  const propertiesClass = ForProperties::class;
   
   /** @var ForProperties */
   public $props;

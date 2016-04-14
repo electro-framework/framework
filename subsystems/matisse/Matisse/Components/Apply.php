@@ -42,7 +42,7 @@ class Apply extends Component
 {
   const allowsChildren = true;
   
-  protected static $propertiesClass = ApplyProperties::class;
+  const propertiesClass = ApplyProperties::class;
   
   /** @var ApplyProperties */
   public $props;

@@ -5,7 +5,7 @@ use Selenia\Matisse\Properties\Base\HtmlContainerProperties;
 
 class HtmlContainer extends HtmlComponent
 {
-  protected static $propertiesClass = HtmlContainerProperties::class;
+  const propertiesClass = HtmlContainerProperties::class;
 
   public $defaultProperty = 'content';
 

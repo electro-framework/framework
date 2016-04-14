@@ -24,7 +24,7 @@ class MacroParamProperties extends ComponentProperties
  */
 class MacroParam extends Component implements MacroExtensionInterface
 {
-  protected static $propertiesClass = MacroParamProperties::class;
+  const propertiesClass = MacroParamProperties::class;
 
   /** @var MacroParamProperties */
   public $props;

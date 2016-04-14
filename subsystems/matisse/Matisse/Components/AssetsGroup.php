@@ -16,7 +16,7 @@ class AssetsGroup extends Component
 {
   const allowsChildren = true;
   
-  protected static $propertiesClass = AssetsGroupProperties::class;
+  const propertiesClass = AssetsGroupProperties::class;
   
   /** @var AssetsGroupProperties */
   public $props;

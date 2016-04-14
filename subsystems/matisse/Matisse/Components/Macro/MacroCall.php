@@ -18,7 +18,7 @@ class MacroCall extends CompositeComponent
   const TAG_NAME = 'Call';
   const allowsChildren = true;
   
-  protected static $propertiesClass = MacroCallProperties::class;
+  const propertiesClass = MacroCallProperties::class;
   
   /** @var MacroCallProperties */
   public $props;

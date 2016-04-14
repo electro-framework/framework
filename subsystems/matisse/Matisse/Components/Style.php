@@ -28,7 +28,7 @@ class Style extends Component
 {
   const allowsChildren = true;
   
-  protected static $propertiesClass = StyleProperties::class;
+  const propertiesClass = StyleProperties::class;
   
   /** @var StyleProperties */
   public $props;
