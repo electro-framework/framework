@@ -86,6 +86,11 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
    */
   abstract function isEnum ($propName);
 
+  /**
+   * Mass-assigns a set of properties.
+   *
+   * @param array $props
+   */
   function apply (array $props)
   {
     $this->beingAssigned = $props;
@@ -130,6 +135,13 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
     }
   }
 
+  /**
+   * Gets the raw value of the specified property, not performing data binding.
+   *
+   * @param string $propName
+   * @param mixed  $default [optional]
+   * @return mixed
+   */
   function get ($propName, $default = null)
   {
     return property ($this, $propName, $default);
@@ -144,6 +156,19 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
   public function getBeingAssigned ()
   {
     return $this->beingAssigned;
+  }
+
+  /**
+   * Gets the value of the specified property, performing data binding if the property is bound.
+   *
+   * @param string $propName
+   * @param mixed  $default [optional]
+   * @return mixed
+   */
+  function getComputed ($propName, $default = null)
+  {
+    $v = $this->component->getComputedPropValue ($propName);
+    return exists ($v) ? $v : $default;
   }
 
   /**

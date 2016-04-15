@@ -73,9 +73,9 @@ class IfProperties extends ComponentProperties
 class If_ extends Component implements MacroExtensionInterface
 {
   const allowsChildren = true;
-  
+
   const propertiesClass = IfProperties::class;
-  
+
   /** @var IfProperties */
   public $props;
 
@@ -106,6 +106,7 @@ class If_ extends Component implements MacroExtensionInterface
 
     if (isset($prop->$np)) {
       if ($prop->$np)
+//      if ($prop->getComputed($np))
         return $this->getChildren ();
       return $this->getChildren ('else');
     }

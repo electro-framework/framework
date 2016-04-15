@@ -95,16 +95,11 @@ class MacroCall extends CompositeComponent
     parent::onCreate ($props, $parent);
   }
 
-  protected function setupViewModel ()
-  {
-    parent::setupViewModel ();
-    inspect ("YO!!!!!", $this->getTagName (), $this->getSkin ()->getDataBinder ());
-    foreach ($this->props->getPropertiesOf (type::content, type::metadata, type::collection) as $prop => $v) {
-      $this->props->$prop->attachTo ($this->getSkin ());
-      $this->props->$prop->preRun();
-      inspect ("PROP " . $prop, $this->props->$prop->getDataBinder ());
-    }
-  }
-
+//  protected function setupViewModel ()
+//  {
+//    parent::setupViewModel ();
+//    foreach ($this->props->getPropertiesOf (type::content, type::metadata, type::collection) as $prop => $v)
+//      $this->props->$prop->preRun();
+//  }
 
 }

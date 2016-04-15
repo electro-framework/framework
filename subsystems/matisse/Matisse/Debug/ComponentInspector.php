@@ -13,6 +13,12 @@ use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
 use SplObjectStorage;
 
+/**
+ * Provides a visual introspection of a Matisse component for debugging purposes.
+ *
+ * > <p>**Note:** append `?extdebug` to the page URL to display extended debugging information.
+ * > <br>It will generate a larger output and it will be slower, though.
+ */
 class ComponentInspector
 {
   private static $inspecting = false;
@@ -89,7 +95,7 @@ class ComponentInspector
     echo "<span style='color:$COLOR_TAG'>&lt;$tag</span>";
     if (!isset($component->parent) && !$component instanceof DocumentFragment)
       echo "&nbsp;<span style='color:$COLOR_INFO'>(detached)</span>";
-    $type = typeOf($component);
+    $type = typeOf ($component);
     echo "<span class='icon hint--rounded hint--top' data-hint='Component class:\n$type'><i class='fa fa-info-circle'></i></span>";
 
     // Handle text node
@@ -136,7 +142,7 @@ class ComponentInspector
         ksort ($props);
 
       if ($props) {
-        $type = typeOf($propsObj);
+        $type = typeOf ($propsObj);
         echo "<span class='icon hint--rounded hint--top' data-hint='Properties class:\n$type'><i class='fa fa-list'></i></span>";
         echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";
 
@@ -308,6 +314,8 @@ class ComponentInspector
 
   private static function inspectInternalProps (Component $component)
   {
+    if (!isset($_GET['extdebug'])) return;
+
     $COLOR_TYPE  = '#55A';
     $COLOR_VALUE = '#333';
     $COLOR_PROP  = '#B00';

@@ -44,12 +44,12 @@ interface DataBinderInterface
    *
    * > Ex: `$vm =& $binder->getViewModel()`.
    *
-*@return $this|null|object|array A reference to the view model. Changes to it will be reflecg
+   * @return $this|null|object|array A reference to the view model. Changes to it will be reflecg
    */
   function &getViewModel ();
 
   /**
-   * Gets a value with the given name from the bound component properties.
+   * Gets a value with the given name from the bound component properties, performing data binding as needed.
    *
    * @param string $key
    * @return mixed null if not found.

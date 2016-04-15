@@ -201,11 +201,11 @@ trait DataBindingTrait
   {
     throw new ComponentException ($this,
       Debug::grid ([
-        'Expression' => "<kbd>$exp</kbd>",
-        'Compiled'   => sprintf ('<code>%s</code>', \PhpCode::highlight ("$exp->translated")),
-        'Error'      => typeInfoOf ($e) . ' ' . $e->getMessage (),
-        'At'         => ErrorConsole::errorLink ($e->getFile (), $e->getLine ()) .
-                        ', line <b>' . $e->getLine () . '</b>',
+        'Expression' => Debug::RAW_TEXT . "<kbd>$exp</kbd>",
+        'Compiled'   => sprintf ('%s<code>%s</code>', Debug::RAW_TEXT, \PhpCode::highlight ("$exp->translated")),
+        'Error'      => sprintf ('%s%s %s', Debug::RAW_TEXT, typeInfoOf ($e), $e->getMessage ()),
+        'At'         => sprintf ('%s%s, line <b>%s</b>', Debug::RAW_TEXT,
+          ErrorConsole::errorLink ($e->getFile (), $e->getLine ()), $e->getLine ()),
       ], 'Error while evaluating data-binding expression')
     );
   }

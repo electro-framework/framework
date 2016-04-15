@@ -3,6 +3,7 @@ namespace Selenia\Matisse\Lib;
 
 use PhpKit\WebConsole\Lib\Debug;
 use Selenia\Interfaces\CustomInspectionInterface;
+use Selenia\Interfaces\RenderableInterface;
 use Selenia\Matisse\Interfaces\DataBinderInterface;
 use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
@@ -76,8 +77,11 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
 
   function prop ($key)
   {
-    $p = $this->props;
-    return $p ? $p->get ($key) : null;
+    if (!$this->props) return null;
+    $v = $this->props->getComputed ($key);
+    if ($v && $v instanceof RenderableInterface)
+      return $v->getRendering ();
+    return $v;
   }
 
   function renderBlock ($name)
@@ -115,9 +119,11 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
   function inspect ()
   {
     return Debug::grid ([
-      "View Model" => Debug::getType ($this->viewModel),
-      "Properties" => Debug::getType ($this->props),
-      "Isolation"  => $this->isolatedViewModel ? 'true' : 'false',
+      "View Model" => $this->viewModel,
+      "Properties" => Debug::RAW_TEXT .
+                      Debug::grid ($this->props, Debug::getType ($this->props), 1, ['props', 'component', 'hidden'],
+                        true),
+      "Isolation"  => $this->isolatedViewModel,
     ]);
   }
 

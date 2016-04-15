@@ -176,10 +176,8 @@ class Parser
       $sPos = 0;
       while (preg_match (self::PARSE_ATTRS, "$attrStr@", $match, PREG_OFFSET_CAPTURE, $sPos)) {
         list(, list($key), list($value, $exists), list($marker, $next)) = $match;
-        if ($key === '') {
-          $value = $key;
+        if ($key === '')
           $key   = self::NAMELESS_PROP;
-        }
         $key = normalizeAttributeName ($key);
         if ($exists < 0)
           $value = 'true';

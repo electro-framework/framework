@@ -5,6 +5,7 @@ use PhpCode;
 use RuntimeException;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Interfaces\DataBinderInterface;
+use Selenia\Traits\InspectionTrait;
 
 /**
  * Represents a Matisse databinding expression.
@@ -52,6 +53,8 @@ use Selenia\Matisse\Interfaces\DataBinderInterface;
  */
 class Expression
 {
+  use InspectionTrait;
+
   /**
    * The name of the parameter of type DataBinder used on an compiled function.
    */
@@ -67,13 +70,11 @@ class Expression
   const PARSE_SIMPLE_EXPR = '/
     ^\s*                      # ignore white space at the beginning
     (                         # capture either
-      [@#]?[:\w]+             # a constant name, a property name (ex: "prop", "@prop"), a block name (ex: "#prop") or a class constant (ex: MyClass::myConstant)
+      !*[@#]?[:\w]+           # a constant name, a property name (ex: "prop", "@prop"), a block name (ex: "#prop") or a class constant (ex: MyClass::myConstant)
       |                       # or
       \'(?:(?<!\\\\)[^\'])*\' # a quoted string constant (supports escaped quotes inside the string)
       |                       # or
       "(?:(?<!\\\\)[^"])*"    # a double quoted string constant (supports escaped double quotes inside the string)
-      |                       # or
-      !                       # the unary `not` operator, which will became part of the captured segment
     )
     \s*                       # ignore white space
     (                         # capture the next operator, if one is present, including the the first filter\'s pipe
@@ -82,6 +83,8 @@ class Expression
       [,\|\.\/\-\(\)\[\]\{\}%&=?*+<>]+  # one of the other allowed operators
     )?
     /xu';
+
+  public static $INSPECTABLE = ['expression', 'translated'];
   /**
    * A map of databinding expressions to compiled functions.
    *
@@ -172,21 +175,18 @@ class Expression
       $seg = $segments[0];
 
       if ($seg[0] == '#')
-        return self::BINDER_PARAM . '->renderBlock("' . substr ($seg, 1) . '")';
+        return sprintf ('%s->renderBlock("%s")', self::BINDER_PARAM, substr ($seg, 1));
 
       PhpCode::evalConstant ($seg, $ok);
       if ($ok) return $seg;
     }
 
-    $exp = $not = '';
+    $exp = $unary = '';
     foreach ($segments as $i => $seg) {
       if ($i)
         $exp = "_g($exp,'$seg')";
       else {
-        if ($seg[0] == '!') {
-          $not = '!';
-          $seg = substr ($seg, 1);
-        }
+        list (, $unary, $seg) = str_match ($seg, '/^(!*)(.*)/', 2);
         // If not a constant value, convert it to a property access expression fragment.
         if ($seg[0] == '"' || $seg[0] == "'" || ctype_digit ($seg))
           $exp = $seg;
@@ -195,7 +195,7 @@ class Expression
           : self::BINDER_PARAM . "->get('$seg')";
       }
     }
-    $exp = "$not$exp";
+    $exp = "$unary$exp";
     if (!PhpCode::validateExpression ($exp))
       throw new DataBindingException(sprintf ("Invalid expression <kbd>%s</kbd>.", implode ('.', $segments)));
     return $exp;

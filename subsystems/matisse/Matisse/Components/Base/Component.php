@@ -741,7 +741,6 @@ abstract class Component implements RenderableInterface
         $this->context->viewModel[$this->shareViewModelAs] = $this->viewModel;
     }
     else if (static::publishProperties) {
-          inspect ($this->getTagName(),static::class,static::publishProperties);
       if (!$this->dataBinder)
         return;
       $this->dataBinder = $this->dataBinder->withProps ($this->props);
