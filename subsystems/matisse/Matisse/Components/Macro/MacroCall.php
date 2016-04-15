@@ -17,9 +17,9 @@ class MacroCall extends CompositeComponent
 {
   const TAG_NAME = 'Call';
   const allowsChildren = true;
-  
+  const publishProperties = true;
   const propertiesClass = MacroCallProperties::class;
-  
+
   /** @var MacroCallProperties */
   public $props;
   /**
@@ -67,14 +67,6 @@ class MacroCall extends CompositeComponent
 
       $this->setMacro ($macro);
     }
-//    else {
-//      $this->viewName = get ($props, 'view');
-//      if (!exists ($this->viewName) && !$this->isBound ('view'))
-//        throw new ComponentException($this,
-//          "One of these properties must be set:<p><kbd>macro</kbd> | <kbd>view</kbd>");
-//      $this->allowsChildren = false;
-//      $this->expectingView  = true;
-//    }
     parent::onCreate ($props, $parent);
   }
 
@@ -103,5 +95,17 @@ class MacroCall extends CompositeComponent
         'You may not specify content for this tag because it has no default property');
     }
   }
+
+  protected function setupViewModel ()
+  {
+    parent::setupViewModel();
+    inspect ("YO!!!!!",$this->getTagName(),$this->getDataBinder());
+    foreach ($this->props->getPropertiesOf(type::content) as $prop => $v) {
+      $this->props->$prop->attachTo($this->getSkin());
+//      $this->props->$prop->preRun();
+      inspect ("PROP ".$prop,$this->props->$prop->getDataBinder());
+    }
+  }
+
 
 }

@@ -55,11 +55,12 @@ class Navigation implements NavigationInterface
     };
     return [
       'Current link'               => $this->currentLink (),
-      'All IDs<sup>*</sup>'        => PA ($this->IDs)->keys ()->sort ()->join (', '),
+      'All IDs<sup>*</sup>'        => PA ($this->IDs)->keys ()->sort ()->join (', ')->S,
       'All URLs<sup>*</sup><br>' .
       '<i>(in scanning order)</i>' => map ($this->rootLink->getDescendants (),
-        function (NavigationLinkInterface $link) {
-          return $link->rawUrl ();
+        function (NavigationLinkInterface $link, &$i) {
+          $i = $link->rawUrl();
+          return $link->url ();
         }),
       'Trail<sup>*</sup>'          => map ($this->getCurrentTrail (), $linkToUrl),
       'Visible trail<sup>*</sup>'  => map ($this->getVisibleTrail (), $linkToUrl),

@@ -231,17 +231,18 @@ class NavigationLink implements NavigationLinkInterface
       if (is_callable ($url = $this->url))
         $url = $url();
 
-      if (isset($url) && $this->parent && !str_beginsWith ($url, 'http') && ($url === '' || $url[0] != '/')) {
+      if (isset($url) && $this->parent && !str_beginsWith ($url, 'http') && ($url === '' || $url[0] != '/')
+      && !preg_match('/^\w+:/', $url)) {
         $base = $this->parent->url ();
         $url  = exists ($base) ? (exists ($url) ? "$base/$url" : $base) : $url;
       }
 
-      $this->cachedUrl = $url;
+      $this->url = $url;
 
       if (exists ($url))
         $url = $this->evaluateUrl ($url);
 
-      return $url;
+      return $this->cachedUrl = $url;
     }
     //else DO NOT CACHE IT YET!
     $this->url = $url;

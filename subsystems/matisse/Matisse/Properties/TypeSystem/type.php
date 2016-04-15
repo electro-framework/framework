@@ -202,7 +202,7 @@ class type
         return is_numeric ($v);
 
       case type::string:
-        return is_scalar ($v);
+        return is_scalar ($v) || (is_object ($v) && method_exists ($v, '__toString'));
     }
     return false;
   }

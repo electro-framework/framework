@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Matisse\Components\Base;
 
+use Selenia\Classes\Overlay;
 use Selenia\Interfaces\RenderableInterface;
 use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
@@ -292,18 +293,6 @@ abstract class Component implements RenderableInterface
     return Context::class;
   }
 
-  function getRendering ()
-  {
-    ob_start (null, 0);
-    $this->run ();
-    return ob_get_clean ();
-  }
-
-  function setContext ($context)
-  {
-    $this->context = $context;
-  }
-
   /**
    * Gets the component's data binder.
    *
@@ -312,6 +301,13 @@ abstract class Component implements RenderableInterface
   function getDataBinder ()
   {
     return $this->dataBinder;
+  }
+
+  function getRendering ()
+  {
+    ob_start (null, 0);
+    $this->run ();
+    return ob_get_clean ();
   }
 
   /**
@@ -469,6 +465,11 @@ abstract class Component implements RenderableInterface
   function runContent ()
   {
     $this->run (true);
+  }
+
+  function setContext ($context)
+  {
+    $this->context = $context;
   }
 
   /**
@@ -632,6 +633,16 @@ abstract class Component implements RenderableInterface
   }
 
   /**
+   * Creates and returns an overlay over the current view model.
+   *
+   * @return Overlay
+   */
+  protected function overlayViewModel ()
+  {
+    return Overlay::from ($this->dataBinder ? $this->dataBinder->getViewModel () : []);
+  }
+
+  /**
    * Do something after the component renders (ex. prepend to the output).
    */
   protected function postRender ()
@@ -718,8 +729,11 @@ abstract class Component implements RenderableInterface
     $this->viewModel ();
 
     if (isset($this->viewModel)) {
-      if ($this->dataBinder)
+      if ($this->dataBinder) {
         $this->dataBinder = $this->dataBinder->withViewModel ($this->viewModel);
+        if (static::publishProperties)
+          $this->dataBinder = $this->dataBinder->withProps ($this->props);
+      }
       else $this->dataBinder = new DataBinder ($this->context, $this->viewModel,
         static::publishProperties ? $this->props : null);
 
@@ -727,9 +741,9 @@ abstract class Component implements RenderableInterface
         $this->context->viewModel[$this->shareViewModelAs] = $this->viewModel;
     }
     else if (static::publishProperties) {
-      if (!$this->dataBinder) {
+          inspect ($this->getTagName(),static::class,static::publishProperties);
+      if (!$this->dataBinder)
         return;
-      }
       $this->dataBinder = $this->dataBinder->withProps ($this->props);
     }
 

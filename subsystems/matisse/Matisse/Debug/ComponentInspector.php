@@ -89,6 +89,8 @@ class ComponentInspector
     echo "<span style='color:$COLOR_TAG'>&lt;$tag</span>";
     if (!isset($component->parent) && !$component instanceof DocumentFragment)
       echo "&nbsp;<span style='color:$COLOR_INFO'>(detached)</span>";
+    $type = typeOf($component);
+    echo "<span class='icon hint--rounded hint--top' data-hint='Component class:\n$type'><i class='fa fa-info-circle'></i></span>";
 
     // Handle text node
 
@@ -133,8 +135,9 @@ class ComponentInspector
       if ($props)
         ksort ($props);
 
-
       if ($props) {
+        $type = typeOf($propsObj);
+        echo "<span class='icon hint--rounded hint--top' data-hint='Properties class:\n$type'><i class='fa fa-list'></i></span>";
         echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";
 
         // Display all scalar properties.
