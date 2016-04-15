@@ -15,11 +15,10 @@ use Selenia\Matisse\Properties\TypeSystem\type;
  */
 class MacroCall extends CompositeComponent
 {
-  const TAG_NAME = 'Call';
-  const allowsChildren = true;
+  const TAG_NAME          = 'Call';
+  const allowsChildren    = true;
+  const propertiesClass   = MacroCallProperties::class;
   const publishProperties = true;
-  const propertiesClass = MacroCallProperties::class;
-
   /** @var MacroCallProperties */
   public $props;
   /**
@@ -28,6 +27,32 @@ class MacroCall extends CompositeComponent
    * @var Macro
    */
   protected $macroInstance;
+
+  function onParsingComplete ()
+  {
+    // Move children to default parameter.
+
+    if ($this->hasChildren ()) {
+      $def = $this->getDefaultParam ();
+      if (!empty($def)) {
+        if (!$this->props->defines ($def))
+          throw new ComponentException($this, "Invalid default property <kbd>$def</kbd>");
+
+        $type = $this->props->getTypeOf ($def);
+        if ($type != type::content && $type != type::metadata)
+          throw new ComponentException($this, sprintf (
+            "The macro's default parameter <kbd>$def</kbd> can't hold content because its type is <kbd>%s</kbd>.",
+            type::getNameOf ($type)));
+
+        $param = new Metadata($this->context, ucfirst ($def), $type);
+        $this->props->set ($def, $param);
+        $param->attachTo ($this);
+        $param->setChildren ($this->getChildren ());
+      }
+      else throw new ComponentException ($this,
+        'You may not specify content for this tag because it has no default property');
+    }
+  }
 
   function setMacro (Macro $macro)
   {
@@ -70,40 +95,14 @@ class MacroCall extends CompositeComponent
     parent::onCreate ($props, $parent);
   }
 
-  function onParsingComplete ()
-  {
-    // Move children to default parameter.
-
-    if ($this->hasChildren ()) {
-      $def = $this->getDefaultParam ();
-      if (!empty($def)) {
-        if (!$this->props->defines ($def))
-          throw new ComponentException($this, "Invalid default property <kbd>$def</kbd>");
-
-        $type = $this->props->getTypeOf ($def);
-        if ($type != type::content && $type != type::metadata)
-          throw new ComponentException($this, sprintf (
-            "The macro's default parameter <kbd>$def</kbd> can't hold content because its type is <kbd>%s</kbd>.",
-            type::getNameOf ($type)));
-
-        $param = new Metadata($this->context, ucfirst ($def), $type);
-        $this->props->set ($def, $param);
-        $param->attachTo ($this);
-        $param->setChildren ($this->getChildren ());
-      }
-      else throw new ComponentException ($this,
-        'You may not specify content for this tag because it has no default property');
-    }
-  }
-
   protected function setupViewModel ()
   {
-    parent::setupViewModel();
-    inspect ("YO!!!!!",$this->getTagName(),$this->getDataBinder());
-    foreach ($this->props->getPropertiesOf(type::content) as $prop => $v) {
-      $this->props->$prop->attachTo($this->getSkin());
-//      $this->props->$prop->preRun();
-      inspect ("PROP ".$prop,$this->props->$prop->getDataBinder());
+    parent::setupViewModel ();
+    inspect ("YO!!!!!", $this->getTagName (), $this->getSkin ()->getDataBinder ());
+    foreach ($this->props->getPropertiesOf (type::content, type::metadata, type::collection) as $prop => $v) {
+      $this->props->$prop->attachTo ($this->getSkin ());
+      $this->props->$prop->preRun();
+      inspect ("PROP " . $prop, $this->props->$prop->getDataBinder ());
     }
   }
 

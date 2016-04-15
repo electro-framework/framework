@@ -69,7 +69,8 @@ class MacroCallProperties extends MetadataProperties
       $this->noMacro ();
     $param = $this->macroInstance->getParameter ($name, $found);
     if (!$found)
-      throw new ComponentException ($this->macroInstance, "Undefined macro parameter <kbd>$name</kbd>.");
+      throw new ComponentException ($this->component, "Undefined macro parameter <kbd>$name</kbd>.
+<p>Available parameters: <b>" . implode (', ', $this->component->props->getPropertyNames ()) . '</b>');
 
     $v = $param->getComputedPropValue ('default');
     if ($param->props->type == 'content') {

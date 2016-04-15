@@ -147,18 +147,18 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
   }
 
   /**
-   * Returns a subset of the available properties, filtered by the a specific type ID.
+   * Returns a subset of the available properties, filtered by the a specific type IDs.
    *
-   * @param string $type One of the {@see type}::XXX constants.
+   * @param string[] $types One or moe of the {@see type}::XXX constants.
    * @return array A map of property name => property value.
    */
-  function getPropertiesOf ($type)
+  function getPropertiesOf (...$types)
   {
     $result = [];
     $names  = $this->getPropertyNames ();
     if (isset($names))
       foreach ($names as $name)
-        if ($this->getTypeOf ($name) == $type)
+        if (in_array ($this->getTypeOf ($name), $types))
           $result[$name] = $this->get ($name);
     return $result;
   }
