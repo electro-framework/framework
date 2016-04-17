@@ -296,7 +296,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   protected function afterRender ()
   {
     parent::afterRender();
-    if ($this->skin) {
+    if ($this->getShadowDOM ()) {
       //----------------------------------------------------------------------------------------
       // View Model panel
       // (MUST run before the DOM panel to capture the data-binding stack at its current state)
@@ -469,12 +469,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     ]);
   }
 
-  /**
-   * {@inheritdoc}
-   *
-   * <p>Note:
-   * > View models are available only on GET requests.
-   */
   protected function viewModel ()
   {
     // Defaults the view model to the component itself.

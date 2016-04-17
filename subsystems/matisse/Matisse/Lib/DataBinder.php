@@ -31,14 +31,14 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
 
   /**
    * @param Context                 $context
-   * @param object|array            $viewModel A view model reference.
-   * @param AbstractProperties|null $props
+   * @param object|array|null       $viewModel [optional] A view model reference.
+   * @param AbstractProperties|null $props     [optional] 
    */
-  public function __construct (Context $context, &$viewModel, AbstractProperties $props = null)
+  public function __construct (Context $context, &$viewModel = null, AbstractProperties $props = null)
   {
+    $this->context   = $context;
     $this->viewModel =& $viewModel;
     $this->props     = $props;
-    $this->context   = $context;
   }
 
   function filter ($name, ...$args)
@@ -73,6 +73,17 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
   function &getViewModel ()
   {
     return $this->viewModel;
+  }
+
+  function inspect ()
+  {
+    return Debug::grid ([
+      "View Model" => $this->viewModel,
+      "Properties" => Debug::RAW_TEXT .
+                      Debug::grid ($this->props, Debug::getType ($this->props), 1, ['props', 'component', 'hidden'],
+                        true),
+      "Isolation"  => $this->isolatedViewModel,
+    ]);
   }
 
   function prop ($key)
@@ -114,17 +125,6 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
     $o            = clone $this;
     $o->viewModel =& $viewModel;
     return $o;
-  }
-
-  function inspect ()
-  {
-    return Debug::grid ([
-      "View Model" => $this->viewModel,
-      "Properties" => Debug::RAW_TEXT .
-                      Debug::grid ($this->props, Debug::getType ($this->props), 1, ['props', 'component', 'hidden'],
-                        true),
-      "Isolation"  => $this->isolatedViewModel,
-    ]);
   }
 
 }

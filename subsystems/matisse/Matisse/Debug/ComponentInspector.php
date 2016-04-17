@@ -105,7 +105,7 @@ class ComponentInspector
       try {
         if ($component->isBound ('value')) {
           /** @var Expression $exp */
-          $exp = $component->bindings['value'];
+          $exp = $component->getBinding ('value');
           $exp = self::inspectString ((string)$exp);
           echo "<span style='color:$COLOR_BIND'>$exp</span> = ";
 
@@ -144,6 +144,9 @@ class ComponentInspector
       if ($props) {
         $type = typeOf ($propsObj);
         echo "<span class='icon hint--rounded hint--top' data-hint='Properties class:\n$type'><i class='fa fa-list'></i></span>";
+
+        self::inspectInternalProps ($component);
+
         echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";
 
         // Display all scalar properties.
@@ -157,9 +160,9 @@ class ComponentInspector
             echo "<tr$modifStyle><td style='color:$COLOR_PROP'>$k<td><i style='color:$COLOR_TYPE'>$tn</i><td>";
 
             // Display data-binding
-            if (isset($component->bindings[$k])) {
+            if ($component->isBound ($k)) {
               /** @var Expression $exp */
-              $exp = get ($component->bindings, $k);
+              $exp = $component->getBinding ($k);
               $exp = self::inspectString ((string)$exp);
               echo "<span style='color:$COLOR_BIND'>$exp</span> = ";
 
@@ -210,7 +213,7 @@ class ComponentInspector
             echo "<tr$modifStyle><td style='color:$COLOR_PROP'>$k<td><i style='color:$COLOR_TYPE'>$tn</i><td>";
 
             /** @var Expression $exp */
-            $exp = get ($component->bindings, $k);
+            $exp = $component->getBinding ($k);
             if (isset($exp)) {
               $exp = self::inspectString ((string)$exp);
               echo "<span style='color:$COLOR_BIND'>$exp</span> = ";
@@ -257,8 +260,7 @@ class ComponentInspector
         echo "</table>";
       }
     }
-
-    self::inspectInternalProps ($component);
+    else self::inspectInternalProps ($component);
 
     // If deep inspection is enabled, recursively inspect all children components.
 
@@ -266,8 +268,8 @@ class ComponentInspector
       $content = null;
       if ($component->hasChildren ())
         $content = $component->getChildren ();
-      elseif ($component instanceof CompositeComponent && ($skin = $component->getSkin ()))
-        $content = [$skin];
+      elseif ($component instanceof CompositeComponent && ($shadowDOM = $component->provideShadowDOM ()))
+        $content = [$shadowDOM];
       if ($content) {
         echo "<span style='color:$COLOR_TAG'>&gt;</span><div style=\"margin:0 0 0 15px\">";
         self::_inspectSet ($content, $deep);
@@ -291,6 +293,8 @@ class ComponentInspector
   }
 
   /**
+   * Error-resilient getter for a component's computed property value.
+   *
    * @param string    $prop
    * @param Component $component
    * @param bool      $error
@@ -320,23 +324,26 @@ class ComponentInspector
     $COLOR_VALUE = '#333';
     $COLOR_PROP  = '#B00';
 
-    // Display some of the component instance class properties
+    if (method_exists ($component, 'getViewModel')) {
 
-    echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";
+      // Display some of the component instance class properties
 
-    // Display view model
+      echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";
 
-    $tn = Debug::getType ($component->getViewModel ());
-    echo "<tr><td style='color:$COLOR_PROP'>View Model<sup>*</sup><td><i style='color:$COLOR_TYPE'>$tn</i></tr>";
+      // Display view model
 
-    // Display dta binder
+      $tn = Debug::getType ($component->getViewModel ());
+      echo "<tr><td style='color:$COLOR_PROP'>View Model<sup>*</sup><td><i style='color:$COLOR_TYPE'>$tn</i></tr>";
 
-    $db = $component->getDataBinder ();
-    $tn = Debug::getType ($db);
-    $tv = $db ? $db->inspect () : '';
-    echo "<tr><td style='color:$COLOR_PROP'>Data Binder<sup>*</sup><td><i style='color:$COLOR_TYPE'>$tn</i><td>$tv</tr>";
+      // Display dta binder
 
-    echo "</table>";
+      $db = $component->getDataBinder ();
+      $tn = Debug::getType ($db);
+      $tv = $db ? $db->inspect () : '';
+      echo "<tr><td style='color:$COLOR_PROP'>Data Binder<sup>*</sup><td><i style='color:$COLOR_TYPE'>$tn</i><td>$tv</tr>";
+
+      echo "</table>";
+    }
   }
 
   /**

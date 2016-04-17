@@ -4,6 +4,7 @@ namespace Selenia\Matisse\Components\Base;
 use Selenia\Interfaces\RenderableInterface;
 use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Traits\Component\ViewModelTrait;
 use Selenia\ViewEngine\Engines\MatisseEngine;
 
 /**
@@ -19,7 +20,7 @@ use Selenia\ViewEngine\Engines\MatisseEngine;
  * <p>Composite components do not render themselves directly, instead they delegate rendering to a view, which parses,
  * compiles and renders a template with the help of a view engine.
  *
- * <p>The view engine can be Matisse, in which case the view is compiled to a "shadow DOM" of components that can
+ * <p>The view engine can be Matisse, in which case the view is compiled into a "shadow DOM" of components that can
  * render themselves, or it can be another templating engine, which usually is also responsible for rendering the
  * template.
  *
@@ -29,8 +30,19 @@ use Selenia\ViewEngine\Engines\MatisseEngine;
  */
 class CompositeComponent extends Component
 {
-  const publishProperties = true;
+  use ViewModelTrait;
 
+  /**
+   * When true, data-binding resolution on the component's view is unaffected by data from the shared document view
+   * model (which is set on {@see Context}); only the component's own view model is used.
+   *
+   * @var bool
+   */
+  const isolatedViewModel = false;
+  /**
+   * @var bool
+   */
+  const publishProperties = true;
   /**
    * An inline/embedded template to be rendered as the component's appearance.
    *
@@ -53,13 +65,13 @@ class CompositeComponent extends Component
    *
    * <p>This is only set when using a Matisse view.
    *
-   * @var Component
+   * @var Component|null
    */
-  protected $skin = null;
+  protected $shadowDOM = null;
   /**
    * The component's view, which renders the component's appearance.
    *
-   * @var ViewInterface
+   * @var ViewInterface|null
    */
   protected $view = null;
   /**
@@ -70,21 +82,14 @@ class CompositeComponent extends Component
   protected $viewEngineClass = MatisseEngine::class;
 
   /**
-   * When the component's view is a matisse template, this returns the root of the parsed template, otherwise it returns
-   * `null`.
+   * Gets the Matisse component that implements this component's renderable view (if the view is a Matisse template).
    *
-   * <p>Subclasses may override this to return a skin other than the component's default one.
-   *
-   * > <p>This is also used by {@see ComponentInspector} for inspecting a composite component's children.
-   *
-   * @return Component|null A {@see DocumentFragment}, but it may also be any other component type.
+   * @see provideShadowDOM()
+   * @return Component|null
    */
-  function getSkin ()
+  function getShadowDOM ()
   {
-    return $this->skin
-      ?: ($this->view && $this->view->getEngine () instanceof MatisseEngine
-        ? $this->view->getCompiled ()
-        : null);
+    return $this->shadowDOM;
   }
 
   /**
@@ -92,25 +97,45 @@ class CompositeComponent extends Component
    *
    * <p>If set, this will override {@see template} and {@see templateUrl}.
    *
-   * @param Component $skin
+   * @param Component $shadowDOM
    */
-  function setSkin (Component $skin)
+  function setShadowDOM (Component $shadowDOM)
   {
-    $this->skin = $skin;
-    $skin->attachTo ($this);
+    $this->shadowDOM = $shadowDOM;
+    $shadowDOM->attachTo ($this);
   }
 
   /**
-   * @return ViewInterface
+   * @return ViewInterface|null
    */
   function getView ()
   {
     return $this->view;
   }
 
+  /**
+   * When the component's view is a matisse template, this returns the root of the parsed template, otherwise it returns
+   * `null`.
+   *
+   * <p>Subclasses may override this to return a shadowDOM other than the component's default one.
+   *
+   * > <p>This is also used by {@see ComponentInspector} for inspecting a composite component's children.
+   *
+   * @return Component|null A {@see DocumentFragment}, but it may also be any other component type.
+   */
+  function provideShadowDOM ()
+  {
+    return $this->shadowDOM
+      ?: (
+      $this->view && $this->view->getEngine () instanceof MatisseEngine
+        ? $this->view->getCompiled ()
+        : null
+      );
+  }
+
   protected function createView ()
   {
-    if (!isset($this->skin)) {
+    if (!isset($this->shadowDOM)) {
       if ($this->templateUrl) {
         $this->assertContext ();
         $this->view = $this->context->viewService->loadFromFile ($this->templateUrl);
@@ -122,10 +147,10 @@ class CompositeComponent extends Component
         $this->view->compile ();
       }
     }
-    // else assume the skin is already attached to this; it will be, if set via setSkin().
+    // else assume the shadowDOM is already attached to this; it will be, if set via setShadowDOM().
 
-    // The skin may have been set directly or indirectly via the loaded view.
-    $this->setSkin ($this->getSkin ());
+    // The shadowDOM may have been set directly or indirectly via the loaded view.
+    $this->setShadowDOM ($this->provideShadowDOM ());
   }
 
   /**
@@ -137,26 +162,10 @@ class CompositeComponent extends Component
    */
   protected function render ()
   {
-    if ($this->skin)
-      $this->skin->run ();
+    if ($this->shadowDOM)
+      $this->shadowDOM->run ();
     elseif ($this->view)
       echo $this->view->render ();
-  }
-
-  protected function setupViewModel ()
-  {
-    parent::setupViewModel ();
-
-    // When there is a skin, transfer the data binding context to it.
-    if ($this->skin) {
-      if (!$this->dataBinder) {
-        return;
-      }
-      $this->skin->setDataBinder ($this->dataBinder);
-      // Now reset the component's binding context.
-      if ($this->parent)
-        $this->dataBinder = $this->parent->getDataBinder ();
-    }
   }
 
   private function assertContext ()

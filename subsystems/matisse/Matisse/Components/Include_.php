@@ -125,30 +125,30 @@ class Include_ extends CompositeComponent
 
     if (exists ($prop->template)) {
       if (exists ($controller)) {
-        $this->setSkin ($skin = $ctx->createComponent ($controller, $this));
-        if (!$skin instanceof CompositeComponent)
+        $this->setShadowDOM ($shadowDOM = $ctx->createComponent ($controller, $this));
+        if (!$shadowDOM instanceof CompositeComponent)
           throw new ComponentException($this,
             "Component <kbd>$controller</kbd> is not a <kbd>CompositeComponent</kbd> instance, so it can't be a controler");
-        // If the skin has its own properties, merge the Include's dynamic properties with them.
-        if ($skin->props)
-          $skin->props->apply ($prop->getDynamic ());
-        $skin->template = $prop->template;
-        $this->attach ($skin);
+        // If the shadowDOM has its own properties, merge the Include's dynamic properties with them.
+        if ($shadowDOM->props)
+          $shadowDOM->props->apply ($prop->getDynamic ());
+        $shadowDOM->template = $prop->template;
+        $this->attach ($shadowDOM);
       }
       else $this->template = $prop->template;
     }
 
     elseif (exists ($prop->view)) {
       if (exists ($controller)) {
-        $this->setSkin ($skin = $ctx->createComponent ($controller, $this));
-        if (!$skin instanceof CompositeComponent)
+        $this->setShadowDOM ($shadowDOM = $ctx->createComponent ($controller, $this));
+        if (!$shadowDOM instanceof CompositeComponent)
           throw new ComponentException($this,
             "Component <kbd>$controller</kbd> is not a <kbd>CompositeComponent</kbd> instance, so it can't be the controler of <kbd>$prop->view</kbd>");
-        // If the skin has its own properties, merge the Include's dynamic properties with them.
-        if ($skin->props)
-          $skin->props->apply ($prop->getDynamic ());
-        $skin->templateUrl = $prop->view;
-        $this->attach ($skin);
+        // If the shadowDOM has its own properties, merge the Include's dynamic properties with them.
+        if ($shadowDOM->props)
+          $shadowDOM->props->apply ($prop->getDynamic ());
+        $shadowDOM->templateUrl = $prop->view;
+        $this->attach ($shadowDOM);
       }
       else $this->templateUrl = $prop->view;
     }

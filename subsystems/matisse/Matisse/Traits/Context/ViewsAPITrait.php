@@ -51,38 +51,27 @@ trait ViewsAPITrait
   {
     /** @var Context $this */
     $path = $this->viewService->resolveTemplatePath ($viewName, $base);
-    inspect ($viewName, $base, $path, $this->controllerNamespaces);
+//    inspect ($viewName, $base, $path);
     if (isset($this->controllers[$path]))
       return $this->controllers[$path];
 
-    foreach ($this->controllerNamespaces as $p => $ns)
-      if (str_beginsWith($p, $base)) {
-        $remaining = substr($p, strlen($base));
-        $p = explode ('/', $remaining);
-        $p = array_map ('ucfirst', $p);
-        $p = implode ('\\', $p);
-        inspect ($p);
+    foreach ($this->controllerNamespaces as $nsPath => $ns) {
+//      inspect ($nsPath, $ns);
+      if (str_beginsWith ($path, $nsPath)) {
+        $remaining = substr ($path, strlen ($nsPath) + 1);
+        $a         = PS ($remaining)->split ('/');
+        $file      = $a->pop ();
+        $nsPrefix  = $a->map ('ucfirst', false)->join ('\\')->S;
+        $class     = ($p = strpos ($file, '.')) !== false
+          ? ucfirst (substr ($file, 0, $p))
+          : ucfirst ($file);
+        $FQN       = PA ([$ns, $nsPrefix, $class])->prune ()->join ('\\')->S;
+//        inspect ("CLASS $FQN");
+        if (class_exists ($FQN))
+          return $FQN;
+      }
     }
-
-    if (isset($this->controllerNamespaces[$base])) {
-      $namespace = $this->controllerNamespaces[$base];
-
-      // Convert the remaining file path into a PHP sub-namespace.
-      $segs = explode ('/', substr ($path, strlen ($base) + 1));
-
-      // Strip file extension(s) from filename
-      $file = array_pop ($segs);
-      if (($p = strpos ($file, '.')) !== false)
-        $file = substr ($file, 0, $p);
-      array_push ($segs, $file);
-
-      $sub = implode ('\\', map ($segs, 'ucwords'));
-
-      $class = "$namespace\\$sub";
-      if (class_exists ($class))
-        return $class;
-    }
-
+//    inspect ("CLASS NOT FOUND FOR VIEW $viewName");
     return null;
   }
 

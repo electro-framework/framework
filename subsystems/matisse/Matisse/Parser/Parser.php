@@ -177,7 +177,7 @@ class Parser
       while (preg_match (self::PARSE_ATTRS, "$attrStr@", $match, PREG_OFFSET_CAPTURE, $sPos)) {
         list(, list($key), list($value, $exists), list($marker, $next)) = $match;
         if ($key === '')
-          $key   = self::NAMELESS_PROP;
+          $key = self::NAMELESS_PROP;
         $key = normalizeAttributeName ($key);
         if ($exists < 0)
           $value = 'true';
@@ -257,7 +257,7 @@ class Parser
       $this->currentScalarValue    = '';
 
       if (Expression::isBindingExpression ($v))
-        $this->current->bindings[$prop] = new Expression ($v);
+        $this->current->bind ($prop, $v);
       else $this->current->props->$prop = $v;
     }
     else {
@@ -395,18 +395,18 @@ does not support the specified parameter <b>$tag</b>.
       switch ($type) {
         case type::content:
           $component->props->$propName = $param;
-          $param->bindings             = $bindings;
+          $param->setBindings ($bindings);
           break;
         case type::metadata:
           $component->props->$propName = $param;
-          $param->bindings             = $bindings;
-          $this->metadataContainer     = $param;
+          $param->setBindings ($bindings);
+          $this->metadataContainer = $param;
           break;
         case type::collection:
           if (isset($component->props->$propName))
             $component->props->{$propName}[] = $param;
           else $component->props->$propName = [$param];
-          $param->bindings = $bindings;
+          $param->setBindings ($bindings);
           break;
         default:
           $this->parsingError ("Invalid subtag <kbd>$tagName</kbd>");
@@ -416,9 +416,9 @@ does not support the specified parameter <b>$tag</b>.
 
   private function subtag_createSlotSubcontent ($name, $tagName, array $attributes = null, array $bindings = null)
   {
-    $param              = $this->current;
-    $this->current      = $subparam = new Metadata($param->context, $tagName, type::content, $attributes);
-    $subparam->bindings = $bindings;
+    $param         = $this->current;
+    $this->current = $subparam = new Metadata($param->context, $tagName, type::content, $attributes);
+    $subparam->setBindings ($bindings);
     $param->addChild ($subparam);
   }
 
@@ -443,8 +443,8 @@ does not support the specified parameter <b>$tag</b>.
       }
       else {
         if ($content[0] == '{') {
-          $lit           = new Text ($context);
-          $lit->bindings = ['value' => new Expression ($content)];
+          $lit = new Text ($context);
+          $lit->setBindings (['value' => new Expression ($content)]);
         }
         else $lit = new Text ($context, ['value' => $content]);
         $this->current->addChild ($lit);
@@ -468,9 +468,9 @@ does not support the specified parameter <b>$tag</b>.
       foreach ($c->getChildren () as $child) {
         if ($prev
             && $prev instanceof Text
-            && empty ($prev->bindings)
+            && !$prev->getBindings ()
             && $child instanceof Text
-            && empty($child->bindings)
+            && !$child->getBindings ()
         ) {
           // safe to merge
           $prev->props->value .= $child->props->value;

@@ -111,6 +111,16 @@ trait DOMNodeTrait
   }
 
   /**
+   * Can this component have children?
+   *
+   * @return bool
+   */
+  public function allowsChildren ()
+  {
+    return static::allowsChildren;
+  }
+
+  /**
    * @param Component|Component[] $childOrChildren
    */
   public function attach ($childOrChildren = null)
@@ -225,6 +235,14 @@ trait DOMNodeTrait
       throw new ComponentException($this, "The parent component has no children.");
 
     return array_search ($this, $this->parent->children, true);
+  }
+
+  /**
+   * @return bool True if the component has any children at all.
+   */
+  function hasChildren ()
+  {
+    return !empty($this->children);
   }
 
   /**

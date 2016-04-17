@@ -7,8 +7,6 @@ use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Interfaces\DataBinderInterface;
-use Selenia\Matisse\Lib\DataBinder;
-use Selenia\Matisse\Parser\Context;
 use Selenia\Matisse\Parser\Expression;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 
@@ -17,9 +15,7 @@ use Selenia\Matisse\Properties\Base\ComponentProperties;
  *
  * It's applicable to the Component class.
  *
- * @property Context             $context    The rendering context.
- * @property ComponentProperties $props      The component's attributes.
- * @property DataBinder          $dataBinder The component's data binder.
+ * @property ComponentProperties $props The component's attributes.
  */
 trait DataBindingTrait
 {
@@ -29,32 +25,15 @@ trait DataBindingTrait
    *
    * > <p>It has `public` visibility so that it can be inspected externally.
    *
-   * @var Expression[]
+   * @var Expression[]|null
    */
-  public $bindings = null;
+  protected $bindings = null;
   /**
    * The data binder for view scope resolution when rendering this component.
    *
    * @var DataBinderInterface
    */
   protected $dataBinder = null;
-  /**
-   * When set, the component's view model is made available on the shared view model under the specified key name.
-   *
-   * @var string
-   */
-  protected $shareViewModelAs = null;
-  /**
-   * The component's view model (its own or an inherited one).
-   *
-   * <p>Subclasses should only set this if the respective component provides a view model.
-   *
-   * > <p>Do not confuse this with {@see Context::viewModel}, the later will be effective only if a field is not found
-   * on any of the cascaded component view models.
-   *
-   * @var array|object|null
-   */
-  protected $viewModel = null;
 
   /**
    * Registers a data binding.
@@ -67,6 +46,48 @@ trait DataBindingTrait
     if (!isset($this->bindings))
       $this->bindings = [];
     $this->bindings[$prop] = $bindExp;
+  }
+
+  /**
+   * Binds a property to a databinding expression.
+   *
+   * @param string              $prop       A property name.
+   * @param Expression[]|string $expression If a string is given, it will be converted to an {@see Expression} instance.
+   */
+  function bind ($prop, $expression)
+  {
+    $this->bindings[$prop] = $expression instanceof Expression ? $expression : new Expression($expression);
+  }
+
+  /**
+   * Gets the databinding expression to which the given property is bound, if any.
+   *
+   * @param string $prop A property name.
+   * @return Expression[]|null null if the property is not bound.
+   */
+  function getBinding ($prop)
+  {
+    return get ($this->bindings, $prop);
+  }
+
+  /**
+   * Gets the component's property bindings map.
+   *
+   * @return Expression[]
+   */
+  public function getBindings ()
+  {
+    return $this->bindings;
+  }
+
+  /**
+   * Sets the component's property bindings map.
+   *
+   * @param Expression[]|null $bindings
+   */
+  public function setBindings (array $bindings = null)
+  {
+    $this->bindings = $bindings;
   }
 
   /**
@@ -87,23 +108,24 @@ trait DataBindingTrait
   }
 
   /**
-   * Returns the component's view model (its own or an inherited one).
+   * Gets the component's data binder.
    *
-   * @return array|null|object
+   * @return DataBinderInterface
    */
-  function getViewModel ()
+  function getDataBinder ()
   {
-    return $this->viewModel;
+    return $this->dataBinder;
   }
 
   /**
-   * Sets the component's view model.
+   * Sets the component's data binder.
    *
-   * @param array|null|object $viewModel
+   * @param DataBinderInterface $binder
+   * @return void
    */
-  function setViewModel ($viewModel)
+  function setDataBinder (DataBinderInterface $binder)
   {
-    $this->viewModel = $viewModel;
+    $this->dataBinder = $binder;
   }
 
   /**
@@ -114,7 +136,18 @@ trait DataBindingTrait
    */
   function isBound ($prop)
   {
-    return isset($this->bindings) && array_key_exists ($prop, $this->bindings);
+    return !missing ($this->bindings, $prop);
+  }
+
+  /**
+   * Indicates if either a constant value or a databinding expression were specified for the given property.
+   *
+   * @param string $fieldName
+   * @return boolean
+   */
+  function isPropertySet ($fieldName)
+  {
+    return isset($this->props->$fieldName) || $this->isBound ($fieldName);
   }
 
   /**
