@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\ViewEngine\Config;
+namespace Selenia\Matisse\Config;
 
 use Selenia\Application;
 use Selenia\DefaultFilters;
@@ -11,10 +11,11 @@ use Selenia\Matisse\Lib\FilterHandler;
 use Selenia\Matisse\Parser\DocumentContext;
 use Selenia\Matisse\Services\AssetsService;
 use Selenia\Matisse\Services\BlocksService;
+use Selenia\Matisse\Services\MacrosService;
 
 class MatisseModule implements ServiceProviderInterface, ModuleInterface
 {
-  function boot (Application $app = null, FilterHandler $filterHandler = null)
+  function boot (Application $app = null)
   {
     $app->condenseLiterals = !$app->debugMode;
     $app->compressOutput   = !$app->debugMode;
@@ -22,28 +23,33 @@ class MatisseModule implements ServiceProviderInterface, ModuleInterface
 
   function register (InjectorInterface $injector)
   {
+    $app = $injector->make (Application::class);
+
     $injector
       ->prepare (DocumentContext::class,
-        function (DocumentContext $ctx, Application $app, ViewServiceInterface $viewService) use ($injector) {
+        function (DocumentContext $ctx, InjectorInterface $injector) use ($app) {
+          $viewService = $injector->make (ViewServiceInterface::class);
           $ctx->registerTags ($app->tags);
           $ctx->setFilterHandler ($filterHandler = new FilterHandler);
           $filterHandler->registerFilters (new DefaultFilters ($app));
           $ctx->condenseLiterals     = $app->condenseLiterals;
           $ctx->debugMode            = $app->debugMode;
-          $ctx->macrosDirectories    = $app->macrosDirectories;
           $ctx->controllers          = $app->controllers;
           $ctx->controllerNamespaces = $app->controllerNamespaces;
           $ctx->presets              = map ($app->presets,
             function ($class) use ($app) { return $app->injector->make ($class); });
-          $ctx->getMacrosService ()
-            ->macrosExt              = '.html';
           $ctx->injector             = $injector;
           $ctx->viewService          = $viewService;
           return $ctx;
         })
       ->share (DocumentContext::class)
-      ->share (new AssetsService())
-      ->share (new BlocksService());
+      ->prepare (MacrosService::class, function (MacrosService $macrosService) use ($app) {
+        $macrosService->macrosDirectories = $app->macrosDirectories;
+        $macrosService->macrosExt         = '.html';
+      })
+      ->share (MacrosService::class)
+      ->share (AssetsService::class)
+      ->share (BlocksService::class);
   }
 
 }
