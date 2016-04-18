@@ -28,18 +28,16 @@ class DocumentContext
   const FORM_ID = 'selenia-form';
 
   static $INSPECTABLE = [
-    'assets',
-    'blocks',
     'condenseLiterals',
     'controllerNamespaces',
     'controllers',
     'debugMode',
-    'macrosDirectories',
-    'macrosExt',
-    'mainAssets',
     'presets',
     'viewModel',
     'viewService',
+    'assetsService',
+    'blocksService',
+    'macrosService'
   ];
 
   /**
@@ -100,7 +98,6 @@ class DocumentContext
   function __construct (AssetsService $assetsService, BlocksService $blocksService, MacrosService $macrosService)
   {
     $this->tags          = self::$coreTags;
-    $this->assets        = $this->mainAssets = new AssetsContext;
     $this->viewModel     = new ViewModel;
     $this->assetsService = $assetsService;
     $this->blocksService = $blocksService;

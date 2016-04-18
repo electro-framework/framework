@@ -3,12 +3,15 @@ namespace Selenia\Matisse\Services;
 
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Lib\AssetsContext;
+use Selenia\Traits\InspectionTrait;
 
 /**
  * Manages external and embedded CSS stylesheets and javascripts.
  */
 class AssetsService
 {
+  use InspectionTrait;
+
   /**
    * @var AssetsContext
    */
@@ -17,6 +20,12 @@ class AssetsService
    * @var AssetsContext
    */
   public $mainAssets;
+
+  public function __construct ()
+  {
+    $this->assets = $this->mainAssets = new AssetsContext;
+  }
+
 
   /**
    * Adds an inline stylesheet to the HEAD section of the page.
@@ -83,12 +92,12 @@ class AssetsService
     $to   = $this->mainAssets;
 
     if ($from->prepend) {
-      $to->inlineCssStyles       = array_merge ($from->inlineCssStyles, $to->inlineCssStyles);
-      $to->inlineScripts         = array_merge ($from->inlineScripts, $to->inlineScripts);
-      $unique                    = array_diff ($from->scripts, $to->scripts);
-      $to->scripts               = array_merge ($unique, $to->scripts);
-      $unique                    = array_diff ($from->stylesheets, $to->stylesheets);
-      $to->stylesheets           = array_merge ($unique, $to->stylesheets);
+      $to->inlineCssStyles = array_merge ($from->inlineCssStyles, $to->inlineCssStyles);
+      $to->inlineScripts   = array_merge ($from->inlineScripts, $to->inlineScripts);
+      $unique              = array_diff ($from->scripts, $to->scripts);
+      $to->scripts         = array_merge ($unique, $to->scripts);
+      $unique              = array_diff ($from->stylesheets, $to->stylesheets);
+      $to->stylesheets     = array_merge ($unique, $to->stylesheets);
     }
     else {
       array_mergeInto ($to->inlineCssStyles, $from->inlineCssStyles);
@@ -109,7 +118,7 @@ class AssetsService
     if (!empty($this->assets->inlineScripts)) {
       echo "<script>";
       foreach ($this->assets->inlineScripts as $item)
-        echo $item instanceof Component ? $item->runAndGetContent () : $item ;
+        echo $item instanceof Component ? $item->runAndGetContent () : $item;
       echo "</script>";
     }
   }
@@ -121,7 +130,7 @@ class AssetsService
     if (!empty($this->assets->inlineCssStyles)) {
       echo "<style>";
       foreach ($this->assets->inlineCssStyles as $item)
-        echo $item instanceof Component ? $item->runAndGetContent () : $item ;
+        echo $item instanceof Component ? $item->runAndGetContent () : $item;
       echo "</style>";
     }
   }
