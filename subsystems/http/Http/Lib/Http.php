@@ -56,17 +56,6 @@ class Http
   }
 
   /**
-   * Returns the shared view model of the specified HTTP request.
-   *
-   * @param ServerRequestInterface $request
-   * @return array
-   */
-  static function getViewModel (ServerRequestInterface $request)
-  {
-    return $request->getAttribute ('viewModel', []);
-  }
-
-  /**
    * Decodes a JSON response.
    *
    * @param ResponseInterface $response
@@ -94,17 +83,6 @@ class Http
     if ($body)
       $response->getBody ()->write ($body);
     return $response->withStatus ($status)->withHeader ('Content-Type', $contentType);
-  }
-
-  /**
-   * Updates the shared view model of the specified HTTP request.
-   *
-   * @param ServerRequestInterface $request
-   * @return ServerRequestInterface
-   */
-  static function updateViewModel (ServerRequestInterface $request, array $viewModel)
-  {
-    return $request->withAttribute ('viewModel', $viewModel);
   }
 
 }

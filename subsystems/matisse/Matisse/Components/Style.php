@@ -40,9 +40,9 @@ class Style extends Component
   {
     $prop = $this->props;
     if (exists ($prop->src))
-      $this->context->addStylesheet ($prop->src);
+      $this->context->getAssetsService ()->addStylesheet ($prop->src);
     else if ($this->hasChildren ())
-      $this->context->addInlineCss ($this, $prop->name);
+      $this->context->getAssetsService ()->addInlineCss ($this, $prop->name);
   }
 }
 

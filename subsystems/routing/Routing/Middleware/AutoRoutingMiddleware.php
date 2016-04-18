@@ -7,7 +7,7 @@ use Selenia\Exceptions\Fatal\FileNotFoundException;
 use Selenia\Http\Components\PageComponent;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Parser\DocumentContext;
 
 /**
  * It allows a designer to rapidly prototype the application by automatically providing routing for URLs matching files
@@ -22,7 +22,7 @@ use Selenia\Matisse\Parser\Context;
 class AutoRoutingMiddleware implements RequestHandlerInterface
 {
   /**
-   * @var Context
+   * @var DocumentContext
    */
   private $context;
   /**
@@ -30,7 +30,7 @@ class AutoRoutingMiddleware implements RequestHandlerInterface
    */
   private $injector;
 
-  public function __construct (InjectorInterface $injector, Context $context)
+  public function __construct (InjectorInterface $injector, DocumentContext $context)
   {
     $this->injector = $injector;
     $this->context  = $context;

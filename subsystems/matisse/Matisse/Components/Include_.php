@@ -162,12 +162,12 @@ class Include_ extends CompositeComponent
     }
 
     else if ($prop->styles) {
-      $ctx->outputStyles ();
+      $ctx->getAssetsService ()->outputStyles ();
       return;
     }
 
     else if ($prop->scripts) {
-      $ctx->outputScripts ();
+      $ctx->getAssetsService ()->outputScripts ();
       return;
     }
 

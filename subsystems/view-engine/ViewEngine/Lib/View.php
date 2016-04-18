@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\ViewEngine;
+namespace Selenia\ViewEngine\Lib;
 
 use Selenia\Exceptions\FatalException;
 use Selenia\Interfaces\Views\ViewEngineInterface;

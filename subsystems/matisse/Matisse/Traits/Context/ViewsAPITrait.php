@@ -3,7 +3,7 @@ namespace Selenia\Matisse\Traits\Context;
 
 use Selenia\Interfaces\Views\ViewServiceInterface;
 use Selenia\Matisse\Components;
-use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Parser\DocumentContext;
 
 /**
  * View-related services.
@@ -26,14 +26,6 @@ trait ViewsAPITrait
    */
   public $controllers = [];
   /**
-   * The shared view-model data for the current rendering context.
-   *
-   * <p>This is always an array, and the same array is always kept.
-   *
-   * @var array
-   */
-  public $viewModel = [];
-  /**
    * The view service that instantiated the current rendering engine and its associated rendering context (this
    * instance).
    *
@@ -49,7 +41,7 @@ trait ViewsAPITrait
    */
   function findControllerForView ($viewName)
   {
-    /** @var Context $this */
+    /** @var DocumentContext $this */
     $path = $this->viewService->resolveTemplatePath ($viewName, $base);
 //    inspect ($viewName, $base, $path);
     if (isset($this->controllers[$path]))
@@ -73,16 +65,6 @@ trait ViewsAPITrait
     }
 //    inspect ("CLASS NOT FOUND FOR VIEW $viewName");
     return null;
-  }
-
-  /**
-   * Shares data on the shared view model.
-   *
-   * @param array $data A map of named values to be shared.
-   */
-  function share (array $data)
-  {
-    array_mergeInto ($this->viewModel, $data);
   }
 
 }

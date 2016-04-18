@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Matisse\Traits\Context;
+namespace Selenia\Matisse\Services;
 
 use Selenia\Matisse\Lib\Block;
 
@@ -8,7 +8,7 @@ use Selenia\Matisse\Lib\Block;
  *
  * > <p>Blocks are lazily evaluated, so they are not rendered when being defined.
  */
-trait BlocksAPITrait
+class BlocksService
 {
   /**
    * A map of block names => block contents.

@@ -5,7 +5,7 @@ use PhpKit\WebConsole\Lib\Debug;
 use Selenia\Interfaces\CustomInspectionInterface;
 use Selenia\Interfaces\RenderableInterface;
 use Selenia\Matisse\Interfaces\DataBinderInterface;
-use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Parser\DocumentContext;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
 
 /**
@@ -16,7 +16,7 @@ use Selenia\Matisse\Properties\Base\AbstractProperties;
 class DataBinder implements DataBinderInterface, CustomInspectionInterface
 {
   /**
-   * @var Context
+   * @var DocumentContext
    */
   private $context;
   private $isolatedViewModel = false;
@@ -30,11 +30,11 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
   private $viewModel;
 
   /**
-   * @param Context                 $context
+   * @param DocumentContext         $context
    * @param object|array|null       $viewModel [optional] A view model reference.
    * @param AbstractProperties|null $props     [optional] 
    */
-  public function __construct (Context $context, &$viewModel = null, AbstractProperties $props = null)
+  public function __construct (DocumentContext $context, &$viewModel = null, AbstractProperties $props = null)
   {
     $this->context   = $context;
     $this->viewModel =& $viewModel;
@@ -54,7 +54,7 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
       return $v;
 
     if (!$this->isolatedViewModel) {
-      $data = $this->context->viewModel;
+      $data = $this->context->getViewModel ();
       if (isset($data)) {
         $v = _g ($data, $key, $this);
         if ($v !== $this)
@@ -97,7 +97,7 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
 
   function renderBlock ($name)
   {
-    return $this->context->getBlock ($name)->render ();
+    return $this->context->getBlocksService ()->getBlock ($name)->render ();
   }
 
   function withIsolation ($isolated = true)

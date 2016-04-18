@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Matisse\Traits\Context;
+namespace Selenia\Matisse\Services;
 
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Lib\AssetsContext;
@@ -7,7 +7,7 @@ use Selenia\Matisse\Lib\AssetsContext;
 /**
  * Manages external and embedded CSS stylesheets and javascripts.
  */
-trait AssetsAPITrait
+class AssetsService
 {
   /**
    * @var AssetsContext

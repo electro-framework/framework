@@ -8,7 +8,7 @@ use Selenia\Interfaces\Views\ViewServiceInterface;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Exceptions\MatisseException;
 use Selenia\Matisse\Lib\FilterHandler;
-use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Parser\DocumentContext;
 use Selenia\Matisse\Parser\Parser;
 
 class MatisseEngine implements ViewEngineInterface
@@ -20,9 +20,13 @@ class MatisseEngine implements ViewEngineInterface
   /**
    * The current rendering context.
    *
-   * @var Context
+   * @var DocumentContext
    */
   private $context;
+  /**
+   * @var FilterHandler
+   */
+  private $filterHandler;
   /**
    * The injector allows the creation of components with yet unknown dependencies.
    *
@@ -30,22 +34,19 @@ class MatisseEngine implements ViewEngineInterface
    */
   private $injector;
   /**
-   * @var FilterHandler
-   */
-  private $filterHandler;
-  /**
    * @var ViewServiceInterface
    */
   private $view;
 
   function __construct (FilterHandler $filterHandler, Application $app, InjectorInterface $injector,
-                        ViewServiceInterface $view, Context $context)
+                        ViewServiceInterface $view, DocumentContext $context)
   {
     $this->filterHandler = $filterHandler;
-    $this->app         = $app;
-    $this->injector    = $injector;
-    $this->view        = $view; // The view is always the owner if this engine, as long as the parameter is called $view
-    $this->context     = $context;
+    $this->app           = $app;
+    $this->injector      = $injector;
+    $this->view          =
+      $view; // The view is always the owner if this engine, as long as the parameter is called $view
+    $this->context       = $context;
   }
 
   function compile ($src)
@@ -74,11 +75,9 @@ class MatisseEngine implements ViewEngineInterface
   {
     /** @var DocumentFragment $compiled */
     if (isset($data)) {
-      $context            = $compiled->context;
-      $prevModel          = $context->viewModel;
-      $context->viewModel = $data;
-      $out                = $compiled->getRendering ();
-      $context->viewModel = $prevModel;
+      $context = $compiled->context;
+      $context->getViewModel ()->set ($data);
+      $out = $compiled->getRendering ();
       return $out;
     }
     return $compiled->getRendering ();

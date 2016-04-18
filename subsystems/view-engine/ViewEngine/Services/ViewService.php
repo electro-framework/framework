@@ -1,11 +1,12 @@
 <?php
-namespace Selenia\ViewEngine;
+namespace Selenia\ViewEngine\Services;
 
 use Selenia\Application;
 use Selenia\Exceptions\Fatal\FileNotFoundException;
 use Selenia\Exceptions\FatalException;
 use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\Views\ViewServiceInterface;
+use Selenia\ViewEngine\Lib\View;
 
 class ViewService implements ViewServiceInterface
 {

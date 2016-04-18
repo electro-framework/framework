@@ -81,10 +81,6 @@ trait ViewModelTrait
       if (!$this->dataBinder)
         $this->dataBinder = $this->parent->getDataBinder ();
     }
-    else {
-      if (!static::isRootComponent)
-        _log ()->warning ("Rendering detached component <kbd>" . shortTypeOf ($this) . '</kbd>');
-    }
   }
 
   /**

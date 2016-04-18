@@ -129,7 +129,7 @@ class Macro extends Component
   public function onParsingComplete ()
   {
     $this->props->name = normalizeTagName ($this->props->name);
-    $this->context->addMacro ($this);
+    $this->context->getMacrosService ()->addMacro ($this);
   }
 
 }

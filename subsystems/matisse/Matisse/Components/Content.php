@@ -64,9 +64,9 @@ class ContentProperties extends ComponentProperties
 class Content extends Component
 {
   const allowsChildren = true;
-  
+
   const propertiesClass = ContentProperties::class;
-  
+
   /** @var ContentProperties */
   public $props;
 
@@ -75,8 +75,9 @@ class Content extends Component
    */
   protected function render ()
   {
-    $prop    = $this->props;
-    $content = exists ($prop->value) ? $prop->value : $this->getChildren ();
+    $prop          = $this->props;
+    $content       = exists ($prop->value) ? $prop->value : $this->getChildren ();
+    $blocksService = $this->context->getBlocksService ();
 
     if ($prop->preRender && is_array ($content))
       $content = $this->attachSetAndGetContent ($content);
@@ -84,19 +85,19 @@ class Content extends Component
     if (exists ($name = $prop->of)) {
       if (!preg_match ('/^\w+$/', $name))
         throw new ComponentException($this, "Invalid block name: <kbd>$name</kbd>");
-      if ($prop->byDefault && $this->context->hasBlock ($name))
+      if ($prop->byDefault && $blocksService->hasBlock ($name))
         return;
-      $this->context->getBlock ($name)->set ($content);
+      $blocksService->getBlock ($name)->set ($content);
     }
     elseif (exists ($name = $prop->appendTo)) {
-      if ($prop->byDefault && $this->context->hasBlock ($name))
+      if ($prop->byDefault && $blocksService->hasBlock ($name))
         return;
-      $this->context->getBlock ($name)->append ($content);
+      $blocksService->getBlock ($name)->append ($content);
     }
     elseif (exists ($name = $prop->prependTo)) {
-      if ($prop->byDefault && $this->context->hasBlock ($name))
+      if ($prop->byDefault && $blocksService->hasBlock ($name))
         return;
-      $this->context->getBlock ($name)->prepend ($content);
+      $blocksService->getBlock ($name)->prepend ($content);
     }
     else throw new ComponentException($this,
       "One of these properties must be set:<p><kbd>of | appendTo | prependTo</kbd>");

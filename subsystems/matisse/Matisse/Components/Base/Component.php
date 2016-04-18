@@ -4,7 +4,7 @@ namespace Selenia\Matisse\Components\Base;
 use Selenia\Interfaces\RenderableInterface;
 use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
-use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Parser\DocumentContext;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
 use Selenia\Matisse\Traits\Component\DataBindingTrait;
 use Selenia\Matisse\Traits\Component\DOMNodeTrait;
@@ -20,26 +20,11 @@ abstract class Component implements RenderableInterface
 
   const ERR_NO_CONTEXT = "<h4>Rendering context not set</h4>The component was not initialized correctly.";
   /**
-   * When true, the component's properties will be set on its data binder, so that data binding expressions can access
-   * them via the `@`property syntax.
-   *
-   * @var bool;
-   */
-  const publishProperties = false;
-  /**
    * Can this component have children?
    *
    * @var bool
    */
   const allowsChildren = false;
-  /**
-   * Set to true for component classes whose instances will be rendered on a detached state.
-   *
-   * <p>This suppresses the logging of a warning message when a detached component is rendered.
-   *
-   * @var bool;
-   */
-  const isRootComponent = false;
   /**
    * @var string|null Null if the component does not supports properties.
    */
@@ -59,7 +44,7 @@ abstract class Component implements RenderableInterface
   /**
    * The rendering context for the current request.
    *
-   * @var Context
+   * @var DocumentContext
    */
   public $context;
   /**
@@ -151,7 +136,7 @@ abstract class Component implements RenderableInterface
     return (new static)->setup ($parent, $parent->context, $props, $bindings);
   }
 
-  static function throwUnknownComponent (Context $context, $tagName, Component $parent, $filename = null)
+  static function throwUnknownComponent (DocumentContext $context, $tagName, Component $parent, $filename = null)
   {
     $paths    = implode ('', map ($context->macrosDirectories,
       function ($dir) { return "<li><path>$dir</path></li>"; }
@@ -203,7 +188,7 @@ abstract class Component implements RenderableInterface
 
   function getContextClass ()
   {
-    return Context::class;
+    return DocumentContext::class;
   }
 
   /**
@@ -286,7 +271,7 @@ abstract class Component implements RenderableInterface
    * middleware stack.
    *
    * @param Component|null                $parent   The component's container component (if any).
-   * @param Context                       $context  A rendering context.
+   * @param DocumentContext               $context  A rendering context.
    * @param array|AbstractProperties|null $props    A map of property names to property values.
    *                                                Properties specified via this argument come only from markup
    *                                                attributes, not from subtags.
@@ -295,7 +280,7 @@ abstract class Component implements RenderableInterface
    * @return Component Component instance.
    * @throws ComponentException
    */
-  function setup (Component $parent = null, Context $context, $props = null, array $bindings = null)
+  function setup (Component $parent = null, DocumentContext $context, $props = null, array $bindings = null)
   {
     if (is_object ($props)) {
       $this->props = $props;

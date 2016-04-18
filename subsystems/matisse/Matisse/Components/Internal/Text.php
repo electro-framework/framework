@@ -3,7 +3,7 @@ namespace Selenia\Matisse\Components\Internal;
 
 use PhpKit\WebConsole\Lib\Debug;
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Parser\DocumentContext;
 use Selenia\Matisse\Parser\Expression;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
@@ -19,7 +19,7 @@ final class Text extends Component
   /** @var TextProperties */
   public $props;
 
-  public function __construct (Context $context = null, $props = null)
+  public function __construct (DocumentContext $context = null, $props = null)
   {
     parent::__construct ();
     if ($context)
@@ -28,7 +28,7 @@ final class Text extends Component
     $this->setProps ($props);
   }
 
-  public static function from (Context $context = null, $text)
+  public static function from (DocumentContext $context = null, $text)
   {
     return new Text($context, ['value' => $text]);
   }

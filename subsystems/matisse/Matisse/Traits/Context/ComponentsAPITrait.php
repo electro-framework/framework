@@ -8,7 +8,7 @@ use Selenia\Matisse\Components\GenericHtmlComponent;
 use Selenia\Matisse\Components\Macro\MacroCall;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\MatisseException;
-use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Parser\DocumentContext;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
 
 /**
@@ -61,7 +61,7 @@ trait ComponentsAPITrait
   {
     /** @var Component $component */
     $component = $this->injector->make ($class);
-    /** @var Context $this */
+    /** @var DocumentContext $this */
     return $component->setup ($parent, $this, $props, $bindings);
   }
 
@@ -99,7 +99,7 @@ trait ComponentsAPITrait
       return $component;
     }
     $class = $this->getClassForTag ($tagName);
-    /** @var Context $this */
+    /** @var DocumentContext $this */
     if (!$class) {
       if ($strict)
         Component::throwUnknownComponent ($this, $tagName, $parent);

@@ -40,9 +40,9 @@ class Script extends Component
   {
     $prop = $this->props;
     if (exists ($prop->src))
-      $this->context->addScript ($prop->src);
+      $this->context->getAssetsService ()->addScript ($prop->src);
     else if ($this->hasChildren ())
-      $this->context->addInlineScript ($this, $prop->name);
+      $this->context->getAssetsService ()->addInlineScript ($this, $prop->name);
   }
 }
 

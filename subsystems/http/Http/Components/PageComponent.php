@@ -25,7 +25,7 @@ use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Interfaces\SessionInterface;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Base\CompositeComponent;
-use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Parser\DocumentContext;
 use Selenia\Matisse\Parser\Expression;
 use Selenia\Traits\PolymorphicInjectionTrait;
 
@@ -249,7 +249,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   {
     $this->renderOnAction = true;
     if ($param)
-      $this->context->addInlineScript ("$('$param').focus()");
+      $this->context->getAssetsService ()->addInlineScript ("$('$param').focus()");
   }
 
   /**
@@ -273,7 +273,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   {
     parent::setupView ();
 
-    $this->context->addScript ("{$this->app->frameworkURI}/js/engine.js");
+    $this->context->getAssetsService ()->addScript ("{$this->app->frameworkURI}/js/engine.js");
     $this->context->getFilterHandler ()->registerFallbackHandler ($this);
 
     $title           = $this->getTitle ();
@@ -284,10 +284,10 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       $ext = substr ($url, $p + 1);
       switch ($ext) {
         case 'css':
-          $this->context->addStylesheet ($url);
+          $this->context->getAssetsService ()->addStylesheet ($url);
           break;
         case 'js':
-          $this->context->addScript ($url);
+          $this->context->getAssetsService ()->addScript ($url);
           break;
       }
     }
@@ -295,7 +295,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
   protected function afterRender ()
   {
-    parent::afterRender();
+    parent::afterRender ();
     if ($this->getShadowDOM ()) {
       //----------------------------------------------------------------------------------------
       // View Model panel
@@ -305,7 +305,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
         $VMFilter = function ($k, $v, $o) {
           if (
-            $v instanceof Context ||
+            $v instanceof DocumentContext ||
             $v instanceof Component ||
             $k === 'parent' ||
             $k === 'viewModel'
@@ -338,7 +338,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
               $v instanceof NavigationLinkInterface ||
               $v instanceof SessionInterface ||
               $v instanceof ServerRequestInterface ||
-              $v instanceof Context ||
+              $v instanceof DocumentContext ||
               $v instanceof Component ||
               $k === 'viewModel' ||
               $k === 'model'
@@ -350,9 +350,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
                     ->write ("<#section|MODEL>")
                     ->inspect ($this->viewModel ? $this->viewModel->model : null)
                     ->write ("</#section><#section|VIEW MODEL>")
-                    ->withFilter ($VMFilter, $this->viewModel)
-                    ->write ("</#section><#section|SHARED VIEW MODEL>")
-                    ->withFilter ($VMFilter, $this->context->viewModel)
+                    ->withFilter ($VMFilter, $this->context->getViewModel ())
                     ->write ("</#section>");
       }
     }
@@ -454,19 +452,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   protected function model ()
   {
     // override
-  }
-
-  protected function setupViewModel ()
-  {
-    parent::setupViewModel ();
-
-    // Merge the request's shared view model into the rendering context view model.
-    $this->context->share (Http::getViewModel ($this->request));
-
-    $this->context->share ([
-      'app'        => $this->app,
-      'navigation' => $this->navigation,
-    ]);
   }
 
   protected function viewModel ()

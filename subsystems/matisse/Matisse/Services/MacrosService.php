@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Matisse\Traits\Context;
+namespace Selenia\Matisse\Services;
 
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
@@ -11,7 +11,7 @@ use Selenia\Matisse\Parser\Parser;
 /**
  * Manages macros loading, storage and retrieval.
  */
-trait MacrosAPITrait
+class MacrosService
 {
   /**
    * @var string[]

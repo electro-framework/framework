@@ -2,7 +2,7 @@
 namespace Selenia\Matisse\Components\Internal;
 
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Parser\DocumentContext;
 use Selenia\Matisse\Properties\Base\MetadataProperties;
 use Selenia\Matisse\Properties\TypeSystem\type;
 
@@ -37,7 +37,7 @@ class Metadata extends Component
    */
   public $value;
 
-  public function __construct (Context $context, $tagName, $type, array $props = null)
+  public function __construct (DocumentContext $context, $tagName, $type, array $props = null)
   {
     parent::__construct ();
     $this->type = $type;

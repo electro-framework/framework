@@ -79,12 +79,12 @@ class MacroCall extends CompositeComponent
     $this->parent = $parent;
     $name         = get ($props, 'macro');
     if (exists ($name)) {
-      $macro = $this->context->getMacro ($name, $this);
+      $macro = $this->context->getMacrosService ()->getMacro ($name, $this);
       if (is_null ($macro))
         try {
           // A macro with the given name is not defined yet.
           // Try to load it now.
-          $macro = $this->context->loadMacro ($name, $parent, $filename);
+          $macro = $this->context->getMacrosService ()->loadMacro ($name, $parent, $filename);
         }
         catch (FileIOException $e) {
           self::throwUnknownComponent ($this->context, $name, $parent, $filename);

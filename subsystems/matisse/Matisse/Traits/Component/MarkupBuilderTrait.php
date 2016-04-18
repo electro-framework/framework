@@ -2,7 +2,7 @@
 namespace Selenia\Matisse\Traits\Component;
 
 use Selenia\Matisse\Exceptions\ComponentException;
-use Selenia\Matisse\Parser\Context;
+use Selenia\Matisse\Parser\DocumentContext;
 use Selenia\Matisse\Parser\Tag;
 
 /**
@@ -10,7 +10,7 @@ use Selenia\Matisse\Parser\Tag;
  *
  * It's applicable to the Component class.
  *
- * @property Context context
+ * @property DocumentContext context
  */
 trait MarkupBuilderTrait
 {
