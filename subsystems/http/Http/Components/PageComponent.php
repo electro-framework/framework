@@ -155,6 +155,97 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     return object_only ($this, $ownProps);
   }
 
+  protected function afterRender ()
+  {
+    parent::afterRender ();
+    if ($this->getShadowDOM ()) {
+      //----------------------------------------------------------------------------------------
+      // View Model panel
+      // (MUST run before the DOM panel to capture the data-binding stack at its current state)
+      //----------------------------------------------------------------------------------------
+      if (DebugConsole::hasLogger ('view')) {
+
+        $VMFilter = function ($k, $v, $o) {
+          if (
+            $v instanceof DocumentContext ||
+            $v instanceof Component ||
+            $k === 'parent' ||
+            $k === 'model'
+          ) return '...';
+          return true;
+        };
+        $expMap   = Expression::$inspectionMap;
+        ksort ($expMap);
+
+        DebugConsole::logger ('view')
+                    ->withFilter ($VMFilter, $this->context)
+                    ->write ('<#section|Compiled expressions>')
+                    ->inspect ($expMap)
+                    ->write ('</#section>');
+      }
+
+      //-----------
+      // DOM panel
+      //-----------
+      if (DebugConsole::hasLogger ('DOM')) {
+        $insp = $this->inspect (true);
+        DebugConsole::logger ('DOM')->write ($insp);
+      }
+
+      if (DebugConsole::hasLogger ('model')) {
+
+        $VMFilter = function ($k, $v, $o) {
+          if ($v instanceof Application ||
+              $v instanceof NavigationInterface ||
+              $v instanceof NavigationLinkInterface ||
+              $v instanceof SessionInterface ||
+              $v instanceof ServerRequestInterface ||
+              $v instanceof DocumentContext ||
+              $v instanceof Component ||
+              $k === 'viewModel' ||
+              $k === 'model'
+          ) return '...';
+          return true;
+        };
+
+        $binder = $this->context->getDataBinder ();
+        $vm     = $binder->getViewModel ();
+        DebugConsole::logger ('model')
+                    ->write ("<#section|MODEL>")
+                    ->inspect ($vm->model)
+                    ->write ("</#section><#section|VIEW MODEL>")
+                    ->withFilter ($VMFilter, $vm)
+                    ->write ("</#section><#section|DOCUMENT PROPERTIES>")
+                    ->inspect ($binder->getProps ())
+                    ->write ("</#section>");
+      }
+    }
+  }
+
+  function setupView ()
+  {
+    parent::setupView ();
+
+    $this->context->getAssetsService ()->addScript ("{$this->app->frameworkURI}/js/engine.js");
+    $this->context->getFilterHandler ()->registerFallbackHandler ($this);
+
+    $title           = $this->getTitle ();
+    $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
+    foreach ($this->app->assets as $url) {
+      $p = strrpos ($url, '.');
+      if (!$p) continue;
+      $ext = substr ($url, $p + 1);
+      switch ($ext) {
+        case 'css':
+          $this->context->getAssetsService ()->addStylesheet ($url);
+          break;
+        case 'js':
+          $this->context->getAssetsService ()->addScript ($url);
+          break;
+      }
+    }
+  }
+
   /**
    * Performs the main execution sequence.
    *
@@ -269,93 +360,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
       FlashType::ERROR);
   }
 
-  function setupView ()
-  {
-    parent::setupView ();
-
-    $this->context->getAssetsService ()->addScript ("{$this->app->frameworkURI}/js/engine.js");
-    $this->context->getFilterHandler ()->registerFallbackHandler ($this);
-
-    $title           = $this->getTitle ();
-    $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
-    foreach ($this->app->assets as $url) {
-      $p = strrpos ($url, '.');
-      if (!$p) continue;
-      $ext = substr ($url, $p + 1);
-      switch ($ext) {
-        case 'css':
-          $this->context->getAssetsService ()->addStylesheet ($url);
-          break;
-        case 'js':
-          $this->context->getAssetsService ()->addScript ($url);
-          break;
-      }
-    }
-  }
-
-  protected function afterRender ()
-  {
-    parent::afterRender ();
-    if ($this->getShadowDOM ()) {
-      //----------------------------------------------------------------------------------------
-      // View Model panel
-      // (MUST run before the DOM panel to capture the data-binding stack at its current state)
-      //----------------------------------------------------------------------------------------
-      if (DebugConsole::hasLogger ('view') && isset($this->viewModel->context)) {
-
-        $VMFilter = function ($k, $v, $o) {
-          if (
-            $v instanceof DocumentContext ||
-            $v instanceof Component ||
-            $k === 'parent' ||
-            $k === 'viewModel'
-          ) return '...';
-          return true;
-        };
-        $expMap   = Expression::$inspectionMap;
-        ksort ($expMap);
-
-        DebugConsole::logger ('view')
-                    ->withFilter ($VMFilter, $this->viewModel->context)
-                    ->write ('<#section|Compiled expressions>')
-                    ->inspect ($expMap)
-                    ->write ('</#section>');
-      }
-
-      //-----------
-      // DOM panel
-      //-----------
-      if (DebugConsole::hasLogger ('DOM')) {
-        $insp = $this->inspect (true);
-        DebugConsole::logger ('DOM')->write ($insp);
-      }
-
-      if (DebugConsole::hasLogger ('model')) {
-
-        $VMFilter = function ($k, $v, $o) {
-          if ($v instanceof Application ||
-              $v instanceof NavigationInterface ||
-              $v instanceof NavigationLinkInterface ||
-              $v instanceof SessionInterface ||
-              $v instanceof ServerRequestInterface ||
-              $v instanceof DocumentContext ||
-              $v instanceof Component ||
-              $k === 'viewModel' ||
-              $k === 'model'
-          ) return '...';
-          return true;
-        };
-
-        DebugConsole::logger ('model')
-                    ->write ("<#section|MODEL>")
-                    ->inspect ($this->viewModel ? $this->viewModel->model : null)
-                    ->write ("</#section><#section|VIEW MODEL>")
-                    ->withFilter ($VMFilter, $this->context->getViewModel ())
-                    ->write ("</#section>");
-      }
-    }
-  }
-
   protected function autoRedirect ()
   {
     if (isset($this->indexPage))
@@ -452,13 +456,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   protected function model ()
   {
     // override
-  }
-
-  protected function viewModel ()
-  {
-    // Defaults the view model to the component itself.
-    if (!isset($this->viewModel))
-      $this->viewModel = $this;
   }
 
 }

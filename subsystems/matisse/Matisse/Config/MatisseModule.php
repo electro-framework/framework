@@ -7,6 +7,8 @@ use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\ModuleInterface;
 use Selenia\Interfaces\ServiceProviderInterface;
 use Selenia\Interfaces\Views\ViewServiceInterface;
+use Selenia\Matisse\Interfaces\DataBinderInterface;
+use Selenia\Matisse\Lib\DataBinder;
 use Selenia\Matisse\Lib\FilterHandler;
 use Selenia\Matisse\Parser\DocumentContext;
 use Selenia\Matisse\Services\AssetsService;
@@ -40,6 +42,7 @@ class MatisseModule implements ServiceProviderInterface, ModuleInterface
             function ($class) use ($app) { return $app->injector->make ($class); });
           $ctx->injector             = $injector;
           $ctx->viewService          = $viewService;
+          $ctx->getDataBinder ()->setContext ($ctx);
           return $ctx;
         })
       ->share (DocumentContext::class)
@@ -49,7 +52,8 @@ class MatisseModule implements ServiceProviderInterface, ModuleInterface
       })
       ->share (MacrosService::class)
       ->share (AssetsService::class)
-      ->share (BlocksService::class);
+      ->share (BlocksService::class)
+      ->alias (DataBinderInterface::class, DataBinder::class);
   }
 
 }

@@ -28,12 +28,6 @@ trait DataBindingTrait
    * @var Expression[]|null
    */
   protected $bindings = null;
-  /**
-   * The data binder for view scope resolution when rendering this component.
-   *
-   * @var DataBinderInterface
-   */
-  protected $dataBinder = null;
 
   /**
    * Registers a data binding.
@@ -114,18 +108,7 @@ trait DataBindingTrait
    */
   function getDataBinder ()
   {
-    return $this->dataBinder;
-  }
-
-  /**
-   * Sets the component's data binder.
-   *
-   * @param DataBinderInterface $binder
-   * @return void
-   */
-  function setDataBinder (DataBinderInterface $binder)
-  {
-    $this->dataBinder = $binder;
+    return $this->context->getDataBinder ();
   }
 
   /**
@@ -193,13 +176,14 @@ trait DataBindingTrait
    */
   protected function evalBinding (Expression $bindExp)
   {
-    if (!$this->dataBinder) {
+    $binder = $this->getDataBinder ();
+    if (!$binder) {
       _log ()->warning ("No binder is set for evaluating an expression on a " . $this->getTagName () . " component");
       return null;
     }
     try {
       /** @var Component $this */
-      return $bindExp->evaluate ($this->dataBinder);
+      return $bindExp->evaluate ($binder);
     }
     catch (\Exception $e) {
       self::evalError ($e, $bindExp);

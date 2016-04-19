@@ -46,7 +46,7 @@ class MatisseEngine implements ViewEngineInterface
     $this->injector      = $injector;
     $this->view          =
       $view; // The view is always the owner if this engine, as long as the parameter is called $view
-    $this->context       = $context;
+    $this->context       = clone $context;
   }
 
   function compile ($src)
@@ -57,7 +57,7 @@ class MatisseEngine implements ViewEngineInterface
     // Create a compiled template.
 
     $root = new DocumentFragment;
-    $root->setContext ($this->context);
+    $root->setContext ($this->context->makeSubcontext ());
 
     $parser = new Parser;
     $parser->parse ($src, $root);
@@ -74,12 +74,6 @@ class MatisseEngine implements ViewEngineInterface
   function render ($compiled, $data = null)
   {
     /** @var DocumentFragment $compiled */
-    if (isset($data)) {
-      $context = $compiled->context;
-      $context->getViewModel ()->set ($data);
-      $out = $compiled->getRendering ();
-      return $out;
-    }
     return $compiled->getRendering ();
   }
 

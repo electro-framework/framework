@@ -2,7 +2,7 @@
 namespace Selenia\Matisse\Parser;
 
 use Selenia\Interfaces\InjectorInterface;
-use Selenia\Matisse\Lib\AssetsContext;
+use Selenia\Matisse\Interfaces\DataBinderInterface;
 use Selenia\Matisse\Services\AssetsService;
 use Selenia\Matisse\Services\BlocksService;
 use Selenia\Matisse\Services\MacrosService;
@@ -33,11 +33,11 @@ class DocumentContext
     'controllers',
     'debugMode',
     'presets',
-    'viewModel',
+    'dataBinder',
     'viewService',
     'assetsService',
     'blocksService',
-    'macrosService'
+    'macrosService',
   ];
 
   /**
@@ -70,12 +70,6 @@ class DocumentContext
    */
   public $presets = [];
   /**
-   * The document's view model data.
-   *
-   * @var ViewModel
-   */
-  public $viewModel;
-  /**
    * @var AssetsService
    */
   private $assetsService;
@@ -84,6 +78,12 @@ class DocumentContext
    */
   private $blocksService;
   /**
+   * The document's data binder.
+   *
+   * @var DataBinderInterface
+   */
+  private $dataBinder;
+  /**
    * @var MacrosService
    */
   private $macrosService;
@@ -91,22 +91,19 @@ class DocumentContext
   /**
    * DocumentContext constructor.
    *
-   * @param AssetsService $assetsService
-   * @param BlocksService $blocksService
-   * @param MacrosService $macrosService
+   * @param AssetsService       $assetsService
+   * @param BlocksService       $blocksService
+   * @param MacrosService       $macrosService
+   * @param DataBinderInterface $dataBinder
    */
-  function __construct (AssetsService $assetsService, BlocksService $blocksService, MacrosService $macrosService)
+  function __construct (AssetsService $assetsService, BlocksService $blocksService, MacrosService $macrosService,
+                        DataBinderInterface $dataBinder)
   {
     $this->tags          = self::$coreTags;
-    $this->viewModel     = new ViewModel;
+    $this->dataBinder    = $dataBinder;
     $this->assetsService = $assetsService;
     $this->blocksService = $blocksService;
     $this->macrosService = $macrosService;
-  }
-
-  public function __clone ()
-  {
-    $this->viewModel = new ViewModel;
   }
 
   /**
@@ -137,6 +134,16 @@ class DocumentContext
   }
 
   /**
+   * Gets the document's data binder.
+   *
+   * @return DataBinderInterface
+   */
+  public function getDataBinder ()
+  {
+    return $this->dataBinder;
+  }
+
+  /**
    * @return MacrosService
    */
   public function getMacrosService ()
@@ -144,14 +151,11 @@ class DocumentContext
     return $this->macrosService;
   }
 
-  /**
-   * Gets the document's view model data.
-   *
-   * @return ViewModel
-   */
-  public function getViewModel ()
+  public function makeSubcontext ()
   {
-    return $this->viewModel;
+    $sub             = clone $this;
+    $sub->dataBinder = $this->dataBinder->makeNew ();
+    return $sub;
   }
 
 }

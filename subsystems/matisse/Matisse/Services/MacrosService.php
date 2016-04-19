@@ -57,7 +57,7 @@ class MacrosService
     if (!$content) return null;
     $parser   = new Parser;
     $root = new DocumentFragment;
-    $root->setContext ($this);
+    $root->setContext ($parent->context);
     $parser->parse ($content, $root);
     $macro = $this->loadedMacro;
     $this->loadedMacro = null;

@@ -218,6 +218,9 @@ trait RenderingTrait
   /**
    * Generates and/or initializes the component's view.
    *
+   * <p>If not overridden, the default behaviour is to load the view from an external file, if one is defined on
+   * `$templateUrl`. If not, the content of `$template` is returned, if set, otherwise no output is generated.
+   * 
    * <p>This is only relevant for {@see CompositeComponent} subclasses.
    */
   protected function createView ()

@@ -7,6 +7,7 @@ use Selenia\Interfaces\RenderableInterface;
 use Selenia\Matisse\Interfaces\DataBinderInterface;
 use Selenia\Matisse\Parser\DocumentContext;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
+use Selenia\ViewEngine\Lib\ViewModel;
 
 /**
  * Manages the view's data-binding context.
@@ -16,28 +17,25 @@ use Selenia\Matisse\Properties\Base\AbstractProperties;
 class DataBinder implements DataBinderInterface, CustomInspectionInterface
 {
   /**
-   * @var DocumentContext
+   * @var DocumentContext|null If null, the binder cannot render content blocks.
    */
-  private $context;
-  private $isolatedViewModel = false;
+  private $context = null;
   /**
    * @var AbstractProperties|null
    */
   private $props;
   /**
-   * @var object|array
+   * @var ViewModel
    */
   private $viewModel;
 
   /**
-   * @param DocumentContext         $context
-   * @param object|array|null       $viewModel [optional] A view model reference.
-   * @param AbstractProperties|null $props     [optional] 
+   * @param ViewModel|null          $viewModel [optional] If not set, a new, blank view model will be assigned.
+   * @param AbstractProperties|null $props     [optional] If not set, no properties will be available.
    */
-  public function __construct (DocumentContext $context, &$viewModel = null, AbstractProperties $props = null)
+  public function __construct (ViewModel $viewModel = null, AbstractProperties $props = null)
   {
-    $this->context   = $context;
-    $this->viewModel =& $viewModel;
+    $this->viewModel = $viewModel ?: new ViewModel;
     $this->props     = $props;
   }
 
@@ -49,20 +47,7 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
 
   function get ($key)
   {
-    $v = _g ($this->viewModel, $key, $this);
-    if ($v !== $this)
-      return $v;
-
-    if (!$this->isolatedViewModel) {
-      $data = $this->context->getViewModel ();
-      if (isset($data)) {
-        $v = _g ($data, $key, $this);
-        if ($v !== $this)
-          return $v;
-      }
-    }
-
-    return null;
+    return $this->viewModel->$key;
   }
 
   function getProps ()
@@ -70,20 +55,26 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
     return $this->props;
   }
 
-  function &getViewModel ()
+  function setProps (AbstractProperties $props = null)
+  {
+    $this->props = $props;
+  }
+
+  function getViewModel ()
   {
     return $this->viewModel;
   }
 
-  function inspect ()
+  function setViewModel ($viewModel)
   {
-    return Debug::grid ([
-      "View Model" => $this->viewModel,
-      "Properties" => Debug::RAW_TEXT .
-                      Debug::grid ($this->props, Debug::getType ($this->props), 1, ['props', 'component', 'hidden'],
-                        true),
-      "Isolation"  => $this->isolatedViewModel,
-    ]);
+    $this->viewModel = $viewModel;
+  }
+
+  function makeNew ()
+  {
+    $b          = new static;
+    $b->context = $this->context;
+    return $b;
   }
 
   function prop ($key)
@@ -100,31 +91,18 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
     return $this->context->getBlocksService ()->getBlock ($name)->render ();
   }
 
-  function withIsolation ($isolated = true)
+  function setContext (DocumentContext $context)
   {
-    if ($isolated == $this->isolatedViewModel)
-      return $this;
-    $o                    = clone $this;
-    $o->isolatedViewModel = $isolated;
-    return $o;
+    $this->context = $context;
   }
 
-  function withProps (AbstractProperties $props = null)
+  function inspect ()
   {
-    if ($props === $this->props)
-      return $this;
-    $o        = clone $this;
-    $o->props = $props;
-    return $o;
+    return Debug::grid ([
+      "View Model" => $this->viewModel,
+      "Properties" => Debug::RAW_TEXT .
+                      Debug::grid ($this->props, Debug::getType ($this->props), 1, ['props', 'component', 'hidden'],
+                        true),
+    ]);
   }
-
-  function withViewModel (&$viewModel)
-  {
-    if ($viewModel === $this->viewModel)
-      return $this;
-    $o            = clone $this;
-    $o->viewModel =& $viewModel;
-    return $o;
-  }
-
 }

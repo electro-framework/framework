@@ -3,7 +3,9 @@ namespace Selenia\Matisse\Interfaces;
 
 use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Exceptions\FilterHandlerNotFoundException;
+use Selenia\Matisse\Parser\DocumentContext;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
+use Selenia\ViewEngine\Lib\ViewModel;
 
 /**
  * Provides a data context for evaluating expressions and methods to manage that context.
@@ -44,9 +46,16 @@ interface DataBinderInterface
    *
    * > Ex: `$vm =& $binder->getViewModel()`.
    *
-   * @return $this|null|object|array A reference to the view model. Changes to it will be reflecg
+   * @return $this|null|ViewModel
    */
-  function &getViewModel ();
+  function getViewModel ();
+
+  /**
+   * Returns a new binder instance of the same class.
+   *
+   * @return DataBinderInterface
+   */
+  function makeNew ();
 
   /**
    * Gets a value with the given name from the bound component properties, performing data binding as needed.
@@ -66,30 +75,24 @@ interface DataBinderInterface
   function renderBlock ($name);
 
   /**
-   * Gets a new binder instance with the given view isolation mode.
+   * Sets the document context for the binder. This is used to access the blocks service.
    *
-   * @param bool $isolated
-   * @return static
+   * @param DocumentContext $context
    */
-  function withIsolation ($isolated = true);
+  function setContext (DocumentContext $context);
 
   /**
-   * Gets a new binder instance with the given component properties.
+   * Assigns properties to the binder.
    *
    * @param AbstractProperties|null $props
-   * @return static
    */
-  function withProps (AbstractProperties $props = null);
+  function setProps (AbstractProperties $props = null);
 
   /**
-   * Gets a new binder instance with the given view model.
+   * Assigns a view model to the binder.
    *
-   * <p>The model is copied by reference, so that changes to binder's model will be reflected on the original model, and
-   * vice-versa.
-   *
-   * @param object|array|null $viewModel
-   * @return static
+   * @param ViewModel $viewModel
    */
-  function withViewModel (&$viewModel);
+  function setViewModel ($viewModel);
 
 }

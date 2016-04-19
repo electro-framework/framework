@@ -155,17 +155,18 @@ class CompositeComponent extends Component
 
   /**
    * Allows subclasses to generate the view's markup dinamically.
-   * If not overriden, the default behaviour is to load the view from an external file, if one is defined on
-   * `$templateUrl`. If not, the content of `$template` is returned, if set, otherwise no output is generated.
+   * If not overridden, the default behaviour is to render the view previously set by {@see createView}.
    *
-   * > **Note:** this returns nothing; the output is sent directly to the output buffer.
+   * ><p>**Note:** this returns nothing; the output is sent directly to the output buffer.
    */
   protected function render ()
   {
-    if ($this->shadowDOM)
+    if ($this->view)
+      // The view model is sent to render() because the view may not be a Matisse template, in which case the model must
+      // be set explicitly.
+      echo $this->view->render ($this->getViewModel ());
+    elseif ($this->shadowDOM)
       $this->shadowDOM->run ();
-    elseif ($this->view)
-      echo $this->view->render ();
   }
 
   private function assertContext ()

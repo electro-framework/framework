@@ -234,6 +234,8 @@ abstract class Component implements RenderableInterface
 
   function setContext ($context)
   {
+    if (!$context instanceof DocumentContext)
+      xdebug_break();
     $this->context = $context;
   }
 
