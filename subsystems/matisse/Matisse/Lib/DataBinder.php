@@ -70,6 +70,16 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
     $this->viewModel = $viewModel;
   }
 
+  function inspect ()
+  {
+    return _log ()->getTable ([
+      "viewModel" => Debug::RAW_TEXT .
+                     _log ()->getTable ($this->viewModel, '', false, false, 1),
+      "props"     => Debug::RAW_TEXT .
+                     _log ()->getTable ($this->props, '', true, true, 1, ['props', 'component', 'hidden']),
+    ]);
+  }
+
   function makeNew ()
   {
     $b          = new static;
@@ -94,15 +104,5 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
   function setContext (DocumentContext $context)
   {
     $this->context = $context;
-  }
-
-  function inspect ()
-  {
-    return Debug::grid ([
-      "View Model" => $this->viewModel,
-      "Properties" => Debug::RAW_TEXT .
-                      Debug::grid ($this->props, Debug::getType ($this->props), 1, ['props', 'component', 'hidden'],
-                        true),
-    ]);
   }
 }

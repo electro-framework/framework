@@ -39,14 +39,9 @@ interface DataBinderInterface
   function getProps ();
 
   /**
-   * Gets a reference to the bound view model.
+   * Gets the binder's view model.
    *
-   * <p>The model is returned by reference, so that changes to binder's model will be reflected on the original model,
-   * and vice-versa. But, if you assign it to a variable,  you must assign the reference.
-   *
-   * > Ex: `$vm =& $binder->getViewModel()`.
-   *
-   * @return $this|null|ViewModel
+   * @return ViewModel
    */
   function getViewModel ();
 

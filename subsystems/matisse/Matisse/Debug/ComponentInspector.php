@@ -2,7 +2,7 @@
 namespace Selenia\Matisse\Debug;
 
 use PhpKit\Html5Tools\HtmlSyntaxHighlighter;
-use PhpKit\WebConsole\Lib\Debug;
+use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Base\CompositeComponent;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
@@ -15,9 +15,6 @@ use SplObjectStorage;
 
 /**
  * Provides a visual introspection of a Matisse component for debugging purposes.
- *
- * > <p>**Note:** append `?extdebug` to the page URL to display extended debugging information.
- * > <br>It will generate a larger output and it will be slower, though.
  */
 class ComponentInspector
 {
@@ -81,18 +78,19 @@ class ComponentInspector
     }
     self::$recursionMap->attach ($component);
 
-    $COLOR_BIND  = '#5AA';
-    $COLOR_CONST = '#5A5';
-    $COLOR_INFO  = '#CCC';
-    $COLOR_PROP  = '#B00';
-    $COLOR_TAG   = '#000;font-weight:bold';
-    $COLOR_TYPE  = '#55A';
-    $COLOR_VALUE = '#333';
-    $Q           = "<i style='color:#CCC'>\"</i>";
+    $COLOR_BIND       = '#5AA';
+    $COLOR_CONST      = '#5A5';
+    $COLOR_INFO       = '#CCC';
+    $COLOR_PROP       = '#B00';
+    $COLOR_TAG        = '#000;font-weight:bold';
+    $COLOR_TYPE       = '#55A';
+    $COLOR_VALUE      = '#333';
+    $COLOR_SHADOW_DOM = '#5AA;font-weight:bold';
+    $Q                = "<i style='color:#CCC'>\"</i>";
 
     $tag        = $component->getTagName ();
     $hasContent = false;
-    echo "<span style='color:$COLOR_TAG'>&lt;$tag</span>";
+    echo "<div class=__component><span style='color:$COLOR_TAG'>&lt;$tag</span>";
     if (!isset($component->parent) && !$component instanceof DocumentFragment)
       echo "&nbsp;<span style='color:$COLOR_INFO'>(detached)</span>";
     $type = typeOf ($component);
@@ -124,16 +122,18 @@ class ComponentInspector
         echo $v;
       }
       finally {
-        echo "</div><span style='color:$COLOR_TAG'>&lt;/$tag&gt;<br></span>";
+        echo "</div><span style='color:$COLOR_TAG'>&lt;/$tag&gt;<br></span></div>";
       }
-      self::inspectInternalProps ($component);
 
       return;
     }
 
     // Handle other node types
 
-    elseif ($component->supportsProperties ()) {
+    if ($component instanceof DocumentFragment)
+      self::inspectViewModel ($component);
+
+    if ($component->supportsProperties ()) {
       /** @var ComponentProperties $propsObj */
       $propsObj = $component->props;
       if ($propsObj) $props = $propsObj->getAll ();
@@ -145,16 +145,14 @@ class ComponentInspector
         $type = typeOf ($propsObj);
         echo "<span class='icon hint--rounded hint--top' data-hint='Properties class:\n$type'><i class='fa fa-list'></i></span>";
 
-        self::inspectInternalProps ($component);
-
-        echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";
+        echo "<table class='__console-table' style='color:$COLOR_VALUE'>";
 
         // Display all scalar properties.
 
         foreach ($props as $k => $v) {
           $t          = $component->props->getTypeOf ($k);
           $isModified = $component->props->isModified ($k);
-          $modifStyle = $isModified ? ' style="background:#FFE"' : ' style="opacity:0.5"';
+          $modifStyle = $isModified ? ' class=__modified' : ' class=__original';
           if ($t != type::content && $t != type::collection && $t != type::metadata) {
             $tn = $component->props->getTypeNameOf ($k);
             echo "<tr$modifStyle><td style='color:$COLOR_PROP'>$k<td><i style='color:$COLOR_TYPE'>$tn</i><td>";
@@ -260,24 +258,29 @@ class ComponentInspector
         echo "</table>";
       }
     }
-    else self::inspectInternalProps ($component);
 
     // If deep inspection is enabled, recursively inspect all children components.
 
     if ($deep) {
-      $content = null;
+      $content = $shadowDOM = null;
       if ($component->hasChildren ())
         $content = $component->getChildren ();
-      elseif ($component instanceof CompositeComponent && ($shadowDOM = $component->provideShadowDOM ()))
-        $content = [$shadowDOM];
-      if ($content) {
+      if ($component instanceof CompositeComponent)
+        $shadowDOM = $component->provideShadowDOM ();
+      if ($content || $shadowDOM) {
         echo "<span style='color:$COLOR_TAG'>&gt;</span><div style=\"margin:0 0 0 15px\">";
-        self::_inspectSet ($content, $deep);
+        if ($content)
+          self::_inspectSet ($content, $deep);
+        if ($shadowDOM) {
+          echo "<span style='color:$COLOR_SHADOW_DOM'>&lt;Shadow DOM&gt;</span><div style=\"margin:0 0 0 15px\">";
+          self::_inspect ($shadowDOM, $deep);
+          echo "</div><span style='color:$COLOR_SHADOW_DOM'>&lt;/Shadow DOM&gt;</span>";
+        }
         echo '</div>';
         $hasContent = true;
       }
     }
-    echo "<span style='color:$COLOR_TAG'>" . ($hasContent ? "&lt;/$tag&gt;<br>" : "/&gt;<br>") . "</span>";
+    echo "<span style='color:$COLOR_TAG'>" . ($hasContent ? "&lt;/$tag&gt;<br>" : "/&gt;<br>") . "</span></div>";
   }
 
   /**
@@ -316,36 +319,6 @@ class ComponentInspector
     return $v;
   }
 
-  private static function inspectInternalProps (Component $component)
-  {
-    if (!isset($_GET['extdebug'])) return;
-
-    $COLOR_TYPE  = '#55A';
-    $COLOR_VALUE = '#333';
-    $COLOR_PROP  = '#B00';
-
-    if (method_exists ($component, 'getViewModel')) {
-
-      // Display some of the component instance class properties
-
-      echo "<table style='color:$COLOR_VALUE;margin:0 0 0 15px'><colgroup><col width=1><col width=1><col></colgroup>";
-
-      // Display view model
-
-      $tn = Debug::getType ($component->getViewModel ());
-      echo "<tr><td style='color:$COLOR_PROP'>View Model<sup>*</sup><td><i style='color:$COLOR_TYPE'>$tn</i></tr>";
-
-      // Display dta binder
-
-      $db = $component->getDataBinder ();
-      $tn = Debug::getType ($db);
-      $tv = $db ? $db->inspect () : '';
-      echo "<tr><td style='color:$COLOR_PROP'>Data Binder<sup>*</sup><td><i style='color:$COLOR_TYPE'>$tn</i><td>$tv</tr>";
-
-      echo "</table>";
-    }
-  }
-
   /**
    * @param string $s
    * @return string
@@ -353,6 +326,16 @@ class ComponentInspector
   private static function inspectString ($s)
   {
     return str_replace ("\n", '&#8626;', htmlspecialchars ($s));
+  }
+
+  private static function inspectViewModel (Component $component)
+  {
+    $old = DebugConsole::$settings->tableUseColumWidths;
+
+    DebugConsole::$settings->tableUseColumWidths = false;
+    echo $component->getDataBinder ()->inspect ();
+
+    DebugConsole::$settings->tableUseColumWidths = $old;
   }
 
 }

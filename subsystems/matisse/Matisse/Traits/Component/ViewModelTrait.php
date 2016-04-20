@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Matisse\Traits\Component;
 
+use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\ViewEngine\Lib\ViewModel;
 
 trait ViewModelTrait
@@ -8,7 +9,7 @@ trait ViewModelTrait
   /**
    * Returns the component's view model (its own or an inherited one).
    *
-   * @return array|null|object
+   * @return ViewModel
    */
   function getViewModel ()
   {
@@ -20,10 +21,10 @@ trait ViewModelTrait
    *
    * @param array|null|object $viewModel
    */
-  function setViewModel ($viewModel)
-  {
-    $this->context->getDataBinder ()->getViewModel ($viewModel);
-  }
+//  function setViewModel ($viewModel)
+//  {
+//    $this->context->getDataBinder ()->getViewModel ($viewModel);
+//  }
 
   /**
    * Extension hook.
@@ -33,7 +34,18 @@ trait ViewModelTrait
   protected function afterPreRun ()
   {
     parent::afterPreRun ();
-    $this->viewModel ($this->getViewModel ());
+    $shadowDOM = $this->getShadowDOM ();
+    if ($shadowDOM) {
+      /** @var DocumentFragment $shadowDOM */
+      $binder = $shadowDOM->getDataBinder ();
+      if (!static::isolatedViewModel){
+        inspect ("NOT ISOLATED",$this, $shadowDOM, $this->getViewModel (), $binder->getViewModel ());
+        $binder->setViewModel ($this->getViewModel ());
+        inspect ($binder->getViewModel ());
+      }
+      $this->viewModel ($binder->getViewModel ());
+      $binder->setProps ($this->props);
+    }
   }
 
   /**

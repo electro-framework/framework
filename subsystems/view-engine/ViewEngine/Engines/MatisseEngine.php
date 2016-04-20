@@ -73,6 +73,9 @@ class MatisseEngine implements ViewEngineInterface
 
   function render ($compiled, $data = null)
   {
+    // Matisse ignores the $data argument. The view model should be set by the CompositeComponent that owns the view,
+    // and it is already set on the document context.
+
     /** @var DocumentFragment $compiled */
     return $compiled->getRendering ();
   }

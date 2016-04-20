@@ -85,6 +85,7 @@ class IncludeProperties extends MetadataProperties
 class Include_ extends CompositeComponent
 {
   const propertiesClass = IncludeProperties::class;
+  const isolatedViewModel = false;
 
   /** @var IncludeProperties */
   public $props;
@@ -141,12 +142,15 @@ class Include_ extends CompositeComponent
     elseif (exists ($prop->view)) {
       if (exists ($controller)) {
         $this->setShadowDOM ($shadowDOM = $ctx->createComponent ($controller, $this));
+
         if (!$shadowDOM instanceof CompositeComponent)
           throw new ComponentException($this,
             "Component <kbd>$controller</kbd> is not a <kbd>CompositeComponent</kbd> instance, so it can't be the controler of <kbd>$prop->view</kbd>");
+
         // If the shadowDOM has its own properties, merge the Include's dynamic properties with them.
         if ($shadowDOM->props)
           $shadowDOM->props->apply ($prop->getDynamic ());
+
         $shadowDOM->templateUrl = $prop->view;
         $this->attach ($shadowDOM);
       }

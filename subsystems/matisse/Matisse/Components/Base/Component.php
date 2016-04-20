@@ -1,6 +1,7 @@
 <?php
 namespace Selenia\Matisse\Components\Base;
 
+use PhpKit\WebConsole\Lib\Debug;
 use Selenia\Interfaces\RenderableInterface;
 use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
@@ -234,9 +235,9 @@ abstract class Component implements RenderableInterface
 
   function setContext ($context)
   {
-    if (!$context instanceof DocumentContext)
-      xdebug_break();
     $this->context = $context;
+    _log()->write ("Context ".Debug::getType ($context)." with binder ".Debug::getType ($context->getDataBinder()).
+                   " with VM ".Debug::getType ($context->getDataBinder()->getViewModel())." set on ".Debug::getType($this)."\n");
   }
 
   /**

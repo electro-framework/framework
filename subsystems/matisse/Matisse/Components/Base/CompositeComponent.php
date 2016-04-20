@@ -33,12 +33,12 @@ class CompositeComponent extends Component
   use ViewModelTrait;
 
   /**
-   * When true, data-binding resolution on the component's view is unaffected by data from the shared document view
-   * model (which is set on {@see Context}); only the component's own view model is used.
+   * When true, data-binding resolution on the component's view is unaffected by data from the host document view
+   * model; only the component's own view model is used.
    *
    * @var bool
    */
-  const isolatedViewModel = false;
+  const isolatedViewModel = true;
   /**
    * @var bool
    */
@@ -149,7 +149,6 @@ class CompositeComponent extends Component
     }
     // else assume the shadowDOM is already attached to this; it will be, if set via setShadowDOM().
 
-    // The shadowDOM may have been set directly or indirectly via the loaded view.
     $this->setShadowDOM ($this->provideShadowDOM ());
   }
 

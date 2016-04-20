@@ -12,6 +12,8 @@ class AssetsService
 {
   use InspectionTrait;
 
+  static $INSPECTABLE = ['assets'];
+
   /**
    * @var AssetsContext
    */

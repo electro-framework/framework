@@ -155,6 +155,7 @@ class DocumentContext
   {
     $sub             = clone $this;
     $sub->dataBinder = $this->dataBinder->makeNew ();
+    $sub->dataBinder->setContext ($sub);
     return $sub;
   }
 
