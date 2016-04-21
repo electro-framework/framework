@@ -8,6 +8,8 @@ use Robo\TaskInfo;
 use Selenia\Application;
 use Selenia\Core\Assembly\Services\ModulesLoader;
 use Selenia\Core\ConsoleApplication\Services\ConsoleIO;
+use Selenia\Core\DependencyInjection\ServiceContainer;
+use Selenia\Core\DependencyInjection\ServiceContainerInterface;
 use Selenia\Interfaces\ConsoleIOInterface;
 use Selenia\Interfaces\InjectorInterface;
 use Symfony\Component\Console\Application as SymfonyConsole;
@@ -60,14 +62,18 @@ class ConsoleApplication extends Runner
   {
     // Create and register the foundational framework services.
 
+    $container = new ServiceContainer($injector);
     $injector
       ->share ($injector)
-      ->alias (InjectorInterface::class, get_class ($injector));
+      ->alias (InjectorInterface::class, get_class ($injector))
+      ->share ($container)
+      ->alias (ServiceContainerInterface::class, ServiceContainer::class);
 
     /** @var Application $app */
     $app = $injector
       ->share (Application::class)
       ->make (Application::class);
+    $container->app = $app;
 
     $app->isConsoleBased = true;
     $app->setup (getcwd ());

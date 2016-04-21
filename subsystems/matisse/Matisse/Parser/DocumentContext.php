@@ -10,7 +10,6 @@ use Selenia\Matisse\Traits\Context\ComponentsAPITrait;
 use Selenia\Matisse\Traits\Context\FiltersAPITrait;
 use Selenia\Matisse\Traits\Context\ViewsAPITrait;
 use Selenia\Traits\InspectionTrait;
-use Selenia\ViewEngine\Lib\ViewModel;
 
 /**
  * A Matisse rendering context.
