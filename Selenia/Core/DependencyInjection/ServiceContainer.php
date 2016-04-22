@@ -2,6 +2,7 @@
 namespace Selenia\Core\DependencyInjection;
 
 use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\ServiceContainerInterface;
 
 class ServiceContainer extends \Map implements ServiceContainerInterface
 {
