@@ -4,7 +4,7 @@ namespace Selenia\Core\DependencyInjection;
 use Selenia\Interfaces\DI\InjectorInterface;
 use Selenia\Interfaces\DI\ServiceContainerInterface;
 
-class ServiceContainer extends \Map implements ServiceContainerInterface
+class ServiceContainer extends \Selenia\Interop\Map implements ServiceContainerInterface
 {
   /**
    * @var InjectorInterface

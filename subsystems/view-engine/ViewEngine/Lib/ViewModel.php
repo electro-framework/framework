@@ -1,7 +1,9 @@
 <?php
 namespace Selenia\ViewEngine\Lib;
 
-class ViewModel extends \Map
+use Selenia\Interop\Map;
+
+class ViewModel extends Map
 {
   // empty
 }
