@@ -1,9 +1,9 @@
 <?php
 namespace Selenia\ViewEngine\Config;
 
-use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
+use Selenia\Interfaces\DI\ServiceProviderInterface;
 use Selenia\Interfaces\ModuleInterface;
-use Selenia\Interfaces\ServiceProviderInterface;
 use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\Interfaces\Views\ViewServiceInterface;
 use Selenia\ViewEngine\Engines\MatisseEngine;

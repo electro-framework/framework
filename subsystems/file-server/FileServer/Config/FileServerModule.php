@@ -9,9 +9,9 @@ use Selenia\Application;
 use Selenia\FileServer\Services\ContentRepository;
 use Selenia\FileServer\Services\FileServerMappings;
 use Selenia\Interfaces\ContentRepositoryInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
+use Selenia\Interfaces\DI\ServiceProviderInterface;
 use Selenia\Interfaces\Http\ResponseFactoryInterface;
-use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\ServiceProviderInterface;
 
 class FileServerModule implements ServiceProviderInterface
 {

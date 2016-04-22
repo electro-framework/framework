@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Routing\Lib;
 
-use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
 
 /**
  * Wraps a routable factory function.

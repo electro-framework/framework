@@ -3,9 +3,9 @@ namespace Selenia\Matisse\Config;
 
 use Selenia\Application;
 use Selenia\DefaultFilters;
-use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
+use Selenia\Interfaces\DI\ServiceProviderInterface;
 use Selenia\Interfaces\ModuleInterface;
-use Selenia\Interfaces\ServiceProviderInterface;
 use Selenia\Interfaces\Views\ViewServiceInterface;
 use Selenia\Matisse\Interfaces\DataBinderInterface;
 use Selenia\Matisse\Lib\DataBinder;
@@ -25,11 +25,10 @@ class MatisseModule implements ServiceProviderInterface, ModuleInterface
 
   function register (InjectorInterface $injector)
   {
-    $app = $injector->make (Application::class);
-
     $injector
       ->prepare (DocumentContext::class,
-        function (DocumentContext $ctx, InjectorInterface $injector) use ($app) {
+        function (DocumentContext $ctx, InjectorInterface $injector) {
+          $app         = $injector->make (Application::class);
           $viewService = $injector->make (ViewServiceInterface::class);
           $ctx->registerTags ($app->tags);
           $ctx->setFilterHandler ($filterHandler = new FilterHandler);

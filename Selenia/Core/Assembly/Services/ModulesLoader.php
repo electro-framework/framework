@@ -7,9 +7,9 @@ use Psr\Log\LoggerInterface;
 use Selenia\Application;
 use Selenia\Core\Assembly\ModuleInfo;
 use Selenia\Exceptions\Fatal\ConfigException;
-use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
+use Selenia\Interfaces\DI\ServiceProviderInterface;
 use Selenia\Interfaces\ModuleInterface;
-use Selenia\Interfaces\ServiceProviderInterface;
 
 /**
  * Loads and initializes the application's modules.

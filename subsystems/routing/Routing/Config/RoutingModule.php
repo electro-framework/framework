@@ -2,13 +2,13 @@
 namespace Selenia\Routing\Config;
 
 use Selenia\Application;
+use Selenia\Interfaces\DI\InjectorInterface;
+use Selenia\Interfaces\DI\ServiceProviderInterface;
 use Selenia\Interfaces\Http\MiddlewareStackInterface;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
 use Selenia\Interfaces\Http\RouterInterface;
 use Selenia\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
 use Selenia\Interfaces\Http\Shared\ApplicationRouterInterface;
-use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\ServiceProviderInterface;
 use Selenia\Routing\Middleware\RoutingMiddleware;
 use Selenia\Routing\Services\Debug\MiddlewareStackWithLogging;
 use Selenia\Routing\Services\Debug\RouterWithLogging;

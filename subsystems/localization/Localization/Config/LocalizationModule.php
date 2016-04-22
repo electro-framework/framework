@@ -1,9 +1,9 @@
 <?php
 namespace Selenia\Localization\Config;
 
-use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
+use Selenia\Interfaces\DI\ServiceProviderInterface;
 use Selenia\Interfaces\ModuleInterface;
-use Selenia\Interfaces\ServiceProviderInterface;
 use Selenia\Localization\Services\Locale;
 
 class LocalizationModule implements ServiceProviderInterface, ModuleInterface

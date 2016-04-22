@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\ErrorHandling\Services;
 
-use PhpKit\WebConsole\ErrorConsole\ErrorConsole;use Psr\Http\Message\ResponseInterface;use Psr\Http\Message\ServerRequestInterface;use Selenia\Application;use Selenia\ErrorHandling\Config\ErrorHandlingSettings;use Selenia\Exceptions\HttpException;use Selenia\Http\Lib\Http;use Selenia\Interfaces\Http\ErrorRendererInterface;use Selenia\Interfaces\Http\ResponseFactoryInterface;use Selenia\Interfaces\InjectorInterface;use Selenia\Interfaces\RenderableInterface;
+use PhpKit\WebConsole\ErrorConsole\ErrorConsole;use Psr\Http\Message\ResponseInterface;use Psr\Http\Message\ServerRequestInterface;use Selenia\Application;use Selenia\ErrorHandling\Config\ErrorHandlingSettings;use Selenia\Exceptions\HttpException;use Selenia\Http\Lib\Http;use Selenia\Interfaces\DI\InjectorInterface;use Selenia\Interfaces\Http\ErrorRendererInterface;use Selenia\Interfaces\Http\ResponseFactoryInterface;use Selenia\Interfaces\RenderableInterface;
 
 /**
  * Renders an error HTTP response into a format supported by the client.

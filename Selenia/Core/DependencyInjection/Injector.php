@@ -2,7 +2,7 @@
 namespace Selenia\Core\DependencyInjection;
 
 use Auryn\Injector as Auryn;
-use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
 
 class Injector extends Auryn implements InjectorInterface
 {

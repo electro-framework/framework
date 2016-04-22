@@ -5,8 +5,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Exceptions\Fatal\FileNotFoundException;
 use Selenia\Http\Components\PageComponent;
+use Selenia\Interfaces\DI\InjectorInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Interfaces\InjectorInterface;
 use Selenia\Matisse\Parser\DocumentContext;
 
 /**

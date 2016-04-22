@@ -2,7 +2,7 @@
 namespace Selenia\ViewEngine\Engines;
 
 use Selenia\Application;
-use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
 use Selenia\Interfaces\Views\ViewEngineInterface;
 use Selenia\Interfaces\Views\ViewServiceInterface;
 use Selenia\Matisse\Components\Internal\DocumentFragment;

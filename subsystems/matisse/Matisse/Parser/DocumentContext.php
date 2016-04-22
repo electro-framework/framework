@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Parser;
 
-use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
 use Selenia\Matisse\Interfaces\DataBinderInterface;
 use Selenia\Matisse\Services\AssetsService;
 use Selenia\Matisse\Services\BlocksService;

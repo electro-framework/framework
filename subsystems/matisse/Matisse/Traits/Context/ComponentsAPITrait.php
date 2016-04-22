@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\Matisse\Traits\Context;
 
-use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
 use Selenia\Matisse\Components;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\GenericHtmlComponent;

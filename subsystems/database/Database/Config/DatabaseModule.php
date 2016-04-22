@@ -5,9 +5,9 @@ use PhpKit\Connection;
 use PhpKit\ConnectionInterface;
 use Selenia\Database\Lib\DebugConnection;
 use Selenia\Database\Services\ModelController;
-use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
+use Selenia\Interfaces\DI\ServiceProviderInterface;
 use Selenia\Interfaces\ModelControllerInterface;
-use Selenia\Interfaces\ServiceProviderInterface;
 
 class DatabaseModule implements ServiceProviderInterface
 {

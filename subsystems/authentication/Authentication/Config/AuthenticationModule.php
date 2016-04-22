@@ -1,8 +1,8 @@
 <?php
 namespace Selenia\Authentication\Config;
 
-use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\ServiceProviderInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
+use Selenia\Interfaces\DI\ServiceProviderInterface;
 use Selenia\Interfaces\UserInterface;
 
 class AuthenticationModule implements ServiceProviderInterface

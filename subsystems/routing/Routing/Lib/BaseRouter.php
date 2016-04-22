@@ -6,9 +6,9 @@ use PhpKit\WebConsole\Lib\Debug;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Exceptions\HttpException;
+use Selenia\Interfaces\DI\InjectorInterface;
 use Selenia\Interfaces\Http\RouteMatcherInterface;
 use Selenia\Interfaces\Http\RouterInterface;
-use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\RenderableInterface;
 use Selenia\Traits\InspectionTrait;
 

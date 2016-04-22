@@ -9,7 +9,7 @@ use Selenia\Core\Assembly\Services\ModulesLoader;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
 use Selenia\Core\DependencyInjection\ServiceContainer;
 use Selenia\Core\DependencyInjection\ServiceContainerInterface;
-use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
 use Zend\Diactoros\Response;
 
 /**

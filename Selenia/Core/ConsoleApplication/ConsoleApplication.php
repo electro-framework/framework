@@ -11,7 +11,7 @@ use Selenia\Core\ConsoleApplication\Services\ConsoleIO;
 use Selenia\Core\DependencyInjection\ServiceContainer;
 use Selenia\Core\DependencyInjection\ServiceContainerInterface;
 use Selenia\Interfaces\ConsoleIOInterface;
-use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputInterface;

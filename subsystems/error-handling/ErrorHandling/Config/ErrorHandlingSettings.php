@@ -1,8 +1,8 @@
 <?php
 namespace Selenia\ErrorHandling\Config;
 
+use Selenia\Interfaces\DI\InjectorInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Interfaces\InjectorInterface;
 
 /**
  * Configuration settings for the Error Handling module.

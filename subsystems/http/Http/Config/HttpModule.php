@@ -6,11 +6,11 @@ use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Http\Services\Redirection;
 use Selenia\Http\Services\ResponseFactory;
 use Selenia\Http\Services\ResponseSender;
+use Selenia\Interfaces\DI\InjectorInterface;
+use Selenia\Interfaces\DI\ServiceProviderInterface;
 use Selenia\Interfaces\Http\RedirectionInterface;
 use Selenia\Interfaces\Http\ResponseFactoryInterface;
 use Selenia\Interfaces\Http\ResponseSenderInterface;
-use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\ServiceProviderInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest;
 

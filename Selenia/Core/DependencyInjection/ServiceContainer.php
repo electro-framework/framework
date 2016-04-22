@@ -1,8 +1,8 @@
 <?php
 namespace Selenia\Core\DependencyInjection;
 
-use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\ServiceContainerInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
+use Selenia\Interfaces\DI\ServiceContainerInterface;
 
 class ServiceContainer extends \Map implements ServiceContainerInterface
 {

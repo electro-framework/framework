@@ -2,10 +2,10 @@
 namespace Selenia\Navigation\Config;
 
 use Selenia\Application;
-use Selenia\Interfaces\InjectorInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
+use Selenia\Interfaces\DI\ServiceProviderInterface;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
-use Selenia\Interfaces\ServiceProviderInterface;
 use Selenia\Navigation\Lib\NavigationLink;
 use Selenia\Navigation\Services\Navigation;
 

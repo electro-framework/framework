@@ -1,8 +1,8 @@
 <?php
 namespace Selenia\Sessions\Config;
 
-use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\ServiceProviderInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
+use Selenia\Interfaces\DI\ServiceProviderInterface;
 use Selenia\Sessions\Services\Session;
 
 class SessionsModule implements ServiceProviderInterface

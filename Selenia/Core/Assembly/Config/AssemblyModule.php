@@ -5,8 +5,8 @@ use Selenia\Core\Assembly\Services\ModuleServices;
 use Selenia\Core\Assembly\Services\ModulesInstaller;
 use Selenia\Core\Assembly\Services\ModulesLoader;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
-use Selenia\Interfaces\InjectorInterface;
-use Selenia\Interfaces\ServiceProviderInterface;
+use Selenia\Interfaces\DI\InjectorInterface;
+use Selenia\Interfaces\DI\ServiceProviderInterface;
 use Selenia\Migrations\Config\MigrationsSettings;
 
 class AssemblyModule implements ServiceProviderInterface

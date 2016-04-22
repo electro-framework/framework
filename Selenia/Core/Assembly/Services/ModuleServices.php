@@ -5,9 +5,9 @@ use PhpKit\Flow\FilesystemFlow;
 use Selenia\Application;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\FileServer\Services\FileServerMappings;
+use Selenia\Interfaces\DI\InjectorInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\Http\Shared\ApplicationRouterInterface;
-use Selenia\Interfaces\InjectorInterface;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationProviderInterface;
 
