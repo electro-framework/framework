@@ -47,7 +47,7 @@ class SessionMiddleware implements RequestHandlerInterface
 
     /** @var AssignableInterface $savedSession */
     if ($savedSession = get ($_SESSION, '#data'))
-      $this->session->_assign ($savedSession->_export ());
+      $this->session->import ($savedSession->export ());
 
     // (Re)initialize some session settings.
     $session->name = $name;

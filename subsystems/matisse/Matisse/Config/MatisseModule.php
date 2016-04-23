@@ -45,7 +45,8 @@ class MatisseModule implements ServiceProviderInterface, ModuleInterface
           return $ctx;
         })
       ->share (DocumentContext::class)
-      ->prepare (MacrosService::class, function (MacrosService $macrosService) use ($app) {
+      ->prepare (MacrosService::class, function (MacrosService $macrosService, InjectorInterface $injector) {
+        $app                              = $injector->make (Application::class);
         $macrosService->macrosDirectories = $app->macrosDirectories;
         $macrosService->macrosExt         = '.html';
       })
