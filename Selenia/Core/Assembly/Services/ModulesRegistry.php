@@ -439,7 +439,7 @@ class ModulesRegistry
 
   private function makeMainModule ()
   {
-    return (new ModuleInfo)->_assign ([
+    return (new ModuleInfo)->import ([
       'name'         => 'app-kernel',
       'description'  => 'Application kernel',
       'path'         => 'private/app-kernel',
@@ -458,7 +458,7 @@ class ModulesRegistry
           ::from ($dirInfo)
           ->onlyDirectories ()
           ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
-            return (new ModuleInfo)->_assign ([
+            return (new ModuleInfo)->import ([
               'name' => $dirInfo->getFilename () . '/' . $subDirInfo->getFilename (),
               'path' => $this->app->toRelativePath ($subDirInfo->getPathname ()),
             ]);
@@ -477,7 +477,7 @@ class ModulesRegistry
           ::from ($dirInfo)
           ->onlyDirectories ()
           ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
-            return (new ModuleInfo)->_assign ([
+            return (new ModuleInfo)->import ([
               'name' => $dirInfo->getFilename () . '/' . $subDirInfo->getFilename (),
               'path' => $this->app->toRelativePath ($subDirInfo->getPathname ()),
             ]);
@@ -494,7 +494,7 @@ class ModulesRegistry
       ->map (function (SplFileInfo $dirInfo) {
         $path = $dirInfo->getPathname ();
         $p    = strpos ($path, 'framework/');
-        return (new ModuleInfo)->_assign ([
+        return (new ModuleInfo)->import ([
           'name' => $dirInfo->getFilename (),
           'path' => "private/packages/selenia/" . substr ($path, $p),
         ]);
