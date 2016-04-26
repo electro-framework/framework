@@ -8,8 +8,8 @@ use Selenia\Application;
 use Selenia\Core\Assembly\Services\ModulesLoader;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
 use Selenia\Core\DependencyInjection\ServiceContainer;
-use Selenia\Core\DependencyInjection\ServiceContainerInterface;
 use Selenia\Interfaces\DI\InjectorInterface;
+use Selenia\Interfaces\DI\ServiceContainerInterface;
 use Zend\Diactoros\Response;
 
 /**
@@ -25,10 +25,6 @@ class WebApplication
    */
   private $app;
   /**
-   * @var ServiceContainerInterface
-   */
-  private $container;
-  /**
    * @var InjectorInterface
    */
   private $injector;
@@ -39,11 +35,9 @@ class WebApplication
   function __construct (InjectorInterface $injector)
   {
     $this->injector = $injector;
-    $this->container      = new ServiceContainer($injector);
     $injector
       ->share ($injector)
       ->alias (InjectorInterface::class, get_class ($injector))
-      ->share ($this->container)
       ->alias (ServiceContainerInterface::class, ServiceContainer::class);
   }
 
@@ -76,7 +70,6 @@ class WebApplication
     $app = $this->app = $this->injector
       ->share (Application::class)
       ->make (Application::class);
-    $this->container->app = $app;
 
     $app->isWebBased = true;
     $app->setup ($rootDir);
