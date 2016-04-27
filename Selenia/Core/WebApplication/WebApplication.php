@@ -7,9 +7,7 @@ use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 use Selenia\Application;
 use Selenia\Core\Assembly\Services\ModulesLoader;
 use Selenia\Core\Assembly\Services\ModulesRegistry;
-use Selenia\Core\DependencyInjection\ServiceContainer;
 use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\DI\ServiceContainerInterface;
 use Zend\Diactoros\Response;
 
 /**
@@ -37,8 +35,7 @@ class WebApplication
     $this->injector = $injector;
     $injector
       ->share ($injector)
-      ->alias (InjectorInterface::class, get_class ($injector))
-      ->alias (ServiceContainerInterface::class, ServiceContainer::class);
+      ->alias (InjectorInterface::class, get_class ($injector));
   }
 
   /**
@@ -68,7 +65,7 @@ class WebApplication
 
     /** @var Application $app */
     $app = $this->app = $this->injector
-      ->share (Application::class)
+      ->share (Application::class, 'app')
       ->make (Application::class);
 
     $app->isWebBased = true;

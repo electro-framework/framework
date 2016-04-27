@@ -8,10 +8,8 @@ use Robo\TaskInfo;
 use Selenia\Application;
 use Selenia\Core\Assembly\Services\ModulesLoader;
 use Selenia\Core\ConsoleApplication\Services\ConsoleIO;
-use Selenia\Core\DependencyInjection\ServiceContainer;
 use Selenia\Interfaces\ConsoleIOInterface;
 use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\DI\ServiceContainerInterface;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputInterface;
@@ -64,12 +62,11 @@ class ConsoleApplication extends Runner
 
     $injector
       ->share ($injector)
-      ->alias (InjectorInterface::class, get_class ($injector))
-      ->alias (ServiceContainerInterface::class, ServiceContainer::class);
+      ->alias (InjectorInterface::class, get_class ($injector));
 
     /** @var Application $app */
     $app = $injector
-      ->share (Application::class)
+      ->share (Application::class, 'app')
       ->make (Application::class);
 
     $app->isConsoleBased = true;

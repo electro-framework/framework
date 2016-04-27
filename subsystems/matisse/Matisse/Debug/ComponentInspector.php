@@ -94,7 +94,7 @@ class ComponentInspector
     if (!isset($component->parent) && !$component instanceof DocumentFragment)
       echo "&nbsp;<span style='color:$COLOR_INFO'>(detached)</span>";
     $type = typeOf ($component);
-    echo "<span class='icon hint--rounded hint--top' data-hint='Component class:\n$type'><i class='fa fa-info-circle'></i></span>";
+    echo "<span class='icon hint--rounded hint--right' data-hint='Component class:\n$type'><i class='fa fa-info-circle'></i></span>";
 
     // Handle text node
 
@@ -143,7 +143,7 @@ class ComponentInspector
 
       if ($props) {
         $type = typeOf ($propsObj);
-        echo "<span class='icon hint--rounded hint--top' data-hint='Properties class:\n$type'><i class='fa fa-list'></i></span>";
+        echo "<span class='icon hint--rounded hint--right' data-hint='Properties class:\n$type'><i class='fa fa-list'></i></span>";
 
         echo "<table class='__console-table' style='color:$COLOR_VALUE'>";
 

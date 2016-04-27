@@ -7,16 +7,6 @@ use Selenia\ViewEngine\Lib\ViewModel;
 trait ViewModelTrait
 {
   /**
-   * Returns the component's view model (its own or an inherited one).
-   *
-   * @return ViewModel
-   */
-  function getViewModel ()
-  {
-    return $this->context->getDataBinder ()->getViewModel ();
-  }
-
-  /**
    * Sets the component's view model.
    *
    * @param array|null|object $viewModel
@@ -38,8 +28,8 @@ trait ViewModelTrait
     if ($shadowDOM) {
       /** @var DocumentFragment $shadowDOM */
       $binder = $shadowDOM->getDataBinder ();
-      if (!static::isolatedViewModel){
-        inspect ("NOT ISOLATED",$this, $shadowDOM, $this->getViewModel (), $binder->getViewModel ());
+      if (!static::isolatedViewModel) {
+        inspect ("NOT ISOLATED", $this, $shadowDOM, $this->getViewModel (), $binder->getViewModel ());
         $binder->setViewModel ($this->getViewModel ());
         inspect ($binder->getViewModel ());
       }

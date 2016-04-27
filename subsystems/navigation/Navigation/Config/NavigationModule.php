@@ -20,7 +20,7 @@ class NavigationModule implements ServiceProviderInterface
           $provider->defineNavigation ($navigation);
         return $navigation;
       })
-      ->share (NavigationInterface::class)
+      ->share (NavigationInterface::class, 'navigation')
       ->alias (NavigationLinkInterface::class, NavigationLink::class);
   }
 

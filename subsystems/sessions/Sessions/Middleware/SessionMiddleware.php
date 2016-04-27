@@ -86,27 +86,27 @@ class SessionMiddleware implements RequestHandlerInterface
    */
   protected function renderFlashMessage (ServerRequestInterface $request, $status, $message)
   {
-    $viewModel = Http::getViewModel ($request);
-    if (!is_null ($status)) {
-      switch ($status) {
-        case FlashType::FATAL:
-          @ob_clean ();
-          echo '<html><head><meta http-equiv="Content-Type" content="text/html;charset=utf-8"></head><body><pre>' .
-               $message .
-               '</pre></body></html>';
-          exit;
-        case FlashType::ERROR:
-          $msg = '<div id="status" class="alert alert-danger" role="alert"><div>' . $message . '</div></div>';
-          break;
-        case FlashType::WARNING:
-          $msg = '<div id="status" class="alert alert-warning" role="alert"><div>' . $message . '</div></div>';
-          break;
-        default:
-          $msg = '<div id="status" class="alert alert-info" role="alert"><div>' . $message . '</div></div>';
-      }
-      $viewModel['statusMessage'] = $msg;
-      return Http::updateViewModel ($request, $viewModel);
-    }
+//    $viewModel = Http::getViewModel ($request);
+//    if (!is_null ($status)) {
+//      switch ($status) {
+//        case FlashType::FATAL:
+//          @ob_clean ();
+//          echo '<html><head><meta http-equiv="Content-Type" content="text/html;charset=utf-8"></head><body><pre>' .
+//               $message .
+//               '</pre></body></html>';
+//          exit;
+//        case FlashType::ERROR:
+//          $msg = '<div id="status" class="alert alert-danger" role="alert"><div>' . $message . '</div></div>';
+//          break;
+//        case FlashType::WARNING:
+//          $msg = '<div id="status" class="alert alert-warning" role="alert"><div>' . $message . '</div></div>';
+//          break;
+//        default:
+//          $msg = '<div id="status" class="alert alert-info" role="alert"><div>' . $message . '</div></div>';
+//      }
+//      $viewModel['statusMessage'] = $msg;
+//      return Http::updateViewModel ($request, $viewModel);
+//    }
     return $request;
   }
 

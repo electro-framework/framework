@@ -35,7 +35,7 @@ trait ComponentsAPITrait
     'Script'            => Components\Script::class,
     'Style'             => Components\Style::class,
     'For'               => Components\For_::class,
-    'Use'               => Components\Use_::class,
+    'Import'            => Components\Import::class,
     MacroCall::TAG_NAME => MacroCall::class,
   ];
 

@@ -10,15 +10,15 @@ class LocalizationModule implements ServiceProviderInterface, ModuleInterface
 {
   function boot (LocalizationSettings $settings = null)
   {
-    if ($settings)
-      date_default_timezone_set ($settings);
+    if ($settings && ($tz = $settings->timeZone ()))
+      date_default_timezone_set ($tz);
   }
 
   function register (InjectorInterface $injector)
   {
     $injector
       ->share (LocalizationSettings::class)
-      ->share (new Locale);
+      ->share (new Locale, 'locale');
   }
 
 }

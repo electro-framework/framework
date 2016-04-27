@@ -11,6 +11,7 @@ use Selenia\Matisse\Traits\Component\DataBindingTrait;
 use Selenia\Matisse\Traits\Component\DOMNodeTrait;
 use Selenia\Matisse\Traits\Component\MarkupBuilderTrait;
 use Selenia\Matisse\Traits\Component\RenderingTrait;
+use Selenia\ViewEngine\Lib\ViewModel;
 
 /**
  * The base class from which all components derive.
@@ -174,6 +175,16 @@ abstract class Component implements RenderableInterface
       ? "Can't set non-existing (or non-accessible) property <b>$name</b>."
       : "Can't set properties on a component that doesn't support them."
     );
+  }
+
+  /**
+   * Returns the component's view model (its own or an inherited one).
+   *
+   * @return ViewModel
+   */
+  function getViewModel ()
+  {
+    return $this->context->getDataBinder ()->getViewModel ();
   }
 
   function __toString ()
