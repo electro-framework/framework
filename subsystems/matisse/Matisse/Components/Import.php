@@ -76,7 +76,6 @@ class Import extends Component
         $aliases = preg_split ('/\s+/', $services, -1, PREG_SPLIT_NO_EMPTY);
 
         if (exists ($as = $prop->as)) {
-          inspect ($aliases);
           if (count ($aliases) > 1)
             throw new ComponentException ($this,
               "When using the <kbd>as</kbd> property, you can only specify one value for the <kbd>service</kbd> property");

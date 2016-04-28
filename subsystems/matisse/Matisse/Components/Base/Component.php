@@ -247,8 +247,6 @@ abstract class Component implements RenderableInterface
   function setContext ($context)
   {
     $this->context = $context;
-    _log()->write ("Context ".Debug::getType ($context)." with binder ".Debug::getType ($context->getDataBinder()).
-                   " with VM ".Debug::getType ($context->getDataBinder()->getViewModel())." set on ".Debug::getType($this)."\n");
   }
 
   /**

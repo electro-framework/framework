@@ -28,11 +28,8 @@ trait ViewModelTrait
     if ($shadowDOM) {
       /** @var DocumentFragment $shadowDOM */
       $binder = $shadowDOM->getDataBinder ();
-      if (!static::isolatedViewModel) {
-        inspect ("NOT ISOLATED", $this, $shadowDOM, $this->getViewModel (), $binder->getViewModel ());
+      if (!static::isolatedViewModel)
         $binder->setViewModel ($this->getViewModel ());
-        inspect ($binder->getViewModel ());
-      }
       $this->viewModel ($binder->getViewModel ());
       $binder->setProps ($this->props);
     }
