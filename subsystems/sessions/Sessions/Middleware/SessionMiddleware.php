@@ -6,29 +6,40 @@ use Psr\Http\Message\ServerRequestInterface;
 use Selenia\Application;
 use Selenia\Exceptions\FlashMessageException;
 use Selenia\Exceptions\FlashType;
-use Selenia\Http\Lib\Http;
 use Selenia\Interfaces\AssignableInterface;
 use Selenia\Interfaces\Http\RedirectionInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\SessionInterface;
+use Selenia\Matisse\Services\BlocksService;
 
 /**
  *
  */
 class SessionMiddleware implements RequestHandlerInterface
 {
+  private static $FLASH_CLASSES = [
+    FlashType::INFO    => 'info',
+    FlashType::ERROR   => 'danger',
+    FlashType::WARNING => 'warning',
+    FlashType::SUCCESS => 'success',
+  ];
+
   /** @var Application */
   private $app;
+  /** @var BlocksService */
+  private $blocksService;
   /** @var RedirectionInterface */
   private $redirection;
   /** @var SessionInterface */
   private $session;
 
-  function __construct (SessionInterface $session, Application $app, RedirectionInterface $redirection)
+  function __construct (SessionInterface $session, Application $app, RedirectionInterface $redirection,
+                        BlocksService $blocksService)
   {
-    $this->app         = $app;
-    $this->redirection = $redirection;
-    $this->session     = $session;
+    $this->app           = $app;
+    $this->redirection   = $redirection;
+    $this->session       = $session;
+    $this->blocksService = $blocksService;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -57,7 +68,7 @@ class SessionMiddleware implements RequestHandlerInterface
 
     $flashMessage = $session->getFlashMessage ();
     if ($flashMessage)
-      $request = $this->renderFlashMessage ($request, $flashMessage['type'], $flashMessage['message']);
+      $this->renderFlashMessage ($flashMessage['type'], $flashMessage['message']);
 
     // Run the next middleware, catching any flash message exceptions.
 
@@ -76,38 +87,20 @@ class SessionMiddleware implements RequestHandlerInterface
   }
 
   /**
-   * Sets the `statusMessage` property on the shared view model to a rendered HTML status message.
+   * Sets the `statusMessage` content block to a rendered HTML status message.
    * <p>Override to define a different template or rendering mechanism.
    *
-   * @param ServerRequestInterface $request
-   * @param int                    $status
-   * @param string                 $message
-   * @return ServerRequestInterface Mutated request.
+   * @param int    $status
+   * @param string $message
    */
-  protected function renderFlashMessage (ServerRequestInterface $request, $status, $message)
+  protected function renderFlashMessage ($status, $message)
   {
-//    $viewModel = Http::getViewModel ($request);
-//    if (!is_null ($status)) {
-//      switch ($status) {
-//        case FlashType::FATAL:
-//          @ob_clean ();
-//          echo '<html><head><meta http-equiv="Content-Type" content="text/html;charset=utf-8"></head><body><pre>' .
-//               $message .
-//               '</pre></body></html>';
-//          exit;
-//        case FlashType::ERROR:
-//          $msg = '<div id="status" class="alert alert-danger" role="alert"><div>' . $message . '</div></div>';
-//          break;
-//        case FlashType::WARNING:
-//          $msg = '<div id="status" class="alert alert-warning" role="alert"><div>' . $message . '</div></div>';
-//          break;
-//        default:
-//          $msg = '<div id="status" class="alert alert-info" role="alert"><div>' . $message . '</div></div>';
-//      }
-//      $viewModel['statusMessage'] = $msg;
-//      return Http::updateViewModel ($request, $viewModel);
-//    }
-    return $request;
+    if (!is_null ($status)) {
+      $class = get (self::$FLASH_CLASSES, $status);
+      $class = $class ? " alert-$class" : '';
+      $msg   = "<div id=status class='alert$class' role=alert><div>$message</div></div>";
+      $this->blocksService->getBlock ('statusMessage')->set ($msg);
+    }
   }
 
 }

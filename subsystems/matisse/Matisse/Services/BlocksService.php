@@ -16,7 +16,7 @@ class BlocksService
    *
    * @var Block[]
    */
-  public $blocks = [];
+  private $blocks = [];
 
   /**
    * Returns the content of a specific block.
