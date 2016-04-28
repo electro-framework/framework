@@ -9,10 +9,18 @@ class Injector extends Auryn implements InjectorInterface, \ArrayAccess
 {
   private $map = [];
 
+  /**
+   * {@inheritdoc}
+   *
+   * <p>This method provides container-interop compatibility.
+   * ><p>**Note:** this is similar to {@see make()}, but it only retrieves symbolic names, not class or interface names.
+   */
   public function get ($id)
   {
+    if (!isset($this->map[$id]))
+      throw new NotFoundException ("The <kbd>$id</kbd> symbolic name is not registered");
     try {
-      return $c = isset($this->map[$id]) ? $this->make ($this->map[$id]) : $this->make ($id);
+      return $this->make ($id);
     }
     catch (InjectionException $e) {
       throw new NotFoundException ($e->getMessage ());
@@ -24,9 +32,23 @@ class Injector extends Auryn implements InjectorInterface, \ArrayAccess
     return isset($this->map[$symbolicName]) ? $this->map[$symbolicName] : null;
   }
 
+  /**
+   * {@inheritdoc}
+   *
+   * <p>This method provides container-interop compatibility.
+   * ><p>**Note:** this is similar to {@see provides()}, but it only checks symbolic names, not class or interface
+   * names.
+   */
   public function has ($id)
   {
-    return isset($this->map[$id]) || $this->provides ($id);
+    return isset($this->map[$id]);
+  }
+
+  public function make ($name, array $args = [])
+  {
+    if (isset($this->map[$name]))
+      $name = $this->map[$name];
+    return parent::make ($name, $args);
   }
 
   public function makeFactory ($name, array $args = [])
@@ -38,7 +60,7 @@ class Injector extends Auryn implements InjectorInterface, \ArrayAccess
 
   public function offsetExists ($offset)
   {
-    return $this->has ($offset);
+    return isset($this->map[$offset]);
   }
 
   public function offsetGet ($offset)
@@ -58,6 +80,11 @@ class Injector extends Auryn implements InjectorInterface, \ArrayAccess
     unset ($this->map[$offset]);
   }
 
+  /**
+   * {@inheritdoc}
+   *
+   * ><p>**Note:** due to technical limitations of Auryn, this operation is slow. Avoid using it.
+   */
   public function provides ($name)
   {
     $r = $this->inspect (strtolower ($name), Injector::I_ALIASES | Injector::I_DELEGATES | Injector::I_SHARES);

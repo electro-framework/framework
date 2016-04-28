@@ -41,29 +41,21 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   /**
    * @var Application
    */
-  public $app;
+  protected $app;
   /**
    * The link that matches the current URL.
    *
    * @var NavigationLinkInterface
    */
-  public $currentLink;
-  /**
-   * @var int Maximum number of pages.
-   */
-  public $max = 1;
+  protected $currentLink;
   /**
    * @var array|Object The page's data model.
    */
-  public $model;
+  protected $model;
   /**
    * @var NavigationInterface
    */
-  public $navigation;
-  /**
-   * @var int Current page number.
-   */
-  public $pageNumber = 1;
+  protected $navigation;
   /**
    * If set, defines the page title. It will generate a document `<title>` and it can be used on
    * breadcrumbs.
@@ -76,11 +68,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   /**
    * @var ServerRequestInterface This is always available for page components, and it is not injected.
    */
-  public $request;
-  /**
-   * @var SessionInterface
-   */
-  public $session;
+  protected $request;
   /**
    * The current request URI without the page number parameters.
    * This property is useful for databing with the expression {!controller.URI_noPage}.
@@ -126,7 +114,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   private $injector;
 
   function __construct (InjectorInterface $injector, Application $app,
-                        RedirectionInterface $redirection, SessionInterface $session, NavigationInterface $navigation,
+                        RedirectionInterface $redirection, NavigationInterface $navigation,
                         ModelControllerInterface $modelController)
   {
     parent::__construct ();
@@ -134,7 +122,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     $this->injector        = $injector;
     $this->app             = $app;
     $this->redirection     = $redirection;
-    $this->session         = $session;
     $this->navigation      = $navigation;
     $this->modelController = $modelController;
 
@@ -215,8 +202,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
                     ->inspect ($vm->model)
                     ->write ("</#section><#section|VIEW MODEL>")
                     ->withFilter ($VMFilter, $vm)
-                    ->write ("</#section><#section|DOCUMENT PROPERTIES>")
-                    ->inspect ($binder->getProps ())
                     ->write ("</#section>");
       }
     }
@@ -280,7 +265,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     $this->modelController->setRequest ($request);
     $this->model ();
     $this->modelController->handleRequest ();
-    $this->model = $this->modelController->getModel ();
+    $this->getViewModel ()->model = $this->modelController->getModel ();
 
     switch ($this->request->getMethod ()) {
       /** @noinspection PhpMissingBreakStatementInspection */
