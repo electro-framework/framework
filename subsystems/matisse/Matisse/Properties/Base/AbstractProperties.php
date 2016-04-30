@@ -86,6 +86,11 @@ abstract class AbstractProperties implements ComponentPropertiesInterface
    */
   abstract function isEnum ($propName);
 
+  function __debugInfo ()
+  {
+    return $this->getAll ();
+  }
+
   /**
    * Mass-assigns a set of properties.
    *

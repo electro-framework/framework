@@ -260,7 +260,9 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   {
     parent::setupView ();
 
-    $this->context->getAssetsService ()->addScript ("{$this->app->frameworkURI}/js/engine.js");
+    $this->context->getAssetsService ()
+      ->addScript ("{$this->app->frameworkURI}/js/engine.js")
+    ->addInlineScript ('bootSeleniaClient();', null,true);
     $this->context->getFilterHandler ()->registerFallbackHandler ($this);
 
     $title           = $this->getTitle ();

@@ -15,9 +15,9 @@ use Selenia\Matisse\Properties\TypeSystem\type;
  */
 class MacroCall extends CompositeComponent
 {
-  const TAG_NAME          = 'Call';
-  const allowsChildren    = true;
-  const propertiesClass   = MacroCallProperties::class;
+  const TAG_NAME        = 'Call';
+  const allowsChildren  = true;
+  const propertiesClass = MacroCallProperties::class;
   /** @var MacroCallProperties */
   public $props;
   /**
@@ -53,15 +53,6 @@ class MacroCall extends CompositeComponent
     }
   }
 
-  function setMacro (Macro $macro)
-  {
-    $this->macroInstance = $macro;
-    if (isset($this->props))
-      $this->props->setMacro ($macro);
-    $this->setShadowDOM ($dom = new DocumentFragment); // this also attaches it, which MUST be done before adding children!
-    $dom->addChildren ($macro->getClonedChildren ());
-  }
-
   protected function getDefaultParam ()
   {
     return $this->macroInstance->props->defaultParam;
@@ -78,18 +69,25 @@ class MacroCall extends CompositeComponent
     $this->parent = $parent;
     $name         = get ($props, 'macro');
     if (exists ($name)) {
-      $macro = $this->context->getMacrosService ()->getMacro ($name, $this);
+      $doc           = new DocumentFragment;
+      $shadowContext = $this->context->makeSubcontext ();
+      $doc->setContext ($shadowContext);
+      $macro = $this->context->getMacrosService ()->getMacro ($name, $shadowContext);
       if (is_null ($macro))
         try {
           // A macro with the given name is not defined yet.
           // Try to load it now.
-          $macro = $this->context->getMacrosService ()->loadMacro ($name, $parent, $filename);
+          $macro = $this->context->getMacrosService ()->loadMacro ($name, $shadowContext, $filename);
         }
         catch (FileIOException $e) {
+          /** @noinspection PhpUndefinedVariableInspection */
           self::throwUnknownComponent ($this->context, $name, $parent, $filename);
         }
-
-      $this->setMacro ($macro);
+      $this->macroInstance = $macro;
+      if (isset($this->props))
+        $this->props->setMacro ($macro);
+      $this->setShadowDOM ($doc); // this also attaches it, which MUST be done before adding children!
+      $doc->addChildren ($macro->getChildren ());
     }
     parent::onCreate ($props, $parent);
   }

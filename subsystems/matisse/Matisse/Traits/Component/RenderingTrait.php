@@ -174,13 +174,14 @@ trait RenderingTrait
   /**
    * Similar to {@see run}, but it renders only the component's children.
    *
-   * <p>Use this if the component has no rendering of its own and all rendering is performed by children.
-   * <p>This is usually called from within a component's {@see render} method.
+   * <p>You should use this instead of {@see run()} when the full rendering of the component is
+   * performed by its children. If the component does some rendering itself and additionally renders its children, call
+   * {@see run()} instead.
+   * 
+   * <p>This MUST NOT be called from within a component's {@see render} method; for that purpose, use {@see runChildren}
+   * instead.
    *
    * ><p>**Note:** the component itself is not rendered.<br><br>
-   * ><p>**Note:** you should use this instead of {@see renderChildren()} when the full rendering of the component is
-   * performed by its children. If the component does some rendering itself and additionally renders its children, call
-   * {@see renderChildren()} from inside the component's rendering code.
    */
   function runContent ()
   {

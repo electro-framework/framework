@@ -6,6 +6,7 @@ use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Components\Macro\Macro;
 use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Exceptions\ParseException;
+use Selenia\Matisse\Parser\DocumentContext;
 use Selenia\Matisse\Parser\Parser;
 
 /**
@@ -47,17 +48,17 @@ class MacrosService
 
   /**
    * @param string    $name
-   * @param Component $parent
+   * @param DocumentContext $context
    * @return Macro
    * @throws ParseException
    */
-  function getMacro ($name, Component $parent)
+  function getMacro ($name, DocumentContext $context)
   {
     $content = get ($this->macros, $name);
     if (!$content) return null;
     $parser   = new Parser;
     $root = new DocumentFragment;
-    $root->setContext ($parent->context);
+    $root->setContext ($context);
     $parser->parse ($content, $root);
     $macro = $this->loadedMacro;
     $this->loadedMacro = null;
@@ -68,19 +69,19 @@ class MacrosService
    * Searches for a file defining a macro for the given tag name.
    *
    * @param string    $tagName
-   * @param Component $parent
+   * @param DocumentContext $context
    * @param string    $filename [optional] Outputs the filename that was searched for.
    * @return Macro
    * @throws FileIOException
    * @throws ParseException
    */
-  function loadMacro ($tagName, Component $parent, &$filename = null)
+  function loadMacro ($tagName, DocumentContext $context, &$filename = null)
   {
     $tagName  = normalizeTagName ($tagName);
     $filename = $tagName . $this->macrosExt;
     $content  = $this->loadMacroFile ($filename);
     $this->macros[$tagName] = $content;
-    return $this->getMacro ($tagName, $parent);
+    return $this->getMacro ($tagName, $context);
   }
 
   private function loadMacroFile ($filename)

@@ -2,6 +2,7 @@
 namespace Selenia\Matisse\Components;
 
 use Selenia\Matisse\Components\Base\CompositeComponent;
+use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
 use Selenia\Matisse\Properties\Base\MetadataProperties;
@@ -125,33 +126,43 @@ class Include_ extends CompositeComponent
 
     if (exists ($prop->template)) {
       if (exists ($controller)) {
-        $this->setShadowDOM ($shadowDOM = $ctx->createComponent ($controller, $this));
-        if (!$shadowDOM instanceof CompositeComponent)
+        $subComponent = $ctx->createComponent ($controller, $this);
+
+        if (!$subComponent instanceof CompositeComponent)
           throw new ComponentException($this,
             "Component <kbd>$controller</kbd> is not a <kbd>CompositeComponent</kbd> instance, so it can't be a controler");
-        // If the shadowDOM has its own properties, merge the Include's dynamic properties with them.
-        if ($shadowDOM->props)
-          $shadowDOM->props->apply ($prop->getDynamic ());
-        $shadowDOM->template = $prop->template;
-        $this->attach ($shadowDOM);
+
+        // If the controller component has its own properties, merge the Include's dynamic properties with them.
+        if (isset($subComponent->props))
+          $subComponent->props->apply ($prop->getDynamic ());
+
+        $subComponent->template = $prop->template;
+//        $this->addChild ($subComponent);
+        $this->setShadowDOM ($subComponent);
       }
       else $this->template = $prop->template;
     }
 
     elseif (exists ($prop->view)) {
       if (exists ($controller)) {
-        $this->setShadowDOM ($shadowDOM = $ctx->createComponent ($controller, $this));
+        $doc           = new DocumentFragment;
+        $shadowContext = $this->context->makeSubcontext ();
+        $doc->setContext ($shadowContext);
+        $this->setShadowDOM ($doc); // this also attaches it, which MUST be done before adding children!
 
-        if (!$shadowDOM instanceof CompositeComponent)
+        $subComponent = $shadowContext->createComponent ($controller, $doc);
+
+        if (!$subComponent instanceof CompositeComponent)
           throw new ComponentException($this,
             "Component <kbd>$controller</kbd> is not a <kbd>CompositeComponent</kbd> instance, so it can't be the controler of <kbd>$prop->view</kbd>");
 
-        // If the shadowDOM has its own properties, merge the Include's dynamic properties with them.
-        if ($shadowDOM->props)
-          $shadowDOM->props->apply ($prop->getDynamic ());
+        // If the controller component has its own properties, merge the Include's dynamic properties with them.
+        if (isset($subComponent->props))
+          $subComponent->props->apply ($prop->getDynamic ());
 
-        $shadowDOM->templateUrl = $prop->view;
-        $this->attach ($shadowDOM);
+        $subComponent->templateUrl = $prop->view;
+//        $this->addChild ($subComponent);
+        $doc->addChild ($subComponent);
       }
       else $this->templateUrl = $prop->view;
     }

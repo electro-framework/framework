@@ -92,17 +92,17 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
 
     return _log ()->getTable ([
       Debug::getType ($this->viewModel) => Debug::RAW_TEXT .
-                     _log ()->getTable ($this->viewModel, '', true, true, 2, $VMFilter),
-      "props"     => Debug::RAW_TEXT .
-                     _log ()->getTable ($this->props, '', true, true, 1, ['props', 'component', 'hidden']),
-    ]);
+                                           _log ()->getTable ($this->viewModel, '', true, true, 2, $VMFilter),
+      is_null ($this->props) ? 'Properties'
+        : Debug::getType ($this->props) => Debug::RAW_TEXT .
+                                           _log ()->getTable ($this->props, '', true, true, 1,
+                                             ['props', 'component', 'hidden']),
+    ], Debug::getType ($this));
   }
 
   function makeNew ()
   {
-    $b          = new static;
-    $b->context = $this->context;
-    return $b;
+    return new static;
   }
 
   function prop ($key)

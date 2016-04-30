@@ -10,6 +10,7 @@ use Selenia\Interfaces\AssignableInterface;
 use Selenia\Interfaces\Http\RedirectionInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\SessionInterface;
+use Selenia\Matisse\Services\AssetsService;
 use Selenia\Matisse\Services\BlocksService;
 
 /**
@@ -26,6 +27,8 @@ class SessionMiddleware implements RequestHandlerInterface
 
   /** @var Application */
   private $app;
+  /** @var AssetsService */
+  private $assetsService;
   /** @var BlocksService */
   private $blocksService;
   /** @var RedirectionInterface */
@@ -34,12 +37,13 @@ class SessionMiddleware implements RequestHandlerInterface
   private $session;
 
   function __construct (SessionInterface $session, Application $app, RedirectionInterface $redirection,
-                        BlocksService $blocksService)
+                        BlocksService $blocksService, AssetsService $assetsService)
   {
     $this->app           = $app;
     $this->redirection   = $redirection;
     $this->session       = $session;
     $this->blocksService = $blocksService;
+    $this->assetsService = $assetsService;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -100,6 +104,7 @@ class SessionMiddleware implements RequestHandlerInterface
       $class = $class ? " alert-$class" : '';
       $msg   = "<div id=status class='alert$class' role=alert><div>$message</div></div>";
       $this->blocksService->getBlock ('statusMessage')->set ($msg);
+      $this->assetsService->addInlineScript ('setTimeout(function(){$("#status").fadeOut()},5000)');
     }
   }
 

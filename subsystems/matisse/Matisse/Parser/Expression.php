@@ -80,7 +80,7 @@ class Expression
     (                         # capture the next operator, if one is present, including the the first filter\'s pipe
       \|(?!\|)                # capture the pipe operator (but not the || operator)
       |                                 # or
-      [,\|\.\/\-\(\)\[\]\{\}%&=?*+<>]+  # one of the other allowed operators
+      [,\|\.\/\-\(\)\[\]\{\}%&=?*+<>!]+ # one of the other allowed operators
     )?
     /xu';
 

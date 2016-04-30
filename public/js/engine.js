@@ -1,5 +1,6 @@
 function nop () {}
-document.addEventListener ("DOMContentLoaded", function () {
+
+function bootSeleniaClient () {
   if (!('$' in window))
     return console.error ("jQuery is required");
 
@@ -162,9 +163,9 @@ document.addEventListener ("DOMContentLoaded", function () {
       });
     },
 
-    go: function (url, ev) {
+    go: function (url, /*Event*/ ev) {
       window.location = url;
-      if (ev) stopPropagation (ev);
+      if (ev) ev.stopImmediatePropagation();
     },
 
     saveScrollPos: function (form) {
@@ -228,4 +229,4 @@ document.addEventListener ("DOMContentLoaded", function () {
       .prependTo (body);
   }) ();
 
-});
+}

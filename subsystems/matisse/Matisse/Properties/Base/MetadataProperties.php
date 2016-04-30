@@ -4,17 +4,12 @@ namespace Selenia\Matisse\Properties\Base;
 use JsonSerializable;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Properties\TypeSystem\type;
-use Selenia\Traits\InspectionTrait;
 
 /**
  * Properties of a Metadata component.
  */
 class MetadataProperties extends AbstractProperties implements JsonSerializable
 {
-  use InspectionTrait;
-
-  private static $INSPECTABLE = ['props'];
-
   /**
    * Dynamic set of attributes, as specified on the source markup.
    *

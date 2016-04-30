@@ -25,11 +25,11 @@ trait ViewModelTrait
    */
   function getViewModel ()
   {
+    /** @var DocumentFragment $shadowDOM */
     $shadowDOM = $this->getShadowDOM ();
     return $shadowDOM
       ? $shadowDOM->getDataBinder ()->getViewModel ()
-      : ($this->shadowViewModel
-        ?: $this->shadowViewModel = new ViewModel);
+      : ($this->shadowViewModel ?: $this->shadowViewModel = new ViewModel);
   }
 
   /**
@@ -40,7 +40,9 @@ trait ViewModelTrait
   protected function afterPreRun ()
   {
     parent::afterPreRun ();
+
     $this->viewModel ($this->getViewModel ());
+
     /** @var DocumentFragment $shadowDOM */
     $shadowDOM = $this->getShadowDOM ();
     if ($shadowDOM)

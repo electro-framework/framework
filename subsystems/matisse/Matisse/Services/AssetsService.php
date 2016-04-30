@@ -37,6 +37,7 @@ class AssetsService
    *                                  When multiple stylesheets with the same name are added, only the last one is
    *                                  considered.
    * @param bool             $prepend If true, prepend to current list instead of appending.
+   * @return $this
    */
   function addInlineCss ($css, $name = null, $prepend = false)
   {
@@ -45,6 +46,7 @@ class AssetsService
     else if ($prepend)
       array_unshift ($this->assets->inlineCssStyles, $css);
     else $this->assets->inlineCssStyles[] = $css;
+    return $this;
   }
 
   /**
@@ -55,16 +57,28 @@ class AssetsService
    *                                  When multiple scripts with the same name are added, only the last one is
    *                                  considered.
    * @param bool             $prepend If true, prepend to current list instead of appending.
+   * @return $this
    */
   function addInlineScript ($code, $name = null, $prepend = false)
   {
+    $code = trim ($code);
+    $last = substr ($code, -1);
+    if ($last != ';' && $last != '}')
+      $code .= ';';
+    $code .= "\n";
     if (exists ($name))
       $this->assets->inlineScripts[$name] = $code;
     else if ($prepend)
       array_unshift ($this->assets->inlineScripts, $code);
     else $this->assets->inlineScripts[] = $code;
+    return $this;
   }
 
+  /**
+   * @param string $uri
+   * @param bool   $prepend
+   * @return $this
+   */
   function addScript ($uri, $prepend = false)
   {
     if (array_search ($uri, $this->assets->scripts) === false) {
@@ -72,14 +86,21 @@ class AssetsService
         array_unshift ($this->assets->scripts, $uri);
       else $this->assets->scripts[] = $uri;
     }
+    return $this;
   }
 
+  /**
+   * @param string $uri
+   * @param bool   $prepend
+   * @return $this
+   */
   function addStylesheet ($uri, $prepend = false)
   {
     if (array_search ($uri, $this->assets->stylesheets) === false)
       if ($prepend)
         array_unshift ($this->assets->stylesheets, $uri);
       else $this->assets->stylesheets[] = $uri;
+    return $this;
   }
 
   function beginAssetsContext ($prepend = false)

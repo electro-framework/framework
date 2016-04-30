@@ -26,11 +26,6 @@ class MacroCallProperties extends MetadataProperties
    */
   private $macroInstance;
 
-  function __debugInfo ()
-  {
-    return $this->getAll ();
-  }
-
   function defines ($name, $asSubtag = false)
   {
     if (property_exists ($this, $name))
