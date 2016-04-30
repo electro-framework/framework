@@ -85,7 +85,6 @@ class IncludeProperties extends MetadataProperties
 class Include_ extends CompositeComponent
 {
   const propertiesClass = IncludeProperties::class;
-  const isolatedViewModel = false;
 
   /** @var IncludeProperties */
   public $props;

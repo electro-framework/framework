@@ -7,14 +7,30 @@ use Selenia\ViewEngine\Lib\ViewModel;
 trait ViewModelTrait
 {
   /**
-   * Sets the component's view model.
-   *
-   * @param array|null|object $viewModel
+   * @var ViewModel|null This is only set if the view is not a Matisse template.
    */
-//  function setViewModel ($viewModel)
-//  {
-//    $this->context->getDataBinder ()->getViewModel ($viewModel);
-//  }
+  private $shadowViewModel = null;
+
+  /**
+   * Returns the component's view model.
+   *
+   * >#####Important
+   * >On a composite component, the view model data is set on the shadow DOM's view model,
+   * **NOT** on the component's own view model!
+   * <p>If the view is not a Matisse template (amd therefore there is no shadow DOM), an alternate view model is used
+   * (see {@see $shadowViewModel}).
+   * ><p>This method overrides {@see DataBindingTrait} to implement that behavior.
+   *
+   * @return ViewModel
+   */
+  function getViewModel ()
+  {
+    $shadowDOM = $this->getShadowDOM ();
+    return $shadowDOM
+      ? $shadowDOM->getDataBinder ()->getViewModel ()
+      : ($this->shadowViewModel
+        ?: $this->shadowViewModel = new ViewModel);
+  }
 
   /**
    * Extension hook.
@@ -24,15 +40,11 @@ trait ViewModelTrait
   protected function afterPreRun ()
   {
     parent::afterPreRun ();
+    $this->viewModel ($this->getViewModel ());
+    /** @var DocumentFragment $shadowDOM */
     $shadowDOM = $this->getShadowDOM ();
-    if ($shadowDOM) {
-      /** @var DocumentFragment $shadowDOM */
-      $binder = $shadowDOM->getDataBinder ();
-      if (!static::isolatedViewModel)
-        $binder->setViewModel ($this->getViewModel ());
-      $this->viewModel ($binder->getViewModel ());
-      $binder->setProps ($this->props);
-    }
+    if ($shadowDOM)
+      $shadowDOM->getDataBinder ()->setProps ($this->props);
   }
 
   /**

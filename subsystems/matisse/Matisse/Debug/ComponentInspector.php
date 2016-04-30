@@ -3,6 +3,7 @@ namespace Selenia\Matisse\Debug;
 
 use PhpKit\Html5Tools\HtmlSyntaxHighlighter;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
+use PhpKit\WebConsole\Lib\Debug;
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Base\CompositeComponent;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
@@ -91,10 +92,17 @@ class ComponentInspector
     $tag        = $component->getTagName ();
     $hasContent = false;
     echo "<div class=__component><span style='color:$COLOR_TAG'>&lt;$tag</span>";
-    if (!isset($component->parent) && !$component instanceof DocumentFragment)
+    $isDoc = $component instanceof DocumentFragment;
+    if (!$component->parent && !$isDoc)
       echo "&nbsp;<span style='color:$COLOR_INFO'>(detached)</span>";
     $type = typeOf ($component);
     echo "<span class='icon hint--rounded hint--right' data-hint='Component class:\n$type'><i class='fa fa-info-circle'></i></span>";
+    if (!$component->parent || $isDoc || $component->getBindings ()) {
+      $type1 = Debug::objectId ($component->context);
+      $type2 = Debug::objectId ($component->getDataBinder ());
+      $type3 = Debug::objectId ($component->getViewModel ());
+      echo "<span class='icon hint--rounded hint--right' data-hint='Context: $type1    Data binder: $type2    View model: $type3'><i class='fa fa-database'></i></span>";
+    }
 
     // Handle text node
 

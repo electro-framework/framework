@@ -33,17 +33,6 @@ class CompositeComponent extends Component
   use ViewModelTrait;
 
   /**
-   * When true, data-binding resolution on the component's view is unaffected by data from the host document view
-   * model; only the component's own view model is used.
-   *
-   * @var bool
-   */
-  const isolatedViewModel = true;
-  /**
-   * @var bool
-   */
-  const publishProperties = true;
-  /**
    * An inline/embedded template to be rendered as the component's appearance.
    *
    * <p>The view engine to be used to handle the template is selected by {@see $viewEngineClass}.

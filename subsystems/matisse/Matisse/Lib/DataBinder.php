@@ -2,8 +2,14 @@
 namespace Selenia\Matisse\Lib;
 
 use PhpKit\WebConsole\Lib\Debug;
+use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Application;
 use Selenia\Interfaces\CustomInspectionInterface;
+use Selenia\Interfaces\Navigation\NavigationInterface;
+use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Interfaces\RenderableInterface;
+use Selenia\Interfaces\SessionInterface;
+use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Interfaces\DataBinderInterface;
 use Selenia\Matisse\Parser\DocumentContext;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
@@ -72,9 +78,21 @@ class DataBinder implements DataBinderInterface, CustomInspectionInterface
 
   function inspect ()
   {
+    $VMFilter = function ($k, $v, $o) {
+      if ($v instanceof Application ||
+          $v instanceof NavigationInterface ||
+          $v instanceof NavigationLinkInterface ||
+          $v instanceof SessionInterface ||
+          $v instanceof ServerRequestInterface ||
+          $v instanceof DocumentContext ||
+          $v instanceof Component
+      ) return '...';
+      return true;
+    };
+
     return _log ()->getTable ([
-      "viewModel" => Debug::RAW_TEXT .
-                     _log ()->getTable ($this->viewModel, '', false, false, 1),
+      Debug::getType ($this->viewModel) => Debug::RAW_TEXT .
+                     _log ()->getTable ($this->viewModel, '', true, true, 2, $VMFilter),
       "props"     => Debug::RAW_TEXT .
                      _log ()->getTable ($this->props, '', true, true, 1, ['props', 'component', 'hidden']),
     ]);

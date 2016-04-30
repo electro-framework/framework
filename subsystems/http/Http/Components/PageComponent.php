@@ -3,6 +3,7 @@ namespace Selenia\Http\Components;
 
 use Exception;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
+use PhpKit\WebConsole\Lib\Debug;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use ReflectionClass;
@@ -37,25 +38,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
   use PolymorphicInjectionTrait;
 
   const isRootComponent = true;
-
-  /**
-   * @var Application
-   */
-  protected $app;
-  /**
-   * The link that matches the current URL.
-   *
-   * @var NavigationLinkInterface
-   */
-  protected $currentLink;
-  /**
-   * @var array|Object The page's data model.
-   */
-  protected $model;
-  /**
-   * @var NavigationInterface
-   */
-  protected $navigation;
   /**
    * If set, defines the page title. It will generate a document `<title>` and it can be used on
    * breadcrumbs.
@@ -66,10 +48,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   public $pageTitle = null;
   /**
-   * @var ServerRequestInterface This is always available for page components, and it is not injected.
-   */
-  protected $request;
-  /**
    * The current request URI without the page number parameters.
    * This property is useful for databing with the expression {!controller.URI_noPage}.
    *
@@ -77,11 +55,21 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   protected $URI_noPage;
   /**
+   * @var Application
+   */
+  protected $app;
+  /**
    * When true and `$indexPage` is not set, upon a POST the page will redirect to the parent navigation link.
    *
    * @var bool
    */
   protected $autoRedirectUp = false;
+  /**
+   * The link that matches the current URL.
+   *
+   * @var NavigationLinkInterface
+   */
+  protected $currentLink;
   /**
    * Specifies the URL of the index page, to where the browser should navigate upon the
    * successful insertion / update / deletion of records.
@@ -91,9 +79,17 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    */
   protected $indexPage = null;
   /**
+   * @var array|Object The page's data model.
+   */
+  protected $model;
+  /**
    * @var ModelControllerInterface
    */
   protected $modelController;
+  /**
+   * @var NavigationInterface
+   */
+  protected $navigation;
   /**
    * @var RedirectionInterface
    */
@@ -104,6 +100,10 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
    * @var bool
    */
   protected $renderOnAction = false;
+  /**
+   * @var ServerRequestInterface This is always available for page components, and it is not injected.
+   */
+  protected $request;
   /**
    * @var ResponseInterface
    */
@@ -142,95 +142,6 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     return object_only ($this, $ownProps);
   }
 
-  protected function afterRender ()
-  {
-    parent::afterRender ();
-    if ($this->getShadowDOM ()) {
-      //----------------------------------------------------------------------------------------
-      // View Model panel
-      // (MUST run before the DOM panel to capture the data-binding stack at its current state)
-      //----------------------------------------------------------------------------------------
-      if (DebugConsole::hasLogger ('view')) {
-
-        $VMFilter = function ($k, $v, $o) {
-          if (
-            $v instanceof DocumentContext ||
-            $v instanceof Component ||
-            $k === 'parent' ||
-            $k === 'model'
-          ) return '...';
-          return true;
-        };
-        $expMap   = Expression::$inspectionMap;
-        ksort ($expMap);
-
-        DebugConsole::logger ('view')
-                    ->withFilter ($VMFilter, $this->context)
-                    ->write ('<#section|Compiled expressions>')
-                    ->inspect ($expMap)
-                    ->write ('</#section>');
-      }
-
-      //-----------
-      // DOM panel
-      //-----------
-      if (DebugConsole::hasLogger ('DOM')) {
-        $insp = $this->inspect (true);
-        DebugConsole::logger ('DOM')->write ($insp);
-      }
-
-      if (DebugConsole::hasLogger ('model')) {
-
-        $VMFilter = function ($k, $v, $o) {
-          if ($v instanceof Application ||
-              $v instanceof NavigationInterface ||
-              $v instanceof NavigationLinkInterface ||
-              $v instanceof SessionInterface ||
-              $v instanceof ServerRequestInterface ||
-              $v instanceof DocumentContext ||
-              $v instanceof Component ||
-              $k === 'viewModel' ||
-              $k === 'model'
-          ) return '...';
-          return true;
-        };
-
-        $binder = $this->context->getDataBinder ();
-        $vm     = $binder->getViewModel ();
-        DebugConsole::logger ('model')
-                    ->write ("<#section|MODEL>")
-                    ->inspect ($vm->model)
-                    ->write ("</#section><#section|VIEW MODEL>")
-                    ->withFilter ($VMFilter, $vm)
-                    ->write ("</#section>");
-      }
-    }
-  }
-
-  function setupView ()
-  {
-    parent::setupView ();
-
-    $this->context->getAssetsService ()->addScript ("{$this->app->frameworkURI}/js/engine.js");
-    $this->context->getFilterHandler ()->registerFallbackHandler ($this);
-
-    $title           = $this->getTitle ();
-    $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
-    foreach ($this->app->assets as $url) {
-      $p = strrpos ($url, '.');
-      if (!$p) continue;
-      $ext = substr ($url, $p + 1);
-      switch ($ext) {
-        case 'css':
-          $this->context->getAssetsService ()->addStylesheet ($url);
-          break;
-        case 'js':
-          $this->context->getAssetsService ()->addScript ($url);
-          break;
-      }
-    }
-  }
-
   /**
    * Performs the main execution sequence.
    *
@@ -265,7 +176,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
     $this->modelController->setRequest ($request);
     $this->model ();
     $this->modelController->handleRequest ();
-    $this->getViewModel ()->model = $this->modelController->getModel ();
+    $this->model = $this->modelController->getModel ();
 
     switch ($this->request->getMethod ()) {
       /** @noinspection PhpMissingBreakStatementInspection */
@@ -343,6 +254,103 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
 
     throw new FlashMessageException('Can\'t automatically insert/update an object of type ' . gettype ($this->model),
       FlashType::ERROR);
+  }
+
+  function setupView ()
+  {
+    parent::setupView ();
+
+    $this->context->getAssetsService ()->addScript ("{$this->app->frameworkURI}/js/engine.js");
+    $this->context->getFilterHandler ()->registerFallbackHandler ($this);
+
+    $title           = $this->getTitle ();
+    $this->pageTitle = exists ($title) ? str_replace ('@', $title, $this->app->title) : $this->app->appName;
+    foreach ($this->app->assets as $url) {
+      $p = strrpos ($url, '.');
+      if (!$p) continue;
+      $ext = substr ($url, $p + 1);
+      switch ($ext) {
+        case 'css':
+          $this->context->getAssetsService ()->addStylesheet ($url);
+          break;
+        case 'js':
+          $this->context->getAssetsService ()->addScript ($url);
+          break;
+      }
+    }
+  }
+
+  /**
+   * Sets a reference to the model on the view model, allowing the view to access the model for redndering.
+   */
+  protected function afterPreRun ()
+  {
+    parent::afterPreRun ();
+    $this->getViewModel ()->model = $this->model;
+  }
+
+  protected function afterRender ()
+  {
+    parent::afterRender ();
+
+    //----------------------------------------------------------------------------------------
+    // View Model panel
+    // (MUST run before the DOM panel to capture the data-binding stack at its current state)
+    //----------------------------------------------------------------------------------------
+    if (DebugConsole::hasLogger ('view')) {
+
+      $VMFilter = function ($k, $v, $o) {
+        if (
+          $v instanceof DocumentContext ||
+          $v instanceof Component ||
+          $k === 'parent' ||
+          $k === 'model'
+        ) return '...';
+        return true;
+      };
+      $expMap   = Expression::$inspectionMap;
+      ksort ($expMap);
+
+      DebugConsole::logger ('view')
+                  ->withFilter ($VMFilter, $this->context)
+                  ->write ('<#section|Compiled expressions>')
+                  ->inspect ($expMap)
+                  ->write ('</#section>');
+    }
+
+    //-----------
+    // DOM panel
+    //-----------
+    if (DebugConsole::hasLogger ('DOM')) {
+      $insp = $this->inspect (true);
+      DebugConsole::logger ('DOM')->write ($insp);
+    }
+
+    if (DebugConsole::hasLogger ('model')) {
+
+      $shadowDOM = $this->getShadowDOM ();
+      if ($shadowDOM) {
+
+        $VMFilter = function ($k, $v, $o) {
+          if ($v instanceof Application ||
+              $v instanceof NavigationInterface ||
+              $v instanceof NavigationLinkInterface ||
+              $v instanceof SessionInterface ||
+              $v instanceof ServerRequestInterface ||
+              $v instanceof DocumentContext ||
+              $v instanceof Component
+          ) return '...';
+          return true;
+        };
+
+        $binder = $shadowDOM->getDataBinder ();
+        DebugConsole::logger ('model')
+                    ->write ('<#i>PAGE DATA BINDER: ' . Debug::getType ($binder) . "</#i>")
+                    ->write ("<#section|PAGE VIEW MODEL>")
+                    ->withFilter ($VMFilter, $binder->getViewModel ())
+                    ->write ("</#section>");
+      }
+    }
   }
 
   protected function autoRedirect ()

@@ -140,7 +140,8 @@ trait DOMNodeTrait
   public function attachTo (Component $parent)
   {
     $this->parent  = $parent;
-    $this->context = $parent->context;
+    if (!$this->context)
+      $this->context = $parent->context;
   }
 
   /**

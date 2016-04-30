@@ -9,6 +9,7 @@ use Selenia\Matisse\Exceptions\DataBindingException;
 use Selenia\Matisse\Interfaces\DataBinderInterface;
 use Selenia\Matisse\Parser\Expression;
 use Selenia\Matisse\Properties\Base\ComponentProperties;
+use Selenia\ViewEngine\Lib\ViewModel;
 
 /**
  * Provides an API for handling data binding on a component's properties.
@@ -109,6 +110,21 @@ trait DataBindingTrait
   function getDataBinder ()
   {
     return $this->context->getDataBinder ();
+  }
+
+  /**
+   * Returns the component's view model (its own or an inherited one).
+   *
+   * >#####Important
+   * >On a composite component, the view model data is set on the shadow DOM's view model,
+   * **NOT** on the component's own view model!
+   * ><p>This method is overridden on {@see ViewModelTrait} to implement that behavior.
+   *
+   * @return ViewModel
+   */
+  function getViewModel ()
+  {
+    return $this->context->getDataBinder ()->getViewModel ();
   }
 
   /**
