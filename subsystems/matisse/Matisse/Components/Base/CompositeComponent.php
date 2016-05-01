@@ -87,9 +87,9 @@ class CompositeComponent extends Component
    *
    * <p>If set, this will override {@see template} and {@see templateUrl}.
    *
-   * @param DocumentFragment|null $shadowDOM
+   * @param Component|null $shadowDOM
    */
-  function setShadowDOM (DocumentFragment $shadowDOM = null)
+  function setShadowDOM (Component $shadowDOM = null)
   {
     $this->shadowDOM = $shadowDOM;
     $shadowDOM->attachTo ($this);

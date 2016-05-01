@@ -95,15 +95,15 @@ class ComponentInspector
     $isDoc = $component instanceof DocumentFragment;
     if (!$component->parent && !$isDoc)
       echo "&nbsp;<span style='color:$COLOR_INFO'>(detached)</span>";
-    $type = typeOf ($component);
+    $type = typeOf ($component) . ' #' . Debug::objectId ($component);
     echo "<span class='icon hint--rounded hint--right' data-hint='Component:\n$type'><i class='fa fa-info-circle'></i></span>";
 
-      $type1 = str_pad ('#' . Debug::objectId ($component->context), 4, ' ', STR_PAD_LEFT);
-      $type2 = str_pad ('#' . Debug::objectId ($component->getDataBinder ()), 4, ' ', STR_PAD_LEFT);
-      $type3 = str_pad ('#' . Debug::objectId ($component->getViewModel ()), 4, ' ', STR_PAD_LEFT);
-      $type4 = str_pad ('#' . Debug::objectId ($component->getDataBinder ()->getViewModel ()), 4, ' ', STR_PAD_LEFT);
-      $type5 = str_pad ('#' . Debug::objectId ($component->getDataBinder ()->getProps ()), 4, ' ', STR_PAD_LEFT);
-      echo "<span class='icon hint--rounded hint--bottom' data-hint='Context:    $type1  Data binder:       $type2\nView model: $type3  Binder view model: $type4\nProperties: $type5'><i class='fa fa-database'></i></span>";
+    $type1 = str_pad ('#' . Debug::objectId ($component->context), 4, ' ', STR_PAD_LEFT);
+    $type2 = str_pad ('#' . Debug::objectId ($component->getDataBinder ()), 4, ' ', STR_PAD_LEFT);
+    $type3 = str_pad ('#' . Debug::objectId ($component->getViewModel ()), 4, ' ', STR_PAD_LEFT);
+    $type4 = str_pad ('#' . Debug::objectId ($component->getDataBinder ()->getViewModel ()), 4, ' ', STR_PAD_LEFT);
+    $type5 = str_pad ('#' . Debug::objectId ($component->getDataBinder ()->getProps ()), 4, ' ', STR_PAD_LEFT);
+    echo "<span class='icon hint--rounded hint--bottom' data-hint='Context:    $type1  Data binder:       $type2\nView model: $type3  Binder view model: $type4\nProperties: $type5'><i class='fa fa-database'></i></span>";
 
     // Handle text node
 
