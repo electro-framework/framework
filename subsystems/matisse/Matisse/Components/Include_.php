@@ -126,7 +126,12 @@ class Include_ extends CompositeComponent
 
     if (exists ($prop->template)) {
       if (exists ($controller)) {
-        $subComponent = $ctx->createComponent ($controller, $this);
+        $doc           = new DocumentFragment;
+        $shadowContext = $this->context->makeSubcontext ();
+        $doc->setContext ($shadowContext);
+        $this->setShadowDOM ($doc); // this also attaches it, which MUST be done before adding children!
+
+        $subComponent = $shadowContext->createComponent ($controller, $doc);
 
         if (!$subComponent instanceof CompositeComponent)
           throw new ComponentException($this,
@@ -137,8 +142,7 @@ class Include_ extends CompositeComponent
           $subComponent->props->apply ($prop->getDynamic ());
 
         $subComponent->template = $prop->template;
-//        $this->addChild ($subComponent);
-        $this->setShadowDOM ($subComponent);
+        $doc->addChild ($subComponent);
       }
       else $this->template = $prop->template;
     }
@@ -161,7 +165,6 @@ class Include_ extends CompositeComponent
           $subComponent->props->apply ($prop->getDynamic ());
 
         $subComponent->templateUrl = $prop->view;
-//        $this->addChild ($subComponent);
         $doc->addChild ($subComponent);
       }
       else $this->templateUrl = $prop->view;
