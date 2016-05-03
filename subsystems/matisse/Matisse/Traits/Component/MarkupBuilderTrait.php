@@ -2,8 +2,8 @@
 namespace Selenia\Matisse\Traits\Component;
 
 use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Lib\Tag;
 use Selenia\Matisse\Parser\DocumentContext;
-use Selenia\Matisse\Parser\Tag;
 
 /**
  * Provides an API for generating structured HTML code.

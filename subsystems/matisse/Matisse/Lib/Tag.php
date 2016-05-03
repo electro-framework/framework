@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Matisse\Parser;
+namespace Selenia\Matisse\Lib;
 
 /**
  * Represents a parsed tag.
