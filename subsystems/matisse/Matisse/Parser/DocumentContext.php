@@ -3,13 +3,13 @@ namespace Selenia\Matisse\Parser;
 
 use Selenia\Interfaces\DI\InjectorInterface;
 use Selenia\Matisse\Interfaces\DataBinderInterface;
-use Selenia\Matisse\Services\AssetsService;
-use Selenia\Matisse\Services\BlocksService;
 use Selenia\Matisse\Services\MacrosService;
 use Selenia\Matisse\Traits\Context\ComponentsAPITrait;
 use Selenia\Matisse\Traits\Context\FiltersAPITrait;
 use Selenia\Matisse\Traits\Context\ViewsAPITrait;
 use Selenia\Traits\InspectionTrait;
+use Selenia\ViewEngine\Services\AssetsService;
+use Selenia\ViewEngine\Services\BlocksService;
 
 /**
  * A Matisse rendering context.
@@ -73,7 +73,7 @@ class DocumentContext
    */
   private $assetsService;
   /**
-   * @var BlocksService
+   * @var \Selenia\ViewEngine\Services\BlocksService
    */
   private $blocksService;
   /**
@@ -125,7 +125,7 @@ class DocumentContext
   }
 
   /**
-   * @return BlocksService
+   * @return \Selenia\ViewEngine\Services\BlocksService
    */
   public function getBlocksService ()
   {

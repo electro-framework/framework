@@ -3,7 +3,7 @@ namespace Selenia\Matisse\Parser;
 
 /**
  * Represents a parsed tag.
- * > The class is used internally by the parser.
+ * > The class is used internally by MarkupBuilderTrait.
  */
 class Tag
 {

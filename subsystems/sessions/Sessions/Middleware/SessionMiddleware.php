@@ -10,8 +10,8 @@ use Selenia\Interfaces\AssignableInterface;
 use Selenia\Interfaces\Http\RedirectionInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Interfaces\SessionInterface;
-use Selenia\Matisse\Services\AssetsService;
-use Selenia\Matisse\Services\BlocksService;
+use Selenia\ViewEngine\Services\AssetsService;
+use Selenia\ViewEngine\Services\BlocksService;
 
 /**
  *
@@ -27,7 +27,7 @@ class SessionMiddleware implements RequestHandlerInterface
 
   /** @var Application */
   private $app;
-  /** @var AssetsService */
+  /** @var \Selenia\ViewEngine\Services\AssetsService */
   private $assetsService;
   /** @var BlocksService */
   private $blocksService;
