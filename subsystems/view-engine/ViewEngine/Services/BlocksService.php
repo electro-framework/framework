@@ -1,7 +1,7 @@
 <?php
-namespace Selenia\Matisse\Services;
+namespace Selenia\ViewEngine\Services;
 
-use Selenia\Matisse\Lib\Block;
+use Selenia\ViewEngine\Lib\Block;
 
 /**
  * Manages blocks of document fragments.

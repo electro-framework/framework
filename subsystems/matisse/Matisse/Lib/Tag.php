@@ -1,9 +1,9 @@
 <?php
-namespace Selenia\Matisse\Parser;
+namespace Selenia\Matisse\Lib;
 
 /**
  * Represents a parsed tag.
- * > The class is used internally by the parser.
+ * > The class is used internally by MarkupBuilderTrait.
  */
 class Tag
 {

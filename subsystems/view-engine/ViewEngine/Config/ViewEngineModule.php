@@ -8,6 +8,8 @@ use Selenia\Interfaces\Views\ViewInterface;
 use Selenia\Interfaces\Views\ViewServiceInterface;
 use Selenia\ViewEngine\Engines\MatisseEngine;
 use Selenia\ViewEngine\Lib\View;
+use Selenia\ViewEngine\Services\AssetsService;
+use Selenia\ViewEngine\Services\BlocksService;
 use Selenia\ViewEngine\Services\ViewService;
 
 class ViewEngineModule implements ServiceProviderInterface, ModuleInterface
@@ -21,7 +23,9 @@ class ViewEngineModule implements ServiceProviderInterface, ModuleInterface
       // Register the built-in view engines:
       ->prepare (ViewServiceInterface::class, function (ViewServiceInterface $viewService) {
         $viewService->register (MatisseEngine::class, '/\.html$/');
-      });
+      })
+      ->share (AssetsService::class)
+      ->share (BlocksService::class);
   }
 
 }

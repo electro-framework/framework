@@ -11,8 +11,6 @@ use Selenia\Matisse\Interfaces\DataBinderInterface;
 use Selenia\Matisse\Lib\DataBinder;
 use Selenia\Matisse\Lib\FilterHandler;
 use Selenia\Matisse\Parser\DocumentContext;
-use Selenia\Matisse\Services\AssetsService;
-use Selenia\Matisse\Services\BlocksService;
 use Selenia\Matisse\Services\MacrosService;
 
 class MatisseModule implements ServiceProviderInterface, ModuleInterface
@@ -51,8 +49,6 @@ class MatisseModule implements ServiceProviderInterface, ModuleInterface
         $macrosService->macrosExt         = '.html';
       })
       ->share (MacrosService::class)
-      ->share (AssetsService::class)
-      ->share (BlocksService::class)
       ->alias (DataBinderInterface::class, DataBinder::class);
   }
 

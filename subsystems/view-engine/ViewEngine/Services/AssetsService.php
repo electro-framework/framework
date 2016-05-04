@@ -1,9 +1,9 @@
 <?php
-namespace Selenia\Matisse\Services;
+namespace Selenia\ViewEngine\Services;
 
 use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Lib\AssetsContext;
 use Selenia\Traits\InspectionTrait;
+use Selenia\ViewEngine\Lib\AssetsContext;
 
 /**
  * Manages external and embedded CSS stylesheets and javascripts.

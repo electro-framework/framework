@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Matisse\Lib;
+namespace Selenia\ViewEngine\Lib;
 
 use Selenia\Matisse\Components\Base\Component;
 

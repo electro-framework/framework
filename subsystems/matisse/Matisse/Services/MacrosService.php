@@ -1,7 +1,6 @@
 <?php
 namespace Selenia\Matisse\Services;
 
-use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Components\Macro\Macro;
 use Selenia\Matisse\Exceptions\FileIOException;
