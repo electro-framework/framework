@@ -61,11 +61,6 @@ class AssetsService
    */
   function addInlineScript ($code, $name = null, $prepend = false)
   {
-    $code = trim ($code);
-    $last = substr ($code, -1);
-    if ($last != ';' && $last != '}')
-      $code .= ';';
-    $code .= "\n";
     if (exists ($name))
       $this->assets->inlineScripts[$name] = $code;
     else if ($prepend)
@@ -140,8 +135,11 @@ class AssetsService
       echo "<script src=\"$URI\"></script>";
     if (!empty($this->assets->inlineScripts)) {
       echo "<script>";
-      foreach ($this->assets->inlineScripts as $item)
-        echo $item instanceof Component ? $item->runAndGetContent () : $item;
+      foreach ($this->assets->inlineScripts as $item) {
+        $code = trim ($item instanceof Component ? $item->runAndGetContent () : $item);
+        $last = substr ($code, -1);
+        echo $last != ';' && $last != '}' ? $code . ';' : $code . "\n";
+      }
       echo "</script>";
     }
   }

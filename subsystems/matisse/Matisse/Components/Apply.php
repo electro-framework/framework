@@ -23,7 +23,7 @@ class ApplyProperties extends ComponentProperties
 }
 
 /**
- * A component that applies a set of property values to the instance's children, optionally filtered by tag name.
+ * A component that applies a set of property values to its children, optionally filtered by tag name.
  *
  * This is useful when the properties have dynamic values, otherwise use 'presets', as they are less computationally
  * expensive.
@@ -36,7 +36,7 @@ class ApplyProperties extends ComponentProperties
  * </Apply>
  *  ```
  * <p>If no filter is provided, only direct children of the component will be affected.
- * > **Note:** you can use data-bindings on the property values of `<Set>`
+ * > **Note:** you can use data bindings on the property values of `<Set>`
  */
 class Apply extends Component
 {

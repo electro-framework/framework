@@ -19,12 +19,4 @@ class MacroProperties extends ComponentProperties
    * @var Metadata[]
    */
   public $param = type::collection;
-  /**
-   * @var Metadata[]
-   */
-  public $script = type::collection;
-  /**
-   * @var Metadata[]
-   */
-  public $style = type::collection;
 }

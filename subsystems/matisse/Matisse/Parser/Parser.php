@@ -90,7 +90,7 @@ class Parser
    */
   private $metadataContainer = null;
   /**
-   * The ending position + 1 of the tag that was parsed previously.
+   * The ending position + 1 of the tag that was previously parsed.
    *
    * @var int
    */
@@ -439,12 +439,17 @@ does not support the specified parameter <b>$tag</b>.
       }
     if (strlen ($content)) {
       if (isset($this->currentScalarProperty)) {
-        $this->currentScalarValue .= $content; //Note: databinding will be taken care of later.
+        $this->currentScalarValue .= $content; //Note: data binding will be taken care of later.
       }
       else {
         if ($content[0] == '{') {
-          $lit = new Text ($context);
-          $lit->setBindings (['value' => new Expression ($content)]);
+          if (ltrim(substr($content,1))[0] == '#' && $this->current instanceof Metadata) {
+            $lit = new Text ($context, ['value' => $this->current->props->get ('type')]);
+          }
+          else {
+            $lit = new Text ($context);
+            $lit->setBindings (['value' => new Expression ($content)]);
+          }
         }
         else $lit = new Text ($context, ['value' => $content]);
         $this->current->addChild ($lit);
