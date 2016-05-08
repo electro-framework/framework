@@ -443,13 +443,8 @@ does not support the specified parameter <b>$tag</b>.
       }
       else {
         if ($content[0] == '{') {
-          if (ltrim(substr($content,1))[0] == '#' && $this->current instanceof Metadata) {
-            $lit = new Text ($context, ['value' => $this->current->props->get ('type')]);
-          }
-          else {
-            $lit = new Text ($context);
-            $lit->setBindings (['value' => new Expression ($content)]);
-          }
+          $lit = new Text ($context);
+          $lit->setBindings (['value' => new Expression ($content)]);
         }
         else $lit = new Text ($context, ['value' => $content]);
         $this->current->addChild ($lit);
