@@ -15,8 +15,8 @@ class DatabaseModule implements ServiceProviderInterface
   {
     $injector
       ->share (ConnectionInterface::class)
-      ->delegate (ConnectionInterface::class, function ($debugMode) {
-        $con = $debugMode ? new DebugConnection : new Connection;
+      ->delegate (ConnectionInterface::class, function ($debugConsole) {
+        $con = $debugConsole ? new DebugConnection : new Connection;
         return $con->getFromEnviroment ();
       })
       ->alias (ModelControllerInterface::class, ModelController::class)

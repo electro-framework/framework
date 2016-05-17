@@ -64,10 +64,6 @@ class Application
    */
   public $controllers = [];
   /**
-   * @var boolean
-   */
-  public $debugMode;
-  /**
    * Favorite icon URL.
    *
    * @var string

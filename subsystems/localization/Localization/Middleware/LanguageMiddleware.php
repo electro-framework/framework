@@ -16,9 +16,9 @@ use Selenia\Localization\Services\Locale;
 class LanguageMiddleware implements RequestHandlerInterface
 {
   /**
-   * @var Application
+   * @var bool
    */
-  private $app;
+  private $debugConsole;
   /**
    * @var Locale
    */
@@ -32,12 +32,21 @@ class LanguageMiddleware implements RequestHandlerInterface
    */
   private $settings;
 
-  function __construct (SessionInterface $session, Application $app, Locale $locale, LocalizationSettings $settings)
+  /**
+   * LanguageMiddleware constructor.
+   *
+   * @param SessionInterface     $session
+   * @param Locale               $locale
+   * @param LocalizationSettings $settings
+   * @param bool $debugConsole
+   */
+  function __construct (SessionInterface $session, Locale $locale, LocalizationSettings $settings,
+                           $debugConsole)
   {
     $this->session  = $session;
-    $this->app      = $app;
     $this->locale   = $locale;
     $this->settings = $settings;
+    $this->debugConsole = $debugConsole;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -50,7 +59,7 @@ class LanguageMiddleware implements RequestHandlerInterface
       $this->session->setLang ($lang);
     }
 
-    if ($this->app->debugMode)
+    if ($this->debugConsole)
       DebugConsole::logger ('config')->inspect ($this->locale);
     return $next();
   }

@@ -4,7 +4,6 @@ namespace Selenia\Core\Assembly\Services;
 use Exception;
 use PhpKit\WebConsole\Lib\Debug;
 use Psr\Log\LoggerInterface;
-use Selenia\Application;
 use Selenia\Core\Assembly\ModuleInfo;
 use Selenia\Exceptions\Fatal\ConfigException;
 use Selenia\Interfaces\DI\InjectorInterface;
@@ -17,9 +16,9 @@ use Selenia\Interfaces\ModuleInterface;
 class ModulesLoader
 {
   /**
-   * @var Application
+   * @var bool
    */
-  private $app;
+  private $debugMode;
   /**
    * @var InjectorInterface
    */
@@ -35,17 +34,17 @@ class ModulesLoader
 
   /**
    * @param InjectorInterface $injector
-   * @param Application       $app
    * @param ModulesRegistry   $modulesRegistry
    * @param LoggerInterface   $logger
+   * @param bool              $debugMode
    */
-  function __construct (InjectorInterface $injector, Application $app, ModulesRegistry $modulesRegistry,
-                        LoggerInterface $logger)
+  function __construct (InjectorInterface $injector, ModulesRegistry $modulesRegistry, LoggerInterface $logger,
+                        $debugMode)
   {
-    $this->app             = $app;
     $this->injector        = $injector;
     $this->modulesRegistry = $modulesRegistry;
     $this->logger          = $logger;
+    $this->debugMode       = $debugMode;
   }
 
   /**
@@ -143,7 +142,7 @@ class ModulesLoader
     $module->errorStatus = $message;
     Debug::logException ($this->logger, $e);
     // Only save errorStatus if not on production, otherwise concurrency problems while saving might occur.
-    if ($this->app->debugMode)
+    if ($this->debugMode)
       $this->modulesRegistry->save ();
   }
 

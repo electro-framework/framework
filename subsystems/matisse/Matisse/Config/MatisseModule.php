@@ -15,10 +15,14 @@ use Selenia\Matisse\Services\MacrosService;
 
 class MatisseModule implements ServiceProviderInterface, ModuleInterface
 {
-  function boot (Application $app = null)
+  /** @var bool */
+  private $debugMode;
+
+  function boot (Application $app, $debugMode)
   {
-    $app->condenseLiterals = !$app->debugMode;
-    $app->compressOutput   = !$app->debugMode;
+    $app->condenseLiterals = !$debugMode;
+    $app->compressOutput   = !$debugMode;
+    $this->debugMode       = $debugMode;
   }
 
   function register (InjectorInterface $injector)
@@ -32,7 +36,7 @@ class MatisseModule implements ServiceProviderInterface, ModuleInterface
           $ctx->setFilterHandler ($filterHandler = new FilterHandler);
           $filterHandler->registerFilters (new DefaultFilters ($app));
           $ctx->condenseLiterals     = $app->condenseLiterals;
-          $ctx->debugMode            = $app->debugMode;
+          $ctx->debugMode            = $this->debugMode;
           $ctx->controllers          = $app->controllers;
           $ctx->controllerNamespaces = $app->controllerNamespaces;
           $ctx->presets              = map ($app->presets,

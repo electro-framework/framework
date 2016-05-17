@@ -340,6 +340,7 @@ class ComponentInspector
 
   private static function inspectViewModel (Component $component)
   {
+    return; // DISABLED
     $old = DebugConsole::$settings->tableUseColumWidths;
 
     DebugConsole::$settings->tableUseColumWidths = false;

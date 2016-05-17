@@ -8,30 +8,39 @@ use PhpKit\WebConsole\ErrorConsole\ErrorConsole;use Psr\Http\Message\ResponseInt
  */
 class ErrorRenderer implements ErrorRendererInterface
 {
-protected $app;
+protected $app;/**
+ * @var bool*/
+private $debugMode;
 /** @var InjectorInterface It is required for instantiating custom error renderers. */
 private $injector;
 private $responseFactory;
 private $settings;
 
-function __construct (Application $app, ResponseFactoryInterface $responseFactory, ErrorHandlingSettings $settings,
-                      InjectorInterface $injector)
+/**
+ * ErrorRenderer constructor.
+ *
+ * @param Application              $app
+ * @param ResponseFactoryInterface $responseFactory
+ * @param ErrorHandlingSettings    $settings
+ * @param InjectorInterface        $injector
+ * @param bool   $debugMode
+ */function __construct (Application $app, ResponseFactoryInterface $responseFactory, ErrorHandlingSettings $settings,
+                         InjectorInterface $injector, $debugMode)
 {
   $this->app             = $app;
   $this->responseFactory = $responseFactory;
   $this->settings        = $settings;
   $this->injector        = $injector;
+  $this->debugMode = $debugMode;
 }
 
 function render (ServerRequestInterface $request, ResponseInterface $response, $error = null)
 {
-  $app = $this->app;
-
   if ($error) {
 
     // On debug mode, a debugging error popup is displayed for Exceptions/Errors.
 
-    if ($app->debugMode && Http::clientAccepts ($request, 'text/html'))
+    if ($this->debugMode && Http::clientAccepts ($request, 'text/html'))
       return ErrorConsole::display ($error, $this->responseFactory->makeHtmlResponse ());
 
     $status = $error instanceof HttpException ? $error->getCode () : 500;

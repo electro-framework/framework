@@ -22,19 +22,31 @@ class WebConsoleMiddleware implements RequestHandlerInterface
    */
   private $app;
   /**
+   * @var bool
+   */
+  private $debugConsole;
+  /**
    * @var InjectorInterface
    */
   private $injector;
 
-  function __construct (Application $app, InjectorInterface $injector)
+  /**
+   * WebConsoleMiddleware constructor.
+   *
+   * @param Application       $app
+   * @param InjectorInterface $injector
+   * @param bool              $debugConsole
+   */
+  function __construct (Application $app, InjectorInterface $injector, $debugConsole)
   {
-    $this->app      = $app;
-    $this->injector = $injector;
+    $this->app          = $app;
+    $this->injector     = $injector;
+    $this->debugConsole = $debugConsole;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    if (getenv ('DEBUG_BAR') != 'true')
+    if (!$this->debugConsole) // In case the middlware was registered.
       return $next ();
     //------------------------------------------------------------------
 

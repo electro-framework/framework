@@ -23,6 +23,10 @@ class WebApplication
    */
   private $app;
   /**
+   * @var bool
+   */
+  private $debugMode;
+  /**
    * @var InjectorInterface
    */
   private $injector;
@@ -86,7 +90,7 @@ class WebApplication
 
     // Post-assembly additional setup.
 
-    if ($app->debugMode)
+    if ($this->debugMode)
       $this->setDebugPathsMap ($this->injector->make (ModulesRegistry::class));
 
     /** @var WebServer $webServer */
@@ -114,8 +118,12 @@ class WebApplication
   private function setupDebugging ($rootDir)
   {
     set_exception_handler ([$this, 'exceptionHandler']);
-    $debug = $this->app->debugMode = getenv ('APP_DEBUG') == 'true';
+
+    $debug = $this->debugMode = getenv ('DEBUG') == 'true';
     $this->injector->defineParam ('debugMode', $debug);
+
+    $debugConsole = getenv ('CONSOLE') == 'true';
+    $this->injector->defineParam ('debugConsole', $debugConsole);
 
     ErrorConsole::init ($debug, $rootDir);
     ErrorConsole::setAppName ($this->app->appName);
