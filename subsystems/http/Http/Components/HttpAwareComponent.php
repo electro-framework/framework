@@ -12,6 +12,7 @@ use Selenia\Exceptions\FlashType;
 use Selenia\Http\Lib\Http;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
 use Selenia\Matisse\Components\Base\CompositeComponent;
+use Selenia\ViewEngine\Lib\ViewModel;
 
 /**
  * The base class for components that are standalone HTML document fragments.
@@ -124,6 +125,15 @@ class HttpAwareComponent extends CompositeComponent implements RequestHandlerInt
   }
 
   /**
+   * Sets a reference to the model on the view model, allowing the view to access the model for redndering.
+   */
+  protected function afterPreRun ()
+  {
+    parent::afterPreRun ();
+    $this->getViewModel ()->model = $this->model;
+  }
+
+  /**
    * Override to implement an auto-redirection.
    *
    * @return ResponseInterface
@@ -216,7 +226,7 @@ class HttpAwareComponent extends CompositeComponent implements RequestHandlerInt
    * <p>Note:
    * > View models are available only on GET requests.
    */
-  protected function viewModel ()
+  protected function viewModel (ViewModel $viewModel)
   {
     //Override.
   }

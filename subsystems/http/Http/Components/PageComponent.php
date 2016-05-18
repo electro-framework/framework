@@ -194,6 +194,7 @@ class PageComponent extends CompositeComponent implements RequestHandlerInterfac
             $response = $this->autoRedirect ();
           break;
         }
+      // Fall through.
       case 'GET':
         // Render the component.
         $out = $this->getRendering ();

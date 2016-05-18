@@ -3,7 +3,6 @@ namespace Selenia\Matisse\Components\Base;
 
 use Selenia\Interfaces\RenderableInterface;
 use Selenia\Interfaces\Views\ViewInterface;
-use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Traits\Component\ViewModelTrait;
 use Selenia\ViewEngine\Engines\MatisseEngine;
@@ -92,7 +91,8 @@ class CompositeComponent extends Component
   function setShadowDOM (Component $shadowDOM = null)
   {
     $this->shadowDOM = $shadowDOM;
-    $shadowDOM->attachTo ($this);
+    if ($shadowDOM)
+      $shadowDOM->attachTo ($this);
   }
 
   /**
