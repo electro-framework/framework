@@ -67,22 +67,24 @@ class Expression
    * Extracts a simple expression segment from a dot-delimited list of segments.
    * <p>Ex: `'a.b.c'`
    */
-  const PARSE_SIMPLE_EXPR = '/
-    ^\s*                      # ignore white space at the beginning
-    (                         # capture either
-      !*[@#]?[:\w]+           # a constant name, a property name (ex: "prop", "@prop"), a block name (ex: "#prop") or a class constant (ex: MyClass::myConstant)
-      |                       # or
-      \'(?:(?<!\\\\)[^\'])*\' # a quoted string constant (supports escaped quotes inside the string)
-      |                       # or
-      "(?:(?<!\\\\)[^"])*"    # a double quoted string constant (supports escaped double quotes inside the string)
-    )
-    \s*                       # ignore white space
-    (                         # capture the next operator, if one is present, including the the first filter\'s pipe
-      \|(?!\|)                # capture the pipe operator (but not the || operator)
-      |                                 # or
-      [,\|\.\/\-\(\)\[\]\{\}%&=?*+<>!]+ # one of the other allowed operators
-    )?
-    /xu';
+  const PARSE_SIMPLE_EXPR = <<<'REGEXP'
+/
+  ^\s*                # ignore white space at the beginning
+  (                   # capture either
+    !*[@#]?[:\w]+     # a constant name, a property name (ex: "prop", "@prop"), a block name (ex: "#prop") or a class constant (ex: MyClass::myConstant)
+    |                 # or
+    '(?:\\'|[^'])*'   # a quoted string constant (supports escaped quotes inside the string)
+    |                 # or
+    "(?:\\"|[^'])*"   # a double quoted string constant (supports escaped double quotes inside the string)
+  )
+  \s*                 # ignore white space
+  (                   # capture the next operator, if one is present, including the the first filter\'s pipe
+    \|(?!\|)          # capture the pipe operator (but not the || operator)
+    |                                     # or
+    [,\|\.\/\-\(\)\[\]\{\}%&=\?\*\+<>!]+  # one of the other allowed operators
+  )?
+/xu
+REGEXP;
 
   public static $INSPECTABLE = ['expression', 'translated'];
   /**
