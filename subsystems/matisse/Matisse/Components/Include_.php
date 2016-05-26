@@ -2,10 +2,8 @@
 namespace Selenia\Matisse\Components;
 
 use Selenia\Matisse\Components\Base\CompositeComponent;
-use Selenia\Matisse\Components\Internal\DocumentFragment;
 use Selenia\Matisse\Exceptions\ComponentException;
 use Selenia\Matisse\Exceptions\FileIOException;
-use Selenia\Matisse\Properties\Base\AbstractProperties;
 use Selenia\Matisse\Properties\Base\MetadataProperties;
 
 class IncludeProperties extends MetadataProperties
@@ -91,29 +89,6 @@ class Include_ extends CompositeComponent
   /** @var IncludeProperties */
   public $props;
 
-  protected function init ()
-  {
-    parent::init ();
-    $prop = $this->props;
-
-    // Validate dynamic properties and rename them.
-
-    $extra = $prop->getDynamic ();
-    if ($extra) {
-      foreach ($extra as $k => $v)
-        if ($k[0] != '@')
-          throw new ComponentException ($this, "Invalid property name: <kbd>$k</kbd>");
-        else {
-          $o = substr ($k, 1);
-          if (isset($prop->$o))
-            throw new ComponentException ($this,
-              "Dynamic property <kbd>$k</kbd> conflicts with predefined property <kbd>$o</kbd>.");
-          $prop->$o = $v;
-          unset ($prop->$k);
-        }
-    }
-  }
-
   protected function createView ()
   {
     $prop       = $this->props;
@@ -127,7 +102,7 @@ class Include_ extends CompositeComponent
 
     if (exists ($prop->template)) {
       if (exists ($controller)) {
-        $subComponent = $this->makeShadowController ($controller, $prop);
+        $subComponent           = $this->makeShadowController ($controller, $prop);
         $subComponent->template = $prop->template;
         $this->setShadowDOM ($subComponent);
       }
@@ -136,7 +111,7 @@ class Include_ extends CompositeComponent
 
     elseif (exists ($prop->view)) {
       if (exists ($controller)) {
-        $subComponent = $this->makeShadowController ($controller, $prop);
+        $subComponent              = $this->makeShadowController ($controller, $prop);
         $subComponent->templateUrl = $prop->view;
         $this->setShadowDOM ($subComponent);
       }
@@ -164,8 +139,31 @@ class Include_ extends CompositeComponent
     parent::createView ();
   }
 
+  protected function init ()
+  {
+    parent::init ();
+    $prop = $this->props;
+
+    // Validate dynamic properties and rename them.
+
+    $extra = $prop->getDynamic ();
+    if ($extra) {
+      foreach ($extra as $k => $v)
+        if ($k[0] != '@')
+          throw new ComponentException ($this, "Invalid property name: <kbd>$k</kbd>");
+        else {
+          $o = substr ($k, 1);
+          if (isset($prop->$o))
+            throw new ComponentException ($this,
+              "Dynamic property <kbd>$k</kbd> conflicts with predefined property <kbd>$o</kbd>.");
+          $prop->$o = $v;
+          unset ($prop->$k);
+        }
+    }
+  }
+
   /**
-   * @param string $controller
+   * @param string            $controller
    * @param IncludeProperties $props
    * @return CompositeComponent
    * @throws ComponentException
@@ -181,7 +179,7 @@ class Include_ extends CompositeComponent
 
     // If the controller component has its own properties, merge the Include's dynamic properties with them.
     if (isset($subComponent->props))
-      $subComponent->props->apply ($props->getDynamic ());return $subComponent;
+      $subComponent->props->apply ($props->getDynamic ());
 
     return $subComponent;
   }

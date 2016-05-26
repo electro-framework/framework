@@ -46,7 +46,7 @@ trait ViewModelTrait
     /** @var DocumentFragment $shadowDOM */
     $shadowDOM = $this->getShadowDOM ();
     if ($shadowDOM)
-      $shadowDOM->getDataBinder ()->setProps ($this->props);
+      $shadowDOM->getDataBinder ()->setProps ($this->props ?: $this->getDataBinder ()->getProps ());
   }
 
   /**
