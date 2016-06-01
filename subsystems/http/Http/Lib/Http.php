@@ -62,11 +62,23 @@ class Http
    * @param bool              $assoc [optional] Return an associative array?
    * @return mixed
    */
-  static function json (ResponseInterface $response, $assoc = false)
+  static function jsonFromResponse (ResponseInterface $response, $assoc = false)
   {
     if ($response->getHeaderLine ('Content-Type') != 'application/json')
       throw new \RuntimeException ("HTTP response is not of type JSON");
     return json_decode ($response->getBody (), $assoc);
+  }
+
+  /**
+   * Creates a JSON-encoded response from the given data.
+   *
+   * @param ResponseInterface $response
+   * @param mixed             $data
+   * @return ResponseInterface
+   */
+  static function jsonResponse (ResponseInterface $response, $data)
+  {
+    return self::send ($response, 200, json_encode ($data), 'application/json');
   }
 
   /**
