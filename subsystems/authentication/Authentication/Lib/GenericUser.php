@@ -32,6 +32,20 @@ class GenericUser implements UserInterface
     return false;
   }
 
+  public function getRecord ()
+  {
+    return [
+      'active'           => $this->activeField (),
+      'id'               => $this->idField (),
+      'lastLogin'        => $this->lastLoginField (),
+      'realName'         => $this->realNameField (),
+      'registrationDate' => $this->registrationDateField (),
+      'role'             => $this->roleField (),
+      'token'            => $this->tokenField (),
+      'username'         => $this->usernameField (),
+    ];
+  }
+
   function idField ($set = null)
   {
     if (isset($set))
