@@ -27,7 +27,7 @@
     "codegyre/robo": "^0.5.3",
     "selenia/interop": "dev-master",
     "php-kit/ext-pdo": "dev-master",
-    "league/glide": "^1.0"
+    "league/glide": "^1.0.0"
   },
   "autoload": {
     "psr-4": {
