@@ -3,6 +3,7 @@ namespace Selenia\Matisse\Parser;
 
 use Selenia\Interfaces\DI\InjectorInterface;
 use Selenia\Matisse\Interfaces\DataBinderInterface;
+use Selenia\Matisse\Interfaces\PresetsInterface;
 use Selenia\Matisse\Services\MacrosService;
 use Selenia\Matisse\Traits\Context\ComponentsAPITrait;
 use Selenia\Matisse\Traits\Context\FiltersAPITrait;
@@ -60,12 +61,12 @@ class DocumentContext
   /**
    * A stack of presets.
    *
-   * Each preset is an instance of a class where methods are named with component class names.
-   * When components are being instantiated, if they match a class name on any of the stacked presets,
+   * <p>Each preset is an instance of a class where methods are named with component class names.
+   * <p>When components are being instantiated, if they match a class name on any of the stacked presets,
    * they will be passed to the corresponding methods for additional initialization.
-   * Callbacks also receive a nullable array argument with the properties being applied.
+   * <p>Callbacks also receive a nullable array argument with the properties being applied.
    *
-   * @var array
+   * @var PresetsInterface[]|object[]
    */
   public $presets = [];
   /**
@@ -152,7 +153,10 @@ class DocumentContext
 
   public function makeSubcontext ()
   {
-    $sub             = clone $this;
+    $sub = clone $this;
+    // Sub-contexts inherit the parent's presets (without this, the Apply component will not work)
+    $sub->presets    =& $this->presets;
+
     $sub->dataBinder = $this->dataBinder->makeNew ();
     $sub->dataBinder->setContext ($sub);
     return $sub;

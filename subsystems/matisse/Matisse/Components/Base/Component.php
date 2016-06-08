@@ -4,6 +4,7 @@ namespace Selenia\Matisse\Components\Base;
 use Selenia\Interfaces\RenderableInterface;
 use Selenia\Matisse\Debug\ComponentInspector;
 use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Interfaces\PresetsInterface;
 use Selenia\Matisse\Parser\DocumentContext;
 use Selenia\Matisse\Properties\Base\AbstractProperties;
 use Selenia\Matisse\Traits\Component\DataBindingTrait;
@@ -186,6 +187,16 @@ abstract class Component implements RenderableInterface
     }
   }
 
+  function applyPresetsOnSelf ()
+  {
+    if ($this->context)
+      foreach ($this->context->presets as $preset)
+        if ($preset instanceof PresetsInterface)
+          $preset->applyPresets ($this);
+        elseif (method_exists ($preset, $this->className))
+          $preset->{$this->className} ($this);
+  }
+
   function getContextClass ()
   {
     return DocumentContext::class;
@@ -238,25 +249,16 @@ abstract class Component implements RenderableInterface
   }
 
   /**
-   * Initializes a newly created component by applying to it the applicable registered presets, followed by the given
-   * properties, if any.
+   * Initializes a newly created component with the given properties, if any.
    *
    * > **Warning:** for some components this method will not be called (ex: Literal).
    *
-   * @param array|null $props A map of the component's properties.
+   * @param array|null $props A map of the component instance's properties being applied.
    * @throws ComponentException
    */
   function setProps (array $props = null)
   {
     if ($this->supportsProperties ()) {
-      // Apply presets.
-
-      if ($this->context)
-        foreach ($this->context->presets as $preset)
-          if (method_exists ($preset, $this->className))
-            $preset->{$this->className} ($this, $props);
-
-      // Apply properties.
       if ($props)
         $this->props->apply ($props);
     }

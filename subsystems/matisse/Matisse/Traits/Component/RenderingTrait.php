@@ -3,6 +3,7 @@ namespace Selenia\Matisse\Traits\Component;
 
 use Selenia\Matisse\Components\Base\Component;
 use Selenia\Matisse\Exceptions\ComponentException;
+use Selenia\Matisse\Interfaces\PresetsInterface;
 
 trait RenderingTrait
 {
@@ -104,14 +105,6 @@ trait RenderingTrait
   }
 
   /**
-   * Extension hook.
-   */
-  protected function afterPreRun ()
-  {
-    //override
-  }
-
-  /**
    * Renders the component.
    *
    * <p>This performs all the setup and data binding logic required for a successful render.
@@ -128,6 +121,9 @@ trait RenderingTrait
   {
     if (!$this->context)
       throw new ComponentException($this, self::ERR_NO_CONTEXT);
+
+    $this->applyPresetsOnSelf ();
+
     if ($this->isVisible ()) {
       $this->preRun ();
       //---- Rendering code ----
@@ -177,7 +173,7 @@ trait RenderingTrait
    * <p>You should use this instead of {@see run()} when the full rendering of the component is
    * performed by its children. If the component does some rendering itself and additionally renders its children, call
    * {@see run()} instead.
-   * 
+   *
    * <p>This MUST NOT be called from within a component's {@see render} method; for that purpose, use {@see runChildren}
    * instead.
    *
@@ -207,6 +203,14 @@ trait RenderingTrait
   }
 
   /**
+   * Extension hook.
+   */
+  protected function afterPreRun ()
+  {
+    //override
+  }
+
+  /**
    * Called after the component is fully rendered.
    *
    * <p>Override to add debug logging, for instance.
@@ -221,7 +225,7 @@ trait RenderingTrait
    *
    * <p>If not overridden, the default behaviour is to load the view from an external file, if one is defined on
    * `$templateUrl`. If not, the content of `$template` is returned, if set, otherwise no output is generated.
-   * 
+   *
    * <p>This is only relevant for {@see CompositeComponent} subclasses.
    */
   protected function createView ()

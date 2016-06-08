@@ -10,8 +10,7 @@ use Selenia\Matisse\Components\Base\Component;
  * <p>A content set is a mixed DOM node / string list.
  *
  * <p>Blocks are lazily rendered on demand.
- * <p>When a block is rendered, each one of its content sets is rendered sequentially, bound to the associated view
- * model.
+ * <p>When a block is rendered, each of its content sets is rendered sequentially, bound to the associated view model.
  */
 class Block
 {
@@ -84,5 +83,5 @@ class Block
   {
     $this->contents = [self::checkContent ($content)];
   }
-  
+
 }
