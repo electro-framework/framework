@@ -1,9 +1,0 @@
-/vendor
-/composer.lock
-/public_html/lib
-/node_modules
-/.idea
-*.log
-.env
-.DS_Store
-Thumbs.db
