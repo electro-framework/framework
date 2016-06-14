@@ -7,7 +7,7 @@ use Selenia\Exceptions\Fatal\FileNotFoundException;
 use Selenia\Http\Components\PageComponent;
 use Selenia\Interfaces\DI\InjectorInterface;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Matisse\Parser\DocumentContext;
+use Selenia\Plugins\Matisse\Parser\DocumentContext;
 
 /**
  * It allows a designer to rapidly prototype the application by automatically providing routing for URLs matching files

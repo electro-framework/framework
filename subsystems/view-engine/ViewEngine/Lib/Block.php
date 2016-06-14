@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\ViewEngine\Lib;
 
-use Selenia\Matisse\Components\Base\Component;
+use Selenia\Plugins\Matisse\Components\Base\Component;
 
 /**
  * A block of renderable content.

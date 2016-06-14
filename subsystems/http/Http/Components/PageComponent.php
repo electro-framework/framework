@@ -24,10 +24,10 @@ use Selenia\Interfaces\ModelControllerInterface;
 use Selenia\Interfaces\Navigation\NavigationInterface;
 use Selenia\Interfaces\Navigation\NavigationLinkInterface;
 use Selenia\Interfaces\SessionInterface;
-use Selenia\Matisse\Components\Base\Component;
-use Selenia\Matisse\Components\Base\CompositeComponent;
-use Selenia\Matisse\Parser\DocumentContext;
-use Selenia\Matisse\Parser\Expression;
+use Selenia\Plugins\Matisse\Components\Base\Component;
+use Selenia\Plugins\Matisse\Components\Base\CompositeComponent;
+use Selenia\Plugins\Matisse\Parser\DocumentContext;
+use Selenia\Plugins\Matisse\Parser\Expression;
 use Selenia\Traits\PolymorphicInjectionTrait;
 
 /**

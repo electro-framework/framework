@@ -11,7 +11,7 @@ use Selenia\Exceptions\FlashMessageException;
 use Selenia\Exceptions\FlashType;
 use Selenia\Http\Lib\Http;
 use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Matisse\Components\Base\CompositeComponent;
+use Selenia\Plugins\Matisse\Components\Base\CompositeComponent;
 use Selenia\ViewEngine\Lib\ViewModel;
 
 /**

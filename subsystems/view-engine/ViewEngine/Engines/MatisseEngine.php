@@ -5,11 +5,11 @@ use Selenia\Application;
 use Selenia\Interfaces\DI\InjectorInterface;
 use Selenia\Interfaces\Views\ViewEngineInterface;
 use Selenia\Interfaces\Views\ViewServiceInterface;
-use Selenia\Matisse\Components\Internal\DocumentFragment;
-use Selenia\Matisse\Exceptions\MatisseException;
-use Selenia\Matisse\Lib\FilterHandler;
-use Selenia\Matisse\Parser\DocumentContext;
-use Selenia\Matisse\Parser\Parser;
+use Selenia\Plugins\Matisse\Components\Internal\DocumentFragment;
+use Selenia\Plugins\Matisse\Exceptions\MatisseException;
+use Selenia\Plugins\Matisse\Lib\FilterHandler;
+use Selenia\Plugins\Matisse\Parser\DocumentContext;
+use Selenia\Plugins\Matisse\Parser\Parser;
 
 class MatisseEngine implements ViewEngineInterface
 {

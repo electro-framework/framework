@@ -1,7 +1,7 @@
 <?php
 namespace Selenia\ViewEngine\Services;
 
-use Selenia\Matisse\Components\Base\Component;
+use Selenia\Plugins\Matisse\Components\Base\Component;
 use Selenia\Traits\InspectionTrait;
 use Selenia\ViewEngine\Lib\AssetsContext;
 
