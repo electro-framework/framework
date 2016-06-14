@@ -1,5 +1,5 @@
 <?php
-use Selenia\Http\Components\PageComponent;
+use Selenia\Plugins\Matisse\Components\Base\PageComponent;
 use Selenia\Routing\Lib\FactoryRoutable;
 
 /**
