@@ -1,6 +1,6 @@
 {
-  "name": "selenia/framework",
-  "description": "The Selenia framework",
+  "name": "electro/framework",
+  "description": "The core code of the Electro framework ",
   "license": "MIT",
   "authors": [
     {
@@ -16,7 +16,7 @@
   "require": {
     "php": ">=5.6",
     "wikimedia/composer-merge-plugin": "dev-master",
-    "selenia/installers": "^1.0.0",
+    "electro/installers": "^1.0.0",
     "php-kit/composer-bower-plugin": "dev-master",
     "php-kit/tools": "dev-master",
     "php-kit/html5-tools": "dev-master",
@@ -25,7 +25,7 @@
     "rdlowrey/auryn": "^1.4.0",
     "monolog/monolog": "^1.17.1",
     "codegyre/robo": "^0.5.3",
-    "selenia/interop": "dev-master",
+    "electro/interop": "dev-master",
     "php-kit/ext-pdo": "dev-master",
     "league/glide": "^1.0.0"
   },
@@ -36,11 +36,6 @@
     "files": [
       "global.php"
     ]
-  },
-  "extra": {
-    "branch-alias": {
-      "dev-master": "1.x-dev"
-    }
   },
   "bin": [
     "bin/selenia"
