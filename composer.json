@@ -2,6 +2,7 @@
   "name": "electro/framework",
   "description": "The core code of the Electro framework ",
   "license": "MIT",
+  "homepage": "https://github.com/electro/framework",
   "authors": [
     {
       "name": "Impactwave",
