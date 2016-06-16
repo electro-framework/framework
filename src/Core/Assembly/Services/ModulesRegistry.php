@@ -17,6 +17,8 @@ class ModulesRegistry
 {
   use InspectionTrait;
 
+  const TASK_RUNNER_NAME = 'workman';
+
   static $INSPECTABLE = ['modules'];
   /**
    * @var Application
@@ -298,12 +300,13 @@ class ModulesRegistry
    */
   function rebuildRegistry ($noConfigYet = false)
   {
+    $runner = self::TASK_RUNNER_NAME;
     if (!$this->app->isConsoleBased) {
       if ($noConfigYet)
         throw new ExceptionWithTitle ('The application\'s runtime configuration is not initialized.',
-          'Please run <kbd>selenia</kbd> on the command line.');
+          'Please run <kbd>$runner</kbd> on the command line.');
       else throw new ExceptionWithTitle ('The application\'s runtime configuration must be updated.',
-        'Please run <kbd>selenia registry:recheck</kbd> on the command line.');
+        'Please run <kbd>$runner registry:recheck</kbd> on the command line.');
     }
 
     $subsystems = $this->loadModulesMetadata ($this->scanSubsystems (), ModuleInfo::TYPE_SUBSYSTEM);
@@ -493,10 +496,10 @@ class ModulesRegistry
       ->onlyDirectories ()
       ->map (function (SplFileInfo $dirInfo) {
         $path = $dirInfo->getPathname ();
-        $p    = strpos ($path, 'framework/');
+        $p    = strpos ($path, 'framework/') + 9;
         return (new ModuleInfo)->import ([
           'name' => $dirInfo->getFilename (),
-          'path' => "private/packages/selenia/" . substr ($path, $p),
+          'path' => $this->app->frameworkPath . substr ($path, $p),
         ]);
       })
       ->pack ()->all ();

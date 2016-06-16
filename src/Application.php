@@ -9,7 +9,7 @@ use Selenia\Interfaces\Navigation\NavigationProviderInterface;
 
 class Application
 {
-  const FRAMEWORK_PATH = 'private/packages/selenia/framework';
+  const FRAMEWORK_PATH = 'private/packages/electro/framework';
   /**
    * The real application name.
    *
