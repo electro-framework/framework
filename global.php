@@ -1,5 +1,5 @@
 <?php
-use Electro\Plugins\Matisse\Components\Base\PageComponent;
+use Selenia\Platform\Components\Base\PageComponent;
 use Electro\Routing\Lib\FactoryRoutable;
 
 /**

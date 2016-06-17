@@ -1,6 +1,6 @@
 # Core Tasks
 
-##### Selenia framework's core command-line tasks
+##### Electro framework's core command-line tasks
 
 ## Introduction
 
@@ -11,28 +11,28 @@ These tasks allow you to run automation scripts that perform repetitive tasks li
 They can also assist you during the development process by:
 
 * Scaffolding Modules, Controllers, Views and many other framework-related constructs.
-* Installing / removing plugin modules.
+* Installing / removing plugin / template modules.
 
-## Installation
-
-This package comes pre-installed as an integrant part of the framework, so you usually don't need to install this manually.
-
-If you are not using the standard `framework` package, type this on the terminal:
-
-```shell
-composer require selenia-components/core-tasks
-```
 ## Available tasks
 
 #### Module-related tasks
 
-Command              | Description
----------------------|--------------------------------------------
-`module:create`      | Scaffolds a new module for your application.
-`module:install`     | Installs a plugin module.
-`module:register`    | Registers a module on the application's configuration, therefore enabling it for use.
-`module:uninstall`   | Removes a module from the application.
-`module:unregister`  | Removes a module from the application's configuration, therefore disabling it.
+Command                   | Description
+--------------------------|--------------------------------------------
+`make:module`             | Scaffolds a new project module.
+`module:install-plugin`   | Installs a plugin module.
+`module:install-template` | Installs a module from a template.
+`module:enable`           | Enables a module.
+`module:disable`          | Disables a module.
+`module:uninstall`        | Removes a module from the application.
+`module:cleanup`          | Runs a module's post-uninstallation tasks.
+
+#### Registry-related tasks
+
+Command                   | Description
+--------------------------|--------------------------------------------
+`registry:recheck`        | Forces an update of the module registry.
+`registry:status`         | Displays information about the currently registered modules.
 
 #### Configuration tasks
 
@@ -42,18 +42,8 @@ Command              | Description
 `init:config`        | Initializes the application's configuration (.env file).
 `init:storage`       | Scaffolds the storage directory's structure.
 
-#### Project build tasks
-
-Command              | Description
----------------------|--------------------------------------------
-`build`              | Builds the whole project, including all modules.
-`update`             | Builds the main project, excluding modules.
-`clean:app`          | Cleans the application-specific assets from the public_html/dist folder.
-`clean:libs`         | Cleans the front-end libraries from the public_html/lib folder.
-`clean:modules`      | Cleans the module's assets from the public_html/modules folder.
-
 ## License
 
-The Selenia framework is open-source software licensed under the [MIT license](http://opensource.org/licenses/MIT).
+The Electro framework is open-source software licensed under the [MIT license](http://opensource.org/licenses/MIT).
 
-**Selenia framework** - Copyright &copy; 2015 Impactwave, Lda.
+**Electro framework** - Copyright &copy; Cláudio Silva and Impactwave, Lda.

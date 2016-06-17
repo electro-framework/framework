@@ -74,7 +74,7 @@ class DefaultFilters
    */
   function filter_fileURL ($v)
   {
-    return $this->app->getFileDownloadURI ($v);
+//    return $this->app->getFileDownloadURI ($v);
   }
 
   /**

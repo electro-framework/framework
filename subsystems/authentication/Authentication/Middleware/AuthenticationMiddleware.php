@@ -34,17 +34,13 @@ class AuthenticationMiddleware implements RequestHandlerInterface
 
     switch ($request->getMethod ()) {
       case 'GET':
-        if (!$this->session->loggedIn ())
+        if ($request->getAttribute('virtualUri') == 'logout') {
+          $this->session->logout ();
+          return $this->redirection->home ();
+        }
+        elseif (!$this->session->loggedIn ())
           return $this->redirection->guest ($this->app->loginFormUrl);
         break;
-      case 'POST':
-        $post   = $request->getParsedBody ();
-        $action = get ($post, PlatformModule::ACTION_FIELD);
-        switch ($action) {
-          case 'logout':
-            $this->session->logout ();
-            return $this->redirection->home ();
-        }
     }
 
     return $next();

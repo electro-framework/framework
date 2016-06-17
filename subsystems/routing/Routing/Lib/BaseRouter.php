@@ -2,6 +2,7 @@
 namespace Electro\Routing\Lib;
 
 use Iterator;
+use PhpKit\Flow\Flow;
 use PhpKit\WebConsole\Lib\Debug;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -64,30 +65,14 @@ abstract class BaseRouter implements RouterInterface
 
   function add ($handler, $key = null, $after = null)
   {
-    if (empty($this->handlers))
-      $this->handlers = [];
-    else if (!is_array ($this->handlers))
-      $this->handlers = iterator_to_array ($this->handlers);
-    $this->handlers = array_insertAfter ($this->handlers, $after, $handler, $key);
+    if ($handler) {
+      if (empty($this->handlers))
+        $this->handlers = [];
+      else if (!is_array ($this->handlers))
+        $this->handlers = iterator_to_array ($this->handlers);
+      $this->handlers = array_insertAfter ($this->handlers, $after, $handler, $key);
+    }
     return $this;
-  }
-
-  function set ($handlers)
-  {
-    if (!is_iterable ($handlers))
-      $handlers = [$handlers];
-    $this->handlers = $handlers;
-    return $this;
-  }
-
-  function with ($handlers)
-  {
-    if (!is_iterable ($handlers))
-      $handlers = [$handlers];
-    $class = get_class ($this);
-    /** @var static $new */
-    $new = new $class ($this->injector, $this->matcher);
-    return $new->set ($handlers);
   }
 
   /**
@@ -135,6 +120,23 @@ abstract class BaseRouter implements RouterInterface
     }
 
     return $response;
+  }
+
+  function set ($handlers)
+  {
+    // Convert the list to an interable and prunte it of NULL values.
+    $this->handlers = Flow::from ($handlers)->where (identity ());
+    return $this;
+  }
+
+  function with ($handlers)
+  {
+    if (!is_iterable ($handlers))
+      $handlers = [$handlers];
+    $class = get_class ($this);
+    /** @var static $new */
+    $new = new $class ($this->injector, $this->matcher);
+    return $new->set ($handlers);
   }
 
   /**

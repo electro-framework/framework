@@ -15,15 +15,7 @@ class Application
    *
    * @var string
    */
-  public $appName = 'Electro framework';
-  /**
-   * A list of relative file paths of assets published by each module, relative to each module's public folder, in
-   * order of precedence. The framework's build process may automatically concatenate and minify those assets for a
-   * release-grade build.
-   *
-   * @var string[]
-   */
-  public $assets = [];
+  public $appName = 'ELECTRO framework';
   /**
    * The file path of current main application's root directory.
    *
@@ -289,31 +281,6 @@ class Application
     $this->injector = $injector;
   }
 
-  function fromPathToURL ($path)
-  {
-    return $this->toURL ($this->toURI ($path));
-  }
-
-  function getFileDownloadURI ($fileId)
-  {
-    return "$this->frameworkURI/download?id=$fileId";
-  }
-
-  function getFileURI ($fileName)
-  {
-    return "$this->baseURI/$this->fileArchivePath/$fileName";
-  }
-
-  function getImageDownloadURI ($fileId)
-  {
-    return "$this->frameworkURI/image?id=$fileId";
-  }
-
-  function getImageURI ($fileName)
-  {
-    return "$this->baseURI/$this->imageArchivePath/$fileName";
-  }
-
   /**
    * Gets an array of file path mappings for the core framework, to aid debugging symlinked directiories.
    *
@@ -342,18 +309,6 @@ class Application
     $loggingModule->register ($this->injector);
   }
 
-  function setIncludePath ($extra = '')
-  {
-    if (!empty($extra)) {
-      $extra .= PATH_SEPARATOR;
-      set_include_path ($this->includePath = $extra . $this->includePath);
-      return;
-    }
-    $path = $extra . $this->baseDirectory;
-    set_include_path ($path);
-    $this->includePath = $path;
-  }
-
   /**
    * Sets up the application configuration.
    * When overriding this method, always call the super() after running your own
@@ -367,7 +322,6 @@ class Application
     $this->baseDirectory = $rootDir;
     $this->frameworkPath =
       "$rootDir/" . self::FRAMEWORK_PATH; // due to eventual symlinking, we can't use dirname(__DIR__) here
-    $this->setIncludePath ();
   }
 
   /**
@@ -387,19 +341,6 @@ class Application
       }
     }
     return $path;
-  }
-
-  function toURI ($path)
-  {
-    return "$this->baseURI/$path";
-  }
-
-  function toURL ($URI)
-  {
-    $port = ':' . $_SERVER['SERVER_PORT'];
-    if ($port == ":80")
-      $port = '';
-    return "http://{$_SERVER['SERVER_NAME']}$port$URI";
   }
 
 }

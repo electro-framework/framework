@@ -76,12 +76,7 @@ class WebServer
    */
   function setup ()
   {
-    $app = $this->app;
-    $this->fileServerMappings->map ($app->frameworkURI,
-      $app->frameworkPath . DIRECTORY_SEPARATOR . $app->modulePublicPath);
-
-    // Process the request.
-
+    $app          = $this->app;
     $request      = ServerRequestFactory::fromGlobals ();
     $app->baseURI = $this->getBaseUri ($request);
     /** @var ServerRequestInterface $request */

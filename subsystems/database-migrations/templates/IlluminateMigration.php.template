@@ -1,5 +1,5 @@
 <?php
-use Selenia\Plugins\IlluminateDatabase\Migration;
+use Electro\Plugins\IlluminateDatabase\Migration;
 use Illuminate\Database\Schema\Blueprint;
 
 /**
@@ -30,12 +30,12 @@ use Illuminate\Database\Schema\Blueprint;
  *
  * > **Note:** be sure to import the correct namespaces before using these facades:
  * > ``
- * > use Selenia\Plugins\IlluminateDatabase\DB;
- * > use Selenia\Plugins\IlluminateDatabase\Schema;
+ * > use Electro\Plugins\IlluminateDatabase\DB;
+ * > use Electro\Plugins\IlluminateDatabase\Schema;
  * > ```
  * > Do not use the original Illuminate facades, they will not work!
  *
- * > **Note:** although facades are an anti-pattern and its use is discouraged by Selenia, migrations is one of those
+ * > **Note:** although facades are an anti-pattern and its use is discouraged by Electro, migrations is one of those
  * few cases where they are ok to use, if you wish to. Beware that you will NOT get IDE autocompletion and code analysis
  * though.
  *
@@ -49,7 +49,7 @@ use Illuminate\Database\Schema\Blueprint;
  * To suppress the inclusion of this documentation block on future migrations, add the `--no-doc` or `-d` option to the
  * migration command.
  *
- * > Ex: `selenia make:migration -d`
+ * > Ex: `workman make:migration -d`
  */
 class $className extends Migration
 {

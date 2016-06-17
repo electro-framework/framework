@@ -1,6 +1,7 @@
 <?php
 namespace Electro\Core\Assembly\Services;
 
+use Electro\ViewEngine\Services\AssetsService;
 use PhpKit\Flow\FilesystemFlow;
 use Electro\Application;
 use Electro\Exceptions\Fatal\ConfigException;
@@ -176,11 +177,24 @@ class ModuleServices
    */
   function registerAssets ($v)
   {
+    /** @var AssetsService $assetsService */
+    $assetsService = $this->injector->make(AssetsService::class);
     // TODO: handle assets on a sub-directory of resources.
     if ($v)
-      array_mergeInto ($this->app->assets, array_map (function ($path) {
-        return "$this->publicUrl/$path";
-      }, $v));
+      foreach ($v as $path) {
+        $path = "$this->publicUrl/$path";
+        $p = strrpos ($path, '.');
+        if (!$p) continue;
+        $ext = substr ($path, $p + 1);
+        switch ($ext) {
+          case 'css':
+            $assetsService->addStylesheet ($path);
+            break;
+          case 'js':
+            $assetsService->addScript ($path);
+            break;
+        }
+      }
     return $this;
   }
 
