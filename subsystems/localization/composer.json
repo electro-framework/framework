@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/localization",
-  "description": "Selenia framework's localization subsystem",
+  "name": "electro-subsystems/localization",
+  "description": "Electro framework's localization subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -18,7 +18,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\Localization\\": "Localization"
+      "Electro\\Localization\\": "Localization"
     }
   }
 }

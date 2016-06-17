@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/authorization",
-  "description": "Selenia framework's authorization subsystem",
+  "name": "electro-subsystems/authorization",
+  "description": "Electro framework's authorization subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -18,7 +18,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\Authorization\\": "Authorization"
+      "Electro\\Authorization\\": "Authorization"
     }
   }
 }

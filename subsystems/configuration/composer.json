@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/configuration",
-  "description": "Selenia framework's configuration subsystem",
+  "name": "electro-subsystems/configuration",
+  "description": "Electro framework's configuration subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -19,7 +19,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\Configuration\\": "Configuration"
+      "Electro\\Configuration\\": "Configuration"
     }
   }
 }

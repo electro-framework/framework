@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/sessions",
-  "description": "Selenia framework's sessions subsystem",
+  "name": "electro-subsystems/sessions",
+  "description": "Electro framework's sessions subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -18,7 +18,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\Sessions\\": "Sessions"
+      "Electro\\Sessions\\": "Sessions"
     }
   }
 }

@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/navigation",
-  "description": "Selenia framework's navigation subsystem",
+  "name": "electro-subsystems/navigation",
+  "description": "Electro framework's navigation subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -18,7 +18,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\Navigation\\": "Navigation"
+      "Electro\\Navigation\\": "Navigation"
     }
   }
 }

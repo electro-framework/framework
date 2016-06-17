@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/validation",
-  "description": "Selenia framework's validation subsystem",
+  "name": "electro-subsystems/validation",
+  "description": "Electro framework's validation subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -18,7 +18,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\Validation\\": "Validation"
+      "Electro\\Validation\\": "Validation"
     }
   }
 }

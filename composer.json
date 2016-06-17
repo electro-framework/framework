@@ -39,6 +39,6 @@
     ]
   },
   "bin": [
-    "bin/selenia"
+    "bin/workman"
   ]
 }

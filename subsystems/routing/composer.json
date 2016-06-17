@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/routing",
-  "description": "Selenia framework's routing subsystem",
+  "name": "electro-subsystems/routing",
+  "description": "Electro framework's routing subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -18,7 +18,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\Routing\\": "Routing"
+      "Electro\\Routing\\": "Routing"
     }
   }
 }

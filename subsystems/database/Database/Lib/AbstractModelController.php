@@ -7,7 +7,7 @@ use Electro\Interfaces\ModelControllerExtensionInterface;
 use Electro\Interfaces\ModelControllerInterface;
 use Electro\Interfaces\SessionInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Plugins\AdminInterface\Config\PlatformModule;
+use Selenia\Platform\Config\PlatformModule;
 
 abstract class AbstractModelController implements ModelControllerInterface
 {

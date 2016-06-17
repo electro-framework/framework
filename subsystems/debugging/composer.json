@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/debugging",
-  "description": "Selenia framework's debugging subsystem",
+  "name": "electro-subsystems/debugging",
+  "description": "Electro framework's debugging subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -19,7 +19,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\Debugging\\": "Debugging"
+      "Electro\\Debugging\\": "Debugging"
     }
   }
 }

@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/error-handling",
-  "description": "Selenia framework's error handling subsystem",
+  "name": "electro-subsystems/error-handling",
+  "description": "Electro framework's error handling subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -19,7 +19,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\ErrorHandling\\": "ErrorHandling"
+      "Electro\\ErrorHandling\\": "ErrorHandling"
     }
   }
 }

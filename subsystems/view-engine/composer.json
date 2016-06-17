@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/view-engine",
-  "description": "Selenia framework's view engine subsystem",
+  "name": "electro-subsystems/view-engine",
+  "description": "Electro framework's view engine subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -18,7 +18,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\ViewEngine\\": "ViewEngine/"
+      "Electro\\ViewEngine\\": "ViewEngine/"
     }
   }
 }

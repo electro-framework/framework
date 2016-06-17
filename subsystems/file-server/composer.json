@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/file-server",
-  "description": "Selenia framework's file server subsystem",
+  "name": "electro-subsystems/file-server",
+  "description": "Electro framework's file server subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -18,7 +18,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\FileServer\\": "FileServer"
+      "Electro\\FileServer\\": "FileServer"
     }
   }
 }

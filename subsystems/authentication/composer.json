@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/authentication",
-  "description": "Selenia framework's authentication subsystem",
+  "name": "electro-subsystems/authentication",
+  "description": "Electro framework's authentication subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -19,7 +19,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\Authentication\\": "Authentication"
+      "Electro\\Authentication\\": "Authentication"
     }
   }
 }

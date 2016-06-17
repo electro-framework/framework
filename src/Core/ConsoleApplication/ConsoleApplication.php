@@ -80,7 +80,7 @@ class ConsoleApplication extends Runner
 
     // Setup the console.
 
-    $console = new SymfonyConsole ('Electro Console');
+    $console = new SymfonyConsole ('Workman Task Runner');
     $io      = new ConsoleIO;
 
     $consoleApp = new static ($io, $app, $console, $injector);

@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/http",
-  "description": "Selenia framework's HTTP subsystem",
+  "name": "electro-subsystems/http",
+  "description": "Electro framework's HTTP subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -19,7 +19,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\Http\\": "Http"
+      "Electro\\Http\\": "Http"
     }
   }
 }

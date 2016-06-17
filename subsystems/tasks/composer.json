@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/tasks",
-  "description": "Selenia framework's core tasks",
+  "name": "electro-subsystems/tasks",
+  "description": "Electro framework's core tasks",
   "license": "MIT",
   "authors": [
     {
@@ -18,7 +18,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\Tasks\\": "Tasks"
+      "Electro\\Tasks\\": "Tasks"
     }
   }
 }

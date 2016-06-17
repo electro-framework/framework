@@ -1,6 +1,6 @@
 {
-  "name": "selenia-subsystems/database",
-  "description": "Selenia framework's database subsystem",
+  "name": "electro-subsystems/database",
+  "description": "Electro framework's database subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -19,7 +19,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\Database\\": "Database"
+      "Electro\\Database\\": "Database"
     }
   }
 }
