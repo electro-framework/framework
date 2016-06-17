@@ -1,13 +1,13 @@
 <?php
-namespace Selenia\FileServer\Middleware;
+namespace Electro\FileServer\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Application;
-use Selenia\FileServer\Lib\FileUtil;
-use Selenia\FileServer\Services\FileServerMappings;
-use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Interfaces\Http\ResponseFactoryInterface;
+use Electro\Application;
+use Electro\FileServer\Lib\FileUtil;
+use Electro\FileServer\Services\FileServerMappings;
+use Electro\Interfaces\Http\RequestHandlerInterface;
+use Electro\Interfaces\Http\ResponseFactoryInterface;
 
 /**
  * Serves static assets on virtual URLs exposed from packages or from the framework itself.

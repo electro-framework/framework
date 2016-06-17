@@ -1,12 +1,12 @@
 <?php
-namespace Selenia\Core\Logging\Config;
+namespace Electro\Core\Logging\Config;
 
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
-use Selenia\Application;
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\DI\ServiceProviderInterface;
+use Electro\Application;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\DI\ServiceProviderInterface;
 
 /**
  * Provides a main logger for the application.

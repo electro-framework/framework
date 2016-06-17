@@ -1,7 +1,7 @@
 <?php
-use Selenia\Exceptions\FatalException;
-use Selenia\Exceptions\Flash\FileException;
-use Selenia\Media;
+use Electro\Exceptions\FatalException;
+use Electro\Exceptions\Flash\FileException;
+use Electro\Media;
 
 $URI      = get ($_GET, 'URI');
 $filename = get ($_GET, 'name');

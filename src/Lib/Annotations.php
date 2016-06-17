@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Lib;
+namespace Electro\Lib;
 
 class Annotations
 {

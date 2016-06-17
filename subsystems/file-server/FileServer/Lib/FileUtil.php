@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\FileServer\Lib;
+namespace Electro\FileServer\Lib;
 
 use Psr\Http\Message\UploadedFileInterface;
 

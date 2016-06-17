@@ -1,14 +1,14 @@
 <?php
-namespace Selenia\Core\Assembly\Services;
+namespace Electro\Core\Assembly\Services;
 
 use Exception;
 use PhpKit\WebConsole\Lib\Debug;
 use Psr\Log\LoggerInterface;
-use Selenia\Core\Assembly\ModuleInfo;
-use Selenia\Exceptions\Fatal\ConfigException;
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\DI\ServiceProviderInterface;
-use Selenia\Interfaces\ModuleInterface;
+use Electro\Core\Assembly\ModuleInfo;
+use Electro\Exceptions\Fatal\ConfigException;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\DI\ServiceProviderInterface;
+use Electro\Interfaces\ModuleInterface;
 
 /**
  * Loads and initializes the application's modules.

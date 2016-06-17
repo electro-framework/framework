@@ -1,9 +1,9 @@
 <?php
-namespace Selenia\Lib;
+namespace Electro\Lib;
 use PhpCode;
 use RuntimeException;
-use Selenia\Exceptions\HttpException;
-use Selenia\Traits\FluentTrait;
+use Electro\Exceptions\HttpException;
+use Electro\Traits\FluentTrait;
 
 /**
  * An interface to packagist.org.

@@ -1,13 +1,13 @@
 <?php
-namespace Selenia\Tasks\Commands;
+namespace Electro\Tasks\Commands;
 
 use Robo\Task\Bower;
 use Robo\Task\FileSystem\CleanDir;
-use Selenia\Application;
-use Selenia\Interfaces\ConsoleIOInterface;
+use Electro\Application;
+use Electro\Interfaces\ConsoleIOInterface;
 
 /**
- * Implements the Selenia Task Runner's pre-set build commands.
+ * Implements the Electro Task Runner's pre-set build commands.
  *
  * @property Application        $app
  * @property ConsoleIOInterface $io

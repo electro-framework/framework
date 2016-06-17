@@ -1,16 +1,16 @@
 <?php
-namespace Selenia\ViewEngine\Config;
+namespace Electro\ViewEngine\Config;
 
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\DI\ServiceProviderInterface;
-use Selenia\Interfaces\ModuleInterface;
-use Selenia\Interfaces\Views\ViewInterface;
-use Selenia\Interfaces\Views\ViewServiceInterface;
-use Selenia\ViewEngine\Engines\MatisseEngine;
-use Selenia\ViewEngine\Lib\View;
-use Selenia\ViewEngine\Services\AssetsService;
-use Selenia\ViewEngine\Services\BlocksService;
-use Selenia\ViewEngine\Services\ViewService;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\DI\ServiceProviderInterface;
+use Electro\Interfaces\ModuleInterface;
+use Electro\Interfaces\Views\ViewInterface;
+use Electro\Interfaces\Views\ViewServiceInterface;
+use Electro\ViewEngine\Engines\MatisseEngine;
+use Electro\ViewEngine\Lib\View;
+use Electro\ViewEngine\Services\AssetsService;
+use Electro\ViewEngine\Services\BlocksService;
+use Electro\ViewEngine\Services\ViewService;
 
 class ViewEngineModule implements ServiceProviderInterface, ModuleInterface
 {

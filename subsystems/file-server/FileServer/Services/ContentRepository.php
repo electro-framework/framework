@@ -1,8 +1,8 @@
 <?php
-namespace Selenia\FileServer\Services;
+namespace Electro\FileServer\Services;
 
 use League\Glide\Urls\UrlBuilder;
-use Selenia\Interfaces\ContentRepositoryInterface;
+use Electro\Interfaces\ContentRepositoryInterface;
 
 class ContentRepository implements ContentRepositoryInterface
 {

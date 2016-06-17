@@ -1,7 +1,7 @@
 <?php
-namespace Selenia\Routing\Services\Debug;
+namespace Electro\Routing\Services\Debug;
 
-use Selenia\Routing\Lib\Debug\BaseRouterWithLogging;
+use Electro\Routing\Lib\Debug\BaseRouterWithLogging;
 
 class RouterWithLogging extends BaseRouterWithLogging
 {

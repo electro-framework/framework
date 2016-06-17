@@ -1,8 +1,8 @@
 <?php
-namespace Selenia\Core\ConsoleApplication\Services;
+namespace Electro\Core\ConsoleApplication\Services;
 
 use InvalidArgumentException;
-use Selenia\Interfaces\ConsoleIOInterface;
+use Electro\Interfaces\ConsoleIOInterface;
 use Symfony\Component\Console\Formatter\OutputFormatterStyleInterface;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;

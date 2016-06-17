@@ -1,8 +1,8 @@
 <?php
-namespace Selenia\Routing\Services;
+namespace Electro\Routing\Services;
 
-use Selenia\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
-use Selenia\Routing\Lib\BaseRouter;
+use Electro\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
+use Electro\Routing\Lib\BaseRouter;
 
 class MiddlewareStack extends BaseRouter
   implements ApplicationMiddlewareInterface /* for call-signature compatibility */

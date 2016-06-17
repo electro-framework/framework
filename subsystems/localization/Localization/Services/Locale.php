@@ -1,8 +1,8 @@
 <?php
-namespace Selenia\Localization\Services;
+namespace Electro\Localization\Services;
 
 use RuntimeException;
-use Selenia\Traits\InspectionTrait;
+use Electro\Traits\InspectionTrait;
 
 /**
  * A service that provides localization settings that apply to the current URL.

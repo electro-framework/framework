@@ -1,12 +1,12 @@
 <?php
-namespace Selenia\ViewEngine\Services;
+namespace Electro\ViewEngine\Services;
 
-use Selenia\Application;
-use Selenia\Exceptions\Fatal\FileNotFoundException;
-use Selenia\Exceptions\FatalException;
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\Views\ViewServiceInterface;
-use Selenia\ViewEngine\Lib\View;
+use Electro\Application;
+use Electro\Exceptions\Fatal\FileNotFoundException;
+use Electro\Exceptions\FatalException;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\Views\ViewServiceInterface;
+use Electro\ViewEngine\Lib\View;
 
 class ViewService implements ViewServiceInterface
 {

@@ -1,5 +1,5 @@
 <?php
-use Selenia\Migrations\Commands\MigrationCommands;
+use Electro\Migrations\Commands\MigrationCommands;
 
 return [
   "paths"        => [

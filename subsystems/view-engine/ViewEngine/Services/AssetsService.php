@@ -1,9 +1,9 @@
 <?php
-namespace Selenia\ViewEngine\Services;
+namespace Electro\ViewEngine\Services;
 
-use Selenia\Plugins\Matisse\Components\Base\Component;
-use Selenia\Traits\InspectionTrait;
-use Selenia\ViewEngine\Lib\AssetsContext;
+use Electro\Plugins\Matisse\Components\Base\Component;
+use Electro\Traits\InspectionTrait;
+use Electro\ViewEngine\Lib\AssetsContext;
 
 /**
  * Manages external and embedded CSS stylesheets and javascripts.

@@ -1,18 +1,18 @@
 <?php
-namespace Selenia\Tasks\Commands;
+namespace Electro\Tasks\Commands;
 
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
 use Robo\Task\FileSystem\FilesystemStack;
-use Selenia\Application;
-use Selenia\Core\ConsoleApplication\ConsoleApplication;
-use Selenia\Interfaces\ConsoleIOInterface;
-use Selenia\Tasks\Config\TasksSettings;
-use Selenia\Tasks\Shared\ChmodEx;
+use Electro\Application;
+use Electro\Core\ConsoleApplication\ConsoleApplication;
+use Electro\Interfaces\ConsoleIOInterface;
+use Electro\Tasks\Config\TasksSettings;
+use Electro\Tasks\Shared\ChmodEx;
 
 /**
- * Implements the Selenia Task Runner's pre-set init:xxx commands.
+ * Implements the Electro Task Runner's pre-set init:xxx commands.
  *
  * @property Application        $app
  * @property TasksSettings      $settings
@@ -37,7 +37,7 @@ trait InitCommands
     $io      = $this->io;
     $envPath = "{$this->app->baseDirectory}/.env";
     $io->clear ()
-       ->banner ("Selenia Configuration Wizard");
+       ->banner ("Electro Configuration Wizard");
     $overwrite = get ($opts, 'overwrite');
     if (file_exists ($envPath) && !$overwrite)
       $io->nl ()->say ("<warning>The application is already configured</warning>")->comment ("Use -o to overwrite the current configuration");

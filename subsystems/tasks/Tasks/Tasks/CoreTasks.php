@@ -1,18 +1,18 @@
 <?php
-namespace Selenia\Tasks\Tasks;
+namespace Electro\Tasks\Tasks;
 
 use Robo\Task\FileSystem\FilesystemStack;
-use Selenia\Application;
-use Selenia\Core\Assembly\Services\ModulesRegistry;
-use Selenia\Core\ConsoleApplication\ConsoleApplication;
-use Selenia\Core\ConsoleApplication\Lib\ModulesUtil;
-use Selenia\Core\ConsoleApplication\Services\ConsoleIO;
-use Selenia\Tasks\Commands\InitCommands;
-use Selenia\Tasks\Commands\ModuleCommands;
-use Selenia\Tasks\Config\TasksSettings;
+use Electro\Application;
+use Electro\Core\Assembly\Services\ModulesRegistry;
+use Electro\Core\ConsoleApplication\ConsoleApplication;
+use Electro\Core\ConsoleApplication\Lib\ModulesUtil;
+use Electro\Core\ConsoleApplication\Services\ConsoleIO;
+use Electro\Tasks\Commands\InitCommands;
+use Electro\Tasks\Commands\ModuleCommands;
+use Electro\Tasks\Config\TasksSettings;
 
 /**
- * The preset Selenia console tasks configuration for Selenia's task runner.
+ * The preset Electro console tasks configuration for Electro's task runner.
  */
 class CoreTasks
 {

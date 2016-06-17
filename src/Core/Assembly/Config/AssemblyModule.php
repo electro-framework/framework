@@ -1,13 +1,13 @@
 <?php
-namespace Selenia\Core\Assembly\Config;
+namespace Electro\Core\Assembly\Config;
 
-use Selenia\Core\Assembly\Services\ModuleServices;
-use Selenia\Core\Assembly\Services\ModulesInstaller;
-use Selenia\Core\Assembly\Services\ModulesLoader;
-use Selenia\Core\Assembly\Services\ModulesRegistry;
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\DI\ServiceProviderInterface;
-use Selenia\Migrations\Config\MigrationsSettings;
+use Electro\Core\Assembly\Services\ModuleServices;
+use Electro\Core\Assembly\Services\ModulesInstaller;
+use Electro\Core\Assembly\Services\ModulesLoader;
+use Electro\Core\Assembly\Services\ModulesRegistry;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\DI\ServiceProviderInterface;
+use Electro\Migrations\Config\MigrationsSettings;
 
 class AssemblyModule implements ServiceProviderInterface
 {

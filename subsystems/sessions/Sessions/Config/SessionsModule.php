@@ -1,10 +1,10 @@
 <?php
-namespace Selenia\Sessions\Config;
+namespace Electro\Sessions\Config;
 
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\DI\ServiceProviderInterface;
-use Selenia\Interfaces\SessionInterface;
-use Selenia\Sessions\Services\Session;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\DI\ServiceProviderInterface;
+use Electro\Interfaces\SessionInterface;
+use Electro\Sessions\Services\Session;
 
 class SessionsModule implements ServiceProviderInterface
 {

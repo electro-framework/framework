@@ -1,5 +1,5 @@
 <?php
-namespace Selenia;
+namespace Electro;
 
 /**
  * Predefined filters provided by the framework.

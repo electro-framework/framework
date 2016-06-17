@@ -1,10 +1,10 @@
 <?php
-namespace Selenia\Database\Lib;
+namespace Electro\Database\Lib;
 
 use PDOException;
 use PhpKit\ExtPDO;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
-use Selenia\Traits\DecoratorTrait;
+use Electro\Traits\DecoratorTrait;
 
 class DebugPDO
 {

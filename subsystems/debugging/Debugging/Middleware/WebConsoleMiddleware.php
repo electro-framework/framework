@@ -1,16 +1,16 @@
 <?php
-namespace Selenia\Debugging\Middleware;
+namespace Electro\Debugging\Middleware;
 
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Application;
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Interfaces\Http\Shared\ApplicationRouterInterface;
-use Selenia\Interfaces\Navigation\NavigationInterface;
-use Selenia\Interfaces\SessionInterface;
-use Selenia\Routing\Services\RoutingLogger;
+use Electro\Application;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\Http\RequestHandlerInterface;
+use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
+use Electro\Interfaces\Navigation\NavigationInterface;
+use Electro\Interfaces\SessionInterface;
+use Electro\Routing\Services\RoutingLogger;
 
 /**
  *

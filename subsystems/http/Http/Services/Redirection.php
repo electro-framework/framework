@@ -1,11 +1,11 @@
 <?php
-namespace Selenia\Http\Services;
+namespace Electro\Http\Services;
 
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\UriInterface;
-use Selenia\Interfaces\Http\RedirectionInterface;
-use Selenia\Interfaces\Http\ResponseFactoryInterface;
-use Selenia\Interfaces\SessionInterface;
+use Electro\Interfaces\Http\RedirectionInterface;
+use Electro\Interfaces\Http\ResponseFactoryInterface;
+use Electro\Interfaces\SessionInterface;
 use Zend\Diactoros\Response;
 
 /**

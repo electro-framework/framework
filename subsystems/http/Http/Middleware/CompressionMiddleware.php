@@ -1,9 +1,9 @@
 <?php
-namespace Selenia\Http\Middleware;
+namespace Electro\Http\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Interfaces\Http\ResponseFactoryInterface;
+use Electro\Interfaces\Http\RequestHandlerInterface;
+use Electro\Interfaces\Http\ResponseFactoryInterface;
 
 /**
  * Applies gzip compression to the HTTP response.

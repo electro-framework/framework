@@ -1,7 +1,7 @@
 <?php
-namespace Selenia\Authentication\Lib;
+namespace Electro\Authentication\Lib;
 
-use Selenia\Interfaces\UserInterface;
+use Electro\Interfaces\UserInterface;
 
 class GenericUser implements UserInterface
 {

@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Http\Lib;
+namespace Electro\Http\Lib;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -9,8 +9,6 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class Http
 {
-  const ACTION_FIELD = 'selenia-action';
-
   /**
    * Checks if the HTTP client accepts the given content type.
    *

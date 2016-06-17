@@ -1,17 +1,17 @@
 <?php
-namespace Selenia\Sessions\Middleware;
+namespace Electro\Sessions\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Application;
-use Selenia\Exceptions\FlashMessageException;
-use Selenia\Exceptions\FlashType;
-use Selenia\Interfaces\AssignableInterface;
-use Selenia\Interfaces\Http\RedirectionInterface;
-use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Interfaces\SessionInterface;
-use Selenia\ViewEngine\Services\AssetsService;
-use Selenia\ViewEngine\Services\BlocksService;
+use Electro\Application;
+use Electro\Exceptions\FlashMessageException;
+use Electro\Exceptions\FlashType;
+use Electro\Interfaces\AssignableInterface;
+use Electro\Interfaces\Http\RedirectionInterface;
+use Electro\Interfaces\Http\RequestHandlerInterface;
+use Electro\Interfaces\SessionInterface;
+use Electro\ViewEngine\Services\AssetsService;
+use Electro\ViewEngine\Services\BlocksService;
 
 /**
  *
@@ -27,7 +27,7 @@ class SessionMiddleware implements RequestHandlerInterface
 
   /** @var Application */
   private $app;
-  /** @var \Selenia\ViewEngine\Services\AssetsService */
+  /** @var \Electro\ViewEngine\Services\AssetsService */
   private $assetsService;
   /** @var BlocksService */
   private $blocksService;

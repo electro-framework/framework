@@ -1,12 +1,12 @@
 <?php
-namespace Selenia\Navigation\Lib;
+namespace Electro\Navigation\Lib;
 
 use PhpKit\Flow\Flow;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Exceptions\Fault;
-use Selenia\Faults\Faults;
-use Selenia\Interfaces\Navigation\NavigationLinkInterface;
-use Selenia\Traits\InspectionTrait;
+use Electro\Exceptions\Fault;
+use Electro\Faults\Faults;
+use Electro\Interfaces\Navigation\NavigationLinkInterface;
+use Electro\Traits\InspectionTrait;
 
 /**
  * TODO: optimize children list to be evaluated only on iteration.

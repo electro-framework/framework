@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Core\DependencyInjection;
+namespace Electro\Core\DependencyInjection;
 
 /**
  * Represents an injectable service that holds a mutable value.

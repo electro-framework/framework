@@ -1,8 +1,8 @@
 <?php
-namespace Selenia\Authentication\Exceptions;
+namespace Electro\Authentication\Exceptions;
 
-use Selenia\Exceptions\FlashMessageException;
-use Selenia\Exceptions\FlashType;
+use Electro\Exceptions\FlashMessageException;
+use Electro\Exceptions\FlashType;
 
 class AuthenticationException extends FlashMessageException
 {

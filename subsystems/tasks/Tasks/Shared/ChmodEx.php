@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Tasks\Shared;
+namespace Electro\Tasks\Shared;
 use Robo\Common\TaskIO;
 use Robo\Contract\TaskInterface;
 use Robo\Exception\TaskException;

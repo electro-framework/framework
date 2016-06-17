@@ -1,8 +1,8 @@
 <?php
-namespace Selenia\FileServer\Services;
+namespace Electro\FileServer\Services;
 
-use Selenia\Application;
-use Selenia\Traits\InspectionTrait;
+use Electro\Application;
+use Electro\Traits\InspectionTrait;
 
 class FileServerMappings
 {

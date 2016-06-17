@@ -1,9 +1,9 @@
 <?php
-namespace Selenia\Core\Assembly;
+namespace Electro\Core\Assembly;
 
-use Selenia\Interfaces\AssignableInterface;
-use Selenia\Lib\ComposerConfigHandler;
-use Selenia\Traits\AssignableTrait;
+use Electro\Interfaces\AssignableInterface;
+use Electro\Lib\ComposerConfigHandler;
+use Electro\Traits\AssignableTrait;
 
 /**
  * Hold information about a module registration.

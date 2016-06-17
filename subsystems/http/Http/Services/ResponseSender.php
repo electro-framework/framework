@@ -1,8 +1,8 @@
 <?php
-namespace Selenia\Http\Services;
+namespace Electro\Http\Services;
 
 use Psr\Http\Message\ResponseInterface;
-use Selenia\Interfaces\Http\ResponseSenderInterface;
+use Electro\Interfaces\Http\ResponseSenderInterface;
 
 class ResponseSender implements ResponseSenderInterface
 {

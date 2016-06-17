@@ -1,17 +1,17 @@
 <?php
-namespace Selenia\FileServer\Config;
+namespace Electro\FileServer\Config;
 
 use League\Glide\Responses\PsrResponseFactory;
 use League\Glide\Server;
 use League\Glide\ServerFactory;
 use League\Glide\Urls\UrlBuilderFactory;
-use Selenia\Application;
-use Selenia\FileServer\Services\ContentRepository;
-use Selenia\FileServer\Services\FileServerMappings;
-use Selenia\Interfaces\ContentRepositoryInterface;
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\DI\ServiceProviderInterface;
-use Selenia\Interfaces\Http\ResponseFactoryInterface;
+use Electro\Application;
+use Electro\FileServer\Services\ContentRepository;
+use Electro\FileServer\Services\FileServerMappings;
+use Electro\Interfaces\ContentRepositoryInterface;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\DI\ServiceProviderInterface;
+use Electro\Interfaces\Http\ResponseFactoryInterface;
 
 class FileServerModule implements ServiceProviderInterface
 {

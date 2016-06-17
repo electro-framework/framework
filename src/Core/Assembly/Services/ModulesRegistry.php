@@ -1,12 +1,12 @@
 <?php
-namespace Selenia\Core\Assembly\Services;
+namespace Electro\Core\Assembly\Services;
 
 use PhpKit\Flow\FilesystemFlow;
-use Selenia\Application;
-use Selenia\Core\Assembly\ModuleInfo;
-use Selenia\Exceptions\ExceptionWithTitle;
-use Selenia\Lib\JsonFile;
-use Selenia\Traits\InspectionTrait;
+use Electro\Application;
+use Electro\Core\Assembly\ModuleInfo;
+use Electro\Exceptions\ExceptionWithTitle;
+use Electro\Lib\JsonFile;
+use Electro\Traits\InspectionTrait;
 use SplFileInfo;
 
 /**
@@ -102,7 +102,7 @@ class ModulesRegistry
    * Gets a list of all plugins and private modules, in that order.
    *
    * @param bool $onlyEnabled Return only modules that are enabled.
-   * @return \Selenia\Core\Assembly\ModuleInfo[]
+   * @return \Electro\Core\Assembly\ModuleInfo[]
    */
   function getApplicationModules ($onlyEnabled = false)
   {

@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Database\Lib;
+namespace Electro\Database\Lib;
 
 class DbUtil
 {

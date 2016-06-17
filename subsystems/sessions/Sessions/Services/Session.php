@@ -1,12 +1,12 @@
 <?php
-namespace Selenia\Sessions\Services;
+namespace Electro\Sessions\Services;
 
-use Selenia\Authentication\Lib\GenericUser;
-use Selenia\Exceptions\FlashType;
-use Selenia\Interfaces\SessionInterface;
-use Selenia\Interfaces\UserInterface;
-use Selenia\Traits\AssignableTrait;
-use Selenia\Traits\InspectionTrait;
+use Electro\Authentication\Lib\GenericUser;
+use Electro\Exceptions\FlashType;
+use Electro\Interfaces\SessionInterface;
+use Electro\Interfaces\UserInterface;
+use Electro\Traits\AssignableTrait;
+use Electro\Traits\InspectionTrait;
 
 class Session implements SessionInterface
 {

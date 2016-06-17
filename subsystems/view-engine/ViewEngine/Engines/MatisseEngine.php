@@ -1,15 +1,15 @@
 <?php
-namespace Selenia\ViewEngine\Engines;
+namespace Electro\ViewEngine\Engines;
 
-use Selenia\Application;
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\Views\ViewEngineInterface;
-use Selenia\Interfaces\Views\ViewServiceInterface;
-use Selenia\Plugins\Matisse\Components\Internal\DocumentFragment;
-use Selenia\Plugins\Matisse\Exceptions\MatisseException;
-use Selenia\Plugins\Matisse\Lib\FilterHandler;
-use Selenia\Plugins\Matisse\Parser\DocumentContext;
-use Selenia\Plugins\Matisse\Parser\Parser;
+use Electro\Application;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\Views\ViewEngineInterface;
+use Electro\Interfaces\Views\ViewServiceInterface;
+use Electro\Plugins\Matisse\Components\Internal\DocumentFragment;
+use Electro\Plugins\Matisse\Exceptions\MatisseException;
+use Electro\Plugins\Matisse\Lib\FilterHandler;
+use Electro\Plugins\Matisse\Parser\DocumentContext;
+use Electro\Plugins\Matisse\Parser\Parser;
 
 class MatisseEngine implements ViewEngineInterface
 {

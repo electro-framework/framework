@@ -1,13 +1,13 @@
 <?php
-namespace Selenia\Core\Assembly\Services;
+namespace Electro\Core\Assembly\Services;
 
 use PhpKit\Connection;
-use Selenia\Application;
-use Selenia\Core\Assembly\ModuleInfo;
-use Selenia\Core\ConsoleApplication\ConsoleApplication;
-use Selenia\Interfaces\ConsoleIOInterface;
-use Selenia\Migrations\Commands\MigrationCommands;
-use Selenia\Migrations\Config\MigrationsSettings;
+use Electro\Application;
+use Electro\Core\Assembly\ModuleInfo;
+use Electro\Core\ConsoleApplication\ConsoleApplication;
+use Electro\Interfaces\ConsoleIOInterface;
+use Electro\Migrations\Commands\MigrationCommands;
+use Electro\Migrations\Config\MigrationsSettings;
 
 /**
  * Manages modules installation, update and removal.

@@ -1,9 +1,9 @@
 <?php
-namespace Selenia\Core\DependencyInjection;
+namespace Electro\Core\DependencyInjection;
 
 use Auryn\InjectionException;
 use Auryn\Injector as Auryn;
-use Selenia\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\DI\InjectorInterface;
 
 class Injector extends Auryn implements InjectorInterface, \ArrayAccess
 {

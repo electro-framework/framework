@@ -1,11 +1,11 @@
 <?php
-namespace Selenia\Http\Middleware;
+namespace Electro\Http\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Application;
-use Selenia\Http\Lib\Http;
-use Selenia\Interfaces\Http\RequestHandlerInterface;
+use Electro\Application;
+use Electro\Http\Lib\Http;
+use Electro\Interfaces\Http\RequestHandlerInterface;
 
 /**
  * A middleware that generates a 404 Not Found response.

@@ -1,7 +1,7 @@
 <?php
-namespace Selenia\Tasks\Shared;
+namespace Electro\Tasks\Shared;
 
-use Selenia\Tasks\Shared\Base\ComposerTask;
+use Electro\Tasks\Shared\Base\ComposerTask;
 
 class UninstallPackageTask extends ComposerTask
 {

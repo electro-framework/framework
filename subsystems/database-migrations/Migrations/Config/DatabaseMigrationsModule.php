@@ -1,10 +1,10 @@
 <?php
-namespace Selenia\Migrations\Config;
+namespace Electro\Migrations\Config;
 
-use Selenia\Core\Assembly\Services\ModuleServices;
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\ModuleInterface;
-use Selenia\Migrations\Commands\MigrationCommands;
+use Electro\Core\Assembly\Services\ModuleServices;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\ModuleInterface;
+use Electro\Migrations\Commands\MigrationCommands;
 
 class DatabaseMigrationsModule implements ModuleInterface
 {

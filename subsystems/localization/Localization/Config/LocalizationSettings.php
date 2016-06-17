@@ -1,8 +1,8 @@
 <?php
-namespace Selenia\Localization\Config;
+namespace Electro\Localization\Config;
 
-use Selenia\Interfaces\AssignableInterface;
-use Selenia\Traits\ConfigurationTrait;
+use Electro\Interfaces\AssignableInterface;
+use Electro\Traits\ConfigurationTrait;
 
 /**
  * Configuration settings for the Localization module.

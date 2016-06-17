@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Core\DependencyInjection;
+namespace Electro\Core\DependencyInjection;
 
 use Interop\Container\Exception\NotFoundException as NotFoundInterface;
 

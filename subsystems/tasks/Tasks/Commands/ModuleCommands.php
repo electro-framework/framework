@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Tasks\Commands;
+namespace Electro\Tasks\Commands;
 
 use PhpKit\Flow\FilesystemFlow;
 use Robo\Task\Composer\Update;
@@ -8,20 +8,20 @@ use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
 use Robo\Task\FileSystem\FilesystemStack;
 use Robo\Task\Vcs\GitStack;
-use Selenia\Application;
-use Selenia\Core\Assembly\ModuleInfo;
-use Selenia\Core\Assembly\Services\ModulesRegistry;
-use Selenia\Core\ConsoleApplication\Lib\ModulesUtil;
-use Selenia\Exceptions\HttpException;
-use Selenia\Interfaces\ConsoleIOInterface;
-use Selenia\Lib\PackagistAPI;
-use Selenia\Migrations\Config\MigrationsSettings;
-use Selenia\Tasks\Config\TasksSettings;
-use Selenia\Tasks\Shared\InstallPackageTask;
-use Selenia\Tasks\Shared\UninstallPackageTask;
+use Electro\Application;
+use Electro\Core\Assembly\ModuleInfo;
+use Electro\Core\Assembly\Services\ModulesRegistry;
+use Electro\Core\ConsoleApplication\Lib\ModulesUtil;
+use Electro\Exceptions\HttpException;
+use Electro\Interfaces\ConsoleIOInterface;
+use Electro\Lib\PackagistAPI;
+use Electro\Migrations\Config\MigrationsSettings;
+use Electro\Tasks\Config\TasksSettings;
+use Electro\Tasks\Shared\InstallPackageTask;
+use Electro\Tasks\Shared\UninstallPackageTask;
 
 /**
- * Implements the Selenia Task Runner's pre-set build commands.
+ * Implements the Electro Task Runner's pre-set build commands.
  *
  * @property Application        $app
  * @property TasksSettings      $settings
@@ -167,7 +167,7 @@ trait ModuleCommands
 
       // Search
 
-      $modules = (new PackagistAPI)->type ('selenia-plugin')->query ($opts['search'])->search (true);
+      $modules = (new PackagistAPI)->type ('electro-plugin')->query ($opts['search'])->search (true);
 
       if (empty($modules))
         $io->error ("No matching plugins were found");
@@ -218,7 +218,7 @@ trait ModuleCommands
 
       // Search
 
-      $modules = (new PackagistAPI)->type ('selenia-template')->query ($opts['search'])->search (true);
+      $modules = (new PackagistAPI)->type ('electro-template')->query ($opts['search'])->search (true);
 
       if (empty($modules))
         $io->error ("No matching templates were found");

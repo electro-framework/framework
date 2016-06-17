@@ -1,8 +1,8 @@
 <?php
-namespace Selenia;
+namespace Electro;
 
-use Selenia\Exceptions\Flash\FileException;
-use Selenia\Exceptions\Flash\ImageException;
+use Electro\Exceptions\Flash\FileException;
+use Electro\Exceptions\Flash\ImageException;
 
 abstract class Media {
 

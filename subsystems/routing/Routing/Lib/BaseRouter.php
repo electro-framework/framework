@@ -1,16 +1,16 @@
 <?php
-namespace Selenia\Routing\Lib;
+namespace Electro\Routing\Lib;
 
 use Iterator;
 use PhpKit\WebConsole\Lib\Debug;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Exceptions\HttpException;
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\Http\RouteMatcherInterface;
-use Selenia\Interfaces\Http\RouterInterface;
-use Selenia\Interfaces\RenderableInterface;
-use Selenia\Traits\InspectionTrait;
+use Electro\Exceptions\HttpException;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\Http\RouteMatcherInterface;
+use Electro\Interfaces\Http\RouterInterface;
+use Electro\Interfaces\RenderableInterface;
+use Electro\Traits\InspectionTrait;
 
 /**
  * A service that assists in routing an HTTP request to one or more request handlers.

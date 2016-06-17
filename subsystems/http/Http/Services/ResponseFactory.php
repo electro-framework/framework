@@ -1,7 +1,7 @@
 <?php
-namespace Selenia\Http\Services;
+namespace Electro\Http\Services;
 
-use Selenia\Interfaces\Http\ResponseFactoryInterface;
+use Electro\Interfaces\Http\ResponseFactoryInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\Stream;
 

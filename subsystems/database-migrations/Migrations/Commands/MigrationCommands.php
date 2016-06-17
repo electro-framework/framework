@@ -1,14 +1,14 @@
 <?php
-namespace Selenia\Migrations\Commands;
+namespace Electro\Migrations\Commands;
 
 use Phinx\Console\Command;
 use Phinx\Console\Command\AbstractCommand;
 use Robo\Config;
-use Selenia\Core\Assembly\Services\ModulesRegistry;
-use Selenia\Core\ConsoleApplication\Lib\ModulesUtil;
-use Selenia\Core\ConsoleApplication\Services\ConsoleIO;
-use Selenia\Migrations\Config\MigrationsSettings;
-use Selenia\Plugins\IlluminateDatabase\DatabaseAPI;
+use Electro\Core\Assembly\Services\ModulesRegistry;
+use Electro\Core\ConsoleApplication\Lib\ModulesUtil;
+use Electro\Core\ConsoleApplication\Services\ConsoleIO;
+use Electro\Migrations\Config\MigrationsSettings;
+use Electro\Plugins\IlluminateDatabase\DatabaseAPI;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;

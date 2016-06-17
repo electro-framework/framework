@@ -1,15 +1,15 @@
 <?php
-namespace Selenia\Core\ConsoleApplication;
+namespace Electro\Core\ConsoleApplication;
 
 use Robo\Config;
 use Robo\Result;
 use Robo\Runner;
 use Robo\TaskInfo;
-use Selenia\Application;
-use Selenia\Core\Assembly\Services\ModulesLoader;
-use Selenia\Core\ConsoleApplication\Services\ConsoleIO;
-use Selenia\Interfaces\ConsoleIOInterface;
-use Selenia\Interfaces\DI\InjectorInterface;
+use Electro\Application;
+use Electro\Core\Assembly\Services\ModulesLoader;
+use Electro\Core\ConsoleApplication\Services\ConsoleIO;
+use Electro\Interfaces\ConsoleIOInterface;
+use Electro\Interfaces\DI\InjectorInterface;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputInterface;
@@ -47,9 +47,9 @@ class ConsoleApplication extends Runner
   }
 
   /**
-   * A factory for creating an instance of a console-based Selenia application.
+   * A factory for creating an instance of a console-based Electro application.
    *
-   * <p>Boots a Selenia Application and creates a console command runner with a base configuration.
+   * <p>Boots a Electro Application and creates a console command runner with a base configuration.
    * > You'll have to configure the IO channels (ex. calling `setupStandardIO()` on the runner) before running the
    * application.
    *
@@ -80,7 +80,7 @@ class ConsoleApplication extends Runner
 
     // Setup the console.
 
-    $console = new SymfonyConsole ('Selenia Console');
+    $console = new SymfonyConsole ('Electro Console');
     $io      = new ConsoleIO;
 
     $consoleApp = new static ($io, $app, $console, $injector);

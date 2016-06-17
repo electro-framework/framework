@@ -1,8 +1,8 @@
 <?php
-namespace Selenia\Core\ConsoleApplication\Lib;
+namespace Electro\Core\ConsoleApplication\Lib;
 
-use Selenia\Core\Assembly\Services\ModulesRegistry;
-use Selenia\Core\ConsoleApplication\Services\ConsoleIO;
+use Electro\Core\Assembly\Services\ModulesRegistry;
+use Electro\Core\ConsoleApplication\Services\ConsoleIO;
 
 /**
  * Utilitary shared functions for working with modules from the console.

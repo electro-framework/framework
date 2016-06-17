@@ -1,13 +1,13 @@
 <?php
-namespace Selenia\Core\WebApplication;
+namespace Electro\Core\WebApplication;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Application;
-use Selenia\Exceptions\Fatal\ConfigException;
-use Selenia\FileServer\Services\FileServerMappings;
-use Selenia\Interfaces\Http\MiddlewareStackInterface;
-use Selenia\Interfaces\Http\ResponseSenderInterface;
-use Selenia\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
+use Electro\Application;
+use Electro\Exceptions\Fatal\ConfigException;
+use Electro\FileServer\Services\FileServerMappings;
+use Electro\Interfaces\Http\MiddlewareStackInterface;
+use Electro\Interfaces\Http\ResponseSenderInterface;
+use Electro\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequestFactory;
 

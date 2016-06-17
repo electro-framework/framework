@@ -1,10 +1,10 @@
 <?php
-namespace Selenia\ErrorHandling\Config;
+namespace Electro\ErrorHandling\Config;
 
-use Selenia\ErrorHandling\Services\ErrorRenderer;
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\DI\ServiceProviderInterface;
-use Selenia\Interfaces\Http\ErrorRendererInterface;
+use Electro\ErrorHandling\Services\ErrorRenderer;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\DI\ServiceProviderInterface;
+use Electro\Interfaces\Http\ErrorRendererInterface;
 use Zend\Diactoros\Response;
 
 class ErrorHandlingModule implements ServiceProviderInterface

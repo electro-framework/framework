@@ -1,14 +1,14 @@
 <?php
-namespace Selenia\Localization\Middleware;
+namespace Electro\Localization\Middleware;
 
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Application;
-use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Interfaces\SessionInterface;
-use Selenia\Localization\Config\LocalizationSettings;
-use Selenia\Localization\Services\Locale;
+use Electro\Application;
+use Electro\Interfaces\Http\RequestHandlerInterface;
+use Electro\Interfaces\SessionInterface;
+use Electro\Localization\Config\LocalizationSettings;
+use Electro\Localization\Services\Locale;
 
 /**
  *

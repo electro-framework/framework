@@ -1,10 +1,10 @@
 <?php
-namespace Selenia\Database\Services;
+namespace Electro\Database\Services;
 
 use PhpKit\ConnectionInterface;
 use PhpKit\ExtPDO;
-use Selenia\Database\Lib\AbstractModelController;
-use Selenia\Interfaces\SessionInterface;
+use Electro\Database\Lib\AbstractModelController;
+use Electro\Interfaces\SessionInterface;
 
 class ModelController extends AbstractModelController
 {

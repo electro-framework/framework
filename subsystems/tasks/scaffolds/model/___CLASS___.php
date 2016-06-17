@@ -1,6 +1,6 @@
 <?php
 namespace _NAMESPACE_\Models;
-use Selenia\DataObject;
+use Electro\DataObject;
 
 class ___CLASS___ extends DataObject
 {

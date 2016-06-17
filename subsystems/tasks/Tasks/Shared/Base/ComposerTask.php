@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Tasks\Shared\Base;
+namespace Electro\Tasks\Shared\Base;
 
 use Robo\Task\Composer\Base;
 use Symfony\Component\Console\Output\OutputInterface;

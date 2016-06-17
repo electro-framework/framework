@@ -1,10 +1,10 @@
 <?php
-namespace Selenia\Routing\Middleware;
+namespace Electro\Routing\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Interfaces\Http\Shared\ApplicationRouterInterface;
-use Selenia\Routing\Services\MiddlewareStack;
+use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
+use Electro\Routing\Services\MiddlewareStack;
 
 /**
  * Performs the application's HTTP request routing.

@@ -1,6 +1,6 @@
 <?php
-use Selenia\Plugins\Matisse\Components\Base\PageComponent;
-use Selenia\Routing\Lib\FactoryRoutable;
+use Electro\Plugins\Matisse\Components\Base\PageComponent;
+use Electro\Routing\Lib\FactoryRoutable;
 
 /**
  * Generates a routable that, when invoked, will return a generic PageComponent with the specified template as a view.

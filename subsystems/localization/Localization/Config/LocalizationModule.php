@@ -1,10 +1,10 @@
 <?php
-namespace Selenia\Localization\Config;
+namespace Electro\Localization\Config;
 
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\DI\ServiceProviderInterface;
-use Selenia\Interfaces\ModuleInterface;
-use Selenia\Localization\Services\Locale;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\DI\ServiceProviderInterface;
+use Electro\Interfaces\ModuleInterface;
+use Electro\Localization\Services\Locale;
 
 class LocalizationModule implements ServiceProviderInterface, ModuleInterface
 {

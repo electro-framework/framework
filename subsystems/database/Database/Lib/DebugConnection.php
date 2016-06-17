@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Database\Lib;
+namespace Electro\Database\Lib;
 
 use PhpKit\Connection;
 use PhpKit\ExtPDO;

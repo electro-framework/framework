@@ -1,12 +1,13 @@
 <?php
-namespace Selenia\Database\Lib;
+namespace Electro\Database\Lib;
 
+use Electro\Exceptions\FatalException;
+use Electro\Http\Lib\Http;
+use Electro\Interfaces\ModelControllerExtensionInterface;
+use Electro\Interfaces\ModelControllerInterface;
+use Electro\Interfaces\SessionInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Exceptions\FatalException;
-use Selenia\Http\Lib\Http;
-use Selenia\Interfaces\ModelControllerExtensionInterface;
-use Selenia\Interfaces\ModelControllerInterface;
-use Selenia\Interfaces\SessionInterface;
+use Selenia\Plugins\AdminInterface\Config\PlatformModule;
 
 abstract class AbstractModelController implements ModelControllerInterface
 {
@@ -157,7 +158,7 @@ abstract class AbstractModelController implements ModelControllerInterface
           )
             $data = $this->parseFormData ($data);
 
-          unset ($data[Http::ACTION_FIELD]);
+          unset ($data[PlatformModule::ACTION_FIELD]);
           $this->merge ($data);
         }
     }

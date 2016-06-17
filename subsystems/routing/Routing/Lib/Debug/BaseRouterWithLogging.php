@@ -1,17 +1,17 @@
 <?php
-namespace Selenia\Routing\Lib\Debug;
+namespace Electro\Routing\Lib\Debug;
 
 use Iterator;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\Lib\Debug;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\Http\RouteMatcherInterface;
-use Selenia\Interfaces\Http\RouterInterface;
-use Selenia\Routing\Lib\BaseRouter;
-use Selenia\Routing\Lib\FactoryRoutable;
-use Selenia\Routing\Services\RoutingLogger;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\Http\RouteMatcherInterface;
+use Electro\Interfaces\Http\RouterInterface;
+use Electro\Routing\Lib\BaseRouter;
+use Electro\Routing\Lib\FactoryRoutable;
+use Electro\Routing\Services\RoutingLogger;
 
 /**
  * Provides the inspection aspect of a RouterInterface implementation.

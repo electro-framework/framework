@@ -1,9 +1,9 @@
 <?php
-namespace Selenia\ViewEngine\Lib;
+namespace Electro\ViewEngine\Lib;
 
-use Selenia\Exceptions\FatalException;
-use Selenia\Interfaces\Views\ViewEngineInterface;
-use Selenia\Interfaces\Views\ViewInterface;
+use Electro\Exceptions\FatalException;
+use Electro\Interfaces\Views\ViewEngineInterface;
+use Electro\Interfaces\Views\ViewInterface;
 
 class View implements ViewInterface
 {

@@ -1,5 +1,5 @@
 <?php
-namespace Selenia\Lib;
+namespace Electro\Lib;
 
 /**
  * Allows reading and writing to a composer.json data structure.

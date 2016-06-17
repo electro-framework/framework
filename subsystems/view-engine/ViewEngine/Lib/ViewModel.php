@@ -1,7 +1,7 @@
 <?php
-namespace Selenia\ViewEngine\Lib;
+namespace Electro\ViewEngine\Lib;
 
-use Selenia\Interop\Map;
+use Electro\Interop\Map;
 
 class ViewModel extends Map
 {

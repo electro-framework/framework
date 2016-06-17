@@ -1,9 +1,9 @@
 <?php
-namespace Selenia\Authentication\Config;
+namespace Electro\Authentication\Config;
 
-use Selenia\Authentication\Lib\GenericUser;
-use Selenia\Interfaces\AssignableInterface;
-use Selenia\Traits\ConfigurationTrait;
+use Electro\Authentication\Lib\GenericUser;
+use Electro\Interfaces\AssignableInterface;
+use Electro\Traits\ConfigurationTrait;
 
 /**
  * Configuration settings for the authentication module.

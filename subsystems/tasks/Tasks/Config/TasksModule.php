@@ -1,10 +1,10 @@
 <?php
-namespace Selenia\Tasks\Config;
+namespace Electro\Tasks\Config;
 
-use Selenia\Core\Assembly\Services\ModuleServices;
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\ModuleInterface;
-use Selenia\Tasks\Tasks\CoreTasks;
+use Electro\Core\Assembly\Services\ModuleServices;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\ModuleInterface;
+use Electro\Tasks\Tasks\CoreTasks;
 
 class TasksModule implements ModuleInterface
 {

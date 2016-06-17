@@ -1,8 +1,8 @@
 <?php
-namespace Selenia\Http\Middleware;
+namespace Electro\Http\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Interfaces\Http\RequestHandlerInterface;
+use Electro\Interfaces\Http\RequestHandlerInterface;
 
 /**
  * Verifies CSRF tokens for form POST requests.

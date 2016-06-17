@@ -1,16 +1,16 @@
 <?php
-namespace Selenia\Http\Config;
+namespace Electro\Http\Config;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Http\Services\Redirection;
-use Selenia\Http\Services\ResponseFactory;
-use Selenia\Http\Services\ResponseSender;
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\DI\ServiceProviderInterface;
-use Selenia\Interfaces\Http\RedirectionInterface;
-use Selenia\Interfaces\Http\ResponseFactoryInterface;
-use Selenia\Interfaces\Http\ResponseSenderInterface;
+use Electro\Http\Services\Redirection;
+use Electro\Http\Services\ResponseFactory;
+use Electro\Http\Services\ResponseSender;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\DI\ServiceProviderInterface;
+use Electro\Interfaces\Http\RedirectionInterface;
+use Electro\Interfaces\Http\ResponseFactoryInterface;
+use Electro\Interfaces\Http\ResponseSenderInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest;
 

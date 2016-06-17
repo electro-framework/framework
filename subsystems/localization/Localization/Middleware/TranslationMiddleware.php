@@ -1,15 +1,15 @@
 <?php
-namespace Selenia\Localization\Middleware;
+namespace Electro\Localization\Middleware;
 
 use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Application;
-use Selenia\Exceptions\Fatal\ConfigException;
-use Selenia\Exceptions\FlashType;
-use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Interfaces\Http\ResponseFactoryInterface;
-use Selenia\Localization\Services\Locale;
+use Electro\Application;
+use Electro\Exceptions\Fatal\ConfigException;
+use Electro\Exceptions\FlashType;
+use Electro\Interfaces\Http\RequestHandlerInterface;
+use Electro\Interfaces\Http\ResponseFactoryInterface;
+use Electro\Localization\Services\Locale;
 
 /**
  * Post-processes the HTTP response to replace translation keys by the corresponding translation.

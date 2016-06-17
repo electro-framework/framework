@@ -3,13 +3,13 @@ namespace ___NAMESPACE___\Config;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Application;
-use Selenia\Core\Assembly\Services\ModuleServices;
-use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Interfaces\Http\RouterInterface;
-use Selenia\Interfaces\ModuleInterface;
-use Selenia\Interfaces\Navigation\NavigationInterface;
-use Selenia\Interfaces\Navigation\NavigationProviderInterface;
+use Electro\Application;
+use Electro\Core\Assembly\Services\ModuleServices;
+use Electro\Interfaces\Http\RequestHandlerInterface;
+use Electro\Interfaces\Http\RouterInterface;
+use Electro\Interfaces\ModuleInterface;
+use Electro\Interfaces\Navigation\NavigationInterface;
+use Electro\Interfaces\Navigation\NavigationProviderInterface;
 
 class ___CLASS___ implements
   ModuleInterface

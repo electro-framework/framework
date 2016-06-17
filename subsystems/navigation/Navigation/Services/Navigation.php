@@ -1,12 +1,12 @@
 <?php
-namespace Selenia\Navigation\Services;
+namespace Electro\Navigation\Services;
 
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Exceptions\Fault;
-use Selenia\Faults\Faults;
-use Selenia\Interfaces\Navigation\NavigationInterface;
-use Selenia\Interfaces\Navigation\NavigationLinkInterface;
-use Selenia\Navigation\Lib\NavigationLink;
+use Electro\Exceptions\Fault;
+use Electro\Faults\Faults;
+use Electro\Interfaces\Navigation\NavigationInterface;
+use Electro\Interfaces\Navigation\NavigationLinkInterface;
+use Electro\Navigation\Lib\NavigationLink;
 
 /**
  * TODO: allow inserting maps into IDs that have not yet been defined.

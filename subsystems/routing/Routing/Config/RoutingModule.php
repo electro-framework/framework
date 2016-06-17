@@ -1,20 +1,20 @@
 <?php
-namespace Selenia\Routing\Config;
+namespace Electro\Routing\Config;
 
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\DI\ServiceProviderInterface;
-use Selenia\Interfaces\Http\MiddlewareStackInterface;
-use Selenia\Interfaces\Http\RouteMatcherInterface;
-use Selenia\Interfaces\Http\RouterInterface;
-use Selenia\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
-use Selenia\Interfaces\Http\Shared\ApplicationRouterInterface;
-use Selenia\Routing\Middleware\RoutingMiddleware;
-use Selenia\Routing\Services\Debug\MiddlewareStackWithLogging;
-use Selenia\Routing\Services\Debug\RouterWithLogging;
-use Selenia\Routing\Services\MiddlewareStack;
-use Selenia\Routing\Services\RouteMatcher;
-use Selenia\Routing\Services\Router;
-use Selenia\Routing\Services\RoutingLogger;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\DI\ServiceProviderInterface;
+use Electro\Interfaces\Http\MiddlewareStackInterface;
+use Electro\Interfaces\Http\RouteMatcherInterface;
+use Electro\Interfaces\Http\RouterInterface;
+use Electro\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
+use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
+use Electro\Routing\Middleware\RoutingMiddleware;
+use Electro\Routing\Services\Debug\MiddlewareStackWithLogging;
+use Electro\Routing\Services\Debug\RouterWithLogging;
+use Electro\Routing\Services\MiddlewareStack;
+use Electro\Routing\Services\RouteMatcher;
+use Electro\Routing\Services\Router;
+use Electro\Routing\Services\RoutingLogger;
 
 class RoutingModule implements ServiceProviderInterface
 {

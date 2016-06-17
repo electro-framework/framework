@@ -1,8 +1,8 @@
 <?php
-namespace Selenia\Tasks\Config;
+namespace Electro\Tasks\Config;
 
-use Selenia\Interfaces\AssignableInterface;
-use Selenia\Traits\ConfigurationTrait;
+use Electro\Interfaces\AssignableInterface;
+use Electro\Traits\ConfigurationTrait;
 
 /**
  * Configuration settings for the database migrations module.

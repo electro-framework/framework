@@ -1,7 +1,7 @@
 <?php
-namespace Selenia\ViewEngine\Services;
+namespace Electro\ViewEngine\Services;
 
-use Selenia\ViewEngine\Lib\Block;
+use Electro\ViewEngine\Lib\Block;
 
 /**
  * Manages blocks of document fragments.

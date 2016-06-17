@@ -1,11 +1,11 @@
 <?php
-namespace Selenia;
+namespace Electro;
 
-use Selenia\Core\Assembly\Config\AssemblyModule;
-use Selenia\Core\Logging\Config\LoggingModule;
-use Selenia\Exceptions\Fatal\ConfigException;
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\Navigation\NavigationProviderInterface;
+use Electro\Core\Assembly\Config\AssemblyModule;
+use Electro\Core\Logging\Config\LoggingModule;
+use Electro\Exceptions\Fatal\ConfigException;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\Navigation\NavigationProviderInterface;
 
 class Application
 {
@@ -15,7 +15,7 @@ class Application
    *
    * @var string
    */
-  public $appName = 'Selenia framework';
+  public $appName = 'Electro framework';
   /**
    * A list of relative file paths of assets published by each module, relative to each module's public folder, in
    * order of precedence. The framework's build process may automatically concatenate and minify those assets for a
@@ -110,20 +110,20 @@ class Application
    */
   public $includePath;
   /**
-   * @var \Selenia\Core\DependencyInjection\Injector
+   * @var \Electro\Core\DependencyInjection\Injector
    */
   public $injector;
   /**
    * If `true` the application is a console app, otherwise it may be a web app.
    *
-   * @see \Selenia\Application::$isWebBased
+   * @see \Electro\Application::$isWebBased
    * @var bool
    */
   public $isConsoleBased = false;
   /**
    * If `true` the application is a web app, otherwise it may be a console app.
    *
-   * @see \Selenia\Application::$isConsoleBased
+   * @see \Electro\Application::$isConsoleBased
    * @var bool
    */
   public $isWebBased = false;
@@ -199,7 +199,7 @@ class Application
    *
    * @var string
    */
-  public $name = 'selenia';
+  public $name = 'electro';
   /**
    * All registered navigation providers.
    * <p>This will be read when the Navigation service is injected for the first time.

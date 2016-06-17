@@ -1,9 +1,9 @@
 <?php
-namespace Selenia\Authentication\Config;
+namespace Electro\Authentication\Config;
 
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\DI\ServiceProviderInterface;
-use Selenia\Interfaces\UserInterface;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\DI\ServiceProviderInterface;
+use Electro\Interfaces\UserInterface;
 
 class AuthenticationModule implements ServiceProviderInterface
 {

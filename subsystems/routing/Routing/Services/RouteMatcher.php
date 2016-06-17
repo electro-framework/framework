@@ -1,11 +1,11 @@
 <?php
-namespace Selenia\Routing\Services;
+namespace Electro\Routing\Services;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Exceptions\Fatal\ConfigException;
-use Selenia\Interfaces\Http\RouteMatcherInterface;
+use Electro\Exceptions\Fatal\ConfigException;
+use Electro\Interfaces\Http\RouteMatcherInterface;
 
 /**
- * Implements Selenia's standard flavour of the the DSL route pattern matching syntax.
+ * Implements Electro's standard flavour of the the DSL route pattern matching syntax.
  */
 class RouteMatcher implements RouteMatcherInterface
 {

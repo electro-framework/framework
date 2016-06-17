@@ -1,15 +1,15 @@
 <?php
-namespace Selenia\Core\Assembly\Services;
+namespace Electro\Core\Assembly\Services;
 
 use PhpKit\Flow\FilesystemFlow;
-use Selenia\Application;
-use Selenia\Exceptions\Fatal\ConfigException;
-use Selenia\FileServer\Services\FileServerMappings;
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\Http\RequestHandlerInterface;
-use Selenia\Interfaces\Http\Shared\ApplicationRouterInterface;
-use Selenia\Interfaces\Navigation\NavigationInterface;
-use Selenia\Interfaces\Navigation\NavigationProviderInterface;
+use Electro\Application;
+use Electro\Exceptions\Fatal\ConfigException;
+use Electro\FileServer\Services\FileServerMappings;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\Http\RequestHandlerInterface;
+use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
+use Electro\Interfaces\Navigation\NavigationInterface;
+use Electro\Interfaces\Navigation\NavigationProviderInterface;
 
 /**
  * A service that allows a module to notify the framework of which standard framework-specific services it provides

@@ -1,9 +1,9 @@
 <?php
-namespace Selenia\Routing\Middleware;
+namespace Electro\Routing\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Interfaces\Http\RequestHandlerInterface;
+use Electro\Interfaces\Http\RequestHandlerInterface;
 
 /**
  * Matches the URL agains a map of predefined permalinks and, if a match is found, replaces the URL internally for

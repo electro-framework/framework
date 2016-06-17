@@ -32,7 +32,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Selenia\\": "src"
+      "Electro\\": "src"
     },
     "files": [
       "global.php"

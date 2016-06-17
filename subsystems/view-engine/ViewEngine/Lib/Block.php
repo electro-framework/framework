@@ -1,7 +1,7 @@
 <?php
-namespace Selenia\ViewEngine\Lib;
+namespace Electro\ViewEngine\Lib;
 
-use Selenia\Plugins\Matisse\Components\Base\Component;
+use Electro\Plugins\Matisse\Components\Base\Component;
 
 /**
  * A block of renderable content.

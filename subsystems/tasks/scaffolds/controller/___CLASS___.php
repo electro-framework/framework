@@ -1,6 +1,6 @@
 <?php
 namespace ___NAMESPACE___\Controllers;
-use Selenia\Plugins\Matisse\Components\Base\PageComponent;
+use Electro\Plugins\Matisse\Components\Base\PageComponent;
 
 class ___CLASS___ extends PageComponent
 {

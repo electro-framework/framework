@@ -1,7 +1,7 @@
 <?php
-namespace Selenia\Routing\Services;
+namespace Electro\Routing\Services;
 
-use Selenia\Routing\Lib\BaseRouter;
+use Electro\Routing\Lib\BaseRouter;
 
 /**
  * A router.

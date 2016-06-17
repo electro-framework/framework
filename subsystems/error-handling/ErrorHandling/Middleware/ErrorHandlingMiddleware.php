@@ -1,12 +1,12 @@
 <?php
-namespace Selenia\ErrorHandling\Middleware;
+namespace Electro\ErrorHandling\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
-use Selenia\Application;
-use Selenia\Interfaces\Http\ErrorRendererInterface;
-use Selenia\Interfaces\Http\RequestHandlerInterface;
+use Electro\Application;
+use Electro\Interfaces\Http\ErrorRendererInterface;
+use Electro\Interfaces\Http\RequestHandlerInterface;
 
 /**
  * Handles errors that occur throughout the HTTP request handling pipeline.

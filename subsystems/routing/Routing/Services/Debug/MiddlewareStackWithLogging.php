@@ -1,8 +1,8 @@
 <?php
-namespace Selenia\Routing\Services\Debug;
+namespace Electro\Routing\Services\Debug;
 
-use Selenia\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
-use Selenia\Routing\Lib\Debug\BaseRouterWithLogging;
+use Electro\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
+use Electro\Routing\Lib\Debug\BaseRouterWithLogging;
 
 class MiddlewareStackWithLogging extends BaseRouterWithLogging
   implements ApplicationMiddlewareInterface /* for call-signature compatibility */

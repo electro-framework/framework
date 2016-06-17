@@ -1,13 +1,13 @@
 <?php
-namespace Selenia\Core\WebApplication;
+namespace Electro\Core\WebApplication;
 
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\DebugConsole\DebugConsoleSettings;
 use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
-use Selenia\Application;
-use Selenia\Core\Assembly\Services\ModulesLoader;
-use Selenia\Core\Assembly\Services\ModulesRegistry;
-use Selenia\Interfaces\DI\InjectorInterface;
+use Electro\Application;
+use Electro\Core\Assembly\Services\ModulesLoader;
+use Electro\Core\Assembly\Services\ModulesRegistry;
+use Electro\Interfaces\DI\InjectorInterface;
 use Zend\Diactoros\Response;
 
 /**

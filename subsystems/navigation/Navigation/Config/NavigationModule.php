@@ -1,13 +1,13 @@
 <?php
-namespace Selenia\Navigation\Config;
+namespace Electro\Navigation\Config;
 
-use Selenia\Application;
-use Selenia\Interfaces\DI\InjectorInterface;
-use Selenia\Interfaces\DI\ServiceProviderInterface;
-use Selenia\Interfaces\Navigation\NavigationInterface;
-use Selenia\Interfaces\Navigation\NavigationLinkInterface;
-use Selenia\Navigation\Lib\NavigationLink;
-use Selenia\Navigation\Services\Navigation;
+use Electro\Application;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\DI\ServiceProviderInterface;
+use Electro\Interfaces\Navigation\NavigationInterface;
+use Electro\Interfaces\Navigation\NavigationLinkInterface;
+use Electro\Navigation\Lib\NavigationLink;
+use Electro\Navigation\Services\Navigation;
 
 class NavigationModule implements ServiceProviderInterface
 {
