@@ -110,8 +110,9 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     // Navigation panel
     //------------------
     if ($this->injector->provides (NavigationInterface::class)) {
-      /** @var NavigationInterface $navigation */
-      $navigation = $this->injector->make (NavigationInterface::class);
+      try {
+        /** @var NavigationInterface $navigation */
+        $navigation = $this->injector->make (NavigationInterface::class);
       // Do not log the navigation if its middleware was not executed.
       if ($navigation->request ())
         DebugConsole::logger ('navigation')->withFilter (function ($k, $v, $o) use ($navigation) {
@@ -119,6 +120,8 @@ class WebConsoleMiddleware implements RequestHandlerInterface
           if ($k === 'IDs' && $o != $navigation->rootLink ()) return '...';
           return true;
         }, $navigation);
+      }
+      catch (\Exception $e) {}
     }
 
     //------------------
