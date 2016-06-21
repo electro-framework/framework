@@ -61,7 +61,7 @@ class NavigationLink implements NavigationLinkInterface
   /** @var bool|callable */
   private $visible = true;
   /** @var bool */
-  private $visibleIfUnavailable = false;
+  private $visibleIfUnavailable = true;
 
   /**
    * Checks if the given argument is a valid iterable value. If it's not, it throws a fault.

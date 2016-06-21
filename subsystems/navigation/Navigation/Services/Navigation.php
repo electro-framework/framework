@@ -207,10 +207,10 @@ class Navigation implements NavigationInterface
     /** @var NavigationLinkInterface $child */
     foreach ($link->links () as $child) {
       if ($this->linkIsActive ($child, $url)) {
-        $trail[]           = $child;
-        $this->currentLink = $child;
         if ($child->isActuallyVisible ())
-          $this->selectedLink = $child;
+          $trail[]           = $child;
+        $this->currentLink = $child;
+        $this->selectedLink = $child;
         $child->setState (true, false, false);
         $this->buildTrail ($child, $trail, $url);
         return;
