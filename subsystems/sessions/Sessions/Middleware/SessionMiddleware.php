@@ -61,7 +61,9 @@ class SessionMiddleware implements RequestHandlerInterface
     // Load the saved session (if any).
 
     /** @var AssignableInterface $savedSession */
-    if ($savedSession = get ($_SESSION, '#data'))
+    if (($savedSession = get ($_SESSION, '#data'))
+        // make sure it's not an incomplete object loaded from a no longer existing class
+        && $savedSession instanceof AssignableInterface)
       $this->session->import ($savedSession->export ());
 
     // (Re)initialize some session settings.
