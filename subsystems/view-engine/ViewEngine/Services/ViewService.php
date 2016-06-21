@@ -7,6 +7,7 @@ use Electro\Exceptions\FatalException;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\ViewEngine\Lib\View;
+use PhpKit\Flow\FilesystemFlow;
 
 class ViewService implements ViewServiceInterface
 {
@@ -64,7 +65,11 @@ class ViewService implements ViewServiceInterface
 
   public function loadViewTemplate ($path)
   {
-    return loadFile ($this->resolveTemplatePath ($path));
+    $realPath = $this->resolveTemplatePath ($path);
+    $file = loadFile ($realPath);
+    if ($file) return $file;
+    $iter = FilesystemFlow::glob("$path.*")->onlyFiles()->getIterator();
+    return $iter->valid() ? $iter->key() : false;
   }
 
   function register ($engineClass, $filePattern)

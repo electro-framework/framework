@@ -23,13 +23,11 @@
     "php-kit/html5-tools": "dev-master",
     "php-kit/power-primitives": "dev-master",
     "php-kit/flow": "dev-master",
+    "php-kit/ext-pdo": "dev-master",
+    "electro/interop": "dev-master",
     "rdlowrey/auryn": "^1.4.0",
     "monolog/monolog": "^1.17.1",
-    "codegyre/robo": "^0.5.3",
-    "electro/interop": "dev-master",
-    "php-kit/ext-pdo": "dev-master",
-    "league/glide": "^1.0.0",
-    "vlucas/phpdotenv": "^2.3.0"
+    "codegyre/robo": "^0.5.3"
   },
   "autoload": {
     "psr-4": {

@@ -76,19 +76,19 @@ class Http
    */
   static function jsonResponse (ResponseInterface $response, $data)
   {
-    return self::send ($response, 200, json_encode ($data), 'application/json');
+    return self::response ($response, json_encode ($data), 'application/json');
   }
 
   /**
    * Simplifies setting response object properties to return a simple HTTP response.
    *
    * @param ResponseInterface $response    An existing, pristine, response object.
-   * @param int               $status      HTTP status code.
    * @param string            $body        Am optional HTML body content.
    * @param string            $contentType Defaults to 'text/plain'.
+   * @param int               $status      HTTP status code.
    * @return ResponseInterface The same response object that was supplied.
    */
-  static function send (ResponseInterface $response, $status = 200, $body = '', $contentType = 'text/plain')
+  static function response (ResponseInterface $response, $body = '', $contentType = 'text/plain', $status = 200)
   {
     if ($body)
       $response->getBody ()->write ($body);

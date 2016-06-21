@@ -1,6 +1,8 @@
 <?php
-use Selenia\Platform\Components\Base\PageComponent;
+use Electro\Http\Lib\Http;
+use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\Routing\Lib\FactoryRoutable;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Generates a routable that, when invoked, will return a generic PageComponent with the specified template as a view.
@@ -12,9 +14,10 @@ use Electro\Routing\Lib\FactoryRoutable;
  */
 function page ($templateUrl)
 {
-  return new FactoryRoutable (function (PageComponent $page) use ($templateUrl) {
-    $page->templateUrl = $templateUrl;
-    return $page;
+  return new FactoryRoutable (function (ViewServiceInterface $viewService) use ($templateUrl) {
+    return function ($request, ResponseInterface $response, $next) use ($viewService, $templateUrl) {
+      return Http::response ($response, $viewService->loadFromFile ($templateUrl)->render ());
+    };
   });
 }
 
