@@ -37,12 +37,12 @@ class ViewService implements ViewServiceInterface
     return $engine;
   }
 
-  function getEngineFromFileName ($fileName)
+  function getEngineFromFileName ($path)
   {
     foreach ($this->patterns as $pattern => $class)
-      if (preg_match ($pattern, $fileName))
+      if (preg_match ($pattern, $path))
         return $this->getEngine ($class);
-    throw new FatalException ("None of the available view engines is capable of handling a file named <b>$fileName</b>.
+    throw new FatalException ("None of the available view engines is capable of handling a file named <b>$path</b>.
 <p>Make sure the file name has one of the supported file extensions or matches a known pattern.");
   }
 
@@ -65,11 +65,7 @@ class ViewService implements ViewServiceInterface
 
   public function loadViewTemplate ($path)
   {
-    $realPath = $this->resolveTemplatePath ($path);
-    $file = loadFile ($realPath);
-    if ($file) return $file;
-    $iter = FilesystemFlow::glob("$path.*")->onlyFiles()->getIterator();
-    return $iter->valid() ? $iter->key() : false;
+    return loadFile ($path);
   }
 
   function register ($engineClass, $filePattern)
@@ -78,18 +74,32 @@ class ViewService implements ViewServiceInterface
     return $this;
   }
 
-  public function resolveTemplatePath ($path, &$base = null)
+  public function resolveTemplatePath ($viewName, &$base = null)
   {
     $dirs = $this->app->viewsDirectories;
     foreach ($dirs as $base) {
-      $p = "$base/$path";
-      if (fileExists ($p))
+      $p = "$base/$viewName";
+      if ($p = $this->findTemplate ($p))
         return $p;
     }
+    // Throw an exception
     $paths = implode ('', map ($dirs, function ($path) {
       return "<li><path>$path</path>";
     }));
-    throw new FileNotFoundException($path, "<p>Search paths:<ul>$paths</ul>");
+    throw new FileNotFoundException($viewName, "<p>Search paths:<ul>$paths</ul>");
+  }
+
+  /**
+   * Finds the file name extension for a given file path that has no extension.
+   *
+   * @param string $path The absolute path to a view template, with or without filename extension.
+   * @return string|bool The complete file name or false if no suitable file was found.
+   */
+  private function findTemplate ($path)
+  {
+    if (file_exists ($path))
+      return $path;
+    return FilesystemFlow::glob ("$path.*")->onlyFiles ()->fetchKey ();
   }
 
 }

@@ -2,6 +2,7 @@
 namespace Electro\Routing\Middleware;
 
 use Electro\Exceptions\Fatal\FileNotFoundException;
+use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -18,6 +19,15 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class AutoRoutingMiddleware implements RequestHandlerInterface
 {
+  /**
+   * @var InjectorInterface
+   */
+  private $injector;
+
+  public function __construct (InjectorInterface $injector)
+  {
+    $this->injector = $injector;
+  }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
@@ -26,7 +36,9 @@ class AutoRoutingMiddleware implements RequestHandlerInterface
     elseif (substr ($URL, -1) == '/') $URL = $URL . 'index';
 
     try {
-      return page ($URL);
+      $routable = page ($URL);
+      $handler  = $this->injector->execute ($routable);
+      return $handler ($request, $response);
     }
     catch (FileNotFoundException $e) {
       return $next ();

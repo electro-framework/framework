@@ -15,8 +15,9 @@ use Psr\Http\Message\ResponseInterface;
 function page ($templateUrl)
 {
   return new FactoryRoutable (function (ViewServiceInterface $viewService) use ($templateUrl) {
-    return function ($request, ResponseInterface $response, $next) use ($viewService, $templateUrl) {
-      return Http::response ($response, $viewService->loadFromFile ($templateUrl)->render ());
+    return function ($request, ResponseInterface $response) use ($viewService, $templateUrl) {
+      $filename = $viewService->resolveTemplatePath ($templateUrl);
+      return Http::response ($response, $viewService->loadFromFile ($filename)->render ());
     };
   });
 }

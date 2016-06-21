@@ -6,7 +6,6 @@ use Electro\Interfaces\DI\ServiceProviderInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Interfaces\Views\ViewInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
-use Electro\ViewEngine\Engines\MatisseEngine;
 use Electro\ViewEngine\Lib\View;
 use Electro\ViewEngine\Services\AssetsService;
 use Electro\ViewEngine\Services\BlocksService;
@@ -22,7 +21,7 @@ class ViewEngineModule implements ServiceProviderInterface, ModuleInterface
       ->share (ViewServiceInterface::class)
       // Register the built-in view engines:
       ->prepare (ViewServiceInterface::class, function (ViewServiceInterface $viewService) {
-        $viewService->register (MatisseEngine::class, '/\.html$/');
+        // No default view engines are available at this time.
       })
       ->share (AssetsService::class)
       ->share (BlocksService::class);
