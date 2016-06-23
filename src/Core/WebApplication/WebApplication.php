@@ -65,6 +65,7 @@ class WebApplication
    */
   function run ($rootDir)
   {
+//startProfiling("WebApplication::run");
     // Create and register the foundational framework services.
 
     /** @var Application $app */
@@ -84,9 +85,12 @@ class WebApplication
 
     // Bootstrap the application's modules.
 
-    /** @var ModulesLoader $modulesApi */
+//stepProfiling('before modulesLoader');
+    /** @var ModulesLoader $loader */
     $loader = $this->injector->make (ModulesLoader::class);
+//stepProfiling('ModulesLoader init');
     $loader->bootModules ();
+//stepProfiling('Boot');
 
     // Post-assembly additional setup.
 
@@ -96,6 +100,7 @@ class WebApplication
     /** @var WebServer $webServer */
     $webServer = $this->injector->make (WebServer::class);
     $webServer->setup ();
+//stopProfiling('after WebServer::setup');
     $webServer->run ();
   }
 

@@ -1,13 +1,10 @@
 <?php
 namespace Electro\Core\Assembly\Services;
 
-use PhpKit\Flow\FilesystemFlow;
 use Electro\Application;
 use Electro\Core\Assembly\ModuleInfo;
-use Electro\Exceptions\ExceptionWithTitle;
 use Electro\Lib\JsonFile;
 use Electro\Traits\InspectionTrait;
-use SplFileInfo;
 
 /**
  * Represents the modules' registry.
@@ -16,8 +13,6 @@ use SplFileInfo;
 class ModulesRegistry
 {
   use InspectionTrait;
-
-  const TASK_RUNNER_NAME = 'workman';
 
   static $INSPECTABLE = ['modules'];
   /**
@@ -31,39 +26,10 @@ class ModulesRegistry
    * @var ModuleInfo[]
    */
   private $modules = [];
-  /**
-   * @var ModulesInstaller
-   */
-  private $modulesInstaller;
 
-  function __construct (Application $app, ModulesInstaller $installer)
+  function __construct (Application $app)
   {
-    $this->app              = $app;
-    $this->modulesInstaller = $installer;
-    $installer->setRegistry ($this);
-  }
-
-  /**
-   * @param ModuleInfo[] $modules
-   * @return string[]
-   */
-  static function getNames (array $modules)
-  {
-    return map ($modules, function (ModuleInfo $module) { return $module->name; });
-  }
-
-  /**
-   * @param string[]     $names
-   * @param ModuleInfo[] $modules
-   * @return ModuleInfo[]
-   */
-  static private function getOnly (array $names, array $modules)
-  {
-    return map ($names, function ($name) use ($modules) {
-      list ($module, $i) = array_find ($modules, 'name', $name);
-      if (!$module) throw new \RuntimeException ("Module not found: $name");
-      return $module;
-    });
+    $this->app = $app;
   }
 
   static private function hidrateModulesList (array $data)
@@ -107,14 +73,6 @@ class ModulesRegistry
   function getApplicationModules ($onlyEnabled = false)
   {
     return array_merge ($this->getPlugins ($onlyEnabled), $this->getPrivateModules ($onlyEnabled));
-  }
-
-  /**
-   * @return ModulesInstaller
-   */
-  function getInstaller ()
-  {
-    return $this->modulesInstaller;
   }
 
   /**
@@ -282,80 +240,17 @@ class ModulesRegistry
 
   /**
    * Loads the modules registration configuration for this project.
+   *
+   * @return bool false if the registry file doesn't exist.
    */
   function load ()
   {
     $json = new JsonFile ($this->getRegistryPath (), true);
-    if ($json->exists ())
+    if ($json->exists ()) {
       $this->importFrom ($json->load ()->data);
-    else {
-      $this->rebuildRegistry (true);
+      return true;
     }
-  }
-
-  /**
-   * @param bool $noConfigYet true if no configuration file exists yet.
-   * @return ModulesRegistry
-   * @throws ExceptionWithTitle
-   */
-  function rebuildRegistry ($noConfigYet = false)
-  {
-    $runner = self::TASK_RUNNER_NAME;
-    if (!$this->app->isConsoleBased) {
-      if ($noConfigYet)
-        throw new ExceptionWithTitle ('The application\'s runtime configuration is not initialized.',
-          'Please run <kbd>$runner</kbd> on the command line.');
-      else throw new ExceptionWithTitle ('The application\'s runtime configuration must be updated.',
-        'Please run <kbd>$runner registry:recheck</kbd> on the command line.');
-    }
-
-    $subsystems = $this->loadModulesMetadata ($this->scanSubsystems (), ModuleInfo::TYPE_SUBSYSTEM);
-    $plugins    = $this->loadModulesMetadata ($this->scanPlugins (), ModuleInfo::TYPE_PLUGIN);
-    $private    = $this->loadModulesMetadata ($this->scanPrivateModules (), ModuleInfo::TYPE_PRIVATE);
-    $main       = $this->makeMainModule ();
-    $this->loadModuleMetadata ($main);
-
-    /** @var ModuleInfo[] $currentModules */
-    $currentModules     = array_merge ([$main], $subsystems, $plugins, $private);
-    $currentModuleNames = self::getNames ($currentModules);
-
-    $prevModules     = $this->modules;
-    $prevModuleNames = self::getNames ($prevModules);
-
-    $newModuleNames = array_diff ($currentModuleNames, $prevModuleNames);
-    $newModules     = self::getOnly ($newModuleNames, $currentModules);
-
-    $moduleNamesKept = array_intersect ($currentModuleNames, $prevModuleNames);
-    $moduleNamesKept = array_intersect ($moduleNamesKept, $this->getApplicationModuleNames ());
-    $modulesKept     = self::getOnly ($moduleNamesKept, $currentModules);
-
-    $this->modules = [];
-    foreach ($currentModules as $module) {
-      /** @var ModuleInfo $oldModule */
-      $oldModule = get ($prevModules, $module->name);
-      if ($oldModule) {
-        // Keep user preferences.
-        foreach (ModuleInfo::KEEP_PROPS as $prop)
-          $module->$prop = $oldModule->$prop;
-      }
-      $this->modules [$module->name] = $module;
-    }
-
-    $this->modulesInstaller->setupNewModules ($newModules);
-    $this->modulesInstaller->updateModules ($modulesKept);
-
-    $this->modulesInstaller->end();
-
-    $this->save ();
-  }
-
-  /**
-   * Updates this instance and also the registration cache file, so that it correctly states the currently installed
-   * modules.
-   */
-  function refresh ()
-  {
-    $this->rebuildRegistry ();
+    return false;
   }
 
   /**
@@ -369,6 +264,16 @@ class ModulesRegistry
       mkdir ($path, 0777, true);
     $json = new JsonFile ($filePath, true);
     $json->assign (['modules' => $this->modules])->save ();
+  }
+
+  /**
+   * Sets information about all registered modules.
+   *
+   * @param ModuleInfo[] $modules A map of module names to module information objects.
+   */
+  function setAllModules (array $modules)
+  {
+    $this->modules = $modules;
   }
 
   /**
@@ -403,106 +308,6 @@ class ModulesRegistry
   private function getRegistryPath ()
   {
     return "{$this->app->storagePath}/modules.json";
-  }
-
-  private function loadModuleMetadata (ModuleInfo $module)
-  {
-    $composerJson = new JsonFile ("$module->path/composer.json");
-    if ($composerJson->exists ()) {
-      $composerJson->load ();
-      $module->description = $composerJson->get ('description');
-      $namespaces          = $composerJson->get ('autoload.psr-4');
-      if ($namespaces) {
-        $firstKey     = array_keys (get_object_vars ($namespaces))[0];
-        $folder       = $namespaces->$firstKey;
-        $bootstrapper = $module->getBootstrapperClass ();
-        $filename     = str_replace ('\\', '/', $bootstrapper);
-        $servicesPath = "$module->path/$folder/$filename.php";
-        if (file_exists ($servicesPath))
-          $module->bootstrapper = "$firstKey$bootstrapper";
-        $rp = realpath ($module->path);
-        if ($rp != "{$this->app->baseDirectory}/$module->path")
-          $module->realPath = $rp;
-      }
-    }
-  }
-
-  /**
-   * @param ModuleInfo[] $modules
-   * @return ModuleInfo[]
-   */
-  private function loadModulesMetadata (array $modules, $type)
-  {
-    foreach ($modules as $module) {
-      $module->type = $type;
-      $this->loadModuleMetadata ($module);
-    }
-    return $modules;
-  }
-
-  private function makeMainModule ()
-  {
-    return (new ModuleInfo)->import ([
-      'name'         => 'app-kernel',
-      'description'  => 'Application kernel',
-      'path'         => 'private/app-kernel',
-      'bootstrapper' => 'AppKernel\Config\AppKernelModule',
-      'type'         => ModuleInfo::TYPE_SUBSYSTEM,
-    ]);
-  }
-
-  private function scanPlugins ()
-  {
-    return FilesystemFlow
-      ::from ("{$this->app->baseDirectory}/{$this->app->pluginModulesPath}")
-      ->onlyDirectories ()
-      ->expand (function (SplFileInfo $dirInfo) {
-        return FilesystemFlow
-          ::from ($dirInfo)
-          ->onlyDirectories ()
-          ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
-            return (new ModuleInfo)->import ([
-              'name' => $dirInfo->getFilename () . '/' . $subDirInfo->getFilename (),
-              'path' => $this->app->toRelativePath ($subDirInfo->getPathname ()),
-            ]);
-          });
-      })
-      ->all ();
-  }
-
-  private function scanPrivateModules ()
-  {
-    return FilesystemFlow
-      ::from ("{$this->app->baseDirectory}/{$this->app->modulesPath}")
-      ->onlyDirectories ()
-      ->expand (function (SplFileInfo $dirInfo) {
-        return FilesystemFlow
-          ::from ($dirInfo)
-          ->onlyDirectories ()
-          ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
-            return (new ModuleInfo)->import ([
-              'name' => $dirInfo->getFilename () . '/' . $subDirInfo->getFilename (),
-              'path' => $this->app->toRelativePath ($subDirInfo->getPathname ()),
-            ]);
-          });
-      })
-      ->all ();
-  }
-
-  private function scanSubsystems ()
-  {
-    return FilesystemFlow
-      ::from ("{$this->app->frameworkPath}/subsystems")
-      ->onlyDirectories ()
-      ->map (function (SplFileInfo $dirInfo) {
-        $path = $dirInfo->getPathname ();
-        $p    = strpos ($path, 'framework/') + 9;
-        return (new ModuleInfo)->import ([
-          'name' => $dirInfo->getFilename (),
-          'path' => $this->app->frameworkPath . substr ($path, $p),
-        ]);
-      })
-      ->pack ()->all ();
   }
 
 }

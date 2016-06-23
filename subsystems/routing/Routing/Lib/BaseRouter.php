@@ -113,7 +113,7 @@ abstract class BaseRouter implements RouterInterface
           $response = $this->callHandler ($routable, $request, $response, $next);
 
         else throw new \RuntimeException (sprintf ("Instances of class <span class=class>%s</span> are not routable.",
-          getType ($routable)));
+          Debug::getType ($routable)));
       }
       else throw new \RuntimeException (sprintf ("Invalid routable type <span class=type>%s</span>.",
         typeOf ($routable)));

@@ -16,10 +16,6 @@ use Electro\Interfaces\ModuleInterface;
 class ModulesLoader
 {
   /**
-   * @var bool
-   */
-  private $debugMode;
-  /**
    * @var InjectorInterface
    */
   private $injector;
@@ -36,15 +32,12 @@ class ModulesLoader
    * @param InjectorInterface $injector
    * @param ModulesRegistry   $modulesRegistry
    * @param LoggerInterface   $logger
-   * @param bool              $debugMode
    */
-  function __construct (InjectorInterface $injector, ModulesRegistry $modulesRegistry, LoggerInterface $logger,
-                        $debugMode)
+  function __construct (InjectorInterface $injector, ModulesRegistry $modulesRegistry, LoggerInterface $logger)
   {
     $this->injector        = $injector;
     $this->modulesRegistry = $modulesRegistry;
     $this->logger          = $logger;
-    $this->debugMode       = $debugMode;
   }
 
   /**
@@ -63,6 +56,7 @@ class ModulesLoader
 
     // Providers registration phase
 
+//stepProfiling("Begin Providers registration");
     foreach ($this->modulesRegistry->getAllModules () as $name => $module) {
       if ($module->enabled && $module->bootstrapper) {
         if (!class_exists ($module->bootstrapper)) {
@@ -84,6 +78,7 @@ class ModulesLoader
             $module->errorStatus = null;
             $this->modulesRegistry->save (); // Note: this only occurs on debug mode.
           }
+//stepProfiling("Provider $name done");
         }
         catch (Exception $e) {
           $this->logModuleError ($module, $e->getMessage (), $e);
@@ -98,12 +93,15 @@ class ModulesLoader
     /** @var ModuleServices $moduleServices */
     $moduleServices = $this->injector->make (ModuleServices::class);
 
+//stepProfiling("Begin Module configuration phase");
     foreach ($providers as $i => $provider) {
       $moduleServices->setPath ($paths[$i]);
       $fn = [$provider, 'configure'];
       if (is_callable ($fn))
         try {
           $this->injector->execute ($fn);
+//$m = str_segmentsLast($paths[$i], '/');
+//stepProfiling("Module $m configured");
         }
         catch (Exception $e) {
           $this->logModuleError ($providerModules[$i], $e->getMessage (), $e);
@@ -113,9 +111,11 @@ class ModulesLoader
     // From this point on, errors are not suppressed, as all modules are already loaded and initialized.
 
     $moduleServices->runPostConfig ();
+//stepProfiling("Post config runned");
 
     // Providers boot phase
 
+//stepProfiling("Begin Providers boot phase");
     foreach ($providers as $i => $provider) {
       // Only boot modules that have not failed the initialization process.
       if (!$providerModules[$i]->errorStatus) {
@@ -123,27 +123,25 @@ class ModulesLoader
         if (is_callable ($fn))
           try {
             $this->injector->execute ($fn);
+//$m = str_segmentsLast($paths[$i], '/');
+//stepProfiling("Module $m booted");
           }
           catch (Exception $e) {
             $this->logModuleError ($providerModules[$i], $e->getMessage (), $e);
           }
       }
     }
+//stepProfiling("bootModules complete");
   }
 
   private function logModuleError (ModuleInfo $module, $message, Exception $e = null)
   {
     if (!$e)
       $e = new \RuntimeException ($message);
-    // Errors on subsystem modules are considered to be always fatal.
-    if ($module->type == ModuleInfo::TYPE_SUBSYSTEM)
-      throw $e;
-
-    $module->errorStatus = $message;
+    // Make sure the exception gets logged before throwing it
     Debug::logException ($this->logger, $e);
-    // Only save errorStatus if not on production, otherwise concurrency problems while saving might occur.
-    if ($this->debugMode)
-      $this->modulesRegistry->save ();
+
+    throw $e;
   }
 
 }

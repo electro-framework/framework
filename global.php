@@ -61,6 +61,17 @@ function dump ()
   echo "</pre>";
 }
 
+/**
+ * Outputs a stack trace up to the first call to this function with detailed timing and memory consumption information
+ * about each function/method call.
+ *
+ * <p>It requires a logger panel named 'trace' to be defined.
+ * <p>It also requires XDebug to be installed.
+ *
+ * @see PhpKit\WebConsole\DebugConsole\DebugConsole::trace
+ * @return string
+ * @throws Exception
+ */
 function trace ()
 {
   PhpKit\WebConsole\DebugConsole\DebugConsole::trace ();

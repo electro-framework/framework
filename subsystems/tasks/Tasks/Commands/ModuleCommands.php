@@ -1,6 +1,7 @@
 <?php
 namespace Electro\Tasks\Commands;
 
+use Electro\Core\Assembly\Services\ModulesInstaller;
 use PhpKit\Flow\FilesystemFlow;
 use Robo\Task\Composer\Update;
 use Robo\Task\File\Replace;
@@ -30,6 +31,7 @@ use Electro\Tasks\Shared\UninstallPackageTask;
  * @property FilesystemStack    $fs
  * @property ModulesUtil        $modulesUtil
  * @property ModulesRegistry    $modulesRegistry
+ * @property ModulesInstaller   $modulesInstaller
  */
 trait ModuleCommands
 {
@@ -112,7 +114,7 @@ trait ModuleCommands
   function moduleCleanup ($moduleName = '', $opts = ['suppress-errors|s' => false])
   {
     if ($this->modulesUtil->selectModule ($moduleName, false, true)) {
-      $this->modulesRegistry->getInstaller ()->cleanUpModule ($moduleName);
+      $this->modulesInstaller->cleanUpModule ($moduleName);
       $this->io->done ("Cleanup complete");
     }
     else if (!$opts['suppress-errors'])
@@ -277,7 +279,7 @@ trait ModuleCommands
   function moduleReinit ()
   {
     if ($this->modulesUtil->selectModule ($moduleName, false, true)) {
-      $this->modulesRegistry->getInstaller ()->setupModule ($moduleName);
+      $this->modulesInstaller->setupModule ($moduleName);
       $this->io->done ("Reinitialization complete");
     }
   }
@@ -306,7 +308,7 @@ trait ModuleCommands
    */
   function registryRecheck ()
   {
-    $this->modulesRegistry->refresh ();
+    $this->modulesInstaller->rebuildRegistry ();
   }
 
   /**
@@ -348,7 +350,7 @@ trait ModuleCommands
 
   protected function uninstallProjectModule ($moduleName)
   {
-    !$this->modulesRegistry->getInstaller ()->cleanUpModule ($moduleName) or exit (1);
+    !$this->modulesInstaller->cleanUpModule ($moduleName) or exit (1);
 
     $io = $this->io;
     $io->nl ();
