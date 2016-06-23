@@ -1,12 +1,12 @@
 <?php
 namespace Electro\Navigation\Services;
 
-use Psr\Http\Message\ServerRequestInterface;
 use Electro\Exceptions\Fault;
 use Electro\Faults\Faults;
 use Electro\Interfaces\Navigation\NavigationInterface;
 use Electro\Interfaces\Navigation\NavigationLinkInterface;
 use Electro\Navigation\Lib\NavigationLink;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * TODO: allow inserting maps into IDs that have not yet been defined.
@@ -59,7 +59,7 @@ class Navigation implements NavigationInterface
       'All URLs<sup>*</sup><br>' .
       '<i>(in scanning order)</i>' => map ($this->rootLink->getDescendants (),
         function (NavigationLinkInterface $link, &$i) {
-          $i = $link->rawUrl();
+          $i = $link->rawUrl ();
           return $link->url ();
         }),
       'Trail<sup>*</sup>'          => map ($this->getCurrentTrail (), $linkToUrl),
@@ -207,10 +207,10 @@ class Navigation implements NavigationInterface
     /** @var NavigationLinkInterface $child */
     foreach ($link->links () as $child) {
       if ($this->linkIsActive ($child, $url)) {
-        if ($child->isActuallyVisible ())
-          $trail[]           = $child;
+        $trail[]           = $child;
         $this->currentLink = $child;
-        $this->selectedLink = $child;
+        if ($child->isActuallyVisible ())
+          $this->selectedLink = $child;
         $child->setState (true, false, false);
         $this->buildTrail ($child, $trail, $url);
         return;
