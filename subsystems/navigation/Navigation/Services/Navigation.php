@@ -138,7 +138,6 @@ class Navigation implements NavigationInterface
     foreach ($trail as $link)
       if ($link->isActuallyVisible ())
         $vtrail[] = $link;
-      else break;
     return $this->cachedVisibleTrail = $vtrail;
   }
 
