@@ -48,14 +48,21 @@ abstract class BaseRouter implements RouterInterface
    */
   protected $stackId;
   /**
+   * Holds the current request for the applications's global middlware stack; updated as the router calls request handlers.
+   *
+   * @var CurrentRequestMutator
+   */
+  protected $currentRequestMutator;
+  /**
    * @var RouteMatcherInterface
    */
   private $matcher;
 
-  public function __construct (RouteMatcherInterface $matcher, InjectorInterface $injector)
+  public function __construct (RouteMatcherInterface $matcher, InjectorInterface $injector, CurrentRequestMutator $currentRequestMutator)
   {
     $this->matcher  = $matcher;
     $this->injector = $injector;
+    $this->currentRequestMutator = $currentRequestMutator;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)

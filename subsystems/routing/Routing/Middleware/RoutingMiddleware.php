@@ -14,6 +14,7 @@ use Electro\Routing\Services\MiddlewareStack;
 class RoutingMiddleware extends MiddlewareStack
   implements ApplicationRouterInterface /* for call-signature compatibility */
 {
+
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     /** @var ServerRequestInterface $request */

@@ -1,6 +1,7 @@
 <?php
 namespace Electro\Routing\Lib\Debug;
 
+use Electro\Routing\Lib\CurrentRequestMutator;
 use Iterator;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\Lib\Debug;
@@ -20,13 +21,6 @@ use Electro\Routing\Services\RoutingLogger;
  */
 class BaseRouterWithLogging extends BaseRouter
 {
-  /**
-   * The current request; updated as the router calls request handlers.
-   * > This is used for debugging only.
-   *
-   * @var ServerRequestInterface
-   */
-  static private $currentRequest;
   /**
    * The current request body size; updated as the router calls request handlers.
    * > This is used for debugging only.
@@ -65,9 +59,9 @@ class BaseRouterWithLogging extends BaseRouter
 
   public function __construct (InjectorInterface $injector,
                                RouteMatcherInterface $matcher,
-                               RoutingLogger $routingLogger, $debugMode)
+                               RoutingLogger $routingLogger, $debugMode, CurrentRequestMutator $currentRequestMutator)
   {
-    parent::__construct ($matcher, $injector);
+    parent::__construct ($matcher, $injector, $currentRequestMutator);
 
     // Uncomment the following line if you want to see the routing log when the app crashes without the Debug Console
     // being displayed:
@@ -102,9 +96,9 @@ class BaseRouterWithLogging extends BaseRouter
 
     DebugConsole::logger ('request')->setRequest ($request);
 
-    if ($request && $request != self::$currentRequest) {
+    if ($request && $request != $this->currentRequestMutator->get ()) {
       $this->logRequest ($request, sprintf ('with another %s object:', Debug::getType ($request)));
-      self::$currentRequest     = $request;
+      $this->currentRequestMutator->set ($request);
       self::$currentRequestSize = $request->getBody ()->getSize ();
     }
 
@@ -142,8 +136,8 @@ class BaseRouterWithLogging extends BaseRouter
   {
     $this->routingLogger->writef ("<#row>Begin stack %d</#row>", $stackId);
 
-    if ($currentRequest && $currentRequest != self::$currentRequest) {
-      if (!self::$currentRequest) {
+    if ($currentRequest && $currentRequest != $this->currentRequestMutator->get ()) {
+      if (!$this->currentRequestMutator->get ()) {
         $this->routingLogger
           ->writef ("<#indent><table class=\"__console-table with-caption\"><caption>with the initial %s object &nbsp; <a class='fa fa-external-link' href='javascript:openConsoleTab(\"request\")'></a></caption></table></#indent>",
             Debug::getType ($currentRequest));
@@ -151,7 +145,7 @@ class BaseRouterWithLogging extends BaseRouter
       else $this->logRequest ($currentRequest,
         sprintf ('with another %s object:', Debug::getType ($currentRequest))
       );
-      self::$currentRequest     = $currentRequest;
+      $this->currentRequestMutator->set ($currentRequest);
       self::$currentRequestSize = $currentRequest->getBody ()->getSize ();
     }
 
@@ -187,8 +181,8 @@ class BaseRouterWithLogging extends BaseRouter
   protected function iteration_step ($key, $routable, ServerRequestInterface $request = null,
                                      ResponseInterface $response = null, callable $nextIteration)
   {
-    if ($request && $request != self::$currentRequest) //NOT SUPPOSED TO HAPPEN?
-      self::$currentRequest = $request;
+    if ($request && $request != $this->currentRequestMutator->get ()) //NOT SUPPOSED TO HAPPEN?
+      $this->currentRequestMutator->set ($request);
 
     return parent::iteration_step ($key, $routable, $request, $response, $nextIteration);
   }
@@ -197,7 +191,7 @@ class BaseRouterWithLogging extends BaseRouter
                                                ResponseInterface $response, callable $nextIteration)
   {
     $this->routingLogger->writef ("<#row><b class=keyword>'%s'</b> <b>matches</b> route pattern <b class=keyword>'$key'</b></#row>",
-      self::$currentRequest->getRequestTarget ());
+      $this->currentRequestMutator->get ()->getRequestTarget ());
 
     return parent::iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
   }
@@ -206,7 +200,7 @@ class BaseRouterWithLogging extends BaseRouter
                                                   ResponseInterface $response, callable $nextIteration)
   {
     $this->routingLogger->writef ("<#row><b class=keyword>'%s'</b> doesn't match route pattern <b class=keyword>'$key'</b></#row>",
-      self::$currentRequest->getRequestTarget ());
+      $this->currentRequestMutator->get ()->getRequestTarget ());
 
     return parent::iteration_stepNotMatchRoute ($key, $routable, $request, $response, $nextIteration);
   }
@@ -230,13 +224,15 @@ class BaseRouterWithLogging extends BaseRouter
    */
   private function logRequest ($r, $title, $forceShow = false)
   {
-    $showAll = !self::$currentRequest || $forceShow;
+    /** @var ServerRequestInterface $current */
+    $current = $this->currentRequestMutator->get ();
+    $showAll = !$this->currentRequestMutator->get () || $forceShow;
     $icon    = $showAll ? '' : '<sup>*</sup>';
-    if ($showAll || $r->getHeaders () != self::$currentRequest->getHeaders ())
+    if ($showAll || $r->getHeaders () != $current->getHeaders ())
       $out['Headers' . $icon] = map ($r->getHeaders (), function ($v) { return implode ('<br>', $v); });
-    if ($showAll || $r->getAttributes () != self::$currentRequest->getAttributes ())
+    if ($showAll || $r->getAttributes () != $current->getAttributes ())
       $out['Attributes' . $icon] = $r->getAttributes ();
-    if ($showAll || $r->getRequestTarget () != self::$currentRequest->getRequestTarget ())
+    if ($showAll || $r->getRequestTarget () != $current->getRequestTarget ())
       $out['Request target' . $icon] = $r->getRequestTarget ();
     if ($showAll || $r->getBody ()->getSize () != self::$currentRequestSize)
       $out['Size' . $icon] = $r->getBody ()->getSize ();

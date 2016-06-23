@@ -15,7 +15,7 @@ class Application
    *
    * @var string
    */
-  public $appName = 'ELECTRO framework';
+  public $appName = '⚡️ ELECTRO';
   /**
    * The file path of current main application's root directory.
    *

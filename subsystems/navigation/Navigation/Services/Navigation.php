@@ -6,6 +6,7 @@ use Electro\Faults\Faults;
 use Electro\Interfaces\Navigation\NavigationInterface;
 use Electro\Interfaces\Navigation\NavigationLinkInterface;
 use Electro\Navigation\Lib\NavigationLink;
+use Electro\Routing\Lib\CurrentRequestMutator;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -30,6 +31,10 @@ class Navigation implements NavigationInterface
    */
   private $currentLink;
   /**
+   * @var CurrentRequestMutator
+   */
+  private $currentRequestMutator;
+  /**
    * @var NavigationLinkInterface
    */
   private $rootLink;
@@ -38,9 +43,10 @@ class Navigation implements NavigationInterface
    */
   private $selectedLink;
 
-  function __construct ()
+  function __construct (CurrentRequestMutator $currentRequestMutator)
   {
-    $this->rootLink = $this->group ()->url ('');
+    $this->rootLink              = $this->group ()->url ('');
+    $this->currentRequestMutator = $currentRequestMutator;
   }
 
   function IDs ()
@@ -99,7 +105,8 @@ class Navigation implements NavigationInterface
   function getCurrentTrail ($offset = 0)
   {
     if (!isset($this->cachedTrail)) {
-      $request = $this->request ();
+      $request = $this->currentRequestMutator->get ();
+      $this->request ($request);
       if (is_null ($request))
         throw new Fault (Faults::REQUEST_NOT_SET);
       $url               = $request->getAttribute ('virtualUri');

@@ -8,6 +8,7 @@ use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\RouterInterface;
 use Electro\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
 use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
+use Electro\Routing\Lib\CurrentRequestMutator;
 use Electro\Routing\Middleware\RoutingMiddleware;
 use Electro\Routing\Services\Debug\MiddlewareStackWithLogging;
 use Electro\Routing\Services\Debug\RouterWithLogging;
@@ -42,7 +43,8 @@ class RoutingModule implements ServiceProviderInterface
         //
         ->share (ApplicationMiddlewareInterface::class)
         ->alias (ApplicationMiddlewareInterface::class,
-          $debugConsole ? MiddlewareStackWithLogging::class : MiddlewareStack::class);
+          $debugConsole ? MiddlewareStackWithLogging::class : MiddlewareStack::class)
+        ->share (CurrentRequestMutator::class);
 
       if ($debugConsole) $injector
         ->share (RoutingLogger::class);
