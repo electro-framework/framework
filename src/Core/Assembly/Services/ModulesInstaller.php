@@ -42,12 +42,12 @@ class ModulesInstaller
    */
   private $registry;
 
-  function __construct (Application $app, ConsoleApplication $consoleApp, ModulesRegistry $registry)
+  function __construct (Application $app, ConsoleApplication $consoleApp, ModulesRegistry $modulesRegistry)
   {
     $this->app        = $app;
     $this->consoleApp = $consoleApp;
     $this->io         = $consoleApp->getIO ();
-    $this->registry   = $registry;
+    $this->registry   = $modulesRegistry;
   }
 
   /**

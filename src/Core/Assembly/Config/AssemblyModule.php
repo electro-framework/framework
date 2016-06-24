@@ -29,9 +29,10 @@ class AssemblyModule implements ServiceProviderInterface
             throw new ExceptionWithTitle ("The application's runtime configuration is not initialized.",
               "Please run <kbd>$runner</kbd> on the command line.");
           }
-
           /** @var ModulesInstaller $installer */
-          $installer = $injector->make (ModulesInstaller::class);
+          // Note: to prevent a cyclic dependency exception, $registry must be passed to the ModulesInstaller's
+          // constructor.
+          $installer = $injector->make (ModulesInstaller::class, [':modulesRegistry' => $registry]);
           $installer->rebuildRegistry ();
         }
       })
