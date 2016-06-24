@@ -1,8 +1,12 @@
 <?php
+use Electro\Exceptions\Fault;
+use Electro\Faults\Faults;
 use Electro\Http\Lib\Http;
+use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\Routing\Lib\FactoryRoutable;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Generates a routable that, when invoked, will return a generic PageComponent with the specified template as a view.
@@ -34,14 +38,45 @@ function factory (callable $fn)
 }
 
 /**
- * @param string|array $ref Either a 'Class::method' string or a ['Class', 'Method'] array.
- * @return array A ['Class', 'Method'] array.
+ * Returns a route to a controller method or function.
+ *
+ * <p>The callable will receive as arguments the route parameters, followed by the request and the response objects.
+ * <p>It can return:
+ * - a response object
+ * - a string (sent as text/html)
+ * - `null` to send an empty response
+ * - arrays, objects or scalars will be sent as JSON.
+ *
+ * @param string|array|callable $ref Either a Closure, a 'Class::method' string or a ['Class', 'method'] array or an
+ *                                   [$instance, 'method'] array.
+ * @return FactoryRoutable
+ * @throws Fault If an invalid data type is returned from the controller.
  */
-function parseMethodRef ($ref)
+function controller ($ref)
 {
-  if (empty($ref))
-    return [null, null];
-  return array_merge (is_array ($ref) ? $ref : explode ('::', $ref), [null]);
+  return new FactoryRoutable (function (InjectorInterface $injector) use ($ref) {
+    $ctrl = $injector->buildExecutable ($ref);
+    return function (ServerRequestInterface $request, ResponseInterface $response) use ($ctrl) {
+      $args   = array_merge (array_values (Http::getRouteParameters ($request)), [$request, $response]);
+      $result = $ctrl (...$args);
+      switch (true) {
+        case $result instanceof ResponseInterface:
+          return $result;
+        case is_string ($result):
+          break;
+        case is_null ($result):
+          $result = '';
+          break;
+        case is_array ($result):
+        case is_object ($result):
+        case is_scalar ($result):
+          return Http::jsonResponse ($response, $result);
+        default:
+          throw new Fault (Faults::INVALID_RESPONSE_TYPE);
+      }
+      return Http::response ($response, $result);
+    };
+  });
 }
 
 /**
