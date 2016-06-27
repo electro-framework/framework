@@ -5,7 +5,7 @@ use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\DI\ServiceProviderInterface;
 use Swift_Mailer;
 
-class EmailModule implements ServiceProviderInterface
+class MailModule implements ServiceProviderInterface
 {
   function register (InjectorInterface $injector)
   {
