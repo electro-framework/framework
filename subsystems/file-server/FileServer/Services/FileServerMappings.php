@@ -8,6 +8,11 @@ class FileServerMappings
 {
   use InspectionTrait;
 
+  /**
+   * Currently, all mapped URLs must have this hardcoded prefix.
+   */
+  const URL_PREFIX = 'modules';
+
   static $INSPECTABLE = ['mountPoints'];
   /**
    * @var Application
@@ -42,7 +47,7 @@ class FileServerMappings
     $p = strpos ($URI, '/');
     if ($p) {
       $head = substr ($URI, 0, $p);
-      if ($head == 'modules') {
+      if ($head == self::URL_PREFIX) {
         $p    = strpos ($URI, '/', $p + 1);
         $p    = strpos ($URI, '/', $p + 1);
         $head = substr ($URI, 0, $p);
