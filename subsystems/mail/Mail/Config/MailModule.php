@@ -4,9 +4,13 @@ namespace Electro\Mail\Config;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\DI\ServiceProviderInterface;
 use Swift_Mailer;
+use Swift_Plugins_LoggerPlugin;
+use Swift_Plugins_Loggers_ArrayLogger;
 
 class MailModule implements ServiceProviderInterface
 {
+  const MAX_LOG_SIZE = 50;
+
   function register (InjectorInterface $injector)
   {
     $injector
@@ -20,7 +24,12 @@ class MailModule implements ServiceProviderInterface
             ->setUsername (env ('EMAIL_SMTP_USERNAME'))
             ->setPassword (env ('EMAIL_SMTP_PASSWORD'));
 
-        return new Swift_Mailer ($transport);
+        $mailer = new Swift_Mailer ($transport);
+        $logger = new Swift_Plugins_Loggers_ArrayLogger (self::MAX_LOG_SIZE);
+        $mailer->registerPlugin (new Swift_Plugins_LoggerPlugin ($logger));
+        // Create run-time custom property to allow easy access to the logger.
+        $mailer->logger = $logger;
+        return $mailer;
       });
   }
 
