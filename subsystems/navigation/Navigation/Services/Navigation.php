@@ -7,7 +7,6 @@ use Electro\Interfaces\Navigation\NavigationInterface;
 use Electro\Interfaces\Navigation\NavigationLinkInterface;
 use Electro\Navigation\Lib\NavigationLink;
 use Electro\Routing\Lib\CurrentRequestMutator;
-use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * TODO: allow inserting maps into IDs that have not yet been defined.
@@ -105,8 +104,7 @@ class Navigation implements NavigationInterface
   function getCurrentTrail ($offset = 0)
   {
     if (!isset($this->cachedTrail)) {
-      $request = $this->currentRequestMutator->get ();
-      $this->request ($request);
+      $request = $this->request ();
       if (is_null ($request))
         throw new Fault (Faults::REQUEST_NOT_SET);
       $url               = $request->getAttribute ('virtualUri');
@@ -162,7 +160,7 @@ class Navigation implements NavigationInterface
    */
   function link ()
   {
-    $link      = new NavigationLink;
+    $link      = new NavigationLink ($this);
     $link->IDs =& $this->IDs;
     return $link;
   }
@@ -187,12 +185,9 @@ class Navigation implements NavigationInterface
     throw new Fault (Faults::PROPERTY_IS_READ_ONLY, $offset);
   }
 
-  function request (ServerRequestInterface $request = null)
+  function request ()
   {
-    if (is_null ($request))
-      return $this->rootLink->request ();
-    $this->rootLink->request ($request);
-    return $this;
+    return $this->currentRequestMutator->get ();
   }
 
   function rootLink (NavigationLinkInterface $rootLink = null)

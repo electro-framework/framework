@@ -163,6 +163,8 @@ abstract class BaseRouter implements RouterInterface
   protected function callHandler (callable $handler, ServerRequestInterface $request, ResponseInterface $response,
                                   callable $next)
   {
+    $this->currentRequestMutator->set ($request);
+
     if ($handler instanceof RenderableInterface) {
       $class = $handler->getContextClass ();
       $handler->setContext ($this->injector->make ($class));

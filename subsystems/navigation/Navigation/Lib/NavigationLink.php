@@ -1,12 +1,13 @@
 <?php
 namespace Electro\Navigation\Lib;
 
-use PhpKit\Flow\Flow;
-use Psr\Http\Message\ServerRequestInterface;
 use Electro\Exceptions\Fault;
 use Electro\Faults\Faults;
+use Electro\Interfaces\Navigation\NavigationInterface;
 use Electro\Interfaces\Navigation\NavigationLinkInterface;
 use Electro\Traits\InspectionTrait;
+use PhpKit\Flow\Flow;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * TODO: optimize children list to be evaluated only on iteration.
@@ -48,10 +49,10 @@ class NavigationLink implements NavigationLinkInterface
   private $id = '';
   /** @var NavigationLinkInterface[] */
   private $links = [];
+  /** @var NavigationInterface */
+  private $navigation;
   /** @var NavigationLinkInterface */
   private $parent;
-  /** @var ServerRequestInterface */
-  private $request;
   /** @var bool */
   private $selected = false;
   /** @var string|callable */
@@ -62,6 +63,11 @@ class NavigationLink implements NavigationLinkInterface
   private $visible = true;
   /** @var bool */
   private $visibleIfUnavailable = true;
+
+  public function __construct (NavigationInterface $navigation)
+  {
+    $this->navigation = $navigation;
+  }
 
   /**
    * Checks if the given argument is a valid iterable value. If it's not, it throws a fault.
@@ -201,10 +207,7 @@ class NavigationLink implements NavigationLinkInterface
 
   function request (ServerRequestInterface $request = null)
   {
-    if (is_null ($request))
-      return $this->request ?: $this->request = ($this->parent ? $this->parent->request () : null);
-    $this->request = $request;
-    return $this;
+    return $this->navigation->request();
   }
 
   function setState ($active, $selected, $current)
@@ -232,7 +235,8 @@ class NavigationLink implements NavigationLinkInterface
         $url = $url();
 
       if (isset($url) && $this->parent && !str_beginsWith ($url, 'http') && ($url === '' || $url[0] != '/')
-      && !preg_match('/^\w+:/', $url)) {
+          && !preg_match ('/^\w+:/', $url)
+      ) {
         $base = $this->parent->url ();
         $url  = exists ($base) ? (exists ($url) ? "$base/$url" : $base) : $url;
       }

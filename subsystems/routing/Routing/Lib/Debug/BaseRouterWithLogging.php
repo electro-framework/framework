@@ -98,7 +98,7 @@ class BaseRouterWithLogging extends BaseRouter
 
     if ($request && $request != $this->currentRequestMutator->get ()) {
       $this->logRequest ($request, sprintf ('with another %s object:', Debug::getType ($request)));
-      $this->currentRequestMutator->set ($request);
+//      $this->currentRequestMutator->set ($request); // DO NOT DO THIS HERE; IT WILL BE DONE ON THE PARENT.
       self::$currentRequestSize = $request->getBody ()->getSize ();
     }
 
