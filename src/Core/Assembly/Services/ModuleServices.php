@@ -292,18 +292,24 @@ class ModuleServices
    *                                                         <p>Some MiddlewareStackInterface implementations
    *                                                         may use the key for other purposes (ex. route matching
    *                                                         patterns).
+   * @param string|int|null                         $before  Insert before an existing handler that lies at the given
+   *                                                         index, or that has the given key. When null, the handler is
+   *                                                         appended to the end of the pipeline, except if $after is
+   *                                                         provided.
    * @param string|int|null                         $after   Insert after an existing handler that lies at the given
-   *                                                         index, or that has the given key. When null, it is
-   *                                                         appended.
+   *                                                         index, or that has the given key. When null, the handler is
+   *                                                         appended to the end of the pipeline, except if $before is
+   *                                                         provided.
    * @return $this
    */
-  function registerRouter ($handler, $key = null, $after = null)
+  function registerRouter ($handler, $key = null, $before = null, $after = null)
   {
-    // $router is not injected because it's retrieval must be postponed until after the routing module loads.
+    // Note: $router is not injected on the constructor because it's retrieval must be postponed until after the routing
+    // module loads (i.e. at this point).
     /** @var ApplicationRouterInterface $router */
     if ($this->app->isWebBased) {
       $router = $this->injector->make (ApplicationRouterInterface::class);
-      $router->add ($handler, $key, $after);
+      $router->add ($handler, $key, $before, $after);
     }
     return $this;
   }

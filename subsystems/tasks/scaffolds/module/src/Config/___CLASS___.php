@@ -67,10 +67,10 @@ class ___CLASS___ implements
    *
    * Either way, you should also remove this comment block when it's no longer needed.
    */
-  function defineNavigation (NavigationInterface $navigation)
+  function defineNavigation (NavigationInterface $nav)
   {
-    $navigation->add ([
-      '' => $navigation
+    $nav->add ([
+      '' => $nav
         ->link ()
         ->id ('home')
         ->title ('Home')

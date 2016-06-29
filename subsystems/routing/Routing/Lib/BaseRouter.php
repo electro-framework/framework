@@ -70,14 +70,16 @@ abstract class BaseRouter implements RouterInterface
     return empty($this->handlers) ? $next () : $this->route ($this->handlers, $request, $response, $next);
   }
 
-  function add ($handler, $key = null, $after = null)
+  function add ($handler, $key = null, $before = null, $after = null)
   {
     if ($handler) {
       if (empty($this->handlers))
         $this->handlers = [];
       else if (!is_array ($this->handlers))
         $this->handlers = iterator_to_array ($this->handlers);
-      $this->handlers = array_insertAfter ($this->handlers, $after, $handler, $key);
+      if (isset($before))
+      $this->handlers = array_insertBefore ($this->handlers, $before, $handler, $key);
+      else $this->handlers = array_insertAfter ($this->handlers, $after, $handler, $key);
     }
     return $this;
   }
@@ -152,7 +154,7 @@ abstract class BaseRouter implements RouterInterface
    * <p>The router does not call handlers directly; instead, it does it trough this method, so that calls can be
    * intercepted, validated and logged.
    *
-   * > This also works as a router extension point.
+   * > This method also functions as a router extension point.
    *
    * @param callable               $handler
    * @param ServerRequestInterface $request
@@ -194,9 +196,13 @@ abstract class BaseRouter implements RouterInterface
   }
 
   /**
-   * Begins iterating the handler pipeline while each handler calls its `$next` argument, otherwise, it returns the HTTP
-   * response.
-   * > This also works as a router extension point.
+   * Begins iterating the handler pipeline and continue iterating until a handler returns without calling the provided
+   * `$next` argument or the iteration ends.
+   *
+   * After the iteration stops and all called handlers have returned an HTTP response, it returns the final response
+   * to the caller.
+   *
+   * > This method also functions as a router extension point.
    *
    * @param Iterator               $it
    * @param ServerRequestInterface $originalRequest
@@ -236,7 +242,7 @@ abstract class BaseRouter implements RouterInterface
 
   /**
    * Invoked when a route iteration step takes place.
-   * > This also works as a router extension point.
+   * > This method also functions as a router extension point.
    *
    * @param string                      $key
    * @param mixed                       $routable
