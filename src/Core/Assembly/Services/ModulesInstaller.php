@@ -362,7 +362,7 @@ class ModulesInstaller
         }
       }
       if (!$found)
-        $io->say ("    No migrations were run.")->nl ();
+        $io->say ("    Migrations have already run.")->nl ();
     }
   }
 

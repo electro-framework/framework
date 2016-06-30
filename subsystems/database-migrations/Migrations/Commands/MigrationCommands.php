@@ -163,8 +163,6 @@ class MigrationCommands
       $moduleName,
     ])->prune ()->A);
     $status = $this->runMigrationCommand ($command, $input);
-    //TODO: temporary workaround for bug
-    $status = $this->runMigrationCommand ($command, $input);
     return $status;
   }
 
@@ -229,8 +227,6 @@ class MigrationCommands
       '--environment'   => 'main',
       $moduleName,
     ])->prune ()->A);
-    $status = $this->runMigrationCommand ($command, $input);
-    //TODO: temporary workaround for bug
     $status = $this->runMigrationCommand ($command, $input);
     return $status;
   }
