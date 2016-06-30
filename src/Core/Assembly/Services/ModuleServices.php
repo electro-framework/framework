@@ -1,8 +1,6 @@
 <?php
 namespace Electro\Core\Assembly\Services;
 
-use Electro\ViewEngine\Services\AssetsService;
-use PhpKit\Flow\FilesystemFlow;
 use Electro\Application;
 use Electro\Exceptions\Fatal\ConfigException;
 use Electro\FileServer\Services\FileServerMappings;
@@ -11,6 +9,8 @@ use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Electro\Interfaces\Navigation\NavigationInterface;
 use Electro\Interfaces\Navigation\NavigationProviderInterface;
+use Electro\ViewEngine\Services\AssetsService;
+use PhpKit\Flow\FilesystemFlow;
 
 /**
  * A service that allows a module to notify the framework of which standard framework-specific services it provides
@@ -67,13 +67,6 @@ class ModuleServices
   {
     throw new ConfigException(sprintf ("Unsupported configuration type: <kbd class=type>%s</kbd>",
       (is_object ($cfg) ? get_class ($cfg) : gettype ($cfg))));
-  }
-
-  private function getModulesRegistry ()
-  {
-    if (!$this->modulesRegistry)
-      $this->modulesRegistry = $this->injector->make (ModulesRegistry::class);
-    return $this->modulesRegistry;
   }
 
   /**
@@ -178,12 +171,12 @@ class ModuleServices
   function registerAssets ($v)
   {
     /** @var AssetsService $assetsService */
-    $assetsService = $this->injector->make(AssetsService::class);
+    $assetsService = $this->injector->make (AssetsService::class);
     // TODO: handle assets on a sub-directory of resources.
     if ($v)
       foreach ($v as $path) {
         $path = "$this->publicUrl/$path";
-        $p = strrpos ($path, '.');
+        $p    = strrpos ($path, '.');
         if (!$p) continue;
         $ext = substr ($path, $p + 1);
         switch ($ext) {
@@ -253,10 +246,11 @@ class ModuleServices
   /**
    * Registers a navigation provider on the application.
    *
-   * @param NavigationProviderInterface $provider A class instance that provides a means to obtain a NavigationInterface
+   * @param NavigationProviderInterface|string $provider An instance or the name of a class that provides a means to
+   *                                                     obtain a NavigationInterface.
    * @return $this
    */
-  function registerNavigation (NavigationProviderInterface $provider)
+  function registerNavigation ($provider)
   {
     if ($this->app->isWebBased)
       $this->app->navigationProviders[] = $provider;
@@ -348,6 +342,13 @@ class ModuleServices
   {
     $this->path = $path;
     return $this;
+  }
+
+  private function getModulesRegistry ()
+  {
+    if (!$this->modulesRegistry)
+      $this->modulesRegistry = $this->injector->make (ModulesRegistry::class);
+    return $this->modulesRegistry;
   }
 
 }

@@ -12,14 +12,21 @@ use Electro\Navigation\Services\Navigation;
 
 class NavigationModule implements ServiceProviderInterface, ModuleInterface
 {
+  /** @var InjectorInterface */
+  private $injector;
+
   function boot (Application $app, NavigationInterface $navigation)
   {
-    foreach ($app->navigationProviders as $provider)
+    foreach ($app->navigationProviders as $provider) {
+      if (is_string ($provider))
+        $provider = $this->injector->make ($provider);
       $provider->defineNavigation ($navigation);
+    }
   }
 
   function register (InjectorInterface $injector)
   {
+    $this->injector = $injector;
     $injector
       ->alias (NavigationInterface::class, Navigation::class)
       ->share (NavigationInterface::class, 'navigation')

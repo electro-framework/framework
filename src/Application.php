@@ -195,8 +195,9 @@ class Application
   /**
    * All registered navigation providers.
    * <p>This will be read when the Navigation service is injected for the first time.
+   * It can hold class names or instances.
    *
-   * @var NavigationProviderInterface[]
+   * @var NavigationProviderInterface[]|string[]
    */
   public $navigationProviders = [];
   /**
