@@ -147,7 +147,7 @@ class AssetsService
   function outputStyles ()
   {
     foreach ($this->assets->stylesheets as $URI)
-      echo '<link rel="stylesheet" tpye="text/css" href="' . $URI . '">';
+      echo '<link rel="stylesheet" type="text/css" href="' . $URI . '">';
     if (!empty($this->assets->inlineCssStyles)) {
       echo "<style>";
       foreach ($this->assets->inlineCssStyles as $item)
