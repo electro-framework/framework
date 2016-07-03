@@ -150,7 +150,7 @@ class NavigationLink implements NavigationLinkInterface
   function isActuallyVisible ()
   {
     $this->url (); // updates $this->available
-    return $this->visible () && ($this->available || $this->visibleIfUnavailable);
+    return $this->visible () && ($this->available && $this->isActive () || $this->visibleIfUnavailable);
   }
 
   function isCurrent ()
