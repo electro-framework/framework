@@ -13,12 +13,18 @@ abstract class AbstractModelController implements ModelControllerInterface
 {
   /**
    * @var string A dot-separated path to the main sub-model.
+   * @see setMainSubModelPath
    */
-  protected $mainModelName = '';
+  protected $mainSubModelPath = '';
   /**
    * @var array|object
    */
   protected $model = [];
+  /**
+   * @var string A dot-separated path to the root/main model.
+   * @see setModelRootPath
+   */
+  protected $modelRootPath = 'model';
   /**
    * @var ServerRequestInterface
    */
@@ -74,6 +80,10 @@ abstract class AbstractModelController implements ModelControllerInterface
     $this->session         = $session;
     $this->handlersForSave = [[$this, 'builtInSaveHandler']];
   }
+
+  abstract function loadData ($collection, $subModelPath = '', $id = null, $primaryKey = 'id');
+
+  abstract function loadModel ($modelClass, $subModelPath = '', $id = null);
 
   /**
    * Override to provide an implementation of beginning a database transaction.
@@ -136,7 +146,7 @@ abstract class AbstractModelController implements ModelControllerInterface
     $rp = Http::getRouteParameters ($request);
     if ($rp) {
       $o = [];
-      setAt ($o, $this->mainModelName, $rp);
+      setAt ($o, $this->mainSubModelPath, $rp);
       $this->merge ($o);
     }
 
@@ -164,10 +174,6 @@ abstract class AbstractModelController implements ModelControllerInterface
     }
     $this->runExtensions ();
   }
-
-  abstract function loadData ($collection, $subModelPath = '', $id = null, $primaryKey = 'id');
-
-  abstract function loadModel ($modelClass, $subModelPath = '', $id = null);
 
   function merge (array $data = null)
   {
@@ -221,12 +227,14 @@ abstract class AbstractModelController implements ModelControllerInterface
     $this->callEventHandlers ($this->handlersForPostSave);
   }
 
-  /**
-   * @param string $path
-   */
   public function setMainSubModelPath ($path)
   {
-    $this->mainModelName = $path;
+    $this->mainSubModelPath = $path;
+  }
+
+  public function setModelRootPath ($path)
+  {
+    $this->modelRootPath = $path;
   }
 
   function withRequestedId ($routeParam = 'id')
@@ -282,10 +290,13 @@ abstract class AbstractModelController implements ModelControllerInterface
    */
   private function parseFormData (array $data)
   {
-    $o = [];
+    $o    = [];
+    $root = "$this->modelRootPath.";
+    $p    = strlen ($root);
     foreach ($data as $k => $v) {
       $k = str_replace ('/', '.', $k);
-      setAt ($o, $k, $v, true);
+      if (str_beginsWith ($k, $root))
+        setAt ($o, substr ($k, $p), $v, true);
     }
     return $o;
   }
