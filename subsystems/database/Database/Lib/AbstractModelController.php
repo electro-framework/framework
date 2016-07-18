@@ -283,7 +283,7 @@ abstract class AbstractModelController implements ModelControllerInterface
   /**
    * Constructs a tree-like structure from flat form-submitted data.
    *
-   * > <p>**Note:** keys with slashes are expanded into nested arrays.
+   * > <p>**Note:** keys with underscores (which PHP generates from dots) are expanded into nested arrays.
    *
    * @param array $data
    * @return array
@@ -294,7 +294,7 @@ abstract class AbstractModelController implements ModelControllerInterface
     $root = "$this->modelRootPath.";
     $p    = strlen ($root);
     foreach ($data as $k => $v) {
-      $k = str_replace ('/', '.', $k);
+      $k = str_replace ('_', '.', $k);
       if (str_beginsWith ($k, $root))
         setAt ($o, substr ($k, $p), $v, true);
     }
