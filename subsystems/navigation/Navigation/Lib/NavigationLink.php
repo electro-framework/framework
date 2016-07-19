@@ -239,6 +239,8 @@ class NavigationLink implements NavigationLinkInterface
         $base = $this->parent->url ();
         $url  = exists ($base) ? (exists ($url) ? "$base/$url" : $base) : $url;
       }
+      else if ($url && $url[0] == '/')
+        $url = $this->getRequest()->getAttribute('baseUri') . $url;
 
       $this->url = $url;
 
