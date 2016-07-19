@@ -75,7 +75,7 @@ abstract class AbstractModelController implements ModelControllerInterface
    */
   private $session;
 
-  public function __construct (SessionInterface $session)
+  function __construct (SessionInterface $session)
   {
     $this->session         = $session;
     $this->handlersForSave = [[$this, 'builtInSaveHandler']];
@@ -114,6 +114,15 @@ abstract class AbstractModelController implements ModelControllerInterface
    */
   abstract protected function save ($model, array $options = []);
 
+  function get ($path)
+  {
+    $root = "$this->modelRootPath.";
+    $p    = strlen ($root);
+    return str_beginsWith ($path, $root)
+      ? getAt ($this->model, substr ($path, $p))
+      : ($path == $this->modelRootPath ? $this->model : null);
+  }
+
   function getModel ($subModelPath = '')
   {
     if ($subModelPath === '')
@@ -136,6 +145,14 @@ abstract class AbstractModelController implements ModelControllerInterface
   function setRequest (ServerRequestInterface $request)
   {
     $this->request = $request;
+  }
+
+  function getTarget ($path)
+  {
+    $z          = explode ('.', $path);
+    $prop       = array_pop ($z);
+    $targetPath = implode ('.', $z);
+    return [$this->get ($targetPath), $prop];
   }
 
   function handleRequest ()
@@ -227,12 +244,21 @@ abstract class AbstractModelController implements ModelControllerInterface
     $this->callEventHandlers ($this->handlersForPostSave);
   }
 
-  public function setMainSubModelPath ($path)
+  function set ($path, $value)
+  {
+    $root = "$this->modelRootPath.";
+    $p    = strlen ($root);
+    if (str_beginsWith ($path, $root))
+      setAt ($this->model, substr ($path, $p), $value);
+    return $this;
+  }
+
+  function setMainSubModelPath ($path)
   {
     $this->mainSubModelPath = $path;
   }
 
-  public function setModelRootPath ($path)
+  function setModelRootPath ($path)
   {
     $this->modelRootPath = $path;
   }
