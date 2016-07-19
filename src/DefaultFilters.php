@@ -69,12 +69,38 @@ class DefaultFilters
   }
 
   /**
+   * Extracts a field from a list of arrays or objects and returns an array with the same cardinality.
+   *
+   * ><p>You may use the `join` filter to generate a string from the resulting array.
+   *
+   * @param array|\Traversable $v
+   * @param string             $field The name of the field to be extracted.
+   * @return string
+   */
+  function filter_extract ($v, $field = 'id')
+  {
+    return map ($v, function ($e) use ($field) { return getField ($e, $field); });
+  }
+
+  /**
    * @param string $v
    * @return string
    */
   function filter_fileURL ($v)
   {
 //    return $this->app->getFileDownloadURI ($v);
+  }
+
+  /**
+   * Joins a list of strings into a string.
+   *
+   * @param array|\Traversable $v    The list of strings to be joined.
+   * @param string             $glue The separator between list elements.
+   * @return string
+   */
+  function filter_join ($v, $glue = ', ')
+  {
+    return implode ($glue . $v);
   }
 
   /**
