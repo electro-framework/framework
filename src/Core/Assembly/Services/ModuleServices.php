@@ -73,7 +73,7 @@ class ModuleServices
    * Sets a function that will be called after all modules have performed their configuration.
    * <p>It will be able to perform aditional configuration based on settings from other modules.
    *
-   * @param callable $fn
+   * @param callable $fn function (no arguments)
    */
   function onPostConfig (callable $fn)
   {

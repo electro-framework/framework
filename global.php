@@ -27,6 +27,20 @@ function page ($templateUrl)
 }
 
 /**
+ * Generates a middleware that matches a given URL and on success, calls the given request handler.
+ *
+ * @param string   $url
+ * @param callable $handler
+ * @return Closure
+ */
+function route ($url, callable $handler)
+{
+  return function (ServerRequestInterface $request, $response, $next) use ($url, $handler) {
+    return $request->getAttribute ('virtualUri') == $url ? $handler ($request, $response, $next) : $next ();
+  };
+}
+
+/**
  * A shortcut to create a {@see FactoryRoutable}.
  *
  * @param callable $fn
