@@ -1,7 +1,17 @@
 <?php
 namespace Electro\ErrorHandling\Services;
 
-use PhpKit\WebConsole\ErrorConsole\ErrorConsole;use Psr\Http\Message\ResponseInterface;use Psr\Http\Message\ServerRequestInterface;use Electro\Application;use Electro\ErrorHandling\Config\ErrorHandlingSettings;use Electro\Exceptions\HttpException;use Electro\Http\Lib\Http;use Electro\Interfaces\DI\InjectorInterface;use Electro\Interfaces\Http\ErrorRendererInterface;use Electro\Interfaces\Http\ResponseFactoryInterface;use Electro\Interfaces\RenderableInterface;
+use Electro\Application;
+use Electro\ErrorHandling\Config\ErrorHandlingSettings;
+use Electro\Exceptions\HttpException;
+use Electro\Http\Lib\Http;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\Http\ErrorRendererInterface;
+use Electro\Interfaces\Http\ResponseFactoryInterface;
+use Electro\Interfaces\RenderableInterface;
+use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Renders an error HTTP response into a format supported by the client.
@@ -9,7 +19,8 @@ use PhpKit\WebConsole\ErrorConsole\ErrorConsole;use Psr\Http\Message\ResponseInt
 class ErrorRenderer implements ErrorRendererInterface
 {
 protected $app;/**
- * @var bool*/
+ * @var bool
+ */
 private $debugMode;
 /** @var InjectorInterface It is required for instantiating custom error renderers. */
 private $injector;
@@ -23,7 +34,7 @@ private $settings;
  * @param ResponseFactoryInterface $responseFactory
  * @param ErrorHandlingSettings    $settings
  * @param InjectorInterface        $injector
- * @param bool   $debugMode
+ * @param bool                     $debugMode
  */function __construct (Application $app, ResponseFactoryInterface $responseFactory, ErrorHandlingSettings $settings,
                          InjectorInterface $injector, $debugMode)
 {
@@ -31,7 +42,7 @@ private $settings;
   $this->responseFactory = $responseFactory;
   $this->settings        = $settings;
   $this->injector        = $injector;
-  $this->debugMode = $debugMode;
+  $this->debugMode       = $debugMode;
 }
 
 function render (ServerRequestInterface $request, ResponseInterface $response, $error = null)

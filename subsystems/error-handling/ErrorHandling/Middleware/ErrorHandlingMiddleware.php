@@ -72,13 +72,17 @@ class ErrorHandlingMiddleware implements RequestHandlerInterface
       $app = $this->app;
 
       // First, start by logging the error to the application logger.
-
       $this->logger->error ($error->getMessage (),
         [
           'exception'  => $error, // PSR-3-compliant property
           'stackTrace' => str_replace ("$app->baseDirectory/", '', $error->getTraceAsString ()),
         ]
       );
+
+      // Discard possibly incomplete application output.
+      while (ob_get_level()) ob_end_clean();
+
+      // Now, output the error description.
       return $this->errorRenderer->render($request, $response, $error);
     }
   }
