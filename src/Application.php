@@ -165,6 +165,12 @@ class Application
    */
   public $modulePublicPath = 'public';
   /**
+   * The path to the folder where symlinks to all modules' public folders are placeed.
+   *
+   * @var string
+   */
+  public $modulesPublishingPath = 'modules';
+  /**
    * The relative path of the views folder inside a module.
    *
    * @var string

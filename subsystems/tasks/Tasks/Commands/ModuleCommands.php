@@ -1,16 +1,9 @@
 <?php
 namespace Electro\Tasks\Commands;
 
-use Electro\Core\Assembly\Services\ModulesInstaller;
-use PhpKit\Flow\FilesystemFlow;
-use Robo\Task\Composer\Update;
-use Robo\Task\File\Replace;
-use Robo\Task\FileSystem\CopyDir;
-use Robo\Task\FileSystem\DeleteDir;
-use Robo\Task\FileSystem\FilesystemStack;
-use Robo\Task\Vcs\GitStack;
 use Electro\Application;
 use Electro\Core\Assembly\ModuleInfo;
+use Electro\Core\Assembly\Services\ModulesInstaller;
 use Electro\Core\Assembly\Services\ModulesRegistry;
 use Electro\Core\ConsoleApplication\Lib\ModulesUtil;
 use Electro\Exceptions\HttpException;
@@ -20,6 +13,13 @@ use Electro\Migrations\Config\MigrationsSettings;
 use Electro\Tasks\Config\TasksSettings;
 use Electro\Tasks\Shared\InstallPackageTask;
 use Electro\Tasks\Shared\UninstallPackageTask;
+use PhpKit\Flow\FilesystemFlow;
+use Robo\Task\Composer\Update;
+use Robo\Task\File\Replace;
+use Robo\Task\FileSystem\CopyDir;
+use Robo\Task\FileSystem\DeleteDir;
+use Robo\Task\FileSystem\FilesystemStack;
+use Robo\Task\Vcs\GitStack;
 
 /**
  * Implements the Electro Task Runner's pre-set build commands.
@@ -274,30 +274,12 @@ trait ModuleCommands
   }
 
   /**
-   * (Re)runs a module's post-installation tasks
+   * (Re)publishes all module's public folders
    */
-  function moduleReinit ()
+  function modulePublish ()
   {
-    if ($this->modulesUtil->selectModule ($moduleName, false, true)) {
-      $this->modulesInstaller->setupModule ($moduleName);
-      $this->io->done ("Reinitialization complete");
-    }
-  }
-
-  /**
-   * Removes a module from the application
-   *
-   * @param string $moduleName The full name (vendor-name/module-name) of the module to be uninstalled
-   */
-  function moduleUninstall ($moduleName = null)
-  {
-    $this->modulesUtil->selectModule ($moduleName);
-
-    $this->io->writeln ("Uninstalling <info>$moduleName</info>")->nl ();
-
-    if ($this->modulesRegistry->isPlugin ($moduleName))
-      $this->uninstallPlugin ($moduleName);
-    else $this->uninstallProjectModule ($moduleName);
+    $this->modulesInstaller->publishModules ();
+    $this->io->done ("Published");
   }
 
   /**
@@ -306,9 +288,20 @@ trait ModuleCommands
    * <p>It updates the configuration to register those modules that are currently installed and unregister those that
    * are no longer installed.
    */
-  function registryRecheck ()
+  function moduleRecheck ()
   {
     $this->modulesInstaller->rebuildRegistry ();
+  }
+
+  /**
+   * (Re)runs a module's post-installation tasks
+   */
+  function moduleReinit ()
+  {
+    if ($this->modulesUtil->selectModule ($moduleName, false, true)) {
+      $this->modulesInstaller->setupModule ($moduleName, true);
+      $this->io->done ("Reinitialization complete");
+    }
   }
 
   /**
@@ -317,7 +310,7 @@ trait ModuleCommands
    * @param array $opts
    * @option $all|a When true, internal subsystem modules will also be displayed
    */
-  function registryStatus ($opts = ['all|a' => false])
+  function moduleStatus ($opts = ['all|a' => false])
   {
     $modules = $opts['all']
       ? $this->modulesRegistry->getAllModules ()
@@ -338,6 +331,24 @@ trait ModuleCommands
     ], $o, [40, 8, 7, 0], ['L', 'C', 'C']);
   }
 
+  /**
+   * Removes a module from the application
+   *
+   * @param string $moduleName The full name (vendor-name/module-name) of the module to be uninstalled
+   */
+  function moduleUninstall ($moduleName = null)
+  {
+    $this->modulesUtil->selectModule ($moduleName);
+
+    $this->io->writeln ("Uninstalling <info>$moduleName</info>")->nl ();
+
+    if ($this->modulesRegistry->isPlugin ($moduleName))
+      $this->uninstallPlugin ($moduleName);
+    else $this->uninstallProjectModule ($moduleName);
+  }
+
+  //--------------------------------------------------------------------------------------------------------------------
+
   protected function uninstallPlugin ($moduleName)
   {
     // This also updates the modules registry.
@@ -345,8 +356,6 @@ trait ModuleCommands
 
     $this->io->done ("Plugin module <info>$moduleName</info> was uninstalled");
   }
-
-  //--------------------------------------------------------------------------------------------------------------------
 
   protected function uninstallProjectModule ($moduleName)
   {

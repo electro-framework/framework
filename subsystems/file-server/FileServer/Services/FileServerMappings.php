@@ -22,7 +22,7 @@ class FileServerMappings
    * A map of mappings from virtual URIs to external folders.
    * <p>This is used to expose assets from composer packages.
    * <p>Array of URI => physical folder path
-   * @var array
+   * @var string[]
    */
   private $mountPoints = [];
 
@@ -61,6 +61,15 @@ class FileServerMappings
       }
     }
     return "{$this->app->baseDirectory}/$URI";
+  }
+
+  /**
+   * Returns a map of mappings from virtual URIs to external folders.
+   * <p>This is used to expose assets from composer packages.
+   * @return string[] Array of URI => physical folder path
+   */
+  function getMountPoints () {
+    return $this->mountPoints;
   }
 
 }

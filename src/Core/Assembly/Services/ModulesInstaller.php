@@ -51,6 +51,29 @@ class ModulesInstaller
   }
 
   /**
+   * @param ModuleInfo[] $modules
+   * @return string[]
+   */
+  static private function getNames (array $modules)
+  {
+    return map ($modules, function (ModuleInfo $module) { return $module->name; });
+  }
+
+  /**
+   * @param string[]     $names
+   * @param ModuleInfo[] $modules
+   * @return ModuleInfo[]
+   */
+  static private function getOnly (array $names, array $modules)
+  {
+    return map ($names, function ($name) use ($modules) {
+      list ($module, $i) = array_find ($modules, 'name', $name);
+      if (!$module) throw new \RuntimeException ("Module not found: $name");
+      return $module;
+    });
+  }
+
+  /**
    * Performs uninstallation clean up tasks before the module is actually uninstalled.
    *
    * @param string $moduleName
@@ -99,6 +122,33 @@ class ModulesInstaller
   }
 
   /**
+   * (Re)publishes all module's public folders.
+   */
+  function publishModules ()
+  {
+    $globalPublishDir = "{$this->app->baseDirectory}/{$this->app->modulesPublishingPath}";
+    $dirs       = dirList ($globalPublishDir, DIR_LIST_DIRECTORIES, true);
+    if ($dirs)
+    foreach ($dirs as $dir) {
+      echo "rem $dir\n";
+      rrmdir ($dir);
+    }
+    $all = $this->registry->getAllModules ();
+    foreach ($all as $module) {
+      $pathToPublish = "$module->path/{$this->app->modulePublicPath}";
+      if (file_exists ($pathToPublish)) {
+        list ($folder, $name) = explode ('/', $module->name);
+        $symlinkAt = "$globalPublishDir/$folder";
+        mkdir ($symlinkAt, 0755, true);
+        $symlinkPath = "$symlinkAt/$name";
+        $relativeTarget = getRelativePath ($symlinkAt, $pathToPublish);
+        symlink ($relativeTarget, $symlinkPath);
+        echo "MKDIR $symlinkAt,\nLINK $relativeTarget, $symlinkAt/$name\n";exit;
+      }
+    }
+  }
+
+  /**
    * Updates this instance and also the registration cache file, so that it correctly states the currently installed
    * modules.
    *
@@ -117,7 +167,7 @@ class ModulesInstaller
     $currentModules     = array_merge ([$main], $subsystems, $plugins, $private);
     $currentModuleNames = self::getNames ($currentModules);
 
-    $prevModules     = $this->registry->getAllModules();
+    $prevModules     = $this->registry->getAllModules ();
     $prevModuleNames = self::getNames ($prevModules);
 
     $newModuleNames = array_diff ($currentModuleNames, $prevModuleNames);
@@ -138,10 +188,11 @@ class ModulesInstaller
       }
       $modules [$module->name] = $module;
     }
-    $this->registry->setAllModules($modules);
+    $this->registry->setAllModules ($modules);
 
     $this->setupNewModules ($newModules);
     $this->updateModules ($modulesKept);
+    $this->publishModules ();
 
     $this->end ();
 
@@ -149,42 +200,21 @@ class ModulesInstaller
   }
 
   /**
-   * @param ModuleInfo[] $modules
-   * @return string[]
-   */
-  static private function getNames (array $modules)
-  {
-    return map ($modules, function (ModuleInfo $module) { return $module->name; });
-  }
-
-  /**
-   * @param string[]     $names
-   * @param ModuleInfo[] $modules
-   * @return ModuleInfo[]
-   */
-  static private function getOnly (array $names, array $modules)
-  {
-    return map ($names, function ($name) use ($modules) {
-      list ($module, $i) = array_find ($modules, 'name', $name);
-      if (!$module) throw new \RuntimeException ("Module not found: $name");
-      return $module;
-    });
-  }
-
-  /**
    * @param string|ModuleInfo $module
-   * @return bool
+   * @param bool              $migrate When true, runs the module's migrations, if any.
    */
-  function setupModule ($module)
+  function setupModule ($module, $migrate = false)
   {
     if (is_string ($module))
       $module = $this->registry->getModule ($module);
 
-    $databaseIsAvailable = Connection::getFromEnviroment ()->isAvailable ();
-    $runMigrations       = $databaseIsAvailable && $this->migrationsSettings;
+    if ($migrate) {
+      $databaseIsAvailable = Connection::getFromEnviroment ()->isAvailable ();
+      $runMigrations       = $databaseIsAvailable && $this->migrationsSettings;
 
-    if ($runMigrations)
-      $this->updateMigrationsOf ($module);
+      if ($runMigrations)
+        $this->updateMigrationsOf ($module);
+    }
   }
 
   /**
@@ -335,7 +365,7 @@ class ModulesInstaller
   {
     foreach ($modules as $module) {
       $this->io->writeln ("  <info>■</info> $module->name");
-      $this->setupModule ($module);
+      $this->setupModule ($module, true);
     }
   }
 

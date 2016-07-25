@@ -2,6 +2,7 @@
 namespace Electro\Tasks\Tasks;
 
 use Electro\Application;
+use Electro\Core\Assembly\Services\ModuleServices;
 use Electro\Core\Assembly\Services\ModulesInstaller;
 use Electro\Core\Assembly\Services\ModulesRegistry;
 use Electro\Core\ConsoleApplication\ConsoleApplication;
@@ -39,6 +40,10 @@ class CoreTasks
    * @var ConsoleIO
    */
   private $io;
+  /**
+   * @var ModuleServices
+   */
+  private $moduleServices;
   /**
    * @var ModulesInstaller
    */
