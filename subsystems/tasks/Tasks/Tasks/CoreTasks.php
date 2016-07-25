@@ -9,6 +9,7 @@ use Electro\Core\ConsoleApplication\Lib\ModulesUtil;
 use Electro\Core\ConsoleApplication\Services\ConsoleIO;
 use Electro\Tasks\Commands\InitCommands;
 use Electro\Tasks\Commands\ModuleCommands;
+use Electro\Tasks\Commands\ServerCommands;
 use Electro\Tasks\Config\TasksSettings;
 use Robo\Task\FileSystem\FilesystemStack;
 

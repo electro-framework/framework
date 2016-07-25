@@ -21,7 +21,6 @@ trait ServerCommands
      */
     function serverStart ($options = ['port|p' => 8000, 'address|a' => '127.0.0.1'])
     {
-        \PhpCode::
     }
 
     /**
