@@ -20,6 +20,7 @@ class CoreTasks
   use InitCommands;
 //  use BuildCommands;
   use ModuleCommands;
+  use ServerCommands;
 
   /**
    * @var Application
