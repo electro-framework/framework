@@ -245,6 +245,10 @@ class Application
    */
   public $presets = [];
   /**
+   * @var string The file path of a router script for the build-in PHP web server.
+   */
+  public $routerFile = 'private/packages/electro/framework/devServerRouter.php';
+  /**
    * @var string
    */
   public $storagePath = 'private/storage';

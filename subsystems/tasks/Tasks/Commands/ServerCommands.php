@@ -44,7 +44,7 @@ trait ServerCommands
     else $root = '';
     $log   = $options['log'] == '/dev/null' ? '<comment>disabled</comment>' : "<info>{$options['log']}</info>";
     $where = $options['address'] . ':' . $options['port'];
-    $pid   = runBackgroundCommand ("php -S $where$root", $options['log']);
+    $pid   = runBackgroundCommand ("php -S $where$root {$this->app->routerFile}", $options['log']);
     file_put_contents ($this->PID_FILE, $pid);
     $this->io->done (sprintf ("The server is now <info>running</info>
 
