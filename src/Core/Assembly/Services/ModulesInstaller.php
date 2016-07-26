@@ -12,6 +12,7 @@ use Electro\Migrations\Config\MigrationsSettings;
 use PhpKit\Connection;
 use PhpKit\Flow\FilesystemFlow;
 use SplFileInfo;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Manages modules installation, update and removal, and it also (re)builds the registry.
@@ -126,26 +127,25 @@ class ModulesInstaller
    */
   function publishModules ()
   {
-    $globalPublishDir = "{$this->app->baseDirectory}/{$this->app->modulesPublishingPath}";
-    $dirs       = dirList ($globalPublishDir, DIR_LIST_DIRECTORIES, true);
-    if ($dirs)
-    foreach ($dirs as $dir) {
-      echo "rem $dir\n";
-      rrmdir ($dir);
-    }
-    $all = $this->registry->getAllModules ();
+    $this->unpublishModules ();
+
+    $globalPublishDir = $this->app->modulesPublishingPath;
+    $all              = $this->registry->getAllModules ();
+    $links = [];
     foreach ($all as $module) {
       $pathToPublish = "$module->path/{$this->app->modulePublicPath}";
       if (file_exists ($pathToPublish)) {
         list ($folder, $name) = explode ('/', $module->name);
-        $symlinkAt = "$globalPublishDir/$folder";
-        mkdir ($symlinkAt, 0755, true);
-        $symlinkPath = "$symlinkAt/$name";
-        $relativeTarget = getRelativePath ($symlinkAt, $pathToPublish);
-        symlink ($relativeTarget, $symlinkPath);
-        echo "MKDIR $symlinkAt,\nLINK $relativeTarget, $symlinkAt/$name\n";exit;
+        $symlinkDir = "$globalPublishDir/$folder";
+        if (!file_exists ($symlinkDir))
+          mkdir ($symlinkDir, 0755, true);
+        $symlinkFile    = "$symlinkDir/$name";
+        $relativeTarget = getRelativePath ("./$symlinkFile", "./$pathToPublish");
+        symlink ($relativeTarget, $symlinkFile);
+        $links[] = [$pathToPublish, $symlinkFile];
       }
     }
+    return $links;
   }
 
   /**
@@ -367,6 +367,15 @@ class ModulesInstaller
       $this->io->writeln ("  <info>■</info> $module->name");
       $this->setupModule ($module, true);
     }
+  }
+
+  private function unpublishModules ()
+  {
+    $globalPublishDir = "{$this->app->baseDirectory}/{$this->app->modulesPublishingPath}";
+    $dirs             = dirList ($globalPublishDir, DIR_LIST_DIRECTORIES, true);
+    if ($dirs)
+      foreach ($dirs as $dir)
+        rrmdir ($dir);
   }
 
   private function updateMigrationsOf (ModuleInfo $module)

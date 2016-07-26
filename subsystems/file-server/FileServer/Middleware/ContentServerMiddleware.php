@@ -10,7 +10,7 @@ use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
 
 /**
- * Serves static assets on virtual URLs exposed from packages or from the framework itself.
+ * Serves static files from the content repository.
  */
 class ContentServerMiddleware implements RequestHandlerInterface
 {

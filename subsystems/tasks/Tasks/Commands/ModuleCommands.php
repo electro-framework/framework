@@ -20,6 +20,7 @@ use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
 use Robo\Task\FileSystem\FilesystemStack;
 use Robo\Task\Vcs\GitStack;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Implements the Electro Task Runner's pre-set build commands.
@@ -278,7 +279,10 @@ trait ModuleCommands
    */
   function modulePublish ()
   {
-    $this->modulesInstaller->publishModules ();
+    $links = $this->modulesInstaller->publishModules ();
+
+    if ($this->io->getOutput()->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE)
+      $this->io->table(['Source', 'Target'], $links, [0,0]);
     $this->io->done ("Published");
   }
 
