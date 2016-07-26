@@ -1,8 +1,8 @@
 <?php
 namespace Electro\Core\ConsoleApplication\Services;
 
-use InvalidArgumentException;
 use Electro\Interfaces\ConsoleIOInterface;
+use InvalidArgumentException;
 use Symfony\Component\Console\Formatter\OutputFormatterStyleInterface;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
@@ -128,23 +128,18 @@ class ConsoleIO implements ConsoleIOInterface
     return $this->doAsk (new ConfirmationQuestion($this->formatQuestion ($question . ' (y/n)'), false));
   }
 
-  function done ($text)
+  function done ($text, $status = 0)
   {
-    $this->nl ()->say (strpos ($text, '<info') === false ? "<info>$text</info>" : $text)->nl ();
+    $this->nl ()->say ($text)->nl ();
     if (!empty($this->warnings))
       $this->writeln (implode (PHP_EOL, $this->warnings))->nl ();
+    exit ($status);
   }
 
-  /**
-   * Prints an error message and stops execution. Use only on commands, not on tasks.
-   *
-   * @param string $text  The message.
-   * @param int    $width Error box width.
-   */
-  function error ($text, $width = 0)
+  function error ($text, $width = 0, $status = 1)
   {
     $this->box ($text, 'fg=white;bg=red', $width, CONSOLE_ALIGN_LEFT);
-    exit (1);
+    exit ($status);
   }
 
   function getDialog ()
