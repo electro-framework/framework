@@ -38,21 +38,21 @@ return call_user_func (function () {
   <symbol id="file" viewBox="0 32 512 450">
     <path fill=#FFF stroke-width=40 d="M288 48H136c-22.1 0-40 17.9-40 40v336c0 22.1 17.9 40 40 40h240c22.1 0 40-17.9 40-40V176L288 48zM272 192V80l112 112H272z"/>
   </symbol>
-  <symbol id="back" viewBox="0 0 512 512">
-    <path d="M256 213.7L256 213.7 256 213.7l174.2 167.2c4.3 4.2 11.4 4.1 15.8-0.2l30.6-29.9c4.4-4.3 4.5-11.3 0.2-15.5L264.1 131.1c-2.2-2.2-5.2-3.2-8.1-3 -3-0.1-5.9 0.9-8.1 3L35.2 335.3c-4.3 4.2-4.2 11.2 0.2 15.5L66 380.7c4.4 4.3 11.5 4.4 15.8 0.2L256 213.7z"/>
+  <symbol id="back" viewBox="2 4 20 20">
+    <path stroke=none transform="rotate(90 12 12)" d="M11 9l1.42 1.42L8.83 14H18V4h2v12H8.83l3.59 3.58L11 21l-6-6 6-6z"/>
   </symbol>
   </defs>
 </svg>
 HTML;
 
-  $HOME_ICON   = '<svg width=16 height=16 fill=#88A><use xlink:href="#home"></use></svg>';
-  $FOLDER_ICON = '<svg width=16 height=16 ><use xlink:href="#folder"></use></svg>';
-  $FILE_ICON   = '<svg width=16 height=16 ><use xlink:href="#file"></use></svg>';
-  $BACK_ICON   = '<svg width=16 height=16 ><use xlink:href="#back"></use></svg>';
+  $HOME_ICON   = '<svg width=16 height=16><use xlink:href="#home"></use></svg>';
+  $FOLDER_ICON = '<svg width=16 height=16><use xlink:href="#folder"></use></svg>';
+  $FILE_ICON   = '<svg width=16 height=16><use xlink:href="#file"></use></svg>';
+  $BACK_ICON   = '<svg width=16 height=16><use xlink:href="#back"></use></svg>';
 
   $prev = '';
   $uriT = trim ($uri, '/');
-  $uriT = implode (' ▸ ',
+  $uriT = implode (' / ',
     array_map (
       function ($e) {
         return "<a href='$e[0]'>$e[1]</a>";
@@ -98,8 +98,8 @@ nav a {
   letter-spacing: 0.5px;
 }
 nav a:hover {
-  background: #DDEEFF;
-  outline: 1px solid rgba(0,0,0,0.05);
+  background: #FFF;
+  outline: 1px solid rgba(0,0,0,0.1);
   outline-offset: -1px;
 }
 nav a img {
@@ -127,18 +127,22 @@ header > p {
   margin: 0;
 }
 header > p svg {
-  vertical-align: bottom;
-  padding: 4px 0;
+  vertical-align: top;
+  padding: 3px 0 0;
+  fill: #888;
 }
 header > p span {
-  color: #C3C3D4;
+  color: #CCC;
 }
 header > p a {
-  color: #88A;
+  color: #888;
   text-decoration: none;
 }
 header > p a:hover {
-  text-decoration: underline;
+  color: #000;
+}
+header > p a:hover svg {
+  fill: #000;
 }
 </style>
 </head>
