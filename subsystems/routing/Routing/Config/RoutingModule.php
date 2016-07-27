@@ -3,6 +3,7 @@ namespace Electro\Routing\Config;
 
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\DI\ServiceProviderInterface;
+use Electro\Interfaces\Http\ApplicationMiddlewareAssemblerInterface;
 use Electro\Interfaces\Http\MiddlewareStackInterface;
 use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\RouterInterface;
@@ -42,8 +43,11 @@ class RoutingModule implements ServiceProviderInterface
         // The application's root/main middleware stack
         //
         ->share (ApplicationMiddlewareInterface::class)
-        ->alias (ApplicationMiddlewareInterface::class,
-          $debugConsole ? MiddlewareStackWithLogging::class : MiddlewareStack::class)
+        ->delegate (ApplicationMiddlewareInterface::class,
+          function (ApplicationMiddlewareAssemblerInterface $assembler, MiddlewareStackInterface $stack) {
+            $assembler->assemble ($stack);
+            return $stack;
+          })
         ->share (CurrentRequestMutator::class);
 
       if ($debugConsole) $injector

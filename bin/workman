@@ -1,6 +1,6 @@
 #!/usr/bin/env php
 <?php
-use AppKernel\Init;
+use App\Init;
 use Electro\Core\ConsoleApplication\ConsoleApplication;
 use Electro\Core\DependencyInjection\Injector;
 

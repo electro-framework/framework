@@ -19,11 +19,29 @@ use Psr\Http\Message\ServerRequestInterface;
 function page ($templateUrl)
 {
   return new FactoryRoutable (function (ViewServiceInterface $viewService) use ($templateUrl) {
-    return function ($request, ResponseInterface $response) use ($viewService, $templateUrl) {
+    return function ($request, $response) use ($viewService, $templateUrl) {
       $filename = $viewService->resolveTemplatePath ($templateUrl);
       return Http::response ($response, $viewService->loadFromFile ($filename)->render ());
     };
   });
+}
+
+/**
+ * Generates a routable that, when invoked, will return an HTTP redirection response.
+ *
+ * @param string $url    The target URL.
+ * @param int    $status HTTP status code.
+ *                       <p>Valid redirection values should be:
+ *                       <p>303 - See Other
+ *                       <p>307 - Temporary Redirect
+ *                       <p>308 - Permanent Redirect
+ * @return Closure
+ */
+function redirect ($url, $status = 307)
+{
+  return function ($request, $response) use ($url, $status) {
+    return Http::redirect ($response, $url, $status);
+  };
 }
 
 /**

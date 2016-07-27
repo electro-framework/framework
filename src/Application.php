@@ -3,8 +3,10 @@ namespace Electro;
 
 use Electro\Core\Assembly\Config\AssemblyModule;
 use Electro\Core\Logging\Config\LoggingModule;
+use Electro\Core\WebApplication\ApplicationMiddlewareAssembler;
 use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\Http\ApplicationMiddlewareAssemblerInterface;
 use Electro\Interfaces\Navigation\NavigationProviderInterface;
 
 class Application
@@ -318,6 +320,8 @@ class Application
     $assemblyModule->register ($this->injector);
     $loggingModule = new LoggingModule;
     $loggingModule->register ($this->injector);
+    // This can be overriden later, usually by a private application module.
+    $this->injector->alias (ApplicationMiddlewareAssemblerInterface::class, ApplicationMiddlewareAssembler::class);
   }
 
   /**

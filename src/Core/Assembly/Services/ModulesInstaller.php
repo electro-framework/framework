@@ -160,11 +160,9 @@ class ModulesInstaller
     $subsystems = $this->loadModulesMetadata ($this->scanSubsystems (), ModuleInfo::TYPE_SUBSYSTEM);
     $plugins    = $this->loadModulesMetadata ($this->scanPlugins (), ModuleInfo::TYPE_PLUGIN);
     $private    = $this->loadModulesMetadata ($this->scanPrivateModules (), ModuleInfo::TYPE_PRIVATE);
-    $main       = $this->makeMainModule ();
-    $this->loadModuleMetadata ($main);
 
     /** @var ModuleInfo[] $currentModules */
-    $currentModules     = array_merge ([$main], $subsystems, $plugins, $private);
+    $currentModules     = array_merge ($subsystems, $plugins, $private);
     $currentModuleNames = self::getNames ($currentModules);
 
     $prevModules     = $this->registry->getAllModules ();
@@ -282,17 +280,6 @@ class ModulesInstaller
       $this->loadModuleMetadata ($module);
     }
     return $modules;
-  }
-
-  private function makeMainModule ()
-  {
-    return (new ModuleInfo)->import ([
-      'name'         => 'app-kernel',
-      'description'  => 'Application kernel',
-      'path'         => 'private/app-kernel',
-      'bootstrapper' => 'AppKernel\Config\AppKernelModule',
-      'type'         => ModuleInfo::TYPE_SUBSYSTEM,
-    ]);
   }
 
   /**

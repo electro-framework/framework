@@ -9,6 +9,14 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class Http
 {
+  const BAD_REQUEST        = 400;
+  const FORBIDDEN          = 403;
+  const NOT_FOUND          = 404;
+  const PERMANENT_REDIRECT = 308;
+  const SEE_OTHER          = 303;
+  const TEMPORARY_REDIRECT = 307;
+  const UNAUTHORIZED       = 401;
+
   /**
    * Checks if the HTTP client accepts the given content type.
    *
@@ -80,13 +88,30 @@ class Http
   }
 
   /**
+   * Simplifies setting response object properties to return a simple HTTP redirection response.
+   *
+   * @param ResponseInterface $response    An existing, pristine, response object.
+   * @param string            $url         The target URL.
+   * @param int               $status      HTTP status code.
+   *                                       <p>Valid redirection values should be:
+   *                                       <p>303 - See Other
+   *                                       <p>307 - Temporary Redirect
+   *                                       <p>308 - Permanent Redirect
+   * @return ResponseInterface A new response object.
+   */
+  static function redirect (ResponseInterface $response, $url, $status = 307)
+  {
+    return $response->withStatus ($status)->withHeader ('Location', $url);
+  }
+
+  /**
    * Simplifies setting response object properties to return a simple HTTP response.
    *
    * @param ResponseInterface $response    An existing, pristine, response object.
    * @param string            $body        Am optional HTML body content.
    * @param string            $contentType Defaults to 'text/html'.
    * @param int               $status      HTTP status code.
-   * @return ResponseInterface The same response object that was supplied.
+   * @return ResponseInterface A new response object.
    */
   static function response (ResponseInterface $response, $body = '', $contentType = 'text/html', $status = 200)
   {
