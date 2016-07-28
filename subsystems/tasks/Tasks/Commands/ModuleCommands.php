@@ -292,7 +292,7 @@ trait ModuleCommands
    * <p>It updates the configuration to register those modules that are currently installed and unregister those that
    * are no longer installed.
    */
-  function moduleRecheck ()
+  function moduleRefresh ()
   {
     $this->modulesInstaller->rebuildRegistry ();
   }

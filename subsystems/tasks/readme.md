@@ -31,8 +31,8 @@ Command                   | Description
 
 Command                   | Description
 --------------------------|--------------------------------------------
-`registry:recheck`        | Forces an update of the module registry.
-`registry:status`         | Displays information about the currently registered modules.
+`module:refresh`        | Forces an update of the module registry.
+`module:status`         | Displays information about the currently registered modules.
 
 #### Configuration tasks
 

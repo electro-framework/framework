@@ -12,7 +12,6 @@ use Electro\Migrations\Config\MigrationsSettings;
 use PhpKit\Connection;
 use PhpKit\Flow\FilesystemFlow;
 use SplFileInfo;
-use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Manages modules installation, update and removal, and it also (re)builds the registry.
@@ -115,7 +114,7 @@ class ModulesInstaller
   }
 
   /**
-   * Runs when registry:recheck ends.
+   * Runs when module:refresh ends.
    */
   public function end ()
   {
@@ -131,7 +130,7 @@ class ModulesInstaller
 
     $globalPublishDir = $this->app->modulesPublishingPath;
     $all              = $this->registry->getAllModules ();
-    $links = [];
+    $links            = [];
     foreach ($all as $module) {
       $pathToPublish = "$module->path/{$this->app->modulePublicPath}";
       if (file_exists ($pathToPublish)) {
