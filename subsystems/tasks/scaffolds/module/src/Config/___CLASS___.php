@@ -16,7 +16,6 @@ class ___CLASS___ implements ModuleInterface
     $app->appName = 'Your App';     // default page title; also displayed on title bar (optional)
     $app->title   = '@ - Your App'; // @ = page title
     $module
-      ->publishPublicDirAs ('modules/___MODULE_PATH___')
       ->provideMacros ()
       ->provideViews ()
       ->registerRouter (Routes::class)

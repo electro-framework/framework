@@ -1,7 +1,6 @@
 <?php
 namespace Ptpt\Backoffice\Config;
 
-use Electro\Http\Lib\Http;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\Http\RouterInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -21,9 +20,10 @@ class Routes implements RequestHandlerInterface
   {
     return $this->router
       ->add ([
-        '.' => function () use ($response) { return Http::response ($response, 'It works!'); },
+        '.' => simpleResponse ('It works!'),
       ])
       ->__invoke ($request, $response, $next);
   }
 
 }
+

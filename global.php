@@ -59,6 +59,16 @@ function route ($url, callable $handler)
 }
 
 /**
+ * Generates a middleware that returns a simple HTML text response.
+ *
+ * @param string|callable $text The text to be returned.
+ * @return Closure
+ */
+function simpleResponse ($text) {
+  return function ($request, $response) use ($text) { return Http::response ($response, $text); };
+}
+
+/**
  * A shortcut to create a {@see FactoryRoutable}.
  *
  * @param callable $fn
