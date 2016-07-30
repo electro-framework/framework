@@ -3,7 +3,6 @@ namespace Electro\Core\ConsoleApplication\Services;
 
 use Electro\Interfaces\ConsoleIOInterface;
 use InvalidArgumentException;
-use Symfony\Component\Console\Formatter\OutputFormatterStyleInterface;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -82,11 +81,6 @@ class ConsoleIO implements ConsoleIOInterface
     return $this->doAsk ($question);
   }
 
-  /**
-   * @param string $text
-   * @param int    $width 0 = autofit
-   * @return $this
-   */
   function banner ($text, $width = 0)
   {
     $this->box ($text, 'fg=white;bg=blue', $width);
@@ -100,9 +94,6 @@ class ConsoleIO implements ConsoleIOInterface
     exit (1);
   }
 
-  /**
-   * @return $this
-   */
   function clear ()
   {
     if ($this->output->getFormatter ()->isDecorated ())
@@ -110,19 +101,11 @@ class ConsoleIO implements ConsoleIOInterface
     return $this;
   }
 
-  /**
-   * @param string $text
-   * @return $this
-   */
   function comment ($text)
   {
     return $this->say ("<comment>$text</comment>");
   }
 
-  /**
-   * @param string $question
-   * @return bool
-   */
   function confirm ($question)
   {
     return $this->doAsk (new ConfirmationQuestion($this->formatQuestion ($question . ' (y/n)'), false));
@@ -147,9 +130,6 @@ class ConsoleIO implements ConsoleIOInterface
     return new QuestionHelper();
   }
 
-  /**
-   * @return InputInterface
-   */
   function getInput ()
   {
     return $this->input;
@@ -160,9 +140,6 @@ class ConsoleIO implements ConsoleIOInterface
     $this->input = $input;
   }
 
-  /**
-   * @return OutputInterface
-   */
   function getOutput ()
   {
     //return Config::get ('output', new NullOutput());
@@ -180,18 +157,6 @@ class ConsoleIO implements ConsoleIOInterface
     return $this;
   }
 
-  /**
-   * Presents a list to the user, from which he/she must select an item.
-   *
-   * @param string   $question
-   * @param string[] $options
-   * @param int      $defaultIndex The default answer if the user just presses return. -1 = no default (returns -1).
-   * @param array    $secondColumn If specified, it contains the 2nd column for each option.
-   * @param callable $validator    If specified, a function that validates the user's selection.
-   *                               It receives the selected index (0 based) as argument and it should return `true`
-   *                               if the selection is valid or an error message string if not.
-   * @return int The selected index (0 based) or -1 if no item was selected.
-   */
   function menu ($question, array $options, $defaultIndex = -1, array $secondColumn = null,
                  callable $validator = null)
   {
@@ -201,7 +166,7 @@ class ConsoleIO implements ConsoleIOInterface
     $width = empty ($options) ? 0 : max (array_map ('taggedStrLen', $options));
     $this->nl ()->writeln ("<question>$question</question>")->nl ();
     foreach ($options as $i => $option) {
-      $this->write ("    <fg=blue>" . str_pad ($i + 1, $pad, ' ', STR_PAD_LEFT) . ".</fg=blue> ");
+      $this->write ("    <fg=cyan>" . str_pad ($i + 1, $pad, ' ', STR_PAD_LEFT) . ".</fg=cyan> ");
       $this->writeln (isset($secondColumn)
         ? taggedStrPad ($option, $width) . "  $secondColumn[$i]"
         : $option
@@ -210,7 +175,8 @@ class ConsoleIO implements ConsoleIOInterface
     $this->nl ();
     do {
       $a = $defaultIndex < 0 ? $this->ask ('') : $this->askDefault ('', $defaultIndex + 1);
-      if (!$a) return -1;
+      if (!$a)
+        if ($defaultIndex < 0) return -1;
       $i = intval ($a);
       if ($i < 1 || $i > count ($options)) {
         $this->say ("<error>Please select a number from the list</error>");
@@ -231,48 +197,23 @@ class ConsoleIO implements ConsoleIOInterface
     return $i - 1;
   }
 
-  /**
-   * @return $this
-   */
   function nl ()
   {
     $this->writeln ();
     return $this;
   }
 
-  /**
-   * Alias of `writeln()`.
-   *
-   * @param string $text
-   * @return $this
-   */
   function say ($text)
   {
     return $this->writeln ($text);
   }
 
-  /**
-   * Defines a tag for a custom color.
-   *
-   * @param string                        $name
-   * @param OutputFormatterStyleInterface $style
-   * @return $this
-   */
   function setColor ($name, $style)
   {
     $this->output->getFormatter ()->setStyle ($name, $style);
     return $this;
   }
 
-  /**
-   * Outputs data in a tabular format.
-   *
-   * @param string[]      $headers
-   * @param array         $data
-   * @param int[]         $widths Each width that is 0 will be assigned the remaining horizontal space on the terminal,
-   *                              divided by the number of columns set to 0.
-   * @param string[]|null $align
-   */
   function table (array $headers, array $data, array $widths, array $align = null)
   {
     self::adjustColumnWidths ($widths);
@@ -295,32 +236,18 @@ class ConsoleIO implements ConsoleIOInterface
     return $this->terminalSize;
   }
 
-  /**
-   * @param string $text
-   * @return $this
-   */
   function title ($text)
   {
     $this->nl ()->writeln ("<title>$text</title>")->nl ();
     return $this;
   }
 
-  /**
-   * Add a warning message to be displayed later, when `done()` is called.
-   *
-   * @param string $text
-   * @return $this
-   */
   function warn ($text)
   {
     $this->warnings[] = "Warning: <warning>$text</warning>";
     return $this;
   }
 
-  /**
-   * @param string $text
-   * @return $this
-   */
   function write ($text)
   {
     if ($this->indent)
@@ -329,10 +256,6 @@ class ConsoleIO implements ConsoleIOInterface
     return $this;
   }
 
-  /**
-   * @param string $text
-   * @return $this
-   */
   function writeln ($text = '')
   {
     if ($this->indent)

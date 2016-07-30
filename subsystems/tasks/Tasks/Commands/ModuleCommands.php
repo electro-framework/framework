@@ -155,123 +155,33 @@ trait ModuleCommands
   }
 
   /**
-   * Installs a plugin module
+   * Installs a plugin or a template
    *
-   * @param string $moduleName If not specified, a list of installable plugins will be displayed for the user
-   *                           to pick one
+   * @param string $moduleType Either <info>plugin</info>|<info>template</info>. If not specified, it will be asked for
+   * @param string $moduleName A full module name (in <comment>vendor/package</comment> format), If not specified, a
+   *                           list of installable modules will be displayed for the user to pick one
    * @param array  $opts
-   * @option $search|s Search for plugins having the specified text word or prefix somewhere on the name or description
+   * @option $search|s Search for modules having the specified text word or prefix somewhere on the name or description
    * @option $stars Sort the list by stars, instead of downloads
    */
-  function moduleInstallPlugin ($moduleName = null, $opts = ['search|s' => '', 'stars' => false])
+  function moduleInstall ($moduleType = null, $moduleName = null, $opts = ['search|s' => '', 'stars' => false])
   {
     $io = $this->io;
-    if (!$moduleName) {
-
-      // Search
-
-      $modules = (new PackagistAPI)->type ('electro-plugin')->query ($opts['search'])->search (true);
-
-      if (empty($modules))
-        $io->error ("No matching plugins were found");
-
-      $this->formatModules ($modules, $opts['stars']);
-
-      // Show menu
-
-      $sel = $io->menu ('Select a plugin module to install:',
-        array_getColumn ($modules, 'fname'), -1,
-        array_getColumn ($modules, 'description'),
-        function ($i) use ($modules) {
-          return !$this->modulesRegistry->isInstalled ($modules[$i]['name']) ?: "That module is already installed";
-        }
-      );
-      if ($sel < 0) $this->io->cancel ();
-      $moduleName = $modules[$sel]['name'];
+    if (!$moduleType)
+      $moduleType = ['plugin', 'template']
+      [$io->menu ('What type of module do you want to install?', [
+        'Plugin',
+        'Template',
+      ], 0)];
+    else $io->nl ();
+    switch ($moduleType) {
+      case 'plugin';
+        $io->banner ("PLUGINS");
+        return $this->moduleInstallPlugin ($moduleName, $opts);
+      case 'template';
+        $io->banner ("TEMPLATES");
+        return $this->moduleInstallTemplate ($moduleName, $opts);
     }
-
-    // Install module via Composer
-
-    $version = self::$INSTALL_STABLE ? '' : ':dev-master';
-    // Note: this also updates the modules registry.
-    (new InstallPackageTask("$moduleName$version"))->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
-
-    $io->done ("Plugin <info>$moduleName</info> is now installed");
-  }
-
-  /**
-   * Installs a template module
-   *
-   * A template, when installed, becames a project-module.
-   *
-   * @param string $moduleName If not specified, a list of installable templates will be displayed for the user
-   *                           to pick one
-   * @param array  $opts
-   * @option $keep-repo|k When set, the hidden .git directory is not removed from the module's directory
-   * @option $search|s Search for templates having the specified text word or prefix somewhere on the name or
-   *                           description
-   * @option $stars Sort the list by stars, instead of downloads
-   */
-  function moduleInstallTemplate ($moduleName = null,
-                                  $opts = ['keep-repo|k' => false, 'search|s' => '', 'stars' => false])
-  {
-    $io = $this->io;
-
-    if (!$moduleName) {
-
-      // Search
-
-      $modules = (new PackagistAPI)->type ('electro-template')->query ($opts['search'])->search (true);
-
-      if (empty($modules))
-        $io->error ("No matching templates were found");
-
-      $this->formatModules ($modules, $opts['stars']);
-
-      // Show menu
-
-      $sel = $io->menu ('Select a template module to install:',
-        array_getColumn ($modules, 'fname'), -1,
-        array_getColumn ($modules, 'description'),
-        function ($i) use ($modules) {
-          return !$this->modulesRegistry->isInstalled ($modules[$i]['name'])
-            ?: "A module with that name already exists on this project";
-        }
-      );
-      if ($sel < 0) $this->io->cancel ();
-      $module     = $modules[$sel];
-      $moduleName = $module['name'];
-      $moduleUrl  = $module['repository'];
-    }
-    else {
-      // Extract package information from packagist.org
-
-      try {
-        $info = (new PackagistAPI)->get ($moduleName);
-      }
-      catch (HttpException $e) {
-        $io->error ($e->getCode () == 404 ? "Module '$moduleName' was not found" : $e->getMessage ());
-      }
-      /** @noinspection PhpUndefinedVariableInspection */
-      $module    = $info['package'];
-      $moduleUrl = $module['repository'];
-    }
-
-    // Clone the repo.
-
-    $path = "{$this->app->modulesPath}/$moduleName";
-    (new GitStack)->cloneRepo ($moduleUrl, $path)->printed (false)->run ();
-
-    // Remove VCS history
-
-    if (!$opts['keep-repo'])
-      $this->fs->remove ("$path/.git")->run ();
-
-    // Install the module's dependencies and register its namespaces
-
-    $this->composerUpdate (); // Note: this also updates the modules registry.
-
-    $io->done ("Template <info>$moduleName</info> is now installed on <info>$path</info>");
   }
 
   /**
@@ -281,8 +191,8 @@ trait ModuleCommands
   {
     $links = $this->modulesInstaller->publishModules ();
 
-    if ($this->io->getOutput()->getVerbosity() >= OutputInterface::VERBOSITY_VERBOSE)
-      $this->io->table(['Source', 'Target'], $links, [0,0]);
+    if ($this->io->getOutput ()->getVerbosity () >= OutputInterface::VERBOSITY_VERBOSE)
+      $this->io->table (['Source', 'Target'], $links, [0, 0]);
     $this->io->done ("Published");
   }
 
@@ -351,7 +261,125 @@ trait ModuleCommands
     else $this->uninstallProjectModule ($moduleName);
   }
 
-  //--------------------------------------------------------------------------------------------------------------------
+  /**
+   * Installs a plugin module
+   *
+   * @param string $moduleName If not specified, a list of installable plugins will be displayed for the user
+   *                           to pick one
+   * @param array  $opts
+   * @option $search|s Search for plugins having the specified text word or prefix somewhere on the name or description
+   * @option $stars Sort the list by stars, instead of downloads
+   */
+  protected function moduleInstallPlugin ($moduleName = null, $opts = ['search|s' => '', 'stars' => false])
+  {
+    $io = $this->io;
+    if (!$moduleName) {
+
+      // Search
+
+      $modules = (new PackagistAPI)->type ('electro-plugin')->query ($opts['search'])->search (true);
+
+      if (empty($modules))
+        $io->error ("No matching plugins were found");
+
+      $this->formatModules ($modules, $opts['stars']);
+
+      // Show menu
+
+      $sel = $io->menu ('Select a plugin module to install:',
+        array_getColumn ($modules, 'fname'), -1,
+        array_getColumn ($modules, 'description'),
+        function ($i) use ($modules) {
+          return !$this->modulesRegistry->isInstalled ($modules[$i]['name']) ?: "That module is already installed";
+        }
+      );
+      if ($sel < 0) $this->io->cancel ();
+      $moduleName = $modules[$sel]['name'];
+    }
+
+    // Install module via Composer
+
+    $version = self::$INSTALL_STABLE ? '' : ':dev-master';
+    // Note: this also updates the modules registry.
+    (new InstallPackageTask("$moduleName$version"))->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
+
+    $io->done ("Plugin <info>$moduleName</info> is now installed");
+  }
+
+  /**
+   * Installs a template module
+   *
+   * A template, when installed, becames a project-module.
+   *
+   * @param string $moduleName If not specified, a list of installable templates will be displayed for the user
+   *                           to pick one
+   * @param array  $opts
+   * @option $keep-repo|k When set, the hidden .git directory is not removed from the module's directory
+   * @option $search|s Search for templates having the specified text word or prefix somewhere on the name or
+   *                           description
+   * @option $stars Sort the list by stars, instead of downloads
+   */
+  protected function moduleInstallTemplate ($moduleName = null,
+                                            $opts = ['keep-repo|k' => false, 'search|s' => '', 'stars' => false])
+  {
+    $io = $this->io;
+
+    if (!$moduleName) {
+
+      // Search
+
+      $modules = (new PackagistAPI)->type ('electro-template')->query ($opts['search'])->search (true);
+
+      if (empty($modules))
+        $io->error ("No matching templates were found");
+
+      $this->formatModules ($modules, $opts['stars']);
+
+      // Show menu
+
+      $sel = $io->menu ('Select a template module to install:',
+        array_getColumn ($modules, 'fname'), -1,
+        array_getColumn ($modules, 'description'),
+        function ($i) use ($modules) {
+          return !$this->modulesRegistry->isInstalled ($modules[$i]['name'])
+            ?: "A module with that name already exists on this project";
+        }
+      );
+      if ($sel < 0) $this->io->cancel ();
+      $module     = $modules[$sel];
+      $moduleName = $module['name'];
+      $moduleUrl  = $module['repository'];
+    }
+    else {
+      // Extract package information from packagist.org
+
+      try {
+        $info = (new PackagistAPI)->get ($moduleName);
+      }
+      catch (HttpException $e) {
+        $io->error ($e->getCode () == 404 ? "Module '$moduleName' was not found" : $e->getMessage ());
+      }
+      /** @noinspection PhpUndefinedVariableInspection */
+      $module    = $info['package'];
+      $moduleUrl = $module['repository'];
+    }
+
+    // Clone the repo.
+
+    $path = "{$this->app->modulesPath}/$moduleName";
+    (new GitStack)->cloneRepo ($moduleUrl, $path)->printed (false)->run ();
+
+    // Remove VCS history
+
+    if (!$opts['keep-repo'])
+      $this->fs->remove ("$path/.git")->run ();
+
+    // Install the module's dependencies and register its namespaces
+
+    $this->composerUpdate (); // Note: this also updates the modules registry.
+
+    $io->done ("Template <info>$moduleName</info> is now installed on <info>$path</info>");
+  }
 
   protected function uninstallPlugin ($moduleName)
   {
@@ -380,6 +408,8 @@ trait ModuleCommands
 
     $io->done ("Module <info>$moduleName</info> was uninstalled");
   }
+
+  //--------------------------------------------------------------------------------------------------------------------
 
   private function composerUpdate ()
   {
