@@ -46,6 +46,36 @@ trait ModuleCommands
   static $SHOW_COMPOSER_OUTPUT = true;
 
   /**
+   * Installs a plugin or a template
+   *
+   * @param string $moduleType Either <info>plugin</info>|<info>template</info>. If not specified, it will be asked for
+   * @param string $moduleName A full module name (in <comment>vendor/package</comment> format), If not specified, a
+   *                           list of installable modules will be displayed for the user to pick one
+   * @param array  $opts
+   * @option $search|s Search for modules having the specified text word or prefix somewhere on the name or description
+   * @option $stars Sort the list by stars, instead of downloads
+   */
+  function install ($moduleType = null, $moduleName = null, $opts = ['search|s' => '', 'stars' => false])
+  {
+    $io = $this->io;
+    if (!$moduleType)
+      $moduleType = ['plugin', 'template']
+      [$io->menu ('What type of module do you want to install?', [
+        'Plugin',
+        'Template',
+      ], 0)];
+    else $io->nl ();
+    switch ($moduleType) {
+      case 'plugin';
+        $io->banner ("PLUGINS");
+        return $this->moduleInstallPlugin ($moduleName, $opts);
+      case 'template';
+        $io->banner ("TEMPLATES");
+        return $this->moduleInstallTemplate ($moduleName, $opts);
+    }
+  }
+
+  /**
    * Scaffolds a new project module
    *
    * @param string $moduleName The full name (vendor-name/module-name) of the module to be created
@@ -155,36 +185,6 @@ trait ModuleCommands
   }
 
   /**
-   * Installs a plugin or a template
-   *
-   * @param string $moduleType Either <info>plugin</info>|<info>template</info>. If not specified, it will be asked for
-   * @param string $moduleName A full module name (in <comment>vendor/package</comment> format), If not specified, a
-   *                           list of installable modules will be displayed for the user to pick one
-   * @param array  $opts
-   * @option $search|s Search for modules having the specified text word or prefix somewhere on the name or description
-   * @option $stars Sort the list by stars, instead of downloads
-   */
-  function moduleInstall ($moduleType = null, $moduleName = null, $opts = ['search|s' => '', 'stars' => false])
-  {
-    $io = $this->io;
-    if (!$moduleType)
-      $moduleType = ['plugin', 'template']
-      [$io->menu ('What type of module do you want to install?', [
-        'Plugin',
-        'Template',
-      ], 0)];
-    else $io->nl ();
-    switch ($moduleType) {
-      case 'plugin';
-        $io->banner ("PLUGINS");
-        return $this->moduleInstallPlugin ($moduleName, $opts);
-      case 'template';
-        $io->banner ("TEMPLATES");
-        return $this->moduleInstallTemplate ($moduleName, $opts);
-    }
-  }
-
-  /**
    * (Re)publishes all module's public folders
    */
   function modulePublish ()
@@ -246,11 +246,21 @@ trait ModuleCommands
   }
 
   /**
-   * Removes a module from the application
+   * Uninstalls a plugin or a private module (alias of <info>uninstall</info>)
    *
    * @param string $moduleName The full name (vendor-name/module-name) of the module to be uninstalled
    */
-  function moduleUninstall ($moduleName = null)
+  function remove ($moduleName = null)
+  {
+    $this->moduleUninstall ($moduleName);
+  }
+
+  /**
+   * Uninstalls a plugin or a private module
+   *
+   * @param string $moduleName The full name (vendor-name/module-name) of the module to be uninstalled
+   */
+  function uninstall ($moduleName = null)
   {
     $this->modulesUtil->selectModule ($moduleName);
 
@@ -259,6 +269,23 @@ trait ModuleCommands
     if ($this->modulesRegistry->isPlugin ($moduleName))
       $this->uninstallPlugin ($moduleName);
     else $this->uninstallProjectModule ($moduleName);
+  }
+
+  /**
+   * Renames a private module
+   *
+   * @param string $oldModuleName The full name (vendor-name/module-name) of the module to be tenamed
+   * @param string $newModuleName The new name (vendor-name/module-name)
+   */
+  function moduleRename ($oldModuleName = null, $newModuleName = null)
+  {
+    $this->modulesUtil->selectModule ($oldModuleName);
+
+    $this->io->writeln ("Uninstalling <info>$oldModuleName</info>")->nl ();
+
+    if ($this->modulesRegistry->isPlugin ($oldModuleName))
+      $this->uninstallPlugin ($oldModuleName);
+    else $this->uninstallProjectModule ($oldModuleName);
   }
 
   /**

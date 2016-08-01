@@ -141,7 +141,7 @@ class MigrationCommands
   }
 
   /**
-   * Run all available migrations of a specific module, optionally up to a specific version
+   * Runs all pending migrations of a module, optionally up to a specific version
    *
    * @param string $moduleName [optional] The target module (vendor-name/package-name syntax).
    *                           If not specified, the user will be prompted for it
