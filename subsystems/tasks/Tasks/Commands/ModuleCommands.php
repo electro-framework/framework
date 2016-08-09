@@ -252,7 +252,7 @@ trait ModuleCommands
    */
   function remove ($moduleName = null)
   {
-    $this->moduleUninstall ($moduleName);
+    $this->uninstall ($moduleName);
   }
 
   /**
