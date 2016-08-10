@@ -421,7 +421,8 @@ trait ModuleCommands
     // If that's the case, we need to remove it, otherwise the module will remain registered.
     if (is_link ($module->path)) {
       unlink ($module->path);
-      $this->composerUpdate (); // Note: this also updates the modules registry.
+      $this->moduleRefresh();   // We must rebuild the registry BEFORE calling Composer update.
+      $this->composerUpdate ();
     }
 
     $this->io->done ("Plugin module <info>$moduleName</info> was uninstalled");
