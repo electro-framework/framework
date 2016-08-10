@@ -144,7 +144,7 @@ trait ModuleCommands
    */
   function moduleCleanup ($moduleName = '', $opts = ['suppress-errors|s' => false])
   {
-    if ($this->modulesUtil->selectModule ($moduleName, false, true)) {
+    if ($this->modulesUtil->selectModule ($moduleName, null, true)) {
       $this->modulesInstaller->cleanUpModule ($moduleName);
       $this->io->done ("Cleanup complete");
     }
@@ -421,7 +421,7 @@ trait ModuleCommands
     // If that's the case, we need to remove it, otherwise the module will remain registered.
     if (is_link ($module->path)) {
       unlink ($module->path);
-      $this->moduleRefresh ();
+      $this->composerUpdate (); // Note: this also updates the modules registry.
     }
 
     $this->io->done ("Plugin module <info>$moduleName</info> was uninstalled");
