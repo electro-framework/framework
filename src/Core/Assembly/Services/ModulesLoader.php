@@ -1,14 +1,14 @@
 <?php
 namespace Electro\Core\Assembly\Services;
 
-use Exception;
-use PhpKit\WebConsole\Lib\Debug;
-use Psr\Log\LoggerInterface;
 use Electro\Core\Assembly\ModuleInfo;
 use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\DI\ServiceProviderInterface;
 use Electro\Interfaces\ModuleInterface;
+use Exception;
+use PhpKit\WebConsole\Lib\Debug;
+use Psr\Log\LoggerInterface;
 
 /**
  * Loads and initializes the application's modules.
@@ -57,32 +57,30 @@ class ModulesLoader
     // Providers registration phase
 
 //stepProfiling("Begin Providers registration");
-    foreach ($this->modulesRegistry->getAllModules () as $name => $module) {
-      if ($module->enabled && $module->bootstrapper) {
-        if (!class_exists ($module->bootstrapper)) {
-          $this->logModuleError ($module, "Class <kbd>$module->bootstrapper</kbd> was not found.");
-          continue; // don't load this module.
-        }
-        try {
-          $provider = new $module->bootstrapper;
-          if ($provider instanceof ServiceProviderInterface)
-            $provider->register ($this->injector);
+    foreach ($this->modulesRegistry->onlyBootable ()->onlyEnabled ()->getModules () as $name => $module) {
+      if (!class_exists ($module->bootstrapper)) {
+        $this->logModuleError ($module, "Class <kbd>$module->bootstrapper</kbd> was not found.");
+        continue; // don't load this module.
+      }
+      try {
+        $provider = new $module->bootstrapper;
+        if ($provider instanceof ServiceProviderInterface)
+          $provider->register ($this->injector);
 
-          if ($provider instanceof ModuleInterface) {
-            $providers[]       = $provider;
-            $paths[]           = $module->path;
-            $providerModules[] = $module;
-          }
-          // Clear module's previous error status (if any)
-          if ($module->errorStatus) {
-            $module->errorStatus = null;
-            $this->modulesRegistry->save (); // Note: this only occurs on debug mode.
-          }
+        if ($provider instanceof ModuleInterface) {
+          $providers[]       = $provider;
+          $paths[]           = $module->path;
+          $providerModules[] = $module;
+        }
+        // Clear module's previous error status (if any)
+        if ($module->errorStatus) {
+          $module->errorStatus = null;
+          $this->modulesRegistry->save (); // Note: this only occurs on debug mode.
+        }
 //stepProfiling("Provider $name done");
-        }
-        catch (Exception $e) {
-          $this->logModuleError ($module, $e->getMessage (), $e);
-        }
+      }
+      catch (Exception $e) {
+        $this->logModuleError ($module, $e->getMessage (), $e);
       }
     }
 

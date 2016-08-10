@@ -129,7 +129,7 @@ class ModulesInstaller
     $this->unpublishModules ();
 
     $globalPublishDir = $this->app->modulesPublishingPath;
-    $all              = $this->registry->getAllModules ();
+    $all              = $this->registry->getModules ();
     $links            = [];
     foreach ($all as $module) {
       $pathToPublish = "$module->path/{$this->app->modulePublicPath}";
@@ -138,11 +138,11 @@ class ModulesInstaller
         $symlinkDir = "$globalPublishDir/$folder";
         if (!file_exists ($symlinkDir))
           mkdir ($symlinkDir, 0755, true);
-        $symlinkFile    = "$symlinkDir/$name";
+        $symlinkFile = "$symlinkDir/$name";
 //        $relativeTarget = getRelativePath ("./$symlinkFile", "./$pathToPublish");
 //        symlink ($relativeTarget, $symlinkFile);
         $pathToPublish = $this->app->baseDirectory . "/$pathToPublish";
-        $symlinkFile = $this->app->baseDirectory . "/$symlinkFile";
+        $symlinkFile   = $this->app->baseDirectory . "/$symlinkFile";
         symlink ($pathToPublish, $symlinkFile);
         $links[] = [$pathToPublish, $symlinkFile];
       }
@@ -167,14 +167,15 @@ class ModulesInstaller
     $currentModules     = array_merge ($subsystems, $plugins, $private);
     $currentModuleNames = self::getNames ($currentModules);
 
-    $prevModules     = $this->registry->getAllModules ();
+    $prevModules     = $this->registry->getModules ();
     $prevModuleNames = self::getNames ($prevModules);
 
     $newModuleNames = array_diff ($currentModuleNames, $prevModuleNames);
     $newModules     = self::getOnly ($newModuleNames, $currentModules);
 
     $moduleNamesKept = array_intersect ($currentModuleNames, $prevModuleNames);
-    $moduleNamesKept = array_intersect ($moduleNamesKept, $this->registry->getApplicationModuleNames ());
+    $moduleNamesKept = array_intersect ($moduleNamesKept,
+      $this->registry->onlyPrivateOrPlugins ()->onlyEnabled ()->getModuleNames ());
     $modulesKept     = self::getOnly ($moduleNamesKept, $currentModules);
 
     $modules = [];
@@ -371,7 +372,7 @@ class ModulesInstaller
   {
     if ($this->moduleHasMigrations ($module)) {
       $io = $this->io;
-      $io->nl ()->comment ("    The module has migrations.");
+      $io->comment ("    The module has migrations.");
       $migrations = $this->getMigrationsOf ($module->name);
       $found      = false;
       foreach ($migrations as $migration) {
@@ -390,7 +391,7 @@ class ModulesInstaller
         }
       }
       if (!$found)
-        $io->say ("    Migrations have already run.")->nl ();
+        $io->comment("    No new migrations to run.");
     }
   }
 

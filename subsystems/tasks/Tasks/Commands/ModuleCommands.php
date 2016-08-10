@@ -219,6 +219,24 @@ trait ModuleCommands
   }
 
   /**
+   * Renames a private module
+   *
+   * @param string $oldModuleName The full name (vendor-name/module-name) of the module to be tenamed
+   * @param string $newModuleName The new name (vendor-name/module-name)
+   */
+  function moduleRename ($oldModuleName = null, $newModuleName = null)
+  {
+    $this->modulesUtil->selectModule ($oldModuleName,
+      function (ModuleInfo $module) { return $module->type == ModuleInfo::TYPE_PRIVATE; });
+
+    $this->io->writeln ("Uninstalling <info>$oldModuleName</info>")->nl ();
+
+    if ($this->modulesRegistry->isPlugin ($oldModuleName))
+      $this->uninstallPlugin ($oldModuleName);
+    else $this->uninstallProjectModule ($oldModuleName);
+  }
+
+  /**
    * Displays information about the currently registered modules
    *
    * @param array $opts
@@ -226,9 +244,10 @@ trait ModuleCommands
    */
   function moduleStatus ($opts = ['all|a' => false])
   {
-    $modules = $opts['all']
-      ? $this->modulesRegistry->getAllModules ()
-      : $this->modulesRegistry->getApplicationModules ();
+    $reg = $this->modulesRegistry;
+    if (!$opts['all'])
+      $reg->onlyPrivateOrPlugins ();
+    $modules = $reg->getModules ();
     $o       = [];
     foreach ($modules as $module)
       $o[] = [
@@ -269,23 +288,6 @@ trait ModuleCommands
     if ($this->modulesRegistry->isPlugin ($moduleName))
       $this->uninstallPlugin ($moduleName);
     else $this->uninstallProjectModule ($moduleName);
-  }
-
-  /**
-   * Renames a private module
-   *
-   * @param string $oldModuleName The full name (vendor-name/module-name) of the module to be tenamed
-   * @param string $newModuleName The new name (vendor-name/module-name)
-   */
-  function moduleRename ($oldModuleName = null, $newModuleName = null)
-  {
-    $this->modulesUtil->selectModule ($oldModuleName);
-
-    $this->io->writeln ("Uninstalling <info>$oldModuleName</info>")->nl ();
-
-    if ($this->modulesRegistry->isPlugin ($oldModuleName))
-      $this->uninstallPlugin ($oldModuleName);
-    else $this->uninstallProjectModule ($oldModuleName);
   }
 
   /**
@@ -419,7 +421,7 @@ trait ModuleCommands
     // If that's the case, we need to remove it, otherwise the module will remain registered.
     if (is_link ($module->path)) {
       unlink ($module->path);
-      $this->moduleRefresh();
+      $this->moduleRefresh ();
     }
 
     $this->io->done ("Plugin module <info>$moduleName</info> was uninstalled");

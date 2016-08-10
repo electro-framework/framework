@@ -20,6 +20,13 @@ class ModulesRegistry
    */
   private $app;
   /**
+   * When set, module retrieval methods will return only modules that pass all filtering callbacks.
+   * <p>Callback syntax: `function (ModuleInfo $module):bool`
+   *
+   * @var string|null
+   */
+  private $moduleFilters = [];
+  /**
    * Contains information about all registered modules.
    * <p>It's a map of module names to module information objects.
    *
@@ -37,42 +44,15 @@ class ModulesRegistry
     return map ($data, function ($o) { return array_toClass ($o, ModuleInfo::class); });
   }
 
-  function getAllModuleNames ()
-  {
-    return map ($this->modules, function (ModuleInfo $m) { return $m->name; });
-  }
-
   /**
-   * Gets information about all registered modules.
-   * <p>Returns a map of module names to module information objects.
+   * Clears all conditions for module retrieval.
    *
-   * @return ModuleInfo[]
+   * @return $this
    */
-  function getAllModules ()
+  function all ()
   {
-    return $this->modules;
-  }
-
-  /**
-   * Returns the names of all installed plugins and private modules, in that order.
-   *
-   * @param bool $onlyEnabled Return only modules that are enabled.
-   * @return string[]
-   */
-  function getApplicationModuleNames ($onlyEnabled = false)
-  {
-    return array_merge ($this->getPluginNames ($onlyEnabled), $this->getPrivateModuleNames ($onlyEnabled));
-  }
-
-  /**
-   * Gets a list of all plugins and private modules, in that order.
-   *
-   * @param bool $onlyEnabled Return only modules that are enabled.
-   * @return \Electro\Core\Assembly\ModuleInfo[]
-   */
-  function getApplicationModules ($onlyEnabled = false)
-  {
-    return array_merge ($this->getPlugins ($onlyEnabled), $this->getPrivateModules ($onlyEnabled));
+    $this->moduleFilters = [];
+    return $this;
   }
 
   /**
@@ -86,95 +66,40 @@ class ModulesRegistry
     return get ($this->modules, $moduleName);
   }
 
+  /**
+   * Retrieves the names of all modules that match the previously set conditions (if any).
+   *
+   * @return string[]
+   */
+  function getModuleNames ()
+  {
+    return array_values (map ($this->getModules (), function (ModuleInfo $m) { return $m->name; }));
+  }
+
+  /**
+   * Retrieves all modules that match the previously set conditions (if any).
+   * <p>Returns a map of module names to module information objects.
+   *
+   * @return ModuleInfo[]
+   */
+  function getModules ()
+  {
+    $modules = filter ($this->modules, function (ModuleInfo $m) {
+      foreach ($this->moduleFilters as $filter)
+        if (!$filter($m))
+          return false;
+      return true;
+    });
+    $this->all ();
+    return $modules;
+  }
+
   function getPathMappings ()
   {
-    return mapAndFilter ($this->getApplicationModules (), function (ModuleInfo $mod, &$k) {
-      $k = $mod->realPath;
-      return $mod->realPath ? $mod->path : null;
-    });
-  }
-
-  /**
-   * Returns the names of all registered modules of tyoe 'plugin'.
-   *
-   * @param bool $onlyEnabled Return only modules that are enabled.
-   * @return string[]
-   */
-  function getPluginNames ($onlyEnabled = false)
-  {
-    return mapAndFilter (array_values ($this->modules),
-      function (ModuleInfo $m) use ($onlyEnabled) {
-        return $m->type == ModuleInfo::TYPE_PLUGIN && ($m->enabled || !$onlyEnabled) ? $m->name : null;
-      });
-  }
-
-  /**
-   * Returns a list of module infomation objects for all registered modules of tyoe 'plugin'.
-   *
-   * @param bool $onlyEnabled Return only modules that are enabled.
-   * @return ModuleInfo[]
-   */
-  function getPlugins ($onlyEnabled = false)
-  {
-    return array_filter ($this->modules,
-      function (ModuleInfo $m) use ($onlyEnabled) {
-        return $m->type == ModuleInfo::TYPE_PLUGIN && ($m->enabled || !$onlyEnabled);
-      });
-  }
-
-  /**
-   * Returns the names of all registered modules of tyoe 'private'.
-   *
-   * @param bool $onlyEnabled Return only modules that are enabled.
-   * @return string[]
-   */
-  function getPrivateModuleNames ($onlyEnabled = false)
-  {
-    return mapAndFilter (array_values ($this->modules),
-      function (ModuleInfo $m) use ($onlyEnabled) {
-        return $m->type == ModuleInfo::TYPE_PRIVATE && ($m->enabled || !$onlyEnabled) ? $m->name : null;
-      });
-  }
-
-  /**
-   * Returns a list of module infomation objects for all registered modules of tyoe 'private'.
-   *
-   * @param bool $onlyEnabled Return only modules that are enabled.
-   * @return ModuleInfo[]
-   */
-  function getPrivateModules ($onlyEnabled = false)
-  {
-    return array_filter ($this->modules,
-      function (ModuleInfo $m) use ($onlyEnabled) {
-        return $m->type == ModuleInfo::TYPE_PRIVATE && ($m->enabled || !$onlyEnabled);
-      });
-  }
-
-  /**
-   * Returns the names of all registered modules of tyoe 'subsystem'.
-   *
-   * @param bool $onlyEnabled Return only modules that are enabled.
-   * @return string[]
-   */
-  function getSubsystemNames ($onlyEnabled = false)
-  {
-    return mapAndFilter (array_values ($this->modules),
-      function (ModuleInfo $m) use ($onlyEnabled) {
-        return $m->type == ModuleInfo::TYPE_SUBSYSTEM && ($m->enabled || !$onlyEnabled) ? $m->name : null;
-      });
-  }
-
-  /**
-   * Returns a list of module infomation objects for all registered modules of tyoe 'subsystem'.
-   *
-   * @param bool $onlyEnabled Return only modules that are enabled.
-   * @return ModuleInfo[]
-   */
-  function getSubsystems ($onlyEnabled = false)
-  {
-    return array_filter ($this->modules,
-      function (ModuleInfo $m) use ($onlyEnabled) {
-        return $m->type == ModuleInfo::TYPE_SUBSYSTEM && ($m->enabled || !$onlyEnabled);
+    return mapAndFilter ($this->onlyPrivateOrPlugins ()->onlyEnabled ()->getModules (),
+      function (ModuleInfo $mod, &$k) {
+        $k = $mod->realPath;
+        return $mod->realPath ? $mod->path : null;
       });
   }
 
@@ -251,6 +176,111 @@ class ModulesRegistry
       return true;
     }
     return false;
+  }
+
+  /**
+   * Adds a custom condition for module retrieval.
+   * <p>Callback syntax: `function (ModuleInfo $module):bool`
+   *
+   * @param callable|null $filter If null, no filter will be added.
+   * @return $this
+   */
+  function only (callable $filter = null)
+  {
+    if ($filter)
+      $this->moduleFilters[] = $filter;
+    return $this;
+  }
+
+  /**
+   * Adds a condition for module retrieval.
+   *
+   * @return $this
+   */
+  function onlyBootable ()
+  {
+    $this->moduleFilters[] = function (ModuleInfo $module) { return (bool)$module->bootstrapper; };
+    return $this;
+  }
+
+  /**
+   * Adds a condition for module retrieval.
+   *
+   * @return $this
+   */
+  function onlyDisabled ()
+  {
+    $this->moduleFilters[] = function (ModuleInfo $module) { return !$module->enabled; };
+    return $this;
+  }
+
+  /**
+   * Adds a condition for module retrieval.
+   *
+   * @return $this
+   */
+  function onlyEnabled ()
+  {
+    $this->moduleFilters[] = function (ModuleInfo $module) { return $module->enabled; };
+    return $this;
+  }
+
+  /**
+   * Adds a condition for module retrieval.
+   *
+   * @return $this
+   */
+  function onlyNotBootable ()
+  {
+    $this->moduleFilters[] = function (ModuleInfo $module) { return !$module->bootstrapper; };
+    return $this;
+  }
+
+  /**
+   * Adds a condition for module retrieval.
+   *
+   * @return $this
+   */
+  function onlyPlugins ()
+  {
+    $this->moduleFilters[] = function (ModuleInfo $module) { return $module->type == ModuleInfo::TYPE_PLUGIN; };
+    return $this;
+  }
+
+  /**
+   * Adds a condition for module retrieval.
+   *
+   * @return $this
+   */
+  function onlyPrivate ()
+  {
+    $this->moduleFilters[] = function (ModuleInfo $module) { return $module->type == ModuleInfo::TYPE_PRIVATE; };
+    return $this;
+  }
+
+  /**
+   * Adds a condition for module retrieval.
+   *
+   * @return $this
+   */
+  function onlyPrivateOrPlugins ()
+  {
+    $this->moduleFilters[] = function (ModuleInfo $module) {
+      return $module->type == ModuleInfo::TYPE_PRIVATE ||
+             $module->type == ModuleInfo::TYPE_PLUGIN;
+    };
+    return $this;
+  }
+
+  /**
+   * Adds a condition for module retrieval.
+   *
+   * @return $this
+   */
+  function onlySubsystems ()
+  {
+    $this->moduleFilters[] = function (ModuleInfo $module) { return $module->type == ModuleInfo::TYPE_SUBSYSTEM; };
+    return $this;
   }
 
   /**

@@ -1,14 +1,15 @@
 <?php
 namespace Electro\Migrations\Commands;
 
-use Phinx\Console\Command;
-use Phinx\Console\Command\AbstractCommand;
-use Robo\Config;
+use Electro\Core\Assembly\ModuleInfo;
 use Electro\Core\Assembly\Services\ModulesRegistry;
 use Electro\Core\ConsoleApplication\Lib\ModulesUtil;
 use Electro\Core\ConsoleApplication\Services\ConsoleIO;
 use Electro\Migrations\Config\MigrationsSettings;
 use Electro\Plugins\IlluminateDatabase\DatabaseAPI;
+use Phinx\Console\Command;
+use Phinx\Console\Command\AbstractCommand;
+use Robo\Config;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
@@ -156,7 +157,7 @@ class MigrationCommands
     $this->setupModule ($moduleName);
     $command = new Command\Migrate;
     $command->setApplication ($this->console);
-    $input = new ArrayInput(PA ([
+    $input  = new ArrayInput(PA ([
       '--configuration' => self::getConfigPath (),
       '--target'        => get ($options, 'target'),
       '--environment'   => 'main',
@@ -220,7 +221,7 @@ class MigrationCommands
     $this->setupModule ($moduleName);
     $command = new Command\Rollback;
     $command->setApplication ($this->console);
-    $input = new ArrayInput(PA ([
+    $input  = new ArrayInput(PA ([
       '--configuration' => self::getConfigPath (),
       '--target'        => get ($options, 'target'),
       '--date'          => get ($options, 'date'),
@@ -317,7 +318,7 @@ class MigrationCommands
    */
   private function setupModule (&$moduleName)
   {
-    $this->modulesUtil->selectModule ($moduleName, true);
+    $this->modulesUtil->selectModule ($moduleName, function (ModuleInfo $module) { return $module->enabled; });
     $this->setupMigrationConfig ($moduleName);
   }
 
