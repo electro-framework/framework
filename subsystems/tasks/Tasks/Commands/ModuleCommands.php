@@ -410,8 +410,17 @@ trait ModuleCommands
 
   protected function uninstallPlugin ($moduleName)
   {
+    $module = $this->modulesRegistry->getModule ($moduleName);
+
     // This also updates the modules registry.
     (new UninstallPackageTask($moduleName))->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
+
+    // When using the global 'php-kit/composer-shared-packages-plugin', a symlink will be left after the uninstallation.
+    // If that's the case, we need to remove it, otherwise the module will remain registered.
+    if (is_link ($module->path)) {
+      unlink ($module->path);
+      $this->moduleRefresh();
+    }
 
     $this->io->done ("Plugin module <info>$moduleName</info> was uninstalled");
   }

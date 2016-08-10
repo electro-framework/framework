@@ -335,8 +335,8 @@ class Application
   function setup ($rootDir)
   {
     $this->baseDirectory = $rootDir;
-    $this->frameworkPath =
-      "$rootDir/" . self::FRAMEWORK_PATH; // due to eventual symlinking, we can't use dirname(__DIR__) here
+    $this->frameworkPath = self::FRAMEWORK_PATH;
+//      "$rootDir/" . self::FRAMEWORK_PATH; // due to eventual symlinking, we can't use dirname(__DIR__) here
   }
 
   /**

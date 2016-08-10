@@ -139,8 +139,11 @@ class ModulesInstaller
         if (!file_exists ($symlinkDir))
           mkdir ($symlinkDir, 0755, true);
         $symlinkFile    = "$symlinkDir/$name";
-        $relativeTarget = getRelativePath ("./$symlinkFile", "./$pathToPublish");
-        symlink ($relativeTarget, $symlinkFile);
+//        $relativeTarget = getRelativePath ("./$symlinkFile", "./$pathToPublish");
+//        symlink ($relativeTarget, $symlinkFile);
+        $pathToPublish = $this->app->baseDirectory . "/$pathToPublish";
+        $symlinkFile = $this->app->baseDirectory . "/$symlinkFile";
+        symlink ($pathToPublish, $symlinkFile);
         $links[] = [$pathToPublish, $symlinkFile];
       }
     }
