@@ -74,6 +74,10 @@ class ModuleInfo implements AssignableInterface
    * @var string
    */
   public $type;
+  /**
+   * @var ComposerConfigHandler Caches the module's Composer configuration.
+   */
+  private $composerConfig;
 
   /**
    * Converts a module name in `vendor-name/package-name` form to a valid PSR-4 namespace.
@@ -110,8 +114,9 @@ class ModuleInfo implements AssignableInterface
    */
   function getComposerConfig ()
   {
-    $composerConfig = new ComposerConfigHandler("$this->path/composer.json", true);
-    return $composerConfig->data ? $composerConfig : null;
+    if (!$this->composerConfig)
+      $this->composerConfig = new ComposerConfigHandler("$this->path/composer.json", true);
+    return $this->composerConfig->data ? $this->composerConfig : null;
   }
 
   /**
@@ -131,6 +136,16 @@ class ModuleInfo implements AssignableInterface
     $namespace = $namespaces [0];
     $srcPath   = $decls[$namespace];
     return rtrim ($namespace, '\\');
+  }
+
+  /**
+   * Returns the names of all packages required by the module.
+   *
+   * @return string[]
+   */
+  function getRequiredPackages ()
+  {
+    return array_discard (array_keys ($this->getComposerConfig ()->get ('require', [])), ['php']);
   }
 
   function getShortName ()

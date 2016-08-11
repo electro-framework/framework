@@ -61,7 +61,7 @@ class ModulesUtil
       }
       else {
         if ($suppressErrors) return false;
-        $this->io->error ("No modules are installed");
+        $this->io->error ("No modules are available");
       }
     }
     return true;

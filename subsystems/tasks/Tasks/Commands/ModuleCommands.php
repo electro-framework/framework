@@ -8,6 +8,7 @@ use Electro\Core\Assembly\Services\ModulesRegistry;
 use Electro\Core\ConsoleApplication\Lib\ModulesUtil;
 use Electro\Exceptions\HttpException;
 use Electro\Interfaces\ConsoleIOInterface;
+use Electro\Lib\ComposerConfigHandler;
 use Electro\Lib\PackagistAPI;
 use Electro\Migrations\Config\MigrationsSettings;
 use Electro\Tasks\Config\TasksSettings;
@@ -281,7 +282,21 @@ trait ModuleCommands
    */
   function uninstall ($moduleName = null)
   {
-    $this->modulesUtil->selectModule ($moduleName);
+    $composerCfg = new ComposerConfigHandler;
+    $required    =
+    $mainRequired = array_discard (array_keys ($composerCfg->get ('require')), ['php', 'electro/framework']);
+    $packagesMap = [];
+
+    $privMods = $this->modulesRegistry->onlyPrivate ()->getModules ();
+    foreach ($privMods as $mod) {
+      $packages = $mod->getRequiredPackages ();
+      array_mergeInto ($packagesMap, array_fill_keys ($packages, $mod));
+      array_mergeInto ($required, $packages);
+    }
+
+    $this->modulesUtil->selectModule ($moduleName, function (ModuleInfo $module) use ($required) {
+      return in_array ($module->name, $required);
+    });
 
     $this->io->writeln ("Uninstalling <info>$moduleName</info>")->nl ();
 
@@ -421,7 +436,7 @@ trait ModuleCommands
     // If that's the case, we need to remove it, otherwise the module will remain registered.
     if (is_link ($module->path)) {
       unlink ($module->path);
-      $this->moduleRefresh();   // We must rebuild the registry BEFORE calling Composer update.
+      $this->moduleRefresh ();   // We must rebuild the registry BEFORE calling Composer update.
       $this->composerUpdate ();
     }
 

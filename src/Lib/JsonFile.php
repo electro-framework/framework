@@ -18,7 +18,7 @@ class JsonFile
 
   function __toString ()
   {
-    return $this->json();
+    return $this->json ();
   }
 
   function assign ($data)
@@ -32,9 +32,9 @@ class JsonFile
     return fileExists ($this->path, $this->useIncludePath);
   }
 
-  function get ($jsonPath)
+  function get ($jsonPath, $def = null)
   {
-    return getAt ($this->data, $jsonPath);
+    return getAt ($this->data, $jsonPath, $def);
   }
 
   function json ($pretty = true)
@@ -53,6 +53,12 @@ class JsonFile
     return $this;
   }
 
+  function remove ($jsonPath)
+  {
+    unsetAt ($this->data, $jsonPath);
+    return $this;
+  }
+
   function save ($pretty = true)
   {
     file_put_contents ($this->path, $this->json ($pretty),
@@ -63,12 +69,6 @@ class JsonFile
   function set ($jsonPath, $value)
   {
     setAt ($this->data, $jsonPath, $value, $this->assoc);
-    return $this;
-  }
-
-  function remove ($jsonPath)
-  {
-    unsetAt ($this->data, $jsonPath);
     return $this;
   }
 
