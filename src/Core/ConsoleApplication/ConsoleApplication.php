@@ -70,7 +70,8 @@ class ConsoleApplication extends Runner
       ->make (Application::class);
 
     $app->isConsoleBased = true;
-    $app->setup (getcwd ());
+    $rootDir = normalizePath (getcwd ());
+    $app->setup ($rootDir);
     $app->preboot ();
 
     // Setup debugging
