@@ -64,6 +64,7 @@ class WebApplication
    */
   function run ($rootDir)
   {
+    $rootDir = normalizePath ($rootDir);
 //startProfiling("WebApplication::run");
     // Create and register the foundational framework services.
 

@@ -309,7 +309,7 @@ class ModulesInstaller
           ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
             return (new ModuleInfo)->import ([
               'name' => $dirInfo->getFilename () . '/' . $subDirInfo->getFilename (),
-              'path' => $this->app->toRelativePath ($subDirInfo->getPathname ()),
+              'path' => $this->app->toRelativePath (normalizePath ($subDirInfo->getPathname ())),
             ]);
           });
       })
@@ -328,7 +328,7 @@ class ModulesInstaller
           ->map (function (SplFileInfo $subDirInfo) use ($dirInfo) {
             return (new ModuleInfo)->import ([
               'name' => $dirInfo->getFilename () . '/' . $subDirInfo->getFilename (),
-              'path' => $this->app->toRelativePath ($subDirInfo->getPathname ()),
+              'path' => $this->app->toRelativePath (normalizePath ($subDirInfo->getPathname ())),
             ]);
           });
       })
@@ -341,7 +341,7 @@ class ModulesInstaller
       ::from ("{$this->app->frameworkPath}/subsystems")
       ->onlyDirectories ()
       ->map (function (SplFileInfo $dirInfo) {
-        $path = $dirInfo->getPathname ();
+        $path = normalizePath ($dirInfo->getPathname ());
         $p    = strpos ($path, 'framework/') + 9;
         return (new ModuleInfo)->import ([
           'name' => $dirInfo->getFilename (),
