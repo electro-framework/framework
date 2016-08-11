@@ -349,7 +349,7 @@ class Application
   function toRelativePath ($path)
   {
     if ($path) {
-      if ($path[0] == DIRECTORY_SEPARATOR) {
+      if ($path[0] == DIRECTORY_SEPARATOR || $path[1]==':') {
         $l = strlen ($this->baseDirectory);
         if (substr ($path, 0, $l) == $this->baseDirectory)
           return substr ($path, $l + 1);
