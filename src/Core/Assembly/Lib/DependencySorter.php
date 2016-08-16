@@ -25,7 +25,7 @@ class DependencySorter
    * @param ModuleInfo $b
    * @return int
    */
-  private function compare (ModuleInfo $a, ModuleInfo $b)
+  private static function compare (ModuleInfo $a, ModuleInfo $b)
   {
     $typeSortOrder = ModuleInfo::TYPE_PRIORITY;
     if ($typeSortOrder == null)
