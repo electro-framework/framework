@@ -9,7 +9,7 @@ use Electro\Core\Assembly\Services\ModulesRegistry;
 use Electro\Exceptions\ExceptionWithTitle;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\DI\ServiceProviderInterface;
-use Electro\Migrations\Config\MigrationsSettings;
+use Electro\Plugins\IlluminateDatabase\Migrations\Config\MigrationsSettings;
 
 class AssemblyModule implements ServiceProviderInterface
 {
