@@ -1,9 +1,0 @@
-# Exclude temporary or IDE-related files
-
-.idea
-.DS_Store
-Thumbs.db
-
-# Preserve folders with .gitkeep files
-
-!**/.gitkeep
