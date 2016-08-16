@@ -88,7 +88,17 @@ class WebServer
   private function getBaseUri (ServerRequestInterface $request)
   {
     $params = $request->getServerParams ();
-    return dirnameEx (get ($params, 'SCRIPT_NAME'));
+    $sUrl   = dirnameEx (get ($params, 'SCRIPT_NAME'));
+    $sUrl   = str_replace ('\\', '/', $sUrl);//files in windows come with \ and urls are with /
+
+    if (strlen ($sUrl) != '/')// make sure that paths start and end with /
+    {
+      if (substr ($sUrl, 0, 1) != '/')
+        $sUrl = '/' . $sUrl;
+      if (substr ($sUrl, -1) != '/')
+        $sUrl = $sUrl . '/';
+    }
+    return $sUrl;
   }
 
   private function getVirtualUri (ServerRequestInterface $request)

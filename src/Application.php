@@ -335,6 +335,8 @@ class Application
   function setup ($rootDir)
   {
     $this->baseDirectory = $rootDir;
+    set_include_path (get_include_path () . PATH_SEPARATOR .
+                      '.');//add current directy in the include paths for path resolve of stream_resolve_include_path function
     $this->frameworkPath = self::FRAMEWORK_PATH;
 //      "$rootDir/" . self::FRAMEWORK_PATH; // due to eventual symlinking, we can't use dirname(__DIR__) here
   }
@@ -349,7 +351,7 @@ class Application
   function toRelativePath ($path)
   {
     if ($path) {
-      if ($path[0] == DIRECTORY_SEPARATOR || $path[1]==':') {
+      if ($path[0] == DIRECTORY_SEPARATOR || $path[1] == ':') {
         $l = strlen ($this->baseDirectory);
         if (substr ($path, 0, $l) == $this->baseDirectory)
           return substr ($path, $l + 1);
