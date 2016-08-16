@@ -5,7 +5,6 @@ use Electro\ErrorHandling\Services\ErrorRenderer;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\DI\ServiceProviderInterface;
 use Electro\Interfaces\Http\ErrorRendererInterface;
-use Zend\Diactoros\Response;
 
 class ErrorHandlingModule implements ServiceProviderInterface
 {

@@ -23,7 +23,6 @@
     "php-kit/html5-tools": "dev-master",
     "php-kit/power-primitives": "dev-master",
     "php-kit/flow": "dev-master",
-    "php-kit/ext-pdo": "dev-master",
     "electro/interop": "dev-master",
     "rdlowrey/auryn": "^1.4.0",
     "monolog/monolog": "^1.17.1",
