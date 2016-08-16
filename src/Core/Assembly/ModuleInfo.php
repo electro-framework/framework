@@ -22,12 +22,25 @@ class ModuleInfo implements AssignableInterface
   const TYPE_PLUGIN                 = 'plugin';
   const TYPE_PRIVATE                = 'private';
   const TYPE_SUBSYSTEM              = 'subsystem';
+
+  const TYPE_PRIORITY = [
+    ModuleInfo::TYPE_SUBSYSTEM => 1,
+    ModuleInfo::TYPE_PLUGIN    => 2,
+    ModuleInfo::TYPE_PRIVATE   => 3,
+  ];
+
   /**
    * The module's service provider class name or null if none.
    *
    * @var string|null
    */
   public $bootstrapper;
+  /**
+   * Name list of the modules, that this module depends on.
+   *
+   * @var array
+   */
+  public $dependencies;
   /**
    * An optional textual description (one line) of the module's purpose.
    *

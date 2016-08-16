@@ -2,6 +2,7 @@
 namespace Electro\Core\Assembly\Services;
 
 use Electro\Application;
+use Electro\Core\Assembly\Lib\DependencySorter;
 use Electro\Core\Assembly\ModuleInfo;
 use Electro\Core\ConsoleApplication\ConsoleApplication;
 use Electro\Exceptions\ExceptionWithTitle;
@@ -164,7 +165,8 @@ class ModulesInstaller
     $private    = $this->loadModulesMetadata ($this->scanPrivateModules (), ModuleInfo::TYPE_PRIVATE);
 
     /** @var ModuleInfo[] $currentModules */
-    $currentModules     = array_merge ($subsystems, $plugins, $private);
+    $currentModules = array_merge ($subsystems, $plugins, $private);
+    DependencySorter::Sort ($currentModules);
     $currentModuleNames = self::getNames ($currentModules);
 
     $prevModules     = $this->registry->getModules ();
@@ -267,6 +269,11 @@ class ModulesInstaller
         $rp = realpath ($module->path);
         if ($rp != "{$this->app->baseDirectory}/$module->path")
           $module->realPath = $rp;
+
+        //load the dependencies to an array as detailed by the modules composer.json
+        $module->dependencies = [];
+        foreach ($composerJson->get ('require') as $dependencyName => $dependencyVersion)
+          $module->dependencies[] = $dependencyName;
       }
     }
   }
@@ -391,7 +398,7 @@ class ModulesInstaller
         }
       }
       if (!$found)
-        $io->comment("    No new migrations to run.");
+        $io->comment ("    No new migrations to run.");
     }
   }
 
