@@ -10,7 +10,7 @@ use Electro\Exceptions\HttpException;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Lib\ComposerConfigHandler;
 use Electro\Lib\PackagistAPI;
-use Electro\Migrations\Config\MigrationsSettings;
+use Electro\Plugins\IlluminateDatabase\Migrations\Config\MigrationsSettings;
 use Electro\Tasks\Config\TasksSettings;
 use Electro\Tasks\Shared\InstallPackageTask;
 use Electro\Tasks\Shared\UninstallPackageTask;
