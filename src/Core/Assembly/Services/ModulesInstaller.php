@@ -144,7 +144,11 @@ class ModulesInstaller
 //        symlink ($relativeTarget, $symlinkFile);
         $pathToPublish = $this->app->baseDirectory . "/$pathToPublish";
         $symlinkFile   = $this->app->baseDirectory . "/$symlinkFile";
-        symlink ($pathToPublish, $symlinkFile);
+        if (strtoupper (substr (PHP_OS, 0, 3)) === 'WIN')
+          exec ('mklink /j "' . str_replace ('/', '\\', $symlinkFile) . '" "' .
+                str_replace ('/', '\\', $pathToPublish) . '"');
+        else
+          symlink ($pathToPublish, $symlinkFile);
         $links[] = [$pathToPublish, $symlinkFile];
       }
     }
