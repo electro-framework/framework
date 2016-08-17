@@ -49,8 +49,6 @@ class WebApplication
    */
   function exceptionHandler ($e)
   {
-    if (function_exists ('database_rollback'))
-      database_rollback ();
 //    if ($this->logger)
 //      $this->logger->error ($e->getMessage (),
 //        ['stackTrace' => str_replace ("{$this->app->baseDirectory}/", '', $e->getTraceAsString ())]);

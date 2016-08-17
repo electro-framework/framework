@@ -33,6 +33,11 @@ class ModulesRegistry
    * @var ModuleInfo[]
    */
   private $modules = [];
+  /**
+   * @var callable A callback set by {@see ModulesInstaller} if it has run and there are possibly pending
+   *      initializations to be performed on some modules.
+   */
+  private $pendingInit = false;
 
   function __construct (Application $app)
   {
@@ -281,6 +286,21 @@ class ModulesRegistry
   {
     $this->moduleFilters[] = function (ModuleInfo $module) { return $module->type == ModuleInfo::TYPE_SUBSYSTEM; };
     return $this;
+  }
+
+  /**
+   * Sets or gets a callback to perform pending module installation/update initializations after all modules were
+   * loaded.
+   *
+   * <p>This occurs when {@see ModulesInstaller} has run and new modules have been installed or existing modules were
+   * updated.
+   *
+   * @param callable|null $value [optional] If specified, sets the callback to be invoked later.
+   * @return callable|null The current value or the value being set.
+   */
+  function pendingInitializations ($value = null)
+  {
+    return isset($value) ? $this->pendingInit = $value : $this->pendingInit;
   }
 
   /**

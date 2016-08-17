@@ -1,15 +1,16 @@
 <?php
 namespace Electro\Core\Assembly\Services;
 
+use Auryn\InjectionException;
 use Electro\Application;
 use Electro\Core\Assembly\Lib\DependencySorter;
 use Electro\Core\Assembly\ModuleInfo;
 use Electro\Core\ConsoleApplication\ConsoleApplication;
-use Electro\Exceptions\ExceptionWithTitle;
 use Electro\Interfaces\ConsoleIOInterface;
+use Electro\Interfaces\MigrationsInterface;
+use Electro\Interop\MigrationInfo;
 use Electro\Lib\JsonFile;
 use Electro\Plugins\IlluminateDatabase\Migrations\Commands\MigrationCommands;
-use Electro\Plugins\IlluminateDatabase\Migrations\Config\MigrationsSettings;
 use PhpKit\Connection;
 use PhpKit\Flow\FilesystemFlow;
 use SplFileInfo;
@@ -23,10 +24,6 @@ use SplFileInfo;
 class ModulesInstaller
 {
   /**
-   * @var MigrationsSettings
-   */
-  public $migrationsSettings;
-  /**
    * @var Application
    */
   private $app;
@@ -39,16 +36,26 @@ class ModulesInstaller
    */
   private $io;
   /**
+   * @var MigrationsInterface Lazily loaded on demand.
+   */
+  private $migrationsAPI;
+  /**
+   * @var callable Returns MigrationsInterface
+   */
+  private $migrationsAPIFactory;
+  /**
    * @var ModulesRegistry
    */
   private $registry;
 
-  function __construct (Application $app, ConsoleApplication $consoleApp, ModulesRegistry $modulesRegistry)
+  function __construct (Application $app, ConsoleApplication $consoleApp, ModulesRegistry $modulesRegistry,
+                        callable $migrationsAPIFactory)
   {
-    $this->app        = $app;
-    $this->consoleApp = $consoleApp;
-    $this->io         = $consoleApp->getIO ();
-    $this->registry   = $modulesRegistry;
+    $this->app                  = $app;
+    $this->consoleApp           = $consoleApp;
+    $this->io                   = $consoleApp->getIO ();
+    $this->registry             = $modulesRegistry;
+    $this->migrationsAPIFactory = $migrationsAPIFactory;
   }
 
   /**
@@ -116,6 +123,7 @@ class ModulesInstaller
 
   /**
    * Runs when module:refresh ends.
+   * Override to implement additional functionality.
    */
   public function end ()
   {
@@ -140,6 +148,7 @@ class ModulesInstaller
         if (!file_exists ($symlinkDir))
           mkdir ($symlinkDir, 0755, true);
         $symlinkFile = "$symlinkDir/$name";
+        // Relative symlinks have been disabled for compatibility with Windows
 //        $relativeTarget = getRelativePath ("./$symlinkFile", "./$pathToPublish");
 //        symlink ($relativeTarget, $symlinkFile);
         $pathToPublish = $this->app->baseDirectory . "/$pathToPublish";
@@ -156,11 +165,7 @@ class ModulesInstaller
   }
 
   /**
-   * Updates this instance and also the registration cache file, so that it correctly states the currently installed
-   * modules.
-   *
-   * @return ModulesRegistry
-   * @throws ExceptionWithTitle
+   * Rebuilds the modules registration cache file, so that it correctly states the currently installed modules.
    */
   function rebuildRegistry ()
   {
@@ -170,7 +175,7 @@ class ModulesInstaller
 
     /** @var ModuleInfo[] $currentModules */
     $currentModules = array_merge ($subsystems, $plugins, $private);
-    DependencySorter::Sort ($currentModules);
+    DependencySorter::sort ($currentModules);
     $currentModuleNames = self::getNames ($currentModules);
 
     $prevModules     = $this->registry->getModules ();
@@ -196,14 +201,18 @@ class ModulesInstaller
       $modules [$module->name] = $module;
     }
     $this->registry->setAllModules ($modules);
+    $this->registry->save ();
 
-    $this->setupNewModules ($newModules);
-    $this->updateModules ($modulesKept);
     $this->publishModules ();
 
-    $this->end ();
+    if ($newModules || $modulesKept) {
+      $this->registry->pendingInitializations (function () use ($newModules, $modulesKept) {
+        $this->setupNewModules ($newModules);
+        $this->updateModules ($modulesKept);
+      });
+    }
 
-    $this->registry->save ();
+    $this->end ();
   }
 
   /**
@@ -217,7 +226,8 @@ class ModulesInstaller
 
     if ($migrate) {
       $databaseIsAvailable = Connection::getFromEnviroment ()->isAvailable ();
-      $runMigrations       = $databaseIsAvailable && $this->migrationsSettings;
+      $migrationsAPI       = $this->getMigrationsAPI ();
+      $runMigrations       = $databaseIsAvailable && $migrationsAPI;
 
       if ($runMigrations)
         $this->updateMigrationsOf ($module);
@@ -245,14 +255,17 @@ class ModulesInstaller
   }
 
   /**
-   * @param string $moduleName
-   * @return \stdClass[]
+   * @return MigrationsInterface
    */
-  private function getMigrationsOf ($moduleName)
+  private function getMigrationsAPI ()
   {
-    $this->consoleApp->runAndCapture ('migrate:status', [$moduleName, '--format=json'], $outStr, null, false);
-    if (!preg_match ('/\{.*\}$/', $outStr, $m)) return [];
-    return json_decode ($m[0])->migrations;
+    try {
+      return $this->migrationsAPI
+        ?: (($factory = $this->migrationsAPIFactory) ? $this->migrationsAPI = $factory() : null);
+    }
+    catch (InjectionException $e) {
+      return null;
+    }
   }
 
   private function loadModuleMetadata (ModuleInfo $module)
@@ -294,18 +307,6 @@ class ModulesInstaller
       $this->loadModuleMetadata ($module);
     }
     return $modules;
-  }
-
-  /**
-   * @param string|ModuleInfo $module
-   * @return bool
-   */
-  private function moduleHasMigrations ($module)
-  {
-    if (is_string ($module))
-      $module = $this->registry->getModule ($module);
-    $path = "$module->path/" . $this->migrationsSettings->migrationsPath ();
-    return fileExists ($path);
   }
 
   private function scanPlugins ()
@@ -381,28 +382,25 @@ class ModulesInstaller
 
   private function updateMigrationsOf (ModuleInfo $module)
   {
-    if ($this->moduleHasMigrations ($module)) {
+    $migrationsAPI = $this->getMigrationsAPI ();
+    $migrations    = $migrationsAPI->status ($module->name);
+    if ($migrations) {
       $io = $this->io;
       $io->comment ("    The module has migrations.");
-      $migrations = $this->getMigrationsOf ($module->name);
-      $found      = false;
-      foreach ($migrations as $migration) {
-        if ($migration->migration_status == 'down') {
-          $found = true;
-          $io->say ("    Updating the database...");
-          $status = $this->consoleApp->runAndCapture (
-            'migrate', [$module->name], $outStr, $io->getOutput ()
-          );
-          if ($status) {
-            $io->writeln ($outStr);
-            $io->error ("Error while migrating. Exit code $status");
-          }
-          $io->indent (4)->write ($outStr)->indent ()->nl ();
-          break;
+      $migrations = filter ($migrations, function (MigrationInfo $migration) {
+        return $migration->status == MigrationInfo::DOWN;
+      });
+      if ($migrations) {
+        $io->say ("    Updating the database...");
+        try {
+          $migrationsAPI->migrate ($module->name);
         }
+        catch (\Exception $e) {
+          $io->error ("Error while migrating: " . $e->getMessage ());
+        }
+        $io->say ("    <info>Done.</info>")->nl ();
       }
-      if (!$found)
-        $io->comment ("    No new migrations to run.");
+      else $io->comment ("    No new migrations to run.");
     }
   }
 

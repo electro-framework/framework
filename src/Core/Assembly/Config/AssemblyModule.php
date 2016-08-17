@@ -9,7 +9,7 @@ use Electro\Core\Assembly\Services\ModulesRegistry;
 use Electro\Exceptions\ExceptionWithTitle;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\DI\ServiceProviderInterface;
-use Electro\Plugins\IlluminateDatabase\Migrations\Config\MigrationsSettings;
+use Electro\Interfaces\MigrationsInterface;
 
 class AssemblyModule implements ServiceProviderInterface
 {
@@ -36,10 +36,10 @@ class AssemblyModule implements ServiceProviderInterface
           $installer->rebuildRegistry ();
         }
       })
-      ->prepare (ModulesInstaller::class, function (ModulesInstaller $installer) {
-        // Configure the installer to use migrations only if the migrations module is available.
-        if (class_exists (MigrationsSettings::class))
-          $installer->migrationsSettings = new MigrationsSettings;
-      });
+      // MigrationsInterface must be lazy-loaded on demand.
+      ->define (ModulesInstaller::class, [
+        ':migrationsAPIFactory' => $injector->makeFactory (MigrationsInterface::class),
+      ]);
   }
+
 }

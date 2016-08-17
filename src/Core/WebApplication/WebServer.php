@@ -1,13 +1,13 @@
 <?php
 namespace Electro\Core\WebApplication;
 
-use Psr\Http\Message\ServerRequestInterface;
 use Electro\Application;
 use Electro\Exceptions\Fatal\ConfigException;
 use Electro\FileServer\Services\FileServerMappings;
 use Electro\Interfaces\Http\MiddlewareStackInterface;
 use Electro\Interfaces\Http\ResponseSenderInterface;
 use Electro\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
+use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -88,8 +88,11 @@ class WebServer
   private function getBaseUri (ServerRequestInterface $request)
   {
     $params = $request->getServerParams ();
+    return dirnameEx (get ($params, 'SCRIPT_NAME'));
+/*
+    $params = $request->getServerParams ();
     $sUrl   = dirnameEx (get ($params, 'SCRIPT_NAME'));
-    $sUrl   = str_replace ('\\', '/', $sUrl);//files in windows come with \ and urls are with /
+    $sUrl   = str_replace ('\\', '/', $sUrl); // Windows compat.
 
     if (strlen ($sUrl) != '/')// make sure that paths start and end with /
     {
@@ -99,6 +102,7 @@ class WebServer
         $sUrl = $sUrl . '/';
     }
     return $sUrl;
+*/
   }
 
   private function getVirtualUri (ServerRequestInterface $request)

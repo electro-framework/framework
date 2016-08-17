@@ -130,6 +130,12 @@ class ModulesLoader
       }
     }
 //stepProfiling("bootModules complete");
+
+    // Pending module installation/update initializations
+
+    $extraInit = $this->modulesRegistry->pendingInitializations ();
+    if ($extraInit)
+      $extraInit ();
   }
 
   private function logModuleError (ModuleInfo $module, $message, Exception $e = null)

@@ -1,25 +1,25 @@
 <?php
 namespace Electro\Core\Assembly\Lib;
 
-
 use Electro\Core\Assembly\ModuleInfo;
 
+/**
+ * Sorts modules by the order they should be loaded, according to their dependencies.
+ */
 class DependencySorter
 {
-
-
   /**
-   * sorts the modules by the order they should be loaded, acording to their dependencies
+   * Sorts modules by the order they should be loaded, according to their dependencies.
    *
    * @param ModuleInfo[] $modules
    */
-  public static function Sort (array &$modules)
+  public static function sort (array &$modules)
   {
     uasort ($modules, [DependencySorter::class, "compare"]);
   }
 
   /**
-   * array sorting callback
+   * Array sorting callback.
    *
    * @param ModuleInfo $a
    * @param ModuleInfo $b
@@ -56,4 +56,5 @@ class DependencySorter
       return strcmp ($a->name, $b->name);
     }
   }
+
 }
