@@ -8,7 +8,7 @@ use Electro\Core\Assembly\ModuleInfo;
 use Electro\Core\ConsoleApplication\ConsoleApplication;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Interfaces\MigrationsInterface;
-use Electro\Interop\MigrationInfo;
+use Electro\Interop\MigrationStruct;
 use Electro\Lib\JsonFile;
 use Electro\Plugins\IlluminateDatabase\Migrations\Commands\MigrationCommands;
 use PhpKit\Connection;
@@ -383,13 +383,11 @@ class ModulesInstaller
   private function updateMigrationsOf (ModuleInfo $module)
   {
     $migrationsAPI = $this->getMigrationsAPI ();
-    $migrations    = $migrationsAPI->status ($module->name);
+    $migrations    = $migrationsAPI->module ($module->name)->status ();
     if ($migrations) {
       $io = $this->io;
       $io->comment ("    The module has migrations.");
-      $migrations = filter ($migrations, function (MigrationInfo $migration) {
-        return $migration->status == MigrationInfo::DOWN;
-      });
+      $migrations = array_findAll ($migrations, MigrationStruct::status, MigrationStruct::DOWN);
       if ($migrations) {
         $io->say ("    Updating the database...");
         try {
