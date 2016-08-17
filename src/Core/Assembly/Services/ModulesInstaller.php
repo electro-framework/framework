@@ -10,7 +10,6 @@ use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Interfaces\MigrationsInterface;
 use Electro\Interop\MigrationStruct;
 use Electro\Lib\JsonFile;
-use Electro\Plugins\IlluminateDatabase\Migrations\Commands\MigrationCommands;
 use PhpKit\Connection;
 use PhpKit\Flow\FilesystemFlow;
 use SplFileInfo;
@@ -85,40 +84,28 @@ class ModulesInstaller
    * Performs uninstallation clean up tasks before the module is actually uninstalled.
    *
    * @param string $moduleName
-   * @return int 0 for success.
    */
   function cleanUpModule ($moduleName)
   {
     $io = $this->io;
     $io->writeln ("Cleaning up <info>$moduleName</info>");
-    $status = 0;
-    if ($this->moduleHasMigrations ($moduleName)) {
+    $migrationsAPI = $this->getMigrationsAPI ();
+    $migrations    = $migrationsAPI->module ($moduleName)->status ();
+    if ($migrations) {
       $io->nl ()->comment ("    The module has migrations.");
-      $migrations = $this->getMigrationsOf ($moduleName);
-      $found      = false;
-      foreach ($migrations as $migration) {
-        if ($migration->migration_status == 'up') {
-          $found = true;
-          $io->say ("    Updating the database...");
-          $status = $this->consoleApp->runAndCapture (
-            'migrate:reset', [$moduleName], $outStr, $io->getOutput ()
-          );
-          if (!$status) {
-            // Drop migrations table.
-            $table = MigrationCommands::$migrationsTable;
-            $con   = Connection::getFromEnviroment ();
-            if ($con->isAvailable ())
-              $con->getPdo ()->query ("DROP TABLE $table");
-          }
-          else $io->error ("Error while rolling back migrations. Exit code $status");
-          $io->indent (2)->write ($outStr)->indent ();
-          break;
+      $migrations = array_findAll ($migrations, MigrationStruct::status, MigrationStruct::UP);
+      if ($migrations) {
+        $io->say ("    Updating the database...");
+        try {
+          $migrationsAPI->reset();
         }
+        catch (\Exception $e) {
+          $io->error ("Error while rolling back migrations: " . $e->getMessage ());
+        }
+        $io->say ("    <info>Done.</info>")->nl ();
       }
-      if (!$found)
-        $io->say ("    No reverse migrations were run.")->nl ();
+      else $io->comment ("    No reverse migrations were run.")->nl ();
     }
-    return $status;
   }
 
   /**

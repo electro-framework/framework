@@ -10,7 +10,7 @@ use Electro\Exceptions\HttpException;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Lib\ComposerConfigHandler;
 use Electro\Lib\PackagistAPI;
-use Electro\Plugins\IlluminateDatabase\Migrations\Config\MigrationsSettings;
+use Electro\Plugins\IlluminateDatabase\Config\MigrationsSettings;
 use Electro\Tasks\Config\TasksSettings;
 use Electro\Tasks\Shared\InstallPackageTask;
 use Electro\Tasks\Shared\UninstallPackageTask;
@@ -55,8 +55,10 @@ trait ModuleCommands
    * @param array  $opts
    * @option $search|s Search for modules having the specified text word or prefix somewhere on the name or description
    * @option $stars Sort the list by stars, instead of downloads
+   * @option $keep-repo|k When set, the hidden .git directory is not removed from the template's directory
    */
-  function install ($moduleType = null, $moduleName = null, $opts = ['search|s' => '', 'stars' => false])
+  function install ($moduleType = null, $moduleName = null,
+                    $opts = ['search|s' => '', 'stars' => false, 'keep-repo|k' => false])
   {
     $io = $this->io;
     if (!$moduleType)
@@ -445,7 +447,7 @@ trait ModuleCommands
 
   protected function uninstallProjectModule ($moduleName)
   {
-    !$this->modulesInstaller->cleanUpModule ($moduleName) or exit (1);
+    $this->modulesInstaller->cleanUpModule ($moduleName);
 
     $io = $this->io;
     $io->nl ();
