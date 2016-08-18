@@ -87,10 +87,10 @@ class ConsoleIO implements ConsoleIOInterface
     return $this;
   }
 
-  function cancel ()
+  function cancel ($message = 'Canceled')
   {
     if ($this->getInput ()->isInteractive ())
-      $this->error ('Canceled');
+      $this->error ($message);
     exit (1);
   }
 

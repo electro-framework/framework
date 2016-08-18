@@ -7,7 +7,7 @@ use Electro\Core\Assembly\Lib\DependencySorter;
 use Electro\Core\Assembly\ModuleInfo;
 use Electro\Core\ConsoleApplication\ConsoleApplication;
 use Electro\Interfaces\ConsoleIOInterface;
-use Electro\Interfaces\MigrationsInterface;
+use Electro\Interfaces\Migrations\MigrationsInterface;
 use Electro\Interop\MigrationStruct;
 use Electro\Lib\JsonFile;
 use PhpKit\Connection;
@@ -93,7 +93,7 @@ class ModulesInstaller
     $migrations    = $migrationsAPI->module ($moduleName)->status ();
     if ($migrations) {
       $io->nl ()->comment ("    The module has migrations.");
-      $migrations = array_findAll ($migrations, MigrationStruct::status, MigrationStruct::UP);
+      $migrations = array_findAll ($migrations, MigrationStruct::status, MigrationStruct::DONE);
       if ($migrations) {
         $io->say ("    Updating the database...");
         try {
@@ -374,7 +374,7 @@ class ModulesInstaller
     if ($migrations) {
       $io = $this->io;
       $io->comment ("    The module has migrations.");
-      $migrations = array_findAll ($migrations, MigrationStruct::status, MigrationStruct::DOWN);
+      $migrations = array_findAll ($migrations, MigrationStruct::status, MigrationStruct::PENDING);
       if ($migrations) {
         $io->say ("    Updating the database...");
         try {

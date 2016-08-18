@@ -104,8 +104,8 @@ class ModuleInfo implements AssignableInterface
     if (count ($o) != 2)
       throw new \RuntimeException ("Invalid module name");
     list ($vendor, $module) = $o;
-    $namespace1 = ucfirst (dehyphenate ($vendor, true));
-    $namespace2 = ucfirst (dehyphenate ($module, true));
+    $namespace1 = ucfirst (str_dehyphenate ($vendor, true));
+    $namespace2 = ucfirst (str_dehyphenate ($module, true));
 
     return "$namespace1\\$namespace2";
   }
@@ -164,7 +164,7 @@ class ModuleInfo implements AssignableInterface
   function getShortName ()
   {
     $a = explode ('/', $this->name);
-    return dehyphenate (end ($a), true);
+    return str_dehyphenate (end ($a), true);
   }
 
 }
