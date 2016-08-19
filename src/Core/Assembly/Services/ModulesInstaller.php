@@ -97,7 +97,7 @@ class ModulesInstaller
       if ($migrations) {
         $io->say ("    Updating the database...");
         try {
-          $migrationsAPI->reset();
+          $migrationsAPI->reset ();
         }
         catch (\Exception $e) {
           $io->error ("Error while rolling back migrations: " . $e->getMessage ());
@@ -127,6 +127,8 @@ class ModulesInstaller
     $globalPublishDir = $this->app->modulesPublishingPath;
     $all              = $this->registry->getModules ();
     $links            = [];
+    $isWindows        = strtoupper (substr (PHP_OS, 0, 3)) === 'WIN';
+
     foreach ($all as $module) {
       $pathToPublish = "$module->path/{$this->app->modulePublicPath}";
       if (file_exists ($pathToPublish)) {
@@ -135,16 +137,20 @@ class ModulesInstaller
         if (!file_exists ($symlinkDir))
           mkdir ($symlinkDir, 0755, true);
         $symlinkFile = "$symlinkDir/$name";
-        // Relative symlinks have been disabled for compatibility with Windows
-//        $relativeTarget = getRelativePath ("./$symlinkFile", "./$pathToPublish");
-//        symlink ($relativeTarget, $symlinkFile);
-        $pathToPublish = $this->app->baseDirectory . "/$pathToPublish";
-        $symlinkFile   = $this->app->baseDirectory . "/$symlinkFile";
-        if (strtoupper (substr (PHP_OS, 0, 3)) === 'WIN')
-          exec ('mklink /j "' . str_replace ('/', '\\', $symlinkFile) . '" "' .
-                str_replace ('/', '\\', $pathToPublish) . '"');
-        else
-          symlink ($pathToPublish, $symlinkFile);
+        if (!$isWindows) {
+          // On Mac or Linux use relative paths for symlinks.
+          $relativeTarget = getRelativePath ("./$symlinkFile", "./$pathToPublish");
+          symlink ($relativeTarget, $symlinkFile);
+        }
+        else {
+          // Relative symlinks do not work properly on Windows, so use absolute paths.
+          $pathToPublish = $this->app->baseDirectory . "/$pathToPublish";
+          $symlinkFile   = $this->app->baseDirectory . "/$symlinkFile";
+          // Create a junction instead of a symlink to avoid requiring administrator permissions.
+          exec (sprintf ('mklink /j "%s" "%s"',
+            str_replace ('/', '\\', $symlinkFile),
+            str_replace ('/', '\\', $pathToPublish)));
+        }
         $links[] = [$pathToPublish, $symlinkFile];
       }
     }
