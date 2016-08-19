@@ -111,9 +111,11 @@ class ConsoleIO implements ConsoleIOInterface
     return $this->doAsk (new ConfirmationQuestion($this->formatQuestion ($question . ' (y/n)'), false));
   }
 
-  function done ($text, $status = 0)
+  function done ($text = '', $status = 0)
   {
-    $this->nl ()->say ($text)->nl ();
+    if ($text !== '')
+      $this->nl ()->say ($text)->nl ();
+    else $this->nl ();
     if (!empty($this->warnings))
       $this->writeln (implode (PHP_EOL, $this->warnings))->nl ();
     exit ($status);
@@ -244,7 +246,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   function warn ($text)
   {
-    $this->warnings[] = "Warning: <warning>$text</warning>";
+    $this->warnings[] = "<warning> $text </warning>";
     return $this;
   }
 
