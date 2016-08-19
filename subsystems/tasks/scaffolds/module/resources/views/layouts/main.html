@@ -1,11 +1,6 @@
-<Content of="master">
-
-  <body>
-    {#statusMessage|*}
-    {#main|*}
-    <Include scripts/>
-  </body>
-
+<Content of=body preRender>
+  {#statusMessage|*}
+  {#main|*}
 </Content>
 
 <Include view="layouts/master.html"/>
