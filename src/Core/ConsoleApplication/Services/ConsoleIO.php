@@ -112,7 +112,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   function done ($text = '', $dontExit = false)
   {
-    if ($text !== '')
+    if (strlen ($text))
       $this->say ($text);
     $this->nl ();
     if (!$dontExit)
