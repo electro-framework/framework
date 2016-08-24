@@ -97,7 +97,7 @@ class ModulesInstaller
       if ($migrations) {
         $io->say ("    Updating the database...");
         try {
-          $migrationsAPI->reset ();
+          $migrationsAPI->rollBack (0);
         }
         catch (\Exception $e) {
           $io->error ("Error while rolling back migrations: " . $e->getMessage ());

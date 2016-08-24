@@ -65,10 +65,10 @@ Log file:     $log"));
 PID: <info>$pid</info>");
       else {
         unlink ($this->PID_FILE);
-        $this->io->done ("The server <red>crashed</red>", 2);
+        $this->io->error ("The server <red>crashed</red>", 2);
       }
     }
-    else $this->io->done ("The server is <red>not running</red>", 1);
+    else $this->io->error ("The server is <red>not running</red>", 1);
   }
 
   /**

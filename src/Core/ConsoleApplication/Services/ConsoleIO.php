@@ -26,7 +26,6 @@ class ConsoleIO implements ConsoleIOInterface
   private $output;
   /** @var array A list of width and height. */
   private $terminalSize;
-  private $warnings = [];
 
   private static function tabular (array $data, array $widths, array $align = null, $glue = ' ',
                                    $pad = ' ', $marker = '…')
@@ -111,14 +110,13 @@ class ConsoleIO implements ConsoleIOInterface
     return $this->doAsk (new ConfirmationQuestion($this->formatQuestion ($question . ' (y/n)'), false));
   }
 
-  function done ($text = '', $status = 0)
+  function done ($text = '', $dontExit = false)
   {
     if ($text !== '')
-      $this->nl ()->say ($text)->nl ();
-    else $this->nl ();
-    if (!empty($this->warnings))
-      $this->writeln (implode (PHP_EOL, $this->warnings))->nl ();
-    exit ($status);
+      $this->say ($text);
+    $this->nl ();
+    if (!$dontExit)
+      exit (0);
   }
 
   function error ($text, $width = 0, $status = 1)
@@ -246,7 +244,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   function warn ($text)
   {
-    $this->warnings[] = "<warning> $text </warning>";
+    $this->output->writeln ("<warning> $text </warning>");
     return $this;
   }
 
