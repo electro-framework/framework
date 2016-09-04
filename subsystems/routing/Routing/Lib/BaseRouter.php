@@ -1,17 +1,17 @@
 <?php
 namespace Electro\Routing\Lib;
 
-use Iterator;
-use PhpKit\Flow\Flow;
-use PhpKit\WebConsole\Lib\Debug;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use Electro\Exceptions\HttpException;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\RouterInterface;
 use Electro\Interfaces\RenderableInterface;
 use Electro\Traits\InspectionTrait;
+use Iterator;
+use PhpKit\Flow\Flow;
+use PhpKit\WebConsole\Lib\Debug;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * A service that assists in routing an HTTP request to one or more request handlers.
@@ -29,6 +29,13 @@ abstract class BaseRouter implements RouterInterface
    * when true (the default), they are used as routing patterns.
    */
   public $routingEnabled = true;
+  /**
+   * Holds the current request for the applications's global middlware stack; updated as the router calls request
+   * handlers.
+   *
+   * @var CurrentRequestMutator
+   */
+  protected $currentRequestMutator;
   /**
    * **Note:** used by RoutingMiddleware
    *
@@ -48,20 +55,15 @@ abstract class BaseRouter implements RouterInterface
    */
   protected $stackId;
   /**
-   * Holds the current request for the applications's global middlware stack; updated as the router calls request handlers.
-   *
-   * @var CurrentRequestMutator
-   */
-  protected $currentRequestMutator;
-  /**
    * @var RouteMatcherInterface
    */
   private $matcher;
 
-  public function __construct (RouteMatcherInterface $matcher, InjectorInterface $injector, CurrentRequestMutator $currentRequestMutator)
+  public function __construct (RouteMatcherInterface $matcher, InjectorInterface $injector,
+                               CurrentRequestMutator $currentRequestMutator)
   {
-    $this->matcher  = $matcher;
-    $this->injector = $injector;
+    $this->matcher               = $matcher;
+    $this->injector              = $injector;
     $this->currentRequestMutator = $currentRequestMutator;
   }
 
@@ -78,7 +80,7 @@ abstract class BaseRouter implements RouterInterface
       else if (!is_array ($this->handlers))
         $this->handlers = iterator_to_array ($this->handlers);
       if (isset($before))
-      $this->handlers = array_insertBefore ($this->handlers, $before, $handler, $key);
+        $this->handlers = array_insertBefore ($this->handlers, $before, $handler, $key);
       else $this->handlers = array_insertAfter ($this->handlers, $after, $handler, $key);
     }
     return $this;
