@@ -474,6 +474,11 @@ trait ModuleCommands
 
   private function formatModules (& $modules, $stars = false)
   {
+    $modules = filter ($modules, function ($mod) {
+      $info = (new PackagistAPI)->get ($mod['name'])['package'];
+      return !isset($info['abandoned']);
+    });
+
     // Sort list
 
     $modules = $stars
