@@ -158,7 +158,7 @@ class ModuleInfo implements AssignableInterface
    */
   function getRequiredPackages ()
   {
-    return array_discard (array_keys ($this->getComposerConfig ()->get ('require', [])), ['php']);
+    return array_diff (array_keys ($this->getComposerConfig ()->get ('require', [])), ['php']);
   }
 
   function getShortName ()

@@ -286,7 +286,7 @@ trait ModuleCommands
   {
     $composerCfg = new ComposerConfigHandler;
     $required    =
-    $mainRequired = array_discard (array_keys ($composerCfg->get ('require')), ['php', 'electro/framework']);
+    $mainRequired = array_diff (array_keys ($composerCfg->get ('require')), ['php', 'electro/framework']);
     $packagesMap = [];
 
     $privMods = $this->modulesRegistry->onlyPrivate ()->getModules ();
