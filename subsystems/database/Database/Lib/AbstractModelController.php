@@ -34,10 +34,6 @@ abstract class AbstractModelController implements ModelControllerInterface
    */
   protected $requestedId = null;
   /**
-   * @var array Driver/ORM-specific options for the default save handler.
-   */
-  private $defaultOptions;
-  /**
    * @var string[]|callable[]|ModelControllerExtensionInterface[]
    */
   private $extensions = [];
@@ -109,10 +105,9 @@ abstract class AbstractModelController implements ModelControllerInterface
    * > <p>This is usually only overriden by controller subclasses that implement support for a specific ORM.
    *
    * @param mixed $model
-   * @param array $options Driver/ORM-specific options.
    * @return bool|null true if the model was saved.
    */
-  abstract protected function save ($model, array $options = []);
+  abstract protected function save ($model);
 
   function get ($path)
   {
@@ -228,9 +223,8 @@ abstract class AbstractModelController implements ModelControllerInterface
     $this->extensions[] = $extension;
   }
 
-  function saveModel (array $defaultOptions = [])
+  function saveModel ()
   {
-    $this->defaultOptions = $defaultOptions;
     $this->callEventHandlers ($this->handlersForPreSave);
     $this->beginTransaction ();
     try {
@@ -275,13 +269,12 @@ abstract class AbstractModelController implements ModelControllerInterface
    * <p>Although not common, you may override this if the model has some unsupported format that can not be handled by
    * the default implementation. Arrays of models and objects with models on public properties are supported.
    *
-   * @param array $options Driver/ORM-specific options.
    * @return bool
    */
-  protected function saveCompositeModel (array $options = [])
+  protected function saveCompositeModel ()
   {
     foreach ($this->model as $submodel)
-      if (!$this->save ($submodel, $options))
+      if (!$this->save ($submodel))
         return false;
     return true;
   }
@@ -293,9 +286,9 @@ abstract class AbstractModelController implements ModelControllerInterface
       return $def ($this);
 
     $model = $this->model;
-    $s     = $this->save ($model, $this->defaultOptions);
+    $s     = $this->save ($model);
     if (is_null ($s))
-      $s = $this->saveCompositeModel ($this->defaultOptions);
+      $s = $this->saveCompositeModel ();
     return $s;
   }
 
