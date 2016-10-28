@@ -91,7 +91,7 @@ class ModuleServices
   function provideMacros ($v = true)
   {
     if ($v) {
-      $path = "$this->path/{$this->app->moduleMacrosPath}";
+      $path = "{$this->app->baseDirectory}/$this->path/{$this->app->moduleMacrosPath}";
       if (fileExists ($path)) {
         $all = FilesystemFlow::from ($path)->onlyDirectories ()->keys ()->all ();
         array_unshift ($all, $path);

@@ -175,7 +175,7 @@ class ModulesRegistry
    */
   function load ()
   {
-    $json = new JsonFile ($this->getRegistryPath (), true);
+    $json = new JsonFile ($this->getRegistryPath (), true, true);
     if ($json->exists ()) {
       $this->importFrom ($json->load ()->data);
       return true;

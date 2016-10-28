@@ -15,7 +15,7 @@ class DependencySorter
    */
   public static function sort (array &$modules)
   {
-    uasort ($modules, [DependencySorter::class, "compare"]);
+    uasort ($modules, [static::class, "compare"]);
   }
 
   /**
@@ -28,31 +28,29 @@ class DependencySorter
   private static function compare (ModuleInfo $a, ModuleInfo $b)
   {
     $typeSortOrder = ModuleInfo::TYPE_PRIORITY;
-    if ($typeSortOrder == null)
-      throw new \RuntimeException ("Priority order not defined for type module types");
 
-    if ($a->type != $b->type)//sort by type
+    if ($a->type != $b->type) // Sort by type
     {
-      //make sure the priorities are defined
+      // Make sure the priorities are defined
       if (!isset($typeSortOrder[$a->type]))
         throw new \RuntimeException ("Priority order not defined for type '{$a->type}' of module {$a->name}");
       if (!isset($typeSortOrder[$b->type]))
         throw new \RuntimeException ("Priority order not defined for type '{$b->type}' of module {$b->name}");
 
-      //sort by the type priority
+      // Sort by priority type
       $aindex = $typeSortOrder[$a->type];
       $bindex = $typeSortOrder[$b->type];
       return $aindex - $bindex;
     }
-    else //if of same type, must check dependencies
+    else // If of same type, must check dependencies
     {
       $aDependsOnb = $a->dependencies && in_array ($b->name, $a->dependencies);
       $bDependsOna = $b->dependencies && in_array ($a->name, $b->dependencies);
 
-      if ($aDependsOnb != $bDependsOna)//simple dependency
+      if ($aDependsOnb != $bDependsOna) // Simple dependency
         return $bDependsOna ? -1 : 1;
 
-      //no dependency or circular dependency simply sort by name;
+      // No dependency or circular dependency; simply sort by name
       return strcmp ($a->name, $b->name);
     }
   }

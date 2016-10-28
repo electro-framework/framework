@@ -6,9 +6,11 @@ use Electro\Core\Assembly\Services\ModuleServices;
 use Electro\Core\Assembly\Services\ModulesInstaller;
 use Electro\Core\Assembly\Services\ModulesLoader;
 use Electro\Core\Assembly\Services\ModulesRegistry;
+use Electro\Core\WebApplication\ApplicationMiddlewareAssembler;
 use Electro\Exceptions\ExceptionWithTitle;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\DI\ServiceProviderInterface;
+use Electro\Interfaces\Http\ApplicationMiddlewareAssemblerInterface;
 use Electro\Interfaces\Migrations\MigrationsInterface;
 
 class AssemblyModule implements ServiceProviderInterface
@@ -39,7 +41,9 @@ class AssemblyModule implements ServiceProviderInterface
       // MigrationsInterface must be lazy-loaded on demand.
       ->define (ModulesInstaller::class, [
         ':migrationsAPIFactory' => $injector->makeFactory (MigrationsInterface::class),
-      ]);
+      ])
+      // This can be overriden later, usually by a private application module.
+      ->alias (ApplicationMiddlewareAssemblerInterface::class, ApplicationMiddlewareAssembler::class);
   }
 
 }

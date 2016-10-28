@@ -3,10 +3,8 @@ namespace Electro;
 
 use Electro\Core\Assembly\Config\AssemblyModule;
 use Electro\Core\Logging\Config\LoggingModule;
-use Electro\Core\WebApplication\ApplicationMiddlewareAssembler;
 use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\DI\InjectorInterface;
-use Electro\Interfaces\Http\ApplicationMiddlewareAssemblerInterface;
 use Electro\Interfaces\Navigation\NavigationProviderInterface;
 
 class Application
@@ -320,8 +318,6 @@ class Application
     $assemblyModule->register ($this->injector);
     $loggingModule = new LoggingModule;
     $loggingModule->register ($this->injector);
-    // This can be overriden later, usually by a private application module.
-    $this->injector->alias (ApplicationMiddlewareAssemblerInterface::class, ApplicationMiddlewareAssembler::class);
   }
 
   /**
@@ -334,11 +330,19 @@ class Application
    */
   function setup ($rootDir)
   {
+    // Note: due to eventual symlinking, we can't use dirname(__DIR__) here
     $this->baseDirectory = $rootDir;
-    set_include_path (get_include_path () . PATH_SEPARATOR .
-                      '.');//add current directy in the include paths for path resolve of stream_resolve_include_path function
     $this->frameworkPath = self::FRAMEWORK_PATH;
-//      "$rootDir/" . self::FRAMEWORK_PATH; // due to eventual symlinking, we can't use dirname(__DIR__) here
+
+    // Setup the include path by prepending the application's root and the framework's to it.
+    // Note: the include path is used, for instance, by stream_resolve_include_path() or file_exists()
+
+//    $dir = $rootDir . PATH_SEPARATOR . "$rootDir/" . self::FRAMEWORK_PATH;
+    $path = get_include_path ();
+    $path = substr($path, 0, 2) == '.' . PATH_SEPARATOR
+      ? $rootDir . substr($path , 1)       // replace the '.' directory by $rootDir
+      : $rootDir . PATH_SEPARATOR . $path; // otherwise prepend $rootDir to the path
+    set_include_path ($path);
   }
 
   /**

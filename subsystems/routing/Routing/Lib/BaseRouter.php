@@ -174,13 +174,16 @@ abstract class BaseRouter implements RouterInterface
       $handler->setContext ($this->injector->make ($class));
     }
 
-    try {
+    /*try {
       $response = $handler ($request, $response, $next);
     }
     catch (HttpException $error) {
       // Convert HTTP exceptions to normal responses
-      return $response->withStatus ($error->getCode (), $error->getMessage () ?: $error->getTitle ());
-    }
+      $msg = $error->getTitle () ?: str_segmentsFirst ($error->getMessage (), "\n"); // use only the first line of text
+      return $response->withStatus ($error->getCode (), $msg);
+    }*/
+
+    $response = $handler ($request, $response, $next);
 
     if (!$response)
       throw new \RuntimeException (sprintf (
