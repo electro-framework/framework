@@ -42,7 +42,7 @@ class AssemblyModule implements ServiceProviderInterface
       ->define (ModulesInstaller::class, [
         ':migrationsAPIFactory' => $injector->makeFactory (MigrationsInterface::class),
       ])
-      // This can be overriden later, usually by a private application module.
+      // This can be overridden later, usually by a private application module.
       ->alias (ApplicationMiddlewareAssemblerInterface::class, ApplicationMiddlewareAssembler::class);
   }
 

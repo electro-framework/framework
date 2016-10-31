@@ -87,8 +87,7 @@ class WebApplication
     /** @var ModulesLoader $loader */
     $loader = $this->injector->make (ModulesLoader::class);
 //stepProfiling('ModulesLoader init');
-    $loader->bootModules ();
-//stepProfiling('Boot');
+    $loader->initModules ();
 
     // Post-assembly additional setup.
 
@@ -98,7 +97,10 @@ class WebApplication
     /** @var WebServer $webServer */
     $webServer = $this->injector->make (WebServer::class);
     $webServer->setup ();
-//stopProfiling('after WebServer::setup');
+
+//stepProfiling('Boot');
+    $loader->bootModules ();
+//stopProfiling('before WebServer::run');
     $webServer->run ();
   }
 

@@ -27,6 +27,14 @@ class ModulesLoader
    * @var ModulesRegistry
    */
   private $modulesRegistry;
+  /**
+   * @var ModuleInfo[] $this ->providerModules
+   */
+  private $providerModules = [];
+  /**
+   * @var ModuleInterface[] $providers
+   */
+  private $providers = [];
 
   /**
    * @param InjectorInterface $injector
@@ -41,18 +49,48 @@ class ModulesLoader
   }
 
   /**
-   * Initializes all modules.
+   * Bootstraps all modules.
    *
    * @throws ConfigException
    */
   function bootModules ()
   {
-    /** @var ModuleInterface[] $providers */
-    $providers = [];
+    // Providers boot phase
+
+//stepProfiling("Begin Providers boot phase");
+    foreach ($this->providers as $i => $provider) {
+      // Only boot modules that have not failed the initialization process.
+      if (!$this->providerModules[$i]->errorStatus) {
+        $fn = [$provider, 'boot'];
+        if (is_callable ($fn))
+          try {
+            $this->injector->execute ($fn);
+//$m = str_segmentsLast($paths[$i], '/');
+//stepProfiling("Module $m booted");
+          }
+          catch (Exception $e) {
+            $this->logModuleError ($this->providerModules[$i], $e->getMessage (), $e);
+          }
+      }
+    }
+//stepProfiling("bootModules complete");
+
+    // Pending module installation/update initializations
+
+    $extraInit = $this->modulesRegistry->pendingInitializations ();
+    if ($extraInit)
+      $extraInit ();
+  }
+
+  /**
+   * Initializes all modules.
+   *
+   * @throws ConfigException
+   */
+  function initModules ()
+  {
     /** @var string[] $paths */
     $paths = [];
-    /** @var ModuleInfo[] $providerModules */
-    $providerModules = [];
 
     // Providers registration phase
 
@@ -68,9 +106,9 @@ class ModulesLoader
           $provider->register ($this->injector);
 
         if ($provider instanceof ModuleInterface) {
-          $providers[]       = $provider;
-          $paths[]           = $module->path;
-          $providerModules[] = $module;
+          $this->providers[]       = $provider;
+          $paths[]                 = $module->path;
+          $this->providerModules[] = $module;
         }
         // Clear module's previous error status (if any)
         if ($module->errorStatus) {
@@ -92,7 +130,7 @@ class ModulesLoader
     $moduleServices = $this->injector->make (ModuleServices::class);
 
 //stepProfiling("Begin Module configuration phase");
-    foreach ($providers as $i => $provider) {
+    foreach ($this->providers as $i => $provider) {
       $moduleServices->setPath ($paths[$i]);
       $fn = [$provider, 'configure'];
       if (is_callable ($fn))
@@ -102,7 +140,7 @@ class ModulesLoader
 //stepProfiling("Module $m configured");
         }
         catch (Exception $e) {
-          $this->logModuleError ($providerModules[$i], $e->getMessage (), $e);
+          $this->logModuleError ($this->providerModules[$i], $e->getMessage (), $e);
         }
     }
 
@@ -110,32 +148,6 @@ class ModulesLoader
 
     $moduleServices->runPostConfig ();
 //stepProfiling("Post config runned");
-
-    // Providers boot phase
-
-//stepProfiling("Begin Providers boot phase");
-    foreach ($providers as $i => $provider) {
-      // Only boot modules that have not failed the initialization process.
-      if (!$providerModules[$i]->errorStatus) {
-        $fn = [$provider, 'boot'];
-        if (is_callable ($fn))
-          try {
-            $this->injector->execute ($fn);
-//$m = str_segmentsLast($paths[$i], '/');
-//stepProfiling("Module $m booted");
-          }
-          catch (Exception $e) {
-            $this->logModuleError ($providerModules[$i], $e->getMessage (), $e);
-          }
-      }
-    }
-//stepProfiling("bootModules complete");
-
-    // Pending module installation/update initializations
-
-    $extraInit = $this->modulesRegistry->pendingInitializations ();
-    if ($extraInit)
-      $extraInit ();
   }
 
   private function logModuleError (ModuleInfo $module, $message, Exception $e = null)
