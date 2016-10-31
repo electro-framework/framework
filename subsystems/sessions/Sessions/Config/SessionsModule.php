@@ -1,18 +1,21 @@
 <?php
 namespace Electro\Sessions\Config;
 
+use Electro\Core\Assembly\Services\Bootstrapper;
 use Electro\Interfaces\DI\InjectorInterface;
-use Electro\Interfaces\DI\ServiceProviderInterface;
+use Electro\Interfaces\ModuleInterface;
 use Electro\Interfaces\SessionInterface;
 use Electro\Sessions\Services\Session;
 
-class SessionsModule implements ServiceProviderInterface
+class SessionsModule implements ModuleInterface
 {
-  function register (InjectorInterface $injector)
+  static function boot (Bootstrapper $boot)
   {
-    $injector
-      ->alias (SessionInterface::class, Session::class)
-      ->share (Session::class, 'session');
+    $boot->on (Bootstrapper::EVENT_BOOT, function (InjectorInterface $injector) {
+      $injector
+        ->alias (SessionInterface::class, Session::class)
+        ->share (Session::class, 'session');
+    });
   }
 
 }

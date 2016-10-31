@@ -1,8 +1,6 @@
 <?php
 namespace Electro;
 
-use Electro\Core\Assembly\Config\AssemblyModule;
-use Electro\Core\Logging\Config\LoggingModule;
 use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Navigation\NavigationProviderInterface;
@@ -165,12 +163,6 @@ class Application
    */
   public $modulePublicPath = 'public';
   /**
-   * The path to the folder where symlinks to all modules' public folders are placeed.
-   *
-   * @var string
-   */
-  public $modulesPublishingPath = 'modules';
-  /**
    * The relative path of the views folder inside a module.
    *
    * @var string
@@ -191,6 +183,12 @@ class Application
    * @var String
    */
   public $modulesPath = 'private/modules';
+  /**
+   * The path to the folder where symlinks to all modules' public folders are placeed.
+   *
+   * @var string
+   */
+  public $modulesPublishingPath = 'modules';
   /**
    * The application name.
    * This should be composed only of alphanumeric characters. It is used as the session name.
@@ -293,6 +291,16 @@ class Application
   }
 
   /**
+   * Returns the directory where bootloaders for each known profile are stored.
+   *
+   * @return string
+   */
+  function getBootloadersPath ()
+  {
+    return "$this->storagePath/boot";
+  }
+
+  /**
    * Gets an array of file path mappings for the core framework, to aid debugging symlinked directiories.
    *
    * @return array
@@ -303,21 +311,6 @@ class Application
     return $rp != $this->frameworkPath ? [
       $rp => self::FRAMEWORK_PATH,
     ] : [];
-  }
-
-  /**
-   * Boots up the core framework modules.
-   *
-   * <p>This occurs before the framework's main boot up sequence.
-   * <p>Unlike the later, which is managed automatically, this pre-boot process is manually defined and consists of just
-   * a few core services that must be setup before any other module loads.
-   */
-  function preboot ()
-  {
-    $assemblyModule = new AssemblyModule;
-    $assemblyModule->register ($this->injector);
-    $loggingModule = new LoggingModule;
-    $loggingModule->register ($this->injector);
   }
 
   /**
@@ -339,8 +332,8 @@ class Application
 
 //    $dir = $rootDir . PATH_SEPARATOR . "$rootDir/" . self::FRAMEWORK_PATH;
     $path = get_include_path ();
-    $path = substr($path, 0, 2) == '.' . PATH_SEPARATOR
-      ? $rootDir . substr($path , 1)       // replace the '.' directory by $rootDir
+    $path = substr ($path, 0, 2) == '.' . PATH_SEPARATOR
+      ? $rootDir . substr ($path, 1)       // replace the '.' directory by $rootDir
       : $rootDir . PATH_SEPARATOR . $path; // otherwise prepend $rootDir to the path
     set_include_path ($path);
   }

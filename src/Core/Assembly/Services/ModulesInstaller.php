@@ -8,6 +8,7 @@ use Electro\Core\Assembly\ModuleInfo;
 use Electro\Core\ConsoleApplication\ConsoleApplication;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Interfaces\Migrations\MigrationsInterface;
+use Electro\Interfaces\ProfileInterface;
 use Electro\Interop\MigrationStruct;
 use Electro\Lib\JsonFile;
 use PhpKit\Connection;
@@ -43,18 +44,23 @@ class ModulesInstaller
    */
   private $migrationsAPIFactory;
   /**
+   * @var ProfileInterface
+   */
+  private $profile;
+  /**
    * @var ModulesRegistry
    */
   private $registry;
 
   function __construct (Application $app, ConsoleApplication $consoleApp, ModulesRegistry $modulesRegistry,
-                        callable $migrationsAPIFactory)
+                        callable $migrationsAPIFactory, ProfileInterface $profile)
   {
     $this->app                  = $app;
     $this->consoleApp           = $consoleApp;
     $this->io                   = $consoleApp->getIO ();
     $this->registry             = $modulesRegistry;
     $this->migrationsAPIFactory = $migrationsAPIFactory;
+    $this->profile              = $profile;
   }
 
   /**
@@ -205,6 +211,8 @@ class ModulesInstaller
       });
     }
 
+    $this->clearBootloaders ();
+
     $this->end ();
   }
 
@@ -248,6 +256,17 @@ class ModulesInstaller
   }
 
   /**
+   * Deletes the currently generated bootloaders for all profiles.
+   */
+  private function clearBootloaders ()
+  {
+    $path = $this->app->getBootloadersPath ();
+    if (fileExists ($path))
+      rrmdir ($path);
+    mkdir ("{$this->app->baseDirectory}/$path");
+  }
+
+  /**
    * @return MigrationsInterface
    */
   private function getMigrationsAPI ()
@@ -260,6 +279,16 @@ class ModulesInstaller
       return null;
     }
   }
+
+//  private function getSubsystemsOfProfile ()
+//  {
+//    return map ($this->profile->getSubsystems (), function ($moduleName) {
+//      return (new ModuleInfo)->import ([
+//        'name' => $moduleName,
+//        'path' => "{$this->app->frameworkPath}/subsystems/$moduleName",
+//      ]);
+//    });
+//  }
 
   private function loadModuleMetadata (ModuleInfo $module)
   {
@@ -340,6 +369,11 @@ class ModulesInstaller
       ->all ();
   }
 
+  /**
+   * Returns all subsystems, irrespective of the configuration profile.
+   *
+   * @return ModuleInfo[]
+   */
   private function scanSubsystems ()
   {
     return FilesystemFlow

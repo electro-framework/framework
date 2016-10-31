@@ -1,19 +1,22 @@
 <?php
 namespace Electro\Authentication\Config;
 
+use Electro\Core\Assembly\Services\Bootstrapper;
 use Electro\Interfaces\DI\InjectorInterface;
-use Electro\Interfaces\DI\ServiceProviderInterface;
+use Electro\Interfaces\ModuleInterface;
 use Electro\Interfaces\UserInterface;
 
-class AuthenticationModule implements ServiceProviderInterface
+class AuthenticationModule implements ModuleInterface
 {
-  function register (InjectorInterface $injector)
+  static function boot (Bootstrapper $boot)
   {
-    $injector
-      ->share (UserInterface::class, 'user')
-      ->share (AuthenticationSettings::class)
-      ->delegate (UserInterface::class, function (AuthenticationSettings $settings) use ($injector) {
-        return $injector->make ($settings->userModel ());
-      });
+    $boot->on (Bootstrapper::EVENT_BOOT, function (InjectorInterface $injector) {
+      $injector
+        ->share (UserInterface::class, 'user')
+        ->share (AuthenticationSettings::class)
+        ->delegate (UserInterface::class, function (AuthenticationSettings $settings) use ($injector) {
+          return $injector->make ($settings->userModel ());
+        });
+    });
   }
 }

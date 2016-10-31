@@ -1,12 +1,11 @@
 <?php
 namespace Electro\Core\Logging\Config;
 
+use Electro\Application;
+use Electro\Interfaces\DI\InjectorInterface;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
-use Electro\Application;
-use Electro\Interfaces\DI\InjectorInterface;
-use Electro\Interfaces\DI\ServiceProviderInterface;
 
 /**
  * Provides a main logger for the application.
@@ -14,9 +13,9 @@ use Electro\Interfaces\DI\ServiceProviderInterface;
  * > <p>To add logging handlers to the main logger, inject a LoggerInterface instance into your class and call
  * pushHandler() on it.
  */
-class LoggingModule implements ServiceProviderInterface
+class LoggingModule
 {
-  function register (InjectorInterface $injector)
+  static function register (InjectorInterface $injector)
   {
     $injector
       ->share (LoggerInterface::class)

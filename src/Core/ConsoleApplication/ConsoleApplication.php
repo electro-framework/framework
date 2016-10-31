@@ -1,15 +1,16 @@
 <?php
 namespace Electro\Core\ConsoleApplication;
 
+use Electro\Application;
+use Electro\Core\Assembly\Services\Bootstrapper;
+use Electro\Core\ConsoleApplication\Services\ConsoleIO;
+use Electro\Interfaces\ConsoleIOInterface;
+use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\ProfileInterface;
 use Robo\Config;
 use Robo\Result;
 use Robo\Runner;
 use Robo\TaskInfo;
-use Electro\Application;
-use Electro\Core\Assembly\Services\ModulesLoader;
-use Electro\Core\ConsoleApplication\Services\ConsoleIO;
-use Electro\Interfaces\ConsoleIOInterface;
-use Electro\Interfaces\DI\InjectorInterface;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\InputInterface;
@@ -53,16 +54,18 @@ class ConsoleApplication extends Runner
    * > You'll have to configure the IO channels (ex. calling `setupStandardIO()` on the runner) before running the
    * application.
    *
-   * @param InjectorInterface $injector Provide your favorite dependency injector.
+   * @param InjectorInterface $injector     Provide your favorite dependency injector.
+   * @param string            $profileClass The configuration profile's fully qualified class name.
    * @return static
    */
-  static function make (InjectorInterface $injector)
+  static function make (InjectorInterface $injector, $profileClass)
   {
     // Create and register the foundational framework services.
 
     $injector
       ->share ($injector)
-      ->alias (InjectorInterface::class, get_class ($injector));
+      ->alias (InjectorInterface::class, get_class ($injector))
+      ->alias (ProfileInterface::class, $profileClass);
 
     /** @var Application $app */
     $app = $injector
@@ -70,9 +73,8 @@ class ConsoleApplication extends Runner
       ->make (Application::class);
 
     $app->isConsoleBased = true;
-    $rootDir = normalizePath (getcwd ());
+    $rootDir             = normalizePath (getcwd ());
     $app->setup ($rootDir);
-    $app->preboot ();
 
     // Setup debugging
 
@@ -115,18 +117,16 @@ class ConsoleApplication extends Runner
     $this->stopOnFail ();
     $this->customizeColors ();
 
-    // Bootstrap the application's modules.
-
-    /** @var ModulesLoader $modulesApi */
-    $loader = $this->injector->make (ModulesLoader::class);
-    $loader->bootModules ();
+    /** @var Bootstrapper $boot */
+    $bootstrapper = $this->injector->make (Bootstrapper::class);
+    $bootstrapper->run ();
 
     // Merge tasks from all registered task classes
 
     foreach ($this->app->taskClasses as $class) {
       if (!class_exists ($class)) {
         $this->getOutput ()->writeln ("<error>Task class '$class' was not found</error>");
-        exit(1);
+        exit (1);
       }
       $this->mergeTasks ($this->console, $class);
     }

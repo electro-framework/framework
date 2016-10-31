@@ -2,9 +2,10 @@
 namespace Electro\Core\WebApplication;
 
 use Electro\Application;
-use Electro\Core\Assembly\Services\ModulesLoader;
+use Electro\Core\Assembly\Services\Bootstrapper;
 use Electro\Core\Assembly\Services\ModulesRegistry;
 use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\ProfileInterface;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\DebugConsole\DebugConsoleSettings;
 use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
@@ -29,16 +30,22 @@ class WebApplication
    * @var InjectorInterface
    */
   private $injector;
+  /**
+   * @var WebServer
+   */
+  private $webServer;
 
   /**
-   * @param InjectorInterface $injector Provide your favorite dependency injector.
+   * @param InjectorInterface $injector     Provide your favorite dependency injector.
+   * @param string            $profileClass The configuration profile's fully qualified class name.
    */
-  function __construct (InjectorInterface $injector)
+  function __construct (InjectorInterface $injector, $profileClass)
   {
     $this->injector = $injector;
     $injector
       ->share ($injector)
-      ->alias (InjectorInterface::class, get_class ($injector));
+      ->alias (InjectorInterface::class, get_class ($injector))
+      ->alias (ProfileInterface::class, $profileClass);
   }
 
   /**
@@ -63,8 +70,6 @@ class WebApplication
   function run ($rootDir)
   {
     $rootDir = normalizePath ($rootDir);
-//startProfiling("WebApplication::run");
-    // Create and register the foundational framework services.
 
     /** @var Application $app */
     $app = $this->app = $this->injector
@@ -73,7 +78,6 @@ class WebApplication
 
     $app->isWebBased = true;
     $app->setup ($rootDir);
-    $app->preboot ();
 
     // Pre-assembly setup.
 
@@ -81,27 +85,22 @@ class WebApplication
     // Temporarily set framework path mapping here for errors thrown during modules loading.
     ErrorConsole::setPathsMap ($app->getMainPathMap ());
 
-    // Bootstrap the application's modules.
+    // Bootstrap the framework/application's modules.
 
-//stepProfiling('before modulesLoader');
-    /** @var ModulesLoader $loader */
-    $loader = $this->injector->make (ModulesLoader::class);
-//stepProfiling('ModulesLoader init');
-    $loader->initModules ();
+    /** @var Bootstrapper $boot */
+    $bootstrapper = $this->injector->make (Bootstrapper::class);
+    $bootstrapper->on (Bootstrapper::EVENT_BOOT, function () {
+      $this->webServer = $this->injector->make (WebServer::class);
+      $this->webServer->setup ();
+    });
+    $bootstrapper->run ();
 
     // Post-assembly additional setup.
 
     if ($this->debugMode)
       $this->setDebugPathsMap ($this->injector->make (ModulesRegistry::class));
 
-    /** @var WebServer $webServer */
-    $webServer = $this->injector->make (WebServer::class);
-    $webServer->setup ();
-
-//stepProfiling('Boot');
-    $loader->bootModules ();
-//stopProfiling('before WebServer::run');
-    $webServer->run ();
+    $this->webServer->run ();
   }
 
   /**

@@ -3,6 +3,7 @@
 use App\Init;
 use Electro\Core\ConsoleApplication\ConsoleApplication;
 use Electro\Core\DependencyInjection\Injector;
+use Electro\Core\Profiles\ConsoleProfile;
 
 // Start the class autoloader.
 
@@ -16,6 +17,6 @@ Init::init ();
  * You can customize the Dependency Injector the framework uses by changing the fist argument of
  * the factory method invocation below.
  */
-$consoleApp = ConsoleApplication::make (new Injector);
+$consoleApp = ConsoleApplication::make (new Injector, ConsoleProfile::class);
 $consoleApp->setupStandardIO ($_SERVER['argv']);
 $consoleApp->execute ();
