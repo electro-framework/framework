@@ -11,7 +11,7 @@ class ErrorHandlingModule implements ModuleInterface
 {
   static function boot (Bootstrapper $boot)
   {
-    $boot->on (Bootstrapper::EVENT_BOOT, function (InjectorInterface $injector) {
+    $boot->on (Bootstrapper::REGISTER_SERVICES, function (InjectorInterface $injector) {
       $injector
         ->alias (ErrorRendererInterface::class, ErrorRenderer::class)
         ->share (ErrorHandlingSettings::class);

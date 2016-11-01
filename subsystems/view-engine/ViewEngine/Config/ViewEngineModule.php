@@ -15,7 +15,7 @@ class ViewEngineModule implements ModuleInterface
 {
   static function boot (Bootstrapper $boot)
   {
-    $boot->on (Bootstrapper::EVENT_BOOT, function (InjectorInterface $injector) {
+    $boot->on (Bootstrapper::REGISTER_SERVICES, function (InjectorInterface $injector) {
       $injector
         ->alias (ViewInterface::class, View::class)//note: this is not used by ViewService.
         ->alias (ViewServiceInterface::class, ViewService::class)

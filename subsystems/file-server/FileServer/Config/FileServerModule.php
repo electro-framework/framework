@@ -18,20 +18,19 @@ class FileServerModule implements ModuleInterface
 {
   static function boot (Bootstrapper $boot)
   {
-    $boot->on (Bootstrapper::EVENT_BOOT, function (InjectorInterface $injector) {
+    $boot->on (Bootstrapper::REGISTER_SERVICES, function (InjectorInterface $injector) {
       $injector
         ->share ($injector->make (FileServerMappings::class))
-        ->delegate (Server::class,
-          function (ResponseFactoryInterface $responseFactory, Application $app) {
-            return ServerFactory::create ([
-              'source'   => $app->fileArchivePath,
-              'cache'    => $app->imagesCachePath,
-              'response' => new PsrResponseFactory ($responseFactory->makeStream (),
-                function ($stream) use ($responseFactory) {
-                  return $responseFactory->makeBody ('', $stream);
-                }),
-            ]);
-          })
+        ->delegate (Server::class, function (ResponseFactoryInterface $responseFactory, Application $app) {
+          return ServerFactory::create ([
+            'source'   => $app->fileArchivePath,
+            'cache'    => $app->imagesCachePath,
+            'response' => new PsrResponseFactory ($responseFactory->makeStream (),
+              function ($stream) use ($responseFactory) {
+                return $responseFactory->makeBody ('', $stream);
+              }),
+          ]);
+        })
         ->share (Server::class)
         ->delegate (ContentRepositoryInterface::class, function (Application $app) {
           $urlBuilder = UrlBuilderFactory::create ($app->fileBaseUrl);

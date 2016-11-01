@@ -89,9 +89,8 @@ class WebApplication
 
     /** @var Bootstrapper $boot */
     $bootstrapper = $this->injector->make (Bootstrapper::class);
-    $bootstrapper->on (Bootstrapper::EVENT_BOOT, function () {
-      $this->webServer = $this->injector->make (WebServer::class);
-      $this->webServer->setup ();
+    $bootstrapper->on (Bootstrapper::CONFIGURE, function (WebServer $webServer) {
+      ($this->webServer = $webServer)->setup ();
     });
     $bootstrapper->run ();
 
@@ -123,7 +122,7 @@ class WebApplication
   {
     set_exception_handler ([$this, 'exceptionHandler']);
 
-    $debug = $this->debugMode = getenv ('DEBUG') == 'true';
+    $debug = $this->app->debugMode = $this->debugMode = getenv ('DEBUG') == 'true';
     $this->injector->defineParam ('debugMode', $debug);
 
     $debugConsole = getenv ('CONSOLE') == 'true';

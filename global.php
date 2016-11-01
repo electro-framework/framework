@@ -127,7 +127,8 @@ function controller ($ref)
  */
 function dump ()
 {
-  echo "<pre>";
+  if (!isCLI())
+    echo "<pre>";
   ob_start ();
   call_user_func_array ('var_dump', func_get_args ());
   // Applies formatting if XDEBUG is not installed
@@ -135,7 +136,8 @@ function dump ()
     list (, $space, $prop) = $m;
     return $space . str_pad ("$prop:", 30, ' ');
   }, ob_get_clean ());
-  echo "</pre>";
+  if (!isCLI())
+    echo "</pre>";
 }
 
 /**

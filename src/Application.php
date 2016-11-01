@@ -27,18 +27,6 @@ class Application
    */
   public $baseURI;
   /**
-   * Whether to compress or not the HTTP response with gzip enconding.
-   *
-   * @var bool
-   */
-  public $compressOutput = false;
-  /**
-   * Remove white space around raw markup blocks?
-   *
-   * @var boolean
-   */
-  public $condenseLiterals;
-  /**
    * A mapping between modules view templates base directories and the corresponding PHP namespaces that will be
    * used for resolving view template paths to PHP controller classes.
    *
@@ -53,6 +41,10 @@ class Application
    * @var array
    */
   public $controllers = [];
+  /**
+   * @var bool The value set on the .env file for the DEBUG variable.
+   */
+  public $debugMode = false;
   /**
    * Favorite icon URL.
    *

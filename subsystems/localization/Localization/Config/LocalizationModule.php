@@ -10,11 +10,14 @@ class LocalizationModule implements ModuleInterface
 {
   static function boot (Bootstrapper $boot)
   {
-    $boot->on (Bootstrapper::EVENT_BOOT, function (InjectorInterface $injector, LocalizationSettings $settings = null) {
+    $boot->on (Bootstrapper::REGISTER_SERVICES, function (InjectorInterface $injector) {
       $injector
         ->share (LocalizationSettings::class)
         ->share (new Locale, 'locale');
-      if ($settings && ($tz = $settings->timeZone ()))
+    });
+
+    $boot->on (Bootstrapper::CONFIGURE, function (LocalizationSettings $settings) {
+      if ($tz = $settings->timeZone ())
         date_default_timezone_set ($tz);
     });
   }

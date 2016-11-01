@@ -13,14 +13,9 @@ use Psr\Log\LoggerInterface;
 
 class DebuggingModule implements ModuleInterface
 {
-  /**
-   * @var LoggerInterface
-   */
-  private $logger;
-
   static function boot (Bootstrapper $boot)
   {
-    $boot->on (Bootstrapper::EVENT_BOOT, function (LoggerInterface $logger, $debugConsole) {
+    $boot->on (Bootstrapper::CONFIGURE, function (LoggerInterface $logger, $debugConsole) {
       if ($debugConsole) {
         DebugConsole::registerPanel ('request', new PSR7RequestLogger ('Request', 'fa fa-paper-plane'));
         DebugConsole::registerPanel ('response', new PSR7ResponseLogger ('Response', 'fa fa-file'));
@@ -36,9 +31,8 @@ class DebuggingModule implements ModuleInterface
 //    DebugConsole::registerPanel ('exceptions', new ConsoleLogger ('Exceptions', 'fa fa-bug'));
 
         // Writing to the logger also writes to the Inspector panel.
-        $this->logger = $logger;
-        if ($this->logger instanceof Logger)
-          $this->logger->pushHandler (new WebConsoleMonologHandler(getenv ('DEBUG_LEVEL') ?: Logger::DEBUG));
+        if ($logger instanceof Logger)
+          $logger->pushHandler (new WebConsoleMonologHandler(getenv ('DEBUG_LEVEL') ?: Logger::DEBUG));
       }
     });
   }

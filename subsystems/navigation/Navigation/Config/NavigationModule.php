@@ -12,25 +12,23 @@ use Electro\Navigation\Services\Navigation;
 
 class NavigationModule implements ModuleInterface
 {
-  /** @var InjectorInterface */
-  private $injector;
-
   static function boot (Bootstrapper $boot)
   {
-    $boot->on (Bootstrapper::EVENT_BOOT, function (InjectorInterface $injector) {
+    $boot->on (Bootstrapper::REGISTER_SERVICES, function (InjectorInterface $injector) {
       $injector
         ->alias (NavigationInterface::class, Navigation::class)
         ->share (NavigationInterface::class, 'navigation')
         ->alias (NavigationLinkInterface::class, NavigationLink::class);
     });
 
-    $boot->on (Bootstrapper::EVENT_POST_BOOT, function (Application $app, NavigationInterface $navigation) {
-      foreach ($app->navigationProviders as $provider) {
-        if (is_string ($provider))
-          $provider = $this->injector->make ($provider);
-        $provider->defineNavigation ($navigation);
-      }
-    });
+    $boot->on (Bootstrapper::POST_CONFIG,
+      function (InjectorInterface $injector, Application $app, NavigationInterface $navigation) {
+        foreach ($app->navigationProviders as $provider) {
+          if (is_string ($provider))
+            $provider = $injector->make ($provider);
+          $provider->defineNavigation ($navigation);
+        }
+      });
   }
 
 }

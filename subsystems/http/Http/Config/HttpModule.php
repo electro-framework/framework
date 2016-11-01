@@ -27,7 +27,7 @@ class HttpModule implements ModuleInterface
 {
   static function boot (Bootstrapper $boot)
   {
-    $boot->on (Bootstrapper::EVENT_BOOT, function (InjectorInterface $injector) {
+    $boot->on (Bootstrapper::REGISTER_SERVICES, function (InjectorInterface $injector) {
       $injector
         ->alias (RedirectionInterface::class, Redirection::class)
         ->alias (ResponseFactoryInterface::class, ResponseFactory::class)

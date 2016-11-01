@@ -14,7 +14,7 @@ class MailModule implements ModuleInterface
 
   static function boot (Bootstrapper $boot)
   {
-    $boot->on (Bootstrapper::EVENT_BOOT, function (InjectorInterface $injector) {
+    $boot->on (Bootstrapper::REGISTER_SERVICES, function (InjectorInterface $injector) {
       $injector
         ->delegate (Swift_Mailer::class, function () use ($injector) {
           $transport = new \Swift_SmtpTransport(

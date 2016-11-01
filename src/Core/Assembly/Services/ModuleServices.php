@@ -112,6 +112,7 @@ class ModuleServices
    */
   function provideTranslations ($v = true)
   {
+inspect("$this->path///{$this->app->moduleLangPath}");
     if ($v) {
       $this->app->languageFolders[] = "$this->path/{$this->app->moduleLangPath}";
       $this->app->translation       = true;

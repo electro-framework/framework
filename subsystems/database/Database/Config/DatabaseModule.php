@@ -14,7 +14,7 @@ class DatabaseModule implements ModuleInterface
 {
   static function boot (Bootstrapper $boot)
   {
-    $boot->on (Bootstrapper::EVENT_BOOT, function (InjectorInterface $injector) {
+    $boot->on (Bootstrapper::REGISTER_SERVICES, function (InjectorInterface $injector) {
       $injector
         ->share (ConnectionInterface::class)
         ->delegate (ConnectionInterface::class, function ($debugConsole) {

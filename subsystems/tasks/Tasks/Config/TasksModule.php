@@ -11,10 +11,13 @@ class TasksModule implements ModuleInterface
 {
   static function boot (Bootstrapper $boot)
   {
-    $boot->on (Bootstrapper::EVENT_BOOT, function (ModuleServices $module, InjectorInterface $injector) {
+    $boot->on (Bootstrapper::REGISTER_SERVICES, function (InjectorInterface $injector) {
+      $injector->share (TasksSettings::class);
+    });
+
+    $boot->on (Bootstrapper::CONFIGURE, function (ModuleServices $module) {
       $module
         ->registerTasksFromClass (CoreTasks::class);
-      $injector->share (TasksSettings::class);
     });
   }
 
