@@ -48,6 +48,27 @@ class ConsoleApplication extends Runner
     $io->terminalSize ($console->getTerminalDimensions ());
   }
 
+  static public function formatErrorArg ($arg)
+  {
+    if (is_object ($arg))
+      switch (get_class ($arg)) {
+        case \ReflectionMethod::class:
+          /** @var \ReflectionMethod $arg */
+          return $arg->getDeclaringClass ()->getName () . '::' . $arg->getName ();
+        case \ReflectionFunction::class:
+          /** @var \ReflectionFunction $arg */
+          return sprintf ('Closure at %s line %d', $arg->getFileName (), $arg->getStartLine ());
+        case \ReflectionParameter::class:
+          /** @var \ReflectionParameter $arg */
+          return '$' . $arg->getName ();
+        default:
+          return typeOf ($arg);
+      }
+    if (is_array ($arg))
+      return sprintf ('[%s]', implode (',', map ($arg, [__CLASS__, 'formatErrorArg'])));
+    return str_replace ('\\\\', '\\', var_export ($arg, true));
+  }
+
   /**
    * A factory for creating an instance of a console-based Electro application.
    *
@@ -61,6 +82,8 @@ class ConsoleApplication extends Runner
    */
   static function make (InjectorInterface $injector, $profileClass)
   {
+    assert (is_string ($profileClass), '$profileClass must be string');
+
     // Create and register the foundational framework services.
 
     $injector
@@ -101,6 +124,45 @@ class ConsoleApplication extends Runner
     return $consoleApp;
   }
 
+  public function errorHandler ($code = null, $msg = null, $file, $line)
+  {
+    if (error_reporting () === 0)
+      return true;
+    throw new \ErrorException ($msg, $code, 1, $file, $line);
+  }
+
+  /**
+   * Outputs the full stack trace with enhanced information.
+   *
+   * @param \Exception|\Throwable $exception
+   */
+  function exceptionHandler ($exception)
+  {
+    $NL    = PHP_EOL;
+    $stack = $exception->getTrace ();
+    if ($exception instanceof \ErrorException)
+      array_shift ($stack);
+    $c = count ($stack);
+    echo sprintf ("{$NL}Unhandled exception: %s$NL{$NL}Stack trace:$NL$NL%4d. Throw %s$NL      from %s, line %d$NL$NL",
+      color ('red', $exception->getMessage ()),
+      $c + 1,
+      color ('yellow', get_class ($exception)),
+      $exception->getFile (),
+      $exception->getLine ()
+    );
+    foreach ($stack as $i => $l)
+      echo sprintf ("%4d. Call %s$NL      from %s, line %d$NL$NL",
+        $c - $i,
+        color ('yellow', sprintf ('%s%s (%s)',
+          isset($l['class']) ? $l['class'] . get ($l, 'type', '::') : '',
+          $l['function'],
+          implode (',', map ($l['args'], [__CLASS__, 'formatErrorArg']))
+        )),
+        $l['file'],
+        $l['line']
+      );
+  }
+
   /**
    * Runs the console.
    *
@@ -115,7 +177,8 @@ class ConsoleApplication extends Runner
     // Setup
 
     register_shutdown_function ([$this, 'shutdown']);
-    set_error_handler ([$this, 'handleError']);
+    set_error_handler ([$this, 'errorHandler']);
+    set_exception_handler ([$this, 'exceptionHandler']);
     $this->stopOnFail ();
     $this->customizeColors ();
 

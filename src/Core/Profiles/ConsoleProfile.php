@@ -24,7 +24,7 @@ class ConsoleProfile implements ProfileInterface
 
   public function getName ()
   {
-    return 'console-profile';
+    return str_segmentsLast (static::class, '\\');
   }
 
 }

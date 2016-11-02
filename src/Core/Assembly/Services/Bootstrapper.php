@@ -88,7 +88,7 @@ class Bootstrapper
   /**
    * @var ProfileInterface
    */
-  private $profile;
+  public $profile;
 
   function __construct (InjectorInterface $injector, ProfileInterface $profile)
   {
@@ -106,7 +106,6 @@ class Bootstrapper
      * a few core services that must be setup before any other module loads.
      */
     $this->injector->execute ([LoggingModule::class, 'register']);
-
     try {
       $this->injector->execute ([AssemblyModule::class, 'register']);
 
@@ -121,8 +120,9 @@ class Bootstrapper
 
       foreach ($registry->onlyBootable ()->onlyEnabled ()->getModules () as $name => $module) {
         /** @var ModuleInfo $module */
-        if (isset ($exclude[$module->name]))
-          continue;
+        if (isset ($exclude[$module->name]) ||
+            ($module->type == ModuleInfo::TYPE_SUBSYSTEM && !isset($subsystems[$module->name]))
+        ) continue;
         $modBoot = $module->bootstrapper;
         if (!class_exists ($modBoot)) // don't load this module.
           $this->logModuleError ("Class <kbd>$modBoot</kbd> was not found.");

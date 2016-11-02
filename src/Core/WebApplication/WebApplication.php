@@ -94,7 +94,8 @@ class WebApplication
     /** @var Bootstrapper $boot */
     $bootstrapper = $this->injector->make (Bootstrapper::class);
     $bootstrapper->on (CONFIGURE, function (WebServer $webServer) use ($urlDepth) {
-      ($this->webServer = $webServer)->setup ($urlDepth);
+      $this->webServer = $webServer;
+      $webServer->setup ($urlDepth);
     });
     $bootstrapper->run ();
 

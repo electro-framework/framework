@@ -3,38 +3,23 @@ namespace Electro\Core\Profiles;
 
 use Electro\Interfaces\ProfileInterface;
 
-class WebProfile implements ProfileInterface
+/**
+ * This is an abstract configuration profile for web applications.
+ *
+ * <p>When testing `$profile instanceof WebProfile`, you can check if a module is being used on a web application or
+ * not, irrespective of the concrete profile being used. Every web profile is therefore free to select any features it
+ * needs without inheriting anything from this base class.
+ */
+abstract class WebProfile implements ProfileInterface
 {
   public function getExcludedModules ()
   {
     return [];
   }
 
-  public function getSubsystems ()
-  {
-    return [
-      'authentication',
-      'authorization',
-      'caching',
-      'configuration',
-      'database',
-      'debugging',
-      'error-handling',
-      'content-server',
-      'http',
-      'localization',
-      'mail',
-      'navigation',
-      'routing',
-      'sessions',
-      'validation',
-      'view-engine',
-    ];
-  }
-
   public function getName ()
   {
-    return 'web-profile';
+    return str_segmentsLast (static::class, '\\');
   }
 
 }
