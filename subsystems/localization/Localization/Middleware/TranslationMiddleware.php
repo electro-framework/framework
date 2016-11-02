@@ -71,7 +71,7 @@ class TranslationMiddleware implements RequestHandlerInterface
       $folders = $this->settings->languageFolders;
       foreach ($folders as $folder) {
         $path     = "$folder/$lang.ini";
-        $newTrans = file_exists ($path) ? parse_ini_file ($path) : null;
+        $newTrans = fileExists ($path) ? parse_ini_file ($path) : null;
         if ($newTrans)
           $trans = array_merge ($trans, $newTrans);
       }

@@ -66,13 +66,15 @@ class WebServer
 
   /**
    * Initializes the web server and sets up the request object.
+   *
+   * @param int $urlDepth How many URL segments should be stripped when calculating the application's root URL.
    */
-  function setup ()
+  function setup ($urlDepth = 0)
   {
     $app          = $this->app;
-    $request      = ServerRequestFactory::fromGlobals ();
-    $app->baseURI = $this->getBaseUri ($request);
     /** @var ServerRequestInterface $request */
+    $request      = ServerRequestFactory::fromGlobals ();
+    $app->baseURI = dirnameEx (get ($request->getServerParams (), 'SCRIPT_NAME'), $urlDepth + 1);
     $request       = $request->withAttribute ('originalUri', $request->getUri ());
     $request       = $request->withAttribute ('baseUri', $app->baseURI);
     $this->request = $request->withAttribute ('virtualUri', $this->getVirtualUri ($request));
@@ -80,8 +82,6 @@ class WebServer
 
   private function getBaseUri (ServerRequestInterface $request)
   {
-    $params = $request->getServerParams ();
-    return dirnameEx (get ($params, 'SCRIPT_NAME'));
     /*
         $params = $request->getServerParams ();
         $sUrl   = dirnameEx (get ($params, 'SCRIPT_NAME'));

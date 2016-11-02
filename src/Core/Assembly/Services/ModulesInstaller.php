@@ -384,7 +384,7 @@ class ModulesInstaller
         $p    = strpos ($path, 'framework/') + 9;
         return (new ModuleInfo)->import ([
           'name' => $dirInfo->getFilename (),
-          'path' => $this->app->frameworkPath . substr ($path, $p),
+          'path' => Application::FRAMEWORK_PATH . substr ($path, $p),
         ]);
       })
       ->pack ()->all ();

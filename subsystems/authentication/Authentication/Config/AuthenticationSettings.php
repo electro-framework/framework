@@ -10,11 +10,26 @@ use Electro\Traits\ConfigurationTrait;
  *
  * @method $this|string userModel (string $v = null) The class name of the model that represents the logged-in user
  * @method $this|string loginFormUrl (string $v = null) The relative URL of the login form page
+ * @method $this|string logoutUrl (string $v = null) The relative URL of the logout route
+ * @method $this|string urlPrefix (string $v = null) Relative URL that prefixes all URLs to the login pages
  */
 class AuthenticationSettings implements AssignableInterface
 {
   use ConfigurationTrait;
 
-  private $loginFormUrl = 'login/login';
+  private $loginFormUrl = 'login';
+  private $logoutUrl    = 'logout';
+  private $urlPrefix    = 'login';
   private $userModel    = GenericUser::class;
+
+  function getLoginUrl ()
+  {
+    return "$this->urlPrefix/$this->loginFormUrl";
+  }
+
+  function getLogoutUrl ()
+  {
+    return "$this->urlPrefix/$this->logoutUrl";
+  }
+
 }

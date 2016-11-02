@@ -22,7 +22,8 @@ class NavigationModule implements ModuleInterface
         $injector
           ->alias (NavigationInterface::class, Navigation::class)
           ->share (NavigationInterface::class, 'navigation')
-          ->alias (NavigationLinkInterface::class, NavigationLink::class);
+          ->alias (NavigationLinkInterface::class, NavigationLink::class)
+          ->share (NavigationSettings::class);
       })
       //
       ->on (RECONFIGURE,

@@ -20,15 +20,13 @@ class ModuleInfo implements AssignableInterface
   const BOOTSTRAPPER_CLASS_NAME_FMT = 'Config\\%sModule';
   const KEEP_PROPS                  = ['enabled'];
   const TYPE_PLUGIN                 = 'plugin';
-  const TYPE_PRIVATE                = 'private';
-  const TYPE_SUBSYSTEM              = 'subsystem';
-
   const TYPE_PRIORITY = [
     ModuleInfo::TYPE_SUBSYSTEM => 1,
     ModuleInfo::TYPE_PLUGIN    => 2,
     ModuleInfo::TYPE_PRIVATE   => 3,
   ];
-
+  const TYPE_PRIVATE                = 'private';
+  const TYPE_SUBSYSTEM              = 'subsystem';
   /**
    * The module's service provider class name or null if none.
    *
@@ -76,6 +74,8 @@ class ModuleInfo implements AssignableInterface
   /**
    * If set, maps `$path` to the real filesystem path. This is useful when modules are symlinked and we want to display
    * debugging paths as short paths relative to the application's root directory.
+   * <p>If the module is not symlinked, this value should be null to enhance performance and to allow deployment of
+   * the module configuration cache via FTP to a server where it can't be regenerated.
    *
    * @var string
    */

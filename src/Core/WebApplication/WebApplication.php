@@ -3,13 +3,13 @@ namespace Electro\Core\WebApplication;
 
 use Electro\Application;
 use Electro\Core\Assembly\Services\Bootstrapper;
-use const Electro\Core\Assembly\Services\CONFIGURE;
 use Electro\Core\Assembly\Services\ModulesRegistry;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\ProfileInterface;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\DebugConsole\DebugConsoleSettings;
 use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
+use const Electro\Core\Assembly\Services\CONFIGURE;
 
 /**
  * Provides the standard bootstrap procedure for web applications.
@@ -66,10 +66,13 @@ class WebApplication
   /**
    * Bootstraps the application.
    *
-   * @param string $rootDir The application's root directory path.
+   * @param string $rootDir  The application's root directory path.
+   * @param int    $urlDepth How many URL segments should be stripped when calculating the application's root URL.
    */
-  function run ($rootDir)
+  function run ($rootDir, $urlDepth = 0)
   {
+    // On some web servers, the current directory may not be the application's root directory, so fix it.
+    chdir ($rootDir);
     $rootDir = normalizePath ($rootDir);
 
     /** @var Application $app */
@@ -90,8 +93,8 @@ class WebApplication
 
     /** @var Bootstrapper $boot */
     $bootstrapper = $this->injector->make (Bootstrapper::class);
-    $bootstrapper->on (CONFIGURE, function (WebServer $webServer) {
-      ($this->webServer = $webServer)->setup ();
+    $bootstrapper->on (CONFIGURE, function (WebServer $webServer) use ($urlDepth) {
+      ($this->webServer = $webServer)->setup ($urlDepth);
     });
     $bootstrapper->run ();
 

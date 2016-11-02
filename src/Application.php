@@ -36,7 +36,7 @@ class Application
    */
   public $favicon = 'data:;base64,iVBORw0KGgo=';
   /**
-   * The path of the framework kernel's directory.
+   * The absolute path of the framework kernel's directory.
    *
    * @var string
    */
@@ -145,7 +145,7 @@ class Application
   }
 
   /**
-   * Gets an array of file path mappings for the core framework, to aid debugging symlinked directiories.
+   * Gets an array of file path mappings for the core framework, to aid debugging symlinked directories.
    *
    * @return array
    */
@@ -169,7 +169,7 @@ class Application
   {
     // Note: due to eventual symlinking, we can't use dirname(__DIR__) here
     $this->baseDirectory = $rootDir;
-    $this->frameworkPath = self::FRAMEWORK_PATH;
+    $this->frameworkPath = "$rootDir/" . self::FRAMEWORK_PATH;
 
     // Setup the include path by prepending the application's root and the framework's to it.
     // Note: the include path is used, for instance, by stream_resolve_include_path() or file_exists()
@@ -192,7 +192,8 @@ class Application
   function toRelativePath ($path)
   {
     if ($path) {
-      if ($path[0] == DIRECTORY_SEPARATOR || $path[1] == ':') {
+      // Check if it's an absolute path
+      if ($path[0] == DIRECTORY_SEPARATOR || $path[1] == ':' /* ex: C:\windows-path */) {
         $l = strlen ($this->baseDirectory);
         if (substr ($path, 0, $l) == $this->baseDirectory)
           return substr ($path, $l + 1);

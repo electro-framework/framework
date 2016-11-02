@@ -84,20 +84,20 @@ class ConsoleApplication extends Runner
 
     // Setup the console.
 
-    $console         = new SymfonyConsole ('Workman Task Runner');
-    $io              = new ConsoleIO;
-    $consoleSettings = $injector->make (ConsoleSettings::class);
-
-    $consoleApp = new static ($io, $consoleSettings, $console, $injector);
+    $console  = new SymfonyConsole ('Workman Task Runner');
+    $io       = new ConsoleIO;
+    $settings = new ConsoleSettings;
 
     $injector
       ->alias (ConsoleIOInterface::class, ConsoleIO::class)
       ->share ($io)
       ->share ($console)
-      ->share ($consoleApp);
+      ->share ($settings);
 
-    // Return the initialized application.
+    // Return a new application instance.
 
+    $consoleApp = new static ($io, $settings, $console, $injector);
+    $injector->share ($consoleApp);
     return $consoleApp;
   }
 

@@ -4,7 +4,6 @@ namespace Electro\Core\Assembly\Config;
 use Electro\Application;
 use Electro\Core\Assembly\Services\ModulesInstaller;
 use Electro\Core\Assembly\Services\ModulesRegistry;
-use Electro\Core\ConsoleApplication\Config\ConsoleSettings;
 use Electro\Core\WebApplication\ApplicationMiddlewareAssembler;
 use Electro\Exceptions\ExceptionWithTitle;
 use Electro\Interfaces\DI\InjectorInterface;
@@ -39,8 +38,7 @@ class AssemblyModule
         ':migrationsAPIFactory' => $injector->makeFactory (MigrationsInterface::class),
       ])
       // This can be overridden later, usually by a private application module.
-      ->alias (ApplicationMiddlewareAssemblerInterface::class, ApplicationMiddlewareAssembler::class)
-      ->share (ConsoleSettings::class);
+      ->alias (ApplicationMiddlewareAssemblerInterface::class, ApplicationMiddlewareAssembler::class);
   }
 
 }
