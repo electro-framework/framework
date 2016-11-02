@@ -1,6 +1,8 @@
 <?php
 namespace Electro\Authentication\Middleware;
+
 use Electro\Application;
+use Electro\Authentication\Config\AuthenticationSettings;
 use Electro\Authentication\Exceptions\AuthenticationException;
 use Electro\Interfaces\Http\RedirectionInterface;
 use Electro\Interfaces\Http\RequestHandlerInterface;
@@ -19,12 +21,18 @@ class AuthenticationMiddleware implements RequestHandlerInterface
    */
   private $redirection;
   private $session;
+  /**
+   * @var AuthenticationSettings
+   */
+  private $settings;
 
-  function __construct (Application $app, SessionInterface $session, RedirectionInterface $redirection)
+  function __construct (Application $app, SessionInterface $session, RedirectionInterface $redirection,
+                        AuthenticationSettings $settings)
   {
     $this->session     = $session;
     $this->app         = $app;
     $this->redirection = $redirection;
+    $this->settings    = $settings;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -34,7 +42,7 @@ class AuthenticationMiddleware implements RequestHandlerInterface
     switch ($request->getMethod ()) {
       case 'GET':
         if (!$this->session->loggedIn ())
-          return $this->redirection->guest ($this->app->loginFormUrl);
+          return $this->redirection->guest ($this->settings->loginFormUrl ());
         break;
     }
 
@@ -70,7 +78,8 @@ class AuthenticationMiddleware implements RequestHandlerInterface
           if ($this->wasPosted ())
             $authenticate = false; // user is now logged in; proceed as a normal request
           else $authenticate = 'retry';
-        } catch (AuthenticationException $e) {
+        }
+        catch (AuthenticationException $e) {
           $this->setStatus (FlashType::WARNING, $e->getMessage ());
           // note: if $prevPost === false, it keeps that value instead of (erroneously) storing the login form data
           if ($action)

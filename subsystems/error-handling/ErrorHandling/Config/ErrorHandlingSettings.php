@@ -5,7 +5,7 @@ use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 
 /**
- * Configuration settings for the Error Handling module.
+ * Configuration settings for the Error Handling subsystem.
  */
 class ErrorHandlingSettings
 {

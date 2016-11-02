@@ -3,13 +3,12 @@ namespace Electro;
 
 use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\DI\InjectorInterface;
-use Electro\Interfaces\Navigation\NavigationProviderInterface;
 
 class Application
 {
   const FRAMEWORK_PATH = 'private/packages/electro/framework';
   /**
-   * The real application name.
+   * The real application name. This is read from templates.
    *
    * @var string
    */
@@ -27,38 +26,15 @@ class Application
    */
   public $baseURI;
   /**
-   * A mapping between modules view templates base directories and the corresponding PHP namespaces that will be
-   * used for resolving view template paths to PHP controller classes.
-   *
-   * @var array
-   */
-  public $controllerNamespaces = [];
-  /**
-   * A map of absolute view file paths to PHP controller class names.
-   *
-   * <p>This is used by the `Include` component.
-   *
-   * @var array
-   */
-  public $controllers = [];
-  /**
    * @var bool The value set on the .env file for the DEBUG variable.
    */
   public $debugMode = false;
   /**
-   * Favorite icon URL.
+   * Favorite icon URL. This is read from templates.
    *
    * @var string
    */
   public $favicon = 'data:;base64,iVBORw0KGgo=';
-  /**
-   * @var string
-   */
-  public $fileArchivePath = 'private/storage/files';
-  /**
-   * @var string
-   */
-  public $fileBaseUrl = 'files';
   /**
    * The path of the framework kernel's directory.
    *
@@ -71,26 +47,6 @@ class Application
    * @var string
    */
   public $frameworkURI = 'framework';
-  /**
-   * @var string
-   */
-  public $imageArchivePath = 'private/storage/images';
-  /**
-   * Set to true to redirect the browser to the generated thumbnail instead of streaming it.
-   *
-   * @var Boolean
-   */
-  public $imageRedirection = false;
-  /**
-   * @var string
-   */
-  public $imagesCachePath = 'private/storage/cache/images';
-  /**
-   * The colon delimited list of directory paths.
-   *
-   * @var string
-   */
-  public $includePath;
   /**
    * @var \Electro\Core\DependencyInjection\Injector
    */
@@ -110,63 +66,11 @@ class Application
    */
   public $isWebBased = false;
   /**
-   * Search paths for module language files, in order of precedence.
-   *
-   * @var array
-   */
-  public $languageFolders = [];
-  /**
-   * The relative URL of the login form page.
-   *
-   * @var string
-   */
-  public $loginFormUrl = 'login/login';
-  /**
-   * Directories where macros can be found.
-   * <p>They will be search in order until the requested macro is found.
-   * <p>These paths will be registered on the templating engine.
-   * <p>This is preinitialized to the application macro's path.
-   *
-   * @var array
-   */
-  public $macrosDirectories = [];
-  /**
-   * Relative to the root folder.
-   *
-   * @var string
-   */
-  public $macrosPath = 'private/resources/macros';
-  /**
-   * The relative path of the language files' folder inside a module.
-   *
-   * @var string
-   */
-  public $moduleLangPath = 'resources/lang';
-  /**
-   * The relative path of the macros folder inside a module.
-   *
-   * @var string
-   */
-  public $moduleMacrosPath = 'resources/macros';
-  /**
    * The relative path of the public folder inside a module.
    *
    * @var string
    */
   public $modulePublicPath = 'public';
-  /**
-   * The relative path of the views folder inside a module.
-   *
-   * @var string
-   */
-  public $moduleViewsPath = 'resources/views';
-  /**
-   * A list of modules that are always bootstrapped when the framework boots.
-   * <p>A `bootstrap.php` file will be executed on each registered module.
-   *
-   * @var array
-   */
-  public $modules = [];
   /**
    * The folder where the framework will search for your application-specific modules.
    * <p>If a module is not found there, it will then search on `defaultModulesPath`.
@@ -189,27 +93,6 @@ class Application
    */
   public $name = 'electro';
   /**
-   * All registered navigation providers.
-   * <p>This will be read when the Navigation service is injected for the first time.
-   * It can hold class names or instances.
-   *
-   * @var NavigationProviderInterface[]|string[]
-   */
-  public $navigationProviders = [];
-  /**
-   * Maximum width and/or height for uploaded images.
-   * Images exceeding this dimensions are resized to fit them.
-   *
-   * @var int
-   */
-  public $originalImageMaxSize = 1024;
-  /**
-   * JPEG compression factor for resampled uploaded images.
-   *
-   * @var int
-   */
-  public $originalImageQuality = 95;
-  /**
    * The URL parameter name used for pagination.
    *
    * @var string
@@ -231,10 +114,6 @@ class Application
    */
   public $pluginModulesPath = 'private/plugins';
   /**
-   * @var string[] A list of "preset" class names.
-   */
-  public $presets = [];
-  /**
    * @var string The file path of a router script for the build-in PHP web server.
    */
   public $routerFile = 'private/packages/electro/framework/devServerRouter.php';
@@ -243,39 +122,12 @@ class Application
    */
   public $storagePath = 'private/storage';
   /**
-   * Registered Matisse tags.
-   *
-   * @var array
-   */
-  public $tags = [];
-  /**
-   * A list of task classes from each module that provides tasks to be merged on the main robofile.
-   *
-   * @var string[]
-   */
-  public $taskClasses = [];
-  /**
    * A site name that can be used on auto-generated window titles (using the title tag).
    * The symbol @ will be replaced by the current page's title.
    *
    * @var string
    */
   public $title = '@';
-  /**
-   * Enables output post-processing for keyword replacement.
-   * Disable this if the app is not multi-language to speed-up page rendering.
-   * Keywords syntax: $keyword
-   *
-   * @var bool
-   */
-  public $translation = false;
-  /**
-   * Folders where views can be found.
-   * <p>They will be search in order until the requested view is found.
-   *
-   * @var array
-   */
-  public $viewsDirectories = [];
 
   function __construct (InjectorInterface $injector)
   {

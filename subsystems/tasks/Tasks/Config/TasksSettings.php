@@ -5,7 +5,7 @@ use Electro\Interfaces\AssignableInterface;
 use Electro\Traits\ConfigurationTrait;
 
 /**
- * Configuration settings for the database migrations module.
+ * Configuration settings for the Tasks subsystem.
  *
  * @method $this|string scaffoldsPath  (string $v = null) The path of scaffolds's dir, relative to the project's dir.
  */

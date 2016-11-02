@@ -20,7 +20,7 @@ class WebProfile implements ProfileInterface
       'database',
       'debugging',
       'error-handling',
-      'file-server',
+      'content-server',
       'http',
       'localization',
       'mail',

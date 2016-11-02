@@ -1,9 +1,9 @@
 <?php
 namespace Electro\Core\WebApplication;
 
+use Electro\ContentServer\Middleware\ContentServerMiddleware;
 use Electro\Debugging\Middleware\WebConsoleMiddleware;
 use Electro\ErrorHandling\Middleware\ErrorHandlingMiddleware;
-use Electro\FileServer\Middleware\ContentServerMiddleware;
 use Electro\Http\Middleware\CompressionMiddleware;
 use Electro\Http\Middleware\CsrfMiddleware;
 use Electro\Http\Middleware\URLNotFoundMiddleware;

@@ -1,6 +1,7 @@
 <?php
 namespace Electro\Database\Config;
 
+use Electro\Core\Assembly\ModuleInfo;
 use Electro\Core\Assembly\Services\Bootstrapper;
 use Electro\Database\Lib\DebugConnection;
 use Electro\Database\Services\ModelController;
@@ -9,12 +10,13 @@ use Electro\Interfaces\ModelControllerInterface;
 use Electro\Interfaces\ModuleInterface;
 use PhpKit\Connection;
 use PhpKit\ConnectionInterface;
+use const Electro\Core\Assembly\Services\REGISTER_SERVICES;
 
 class DatabaseModule implements ModuleInterface
 {
-  static function boot (Bootstrapper $boot)
+  static function bootUp (Bootstrapper $bootstrapper, ModuleInfo $moduleInfo)
   {
-    $boot->on (Bootstrapper::REGISTER_SERVICES, function (InjectorInterface $injector) {
+    $bootstrapper->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
       $injector
         ->share (ConnectionInterface::class)
         ->delegate (ConnectionInterface::class, function ($debugConsole) {

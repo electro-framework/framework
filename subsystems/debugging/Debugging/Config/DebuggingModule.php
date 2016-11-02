@@ -1,6 +1,7 @@
 <?php
 namespace Electro\Debugging\Config;
 
+use Electro\Core\Assembly\ModuleInfo;
 use Electro\Core\Assembly\Services\Bootstrapper;
 use Electro\Interfaces\ModuleInterface;
 use Monolog\Logger;
@@ -10,12 +11,13 @@ use PhpKit\WebConsole\Loggers\Handlers\WebConsoleMonologHandler;
 use PhpKit\WebConsole\Loggers\Specialized\PSR7RequestLogger;
 use PhpKit\WebConsole\Loggers\Specialized\PSR7ResponseLogger;
 use Psr\Log\LoggerInterface;
+use const Electro\Core\Assembly\Services\CONFIGURE;
 
 class DebuggingModule implements ModuleInterface
 {
-  static function boot (Bootstrapper $boot)
+  static function bootUp (Bootstrapper $bootstrapper, ModuleInfo $moduleInfo)
   {
-    $boot->on (Bootstrapper::CONFIGURE, function (LoggerInterface $logger, $debugConsole) {
+    $bootstrapper->on (CONFIGURE, function (LoggerInterface $logger, $debugConsole) {
       if ($debugConsole) {
         DebugConsole::registerPanel ('request', new PSR7RequestLogger ('Request', 'fa fa-paper-plane'));
         DebugConsole::registerPanel ('response', new PSR7ResponseLogger ('Response', 'fa fa-file'));

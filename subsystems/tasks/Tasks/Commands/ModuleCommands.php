@@ -89,7 +89,7 @@ trait ModuleCommands
 
     $moduleName = $moduleName ?: $io->askDefault ("Module name", "company-name/project-name");
 
-    if (!$this->modulesRegistry->validateModuleName ($moduleName))
+    if (!ModulesRegistry::validateModuleName ($moduleName))
       $io->error ("Invalid module name $moduleName. Correct syntax: company-name/project-name");
     if ($this->modulesRegistry->isInstalled ($moduleName))
       $io->error ("You can't use that name because a module named $moduleName already exists");

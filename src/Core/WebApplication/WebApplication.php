@@ -3,6 +3,7 @@ namespace Electro\Core\WebApplication;
 
 use Electro\Application;
 use Electro\Core\Assembly\Services\Bootstrapper;
+use const Electro\Core\Assembly\Services\CONFIGURE;
 use Electro\Core\Assembly\Services\ModulesRegistry;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\ProfileInterface;
@@ -89,7 +90,7 @@ class WebApplication
 
     /** @var Bootstrapper $boot */
     $bootstrapper = $this->injector->make (Bootstrapper::class);
-    $bootstrapper->on (Bootstrapper::CONFIGURE, function (WebServer $webServer) {
+    $bootstrapper->on (CONFIGURE, function (WebServer $webServer) {
       ($this->webServer = $webServer)->setup ();
     });
     $bootstrapper->run ();

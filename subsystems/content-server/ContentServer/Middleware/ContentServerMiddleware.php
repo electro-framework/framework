@@ -1,13 +1,14 @@
 <?php
-namespace Electro\FileServer\Middleware;
+namespace Electro\ContentServer\Middleware;
 
+use Electro\Application;
+use Electro\ContentServer\Config\ContentServerSettings;
+use Electro\ContentServer\Lib\FileUtil;
+use Electro\Interfaces\Http\RequestHandlerInterface;
+use Electro\Interfaces\Http\ResponseFactoryInterface;
 use League\Glide\Server;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Electro\Application;
-use Electro\FileServer\Lib\FileUtil;
-use Electro\Interfaces\Http\RequestHandlerInterface;
-use Electro\Interfaces\Http\ResponseFactoryInterface;
 
 /**
  * Serves static files from the content repository.
@@ -26,24 +27,28 @@ class ContentServerMiddleware implements RequestHandlerInterface
    * @var ResponseFactoryInterface
    */
   private $responseFactory;
+  /**
+   * @var ContentServerSettings
+   */
+  private $settings;
 
-  function __construct (Application $app, ResponseFactoryInterface $responseFactory, Server $glideServer)
+  function __construct (ResponseFactoryInterface $responseFactory, Server $glideServer, ContentServerSettings $settings)
   {
-    $this->app             = $app;
     $this->responseFactory = $responseFactory;
     $this->glideServer     = $glideServer;
+    $this->settings        = $settings;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     $url = $request->getAttribute ('virtualUri', '');
-    if (!str_beginsWith ($url, "{$this->app->fileBaseUrl}/"))
+    if (!str_beginsWith ($url, "{$this->settings->fileBaseUrl()}/"))
       return $next ();
 
     // Strip prefix from URL
-    $url = substr ($url, strlen ($this->app->fileBaseUrl) + 1);
+    $url = substr ($url, strlen ($this->settings->fileBaseUrl ()) + 1);
 
-    $path = "{$this->app->fileArchivePath}/$url";
+    $path = "{$this->settings->fileArchivePath()}/$url";
 
     if (!file_exists ($path))
       return $this->responseFactory->make (404, "Not found: $path", 'text/plain');

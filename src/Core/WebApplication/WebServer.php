@@ -3,7 +3,6 @@ namespace Electro\Core\WebApplication;
 
 use Electro\Application;
 use Electro\Exceptions\Fatal\ConfigException;
-use Electro\FileServer\Services\FileServerMappings;
 use Electro\Interfaces\Http\MiddlewareStackInterface;
 use Electro\Interfaces\Http\ResponseSenderInterface;
 use Electro\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
@@ -26,10 +25,6 @@ class WebServer
    */
   private $app;
   /**
-   * @var FileServerMappings
-   */
-  private $fileServerMappings;
-  /**
    * @var MiddlewareStackInterface
    */
   private $middlewareStack;
@@ -42,15 +37,13 @@ class WebServer
    * @param Application                    $app
    * @param ApplicationMiddlewareInterface $middlewareStack
    * @param ResponseSenderInterface        $responseSender
-   * @param FileServerMappings             $fileServerMappings
    */
   function __construct (Application $app, ApplicationMiddlewareInterface $middlewareStack,
-                        ResponseSenderInterface $responseSender, FileServerMappings $fileServerMappings)
+                        ResponseSenderInterface $responseSender)
   {
-    $this->app                = $app;
-    $this->fileServerMappings = $fileServerMappings;
-    $this->middlewareStack    = $middlewareStack;
-    $this->responseSender     = $responseSender;
+    $this->app             = $app;
+    $this->middlewareStack = $middlewareStack;
+    $this->responseSender  = $responseSender;
   }
 
   /**
@@ -89,20 +82,20 @@ class WebServer
   {
     $params = $request->getServerParams ();
     return dirnameEx (get ($params, 'SCRIPT_NAME'));
-/*
-    $params = $request->getServerParams ();
-    $sUrl   = dirnameEx (get ($params, 'SCRIPT_NAME'));
-    $sUrl   = str_replace ('\\', '/', $sUrl); // Windows compat.
+    /*
+        $params = $request->getServerParams ();
+        $sUrl   = dirnameEx (get ($params, 'SCRIPT_NAME'));
+        $sUrl   = str_replace ('\\', '/', $sUrl); // Windows compat.
 
-    if (strlen ($sUrl) != '/')// make sure that paths start and end with /
-    {
-      if (substr ($sUrl, 0, 1) != '/')
-        $sUrl = '/' . $sUrl;
-      if (substr ($sUrl, -1) != '/')
-        $sUrl = $sUrl . '/';
-    }
-    return $sUrl;
-*/
+        if (strlen ($sUrl) != '/')// make sure that paths start and end with /
+        {
+          if (substr ($sUrl, 0, 1) != '/')
+            $sUrl = '/' . $sUrl;
+          if (substr ($sUrl, -1) != '/')
+            $sUrl = $sUrl . '/';
+        }
+        return $sUrl;
+    */
   }
 
   private function getVirtualUri (ServerRequestInterface $request)

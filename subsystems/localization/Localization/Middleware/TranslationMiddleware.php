@@ -1,15 +1,16 @@
 <?php
 namespace Electro\Localization\Middleware;
 
-use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use Electro\Application;
 use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Exceptions\FlashType;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
+use Electro\Localization\Config\LocalizationSettings;
 use Electro\Localization\Services\Locale;
+use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Post-processes the HTTP response to replace translation keys by the corresponding translation.
@@ -36,12 +37,18 @@ class TranslationMiddleware implements RequestHandlerInterface
    * @var ResponseFactoryInterface
    */
   private $responseFactory;
+  /**
+   * @var LocalizationSettings
+   */
+  private $settings;
 
-  function __construct (Application $app, Locale $locale, ResponseFactoryInterface $responseFactory)
+  function __construct (Application $app, Locale $locale, ResponseFactoryInterface $responseFactory,
+                        LocalizationSettings $settings)
   {
     $this->app             = $app;
     $this->locale          = $locale;
     $this->responseFactory = $responseFactory;
+    $this->settings = $settings;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -52,7 +59,7 @@ class TranslationMiddleware implements RequestHandlerInterface
     $lang = $this->locale->locale ();
     // The check for app->translation is made here instead of conditionally adding this middleware
     // because loaded modules can change this setting.
-    if (!$this->app->translation || !$lang)
+    if (!$this->settings->translation || !$lang)
       return $response;
 
     if (!isset(self::$translation[$lang])) {
@@ -61,7 +68,7 @@ class TranslationMiddleware implements RequestHandlerInterface
       self::$translation[$lang] = [];
 
       $trans   =& self::$translation[$lang];
-      $folders = $this->app->languageFolders;
+      $folders = $this->settings->languageFolders;
       foreach ($folders as $folder) {
         $path     = "$folder/$lang.ini";
         $newTrans = file_exists ($path) ? parse_ini_file ($path) : null;

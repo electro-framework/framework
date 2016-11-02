@@ -1,6 +1,7 @@
 <?php
 namespace Electro\Http\Config;
 
+use Electro\Core\Assembly\ModuleInfo;
 use Electro\Core\Assembly\Services\Bootstrapper;
 use Electro\Http\Services\Redirection;
 use Electro\Http\Services\ResponseFactory;
@@ -14,6 +15,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest;
+use const Electro\Core\Assembly\Services\REGISTER_SERVICES;
 
 /**
  * ### Notes:
@@ -25,9 +27,9 @@ use Zend\Diactoros\ServerRequest;
  */
 class HttpModule implements ModuleInterface
 {
-  static function boot (Bootstrapper $boot)
+  static function bootUp (Bootstrapper $bootstrapper, ModuleInfo $moduleInfo)
   {
-    $boot->on (Bootstrapper::REGISTER_SERVICES, function (InjectorInterface $injector) {
+    $bootstrapper->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
       $injector
         ->alias (RedirectionInterface::class, Redirection::class)
         ->alias (ResponseFactoryInterface::class, ResponseFactory::class)

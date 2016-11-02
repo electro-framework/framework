@@ -1,6 +1,6 @@
 {
-  "name": "electro-subsystems/file-server",
-  "description": "Electro framework's file and media server subsystem",
+  "name": "electro-subsystems/content-server",
+  "description": "Electro framework's media server subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -19,7 +19,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Electro\\FileServer\\": "FileServer"
+      "Electro\\ContentServer\\": "ContentServer"
     }
   }
 }

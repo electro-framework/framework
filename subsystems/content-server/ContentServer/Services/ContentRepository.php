@@ -1,8 +1,8 @@
 <?php
-namespace Electro\FileServer\Services;
+namespace Electro\ContentServer\Services;
 
-use League\Glide\Urls\UrlBuilder;
 use Electro\Interfaces\ContentRepositoryInterface;
+use League\Glide\Urls\UrlBuilder;
 
 class ContentRepository implements ContentRepositoryInterface
 {

@@ -1,5 +1,5 @@
 <?php
-namespace Electro\FileServer\Lib;
+namespace Electro\ContentServer\Lib;
 
 use Psr\Http\Message\UploadedFileInterface;
 

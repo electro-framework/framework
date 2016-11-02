@@ -3,6 +3,7 @@ namespace Electro\Core\ConsoleApplication;
 
 use Electro\Application;
 use Electro\Core\Assembly\Services\Bootstrapper;
+use Electro\Core\ConsoleApplication\Config\ConsoleSettings;
 use Electro\Core\ConsoleApplication\Services\ConsoleIO;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Interfaces\DI\InjectorInterface;
@@ -29,20 +30,20 @@ class ConsoleApplication extends Runner
    */
   protected $io;
   /**
-   * @var Application
-   */
-  private $app;
-  /**
    * @var InjectorInterface
    */
   private $injector;
+  /**
+   * @var ConsoleSettings
+   */
+  private $settings;
 
-  function __construct (ConsoleIO $io, Application $app, SymfonyConsole $console, InjectorInterface $injector)
+  function __construct (ConsoleIO $io, ConsoleSettings $settings, SymfonyConsole $console, InjectorInterface $injector)
   {
     $this->io       = $io;
-    $this->app      = $app;
     $this->console  = $console;
     $this->injector = $injector;
+    $this->settings = $settings;
     $console->setAutoExit (false);
     $io->terminalSize ($console->getTerminalDimensions ());
   }
@@ -83,10 +84,11 @@ class ConsoleApplication extends Runner
 
     // Setup the console.
 
-    $console = new SymfonyConsole ('Workman Task Runner');
-    $io      = new ConsoleIO;
+    $console         = new SymfonyConsole ('Workman Task Runner');
+    $io              = new ConsoleIO;
+    $consoleSettings = $injector->make (ConsoleSettings::class);
 
-    $consoleApp = new static ($io, $app, $console, $injector);
+    $consoleApp = new static ($io, $consoleSettings, $console, $injector);
 
     $injector
       ->alias (ConsoleIOInterface::class, ConsoleIO::class)
@@ -123,7 +125,7 @@ class ConsoleApplication extends Runner
 
     // Merge tasks from all registered task classes
 
-    foreach ($this->app->taskClasses as $class) {
+    foreach ($this->settings->getTaskClasses () as $class) {
       if (!class_exists ($class)) {
         $this->getOutput ()->writeln ("<error>Task class '$class' was not found</error>");
         exit (1);

@@ -1,20 +1,20 @@
 <?php
 namespace Electro\ViewEngine\Services;
 
-use Electro\Application;
 use Electro\Exceptions\Fatal\FileNotFoundException;
 use Electro\Exceptions\FatalException;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
+use Electro\ViewEngine\Config\ViewEngineSettings;
 use Electro\ViewEngine\Lib\View;
 use PhpKit\Flow\FilesystemFlow;
 
 class ViewService implements ViewServiceInterface
 {
   /**
-   * @var Application
+   * @var ViewEngineSettings
    */
-  private $app;
+  private $engineSettings;
   /**
    * @var InjectorInterface
    */
@@ -24,10 +24,10 @@ class ViewService implements ViewServiceInterface
    */
   private $patterns = [];
 
-  function __construct (Application $app, InjectorInterface $injector)
+  function __construct (ViewEngineSettings $engineSettings, InjectorInterface $injector)
   {
-    $this->injector = $injector;
-    $this->app      = $app;
+    $this->injector       = $injector;
+    $this->engineSettings = $engineSettings;
   }
 
   function getEngine ($engineClass)
@@ -76,7 +76,7 @@ class ViewService implements ViewServiceInterface
 
   public function resolveTemplatePath ($viewName, &$base = null)
   {
-    $dirs = $this->app->viewsDirectories;
+    $dirs = $this->engineSettings->getDirectories ();
     foreach ($dirs as $base) {
       $p = "$base/$viewName";
       if ($p = $this->findTemplate ($p))

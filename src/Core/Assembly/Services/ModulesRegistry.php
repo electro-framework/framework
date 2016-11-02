@@ -44,6 +44,17 @@ class ModulesRegistry
     $this->app = $app;
   }
 
+  /**
+   * Checks if the given name is a valid module name.
+   *
+   * @param string $name A module name in `vendor-name/package-name` format.
+   * @return bool `true` if the name is valid.
+   */
+  static public function validateModuleName ($name)
+  {
+    return (bool)preg_match ('#^[a-z0-9\-]+/[a-z0-9\-]+$#', $name);
+  }
+
   static private function hidrateModulesList (array $data)
   {
     return map ($data, function ($o) { return array_toClass ($o, ModuleInfo::class); });
@@ -289,6 +300,17 @@ class ModulesRegistry
   }
 
   /**
+   * Shortcut method to get the file system path of a module's root folder, relative to the project's root folder.
+   *
+   * @param string $moduleName vendor-name/product-name
+   * @return string The module's path.
+   */
+  function pathOf ($moduleName)
+  {
+    return $this->getModule ($moduleName)->path;
+  }
+
+  /**
    * Sets or gets a callback to perform pending module installation/update initializations after all modules were
    * loaded.
    *
@@ -339,17 +361,6 @@ class ModulesRegistry
     unset ($this->modules[$moduleName]);
     $this->save ();
     return true;
-  }
-
-  /**
-   * Checks if the given name is a valid module name.
-   *
-   * @param string $name A module name in `vendor-name/package-name` format.
-   * @return bool `true` if the name is valid.
-   */
-  function validateModuleName ($name)
-  {
-    return (bool)preg_match ('#^[a-z0-9\-]+/[a-z0-9\-]+$#', $name);
   }
 
   /**

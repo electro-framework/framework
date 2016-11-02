@@ -39,7 +39,7 @@ class ModulesUtil
   function selectModule (& $moduleName, callable $filter = null, $suppressErrors = false)
   {
     if ($moduleName) {
-      if (!$this->registry->validateModuleName ($moduleName)) {
+      if (!ModulesRegistry::validateModuleName ($moduleName)) {
         if ($suppressErrors) return false;
         $this->io->error ("Invalid module name $moduleName. Correct syntax: vendor-name/product-name");
       }
