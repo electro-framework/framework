@@ -3,11 +3,11 @@ namespace Electro\Kernel\Config;
 
 use Electro\Exceptions\ExceptionWithTitle;
 use Electro\Interfaces\DI\InjectorInterface;
-use Electro\Interfaces\Http\ApplicationMiddlewareAssemblerInterface;
+use Electro\Interfaces\Http\MiddlewareAssemblerInterface;
 use Electro\Interfaces\Migrations\MigrationsInterface;
 use Electro\Kernel\Services\ModulesInstaller;
 use Electro\Kernel\Services\ModulesRegistry;
-use Electro\WebApplication\ApplicationMiddlewareAssembler;
+use Electro\WebApplication\DefaultMiddlewareAssembler;
 
 class KernelModule
 {
@@ -37,7 +37,7 @@ class KernelModule
         ':migrationsAPIFactory' => $injector->makeFactory (MigrationsInterface::class),
       ])
       // This can be overridden later, usually by a private application module.
-      ->alias (ApplicationMiddlewareAssemblerInterface::class, ApplicationMiddlewareAssembler::class);
+      ->alias (MiddlewareAssemblerInterface::class, DefaultMiddlewareAssembler::class);
   }
 
 }

@@ -7,16 +7,16 @@ use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\ModelControllerInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
-use Electro\Kernel\Services\Bootstrapper;
+use Electro\Kernel\Services\Loader;
 use PhpKit\Connection;
 use PhpKit\ConnectionInterface;
 use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 class DatabaseModule implements ModuleInterface
 {
-  static function bootUp (Bootstrapper $bootstrapper, ModuleInfo $moduleInfo)
+  static function startUp (Loader $loader, ModuleInfo $moduleInfo)
   {
-    $bootstrapper->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
+    $loader->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
       $injector
         ->share (ConnectionInterface::class)
         ->delegate (ConnectionInterface::class, function ($debugConsole) {

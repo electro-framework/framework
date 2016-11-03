@@ -2,7 +2,7 @@
 namespace Electro\Routing\Config;
 
 use Electro\Interfaces\DI\InjectorInterface;
-use Electro\Interfaces\Http\ApplicationMiddlewareAssemblerInterface;
+use Electro\Interfaces\Http\MiddlewareAssemblerInterface;
 use Electro\Interfaces\Http\MiddlewareStackInterface;
 use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\RouterInterface;
@@ -10,7 +10,7 @@ use Electro\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
 use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
-use Electro\Kernel\Services\Bootstrapper;
+use Electro\Kernel\Services\Loader;
 use Electro\Routing\Lib\CurrentRequestMutator;
 use Electro\Routing\Middleware\RoutingMiddleware;
 use Electro\Routing\Services\Debug\MiddlewareStackWithLogging;
@@ -23,9 +23,9 @@ use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 class RoutingModule implements ModuleInterface
 {
-  static function bootUp (Bootstrapper $bootstrapper, ModuleInfo $moduleInfo)
+  static function startUp (Loader $loader, ModuleInfo $moduleInfo)
   {
-    $bootstrapper->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
+    $loader->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
       $injector->execute (function ($debugConsole) use ($injector) {
         $injector
           //
@@ -47,7 +47,7 @@ class RoutingModule implements ModuleInterface
           //
           ->share (ApplicationMiddlewareInterface::class)
           ->delegate (ApplicationMiddlewareInterface::class,
-            function (ApplicationMiddlewareAssemblerInterface $assembler, MiddlewareStackInterface $stack) {
+            function (MiddlewareAssemblerInterface $assembler, MiddlewareStackInterface $stack) {
               $assembler->assemble ($stack);
               return $stack;
             })

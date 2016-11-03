@@ -1,22 +1,11 @@
 #!/usr/bin/env php
 <?php
-use App\Init;
-use Electro\ConsoleApplication\ConsoleApplication;
-use Electro\DependencyInjection\Injector;
 use Electro\Profiles\ConsoleProfile;
 
-// Start the class autoloader.
-
-require "{$_SERVER['PWD']}/private/packages/autoload.php";
-
-// Setup the app.
-Init::init ();
-
 /*
- * Run the framework's Console subsystem, which then runs the terminal-based application.
- * You can customize the Dependency Injector the framework uses by changing the fist argument of
- * the factory method invocation below.
+ * We do not use __DIR__ here as it will fail if this script is symlinked.
+ * We assume the command is always run from the application's root directory.
  */
-$consoleApp = ConsoleApplication::make (new Injector, ConsoleProfile::class);
-$consoleApp->setupStandardIO ($_SERVER['argv']);
-$consoleApp->execute ();
+require "{$_SERVER['PWD']}/private/App.php";
+
+App::run (ConsoleProfile::class);

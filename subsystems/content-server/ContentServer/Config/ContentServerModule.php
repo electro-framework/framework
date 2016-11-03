@@ -7,7 +7,7 @@ use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
-use Electro\Kernel\Services\Bootstrapper;
+use Electro\Kernel\Services\Loader;
 use League\Glide\Responses\PsrResponseFactory;
 use League\Glide\Server;
 use League\Glide\ServerFactory;
@@ -16,9 +16,9 @@ use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 class ContentServerModule implements ModuleInterface
 {
-  static function bootUp (Bootstrapper $bootstrapper, ModuleInfo $moduleInfo)
+  static function startUp (Loader $loader, ModuleInfo $moduleInfo)
   {
-    $bootstrapper->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
+    $loader->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
       $injector
         ->delegate (Server::class,
           function (ResponseFactoryInterface $responseFactory, ContentServerSettings $settings) {

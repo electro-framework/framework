@@ -6,7 +6,7 @@ use Electro\Interfaces\ModuleInterface;
 use Electro\Interfaces\Views\ViewInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\Kernel\Lib\ModuleInfo;
-use Electro\Kernel\Services\Bootstrapper;
+use Electro\Kernel\Services\Loader;
 use Electro\ViewEngine\Lib\View;
 use Electro\ViewEngine\Services\AssetsService;
 use Electro\ViewEngine\Services\BlocksService;
@@ -15,9 +15,9 @@ use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 class ViewEngineModule implements ModuleInterface
 {
-  static function bootUp (Bootstrapper $bootstrapper, ModuleInfo $moduleInfo)
+  static function startUp (Loader $loader, ModuleInfo $moduleInfo)
   {
-    $bootstrapper->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
+    $loader->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
       $injector
         ->alias (ViewInterface::class, View::class)//note: this is not used by ViewService.
         ->alias (ViewServiceInterface::class, ViewService::class)

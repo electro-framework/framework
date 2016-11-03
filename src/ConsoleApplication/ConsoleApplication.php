@@ -5,9 +5,7 @@ use Electro\ConsoleApplication\Config\ConsoleSettings;
 use Electro\ConsoleApplication\Services\ConsoleIO;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Interfaces\DI\InjectorInterface;
-use Electro\Interfaces\ProfileInterface;
-use Electro\Kernel\Config\KernelSettings;
-use Electro\Kernel\Services\Bootstrapper;
+use Electro\Kernel\Services\Loader;
 use Robo\Config;
 use Robo\Result;
 use Robo\Runner;
@@ -19,6 +17,9 @@ use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ * Represents a console-based Electro application.
+ */
 class ConsoleApplication extends Runner
 {
   /**
@@ -38,6 +39,17 @@ class ConsoleApplication extends Runner
    */
   private $settings;
 
+  /**
+   * ConsoleApplication constructor.
+   *
+   * ><p>**Note:** you'll have to configure the IO channels (ex. calling {@see setupStandardIO}) before running the
+   * application.
+   *
+   * @param ConsoleIO         $io
+   * @param ConsoleSettings   $settings
+   * @param SymfonyConsole    $console
+   * @param InjectorInterface $injector
+   */
   function __construct (ConsoleIO $io, ConsoleSettings $settings, SymfonyConsole $console, InjectorInterface $injector)
   {
     $this->io       = $io;
@@ -70,60 +82,16 @@ class ConsoleApplication extends Runner
   }
 
   /**
-   * A factory for creating an instance of a console-based Electro application.
+   * Converts PHP < 7 errors to ErrorExceptions.
    *
-   * <p>Boots a Electro Application and creates a console command runner with a base configuration.
-   * > You'll have to configure the IO channels (ex. calling `setupStandardIO()` on the runner) before running the
-   * application.
-   *
-   * @param InjectorInterface $injector     Provide your favorite dependency injector.
-   * @param string            $profileClass The configuration profile's fully qualified class name.
-   * @return static
+   * @internal
+   * @param int    $code
+   * @param string $msg
+   * @param string $file
+   * @param int    $line
+   * @return bool
+   * @throws \ErrorException
    */
-  static function make (InjectorInterface $injector, $profileClass)
-  {
-    assert (is_string ($profileClass), '$profileClass must be string');
-
-    // Create and register the foundational framework services.
-
-    $injector
-      ->share ($injector)
-      ->alias (InjectorInterface::class, get_class ($injector))
-      ->alias (ProfileInterface::class, $profileClass);
-
-    /** @var KernelSettings $kernelSettings */
-    $kernelSettings = $injector
-      ->share (KernelSettings::class, 'app')
-      ->make (KernelSettings::class);
-
-    $kernelSettings->isConsoleBased = true;
-    $rootDir                        = normalizePath (getcwd ());
-    $kernelSettings->setRootDir ($rootDir);
-
-    // Setup debugging
-
-    $injector->defineParam ('debugMode', false);
-    $injector->defineParam ('debugConsole', false);
-
-    // Setup the console.
-
-    $console  = new SymfonyConsole ('Workman Task Runner');
-    $io       = new ConsoleIO;
-    $settings = new ConsoleSettings;
-
-    $injector
-      ->alias (ConsoleIOInterface::class, ConsoleIO::class)
-      ->share ($io)
-      ->share ($console)
-      ->share ($settings);
-
-    // Return a new application instance.
-
-    $consoleApp = new static ($io, $settings, $console, $injector);
-    $injector->share ($consoleApp);
-    return $consoleApp;
-  }
-
   public function errorHandler ($code = null, $msg = null, $file, $line)
   {
     if (error_reporting () === 0)
@@ -134,6 +102,7 @@ class ConsoleApplication extends Runner
   /**
    * Outputs the full stack trace with enhanced information.
    *
+   * @internal
    * @param \Exception|\Throwable $exception
    */
   function exceptionHandler ($exception)
@@ -182,8 +151,8 @@ class ConsoleApplication extends Runner
     $this->stopOnFail ();
     $this->customizeColors ();
 
-    /** @var Bootstrapper $boot */
-    $bootstrapper = $this->injector->make (Bootstrapper::class);
+    /** @var Loader $boot */
+    $bootstrapper = $this->injector->make (Loader::class);
     $bootstrapper->run ();
 
     // Merge tasks from all registered task classes

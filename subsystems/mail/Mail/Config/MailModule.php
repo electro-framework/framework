@@ -4,7 +4,7 @@ namespace Electro\Mail\Config;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
-use Electro\Kernel\Services\Bootstrapper;
+use Electro\Kernel\Services\Loader;
 use Swift_Mailer;
 use Swift_Plugins_LoggerPlugin;
 use Swift_Plugins_Loggers_ArrayLogger;
@@ -14,9 +14,9 @@ class MailModule implements ModuleInterface
 {
   const MAX_LOG_SIZE = 50;
 
-  static function bootUp (Bootstrapper $bootstrapper, ModuleInfo $moduleInfo)
+  static function startUp (Loader $loader, ModuleInfo $moduleInfo)
   {
-    $bootstrapper->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
+    $loader->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
       $injector
         ->delegate (Swift_Mailer::class, function () use ($injector) {
           $transport = new \Swift_SmtpTransport(

@@ -1,10 +1,12 @@
 <?php
 namespace Electro\WebApplication;
 
+use Dotenv\Dotenv;
+use Electro\Interfaces\BootstrapperInterface;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\ProfileInterface;
 use Electro\Kernel\Config\KernelSettings;
-use Electro\Kernel\Services\Bootstrapper;
+use Electro\Kernel\Services\Loader;
 use Electro\Kernel\Services\ModulesRegistry;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\DebugConsole\DebugConsoleSettings;
@@ -17,12 +19,8 @@ use const Electro\Kernel\Services\CONFIGURE;
  * - Sets up all framework services required for HTTP request handling.
  * - Transfers execution to the web-server subsystem.
  */
-class WebApplication
+class WebBootstrapper implements BootstrapperInterface
 {
-  /**
-   * @var KernelSettings
-   */
-  private $kernelSettings;
   /**
    * @var bool
    */
@@ -31,6 +29,10 @@ class WebApplication
    * @var InjectorInterface
    */
   private $injector;
+  /**
+   * @var KernelSettings
+   */
+  private $kernelSettings;
   /**
    * @var WebServer
    */
@@ -71,9 +73,14 @@ class WebApplication
    */
   function run ($rootDir, $urlDepth = 0)
   {
-    // On some web servers, the current directory may not be the application's root directory, so fix it.
-    chdir ($rootDir);
     $rootDir = normalizePath ($rootDir);
+
+    // Initialize some settings from environment variables
+
+    if (file_exists ("$rootDir/.env")) {
+      $dotenv = new Dotenv ($rootDir);
+      $dotenv->load ();
+    }
 
     /** @var KernelSettings $kernelSettings */
     $kernelSettings = $this->kernelSettings = $this->injector
@@ -83,7 +90,7 @@ class WebApplication
     $kernelSettings->isWebBased = true;
     $kernelSettings->setRootDir ($rootDir);
 
-    // Pre-assembly setup.
+    // Setup debugging
 
     $this->setupDebugging ($rootDir);
     // Temporarily set framework path mapping here for errors thrown during modules loading.
@@ -91,18 +98,21 @@ class WebApplication
 
     // Bootstrap the framework/application's modules.
 
-    /** @var Bootstrapper $boot */
-    $bootstrapper = $this->injector->make (Bootstrapper::class);
+    /** @var Loader $boot */
+    $bootstrapper = $this->injector->make (Loader::class);
+    // Initialize the web server at the beginning of the CONFIGURE phase.
     $bootstrapper->on (CONFIGURE, function (WebServer $webServer) use ($urlDepth) {
       $this->webServer = $webServer;
       $webServer->setup ($urlDepth);
     });
     $bootstrapper->run ();
 
-    // Post-assembly additional setup.
+    // Post-bootstrap additional setup.
 
     if ($this->debugMode)
       $this->setDebugPathsMap ($this->injector->make (ModulesRegistry::class));
+
+    // Run the framework's web server, which handles the HTTP request.
 
     $this->webServer->run ();
   }

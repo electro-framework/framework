@@ -8,7 +8,7 @@ use Electro\Http\Middleware\CompressionMiddleware;
 use Electro\Http\Middleware\CsrfMiddleware;
 use Electro\Http\Middleware\URLNotFoundMiddleware;
 use Electro\Http\Middleware\WelcomeMiddleware;
-use Electro\Interfaces\Http\ApplicationMiddlewareAssemblerInterface;
+use Electro\Interfaces\Http\MiddlewareAssemblerInterface;
 use Electro\Interfaces\Http\MiddlewareStackInterface;
 use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Electro\Localization\Middleware\LanguageMiddleware;
@@ -16,7 +16,7 @@ use Electro\Localization\Middleware\TranslationMiddleware;
 use Electro\Routing\Middleware\PermalinksMiddleware;
 use Electro\Sessions\Middleware\SessionMiddleware;
 
-class ApplicationMiddlewareAssembler implements ApplicationMiddlewareAssemblerInterface
+class DefaultMiddlewareAssembler implements MiddlewareAssemblerInterface
 {
   /** @var bool */
   private $debugConsole;
