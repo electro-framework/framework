@@ -1,8 +1,6 @@
 <?php
 namespace Electro\Http\Config;
 
-use Electro\Core\Assembly\ModuleInfo;
-use Electro\Core\Assembly\Services\Bootstrapper;
 use Electro\Http\Services\Redirection;
 use Electro\Http\Services\ResponseFactory;
 use Electro\Http\Services\ResponseSender;
@@ -11,11 +9,13 @@ use Electro\Interfaces\Http\RedirectionInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
 use Electro\Interfaces\Http\ResponseSenderInterface;
 use Electro\Interfaces\ModuleInterface;
+use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Kernel\Services\Bootstrapper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest;
-use const Electro\Core\Assembly\Services\REGISTER_SERVICES;
+use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 /**
  * ### Notes:

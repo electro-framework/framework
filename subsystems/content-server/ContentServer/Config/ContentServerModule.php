@@ -2,17 +2,17 @@
 namespace Electro\ContentServer\Config;
 
 use Electro\ContentServer\Services\ContentRepository;
-use Electro\Core\Assembly\ModuleInfo;
-use Electro\Core\Assembly\Services\Bootstrapper;
 use Electro\Interfaces\ContentRepositoryInterface;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
 use Electro\Interfaces\ModuleInterface;
+use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Kernel\Services\Bootstrapper;
 use League\Glide\Responses\PsrResponseFactory;
 use League\Glide\Server;
 use League\Glide\ServerFactory;
 use League\Glide\Urls\UrlBuilderFactory;
-use const Electro\Core\Assembly\Services\REGISTER_SERVICES;
+use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 class ContentServerModule implements ModuleInterface
 {

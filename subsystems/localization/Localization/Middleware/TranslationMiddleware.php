@@ -1,11 +1,11 @@
 <?php
 namespace Electro\Localization\Middleware;
 
-use Electro\Application;
 use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Exceptions\FlashType;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
+use Electro\Kernel\Config\KernelSettings;
 use Electro\Localization\Config\LocalizationSettings;
 use Electro\Localization\Services\Locale;
 use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
@@ -26,9 +26,9 @@ class TranslationMiddleware implements RequestHandlerInterface
   protected static $translation = [];
 
   /**
-   * @var Application
+   * @var KernelSettings
    */
-  private $app;
+  private $kernelSettings;
   /**
    * @var Locale
    */
@@ -42,13 +42,13 @@ class TranslationMiddleware implements RequestHandlerInterface
    */
   private $settings;
 
-  function __construct (Application $app, Locale $locale, ResponseFactoryInterface $responseFactory,
+  function __construct (KernelSettings $kernelSettings, Locale $locale, ResponseFactoryInterface $responseFactory,
                         LocalizationSettings $settings)
   {
-    $this->app             = $app;
+    $this->kernelSettings  = $kernelSettings;
     $this->locale          = $locale;
     $this->responseFactory = $responseFactory;
-    $this->settings = $settings;
+    $this->settings        = $settings;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)

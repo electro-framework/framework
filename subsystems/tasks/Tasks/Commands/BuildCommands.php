@@ -1,15 +1,14 @@
 <?php
 namespace Electro\Tasks\Commands;
 
-use Robo\Task\Bower;
-use Robo\Task\FileSystem\CleanDir;
-use Electro\Application;
 use Electro\Interfaces\ConsoleIOInterface;
+use Electro\Kernel\Config\KernelSettings;
+use Robo\Task\FileSystem\CleanDir;
 
 /**
  * Implements the Electro Task Runner's pre-set build commands.
  *
- * @property Application        $app
+ * @property KernelSettings     $app
  * @property ConsoleIOInterface $io
  */
 trait BuildCommands
@@ -31,9 +30,9 @@ trait BuildCommands
 //      foreach (ModulesLoader::get ()->modules () as $module) {
 //        $path = "$module->path/bower.json";
 //        if (file_exists ($path))
-//          copy ($path, $this->app->baseDirectory . '/bower.json');
+//          copy ($path, $this->kernelSettings->baseDirectory . '/bower.json');
 //      }
-//      (new Bower\Update())->dir ($this->app->baseDirectory)->run ();
+//      (new Bower\Update())->dir ($this->kernelSettings->baseDirectory)->run ();
     }
   }
 

@@ -1,12 +1,12 @@
 <?php
 namespace Electro\Authentication\Middleware;
 
-use Electro\Application;
 use Electro\Authentication\Config\AuthenticationSettings;
 use Electro\Authentication\Exceptions\AuthenticationException;
 use Electro\Interfaces\Http\RedirectionInterface;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\SessionInterface;
+use Electro\Kernel\Config\KernelSettings;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -15,7 +15,7 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class AuthenticationMiddleware implements RequestHandlerInterface
 {
-  private $app;
+  private $kernelSettings;
   /**
    * @var RedirectionInterface
    */
@@ -26,13 +26,13 @@ class AuthenticationMiddleware implements RequestHandlerInterface
    */
   private $settings;
 
-  function __construct (Application $app, SessionInterface $session, RedirectionInterface $redirection,
+  function __construct (KernelSettings $kernelSettings, SessionInterface $session, RedirectionInterface $redirection,
                         AuthenticationSettings $settings)
   {
-    $this->session     = $session;
-    $this->app         = $app;
-    $this->redirection = $redirection;
-    $this->settings    = $settings;
+    $this->session        = $session;
+    $this->kernelSettings = $kernelSettings;
+    $this->redirection    = $redirection;
+    $this->settings       = $settings;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)

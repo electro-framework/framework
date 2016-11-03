@@ -1,13 +1,13 @@
 <?php
 namespace Electro\Tasks\Commands;
 
-use Electro\Application;
-use Electro\Core\Assembly\ModuleInfo;
-use Electro\Core\Assembly\Services\ModulesInstaller;
-use Electro\Core\Assembly\Services\ModulesRegistry;
-use Electro\Core\ConsoleApplication\Lib\ModulesUtil;
+use Electro\ConsoleApplication\Lib\ModulesUtil;
 use Electro\Exceptions\HttpException;
 use Electro\Interfaces\ConsoleIOInterface;
+use Electro\Kernel\Config\KernelSettings;
+use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Kernel\Services\ModulesInstaller;
+use Electro\Kernel\Services\ModulesRegistry;
 use Electro\Lib\ComposerConfigHandler;
 use Electro\Lib\PackagistAPI;
 use Electro\Plugins\IlluminateDatabase\Config\MigrationsSettings;
@@ -26,7 +26,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * Implements the Electro Task Runner's pre-set build commands.
  *
- * @property Application        $app
+ * @property KernelSettings     $kernelSettings
  * @property TasksSettings      $settings
  * @property MigrationsSettings $migrationsSettings
  * @property ConsoleIOInterface $io
@@ -103,7 +103,7 @@ trait ModuleCommands
     }
     $___PSR4_NAMESPACE___ = str_replace ('\\', '\\\\', "$___NAMESPACE___\\");
 
-    $path = "{$this->app->modulesPath}/$___MODULE___";
+    $path = "{$this->kernelSettings->modulesPath}/$___MODULE___";
     (new CopyDir (["{$this->settings->scaffoldsPath()}/module" => $path]))->run ();
     $this->fs->rename ("$path/src/Config/___CLASS___.php", "$path/src/Config/$___CLASS___.php")->run ();
 
@@ -412,7 +412,7 @@ trait ModuleCommands
 
     // Clone the repo.
 
-    $path = "{$this->app->modulesPath}/$moduleName";
+    $path = "{$this->kernelSettings->modulesPath}/$moduleName";
     (new GitStack)->cloneRepo ($moduleUrl, $path)->printed (false)->run ();
 
     // Remove VCS history
@@ -455,7 +455,7 @@ trait ModuleCommands
     // Unregister the module now, otherwise a class not found error will be displayed when moduleRefresh is called.
     $this->modulesRegistry->unregisterModule ($moduleName) or exit (1);
 
-    $path = "{$this->app->modulesPath}/$moduleName";
+    $path = "{$this->kernelSettings->modulesPath}/$moduleName";
     $this->removeModuleDirectory ($path);
 
     // Uninstall the module's dependencies and unregister its namespaces.

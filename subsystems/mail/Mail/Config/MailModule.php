@@ -1,14 +1,14 @@
 <?php
 namespace Electro\Mail\Config;
 
-use Electro\Core\Assembly\ModuleInfo;
-use Electro\Core\Assembly\Services\Bootstrapper;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\ModuleInterface;
+use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Kernel\Services\Bootstrapper;
 use Swift_Mailer;
 use Swift_Plugins_LoggerPlugin;
 use Swift_Plugins_Loggers_ArrayLogger;
-use const Electro\Core\Assembly\Services\REGISTER_SERVICES;
+use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 class MailModule implements ModuleInterface
 {

@@ -1,16 +1,16 @@
 <?php
 namespace Electro\Navigation\Config;
 
-use Electro\Core\Assembly\ModuleInfo;
-use Electro\Core\Assembly\Services\Bootstrapper;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Interfaces\Navigation\NavigationInterface;
 use Electro\Interfaces\Navigation\NavigationLinkInterface;
+use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Kernel\Services\Bootstrapper;
 use Electro\Navigation\Lib\NavigationLink;
 use Electro\Navigation\Services\Navigation;
-use const Electro\Core\Assembly\Services\RECONFIGURE;
-use const Electro\Core\Assembly\Services\REGISTER_SERVICES;
+use const Electro\Kernel\Services\RECONFIGURE;
+use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 class NavigationModule implements ModuleInterface
 {

@@ -1,26 +1,22 @@
 <?php
 namespace Electro\Debugging\Middleware;
 
-use PhpKit\WebConsole\DebugConsole\DebugConsole;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Electro\Application;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Electro\Interfaces\Navigation\NavigationInterface;
 use Electro\Interfaces\SessionInterface;
+use Electro\Kernel\Config\KernelSettings;
 use Electro\Routing\Services\RoutingLogger;
+use PhpKit\WebConsole\DebugConsole\DebugConsole;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  *
  */
 class WebConsoleMiddleware implements RequestHandlerInterface
 {
-  /**
-   * @var Application
-   */
-  private $app;
   /**
    * @var bool
    */
@@ -29,19 +25,23 @@ class WebConsoleMiddleware implements RequestHandlerInterface
    * @var InjectorInterface
    */
   private $injector;
+  /**
+   * @var KernelSettings
+   */
+  private $kernelSettings;
 
   /**
    * WebConsoleMiddleware constructor.
    *
-   * @param Application       $app
+   * @param KernelSettings    $kernelSettings
    * @param InjectorInterface $injector
    * @param bool              $debugConsole
    */
-  function __construct (Application $app, InjectorInterface $injector, $debugConsole)
+  function __construct (KernelSettings $kernelSettings, InjectorInterface $injector, $debugConsole)
   {
-    $this->app          = $app;
-    $this->injector     = $injector;
-    $this->debugConsole = $debugConsole;
+    $this->kernelSettings = $kernelSettings;
+    $this->injector       = $injector;
+    $this->debugConsole   = $debugConsole;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -119,13 +119,14 @@ class WebConsoleMiddleware implements RequestHandlerInterface
           return true;
         }, $navigation);
       }
-      catch (\Exception $e) {}
+      catch (\Exception $e) {
+      }
     }
 
     //------------------
     // Config. panel
     //------------------
-    DebugConsole::logger ('config')->inspect ($this->app);
+    DebugConsole::logger ('config')->inspect ($this->kernelSettings);
 
     //------------------
     // Session panel

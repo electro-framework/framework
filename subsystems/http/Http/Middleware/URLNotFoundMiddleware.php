@@ -1,22 +1,22 @@
 <?php
 namespace Electro\Http\Middleware;
 
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Electro\Application;
 use Electro\Http\Lib\Http;
 use Electro\Interfaces\Http\RequestHandlerInterface;
+use Electro\Kernel\Config\KernelSettings;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * A middleware that generates a 404 Not Found response.
  */
 class URLNotFoundMiddleware implements RequestHandlerInterface
 {
-  private $app;
+  private $kernelSettings;
 
-  function __construct (Application $app)
+  function __construct (KernelSettings $app)
   {
-    $this->app = $app;
+    $this->kernelSettings = $app;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)

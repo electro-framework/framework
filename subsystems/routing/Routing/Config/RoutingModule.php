@@ -1,9 +1,6 @@
 <?php
 namespace Electro\Routing\Config;
 
-use Electro\Core\Assembly\ModuleInfo;
-use Electro\Core\Assembly\Services\Bootstrapper;
-use const Electro\Core\Assembly\Services\REGISTER_SERVICES;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\ApplicationMiddlewareAssemblerInterface;
 use Electro\Interfaces\Http\MiddlewareStackInterface;
@@ -12,6 +9,8 @@ use Electro\Interfaces\Http\RouterInterface;
 use Electro\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
 use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Electro\Interfaces\ModuleInterface;
+use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Kernel\Services\Bootstrapper;
 use Electro\Routing\Lib\CurrentRequestMutator;
 use Electro\Routing\Middleware\RoutingMiddleware;
 use Electro\Routing\Services\Debug\MiddlewareStackWithLogging;
@@ -20,6 +19,7 @@ use Electro\Routing\Services\MiddlewareStack;
 use Electro\Routing\Services\RouteMatcher;
 use Electro\Routing\Services\Router;
 use Electro\Routing\Services\RoutingLogger;
+use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 class RoutingModule implements ModuleInterface
 {

@@ -1,9 +1,9 @@
 <?php
 namespace Electro\ViewEngine\Config;
 
-use Electro\Application;
-use Electro\Core\Assembly\ModuleInfo;
 use Electro\Interfaces\AssignableInterface;
+use Electro\Kernel\Config\KernelSettings;
+use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Traits\ConfigurationTrait;
 
 /**
@@ -16,9 +16,9 @@ class ViewEngineSettings implements AssignableInterface
   use ConfigurationTrait;
 
   /**
-   * @var Application
+   * @var KernelSettings
    */
-  private $app;
+  private $kernelSettings;
   /**
    * @var string
    */
@@ -28,9 +28,9 @@ class ViewEngineSettings implements AssignableInterface
    */
   private $viewsDirectories = [];
 
-  public function __construct (Application $app)
+  public function __construct (KernelSettings $kernelSettings)
   {
-    $this->app = $app;
+    $this->kernelSettings = $kernelSettings;
   }
 
   /**
@@ -52,7 +52,7 @@ class ViewEngineSettings implements AssignableInterface
    */
   function registerViews (ModuleInfo $moduleInfo)
   {
-    array_unshift ($this->viewsDirectories, "{$this->app->baseDirectory}/$moduleInfo->path/$this->moduleViewsPath");
+    array_unshift ($this->viewsDirectories, "{$this->kernelSettings->baseDirectory}/$moduleInfo->path/$this->moduleViewsPath");
     return $this;
   }
 

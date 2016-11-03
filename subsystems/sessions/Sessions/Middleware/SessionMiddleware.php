@@ -1,17 +1,17 @@
 <?php
 namespace Electro\Sessions\Middleware;
 
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Electro\Application;
 use Electro\Exceptions\FlashMessageException;
 use Electro\Exceptions\FlashType;
 use Electro\Interfaces\AssignableInterface;
 use Electro\Interfaces\Http\RedirectionInterface;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\SessionInterface;
+use Electro\Kernel\Config\KernelSettings;
 use Electro\ViewEngine\Services\AssetsService;
 use Electro\ViewEngine\Services\BlocksService;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  *
@@ -24,37 +24,36 @@ class SessionMiddleware implements RequestHandlerInterface
     FlashType::WARNING => 'warning',
     FlashType::SUCCESS => 'success',
   ];
-
-  /** @var Application */
-  private $app;
   /** @var \Electro\ViewEngine\Services\AssetsService */
   private $assetsService;
   /** @var BlocksService */
   private $blocksService;
+  /** @var KernelSettings */
+  private $kernelSettings;
   /** @var RedirectionInterface */
   private $redirection;
   /** @var SessionInterface */
   private $session;
 
-  function __construct (SessionInterface $session, Application $app, RedirectionInterface $redirection,
+  function __construct (SessionInterface $session, KernelSettings $kernelSettings, RedirectionInterface $redirection,
                         BlocksService $blocksService, AssetsService $assetsService)
   {
-    $this->app           = $app;
-    $this->redirection   = $redirection;
-    $this->session       = $session;
-    $this->blocksService = $blocksService;
-    $this->assetsService = $assetsService;
+    $this->kernelSettings = $kernelSettings;
+    $this->redirection    = $redirection;
+    $this->session        = $session;
+    $this->blocksService  = $blocksService;
+    $this->assetsService  = $assetsService;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $app     = $this->app;
-    $session = $this->session;
+    $settings = $this->kernelSettings;
+    $session  = $this->session;
     $this->redirection->setRequest ($request);
 
     // Start the sessions engine.
 
-    session_name ($app->name);
+    session_name ($settings->name);
     $name = session_name ();
     session_start ();
 
@@ -63,7 +62,8 @@ class SessionMiddleware implements RequestHandlerInterface
     /** @var AssignableInterface $savedSession */
     if (($savedSession = get ($_SESSION, '#data'))
         // make sure it's not an incomplete object loaded from a no longer existing class
-        && $savedSession instanceof AssignableInterface)
+        && $savedSession instanceof AssignableInterface
+    )
       $this->session->import ($savedSession->export ());
 
     // (Re)initialize some session settings.

@@ -1,24 +1,14 @@
 <?php
 namespace Electro\ErrorHandling\Services;
 
-use Electro\Application;
-use Electro\ErrorHandling\Config\ErrorHandlingSettings;
-use Electro\Exceptions\HttpException;
-use Electro\Http\Lib\Http;
-use Electro\Interfaces\DI\InjectorInterface;
-use Electro\Interfaces\Http\ErrorRendererInterface;
-use Electro\Interfaces\Http\ResponseFactoryInterface;
-use Electro\Interfaces\RenderableInterface;
-use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
+use Electro\ErrorHandling\Config\ErrorHandlingSettings;use Electro\Exceptions\HttpException;use Electro\Http\Lib\Http;use Electro\Interfaces\DI\InjectorInterface;use Electro\Interfaces\Http\ErrorRendererInterface;use Electro\Interfaces\Http\ResponseFactoryInterface;use Electro\Interfaces\RenderableInterface;use Electro\Kernel\Config\KernelSettings;use PhpKit\WebConsole\ErrorConsole\ErrorConsole;use Psr\Http\Message\ResponseInterface;use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Renders an error HTTP response into a format supported by the client.
  */
 class ErrorRenderer implements ErrorRendererInterface
 {
-protected $app;/**
+protected $kernelSettings;/**
  * @var bool
  */
 private $debugMode;
@@ -30,15 +20,15 @@ private $settings;
 /**
  * ErrorRenderer constructor.
  *
- * @param Application              $app
+ * @param KernelSettings           $kernelSettings
  * @param ResponseFactoryInterface $responseFactory
  * @param ErrorHandlingSettings    $settings
  * @param InjectorInterface        $injector
  * @param bool                     $debugMode
- */function __construct (Application $app, ResponseFactoryInterface $responseFactory, ErrorHandlingSettings $settings,
+ */function __construct (KernelSettings $kernelSettings, ResponseFactoryInterface $responseFactory, ErrorHandlingSettings $settings,
                          InjectorInterface $injector, $debugMode)
 {
-  $this->app             = $app;
+  $this->kernelSettings  = $kernelSettings;
   $this->responseFactory = $responseFactory;
   $this->settings        = $settings;
   $this->injector        = $injector;
@@ -210,7 +200,7 @@ protected function htmlTemplate ($status, $title, $message)
       <div class=row1>
         <header>
           <h5 style='float:left'>HTTP <?= $status ?> &nbsp;</h5>
-          <h5 style='float:right'>&nbsp; <?= $this->app->appName ?></h5>
+          <h5 style='float:right'>&nbsp; <?= $this->kernelSettings->appName ?></h5>
         </header>
       </div>
       <div class=row2>

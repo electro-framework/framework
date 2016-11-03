@@ -1,7 +1,7 @@
 <?php
 namespace Electro\Routing\Lib;
 
-use Electro\Core\DependencyInjection\MutatorTrait;
+use Electro\DependencyInjection\MutatorTrait;
 
 class CurrentRequestMutator
 {

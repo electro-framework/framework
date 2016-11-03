@@ -1,9 +1,9 @@
 <?php
 namespace Electro\Debugging\Config;
 
-use Electro\Core\Assembly\ModuleInfo;
-use Electro\Core\Assembly\Services\Bootstrapper;
 use Electro\Interfaces\ModuleInterface;
+use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Kernel\Services\Bootstrapper;
 use Monolog\Logger;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\Loggers\ConsoleLogger;
@@ -11,7 +11,7 @@ use PhpKit\WebConsole\Loggers\Handlers\WebConsoleMonologHandler;
 use PhpKit\WebConsole\Loggers\Specialized\PSR7RequestLogger;
 use PhpKit\WebConsole\Loggers\Specialized\PSR7ResponseLogger;
 use Psr\Log\LoggerInterface;
-use const Electro\Core\Assembly\Services\CONFIGURE;
+use const Electro\Kernel\Services\CONFIGURE;
 
 class DebuggingModule implements ModuleInterface
 {

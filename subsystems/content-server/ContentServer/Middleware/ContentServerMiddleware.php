@@ -1,11 +1,11 @@
 <?php
 namespace Electro\ContentServer\Middleware;
 
-use Electro\Application;
 use Electro\ContentServer\Config\ContentServerSettings;
 use Electro\ContentServer\Lib\FileUtil;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
+use Electro\Kernel\Config\KernelSettings;
 use League\Glide\Server;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -16,7 +16,7 @@ use Psr\Http\Message\ServerRequestInterface;
 class ContentServerMiddleware implements RequestHandlerInterface
 {
   /**
-   * @var Application
+   * @var KernelSettings
    */
   private $app;
   /**

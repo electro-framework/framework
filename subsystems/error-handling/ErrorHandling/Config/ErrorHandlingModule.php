@@ -1,13 +1,13 @@
 <?php
 namespace Electro\ErrorHandling\Config;
 
-use Electro\Core\Assembly\ModuleInfo;
-use Electro\Core\Assembly\Services\Bootstrapper;
 use Electro\ErrorHandling\Services\ErrorRenderer;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\ErrorRendererInterface;
 use Electro\Interfaces\ModuleInterface;
-use const Electro\Core\Assembly\Services\REGISTER_SERVICES;
+use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Kernel\Services\Bootstrapper;
+use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 class ErrorHandlingModule implements ModuleInterface
 {

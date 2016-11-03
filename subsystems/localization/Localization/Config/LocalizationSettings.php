@@ -1,8 +1,8 @@
 <?php
 namespace Electro\Localization\Config;
 
-use Electro\Core\Assembly\ModuleInfo;
 use Electro\Interfaces\AssignableInterface;
+use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Traits\ConfigurationTrait;
 
 /**

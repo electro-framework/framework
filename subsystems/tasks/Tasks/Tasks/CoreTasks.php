@@ -1,12 +1,12 @@
 <?php
 namespace Electro\Tasks\Tasks;
 
-use Electro\Application;
-use Electro\Core\Assembly\Services\ModulesInstaller;
-use Electro\Core\Assembly\Services\ModulesRegistry;
-use Electro\Core\ConsoleApplication\ConsoleApplication;
-use Electro\Core\ConsoleApplication\Lib\ModulesUtil;
-use Electro\Core\ConsoleApplication\Services\ConsoleIO;
+use Electro\ConsoleApplication\ConsoleApplication;
+use Electro\ConsoleApplication\Lib\ModulesUtil;
+use Electro\ConsoleApplication\Services\ConsoleIO;
+use Electro\Kernel\Config\KernelSettings;
+use Electro\Kernel\Services\ModulesInstaller;
+use Electro\Kernel\Services\ModulesRegistry;
 use Electro\Tasks\Commands\InitCommands;
 use Electro\Tasks\Commands\ModuleCommands;
 use Electro\Tasks\Commands\ServerCommands;
@@ -24,10 +24,6 @@ class CoreTasks
   use ServerCommands;
 
   /**
-   * @var Application
-   */
-  private $app;
-  /**
    * @var ConsoleApplication
    */
   private $consoleApp;
@@ -39,6 +35,10 @@ class CoreTasks
    * @var ConsoleIO
    */
   private $io;
+  /**
+   * @var KernelSettings
+   */
+  private $kernelSettings;
   /**
    * @var ModulesInstaller
    */
@@ -56,12 +56,13 @@ class CoreTasks
    */
   private $settings;
 
-  function __construct (ConsoleIO $io, Application $app, ModulesUtil $modulesUtil, ModulesRegistry $registry,
-                        ModulesInstaller $installer, TasksSettings $settings, ConsoleApplication $consoleApp)
+  function __construct (ConsoleIO $io, KernelSettings $kernelSettings, ModulesUtil $modulesUtil,
+                        ModulesRegistry $registry, ModulesInstaller $installer, TasksSettings $settings,
+                        ConsoleApplication $consoleApp)
   {
     $this->io               = $io;
     $this->modulesUtil      = $modulesUtil;
-    $this->app              = $app;
+    $this->kernelSettings   = $kernelSettings;
     $this->modulesRegistry  = $registry;
     $this->modulesInstaller = $installer;
     $this->settings         = $settings;

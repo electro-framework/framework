@@ -1,20 +1,20 @@
 <?php
 namespace Electro\Tasks\Commands;
 
+use Electro\ConsoleApplication\ConsoleApplication;
+use Electro\Interfaces\ConsoleIOInterface;
+use Electro\Kernel\Config\KernelSettings;
+use Electro\Tasks\Config\TasksSettings;
+use Electro\Tasks\Shared\ChmodEx;
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
 use Robo\Task\FileSystem\FilesystemStack;
-use Electro\Application;
-use Electro\Core\ConsoleApplication\ConsoleApplication;
-use Electro\Interfaces\ConsoleIOInterface;
-use Electro\Tasks\Config\TasksSettings;
-use Electro\Tasks\Shared\ChmodEx;
 
 /**
  * Implements the Electro Task Runner's pre-set init:xxx commands.
  *
- * @property Application        $app
+ * @property KernelSettings     $kernelSettings
  * @property TasksSettings      $settings
  * @property ConsoleApplication $consoleApp
  * @property ConsoleIOInterface $io
@@ -35,7 +35,7 @@ trait InitCommands
   function init ($opts = ['overwrite|o' => false])
   {
     $io      = $this->io;
-    $envPath = "{$this->app->baseDirectory}/.env";
+    $envPath = "{$this->kernelSettings->baseDirectory}/.env";
     $io->clear ()
        ->banner ("Electro Configuration Wizard");
     $overwrite = get ($opts, 'overwrite');
@@ -47,7 +47,7 @@ trait InitCommands
       $this->initStorage ();
       $this->initConfig (['overwrite' => true]);
     }
-    $demoPath = "{$this->app->modulesPath}/demo-company";
+    $demoPath = "{$this->kernelSettings->modulesPath}/demo-company";
     if (file_exists ($demoPath)) {
       if (!$io->nl ()->confirm ("Do you wish keep the demonstration web pages? [n]")) {
         /** @var ModuleCommands $this */
@@ -69,11 +69,11 @@ trait InitCommands
   function initConfig ($opts = ['overwrite|o' => false])
   {
     $io      = $this->io;
-    $envPath = "{$this->app->baseDirectory}/.env";
+    $envPath = "{$this->kernelSettings->baseDirectory}/.env";
     if (file_exists ($envPath) && !get ($opts, 'overwrite'))
       $io->error (".env file already exists");
 
-    $examplePath = "{$this->app->baseDirectory}/.env.example";
+    $examplePath = "{$this->kernelSettings->baseDirectory}/.env.example";
     if (file_exists ($examplePath)) {
       $this->fs->copy ($examplePath, $envPath, true)->run ();
       $io->nl ()
@@ -180,7 +180,7 @@ trait InitCommands
    */
   function initStorage ()
   {
-    $target = $this->app->storagePath;
+    $target = $this->kernelSettings->storagePath;
     if (file_exists ($target))
       (new DeleteDir ($target))->run ();
     (new CopyDir (["{$this->settings->scaffoldsPath()}/storage" => $target]))->run ();

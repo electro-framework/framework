@@ -1,13 +1,13 @@
 <?php
 namespace Electro\Sessions\Config;
 
-use Electro\Core\Assembly\ModuleInfo;
-use Electro\Core\Assembly\Services\Bootstrapper;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Interfaces\SessionInterface;
+use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Kernel\Services\Bootstrapper;
 use Electro\Sessions\Services\Session;
-use const Electro\Core\Assembly\Services\REGISTER_SERVICES;
+use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 class SessionsModule implements ModuleInterface
 {

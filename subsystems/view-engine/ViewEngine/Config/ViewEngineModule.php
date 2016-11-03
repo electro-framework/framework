@@ -1,17 +1,17 @@
 <?php
 namespace Electro\ViewEngine\Config;
 
-use Electro\Core\Assembly\ModuleInfo;
-use Electro\Core\Assembly\Services\Bootstrapper;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Interfaces\Views\ViewInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
+use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Kernel\Services\Bootstrapper;
 use Electro\ViewEngine\Lib\View;
 use Electro\ViewEngine\Services\AssetsService;
 use Electro\ViewEngine\Services\BlocksService;
 use Electro\ViewEngine\Services\ViewService;
-use const Electro\Core\Assembly\Services\REGISTER_SERVICES;
+use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 class ViewEngineModule implements ModuleInterface
 {

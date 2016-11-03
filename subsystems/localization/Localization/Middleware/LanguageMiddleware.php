@@ -1,14 +1,13 @@
 <?php
 namespace Electro\Localization\Middleware;
 
-use PhpKit\WebConsole\DebugConsole\DebugConsole;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
-use Electro\Application;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\SessionInterface;
 use Electro\Localization\Config\LocalizationSettings;
 use Electro\Localization\Services\Locale;
+use PhpKit\WebConsole\DebugConsole\DebugConsole;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  *
