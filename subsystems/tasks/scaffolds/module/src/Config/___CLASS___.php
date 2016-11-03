@@ -2,22 +2,19 @@
 namespace ___NAMESPACE___\Config;
 
 use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
+use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Lib\ModuleInfo;
-use Electro\Kernel\Services\Loader;
 use Electro\Navigation\Config\NavigationSettings;
 use Electro\Plugins\Matisse\Config\MatisseSettings;
 use Electro\ViewEngine\Config\ViewEngineSettings;
-use const Electro\Kernel\Services\CONFIGURE;
 
 class ___CLASS___ implements ModuleInterface
 {
-  static function startUp (Loader $loader, ModuleInfo $moduleInfo)
+  static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)
   {
-    $loader
-      //
-      ->on (CONFIGURE,
+    $kernel->onConfigure (
         function (MatisseSettings $matisseSettings, KernelSettings $app, ApplicationRouterInterface $router,
                   NavigationSettings $navigationSettings, ViewEngineSettings $viewEngineSettings)
         use ($moduleInfo) {

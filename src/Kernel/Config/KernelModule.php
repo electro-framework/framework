@@ -4,7 +4,9 @@ namespace Electro\Kernel\Config;
 use Electro\Exceptions\ExceptionWithTitle;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\MiddlewareAssemblerInterface;
+use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\Migrations\MigrationsInterface;
+use Electro\Kernel\Services\Kernel;
 use Electro\Kernel\Services\ModulesInstaller;
 use Electro\Kernel\Services\ModulesRegistry;
 use Electro\WebApplication\DefaultMiddlewareAssembler;
@@ -16,6 +18,7 @@ class KernelModule
   static function register (InjectorInterface $injector)
   {
     $injector
+      ->alias (KernelInterface::class, Kernel::class)
       ->share (ModulesRegistry::class)
       ->prepare (ModulesRegistry::class, function (ModulesRegistry $registry) use ($injector) {
         if (!$registry->load ()) {

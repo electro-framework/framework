@@ -5,7 +5,10 @@ use Electro\ConsoleApplication\Config\ConsoleSettings;
 use Electro\ConsoleApplication\Services\ConsoleIO;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Interfaces\DI\InjectorInterface;
-use Electro\Kernel\Services\Loader;
+use Electro\Interfaces\KernelInterface;
+use Electro\Kernel\Config\KernelModule;
+use Electro\Kernel\Services\Kernel;
+use Electro\Logging\Config\LoggingModule;
 use Robo\Config;
 use Robo\Result;
 use Robo\Runner;
@@ -151,9 +154,23 @@ class ConsoleApplication extends Runner
     $this->stopOnFail ();
     $this->customizeColors ();
 
-    /** @var Loader $boot */
-    $bootstrapper = $this->injector->make (Loader::class);
-    $bootstrapper->run ();
+    /*
+     * Boot up the core framework modules.
+     *
+     * This occurs before the framework's main startup sequence.
+     * Unlike the later, which is managed automatically, this pre-startup process is manually defined and consists of
+     * just a few core services that must be setup before any other module loads.
+     */
+    $this->injector->execute ([LoggingModule::class, 'register']);
+    $this->injector->execute ([KernelModule::class, 'register']);
+
+    // Bootstrap the framework/application's modules.
+
+    /** @var KernelInterface $kernel */
+    $kernel = $this->injector->make (KernelInterface::class);
+
+    // Start up all modules.
+    $kernel->run ();
 
     // Merge tasks from all registered task classes
 

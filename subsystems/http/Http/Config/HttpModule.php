@@ -8,9 +8,9 @@ use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RedirectionInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
 use Electro\Interfaces\Http\ResponseSenderInterface;
+use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
-use Electro\Kernel\Services\Loader;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response;
@@ -26,16 +26,17 @@ use Zend\Diactoros\ServerRequest;
  */
 class HttpModule implements ModuleInterface
 {
-  static function startUp (Loader $loader, ModuleInfo $moduleInfo)
+  static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)
   {
-    $loader->onRegisterServices (function (InjectorInterface $injector) {
-      $injector
-        ->alias (RedirectionInterface::class, Redirection::class)
-        ->alias (ResponseFactoryInterface::class, ResponseFactory::class)
-        ->alias (ResponseSenderInterface::class, ResponseSender::class)
-        ->alias (ServerRequestInterface::class, ServerRequest::class)
-        ->alias (ResponseInterface::class, Response::class);
-    });
+    $kernel->onRegisterServices (
+      function (InjectorInterface $injector) {
+        $injector
+          ->alias (RedirectionInterface::class, Redirection::class)
+          ->alias (ResponseFactoryInterface::class, ResponseFactory::class)
+          ->alias (ResponseSenderInterface::class, ResponseSender::class)
+          ->alias (ServerRequestInterface::class, ServerRequest::class)
+          ->alias (ResponseInterface::class, Response::class);
+      });
   }
 
 }
