@@ -19,13 +19,12 @@ use Electro\Routing\Services\MiddlewareStack;
 use Electro\Routing\Services\RouteMatcher;
 use Electro\Routing\Services\Router;
 use Electro\Routing\Services\RoutingLogger;
-use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 class RoutingModule implements ModuleInterface
 {
   static function startUp (Loader $loader, ModuleInfo $moduleInfo)
   {
-    $loader->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
+    $loader->onRegisterServices (function (InjectorInterface $injector) {
       $injector->execute (function ($debugConsole) use ($injector) {
         $injector
           //

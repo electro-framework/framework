@@ -8,7 +8,6 @@ use Electro\Kernel\Services\Loader;
 use Swift_Mailer;
 use Swift_Plugins_LoggerPlugin;
 use Swift_Plugins_Loggers_ArrayLogger;
-use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 class MailModule implements ModuleInterface
 {
@@ -16,7 +15,7 @@ class MailModule implements ModuleInterface
 
   static function startUp (Loader $loader, ModuleInfo $moduleInfo)
   {
-    $loader->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
+    $loader->onRegisterServices (function (InjectorInterface $injector) {
       $injector
         ->delegate (Swift_Mailer::class, function () use ($injector) {
           $transport = new \Swift_SmtpTransport(

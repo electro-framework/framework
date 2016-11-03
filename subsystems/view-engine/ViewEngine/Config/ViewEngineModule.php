@@ -11,13 +11,12 @@ use Electro\ViewEngine\Lib\View;
 use Electro\ViewEngine\Services\AssetsService;
 use Electro\ViewEngine\Services\BlocksService;
 use Electro\ViewEngine\Services\ViewService;
-use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 class ViewEngineModule implements ModuleInterface
 {
   static function startUp (Loader $loader, ModuleInfo $moduleInfo)
   {
-    $loader->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
+    $loader->onRegisterServices (function (InjectorInterface $injector) {
       $injector
         ->alias (ViewInterface::class, View::class)//note: this is not used by ViewService.
         ->alias (ViewServiceInterface::class, ViewService::class)

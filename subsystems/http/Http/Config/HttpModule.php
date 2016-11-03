@@ -15,7 +15,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequest;
-use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 /**
  * ### Notes:
@@ -29,7 +28,7 @@ class HttpModule implements ModuleInterface
 {
   static function startUp (Loader $loader, ModuleInfo $moduleInfo)
   {
-    $loader->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
+    $loader->onRegisterServices (function (InjectorInterface $injector) {
       $injector
         ->alias (RedirectionInterface::class, Redirection::class)
         ->alias (ResponseFactoryInterface::class, ResponseFactory::class)

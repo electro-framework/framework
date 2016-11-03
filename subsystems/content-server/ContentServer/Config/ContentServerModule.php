@@ -12,13 +12,12 @@ use League\Glide\Responses\PsrResponseFactory;
 use League\Glide\Server;
 use League\Glide\ServerFactory;
 use League\Glide\Urls\UrlBuilderFactory;
-use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 class ContentServerModule implements ModuleInterface
 {
   static function startUp (Loader $loader, ModuleInfo $moduleInfo)
   {
-    $loader->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
+    $loader->onRegisterServices (function (InjectorInterface $injector) {
       $injector
         ->delegate (Server::class,
           function (ResponseFactoryInterface $responseFactory, ContentServerSettings $settings) {

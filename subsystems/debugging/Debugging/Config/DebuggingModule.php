@@ -11,13 +11,12 @@ use PhpKit\WebConsole\Loggers\Handlers\WebConsoleMonologHandler;
 use PhpKit\WebConsole\Loggers\Specialized\PSR7RequestLogger;
 use PhpKit\WebConsole\Loggers\Specialized\PSR7ResponseLogger;
 use Psr\Log\LoggerInterface;
-use const Electro\Kernel\Services\CONFIGURE;
 
 class DebuggingModule implements ModuleInterface
 {
   static function startUp (Loader $loader, ModuleInfo $moduleInfo)
   {
-    $loader->on (CONFIGURE, function (LoggerInterface $logger, $debugConsole) {
+    $loader->onConfigure (function (LoggerInterface $logger, $debugConsole) {
       if ($debugConsole) {
         DebugConsole::registerPanel ('request', new PSR7RequestLogger ('Request', 'fa fa-paper-plane'));
         DebugConsole::registerPanel ('response', new PSR7ResponseLogger ('Response', 'fa fa-file'));

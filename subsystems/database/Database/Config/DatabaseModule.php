@@ -10,13 +10,12 @@ use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Kernel\Services\Loader;
 use PhpKit\Connection;
 use PhpKit\ConnectionInterface;
-use const Electro\Kernel\Services\REGISTER_SERVICES;
 
 class DatabaseModule implements ModuleInterface
 {
   static function startUp (Loader $loader, ModuleInfo $moduleInfo)
   {
-    $loader->on (REGISTER_SERVICES, function (InjectorInterface $injector) {
+    $loader->onRegisterServices (function (InjectorInterface $injector) {
       $injector
         ->share (ConnectionInterface::class)
         ->delegate (ConnectionInterface::class, function ($debugConsole) {
