@@ -8,4 +8,4 @@ use Electro\Profiles\ConsoleProfile;
  */
 require "{$_SERVER['PWD']}/private/src/Bootloader.php";
 
-exit (App\Bootloader::make ()->boot (ConsoleProfile::class));
+exit (App\Bootloader::make ()->boot (new ConsoleProfile));

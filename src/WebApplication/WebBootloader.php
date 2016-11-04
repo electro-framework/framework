@@ -5,7 +5,6 @@ use Dotenv\Dotenv;
 use Electro\Interfaces\BootloaderInterface;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\KernelInterface;
-use Electro\Interfaces\ProfileInterface;
 use Electro\Kernel\Config\KernelModule;
 use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Services\ModulesRegistry;
@@ -39,17 +38,9 @@ class WebBootloader implements BootloaderInterface
    */
   private $webServer;
 
-  /**
-   * @param InjectorInterface $injector     Provide your favorite dependency injector.
-   * @param string            $profileClass The configuration profile's fully qualified class name.
-   */
-  function __construct (InjectorInterface $injector, $profileClass)
+  function __construct (InjectorInterface $injector)
   {
     $this->injector = $injector;
-    $injector
-      ->share ($injector)
-      ->alias (InjectorInterface::class, get_class ($injector))
-      ->alias (ProfileInterface::class, $profileClass);
   }
 
   function boot ($rootDir, $urlDepth = 0, callable $onStartUp = null)

@@ -1,25 +1,64 @@
 <?php
 namespace Electro\Profiles;
 
+use Electro\DependencyInjection\Injector;
 use Electro\Interfaces\ProfileInterface;
+use Electro\Kernel\Services\Kernel;
+use Electro\WebApplication\WebBootloader;
 
 /**
- * This is an abstract configuration profile for web applications.
+ * A configuration profile tailored for web applications.
  *
  * <p>When testing `$profile instanceof WebProfile`, you can check if a module is being used on a web application or
- * not, irrespective of the concrete profile being used. Every web profile is therefore free to select any features it
- * needs without inheriting anything from this base class.
+ * not, irrespective of the concrete profile being used, as every web profile should inherit from this base class.
  */
 abstract class WebProfile implements ProfileInterface
 {
+  public function getBootloaderClass ()
+  {
+    return WebBootloader::class;
+  }
+
   public function getExcludedModules ()
   {
     return [];
   }
 
+  public function getInjector ()
+  {
+    return new Injector;
+  }
+
+  public function getKernelClass ()
+  {
+    return Kernel::class;
+  }
+
   public function getName ()
   {
     return str_segmentsLast (static::class, '\\');
+  }
+
+  public function getSubsystems ()
+  {
+    return [
+      'authentication',
+      'authorization',
+      'caching',
+      'configuration',
+      'database',
+      'debugging',
+      'error-handling',
+      'content-server',
+      'http',
+      'localization',
+      'mail',
+      'navigation',
+      'routing',
+      'sessions',
+      'validation',
+      'view-engine',
+    ];
   }
 
 }
