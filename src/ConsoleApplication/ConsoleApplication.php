@@ -11,9 +11,11 @@ use Robo\Runner;
 use Robo\TaskInfo;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
+use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -59,6 +61,11 @@ class ConsoleApplication extends Runner
     $io->terminalSize ($console->getTerminalDimensions ());
   }
 
+  /**
+   * @internal
+   * @param mixed $arg
+   * @return string
+   */
   static public function formatErrorArg ($arg)
   {
     if (is_object ($arg))
@@ -169,6 +176,51 @@ class ConsoleApplication extends Runner
     $r      = $this->console->run ($this->prepareInput ($args), $out);
     $outStr = $out->fetch ();
     return $r;
+  }
+
+  /**
+   * Sets up the ConsoleApplication instance to runs the specified console command from within a Composer execution
+   * context.
+   *
+   * @see \App\Bootloader
+   *
+   * @param string                       $name Command name.
+   * @param string[]                     $args Command arguments.
+   * @param Composer\Script\PackageEvent $event
+   */
+  public function runCommand ($name, $args = [], $event = null)
+  {
+    $output = null;
+    if ($event) {
+      $io = $event->getIO ();
+
+      // Check for the presence of the -q|--quiet option.
+      $r = new \ReflectionProperty($io, 'input');
+      $r->setAccessible (true);
+      /** @var ArgvInput $input */
+      $input = $r->getValue ($io);
+      if ($input->getOption ('quiet'))
+        $output = new NullOutput;
+
+      else {
+        // DO NOT change the order of evaluation!
+        switch (true) {
+          case $io->isDebug ():
+            $verbose = ConsoleOutput::VERBOSITY_DEBUG;
+            break;
+          case $io->isVeryVerbose ():
+            $verbose = ConsoleOutput::VERBOSITY_VERY_VERBOSE;
+            break;
+          case $io->isVerbose ():
+            $verbose = ConsoleOutput::VERBOSITY_VERBOSE;
+            break;
+          default:
+            $verbose = ConsoleOutput::VERBOSITY_NORMAL;
+        }
+        $output = new ConsoleOutput($verbose, $io->isDecorated ());
+      }
+    }
+    $this->setupStandardIO (array_merge (['', $name], $args), $output);
   }
 
   /**

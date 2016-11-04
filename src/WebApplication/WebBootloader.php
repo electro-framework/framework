@@ -52,20 +52,6 @@ class WebBootloader implements BootloaderInterface
       ->alias (ProfileInterface::class, $profileClass);
   }
 
-  /**
-   * Last resort error handler.
-   * <p>It is only activated if an error occurs outside of the HTTP handling pipeline.
-   *
-   * @param \Exception|\Error $e
-   */
-  function exceptionHandler ($e)
-  {
-//    if ($this->logger)
-//      $this->logger->error ($e->getMessage (),
-//        ['stackTrace' => str_replace ("{$this->kernelSettings->baseDirectory}/", '', $e->getTraceAsString ())]);
-    DebugConsole::outputContent (true);
-  }
-
   function boot ($rootDir, $urlDepth = 0, callable $onStartUp = null)
   {
     $rootDir = normalizePath ($rootDir);
@@ -130,6 +116,20 @@ class WebBootloader implements BootloaderInterface
 
     $this->webServer->run ();
     return 0;
+  }
+
+  /**
+   * Last resort error handler.
+   * <p>It is only activated if an error occurs outside of the HTTP handling pipeline.
+   *
+   * @param \Exception|\Error $e
+   */
+  function exceptionHandler ($e)
+  {
+//    if ($this->logger)
+//      $this->logger->error ($e->getMessage (),
+//        ['stackTrace' => str_replace ("{$this->kernelSettings->baseDirectory}/", '', $e->getTraceAsString ())]);
+    DebugConsole::outputContent (true);
   }
 
   /**

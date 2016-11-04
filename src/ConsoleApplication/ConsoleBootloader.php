@@ -34,57 +34,6 @@ class ConsoleBootloader implements BootloaderInterface
       ->alias (ProfileInterface::class, $profileClass);
   }
 
-  /**
-   * Converts PHP < 7 errors to ErrorExceptions.
-   *
-   * @internal
-   * @param int    $code
-   * @param string $msg
-   * @param string $file
-   * @param int    $line
-   * @return bool
-   * @throws \ErrorException
-   */
-  public function errorHandler ($code = null, $msg = null, $file, $line)
-  {
-    if (error_reporting () === 0)
-      return true;
-    throw new \ErrorException ($msg, $code, 1, $file, $line);
-  }
-
-  /**
-   * Outputs the full stack trace with enhanced information.
-   *
-   * @internal
-   * @param \Exception|\Throwable $exception
-   */
-  function exceptionHandler ($exception)
-  {
-    $NL    = PHP_EOL;
-    $stack = $exception->getTrace ();
-    if ($exception instanceof \ErrorException)
-      array_shift ($stack);
-    $c = count ($stack);
-    echo sprintf ("{$NL}Unhandled exception: %s$NL{$NL}Stack trace:$NL$NL%4d. Throw %s$NL      from %s, line %d$NL$NL",
-      color ('red', $exception->getMessage ()),
-      $c + 1,
-      color ('yellow', get_class ($exception)),
-      $exception->getFile (),
-      $exception->getLine ()
-    );
-    foreach ($stack as $i => $l)
-      echo sprintf ("%4d. Call %s$NL      from %s, line %d$NL$NL",
-        $c - $i,
-        color ('yellow', sprintf ('%s%s (%s)',
-          isset($l['class']) ? $l['class'] . get ($l, 'type', '::') : '',
-          $l['function'],
-          implode (',', map ($l['args'], [__CLASS__, 'formatErrorArg']))
-        )),
-        $l['file'],
-        $l['line']
-      );
-  }
-
   function boot ($rootDir, $urlDepth = 0, callable $onStartUp = null)
   {
     // Setup error handling
@@ -141,6 +90,12 @@ class ConsoleBootloader implements BootloaderInterface
     $this->injector->execute ([LoggingModule::class, 'register']);
     $this->injector->execute ([KernelModule::class, 'register']);
 
+    // Create a new application instance.
+    // This must be done before the kernel boots up, so that modules may access the instance.
+
+    $consoleApp = new ConsoleApplication ($io, $settings, $console, $this->injector);
+    $this->injector->share ($consoleApp);
+
     // Boot up the framework/application's modules.
 
     /** @var KernelInterface $kernel */
@@ -152,15 +107,63 @@ class ConsoleBootloader implements BootloaderInterface
     // Boot up all modules.
     $kernel->boot ();
 
-    // Create a new application instance.
-
-    $consoleApp = new ConsoleApplication ($io, $settings, $console, $this->injector);
-    $this->injector->share ($consoleApp);
+    // If no code on the startup process has set the console instance's input/output, set it now.
+    if (!$consoleApp->getIO ()->getInput ())
+      $consoleApp->setupStandardIO ($_SERVER['argv']);
 
     // Run the framework's console subsystem, which then runs the terminal-based application.
-
-    $consoleApp->setupStandardIO ($_SERVER['argv']);
     return $consoleApp->execute ();
+  }
+
+  /**
+   * Converts PHP < 7 errors to ErrorExceptions.
+   *
+   * @internal
+   * @param int    $code
+   * @param string $msg
+   * @param string $file
+   * @param int    $line
+   * @return bool
+   * @throws \ErrorException
+   */
+  public function errorHandler ($code = null, $msg = null, $file, $line)
+  {
+    if (error_reporting () === 0)
+      return true;
+    throw new \ErrorException ($msg, $code, 1, $file, $line);
+  }
+
+  /**
+   * Outputs the full stack trace with enhanced information.
+   *
+   * @internal
+   * @param \Exception|\Throwable $exception
+   */
+  function exceptionHandler ($exception)
+  {
+    $NL    = PHP_EOL;
+    $stack = $exception->getTrace ();
+    if ($exception instanceof \ErrorException)
+      array_shift ($stack);
+    $c = count ($stack);
+    echo sprintf ("{$NL}Unhandled exception: %s$NL{$NL}Stack trace:$NL$NL%4d. Throw %s$NL      from %s, line %d$NL$NL",
+      color ('red', $exception->getMessage ()),
+      $c + 1,
+      color ('yellow', get_class ($exception)),
+      $exception->getFile (),
+      $exception->getLine ()
+    );
+    foreach ($stack as $i => $l)
+      echo sprintf ("%4d. Call %s$NL      from %s, line %d$NL$NL",
+        $c - $i,
+        color ('yellow', sprintf ('%s%s (%s)',
+          isset($l['class']) ? $l['class'] . get ($l, 'type', '::') : '',
+          $l['function'],
+          implode (',', map ($l['args'], [__CLASS__, 'formatErrorArg']))
+        )),
+        $l['file'],
+        $l['line']
+      );
   }
 
   /**
