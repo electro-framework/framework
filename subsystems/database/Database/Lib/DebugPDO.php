@@ -1,10 +1,10 @@
 <?php
 namespace Electro\Database\Lib;
 
-use PDOException;
-use PhpKit\ExtPDO;
-use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use Electro\Traits\DecoratorTrait;
+use PDOException;
+use PhpKit\ExtPDO\ExtPDO;
+use PhpKit\WebConsole\DebugConsole\DebugConsole;
 
 class DebugPDO
 {

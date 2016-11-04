@@ -1,5 +1,5 @@
 <?php
-namespace Ptpt\Backoffice\Config;
+namespace ___NAMESPACE___\Config;
 
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\Http\RouterInterface;
@@ -26,4 +26,3 @@ class Routes implements RequestHandlerInterface
   }
 
 }
-

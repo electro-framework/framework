@@ -8,8 +8,10 @@ use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModelControllerInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
-use PhpKit\Connection;
-use PhpKit\ConnectionInterface;
+use PhpKit\ExtPDO\Connection;
+use PhpKit\ExtPDO\Connections;
+use PhpKit\ExtPDO\Interfaces\ConnectionInterface;
+use PhpKit\ExtPDO\Interfaces\ConnectionsInterface;
 
 class DatabaseModule implements ModuleInterface
 {
@@ -18,10 +20,14 @@ class DatabaseModule implements ModuleInterface
     $kernel->onRegisterServices (
       function (InjectorInterface $injector) {
         $injector
-          ->share (ConnectionInterface::class)
           ->delegate (ConnectionInterface::class, function ($debugConsole) {
-            $con = $debugConsole ? new DebugConnection : new Connection;
-            return $con->getFromEnviroment ();
+            return $debugConsole ? new DebugConnection : new Connection;
+          })
+          ->share (ConnectionsInterface::class)
+          ->delegate (ConnectionsInterface::class, function ($debugConsole) {
+            $connections = new Connections;
+            $connections->setConnectionClass ($debugConsole ? DebugConnection::class : Connection::class);
+            return $connections;
           })
           ->alias (ModelControllerInterface::class, ModelController::class)
           ->share (ModelController::class);

@@ -1,10 +1,10 @@
 <?php
 namespace Electro\Database\Services;
 
-use PhpKit\ConnectionInterface;
-use PhpKit\ExtPDO;
 use Electro\Database\Lib\AbstractModelController;
 use Electro\Interfaces\SessionInterface;
+use PhpKit\ExtPDO\ExtPDO;
+use PhpKit\ExtPDO\Interfaces\ConnectionInterface;
 
 class ModelController extends AbstractModelController
 {

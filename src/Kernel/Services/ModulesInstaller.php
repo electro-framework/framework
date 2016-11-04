@@ -10,7 +10,7 @@ use Electro\Interop\MigrationStruct;
 use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Lib\JsonFile;
-use PhpKit\Connection;
+use PhpKit\ExtPDO\Connection;
 use PhpKit\Flow\FilesystemFlow;
 use SplFileInfo;
 

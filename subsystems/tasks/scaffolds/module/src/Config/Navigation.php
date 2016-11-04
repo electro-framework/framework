@@ -1,5 +1,5 @@
 <?php
-namespace Ptpt\Backoffice\Config;
+namespace ___NAMESPACE___\Config;
 
 use Electro\Interfaces\Navigation\NavigationInterface;
 use Electro\Interfaces\Navigation\NavigationProviderInterface;

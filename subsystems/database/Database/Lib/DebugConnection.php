@@ -1,14 +1,14 @@
 <?php
 namespace Electro\Database\Lib;
 
-use PhpKit\Connection;
-use PhpKit\ExtPDO;
+use PhpKit\ExtPDO\Connection;
+use PhpKit\ExtPDO\ExtPDO;
 
 class DebugConnection extends Connection
 {
   /**
    * @param array|null $options
-   * @return ExtPDO|DebugPDO
+   * @return \PhpKit\ExtPDO\ExtPDO|DebugPDO
    */
   function getPdo (array $options = null)
   {
