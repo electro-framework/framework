@@ -12,7 +12,7 @@ use Electro\WebApplication\WebBootloader;
  * <p>When testing `$profile instanceof WebProfile`, you can check if a module is being used on a web application or
  * not, irrespective of the concrete profile being used, as every web profile should inherit from this base class.
  */
-abstract class WebProfile implements ProfileInterface
+class WebProfile implements ProfileInterface
 {
   public function getBootloaderClass ()
   {
