@@ -34,6 +34,32 @@ class ConsoleBootloader implements BootloaderInterface
       ->alias (ProfileInterface::class, $profileClass);
   }
 
+  /**
+   * @internal
+   * @param mixed $arg
+   * @return string
+   */
+  static public function formatErrorArg ($arg)
+  {
+    if (is_object ($arg))
+      switch (get_class ($arg)) {
+        case \ReflectionMethod::class:
+          /** @var \ReflectionMethod $arg */
+          return $arg->getDeclaringClass ()->getName () . '::' . $arg->getName ();
+        case \ReflectionFunction::class:
+          /** @var \ReflectionFunction $arg */
+          return sprintf ('Closure at %s line %d', $arg->getFileName (), $arg->getStartLine ());
+        case \ReflectionParameter::class:
+          /** @var \ReflectionParameter $arg */
+          return '$' . $arg->getName ();
+        default:
+          return typeOf ($arg);
+      }
+    if (is_array ($arg))
+      return sprintf ('[%s]', implode (',', map ($arg, [__CLASS__, 'formatErrorArg'])));
+    return str_replace ('\\\\', '\\', var_export ($arg, true));
+  }
+
   function boot ($rootDir, $urlDepth = 0, callable $onStartUp = null)
   {
     // Setup error handling
@@ -63,7 +89,7 @@ class ConsoleBootloader implements BootloaderInterface
 
     // Setup the console.
 
-    $console  = new SymfonyConsole ('Workman Task Runner');
+    $console  = new SymfonyConsole ("\nWorkman Task Runner");
     $io       = new ConsoleIO;
     $settings = new ConsoleSettings;
 

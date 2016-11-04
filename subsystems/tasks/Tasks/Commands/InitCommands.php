@@ -88,7 +88,7 @@ trait InitCommands
       $LANG = $io->askDefault ("What is the application's main language? (en | pt | ...)", 'en');
       do {
         $DB_DRIVER =
-          $io->askDefault ("Which database kind are you going to use? (none | sqlite | mysql | pgsql)", 'none');
+          $io->askDefault ("Which database kind are you going to use? (none | sqlite | mysql | pgsql)", 'sqlite');
       } while ($DB_DRIVER != 'sqlite' && $DB_DRIVER != 'mysql' && $DB_DRIVER != 'pgsql' && $DB_DRIVER != 'none');
 
       $DB_DATABASE    = '';

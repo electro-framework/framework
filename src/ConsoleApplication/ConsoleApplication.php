@@ -62,32 +62,6 @@ class ConsoleApplication extends Runner
   }
 
   /**
-   * @internal
-   * @param mixed $arg
-   * @return string
-   */
-  static public function formatErrorArg ($arg)
-  {
-    if (is_object ($arg))
-      switch (get_class ($arg)) {
-        case \ReflectionMethod::class:
-          /** @var \ReflectionMethod $arg */
-          return $arg->getDeclaringClass ()->getName () . '::' . $arg->getName ();
-        case \ReflectionFunction::class:
-          /** @var \ReflectionFunction $arg */
-          return sprintf ('Closure at %s line %d', $arg->getFileName (), $arg->getStartLine ());
-        case \ReflectionParameter::class:
-          /** @var \ReflectionParameter $arg */
-          return '$' . $arg->getName ();
-        default:
-          return typeOf ($arg);
-      }
-    if (is_array ($arg))
-      return sprintf ('[%s]', implode (',', map ($arg, [__CLASS__, 'formatErrorArg'])));
-    return str_replace ('\\\\', '\\', var_export ($arg, true));
-  }
-
-  /**
    * Runs the console.
    *
    * <p>This should be called **ONLY ONCE** per console application instance.
