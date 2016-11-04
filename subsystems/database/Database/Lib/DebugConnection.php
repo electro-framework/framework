@@ -8,7 +8,7 @@ class DebugConnection extends Connection
 {
   /**
    * @param array|null $options
-   * @return \PhpKit\ExtPDO\ExtPDO|DebugPDO
+   * @return ExtPDO|DebugPDO
    */
   function getPdo (array $options = null)
   {
