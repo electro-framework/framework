@@ -27,6 +27,15 @@ const CONFIGURE = 2;
  * Use this event for performing additional initialization/configuration steps.
  */
 const RECONFIGURE = 3;
+/**
+ * Use this event for performing "useful work" after all module initializations were performed.
+ */
+const RUN = 4;
+/**
+ * Use this event for performing cleanup operations after all "useful work" has been performed and just before the
+ * application finishes.
+ */
+const SHUTDOWN = 5;
 
 /**
  * The service that loads the bulk of the framework code and the application's modules.
@@ -86,6 +95,8 @@ class Kernel implements KernelInterface
       $this->emit (REGISTER_SERVICES, $this->injector);
       $this->emitAndInject (CONFIGURE);
       $this->emitAndInject (RECONFIGURE);
+      $this->emitAndInject (RUN);
+      $this->emitAndInject (SHUTDOWN);
     }
     catch (Exception $e) {
       $this->logModuleError ($e->getMessage (), $e);
@@ -115,6 +126,16 @@ class Kernel implements KernelInterface
   function onRegisterServices (callable $handler)
   {
     return $this->on (REGISTER_SERVICES, $handler);
+  }
+
+  function onRun (callable $handler)
+  {
+    return $this->on (RUN, $handler);
+  }
+
+  function onShutdown (callable $handler)
+  {
+    return $this->on (SHUTDOWN, $handler);
   }
 
   /**
