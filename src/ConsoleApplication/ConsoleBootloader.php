@@ -188,7 +188,7 @@ class ConsoleBootloader implements BootloaderInterface
           implode (',', map ($l['args'], [__CLASS__, 'formatErrorArg']))
         )),
         get ($l, 'file', 'an unknown location'),
-        get ($l. 'line')
+        get ($l, 'line')
       );
   }
 

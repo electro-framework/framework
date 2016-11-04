@@ -95,7 +95,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   function clear ()
   {
-    if ($this->output->getFormatter ()->isDecorated ())
+    if ($this->output && $this->output->getFormatter ()->isDecorated ())
       $this->write ("\033[0;0f\033[2J");
     return $this;
   }
@@ -210,7 +210,8 @@ class ConsoleIO implements ConsoleIOInterface
 
   function setColor ($name, $style)
   {
-    $this->output->getFormatter ()->setStyle ($name, $style);
+    if ($this->output)
+      $this->output->getFormatter ()->setStyle ($name, $style);
     return $this;
   }
 
@@ -244,7 +245,8 @@ class ConsoleIO implements ConsoleIOInterface
 
   function warn ($text)
   {
-    $this->output->writeln ("<warning> $text </warning>");
+    if ($this->output)
+      $this->output->writeln ("<warning> $text </warning>");
     return $this;
   }
 
@@ -252,7 +254,8 @@ class ConsoleIO implements ConsoleIOInterface
   {
     if ($this->indent)
       $text = preg_replace ('/^/m', $this->indent, $text);
-    $this->output->write ($text);
+    if ($this->output)
+      $this->output->write ($text);
     return $this;
   }
 
@@ -260,7 +263,8 @@ class ConsoleIO implements ConsoleIOInterface
   {
     if ($this->indent)
       $text = preg_replace ('/^/m', $this->indent, $text);
-    $this->output->writeln ($text);
+    if ($this->output)
+      $this->output->writeln ($text);
     return $this;
   }
 
@@ -314,7 +318,8 @@ class ConsoleIO implements ConsoleIOInterface
 
   private function doAsk (Question $question)
   {
-    return $this->getDialog ()->ask ($this->input, $this->output, $question);
+    if ($this->input && $this->output)
+      return $this->getDialog ()->ask ($this->input, $this->output, $question);
   }
 
   private function formatQuestion ($message)
