@@ -2,7 +2,7 @@
 namespace Electro\WebApplication;
 
 use Dotenv\Dotenv;
-use Electro\Interfaces\BootstrapperInterface;
+use Electro\Interfaces\BootloaderInterface;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ProfileInterface;
@@ -13,7 +13,6 @@ use Electro\Logging\Config\LoggingModule;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\DebugConsole\DebugConsoleSettings;
 use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
-use const Electro\Kernel\Services\CONFIGURE;
 
 /**
  * Provides the standard bootstrap procedure for web applications.
@@ -21,7 +20,7 @@ use const Electro\Kernel\Services\CONFIGURE;
  * - Sets up all framework services required for HTTP request handling.
  * - Transfers execution to the web-server subsystem.
  */
-class WebBootstrapper implements BootstrapperInterface
+class WebBootloader implements BootloaderInterface
 {
   /**
    * @var bool
@@ -67,13 +66,7 @@ class WebBootstrapper implements BootstrapperInterface
     DebugConsole::outputContent (true);
   }
 
-  /**
-   * Bootstraps the application.
-   *
-   * @param string $rootDir  The application's root directory path.
-   * @param int    $urlDepth How many URL segments should be stripped when calculating the application's root URL.
-   */
-  function run ($rootDir, $urlDepth = 0)
+  function boot ($rootDir, $urlDepth = 0, callable $onStartUp = null)
   {
     $rootDir = normalizePath ($rootDir);
 
@@ -83,6 +76,8 @@ class WebBootstrapper implements BootstrapperInterface
       $dotenv = new Dotenv ($rootDir);
       $dotenv->load ();
     }
+
+    // Load the kernel's configuration
 
     /** @var KernelSettings $kernelSettings */
     $kernelSettings = $this->kernelSettings = $this->injector
@@ -99,28 +94,32 @@ class WebBootstrapper implements BootstrapperInterface
     ErrorConsole::setPathsMap ($kernelSettings->getMainPathMap ());
 
     /*
-     * Boot up the core framework modules.
+     * Boot up the framework's core embedded modules.
      *
      * This occurs before the framework's main startup sequence.
      * Unlike the later, which is managed automatically, this pre-startup process is manually defined and consists of
      * just a few core services that must be setup before any other module loads.
+     * Note: these modules are special and they do not implement ModuleInterface.
      */
     $this->injector->execute ([LoggingModule::class, 'register']);
     $this->injector->execute ([KernelModule::class, 'register']);
 
-    // Bootstrap the framework/application's modules.
+    // Boot up the framework/application's modules.
 
     /** @var KernelInterface $kernel */
     $kernel = $this->injector->make (KernelInterface::class);
 
     // Initialize the web server at the beginning of the CONFIGURE phase.
-    $kernel->on (CONFIGURE, function (WebServer $webServer) use ($urlDepth) {
+    $kernel->onConfigure (function (WebServer $webServer) use ($urlDepth) {
       $this->webServer = $webServer;
       $webServer->setup ($urlDepth);
     });
 
-    // Start up all modules.
-    $kernel->run ();
+    if ($onStartUp)
+      $onStartUp ($kernel);
+
+    // Boot up all modules.
+    $kernel->boot ();
 
     // Post-bootstrap additional setup.
 
@@ -130,6 +129,7 @@ class WebBootstrapper implements BootstrapperInterface
     // Run the framework's web server, which handles the HTTP request.
 
     $this->webServer->run ();
+    return 0;
   }
 
   /**

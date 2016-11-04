@@ -1,13 +1,13 @@
 <?php
 namespace Electro\Profiles;
 
-use Electro\WebApplication\WebBootstrapper;
+use Electro\WebApplication\WebBootloader;
 
 class StandardWebProfile extends WebProfile
 {
-  static public function getBootstrapperClass ()
+  static public function getBootloaderClass ()
   {
-    return WebBootstrapper::class;
+    return WebBootloader::class;
   }
 
   public function getSubsystems ()

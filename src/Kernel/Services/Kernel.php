@@ -5,9 +5,7 @@ use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Interfaces\ProfileInterface;
-use Electro\Kernel\Config\KernelModule;
 use Electro\Kernel\Lib\ModuleInfo;
-use Electro\Logging\Config\LoggingModule;
 use Electro\Traits\EventEmitterTrait;
 use Exception;
 use PhpKit\WebConsole\Lib\Debug;
@@ -54,44 +52,18 @@ class Kernel implements KernelInterface
     $this->profile  = $profile;
   }
 
-  function getProfile ()
+  function boot ()
   {
-    return $this->profile;
-  }
+    /*
+     * Load all remaining modules, allowing them to subscribe to bootstrap events.
+     */
+    $exclude    = array_flip ($this->profile->getExcludedModules ());
+    $subsystems = array_flip ($this->profile->getSubsystems ());
 
-  function onConfigure (callable $handler)
-  {
-    return $this->on (CONFIGURE, $handler);
-  }
+    /** @var ModulesRegistry $registry */
+    $registry = $this->injector->make (ModulesRegistry::class);
 
-  function onPreRegister (callable $handler)
-  {
-    return $this->on (PRE_REGISTER, $handler);
-  }
-
-  function onReconfigure (callable $handler)
-  {
-    return $this->on (RECONFIGURE, $handler);
-  }
-
-  function onRegisterServices (callable $handler)
-  {
-    return $this->on (REGISTER_SERVICES, $handler);
-  }
-
-  function run ()
-  {
     try {
-
-      /*
-       * Load all remaining modules, allowing them to subscribe to bootstrap events.
-       */
-      $exclude    = array_flip ($this->profile->getExcludedModules ());
-      $subsystems = array_flip ($this->profile->getSubsystems ());
-
-      /** @var ModulesRegistry $registry */
-      $registry = $this->injector->make (ModulesRegistry::class);
-
       foreach ($registry->onlyBootable ()->onlyEnabled ()->getModules () as $name => $module) {
         /** @var ModuleInfo $module */
         if (isset ($exclude[$module->name]) ||
@@ -118,6 +90,31 @@ class Kernel implements KernelInterface
     catch (Exception $e) {
       $this->logModuleError ($e->getMessage (), $e);
     }
+  }
+
+  function getProfile ()
+  {
+    return $this->profile;
+  }
+
+  function onConfigure (callable $handler)
+  {
+    return $this->on (CONFIGURE, $handler);
+  }
+
+  function onPreRegister (callable $handler)
+  {
+    return $this->on (PRE_REGISTER, $handler);
+  }
+
+  function onReconfigure (callable $handler)
+  {
+    return $this->on (RECONFIGURE, $handler);
+  }
+
+  function onRegisterServices (callable $handler)
+  {
+    return $this->on (REGISTER_SERVICES, $handler);
   }
 
   /**

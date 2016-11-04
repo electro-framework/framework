@@ -5,10 +5,6 @@ use Electro\ConsoleApplication\Config\ConsoleSettings;
 use Electro\ConsoleApplication\Services\ConsoleIO;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Interfaces\DI\InjectorInterface;
-use Electro\Interfaces\KernelInterface;
-use Electro\Kernel\Config\KernelModule;
-use Electro\Kernel\Services\Kernel;
-use Electro\Logging\Config\LoggingModule;
 use Robo\Config;
 use Robo\Result;
 use Robo\Runner;
@@ -85,57 +81,6 @@ class ConsoleApplication extends Runner
   }
 
   /**
-   * Converts PHP < 7 errors to ErrorExceptions.
-   *
-   * @internal
-   * @param int    $code
-   * @param string $msg
-   * @param string $file
-   * @param int    $line
-   * @return bool
-   * @throws \ErrorException
-   */
-  public function errorHandler ($code = null, $msg = null, $file, $line)
-  {
-    if (error_reporting () === 0)
-      return true;
-    throw new \ErrorException ($msg, $code, 1, $file, $line);
-  }
-
-  /**
-   * Outputs the full stack trace with enhanced information.
-   *
-   * @internal
-   * @param \Exception|\Throwable $exception
-   */
-  function exceptionHandler ($exception)
-  {
-    $NL    = PHP_EOL;
-    $stack = $exception->getTrace ();
-    if ($exception instanceof \ErrorException)
-      array_shift ($stack);
-    $c = count ($stack);
-    echo sprintf ("{$NL}Unhandled exception: %s$NL{$NL}Stack trace:$NL$NL%4d. Throw %s$NL      from %s, line %d$NL$NL",
-      color ('red', $exception->getMessage ()),
-      $c + 1,
-      color ('yellow', get_class ($exception)),
-      $exception->getFile (),
-      $exception->getLine ()
-    );
-    foreach ($stack as $i => $l)
-      echo sprintf ("%4d. Call %s$NL      from %s, line %d$NL$NL",
-        $c - $i,
-        color ('yellow', sprintf ('%s%s (%s)',
-          isset($l['class']) ? $l['class'] . get ($l, 'type', '::') : '',
-          $l['function'],
-          implode (',', map ($l['args'], [__CLASS__, 'formatErrorArg']))
-        )),
-        $l['file'],
-        $l['line']
-      );
-  }
-
-  /**
    * Runs the console.
    *
    * <p>This should be called **ONLY ONCE** per console application instance.
@@ -146,31 +91,8 @@ class ConsoleApplication extends Runner
    */
   function execute ($input = null)
   {
-    // Setup
-
-    register_shutdown_function ([$this, 'shutdown']);
-    set_error_handler ([$this, 'errorHandler']);
-    set_exception_handler ([$this, 'exceptionHandler']);
     $this->stopOnFail ();
     $this->customizeColors ();
-
-    /*
-     * Boot up the core framework modules.
-     *
-     * This occurs before the framework's main startup sequence.
-     * Unlike the later, which is managed automatically, this pre-startup process is manually defined and consists of
-     * just a few core services that must be setup before any other module loads.
-     */
-    $this->injector->execute ([LoggingModule::class, 'register']);
-    $this->injector->execute ([KernelModule::class, 'register']);
-
-    // Bootstrap the framework/application's modules.
-
-    /** @var KernelInterface $kernel */
-    $kernel = $this->injector->make (KernelInterface::class);
-
-    // Start up all modules.
-    $kernel->run ();
 
     // Merge tasks from all registered task classes
 

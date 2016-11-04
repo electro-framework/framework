@@ -1,14 +1,14 @@
 <?php
 namespace Electro\Profiles;
 
-use Electro\ConsoleApplication\ConsoleBootstrapper;
+use Electro\ConsoleApplication\ConsoleBootloader;
 use Electro\Interfaces\ProfileInterface;
 
 class ConsoleProfile implements ProfileInterface
 {
-  static public function getBootstrapperClass ()
+  static public function getBootloaderClass ()
   {
-    return ConsoleBootstrapper::class;
+    return ConsoleBootloader::class;
   }
 
   public function getExcludedModules ()

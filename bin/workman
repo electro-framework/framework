@@ -6,6 +6,6 @@ use Electro\Profiles\ConsoleProfile;
  * We do not use __DIR__ here as it will fail if this script is symlinked.
  * We assume the command is always run from the application's root directory.
  */
-require "{$_SERVER['PWD']}/private/App.php";
+require "{$_SERVER['PWD']}/private/src/Bootloader.php";
 
-App::run (ConsoleProfile::class);
+exit (App\Bootloader::make ()->boot (ConsoleProfile::class));
