@@ -38,5 +38,25 @@
   },
   "bin": [
     "bin/workman"
-  ]
+  ],
+  "provide": {
+    "authentication": "self.version",
+    "authorization": "self.version",
+    "caching": "self.version",
+    "configuration": "self.version",
+    "content-server": "self.version",
+    "database": "self.version",
+    "debugging": "self.version",
+    "error-handling": "self.version",
+    "http": "self.version",
+    "localization": "self.version",
+    "mail": "self.version",
+    "navigation": "self.version",
+    "routing": "self.version",
+    "sessions": "self.version",
+    "tasks": "self.version",
+    "validation": "self.version",
+    "view-engine": "self.version",
+    "web-server": "self.version"
+  }
 }
