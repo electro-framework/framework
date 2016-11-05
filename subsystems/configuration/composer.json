@@ -1,5 +1,5 @@
 {
-  "name": "configuration",
+  "name": "subsystems/configuration",
   "description": "Electro framework's configuration subsystem",
   "license": "MIT",
   "authors": [

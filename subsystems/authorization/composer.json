@@ -1,5 +1,5 @@
 {
-  "name": "authorization",
+  "name": "subsystems/authorization",
   "description": "Electro framework's authorization subsystem",
   "license": "MIT",
   "authors": [
@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "authentication": "self.version"
+    "subsystems/authentication": "self.version"
   },
   "autoload": {
     "psr-4": {

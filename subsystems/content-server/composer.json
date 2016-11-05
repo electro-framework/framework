@@ -1,5 +1,5 @@
 {
-  "name": "content-server",
+  "name": "subsystems/content-server",
   "description": "Electro framework's media server subsystem",
   "license": "MIT",
   "authors": [
@@ -15,7 +15,7 @@
   ],
   "require": {
     "league/glide": "^1.0.0",
-    "http": "self.version"
+    "subsystems/http": "self.version"
   },
   "autoload": {
     "psr-4": {

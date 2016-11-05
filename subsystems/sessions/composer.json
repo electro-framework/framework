@@ -1,5 +1,5 @@
 {
-  "name": "sessions",
+  "name": "subsystems/sessions",
   "description": "Electro framework's sessions subsystem",
   "license": "MIT",
   "authors": [
@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "http": "self.version"
+    "subsystems/http": "self.version"
   },
   "autoload": {
     "psr-4": {

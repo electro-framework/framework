@@ -1,5 +1,5 @@
 {
-  "name": "http",
+  "name": "subsystems/http",
   "description": "Electro framework's HTTP subsystem",
   "license": "MIT",
   "authors": [

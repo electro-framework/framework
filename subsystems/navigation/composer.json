@@ -1,5 +1,5 @@
 {
-  "name": "navigation",
+  "name": "subsystems/navigation",
   "description": "Electro framework's navigation subsystem",
   "license": "MIT",
   "authors": [
@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "http": "self.version"
+    "subsystems/http": "self.version"
   },
   "autoload": {
     "psr-4": {

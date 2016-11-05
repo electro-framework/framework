@@ -1,5 +1,5 @@
 {
-  "name": "localization",
+  "name": "subsystems/localization",
   "description": "Electro framework's localization subsystem",
   "license": "MIT",
   "authors": [
@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "http": "self.version"
+    "subsystems/http": "self.version"
   },
   "autoload": {
     "psr-4": {

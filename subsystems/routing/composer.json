@@ -1,5 +1,5 @@
 {
-  "name": "routing",
+  "name": "subsystems/routing",
   "description": "Electro framework's routing subsystem",
   "license": "MIT",
   "authors": [
@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "http": "self.version"
+    "subsystems/http": "self.version"
   },
   "autoload": {
     "psr-4": {

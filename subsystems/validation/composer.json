@@ -1,5 +1,5 @@
 {
-  "name": "validation",
+  "name": "subsystems/validation",
   "description": "Electro framework's validation subsystem",
   "license": "MIT",
   "authors": [

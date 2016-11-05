@@ -1,5 +1,5 @@
 {
-  "name": "web-server",
+  "name": "subsystems/web-server",
   "description": "Electro framework's web server subsystem",
   "license": "MIT",
   "authors": [
@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "http": "self.version"
+    "subsystems/http": "self.version"
   },
   "autoload": {
     "psr-4": {

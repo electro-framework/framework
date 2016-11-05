@@ -1,5 +1,5 @@
 {
-  "name": "mail",
+  "name": "subsystems/mail",
   "description": "Electro framework's email subsystem",
   "license": "MIT",
   "authors": [
