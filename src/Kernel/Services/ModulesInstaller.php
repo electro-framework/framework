@@ -450,7 +450,7 @@ class ModulesInstaller
         $path = normalizePath ($dirInfo->getPathname ());
         $p    = strpos ($path, 'framework/') + 9;
         return (new ModuleInfo)->import ([
-          'name' => $dirInfo->getFilename (),
+          'name' => 'subsystems/' . $dirInfo->getFilename (),
           'path' => KernelSettings::FRAMEWORK_PATH . substr ($path, $p),
         ]);
       })

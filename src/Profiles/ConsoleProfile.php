@@ -43,12 +43,12 @@ class ConsoleProfile implements ProfileInterface
   public function getSubsystems ()
   {
     return [
-      'configuration',
-      'database',
-      'localization',
-      'mail',
-      'tasks',
-      'validation',
+      'subsystems/configuration',
+      'subsystems/database',
+      'subsystems/localization',
+      'subsystems/mail',
+      'subsystems/tasks',
+      'subsystems/validation',
     ];
   }
 
