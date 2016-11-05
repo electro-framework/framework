@@ -76,7 +76,7 @@ class ConsoleBootloader implements BootloaderInterface
       ->make (KernelSettings::class);
 
     $kernelSettings->isConsoleBased = true;
-    $kernelSettings->setRootDir ($rootDir);
+    $kernelSettings->setApplicationRoot ($rootDir, $urlDepth);
 
     // Setup the console.
 

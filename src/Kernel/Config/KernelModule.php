@@ -3,13 +3,11 @@ namespace Electro\Kernel\Config;
 
 use Electro\Exceptions\ExceptionWithTitle;
 use Electro\Interfaces\DI\InjectorInterface;
-use Electro\Interfaces\Http\MiddlewareAssemblerInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\Migrations\MigrationsInterface;
 use Electro\Kernel\Services\Kernel;
 use Electro\Kernel\Services\ModulesInstaller;
 use Electro\Kernel\Services\ModulesRegistry;
-use Electro\WebApplication\DefaultMiddlewareAssembler;
 
 class KernelModule
 {
@@ -38,9 +36,7 @@ class KernelModule
       // MigrationsInterface must be lazy-loaded on demand.
       ->define (ModulesInstaller::class, [
         ':migrationsAPIFactory' => $injector->makeFactory (MigrationsInterface::class),
-      ])
-      // This can be overridden later, usually by a private application module.
-      ->alias (MiddlewareAssemblerInterface::class, DefaultMiddlewareAssembler::class);
+      ]);
   }
 
 }

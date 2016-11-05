@@ -64,7 +64,8 @@ function route ($url, callable $handler)
  * @param string|callable $text The text to be returned.
  * @return Closure
  */
-function simpleResponse ($text) {
+function simpleResponse ($text)
+{
   return function ($request, $response) use ($text) { return Http::response ($response, $text); };
 }
 
@@ -127,16 +128,38 @@ function controller ($ref)
  */
 function dump ()
 {
-  if (!isCLI())
+  if (!isCLI ())
     echo "<pre>";
   ob_start ();
   call_user_func_array ('var_dump', func_get_args ());
+  $o = ob_get_clean ();
+  $o = str_replace ('[', '[', $o); // to prevent colision with color escape codes
+  $o = preg_replace ('/\{\s*\}/', '{}', $o); // condense empty arrays
+  $o = preg_replace ('/":".*?":(private|protected)/', color ('dark grey', ':$1'), $o); // condense empty arrays
   // Applies formatting if XDEBUG is not installed
-  echo preg_replace_callback ('/^(\s*)\["?(.*?)"?\]=>\n\s*/m', function ($m) {
-    list (, $space, $prop) = $m;
-    return $space . str_pad ("$prop:", 30, ' ');
-  }, ob_get_clean ());
-  if (!isCLI())
+  $SEP = color ('dark grey', '|');
+  $o   = preg_replace_callback ('/^(\s*)\["?(.*?)"?\]=>\n\s*(\S+) *(\S)?/m', function ($m) use ($SEP) {
+    $m[] = '';
+    list (, $space, $prop, $type, $next) = $m;
+    $z = explode ('(', $type, 2);
+    if (count ($z) > 1) {
+      list ($type, $len) = $z;
+      $len  = color ('dark cyan', " ($len");
+      $type = $type . $len;
+    }
+    $num = ctype_digit ($prop[0]);
+    return $space . $SEP . color ('dark yellow', str_pad ($prop, $num ? 4 : 15, ' ', $num ? STR_PAD_LEFT : STR_PAD_RIGHT)) .
+           " $SEP " . color ('dark green', str_pad ($type, 25, ' ')) . (strlen ($next) ? "$SEP $next" : '');
+  }, $o);
+  $o   = preg_replace ('/[\{\}§\]]/', color ('red', '$0'), $o);
+  $o   = str_replace ('"', color ('dark cyan', '"'), $o);
+  $o   = preg_replace ('/^(\s*object)\((.*?)\)(.*?(?=\{))/m',
+    '$1(' . color ('dark purple', '$2') . ')' . color ('dark cyan', '$3'), $o);
+  $o   =
+    preg_replace ('/^(\s*\w+)\((\d+)\)/m', str_pad (color ('dark green', '$1') . color ('dark cyan', ' ($2)'), 31, ' '),
+      $o);
+  echo $o;
+  if (!isCLI ())
     echo "</pre>";
 }
 

@@ -1,5 +1,5 @@
 <?php
-namespace Electro\WebApplication;
+namespace Electro\WebServer;
 
 use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\Http\MiddlewareStackInterface;
@@ -66,38 +66,21 @@ class WebServer
 
   /**
    * Initializes the web server and sets up the request object.
-   *
-   * @param int $urlDepth How many URL segments should be stripped when calculating the application's root URL.
    */
-  function setup ($urlDepth = 0)
+  function setup ()
   {
     /** @var ServerRequestInterface $request */
     $request                       = ServerRequestFactory::fromGlobals ();
-    $this->kernelSettings->baseURI = dirnameEx (get ($request->getServerParams (), 'SCRIPT_NAME'), $urlDepth + 1);
+    $this->kernelSettings->baseURI = dirnameEx (
+      get ($request->getServerParams (), 'SCRIPT_NAME'),
+      $this->kernelSettings->urlDepth + 1
+    );
     $request                       = $request->withAttribute ('originalUri', $request->getUri ());
     $request                       = $request->withAttribute ('baseUri', $this->kernelSettings->baseURI);
     $this->request                 = $request->withAttribute ('virtualUri', $this->getVirtualUri ($request));
   }
 
-  private function getBaseUri (ServerRequestInterface $request)
-  {
-    /*
-        $params = $request->getServerParams ();
-        $sUrl   = dirnameEx (get ($params, 'SCRIPT_NAME'));
-        $sUrl   = str_replace ('\\', '/', $sUrl); // Windows compat.
-
-        if (strlen ($sUrl) != '/')// make sure that paths start and end with /
-        {
-          if (substr ($sUrl, 0, 1) != '/')
-            $sUrl = '/' . $sUrl;
-          if (substr ($sUrl, -1) != '/')
-            $sUrl = $sUrl . '/';
-        }
-        return $sUrl;
-    */
-  }
-
-  private function getVirtualUri (ServerRequestInterface $request)
+  protected function getVirtualUri (ServerRequestInterface $request)
   {
     $uri     = $request->getUri ()->getPath ();
     $baseURI = $request->getAttribute ('baseUri');

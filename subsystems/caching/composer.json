@@ -1,5 +1,5 @@
 {
-  "name": "electro-subsystems/caching",
+  "name": "caching",
   "description": "Electro framework's caching subsystem",
   "license": "MIT",
   "authors": [

@@ -4,7 +4,7 @@ namespace Electro\Profiles;
 use Electro\DependencyInjection\Injector;
 use Electro\Interfaces\ProfileInterface;
 use Electro\Kernel\Services\Kernel;
-use Electro\WebApplication\WebBootloader;
+use Electro\WebServer\WebBootloader;
 
 /**
  * A configuration profile tailored for web applications.
@@ -58,6 +58,7 @@ class WebProfile implements ProfileInterface
       'sessions',
       'validation',
       'view-engine',
+      'web-server',
     ];
   }
 

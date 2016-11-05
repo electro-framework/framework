@@ -1,5 +1,5 @@
 <?php
-namespace Electro\WebApplication;
+namespace Electro\WebServer;
 
 use Electro\ContentServer\Middleware\ContentServerMiddleware;
 use Electro\Debugging\Middleware\WebConsoleMiddleware;

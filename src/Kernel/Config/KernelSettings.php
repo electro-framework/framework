@@ -127,6 +127,12 @@ class KernelSettings
    * @var string
    */
   public $title = '@';
+  /**
+   * How deep is the current sub-application's base URL in relation to the main application's root URL.
+   *
+   * @var int
+   */
+  public $urlDepth;
 
   function __construct (InjectorInterface $injector)
   {
@@ -157,12 +163,17 @@ class KernelSettings
   }
 
   /**
-   * Sets the application's root directory and adjusts PHP's include path accordingly.
+   * Sets the application's root directory and adjusts PHP's include path accordingly; it also saves how deep is the
+   * current sub-application's base URL in relation to the main application's root URL.
    *
-   * @param string $rootDir
+   * @param string $rootDir     The application's root directory path.
+   * @param int    $urlDepth    How many URL segments should be stripped when calculating the application's root URL.
+   *                            Use it when booting a sub-application from an index.php on a sub-directory of the main
+   *                            application.
    */
-  function setRootDir ($rootDir)
+  function setApplicationRoot ($rootDir, $urlDepth)
   {
+    $this->urlDepth = $urlDepth;
     // Note: due to eventual symlinking, we can't use dirname(__DIR__) here
     $this->baseDirectory = $rootDir;
     $this->frameworkPath = "$rootDir/" . self::FRAMEWORK_PATH;

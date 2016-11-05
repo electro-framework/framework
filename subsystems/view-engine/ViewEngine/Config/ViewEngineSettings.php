@@ -7,7 +7,7 @@ use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Traits\ConfigurationTrait;
 
 /**
- * Configuration settings for the Tasks subsystem.
+ * Configuration settings for the ViewEngine subsystem.
  *
  * @method $this|string moduleViewsPath (string $v = null) The relative path of the views folder inside a module
  */

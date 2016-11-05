@@ -1,5 +1,5 @@
 <?php
-namespace Electro\WebApplication;
+namespace Electro\WebServer;
 
 use Dotenv\Dotenv;
 use Electro\Interfaces\BootloaderInterface;
@@ -33,10 +33,6 @@ class WebBootloader implements BootloaderInterface
    * @var KernelSettings
    */
   private $kernelSettings;
-  /**
-   * @var WebServer
-   */
-  private $webServer;
 
   function __construct (InjectorInterface $injector)
   {
@@ -62,7 +58,7 @@ class WebBootloader implements BootloaderInterface
       ->make (KernelSettings::class);
 
     $kernelSettings->isWebBased = true;
-    $kernelSettings->setRootDir ($rootDir);
+    $kernelSettings->setApplicationRoot ($rootDir, $urlDepth);
 
     // Setup debugging
 
@@ -86,26 +82,17 @@ class WebBootloader implements BootloaderInterface
     /** @var KernelInterface $kernel */
     $kernel = $this->injector->make (KernelInterface::class);
 
-    // Initialize the web server at the beginning of the CONFIGURE phase.
-    $kernel->onConfigure (function (WebServer $webServer) use ($urlDepth) {
-      $this->webServer = $webServer;
-      $webServer->setup ($urlDepth);
-    });
-
     if ($onStartUp)
       $onStartUp ($kernel);
 
     // Boot up all modules.
     $kernel->boot ();
 
-    // Post-bootstrap additional setup.
+    // Finalize.
 
     if ($this->debugMode)
       $this->setDebugPathsMap ($this->injector->make (ModulesRegistry::class));
 
-    // Run the framework's web server, which handles the HTTP request.
-
-    $this->webServer->run ();
     return 0;
   }
 

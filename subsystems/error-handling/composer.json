@@ -1,5 +1,5 @@
 {
-  "name": "electro-subsystems/error-handling",
+  "name": "error-handling",
   "description": "Electro framework's error handling subsystem",
   "license": "MIT",
   "authors": [
@@ -15,7 +15,8 @@
   ],
   "require": {
     "php": ">=5.6",
-    "php-kit/php-web-console": "dev-master"
+    "php-kit/php-web-console": "dev-master",
+    "http": "self.version"
   },
   "autoload": {
     "psr-4": {

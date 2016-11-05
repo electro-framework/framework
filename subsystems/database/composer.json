@@ -1,5 +1,5 @@
 {
-  "name": "electro-subsystems/database",
+  "name": "database",
   "description": "Electro framework's database subsystem",
   "license": "MIT",
   "authors": [

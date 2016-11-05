@@ -3,6 +3,7 @@ namespace Electro\Kernel\Services;
 
 use Auryn\InjectionException;
 use Electro\ConsoleApplication\ConsoleApplication;
+use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Interfaces\Migrations\MigrationsInterface;
 use Electro\Interfaces\ProfileInterface;
@@ -23,10 +24,6 @@ use SplFileInfo;
 class ModulesInstaller
 {
   /**
-   * @var KernelSettings
-   */
-  private $kernelSettings;
-  /**
    * @var ConsoleApplication
    */
   private $consoleApp;
@@ -34,6 +31,10 @@ class ModulesInstaller
    * @var ConsoleIOInterface
    */
   private $io;
+  /**
+   * @var KernelSettings
+   */
+  private $kernelSettings;
   /**
    * @var MigrationsInterface Lazily loaded on demand.
    */
@@ -51,7 +52,8 @@ class ModulesInstaller
    */
   private $registry;
 
-  function __construct (KernelSettings $kernelSettings, ConsoleApplication $consoleApp, ModulesRegistry $modulesRegistry,
+  function __construct (KernelSettings $kernelSettings, ConsoleApplication $consoleApp,
+                        ModulesRegistry $modulesRegistry,
                         callable $migrationsAPIFactory, ProfileInterface $profile)
   {
     $this->kernelSettings       = $kernelSettings;
@@ -86,40 +88,56 @@ class ModulesInstaller
   }
 
   /**
+   * @param ModuleInfo[] $modules
+   * @return ModuleInfo[]
+   * @throws ConfigException
+   */
+  static private function modulesTopologicalSort (array $modules)
+  {
+    /** @var ModuleInfo[] $A All modules, indexed by name */
+    $A = [];
+    /** @var ModuleInfo[] $L The sorted list to be returned */
+    $L = [];
+    foreach ($modules as $module) {
+      $A[$module->name] = $module;
+      $module->tmp      = $module->requiredBy; // tmp is a temporary scratch list
+    }
+    /** @var ModuleInfo[] $S Set of all modules not dependend upon */
+    $S = filter ($modules, function (ModuleInfo $m) { return !$m->requiredBy; }, true);
+    while ($S) {
+      $n = array_pop ($S);
+      array_unshift ($L, $n);
+      foreach ($n->dependencies as $name) {
+        $m = $A[$name];
+        if (in_array ($n->name, $m->tmp)) {
+          $m->tmp = array_diff ($m->tmp, [$n->name]);
+          if (!$m->tmp)
+            $S[] = $m;
+        }
+      }
+    }
+    foreach ($modules as $m) {
+      if ($m->tmp)
+        throw new ConfigException(sprintf ('Cyclic dependency between modules: "%s" <-> "%s"', $m->name,
+          implode ('" <-> "', $m->tmp)));
+      unset ($m->tmp);
+    }
+    return $L;
+  }
+
+  /**
    * Sorts modules by the order they should be loaded, according to their dependencies.
    *
    * @param ModuleInfo[] $modules
    */
   static private function sortModules (array &$modules)
   {
-    uasort ($modules, function (ModuleInfo $a, ModuleInfo $b) {
-      $typeSortOrder = ModuleInfo::TYPE_PRIORITY;
-
-      if ($a->type != $b->type) // Sort by type
-      {
-        // Make sure the priorities are defined
-        if (!isset($typeSortOrder[$a->type]))
-          throw new \RuntimeException ("Priority order not defined for type '{$a->type}' of module {$a->name}");
-        if (!isset($typeSortOrder[$b->type]))
-          throw new \RuntimeException ("Priority order not defined for type '{$b->type}' of module {$b->name}");
-
-        // Sort by priority type
-        $aindex = $typeSortOrder[$a->type];
-        $bindex = $typeSortOrder[$b->type];
-        return $aindex - $bindex;
-      }
-      else // If of same type, must check dependencies
-      {
-        $aDependsOnb = $a->dependencies && in_array ($b->name, $a->dependencies);
-        $bDependsOna = $b->dependencies && in_array ($a->name, $b->dependencies);
-
-        if ($aDependsOnb != $bDependsOna) // Simple dependency
-          return $bDependsOna ? -1 : 1;
-
-        // No dependency or circular dependency; simply sort by name
-        return strcmp ($a->name, $b->name);
-      }
-    });
+    $types = [];
+    foreach ($modules as $m)
+      $types[ModuleInfo::TYPE_PRIORITY[$m->type]][] = $m;
+    foreach ($types as &$t)
+      $t = self::modulesTopologicalSort ($t);
+    $modules = array_merge (...$types);
   }
 
   /**
@@ -345,10 +363,7 @@ class ModulesInstaller
         if ($rp != "{$this->kernelSettings->baseDirectory}/$module->path")
           $module->realPath = $rp;
 
-        //load the dependencies to an array as detailed by the modules composer.json
-        $module->dependencies = [];
-        foreach ($composerJson->get ('require') as $dependencyName => $dependencyVersion)
-          $module->dependencies[] = $dependencyName;
+        $module->dependencies = array_diff (object_propNames ($composerJson->get ('require')), ['php']);
       }
     }
   }
@@ -356,14 +371,30 @@ class ModulesInstaller
   /**
    * @param ModuleInfo[] $modules
    * @param string       $type
-   * @return \Electro\Kernel\Lib\ModuleInfo[]
+   * @return ModuleInfo[]
+   * @throws ConfigException
    */
   private function loadModulesMetadata (array $modules, $type)
   {
+    /** @var ModuleInfo[] $all */
+    $all = [];
     foreach ($modules as $module) {
       $module->type = $type;
       $this->loadModuleMetadata ($module);
+      $all[$module->name] = $module;
     }
+    // Filter out non-module package dependencies
+    $allModuleNames = map ($modules, pluck ('name'));
+    foreach ($modules as $module)
+      $module->dependencies = array_values (array_intersect ($module->dependencies, $allModuleNames));
+
+    foreach ($modules as $module) {
+      foreach ($module->dependencies as $dep)
+        if (isset($all[$dep]))
+          $all[$dep]->requiredBy[] = $module->name;
+        else throw new ConfigException("Invalid dependency: $dep");
+    }
+
     return $modules;
   }
 
