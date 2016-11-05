@@ -16,7 +16,6 @@
   ],
   "require": {
     "php": ">=5.6",
-    "wikimedia/composer-merge-plugin": "dev-master",
     "electro/installers": "^1.0.0",
     "php-kit/composer-bower-plugin": "dev-master",
     "php-kit/tools": "dev-master",
@@ -26,7 +25,25 @@
     "electro/interop": "dev-master || 1.x-dev",
     "rdlowrey/auryn": "^1.4.0",
     "monolog/monolog": "^1.17.1",
-    "codegyre/robo": "^0.5.3"
+    "codegyre/robo": "^0.5.3",
+    "authentication": "self.version",
+    "authorization": "self.version",
+    "caching": "self.version",
+    "configuration": "self.version",
+    "content-server": "self.version",
+    "database": "self.version",
+    "debugging": "self.version",
+    "error-handling": "self.version",
+    "http": "self.version",
+    "localization": "self.version",
+    "mail": "self.version",
+    "navigation": "self.version",
+    "routing": "self.version",
+    "sessions": "self.version",
+    "tasks": "self.version",
+    "validation": "self.version",
+    "view-engine": "self.version",
+    "web-server": "self.version"
   },
   "autoload": {
     "psr-4": {
