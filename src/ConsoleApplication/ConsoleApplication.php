@@ -223,8 +223,6 @@ class ConsoleApplication extends Runner
    */
   protected function mergeTasks ($app, $className)
   {
-    $roboTasks = $this->injector->make ($className);
-
     $commandNames = array_filter (get_class_methods ($className),
       function ($m) use ($className) {
         $method = new \ReflectionMethod($className, $m);
@@ -236,7 +234,7 @@ class ConsoleApplication extends Runner
     foreach ($commandNames as $commandName) {
       $command = $this->createCommand (new TaskInfo($className, $commandName));
       $command->setCode (function (InputInterface $input, OutputInterface $output)
-      use ($roboTasks, $commandName, $passThrough) {
+      use ($className, $commandName, $passThrough) {
         // get passthru args
         $args = $input->getArguments ();
         array_shift ($args);
@@ -250,6 +248,7 @@ class ConsoleApplication extends Runner
         // output capture.
         Config::setOutput ($output);
 
+        $roboTasks = $this->injector->make ($className);
         $res = call_user_func_array ([$roboTasks, $commandName], $args);
         // Restore the setting to the main output stream.
         Config::setOutput ($this->io->getOutput ());
