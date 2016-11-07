@@ -1,8 +1,7 @@
 {
   "name": "electro/framework",
-  "description": "The core code of the Electro framework ",
+  "description": "Electro framework's standard installation profile",
   "license": "MIT",
-  "homepage": "https://github.com/electro/framework",
   "authors": [
     {
       "name": "Impactwave",
@@ -15,27 +14,29 @@
     }
   ],
   "require": {
-    "php": ">=5.6",
-    "electro/installers": "^1.0.0",
-    "php-kit/composer-bower-plugin": "dev-master",
-    "php-kit/tools": "dev-master",
-    "php-kit/html5-tools": "dev-master",
-    "php-kit/power-primitives": "dev-master",
-    "php-kit/flow": "dev-master",
-    "electro/interop": "dev-master || 1.x-dev",
-    "rdlowrey/auryn": "^1.4.0",
-    "monolog/monolog": "^1.17.1",
-    "codegyre/robo": "^0.5.3"
+    "electro/kernel": "self.version",
+    "subsystems/authentication": "self.version",
+    "subsystems/authorization": "self.version",
+    "subsystems/caching": "self.version",
+    "subsystems/configuration": "self.version",
+    "subsystems/content-server": "self.version",
+    "subsystems/database": "self.version",
+    "subsystems/debugging": "self.version",
+    "subsystems/error-handling": "self.version",
+    "subsystems/http": "self.version",
+    "subsystems/localization": "self.version",
+    "subsystems/mail": "self.version",
+    "subsystems/navigation": "self.version",
+    "subsystems/routing": "self.version",
+    "subsystems/sessions": "self.version",
+    "subsystems/tasks": "self.version",
+    "subsystems/validation": "self.version",
+    "subsystems/view-engine": "self.version",
+    "subsystems/web-server": "self.version"
   },
   "autoload": {
     "psr-4": {
-      "Electro\\": "src"
-    },
-    "files": [
-      "global.php"
-    ]
-  },
-  "bin": [
-    "bin/workman"
-  ]
+      "Electro\\": "subsystems"
+    }
+  }
 }
