@@ -14,25 +14,7 @@
     }
   ],
   "require": {
-    "electro/kernel": "self.version",
-    "subsystems/authentication": "self.version",
-    "subsystems/authorization": "self.version",
-    "subsystems/caching": "self.version",
-    "subsystems/configuration": "self.version",
-    "subsystems/content-server": "self.version",
-    "subsystems/database": "self.version",
-    "subsystems/debugging": "self.version",
-    "subsystems/error-handling": "self.version",
-    "subsystems/http": "self.version",
-    "subsystems/localization": "self.version",
-    "subsystems/mail": "self.version",
-    "subsystems/navigation": "self.version",
-    "subsystems/routing": "self.version",
-    "subsystems/sessions": "self.version",
-    "subsystems/tasks": "self.version",
-    "subsystems/validation": "self.version",
-    "subsystems/view-engine": "self.version",
-    "subsystems/web-server": "self.version"
+    "electro/kernel": "self.version"
   },
   "autoload": {
     "psr-4": {
