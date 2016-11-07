@@ -1,6 +1,7 @@
 <?php
 namespace Electro\Kernel\Services;
 
+use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
@@ -72,35 +73,30 @@ class Kernel implements KernelInterface
     /** @var ModulesRegistry $registry */
     $registry = $this->injector->make (ModulesRegistry::class);
 
-    try {
-      foreach ($registry->onlyBootable ()->onlyEnabled ()->getModules () as $name => $module) {
-        /** @var ModuleInfo $module */
-        if (isset ($exclude[$module->name]) ||
-            ($module->type == ModuleInfo::TYPE_SUBSYSTEM && !isset($subsystems[$module->name]))
-        ) continue;
-        $modBoot = $module->bootstrapper;
-        /** @var ModuleInterface|string $modBoot */
-        if (!class_exists ($modBoot)) // don't load this module.
-          $this->logModuleError ("Class <kbd>$modBoot</kbd> was not found.");
-        elseif (is_a ($modBoot, ModuleInterface::class, true))
-          $modBoot::startUp ($this, $module);
-        //else ignore the module
-      }
-
-      /**
-       * Boot up all non-core modules.
-       */
-
-      $this->emit (PRE_REGISTER, $this->injector);
-      $this->emit (REGISTER_SERVICES, $this->injector);
-      $this->emitAndInject (CONFIGURE);
-      $this->emitAndInject (RECONFIGURE);
-      $this->emitAndInject (RUN);
-      $this->emitAndInject (SHUTDOWN);
+    foreach ($registry->onlyBootable ()->onlyEnabled ()->getModules () as $name => $module) {
+      /** @var ModuleInfo $module */
+      if (isset ($exclude[$module->name]) ||
+          ($module->type == ModuleInfo::TYPE_SUBSYSTEM && !isset($subsystems[$module->name]))
+      ) continue;
+      $modBoot = $module->bootstrapper;
+      /** @var ModuleInterface|string $modBoot */
+      if (!class_exists ($modBoot)) // don't load this module.
+        throw new ConfigException("Class $modBoot was not found.");
+      elseif (is_a ($modBoot, ModuleInterface::class, true))
+        $modBoot::startUp ($this, $module);
+      //else ignore the module
     }
-    catch (Exception $e) {
-      $this->logModuleError ($e->getMessage (), $e);
-    }
+
+    /**
+     * Boot up all non-core modules.
+     */
+
+    $this->emit (PRE_REGISTER, $this->injector);
+    $this->emit (REGISTER_SERVICES, $this->injector);
+    $this->emitAndInject (CONFIGURE);
+    $this->emitAndInject (RECONFIGURE);
+    $this->emitAndInject (RUN);
+    $this->emitAndInject (SHUTDOWN);
   }
 
   function getProfile ()
@@ -147,17 +143,6 @@ class Kernel implements KernelInterface
   {
     foreach (get ($this->listeners, $event, []) as $l)
       $this->injector->execute ($l);
-  }
-
-  private function logModuleError ($message, Exception $e = null)
-  {
-    if (!$e)
-      $e = new \RuntimeException ($message);
-    // Make sure the exception gets logged before throwing it.
-    // Note: the logger is lazily created to allow some module to override it before this error occurs.
-    Debug::logException ($this->injector->make (LoggerInterface::class), $e);
-
-    throw $e;
   }
 
 }
