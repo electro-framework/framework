@@ -93,7 +93,7 @@ class WebBootloader implements BootloaderInterface
     if ($this->debugMode)
       $this->setDebugPathsMap ($this->injector->make (ModulesRegistry::class));
 
-    return 0;
+    return $kernel->getExitCode();
   }
 
   /**
