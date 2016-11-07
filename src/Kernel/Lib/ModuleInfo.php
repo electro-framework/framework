@@ -34,15 +34,15 @@ class ModuleInfo implements AssignableInterface
    */
   public $bootstrapper;
   /**
-   * Name list of the modules, that this module depends on.
+   * List of names of modules on whom this module depends on.
    *
-   * @var array
+   * @var string[]
    */
-  public $dependencies;
+  public $dependencies = [];
   /**
-   * Name list of the modules that depend on this module.
+   * List of names of modules that depend on this module.
    *
-   * @var array
+   * @var string[]
    */
   public $requiredBy = [];
   /**
