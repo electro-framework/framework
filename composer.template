@@ -1,6 +1,6 @@
 {
-  "name": "subsystems/console",
-  "description": "Electro framework's console subsystem",
+  "name": "electro/framework",
+  "description": "Electro framework's subsystems for the standard configuration profiles",
   "license": "MIT",
   "authors": [
     {
@@ -14,14 +14,15 @@
     }
   ],
   "require": {
-    "codegyre/robo": "^0.5.3"
+    "electro/kernel": "self.version"
   },
   "autoload": {
     "psr-4": {
-      "Electro\\ConsoleApplication\\": "ConsoleApplication"
     }
   },
   "bin": [
-    "bin/workman"
+  ],
+  "files": [
+    "global.php"
   ]
 }

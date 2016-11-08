@@ -1,18 +1,34 @@
 # Framework
 
-The Electro framework's standard installation profile
+The Electro framework's subsystems for the standard configuration profiles
 
-## Standard framework installation
+### Introduction
+
+This package provides the standard framework subsystems and causes the installation of all the recommended packages for a standard framework configuration.
+
+The standard configuration provides two profiles:
+1. The `WebProfile` - the standard functionality for web applications.
+1. The `ConsoleProfile` - the standard functionality for console-based applications.
+
+See the framework's documentation to know more about profiles.
+
+##### Subsystems vs Plugins
+
+This package's subsystem modules provide only the main functionality of the framework.
+
+Some optional parts of the framework are available elsewere as plugin packages that you can install on demand. Those will provide you with ORMs, database migrations, templating engines and more.
+
+Plese refer to the framework's documentation for instructions on how to install plugins.
+
+### Installing the framework's standard package bundle
 
 By requiring this package on your project's `composer.json` file, you will install the framework with all recommended packages for a standard configuration.
 
-> Some optional parts of the framework are available elsewere as plugin packages that you can install on demand. Refer to the framework's documentation for instructions on how to install plugins.
-
-You should not install this package on an empty project, as it doesn't provide the underlying files and directory structure required by a fully-working application.
+You should not install this package on an empty project, as it will be missing the underlying files and directory structure required by a fully-working application.
 
 Use the [Electro base installation](https://github.com/electro-framework/electro) as your application's starting point.
 
-## Customized framework installation
+### Installing a customized framework profile
 
 In a near future, there will be more framework installation profiles available.
 
