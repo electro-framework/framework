@@ -18,11 +18,11 @@
   },
   "autoload": {
     "psr-4": {
-    }
+    },
+   "files": [
+     "global.php"
+   ]
   },
   "bin": [
-  ],
-  "files": [
-    "global.php"
   ]
 }

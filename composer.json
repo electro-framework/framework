@@ -45,12 +45,12 @@
       "Electro\\Validation\\": "subsystems/validation/Validation",
       "Electro\\ViewEngine\\": "subsystems/view-engine/ViewEngine/",
       "Electro\\WebServer\\": "subsystems/web-server/WebServer"
-    }
+    },
+    "files": [
+      "global.php"
+    ]
   },
   "bin": [
     "subsystems/console/bin/workman"
-  ],
-  "files": [
-    "global.php"
   ]
 }

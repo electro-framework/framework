@@ -21,7 +21,7 @@ foreach ($packages as $package) {
   if (isset($config['require'])) {
     $require = $config['require'];
     foreach ($require as $name => $version)
-      if (substr($name, 0, 11) != 'subsystems/') { // exclude subsystems
+      if (substr ($name, 0, 11) != 'subsystems/') { // exclude subsystems
         if (!isset ($requires[$name]))
           $requires[$name] = $version;
         else if ($requires[$name] != $version)
@@ -30,32 +30,38 @@ foreach ($packages as $package) {
       }
   }
 
-  // Merge 'autoload.psr-4' section
+  if (isset($config['autoload'])) {
+    $autoload = $config['autoload'];
 
-  if (isset($config['autoload']))
-    foreach ($config['autoload']['psr-4'] as $namespace => $dir)
-      $psr4s[$namespace] = "subsystems/$package/$dir";
+    // Merge 'autoload.psr-4' section
+
+    if (isset($autoload['psr-4']))
+      foreach ($autoload['psr-4'] as $namespace => $dir)
+        $psr4s[$namespace] = "subsystems/$package/$dir";
+
+    // Merge 'files' section
+
+    if (isset($autoload['files']))
+      foreach ($autoload['files'] as $file)
+        $files[] = "subsystems/$package/$file";
+  }
 
   // Merge 'bin' section
 
   if (isset($config['bin']))
     foreach ($config['bin'] as $file)
       $bins[] = "subsystems/$package/$file";
-
-  // Merge 'files' section
-
-  if (isset($config['files']))
-    foreach ($config['files'] as $file)
-      $files[] = "subsystems/$package/$file";
 }
 
 ksort ($requires);
 ksort ($psr4s);
 ksort ($bins);
+// do not sort files.
+
 $targetConfig['require']           = array_merge ($targetConfig['require'], $requires);
 $targetConfig['autoload']['psr-4'] = array_merge ($targetConfig['autoload']['psr-4'], $psr4s);
+$targetConfig['autoload']['files'] = array_merge ($targetConfig['autoload']['files'], $files);
 $targetConfig['bin']               = array_merge ($targetConfig['bin'], $bins);
-$targetConfig['files']             = array_merge ($targetConfig['files'], $files);
 
 json_save ('composer.json', $targetConfig);
 echo "composer.json has been updated
