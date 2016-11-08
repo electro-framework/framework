@@ -20,8 +20,6 @@
     "league/glide": "^1.0.0",
     "php-kit/ext-pdo": "dev-master",
     "php-kit/php-web-console": "dev-master",
-    "subsystems/authentication": "self.version",
-    "subsystems/http": "self.version",
     "swiftmailer/swiftmailer": "^5.4.2",
     "vlucas/phpdotenv": "^2.3.0",
     "zendframework/zend-diactoros": "^1.1.3"

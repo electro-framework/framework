@@ -21,11 +21,13 @@ foreach ($packages as $package) {
   if (isset($config['require'])) {
     $require = $config['require'];
     foreach ($require as $name => $version)
-      if (!isset ($requires[$name]))
-        $requires[$name] = $version;
-      else if ($requires[$name] != $version)
-        fail ("subsystem/$package's version of package '$name' conflicts with another subsystem's version of the same package
+      if (substr($name, 0, 11) != 'subsystems/') { // exclude subsystems
+        if (!isset ($requires[$name]))
+          $requires[$name] = $version;
+        else if ($requires[$name] != $version)
+          fail ("subsystem/$package's version of package '$name' conflicts with another subsystem's version of the same package
 ");
+      }
   }
 
   // Merge 'autoload.psr-4' section

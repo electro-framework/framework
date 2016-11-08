@@ -7,6 +7,7 @@ The Electro framework's subsystems for the standard configuration profiles
 This package provides the standard framework subsystems and causes the installation of all the recommended packages for a standard framework configuration.
 
 The standard configuration provides two profiles:
+
 1. The `WebProfile` - the standard functionality for web applications.
 1. The `ConsoleProfile` - the standard functionality for console-based applications.
 
