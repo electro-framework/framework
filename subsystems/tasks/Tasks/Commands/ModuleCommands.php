@@ -79,61 +79,23 @@ trait ModuleCommands
   }
 
   /**
-   * Scaffolds a new project module
+   * Scaffolds a private module that uses the Matisse templating engine
+   *
+   * @param string $moduleName The full name (vendor-name/module-name) of the module to be created
+   */
+  function makeMatisseModule ($moduleName = null)
+  {
+    $this->makeModuleFromScaffold ($moduleName, 'matisse-module');
+  }
+
+  /**
+   * Scaffolds a basic private module with routing, navigation and PHP templating
    *
    * @param string $moduleName The full name (vendor-name/module-name) of the module to be created
    */
   function makeModule ($moduleName = null)
   {
-    $io = $this->io;
-
-    $moduleName = $moduleName ?: $io->askDefault ("Module name", "company-name/project-name");
-
-    if (!ModulesRegistry::validateModuleName ($moduleName))
-      $io->error ("Invalid module name $moduleName. Correct syntax: company-name/project-name");
-    if ($this->modulesRegistry->isInstalled ($moduleName))
-      $io->error ("You can't use that name because a module named $moduleName already exists");
-
-    $___MODULE___    = $moduleName;
-    $___NAMESPACE___ = ModuleInfo::moduleNameToNamespace ($___MODULE___);
-    $___CLASS___     = explode ('\\', $___NAMESPACE___)[1] . 'Module';
-    if (!$moduleName) {
-      $___NAMESPACE___ = $io->askDefault ("PHP namespace for the module's classes", $___NAMESPACE___);
-      $___CLASS___     = $io->askDefault ("Name of the class that represents the module:", $___CLASS___);
-    }
-    $___PSR4_NAMESPACE___ = str_replace ('\\', '\\\\', "$___NAMESPACE___\\");
-
-    $path = "{$this->kernelSettings->modulesPath}/$___MODULE___";
-    (new CopyDir (["{$this->settings->scaffoldsPath()}/module" => $path]))->run ();
-    $this->fs->rename ("$path/src/Config/___CLASS___.php", "$path/src/Config/$___CLASS___.php")->run ();
-
-    foreach
-    ([
-       "$path/src/Config/$___CLASS___.php",
-       "$path/composer.json",
-     ]
-     as $file) (new Replace ($file))
-      ->from ([
-        '___MODULE___',
-        '___CLASS___',
-        '___NAMESPACE___',
-        '___PSR4_NAMESPACE___',
-        '___MODULE_PATH___',
-      ])
-      ->to ([
-        $___MODULE___,
-        $___CLASS___,
-        $___NAMESPACE___,
-        $___PSR4_NAMESPACE___,
-        $path,
-      ])
-      ->run ();
-
-    // Register the module's namespace
-
-    $this->composerUpdate (); // It also updates the modules registry
-
-    $io->done ("Module <info>$___MODULE___</info> was created");
+    $this->makeModuleFromScaffold ($moduleName, 'module');
   }
 
   /**
@@ -284,21 +246,19 @@ trait ModuleCommands
    */
   function uninstall ($moduleName = null)
   {
-    $composerCfg = new ComposerConfigHandler;
-    $required    =
-    $mainRequired = array_diff (array_keys ($composerCfg->get ('require')), ['php', 'electro/framework']);
-    $packagesMap = [];
+    if (!$moduleName) {
+      $composerCfg = new ComposerConfigHandler;
+      $required    = array_keys ($composerCfg->get ('require'));
 
-    $privMods = $this->modulesRegistry->onlyPrivate ()->getModules ();
-    foreach ($privMods as $mod) {
-      $packages = $mod->getRequiredPackages ();
-      array_mergeInto ($packagesMap, array_fill_keys ($packages, $mod));
-      array_mergeInto ($required, $packages);
+      $availableModules = [];
+      foreach ($required as $mod)
+        if ($this->modulesRegistry->isPrivateModule ($mod) || $this->modulesRegistry->isPlugin ($mod))
+          $availableModules[] = $mod;
+
+      $this->modulesUtil->selectModule ($moduleName, function (ModuleInfo $module) use ($availableModules) {
+        return in_array ($module->name, $availableModules);
+      });
     }
-
-    $this->modulesUtil->selectModule ($moduleName, function (ModuleInfo $module) use ($required) {
-      return in_array ($module->name, $required);
-    });
 
     $this->io->writeln ("Uninstalling <info>$moduleName</info>")->nl ();
 
@@ -455,22 +415,29 @@ trait ModuleCommands
     // Unregister the module now, otherwise a class not found error will be displayed when moduleRefresh is called.
     $this->modulesRegistry->unregisterModule ($moduleName) or exit (1);
 
-    $path = "{$this->kernelSettings->modulesPath}/$moduleName";
-    $this->removeModuleDirectory ($path);
-
     // Uninstall the module's dependencies and unregister its namespaces.
+    $cfg     = new ComposerConfigHandler;
+    $require = $cfg->get ('require', []);
+    unset ($require[$moduleName]);
+    $cfg->set ('require', $require);
+    $cfg->save ();
 
     $this->composerUpdate (); // Note: this also updates the modules registry.
 
+    // Physically remove the module, as Composer won't do it for private modules.
+    // This must be done AFTER 'composer update' removes the symlinks.
+    $path = "{$this->kernelSettings->modulesPath}/$moduleName";
+    $this->removeModuleDirectory ($path);
+
     $io->done ("Module <info>$moduleName</info> was uninstalled");
   }
-
-  //--------------------------------------------------------------------------------------------------------------------
 
   private function composerUpdate ()
   {
     (new Update)->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
   }
+
+  //--------------------------------------------------------------------------------------------------------------------
 
   private function formatModules (& $modules, $stars = false)
   {
@@ -513,6 +480,72 @@ trait ModuleCommands
   private function isDirectoryEmpty ($path)
   {
     return !count (FilesystemFlow::from ($path)->all ());
+  }
+
+  /**
+   * Scaffolds a new project module
+   *
+   * @param string|null $moduleName The full name (vendor-name/module-name) of the module to be created
+   * @param string      $scaffold   The scaffold's folder name.
+   */
+  private function makeModuleFromScaffold ($moduleName, $scaffold)
+  {
+    $io = $this->io;
+
+    $moduleName = $moduleName ?: $io->askDefault ("Module name", "company-name/project-name");
+
+    if (!ModulesRegistry::validateModuleName ($moduleName))
+      $io->error ("Invalid module name $moduleName. Correct syntax: company-name/project-name");
+    if ($this->modulesRegistry->isInstalled ($moduleName))
+      $io->error ("You can't use that name because a module named $moduleName already exists");
+
+    $___MODULE___    = $moduleName;
+    $___NAMESPACE___ = ModuleInfo::moduleNameToNamespace ($___MODULE___);
+    $___CLASS___     = explode ('\\', $___NAMESPACE___)[1] . 'Module';
+    if (!$moduleName) {
+      $___NAMESPACE___ = $io->askDefault ("PHP namespace for the module's classes", $___NAMESPACE___);
+      $___CLASS___     = $io->askDefault ("Name of the class that represents the module:", $___CLASS___);
+    }
+    $___PSR4_NAMESPACE___ = str_replace ('\\', '\\\\', "$___NAMESPACE___\\");
+
+    $path = "{$this->kernelSettings->modulesPath}/$___MODULE___";
+    (new CopyDir (["{$this->settings->scaffoldsPath()}/$scaffold" => $path]))->run ();
+    $this->fs->rename ("$path/src/Config/___CLASS___.php", "$path/src/Config/$___CLASS___.php")->run ();
+
+    foreach
+    ([
+       "$path/src/Config/$___CLASS___.php",
+       "$path/src/Config/Navigation.php",
+       "$path/src/Config/Routes.php",
+       "$path/composer.json",
+     ]
+     as $file) (new Replace ($file))
+      ->from ([
+        '___MODULE___',
+        '___CLASS___',
+        '___NAMESPACE___',
+        '___PSR4_NAMESPACE___',
+        '___MODULE_PATH___',
+      ])
+      ->to ([
+        $___MODULE___,
+        $___CLASS___,
+        $___NAMESPACE___,
+        $___PSR4_NAMESPACE___,
+        $path,
+      ])
+      ->run ();
+
+    // Register the module's namespace
+    $cfg                  = new ComposerConfigHandler;
+    $require              = $cfg->get ('require', []);
+    $require[$moduleName] = '*';
+    $cfg->set ('require', $require);
+    $cfg->save ();
+
+    $this->composerUpdate (); // It also updates the modules registry
+
+    $io->done ("Module <info>$___MODULE___</info> was created");
   }
 
   private function removeModuleDirectory ($path)

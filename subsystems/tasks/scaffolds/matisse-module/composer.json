@@ -1,0 +1,13 @@
+{
+  "name": "___MODULE___",
+  "description": "",
+  "license": "proprietary",
+  "autoload": {
+    "psr-4": {
+      "___PSR4_NAMESPACE___": "src"
+    }
+  },
+  "require": {
+    "electro-modules/matisse": "v1-dev"
+  }
+}
