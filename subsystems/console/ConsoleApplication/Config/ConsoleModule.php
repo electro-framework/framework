@@ -10,7 +10,7 @@ use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
 use Symfony\Component\Console\Application as SymfonyConsole;
 
-class WebServerModule implements ModuleInterface
+class ConsoleModule implements ModuleInterface
 {
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)
   {
