@@ -8,16 +8,18 @@ use Electro\Interfaces\KernelInterface;
 use Electro\Kernel\Config\KernelModule;
 use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Services\ModulesRegistry;
-use Electro\Logging\Config\LoggingModule;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\DebugConsole\DebugConsoleSettings;
 use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 
 /**
- * Provides the standard bootstrap procedure for web applications.
+ * Provides the standard bootstrap sequence for web applications.
  *
- * - Sets up all framework services required for HTTP request handling.
- * - Transfers execution to the web-server subsystem.
+ * Boot up the framework's kernel.
+ *
+ * This occurs before the framework's main startup sequence.
+ * Unlike the later, which is managed automatically, this pre-startup process is manually defined and consists of
+ * just a core service that must be setup before any other module loads.
  */
 class WebBootloader implements BootloaderInterface
 {
@@ -50,7 +52,7 @@ class WebBootloader implements BootloaderInterface
       $dotenv->load ();
     }
 
-    // Load the kernel's configuration
+    // Load the kernel's configuration.
 
     /** @var KernelSettings $kernelSettings */
     $kernelSettings = $this->kernelSettings = $this->injector
@@ -60,24 +62,17 @@ class WebBootloader implements BootloaderInterface
     $kernelSettings->isWebBased = true;
     $kernelSettings->setApplicationRoot ($rootDir, $urlDepth);
 
-    // Setup debugging
+    // Setup debugging.
 
     $this->setupDebugging ($rootDir);
     // Temporarily set framework path mapping here for errors thrown during modules loading.
     ErrorConsole::setPathsMap ($kernelSettings->getMainPathMap ());
 
-    /*
-     * Boot up the framework's core embedded modules.
-     *
-     * This occurs before the framework's main startup sequence.
-     * Unlike the later, which is managed automatically, this pre-startup process is manually defined and consists of
-     * just a few core services that must be setup before any other module loads.
-     * Note: these modules are special and they do not implement ModuleInterface.
-     */
-    $this->injector->execute ([LoggingModule::class, 'register']);
+    // Boot up the framework's kernel.
+
     $this->injector->execute ([KernelModule::class, 'register']);
 
-    // Boot up the framework/application's modules.
+    // Boot up the framework's subsytems and the application's modules.
 
     /** @var KernelInterface $kernel */
     $kernel = $this->injector->make (KernelInterface::class);
@@ -93,7 +88,7 @@ class WebBootloader implements BootloaderInterface
     if ($this->debugMode)
       $this->setDebugPathsMap ($this->injector->make (ModulesRegistry::class));
 
-    return $kernel->getExitCode();
+    return $kernel->getExitCode ();
   }
 
   /**

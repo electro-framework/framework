@@ -1,6 +1,6 @@
 {
-  "name": "subsystems/authorization",
-  "description": "Electro framework's authorization subsystem",
+  "name": "subsystems/logging",
+  "description": "Electro framework's logging subsystem",
   "license": "MIT",
   "authors": [
     {
@@ -13,12 +13,9 @@
       "email": "claudio.silva@impactwave.com"
     }
   ],
-  "require": {
-    "subsystems/authentication": "self.version"
-  },
   "autoload": {
     "psr-4": {
-      "Electro\\Authorization\\": "Authorization"
+      "Electro\\Logging\\": "Logging"
     }
   }
 }

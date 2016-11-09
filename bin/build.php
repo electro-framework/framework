@@ -2,7 +2,7 @@
 <?php
 /*
  * This script rebuilds this package's composer.json file by merging relevant sections from the bundled subsystems.
- * You should run it whenever you modify one of the subsystem's composer.json and the commit the changes to Git.
+ * Whenever you modify the composer.json of a subsystem, you should run this and then commit the changes to Git.
  */
 
 define ('DIR_LIST_DIRECTORIES', 2);

@@ -74,15 +74,8 @@ class ConsoleBootloader implements BootloaderInterface
     $kernelSettings->isConsoleBased = true;
     $kernelSettings->setApplicationRoot ($rootDir, $urlDepth);
 
-    /*
-     * Boot up the framework's core embedded modules.
-     *
-     * This occurs before the framework's main startup sequence.
-     * Unlike the later, which is managed automatically, this pre-startup process is manually defined and consists of
-     * just a few core services that must be setup before any other module loads.
-     * Note: these modules are special and they do not implement ModuleInterface.
-     */
-    $this->injector->execute ([LoggingModule::class, 'register']);
+    // Boot up the framework's kernel.
+
     $this->injector->execute ([KernelModule::class, 'register']);
 
     // Boot up the framework/application's modules.
