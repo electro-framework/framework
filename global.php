@@ -5,6 +5,7 @@ use Electro\Http\Lib\Http;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\Routing\Lib\FactoryRoutable;
+use PhpKit\WebConsole\Lib\Debug;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 

@@ -7,7 +7,6 @@ use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Kernel\Config\KernelModule;
 use Electro\Kernel\Config\KernelSettings;
-use Electro\Logging\Config\LoggingModule;
 
 class ConsoleBootloader implements BootloaderInterface
 {
@@ -32,13 +31,13 @@ class ConsoleBootloader implements BootloaderInterface
       switch (get_class ($arg)) {
         case \ReflectionMethod::class:
           /** @var \ReflectionMethod $arg */
-          return $arg->getDeclaringClass ()->getName () . '::' . $arg->getName ();
+          return sprintf ('ReflectionMethod<%s::$s>', $arg->getDeclaringClass ()->getName (), $arg->getName ());
         case \ReflectionFunction::class:
           /** @var \ReflectionFunction $arg */
-          return sprintf ('Closure at %s line %d', $arg->getFileName (), $arg->getStartLine ());
+          return sprintf ('ReflectionFunction<function at %s line %d>', $arg->getFileName (), $arg->getStartLine ());
         case \ReflectionParameter::class:
           /** @var \ReflectionParameter $arg */
-          return '$' . $arg->getName ();
+          return sprintf ('ReflectionParameter<$%s>', $arg->getName ());
         default:
           return typeOf ($arg);
       }
@@ -89,7 +88,7 @@ class ConsoleBootloader implements BootloaderInterface
     // Boot up all modules.
     $kernel->boot ();
 
-    return $kernel->getExitCode();
+    return $kernel->getExitCode ();
   }
 
   /**

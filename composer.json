@@ -27,7 +27,6 @@
   "autoload": {
     "psr-4": {
       "Electro\\Authentication\\": "subsystems/authentication/Authentication",
-      "Electro\\Authorization\\": "subsystems/authorization/Authorization",
       "Electro\\Caching\\": "subsystems/caching/Caching",
       "Electro\\Configuration\\": "subsystems/configuration/Configuration",
       "Electro\\ConsoleApplication\\": "subsystems/console/ConsoleApplication",
@@ -37,6 +36,7 @@
       "Electro\\ErrorHandling\\": "subsystems/error-handling/ErrorHandling",
       "Electro\\Http\\": "subsystems/http/Http",
       "Electro\\Localization\\": "subsystems/localization/Localization",
+      "Electro\\Logging\\": "subsystems/logging/Logging",
       "Electro\\Mail\\": "subsystems/mail/Mail",
       "Electro\\Navigation\\": "subsystems/navigation/Navigation",
       "Electro\\Routing\\": "subsystems/routing/Routing",

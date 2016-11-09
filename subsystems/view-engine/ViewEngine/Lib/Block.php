@@ -2,6 +2,7 @@
 namespace Electro\ViewEngine\Lib;
 
 use Electro\Plugins\Matisse\Components\Base\Component;
+use PhpKit\WebConsole\Lib\Debug;
 
 /**
  * A block of renderable content.
@@ -27,7 +28,7 @@ class Block
   {
     if (!is_array ($content) && !is_string ($content))
       throw new \InvalidArgumentException(sprintf ("Block content must be <kbd>string|Component[]</kbd>, %s given",
-        typeInfoOf ($content)));
+        Debug::typeInfoOf ($content)));
     return $content;
   }
 
