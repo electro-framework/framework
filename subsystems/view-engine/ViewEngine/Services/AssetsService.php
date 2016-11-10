@@ -17,11 +17,11 @@ class AssetsService
   /**
    * @var AssetsContext
    */
-  public $assets;
+  private $assets;
   /**
    * @var AssetsContext
    */
-  public $mainAssets;
+  private $mainAssets;
 
   public function __construct ()
   {

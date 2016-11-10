@@ -54,7 +54,8 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     $response = $next ();
 
     $contentType = $response->getHeaderLine ('Content-Type');
-    if ($contentType && $contentType != 'text/html')
+    $status      = $response->getStatusCode ();
+    if ($status >= 300 && $status < 400 || $contentType && $contentType != 'text/html')
       return $response;
 
     $response->getBody ()->rewind ();
@@ -143,7 +144,6 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     $trace = DebugConsole::logger ('trace');
     if ($trace->hasContent ())
       DebugConsole::registerPanel ('trace', $trace);
-
 
     return DebugConsole::outputContentViaResponse ($request, $response, true);
   }
