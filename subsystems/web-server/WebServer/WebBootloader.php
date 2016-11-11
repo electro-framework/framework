@@ -62,15 +62,15 @@ class WebBootloader implements BootloaderInterface
     $kernelSettings->isWebBased = true;
     $kernelSettings->setApplicationRoot ($rootDir, $urlDepth);
 
+    // Boot up the framework's kernel.
+
+    $this->injector->execute ([KernelModule::class, 'register']);
+
     // Setup debugging.
 
     $this->setupDebugging ($rootDir);
     // Temporarily set framework path mapping here for errors thrown during modules loading.
     ErrorConsole::setPathsMap ($kernelSettings->getMainPathMap ());
-
-    // Boot up the framework's kernel.
-
-    $this->injector->execute ([KernelModule::class, 'register']);
 
     // Boot up the framework's subsytems and the application's modules.
 
@@ -125,7 +125,7 @@ class WebBootloader implements BootloaderInterface
   {
     set_exception_handler ([$this, 'exceptionHandler']);
 
-    $debug = $this->kernelSettings->debugMode = $this->debugMode = getenv ('DEBUG') == 'true';
+    $debug = $this->debugMode = getenv ('DEBUG') == 'true';
     $this->injector->defineParam ('debugMode', $debug);
 
     $debugConsole = getenv ('CONSOLE') == 'true';
