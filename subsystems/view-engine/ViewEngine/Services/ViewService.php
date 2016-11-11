@@ -32,7 +32,7 @@ class ViewService implements ViewServiceInterface
 
   function getEngine ($engineClass)
   {
-    // The engine class may receive this insstance as a $view parameter on the constructor (optional).
+    // The engine class may receive this instance as a $view parameter on the constructor (optional).
     $engine = $this->injector->make ($engineClass, [':view' => $this]);
     return $engine;
   }
