@@ -18,9 +18,6 @@ class ConsoleModule implements ModuleInterface
       ->onRegisterServices (
         function (InjectorInterface $injector) {
           $injector
-            ->defineParam ('debugMode', false)
-            ->defineParam ('debugConsole', false)
-            //
             ->share (ConsoleSettings::class)
             //
             ->alias (ConsoleIOInterface::class, ConsoleIO::class)

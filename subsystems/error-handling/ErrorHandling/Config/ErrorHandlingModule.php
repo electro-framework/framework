@@ -20,13 +20,12 @@ class ErrorHandlingModule implements ModuleInterface
           $injector
             ->alias (ErrorRendererInterface::class, ErrorRenderer::class)
             ->share (ErrorHandlingSettings::class);
-        })
-      //
-      ->onConfigure (
-        function ($debugConsole, ApplicationMiddlewareInterface $applicationMiddleware) {
-          if ($debugConsole) {
-            $applicationMiddleware->add (EditorLauncherMiddleware::class, null, 'router');
-          }
+        });
+
+    if ($kernel->devEnv ())
+      $kernel->onConfigure (
+        function (ApplicationMiddlewareInterface $applicationMiddleware) {
+          $applicationMiddleware->add (EditorLauncherMiddleware::class, null, 'router');
         });
   }
 

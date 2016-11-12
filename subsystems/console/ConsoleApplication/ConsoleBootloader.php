@@ -50,12 +50,6 @@ class ConsoleBootloader implements BootloaderInterface
   {
     $rootDir = normalizePath ($rootDir);
 
-    // Setup error handling
-
-    register_shutdown_function ([$this, 'shutdown']);
-    set_error_handler ([$this, 'errorHandler']);
-    set_exception_handler ([$this, 'exceptionHandler']);
-
     // Initialize some settings from environment variables
 
     if (file_exists ("$rootDir/.env")) {
@@ -73,6 +67,10 @@ class ConsoleBootloader implements BootloaderInterface
     $kernelSettings->isConsoleBased = true;
     $kernelSettings->setApplicationRoot ($rootDir, $urlDepth);
 
+    // Setup debugging (must be done before instantiating the kernel, but after instantiating its settings).
+
+    $this->setupDebugging ($rootDir);
+
     // Boot up the framework's kernel.
 
     $this->injector->execute ([KernelModule::class, 'register']);
@@ -89,6 +87,19 @@ class ConsoleBootloader implements BootloaderInterface
     $kernel->boot ();
 
     return $kernel->getExitCode ();
+  }
+
+  /**
+   * @param string $rootDir
+   */
+  private function setupDebugging ($rootDir)
+  {
+    register_shutdown_function ([$this, 'shutdown']);
+    set_error_handler ([$this, 'errorHandler']);
+    set_exception_handler ([$this, 'exceptionHandler']);
+
+    $this->injector->defineParam ('debugMode', false);
+    $this->injector->defineParam ('debugConsole', false);
   }
 
   /**

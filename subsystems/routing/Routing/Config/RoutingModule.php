@@ -53,8 +53,9 @@ class RoutingModule implements ModuleInterface
               })
             ->share (CurrentRequestMutator::class);
 
-          if ($debugConsole) $injector
-            ->share (RoutingLogger::class);
+          if ($debugConsole)
+            $injector
+              ->share (RoutingLogger::class);
         });
 
       });

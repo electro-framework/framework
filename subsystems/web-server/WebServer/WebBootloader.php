@@ -24,10 +24,6 @@ use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 class WebBootloader implements BootloaderInterface
 {
   /**
-   * @var bool
-   */
-  private $debugMode;
-  /**
    * @var InjectorInterface
    */
   private $injector;
@@ -62,15 +58,13 @@ class WebBootloader implements BootloaderInterface
     $kernelSettings->isWebBased = true;
     $kernelSettings->setApplicationRoot ($rootDir, $urlDepth);
 
+    // Setup debugging (must be done before instantiating the kernel, but after instantiating its settings).
+
+    $this->setupDebugging ($rootDir);
+
     // Boot up the framework's kernel.
 
     $this->injector->execute ([KernelModule::class, 'register']);
-
-    // Setup debugging.
-
-    $this->setupDebugging ($rootDir);
-    // Temporarily set framework path mapping here for errors thrown during modules loading.
-    ErrorConsole::setPathsMap ($kernelSettings->getMainPathMap ());
 
     // Boot up the framework's subsytems and the application's modules.
 
@@ -85,7 +79,7 @@ class WebBootloader implements BootloaderInterface
 
     // Finalize.
 
-    if ($this->debugMode)
+    if ($kernel->devEnv ())
       $this->setDebugPathsMap ($this->injector->make (ModulesRegistry::class));
 
     return $kernel->getExitCode ();
@@ -125,7 +119,7 @@ class WebBootloader implements BootloaderInterface
   {
     set_exception_handler ([$this, 'exceptionHandler']);
 
-    $debug = $this->debugMode = getenv ('DEBUG') == 'true';
+    $debug = getenv ('DEBUG') == 'true';
     $this->injector->defineParam ('debugMode', $debug);
 
     $debugConsole = getenv ('CONSOLE') == 'true';
@@ -138,6 +132,9 @@ class WebBootloader implements BootloaderInterface
     $settings->defaultPanelTitle = 'Inspector';
     $settings->defaultPanelIcon  = 'fa fa-search';
     DebugConsole::init ($debug, $settings);
+
+    // Temporarily set framework path mapping here for errors thrown during modules loading.
+    ErrorConsole::setPathsMap ($this->kernelSettings->getMainPathMap ());
   }
 
 }

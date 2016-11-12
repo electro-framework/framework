@@ -224,9 +224,9 @@ trait ModuleCommands
     $this->io->table ([
       'Module',
       'Enabled',
-      'Booted',
+      'Bootable',
       'Status',
-    ], $o, [40, 8, 7, 0], ['L', 'C', 'C']);
+    ], $o, [40, 8, 9, 0], ['L', 'C', 'C']);
   }
 
   /**
