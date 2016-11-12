@@ -127,6 +127,7 @@ class WebBootloader implements BootloaderInterface
 
     ErrorConsole::init ($debug, $rootDir);
     ErrorConsole::setAppName ($this->kernelSettings->appName);
+    ErrorConsole::setEditorURL ($this->kernelSettings->editorURL);
 
     $settings                    = new DebugConsoleSettings;
     $settings->defaultPanelTitle = 'Inspector';
