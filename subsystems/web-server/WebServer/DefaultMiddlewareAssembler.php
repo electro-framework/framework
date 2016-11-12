@@ -19,14 +19,14 @@ use Electro\Sessions\Middleware\SessionMiddleware;
 class DefaultMiddlewareAssembler implements MiddlewareAssemblerInterface
 {
   /** @var bool */
-  private $debugConsole;
+  private $webConsole;
   /** @var bool */
-  private $debugMode;
+  private $devEnv;
 
-  public function __construct ($debugMode, $debugConsole)
+  public function __construct ($devEnv, $webConsole)
   {
-    $this->debugMode    = $debugMode;
-    $this->debugConsole = $debugConsole;
+    $this->devEnv       = $devEnv;
+    $this->webConsole = $webConsole;
   }
 
   function assemble (MiddlewareStackInterface $stack)
@@ -34,8 +34,8 @@ class DefaultMiddlewareAssembler implements MiddlewareAssemblerInterface
     $stack
       ->set ([
         ContentServerMiddleware::class,
-        when (!$this->debugMode, CompressionMiddleware::class),
-        when ($this->debugConsole, WebConsoleMiddleware::class),
+        when (!$this->devEnv, CompressionMiddleware::class),
+        when ($this->webConsole, WebConsoleMiddleware::class),
         ErrorHandlingMiddleware::class,
         TranslationMiddleware::class,
         SessionMiddleware::class,

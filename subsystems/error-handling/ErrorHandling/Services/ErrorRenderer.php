@@ -11,7 +11,7 @@ class ErrorRenderer implements ErrorRendererInterface
 protected $kernelSettings;/**
  * @var bool
  */
-private $debugMode;
+private $devEnv;
 /** @var InjectorInterface It is required for instantiating custom error renderers. */
 private $injector;
 private $responseFactory;
@@ -24,15 +24,16 @@ private $settings;
  * @param ResponseFactoryInterface $responseFactory
  * @param ErrorHandlingSettings    $settings
  * @param InjectorInterface        $injector
- * @param bool                     $debugMode
- */function __construct (KernelSettings $kernelSettings, ResponseFactoryInterface $responseFactory, ErrorHandlingSettings $settings,
-                         InjectorInterface $injector, $debugMode)
+ * @param bool                     $devEnv
+ */function __construct (KernelSettings $kernelSettings, ResponseFactoryInterface $responseFactory,
+                         ErrorHandlingSettings $settings,
+                         InjectorInterface $injector, $devEnv)
 {
   $this->kernelSettings  = $kernelSettings;
   $this->responseFactory = $responseFactory;
   $this->settings        = $settings;
   $this->injector        = $injector;
-  $this->debugMode       = $debugMode;
+  $this->devEnv          = $devEnv;
 }
 
 function render (ServerRequestInterface $request, ResponseInterface $response, $error = null)
@@ -41,7 +42,7 @@ function render (ServerRequestInterface $request, ResponseInterface $response, $
 
     // On debug mode, a debugging error popup is displayed for Exceptions/Errors.
 
-    if ($this->debugMode && Http::clientAccepts ($request, 'text/html'))
+    if ($this->devEnv && Http::clientAccepts ($request, 'text/html'))
       return ErrorConsole::display ($error, $this->responseFactory->makeHtmlResponse ());
 
     $status = $error instanceof HttpException ? $error->getCode () : 500;

@@ -1,18 +1,17 @@
 <?php
 namespace Electro\Routing\Lib\Debug;
 
-use Electro\Routing\Lib\CurrentRequestMutator;
-use Iterator;
-use PhpKit\WebConsole\DebugConsole\DebugConsole;
-use PhpKit\WebConsole\Lib\Debug;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\RouterInterface;
 use Electro\Routing\Lib\BaseRouter;
+use Electro\Routing\Lib\CurrentRequestMutator;
 use Electro\Routing\Lib\FactoryRoutable;
 use Electro\Routing\Services\RoutingLogger;
+use PhpKit\WebConsole\DebugConsole\DebugConsole;
+use PhpKit\WebConsole\Lib\Debug;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Provides the inspection aspect of a RouterInterface implementation.
@@ -51,7 +50,7 @@ class BaseRouterWithLogging extends BaseRouter
   /**
    * @var bool
    */
-  protected $debugMode;
+  protected $devEnv;
   /**
    * @var RoutingLogger
    */
@@ -59,7 +58,7 @@ class BaseRouterWithLogging extends BaseRouter
 
   public function __construct (InjectorInterface $injector,
                                RouteMatcherInterface $matcher,
-                               RoutingLogger $routingLogger, $debugMode, CurrentRequestMutator $currentRequestMutator)
+                               RoutingLogger $routingLogger, $devEnv, CurrentRequestMutator $currentRequestMutator)
   {
     parent::__construct ($matcher, $injector, $currentRequestMutator);
 
@@ -69,7 +68,7 @@ class BaseRouterWithLogging extends BaseRouter
     // $routingLogger = new DirectOutputLogger();
 
     $this->routingLogger = $routingLogger;
-    $this->debugMode     = $debugMode;
+    $this->devEnv        = $devEnv;
   }
 
 

@@ -90,19 +90,6 @@ class ConsoleBootloader implements BootloaderInterface
   }
 
   /**
-   * @param string $rootDir
-   */
-  private function setupDebugging ($rootDir)
-  {
-    register_shutdown_function ([$this, 'shutdown']);
-    set_error_handler ([$this, 'errorHandler']);
-    set_exception_handler ([$this, 'exceptionHandler']);
-
-    $this->injector->defineParam ('debugMode', false);
-    $this->injector->defineParam ('debugConsole', false);
-  }
-
-  /**
    * Converts PHP < 7 errors to ErrorExceptions.
    *
    * @internal
@@ -161,6 +148,19 @@ class ConsoleBootloader implements BootloaderInterface
     $error = error_get_last ();
     if (!is_array ($error)) return;
     echo sprintf ("ERROR: %s \nin %s:%d\n", color ('red', $error['message']), $error['file'], $error['line']);
+  }
+
+  /**
+   * @param string $rootDir
+   */
+  private function setupDebugging ($rootDir)
+  {
+    register_shutdown_function ([$this, 'shutdown']);
+    set_error_handler ([$this, 'errorHandler']);
+    set_exception_handler ([$this, 'exceptionHandler']);
+
+    $this->injector->defineParam ('devEnv', false);
+    $this->injector->defineParam ('webConsole', false);
   }
 
 }

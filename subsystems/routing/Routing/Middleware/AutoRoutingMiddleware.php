@@ -15,7 +15,7 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * <p>**This is NOT recommended for production!**
  *
- * <p>You should register this middleware right before the router, but only if `debugMode = false`.
+ * <p>You should register this middleware right before the router, but only if `devEnv = false`.
  */
 class AutoRoutingMiddleware implements RequestHandlerInterface
 {

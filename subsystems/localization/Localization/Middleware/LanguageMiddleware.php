@@ -17,7 +17,7 @@ class LanguageMiddleware implements RequestHandlerInterface
   /**
    * @var bool
    */
-  private $debugConsole;
+  private $webConsole;
   /**
    * @var Locale
    */
@@ -37,15 +37,15 @@ class LanguageMiddleware implements RequestHandlerInterface
    * @param SessionInterface     $session
    * @param Locale               $locale
    * @param LocalizationSettings $settings
-   * @param bool $debugConsole
+   * @param bool $webConsole
    */
   function __construct (SessionInterface $session, Locale $locale, LocalizationSettings $settings,
-                           $debugConsole)
+                           $webConsole)
   {
     $this->session  = $session;
     $this->locale   = $locale;
     $this->settings = $settings;
-    $this->debugConsole = $debugConsole;
+    $this->webConsole = $webConsole;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -58,7 +58,7 @@ class LanguageMiddleware implements RequestHandlerInterface
       $this->session->setLang ($lang);
     }
 
-    if ($this->debugConsole)
+    if ($this->webConsole)
       DebugConsole::logger ('config')->inspect ($this->locale);
     return $next();
   }

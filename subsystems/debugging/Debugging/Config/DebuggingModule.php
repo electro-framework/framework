@@ -17,8 +17,8 @@ class DebuggingModule implements ModuleInterface
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)
   {
     $kernel->onConfigure (
-      function (LoggerInterface $logger, $debugConsole) {
-        if ($debugConsole) {
+      function (LoggerInterface $logger, $webConsole) {
+        if ($webConsole) {
           DebugConsole::registerPanel ('request', new PSR7RequestLogger ('Request', 'fa fa-paper-plane'));
           DebugConsole::registerPanel ('response', new PSR7ResponseLogger ('Response', 'fa fa-file'));
           DebugConsole::registerPanel ('routes', new ConsoleLogger ('Routing', 'fa fa-location-arrow'));

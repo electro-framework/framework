@@ -20,7 +20,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
   /**
    * @var bool
    */
-  private $debugConsole;
+  private $webConsole;
   /**
    * @var InjectorInterface
    */
@@ -35,18 +35,18 @@ class WebConsoleMiddleware implements RequestHandlerInterface
    *
    * @param KernelSettings    $kernelSettings
    * @param InjectorInterface $injector
-   * @param bool              $debugConsole
+   * @param bool              $webConsole
    */
-  function __construct (KernelSettings $kernelSettings, InjectorInterface $injector, $debugConsole)
+  function __construct (KernelSettings $kernelSettings, InjectorInterface $injector, $webConsole)
   {
     $this->kernelSettings = $kernelSettings;
     $this->injector       = $injector;
-    $this->debugConsole   = $debugConsole;
+    $this->webConsole   = $webConsole;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    if (!$this->debugConsole) // In case the middlware was registered.
+    if (!$this->webConsole) // In case the middlware was registered.
       return $next ();
     //------------------------------------------------------------------
 

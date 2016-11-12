@@ -119,20 +119,20 @@ class WebBootloader implements BootloaderInterface
   {
     set_exception_handler ([$this, 'exceptionHandler']);
 
-    $debug = getenv ('DEBUG') == 'true';
-    $this->injector->defineParam ('debugMode', $debug);
+    $devEnv = getenv ('DEV') == 'true';
+    $this->injector->defineParam ('devEnv', $devEnv);
 
-    $debugConsole = getenv ('CONSOLE') == 'true';
-    $this->injector->defineParam ('debugConsole', $debugConsole);
+    $webConsole = getenv ('CONSOLE') == 'true';
+    $this->injector->defineParam ('webConsole', $webConsole);
 
-    ErrorConsole::init ($debug, $rootDir);
+    ErrorConsole::init ($devEnv, $rootDir);
     ErrorConsole::setAppName ($this->kernelSettings->appName);
     ErrorConsole::setEditorURL ($this->kernelSettings->editorURL);
 
     $settings                    = new DebugConsoleSettings;
     $settings->defaultPanelTitle = 'Inspector';
     $settings->defaultPanelIcon  = 'fa fa-search';
-    DebugConsole::init ($debug, $settings);
+    DebugConsole::init ($devEnv, $settings);
 
     // Temporarily set framework path mapping here for errors thrown during modules loading.
     ErrorConsole::setPathsMap ($this->kernelSettings->getMainPathMap ());

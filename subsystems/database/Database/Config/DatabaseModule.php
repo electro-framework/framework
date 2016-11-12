@@ -20,13 +20,13 @@ class DatabaseModule implements ModuleInterface
     $kernel->onRegisterServices (
       function (InjectorInterface $injector) {
         $injector
-          ->delegate (ConnectionInterface::class, function ($debugConsole) {
-            return $debugConsole ? new DebugConnection : new Connection;
+          ->delegate (ConnectionInterface::class, function ($webConsole) {
+            return $webConsole ? new DebugConnection : new Connection;
           })
           ->share (ConnectionsInterface::class)
-          ->delegate (ConnectionsInterface::class, function ($debugConsole) {
+          ->delegate (ConnectionsInterface::class, function ($webConsole) {
             $connections = new Connections;
-            $connections->setConnectionClass ($debugConsole ? DebugConnection::class : Connection::class);
+            $connections->setConnectionClass ($webConsole ? DebugConnection::class : Connection::class);
             return $connections;
           })
           ->alias (ModelControllerInterface::class, ModelController::class)
