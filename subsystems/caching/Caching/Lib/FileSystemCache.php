@@ -1,6 +1,7 @@
 <?php
 namespace Electro\Caching\Lib;
 
+use Electro\Caching\Config\CachingSettings;
 use Electro\Interfaces\Caching\CacheInterface;
 use Electro\Kernel\Config\KernelSettings;
 use PhpKit\Flow\FilesystemFlow;
@@ -14,9 +15,9 @@ class FileSystemCache implements CacheInterface
   /** @var string */
   protected $rootPath = '';
 
-  public function __construct (KernelSettings $settings)
+  public function __construct (KernelSettings $kernelSettings, CachingSettings $cachingSettings)
   {
-    $this->rootPath = $this->basePath = "$settings->baseDirectory/$settings->cachePath";
+    $this->rootPath = $this->basePath = "$kernelSettings->baseDirectory/$cachingSettings->cachePath";
   }
 
   function add ($key, $value)
