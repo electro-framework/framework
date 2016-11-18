@@ -34,28 +34,33 @@ class CsvUtil
    * It closes the stream before returning.
    * Data should be comma-delimited and string may be enclosed on double quotes.
    *
-   * @param resource          $handle  An opened stream.
-   * @param array|string|null $columns Either:<ul>
-   *                                   <li> an array of column names,
-   *                                   <li> a string of comma-delimited column names,
-   *                                   <li> null (or ommited) to read column names from the first row of data.
-   *                                   </ul>
+   * @param resource          $handle    An opened stream.
+   * @param array|string|null $columns   Either:<ul>
+   *                                     <li> an array of column names,
+   *                                     <li> a string of comma-delimited (and possibly quoted) column names,
+   *                                     <li> null (or ommited) to read column names from the first row of data.
+   *                                     </ul>
+   * @param string            $delimiter The character used for separating fields. If not specified, it will be
+   *                                     auto-decteded, if possible. If it's not possible, a comma will be used.
    * @return array The loaded data.
    */
-  static function loadCsvFromStream ($handle, $columns = null)
+  static function loadCsvFromStream ($handle, $columns = null, $delimiter = '')
   {
     if (is_null ($columns))
-      $columns = trim (fgets ($handle));
+      $columns = removeBOM (fgets ($handle));
 
-    if (is_string ($columns))
-      $columns = explode (',', $columns);
+    if (is_string ($columns)) {
+      if (!$delimiter)
+        $delimiter = self::autoDetectSeparator ($columns);
+      $columns = map (explode ($delimiter, $columns), function ($col) { return preg_replace ("/^[\\s\"\t']|[\\s\"\t']$/", '', $col);});
+    }
 
-// use fgetcsv which tends to work better than str_getcsv in some cases
+    // use fgetcsv which tends to work better than str_getcsv in some cases
     $data = [];
     $i    = 0;
     $row  = '';
     try {
-      while ($row = fgetcsv ($handle, null, ',', '"')) {
+      while ($row = fgetcsv ($handle, null, $delimiter, '"')) {
         ++$i;
         $data[] = array_combine ($columns, $row);
       }
@@ -70,6 +75,13 @@ class CsvUtil
       exit (1);
     }
     return $data;
+  }
+
+  static function autoDetectSeparator ($line)
+  {
+    if (strpos ($line, ';') !== false) return ';';
+    if (strpos ($line, "\t") !== false) return "\t";
+    return ',';
   }
 
   /**
