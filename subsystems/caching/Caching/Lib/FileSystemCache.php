@@ -15,12 +15,19 @@ use Psr\Log\LogLevel;
  * to reference directories under the cache directory.
  *
  * <p>You may define which serializer and unserializer functions will be used when saving and loading data.
- * By default, the {@see serialize} and {@see unserialize} functions are used.
+ * By default, the {@see serialize} and {@see unserialize} functions are used. You can set these via the `serializer`
+ * and `unserializer` options.
+ *
+ * <p>You may enable the `dataIsCode` option (set it to TRUE) if you are saving and retrieving PHP source code.
+ * On this mode, the cache will load and execute files via PHP's `include`, and it will be able to take advantage of
+ * PHP's opcode cache.
  */
 class FileSystemCache implements CacheInterface
 {
   /** @var string The root path plus the current namespace. */
   protected $basePath = '';
+  /** @var bool */
+  protected $dataIsCode = false;
   /** @var string */
   protected $namespace = '';
   /** @var string */
@@ -44,7 +51,7 @@ class FileSystemCache implements CacheInterface
     $path = $this->toFileName ($key);
     $f    = @fopen ($path, 'x');
     if (!$f) {
-      // Maybe the directory is inexistent...
+      // Maybe the directory is nonexistent...
       if (!$this->createDirIfAbsent ()) {
         // Nope, the file probably exists already.
         if (file_exists ($path))
@@ -63,8 +70,11 @@ class FileSystemCache implements CacheInterface
         throw new \RuntimeException("Can't cache a NULL value");
       if (is_object ($value) && $value instanceof \Closure)
         $value = $value ();
-      $serialize = $this->serializer;
-      fwrite ($f, $serialize ($value));
+      if (!$this->dataIsCode) {
+        $serialize = $this->serializer;
+        $value     = $serialize ($value);
+      }
+      fwrite ($f, $value);
       fflush ($f);
       return true;
     }
@@ -85,42 +95,46 @@ class FileSystemCache implements CacheInterface
       $this->error ("Couldn't cleanup the $tmp directory", LogLevel::NOTICE);
   }
 
-  function delete ($key)
+  function get ($key, $value = null)
   {
     $path = $this->toFileName ($key);
-    return @unlink ($path);
-  }
-
-  function get ($key, $value)
-  {
-    $path = $this->toFileName ($key);
-    $f    = @fopen ($path, 'r');
-    if (!$f) {
-      // Maybe the directory is inexistent...
-      if ($this->createDirIfAbsent ())
-        // Reattempt the operation now that we have a valid directory.
-        return $this->get ($key, $value);
-      // Ok, so the directory is valid. Let's check if the file exists but is inaccessible for reading.
-      if (file_exists ($path) || !is_readable ($path))
-        return $this->error ("File $path exists but its not readable");
-      // Well, the file doesn't exist yet; therefore, create a new cache entry.
-      // Note: if by chance it has been created meanwhile, well, too bad, just overwrite it.
-      // First, compute the value to be saved, if required.
-      if (is_object ($value) && $value instanceof \Closure)
-        $value = $value ();
-      // Save the value and return it, or NULL if that failed.
-      return $this->set ($path, $value) ? $value : null;
+    if ($this->dataIsCode) {
+      // Slight possibility of data corruption here
+      if (($v = @include $path) !== false)
+        return $v;
     }
-    try {
-      if (!flock ($f, LOCK_SH)) // Block if file already locked.
-        return false; // Abort if the filesystem doesn't support locking.
-      $unserialize = $this->unserializer;
-      return $unserialize (stream_get_contents ($f));
+    else {
+      $f = @fopen ($path, 'r');
+      if ($f) {
+        try {
+          if (!flock ($f, LOCK_SH)) // Block if file already locked.
+            return false; // Abort if the filesystem doesn't support locking.
+          $unserialize = $this->unserializer;
+          return $unserialize (stream_get_contents ($f));
+        }
+        finally {
+          flock ($f, LOCK_UN);
+          fclose ($f);
+        }
+      }
     }
-    finally {
-      flock ($f, LOCK_UN);
-      fclose ($f);
-    }
+    // The file couldn't be read.
+    // Maybe the directory is nonexistent...
+    if ($this->createDirIfAbsent ())
+      // Reattempt the operation now that we have a valid directory.
+      return $this->get ($key, $value);
+    // Ok, so the directory is valid. Let's check if the file exists but is inaccessible for reading.
+    if (file_exists ($path) || !is_readable ($path))
+      return $this->error ("File $path exists but its not readable");
+    // Well, the file doesn't exist yet; therefore, create a new cache entry.
+    // Note: if by chance it has been created meanwhile, well, too bad, just overwrite it.
+    // First, compute the value to be saved, if required.
+    if (is_object ($value) && $value instanceof \Closure)
+      $value = $value ();
+    // Save the value and return it, or NULL if that failed or there's no value to be saved.
+    if (isset ($velue) && $this->set ($path, $value))
+      return $value;
+    return null;
   }
 
   function getNamespace ()
@@ -155,6 +169,12 @@ class FileSystemCache implements CacheInterface
     // not applicable
   }
 
+  function remove ($key)
+  {
+    $path = $this->toFileName ($key);
+    return @unlink ($path);
+  }
+
   function set ($key, $value)
   {
     if (is_null ($value))
@@ -163,7 +183,7 @@ class FileSystemCache implements CacheInterface
     $path = $this->toFileName ($key);
     $f    = @fopen ($path, 'w');
     if (!$f) {
-      // Maybe the directory is inexistent...
+      // Maybe the directory is nonexistent...
       if ($this->createDirIfAbsent ())
         // Reattempt the operation now that we have a valid directory.
         return $this->set ($key, $value);
@@ -173,13 +193,16 @@ class FileSystemCache implements CacheInterface
         return $this->error ("File $path exists but is not writable");
       return $this->error ("Can't open $path for writing");
     }
-    if (!flock ($f, LOCK_EX)) // Block if file already locked. Then proceed to override its contents.
-      return false; // Abort if the filesystem doesn't support locking.
-    if (is_object ($value) && $value instanceof \Closure)
-      $value = $value ();
     try {
-      $serialize = $this->serializer;
-      return fwrite ($f, $serialize ($value));
+      if (!flock ($f, LOCK_EX)) // Block if file already locked. Then proceed to override its contents.
+        return false; // Abort if the filesystem doesn't support locking.
+      if (is_object ($value) && $value instanceof \Closure)
+        $value = $value ();
+      if (!$this->dataIsCode) {
+        $serialize = $this->serializer;
+        $value     = $serialize ($value);
+      }
+      return fwrite ($f, $value);
     }
     finally {
       flock ($f, LOCK_UN);
@@ -191,6 +214,7 @@ class FileSystemCache implements CacheInterface
   {
     $this->serializer   = get ($options, 'serializer') ?: $this->serializer;
     $this->unserializer = get ($options, 'unserializer') ?: $this->unserializer;
+    $this->dataIsCode   = (bool)get ($options, 'dataIsCode') ?: $this->dataIsCode;
     assert (is_callable ($this->serializer), 'The serializer option must be a callable reference');
     assert (is_callable ($this->unserializer), 'The unserializer option must be a callable reference');
   }
