@@ -11,8 +11,11 @@ class MemoryCache implements CacheInterface
 
   function add ($key, $value)
   {
-    if (!$this->has ($key))
+    if (!$this->has ($key)) {
+      if (is_object ($value) && $value instanceof \Closure)
+        $value = $value ();
       return $this->set ($key, $value);
+    }
     return false;
   }
 
@@ -24,7 +27,12 @@ class MemoryCache implements CacheInterface
 
   function get ($key, $value = null)
   {
-    return getAt ($this->data, $this->path ? "$this->path.$key" : $key);
+    $v = getAt ($this->data, $this->path ? "$this->path.$key" : $key);
+    if (isset($v))
+      return $v;
+    if (is_object ($value) && $value instanceof \Closure)
+      $value = $value ();
+    return $this->set ($key, $value) ? $value : null;
   }
 
   function getNamespace ()
@@ -52,8 +60,9 @@ class MemoryCache implements CacheInterface
   {
     $v = $this->get ($key);
     if (!is_numeric ($v))
-      $v = 0;
+      return false;
     $this->set ($key, $v + $value);
+    return true;
   }
 
   function prune ()
@@ -69,7 +78,9 @@ class MemoryCache implements CacheInterface
 
   function set ($key, $value)
   {
-    setAt ($this->data, $this->path ? "$this->path.$key" : $key, $value);
+    if (isset($value) && (!is_object ($value) || !$value instanceof \Closure))
+      setAt ($this->data, $this->path ? "$this->path.$key" : $key, $value, true);
+    else return false;
     return true;
   }
 

@@ -132,9 +132,7 @@ class FileSystemCache implements CacheInterface
     if (is_object ($value) && $value instanceof \Closure)
       $value = $value ();
     // Save the value and return it, or NULL if that failed or there's no value to be saved.
-    if (isset ($velue) && $this->set ($path, $value))
-      return $value;
-    return null;
+    return $this->set ($key, $value) ? $value : null;
   }
 
   function getNamespace ()
@@ -162,6 +160,7 @@ class FileSystemCache implements CacheInterface
   function inc ($path, $value = 1)
   {
     // not available (wouldn't make sense with this kind of cache; it's too slow for implementing atomic counters)
+    return false;
   }
 
   function prune ()
@@ -178,8 +177,9 @@ class FileSystemCache implements CacheInterface
   function set ($key, $value)
   {
     if (is_null ($value))
-      // This is not allowed (you know why).
-      return $this->error ("Can't cache a NULL value");
+      return true;
+    if (is_object ($value) && $value instanceof \Closure)
+      return false;
     $path = $this->toFileName ($key);
     $f    = @fopen ($path, 'w');
     if (!$f) {
@@ -196,8 +196,6 @@ class FileSystemCache implements CacheInterface
     try {
       if (!flock ($f, LOCK_EX)) // Block if file already locked. Then proceed to override its contents.
         return false; // Abort if the filesystem doesn't support locking.
-      if (is_object ($value) && $value instanceof \Closure)
-        $value = $value ();
       if (!$this->dataIsCode) {
         $serialize = $this->serializer;
         $value     = $serialize ($value);
