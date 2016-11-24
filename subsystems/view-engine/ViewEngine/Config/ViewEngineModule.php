@@ -7,6 +7,7 @@ use Electro\Interfaces\ModuleInterface;
 use Electro\Interfaces\Views\ViewInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\Kernel\Lib\ModuleInfo;
+use Electro\ViewEngine\Lib\TemplateCache;
 use Electro\ViewEngine\Lib\View;
 use Electro\ViewEngine\Services\AssetsService;
 use Electro\ViewEngine\Services\BlocksService;
@@ -28,7 +29,8 @@ class ViewEngineModule implements ModuleInterface
           })
           ->share (AssetsService::class)
           ->share (BlocksService::class)
-          ->share (ViewEngineSettings::class);
+          ->share (ViewEngineSettings::class)
+          ->share (TemplateCache::class);
       });
   }
 

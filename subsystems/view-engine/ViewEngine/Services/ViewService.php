@@ -6,11 +6,16 @@ use Electro\Exceptions\FatalException;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\ViewEngine\Config\ViewEngineSettings;
+use Electro\ViewEngine\Lib\TemplateCache;
 use Electro\ViewEngine\Lib\View;
 use PhpKit\Flow\FilesystemFlow;
 
 class ViewService implements ViewServiceInterface
 {
+  /**
+   * @var TemplateCache
+   */
+  private $cache;
   /**
    * @var ViewEngineSettings
    */
@@ -24,10 +29,12 @@ class ViewService implements ViewServiceInterface
    */
   private $patterns = [];
 
-  function __construct (ViewEngineSettings $engineSettings, InjectorInterface $injector)
+  function __construct (ViewEngineSettings $engineSettings, InjectorInterface $injector,
+                        TemplateCache $cache)
   {
     $this->injector       = $injector;
     $this->engineSettings = $engineSettings;
+    $this->cache          = $cache;
   }
 
   function getEngine ($engineClass)
@@ -46,11 +53,21 @@ class ViewService implements ViewServiceInterface
 <p>Make sure the file name has one of the supported file extensions or matches a known pattern.");
   }
 
+  function loadFromCompiled ($compiled, $engineOrClass)
+  {
+    if (is_string ($engineOrClass))
+      $engineOrClass = $this->getEngine ($engineOrClass);
+    // The injector is not used here. This service only returns instances of View.
+    $view = new View ($engineOrClass);
+    $view->setCompiled ($compiled);
+    return $view;
+  }
+
   function loadFromFile ($path)
   {
-    $engine = $this->getEngineFromFileName ($path);
-    $src    = $this->loadViewTemplate ($path);
-    return $this->loadFromString ($src, $engine);
+    $engine   = $this->getEngineFromFileName ($path);
+    $compiled = $engine->loadFromCache ($this->cache, $path);
+    return $this->loadFromCompiled ($compiled, $engine);
   }
 
   function loadFromString ($src, $engineOrClass)
@@ -58,7 +75,7 @@ class ViewService implements ViewServiceInterface
     if (is_string ($engineOrClass))
       $engineOrClass = $this->getEngine ($engineOrClass);
     // The injector is not used here. This service only returns instances of View.
-    $view = new View($engineOrClass);
+    $view = new View ($engineOrClass);
     $view->setSource ($src);
     return $view;
   }

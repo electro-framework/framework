@@ -37,7 +37,7 @@ class CachingFileCompiler
    *
    * @param string   $sourceFile The filesystem path of the source code file.
    * @param callable $compiler   A function that transforms the source file into the final representation that will be
-   *                             cached.
+   *                             cached. It must have a single parameter of type string (the source code).
    * @return mixed The compiled code.
    */
   function cache ($sourceFile, callable $compiler)
@@ -54,7 +54,7 @@ class CachingFileCompiler
    *
    * @param string   $sourceFile The filesystem path of the source code file.
    * @param callable $compiler   A function that transforms the source file into the final representation that will be
-   *                             cached.
+   *                             cached. It must have a single parameter of type string (the source code).
    * @return mixed The compiled code.
    */
   function get ($sourceFile, callable $compiler)
@@ -74,7 +74,7 @@ class CachingFileCompiler
       // The source file was not modified, so fetch from the cache.
     }
     if ($this->cachingEnabled)
-      return $this->cache->get ($sourceFile, function () use ($sourceFile, $compiler) {
+      $this->cache->get ($sourceFile, function () use ($sourceFile, $compiler) {
         return $this->loadAndCompile ($sourceFile, $compiler);
       });
     // Caching is disabled, so just compile the source file and return the result.
@@ -97,7 +97,7 @@ class CachingFileCompiler
    *
    * @param string   $sourceFile The filesystem path of the source code file.
    * @param callable $compiler   A function that transforms the source file into the final representation that will be
-   *                             cached.
+   *                             cached. It must have a single parameter of type string (the source code).
    * @return mixed
    */
   function loadAndCompile ($sourceFile, callable $compiler)

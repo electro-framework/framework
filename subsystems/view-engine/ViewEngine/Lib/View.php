@@ -38,6 +38,12 @@ class View implements ViewInterface
     return $this->compiled;
   }
 
+  function setCompiled ($compiled)
+  {
+    $this->compiled = $compiled;
+    return $this;
+  }
+
   function getEngine ()
   {
     return $this->viewEngine;

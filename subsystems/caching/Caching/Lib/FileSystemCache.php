@@ -36,14 +36,17 @@ class FileSystemCache implements CacheInterface
   protected $serializer = 'serialize';
   /** @var callable */
   protected $unserializer = 'unserialize';
+  /** @var string */
+  private $appDir;
   /** @var LoggerInterface */
   private $logger;
 
   public function __construct (KernelSettings $kernelSettings, CachingSettings $cachingSettings,
                                LoggerInterface $logger)
   {
-    $this->rootPath = $this->basePath = "$kernelSettings->baseDirectory/$cachingSettings->cachePath";
+    $this->rootPath = $this->basePath = "$kernelSettings->baseDirectory/$kernelSettings->storagePath/$cachingSettings->cachePath";
     $this->logger   = $logger;
+    $this->appDir   = dirname ("$kernelSettings->baseDirectory/$kernelSettings->modulesPath") . '/';
   }
 
   function add ($key, $value)
@@ -124,7 +127,7 @@ class FileSystemCache implements CacheInterface
       // Reattempt the operation now that we have a valid directory.
       return $this->get ($key, $value);
     // Ok, so the directory is valid. Let's check if the file exists but is inaccessible for reading.
-    if (file_exists ($path) || !is_readable ($path))
+    if (file_exists ($path) && !is_readable ($path))
       return $this->error ("File $path exists but its not readable");
     // Well, the file doesn't exist yet; therefore, create a new cache entry.
     // Note: if by chance it has been created meanwhile, well, too bad, just overwrite it.
@@ -240,6 +243,7 @@ class FileSystemCache implements CacheInterface
           // If it wasn't, it is not possible to create a directory at the given path.
           return $this->error ("Can't create directory $path");
     }
+    else return false;
     return true;
   }
 
@@ -258,6 +262,8 @@ class FileSystemCache implements CacheInterface
 
   private function toFileName ($key)
   {
-    return "$this->basePath/" . str_replace ('/', '\\', escapeshellarg ($key));
+    if (str_beginsWith ($key, $this->appDir))
+      $key = substr ($key, strlen ($this->appDir));
+    return "$this->basePath/" . str_replace ('/', '.', escapeshellcmd ($key));
   }
 }
