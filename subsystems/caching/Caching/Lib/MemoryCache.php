@@ -8,12 +8,18 @@ class MemoryCache implements CacheInterface
   protected $data      = [];
   protected $namespace = '';
   protected $path      = '';
+  /** @var callable */
+  protected $serializer = 'serialize';
+  /** @var callable */
+  protected $unserializer = 'unserialize';
 
   function add ($key, $value)
   {
     if (!$this->has ($key)) {
       if (is_object ($value) && $value instanceof \Closure)
         $value = $value ();
+      $serialize = $this->serializer;
+      $value     = $serialize ($value);
       return $this->set ($key, $value);
     }
     return false;
@@ -28,8 +34,10 @@ class MemoryCache implements CacheInterface
   function get ($key, $value = null)
   {
     $v = getAt ($this->data, $this->path ? "$this->path.$key" : $key);
-    if (isset($v))
-      return $v;
+    if (isset($v)) {
+      $unserialize = $this->unserializer;
+      return $unserialize ($v);
+    }
     if (is_object ($value) && $value instanceof \Closure)
       $value = $value ();
     return $this->set ($key, $value) ? $value : null;
@@ -78,15 +86,21 @@ class MemoryCache implements CacheInterface
 
   function set ($key, $value)
   {
-    if (isset($value) && (!is_object ($value) || !$value instanceof \Closure))
+    if (isset($value) && (!is_object ($value) || !$value instanceof \Closure)) {
+      $serialize = $this->serializer;
+      $value     = $serialize ($value);
       setAt ($this->data, $this->path ? "$this->path.$key" : $key, $value, true);
+    }
     else return false;
     return true;
   }
 
   function setOptions (array $options)
   {
-    // no op
+    $this->serializer   = get ($options, 'serializer') ?: $this->serializer;
+    $this->unserializer = get ($options, 'unserializer') ?: $this->unserializer;
+    assert (is_callable ($this->serializer), 'The serializer option must be a callable reference');
+    assert (is_callable ($this->unserializer), 'The unserializer option must be a callable reference');
   }
 
   function with (array $options)
