@@ -4,6 +4,7 @@ namespace Electro\Debugging\Config;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Profiles\WebProfile;
 use Monolog\Logger;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\Loggers\ConsoleLogger;
@@ -14,6 +15,11 @@ use Psr\Log\LoggerInterface;
 
 class DebuggingModule implements ModuleInterface
 {
+  static function getCompatibleProfiles ()
+  {
+    return [WebProfile::class];
+  }
+
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)
   {
     $kernel->onConfigure (

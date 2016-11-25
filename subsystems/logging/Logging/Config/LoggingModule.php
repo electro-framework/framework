@@ -6,6 +6,8 @@ use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Profiles\ConsoleProfile;
+use Electro\Profiles\WebProfile;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
@@ -18,6 +20,11 @@ use Psr\Log\LoggerInterface;
  */
 class LoggingModule implements ModuleInterface
 {
+  static function getCompatibleProfiles ()
+  {
+    return [WebProfile::class, ConsoleProfile::class];
+  }
+
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)
   {
     // This module runs before all other modules, so that it becomes enabled as soon as possible.

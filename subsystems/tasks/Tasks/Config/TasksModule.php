@@ -6,10 +6,16 @@ use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Profiles\ConsoleProfile;
 use Electro\Tasks\Tasks\CoreTasks;
 
 class TasksModule implements ModuleInterface
 {
+  static function getCompatibleProfiles ()
+  {
+    return [ConsoleProfile::class];
+  }
+
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)
   {
     $kernel

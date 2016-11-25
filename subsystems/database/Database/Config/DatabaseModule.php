@@ -8,6 +8,8 @@ use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModelControllerInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Profiles\ConsoleProfile;
+use Electro\Profiles\WebProfile;
 use PhpKit\ExtPDO\Connection;
 use PhpKit\ExtPDO\Connections;
 use PhpKit\ExtPDO\Interfaces\ConnectionInterface;
@@ -15,6 +17,11 @@ use PhpKit\ExtPDO\Interfaces\ConnectionsInterface;
 
 class DatabaseModule implements ModuleInterface
 {
+  static function getCompatibleProfiles ()
+  {
+    return [WebProfile::class, ConsoleProfile::class];
+  }
+
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)
   {
     $kernel->onRegisterServices (

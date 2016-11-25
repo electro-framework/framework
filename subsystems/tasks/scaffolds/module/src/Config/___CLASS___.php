@@ -12,20 +12,24 @@ use Electro\ViewEngine\Config\ViewEngineSettings;
 
 class ___CLASS___ implements ModuleInterface
 {
+  static function getCompatibleProfiles ()
+  {
+    return [WebProfile::class];
+  }
+
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)
   {
-    if ($kernel->getProfile () instanceof WebProfile)
-      $kernel->onConfigure (
-        function (KernelSettings $app, ApplicationRouterInterface $router, NavigationSettings $navigationSettings,
-                  ViewEngineSettings $viewEngineSettings)
-        use ($moduleInfo) {
-          $app->name    = 'yourapp';      // session cookie name
-          $app->appName = 'Your App';     // default page title; also displayed on title bar (optional)
-          $app->title   = '@ - Your App'; // @ = page title
-          $viewEngineSettings->registerViews ($moduleInfo);
-          $router->add (Routes::class);
-          $navigationSettings->registerNavigation (Navigation::class);
-        });
+    $kernel->onConfigure (
+      function (KernelSettings $app, ApplicationRouterInterface $router, NavigationSettings $navigationSettings,
+                ViewEngineSettings $viewEngineSettings)
+      use ($moduleInfo) {
+        $app->name    = 'yourapp';      // session cookie name
+        $app->appName = 'Your App';     // default page title; also displayed on title bar (optional)
+        $app->title   = '@ - Your App'; // @ = page title
+        $viewEngineSettings->registerViews ($moduleInfo);
+        $router->add (Routes::class);
+        $navigationSettings->registerNavigation (Navigation::class);
+      });
   }
 
 }

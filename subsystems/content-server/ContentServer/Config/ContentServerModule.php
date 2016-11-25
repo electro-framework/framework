@@ -8,6 +8,7 @@ use Electro\Interfaces\Http\ResponseFactoryInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Profiles\WebProfile;
 use League\Glide\Responses\PsrResponseFactory;
 use League\Glide\Server;
 use League\Glide\ServerFactory;
@@ -15,6 +16,11 @@ use League\Glide\Urls\UrlBuilderFactory;
 
 class ContentServerModule implements ModuleInterface
 {
+  static function getCompatibleProfiles ()
+  {
+    return [WebProfile::class];
+  }
+
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)
   {
     $kernel->onRegisterServices (

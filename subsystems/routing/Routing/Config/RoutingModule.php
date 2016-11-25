@@ -11,6 +11,7 @@ use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Profiles\WebProfile;
 use Electro\Routing\Lib\CurrentRequestMutator;
 use Electro\Routing\Middleware\RoutingMiddleware;
 use Electro\Routing\Services\Debug\MiddlewareStackWithLogging;
@@ -22,6 +23,11 @@ use Electro\Routing\Services\RoutingLogger;
 
 class RoutingModule implements ModuleInterface
 {
+  static function getCompatibleProfiles ()
+  {
+    return [WebProfile::class];
+  }
+
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)
   {
     $kernel->onRegisterServices (

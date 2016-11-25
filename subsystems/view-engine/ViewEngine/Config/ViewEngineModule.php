@@ -7,6 +7,7 @@ use Electro\Interfaces\ModuleInterface;
 use Electro\Interfaces\Views\ViewInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Profiles\WebProfile;
 use Electro\ViewEngine\Lib\TemplateCache;
 use Electro\ViewEngine\Lib\View;
 use Electro\ViewEngine\Services\AssetsService;
@@ -15,6 +16,11 @@ use Electro\ViewEngine\Services\ViewService;
 
 class ViewEngineModule implements ModuleInterface
 {
+  static function getCompatibleProfiles ()
+  {
+    return [WebProfile::class];
+  }
+
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)
   {
     $kernel->onRegisterServices (

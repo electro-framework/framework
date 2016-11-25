@@ -5,6 +5,8 @@ use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Profiles\ConsoleProfile;
+use Electro\Profiles\WebProfile;
 use Swift_Mailer;
 use Swift_Plugins_LoggerPlugin;
 use Swift_Plugins_Loggers_ArrayLogger;
@@ -12,6 +14,11 @@ use Swift_Plugins_Loggers_ArrayLogger;
 class MailModule implements ModuleInterface
 {
   const MAX_LOG_SIZE = 50;
+
+  static function getCompatibleProfiles ()
+  {
+    return [WebProfile::class, ConsoleProfile::class];
+  }
 
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)
   {

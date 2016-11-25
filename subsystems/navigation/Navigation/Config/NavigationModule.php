@@ -9,9 +9,15 @@ use Electro\Interfaces\Navigation\NavigationLinkInterface;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Navigation\Lib\NavigationLink;
 use Electro\Navigation\Services\Navigation;
+use Electro\Profiles\WebProfile;
 
 class NavigationModule implements ModuleInterface
 {
+  static function getCompatibleProfiles ()
+  {
+    return [WebProfile::class];
+  }
+
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)
   {
     $kernel
