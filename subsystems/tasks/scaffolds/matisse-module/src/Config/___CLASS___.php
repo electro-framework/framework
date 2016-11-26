@@ -7,7 +7,7 @@ use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Navigation\Config\NavigationSettings;
-use Electro\Plugins\Matisse\Config\MatisseSettings;
+use Matisse\Config\MatisseSettings;
 use Electro\Profiles\WebProfile;
 use Electro\ViewEngine\Config\ViewEngineSettings;
 

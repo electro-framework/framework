@@ -1,7 +1,7 @@
 <?php
 namespace Electro\ViewEngine\Lib;
 
-use Electro\Plugins\Matisse\Components\Base\Component;
+use Matisse\Components\Base\Component;
 
 class AssetsContext
 {

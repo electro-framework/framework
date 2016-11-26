@@ -1,7 +1,7 @@
 <?php
 namespace Electro\ViewEngine\Services;
 
-use Electro\Plugins\Matisse\Components\Base\Component;
+use Matisse\Components\Base\Component;
 use Electro\Traits\InspectionTrait;
 use Electro\ViewEngine\Lib\AssetsContext;
 
