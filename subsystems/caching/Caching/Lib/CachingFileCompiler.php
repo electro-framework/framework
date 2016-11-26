@@ -68,15 +68,20 @@ class CachingFileCompiler
       if (!$sourceT)
         $this->fileNotFound ($sourceFile);
 
-      // Note: if the cached item doesn't exist yet ($cacheT==FALSE), the following condition also succeeds.
-      if ($sourceT > $cacheT)
+      // Note: if the cached item doesn't exist yet ($cacheT==0), the following condition will also succeed.
+      // But if the cache has no timestamp capability ($cacheT==FALSE), the condition will fail because we'll assume the
+      // cache never expires.
+      if ($cacheT !== false && $sourceT > $cacheT)
         return $this->cache ($sourceFile, $compiler);
+
       // The source file was not modified, so fetch from the cache.
     }
-    if ($this->cachingEnabled)
-      $this->cache->get ($sourceFile, function () use ($sourceFile, $compiler) {
+    //else always fetch from the cache.
+    if ($this->cachingEnabled) {
+      return $this->cache->get ($sourceFile, function () use ($sourceFile, $compiler) {
         return $this->loadAndCompile ($sourceFile, $compiler);
       });
+    }
     // Caching is disabled, so just compile the source file and return the result.
     return $this->loadAndCompile ($sourceFile, $compiler);
   }

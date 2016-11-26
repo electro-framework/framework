@@ -4,6 +4,7 @@ namespace Electro\ViewEngine\Services;
 use Electro\Exceptions\Fatal\FileNotFoundException;
 use Electro\Exceptions\FatalException;
 use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\Views\ViewEngineInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\ViewEngine\Config\ViewEngineSettings;
 use Electro\ViewEngine\Lib\TemplateCache;
@@ -29,8 +30,7 @@ class ViewService implements ViewServiceInterface
    */
   private $patterns = [];
 
-  function __construct (ViewEngineSettings $engineSettings, InjectorInterface $injector,
-                        TemplateCache $cache)
+  function __construct (ViewEngineSettings $engineSettings, InjectorInterface $injector, TemplateCache $cache)
   {
     $this->injector       = $injector;
     $this->engineSettings = $engineSettings;
@@ -53,16 +53,6 @@ class ViewService implements ViewServiceInterface
 <p>Make sure the file name has one of the supported file extensions or matches a known pattern.");
   }
 
-  function loadFromCompiled ($compiled, $engineOrClass)
-  {
-    if (is_string ($engineOrClass))
-      $engineOrClass = $this->getEngine ($engineOrClass);
-    // The injector is not used here. This service only returns instances of View.
-    $view = new View ($engineOrClass);
-    $view->setCompiled ($compiled);
-    return $view;
-  }
-
   function loadFromFile ($path)
   {
     $engine   = $this->getEngineFromFileName ($path);
@@ -77,6 +67,7 @@ class ViewService implements ViewServiceInterface
     // The injector is not used here. This service only returns instances of View.
     $view = new View ($engineOrClass);
     $view->setSource ($src);
+    $view->compile();
     return $view;
   }
 
@@ -117,6 +108,23 @@ class ViewService implements ViewServiceInterface
     if (file_exists ($path))
       return $path;
     return FilesystemFlow::glob ("$path.*")->onlyFiles ()->fetchKey ();
+  }
+
+  /**
+   * Creates a {@see View} instance from a compiled template.
+   *
+   * @param mixed                      $compiled
+   * @param string|ViewEngineInterface $engineOrClass
+   * @return View
+   */
+  private function loadFromCompiled ($compiled, $engineOrClass)
+  {
+    if (is_string ($engineOrClass))
+      $engineOrClass = $this->getEngine ($engineOrClass);
+    // The injector is not used here. This service only returns instances of View.
+    $view = new View ($engineOrClass);
+    $view->setCompiled ($compiled);
+    return $view;
   }
 
 }

@@ -44,7 +44,8 @@ class FileSystemCache implements CacheInterface
   public function __construct (KernelSettings $kernelSettings, CachingSettings $cachingSettings,
                                LoggerInterface $logger)
   {
-    $this->rootPath = $this->basePath = "$kernelSettings->baseDirectory/$kernelSettings->storagePath/$cachingSettings->cachePath";
+    $this->rootPath =
+    $this->basePath = "$kernelSettings->baseDirectory/$kernelSettings->storagePath/$cachingSettings->cachePath";
     $this->logger   = $logger;
     $this->appDir   = dirname ("$kernelSettings->baseDirectory/$kernelSettings->modulesPath") . '/';
   }
@@ -102,7 +103,7 @@ class FileSystemCache implements CacheInterface
   {
     $path = $this->toFileName ($key);
     if ($this->dataIsCode) {
-      // Slight possibility of data corruption here
+      // Slight possibility of reading truncated data here
       if (($v = @include $path) !== false)
         return $v;
     }
@@ -135,7 +136,7 @@ class FileSystemCache implements CacheInterface
     if (is_object ($value) && $value instanceof \Closure)
       $value = $value ();
     // Save the value and return it, or NULL if that failed or there's no value to be saved.
-    return $this->set ($key, $value) ? $value : null;
+    return isset($value) ? ($this->set ($key, $value) ? $value : null) : null;
   }
 
   function getNamespace ()

@@ -39,16 +39,25 @@ class CompositeCache implements CacheInterface
 
   function get ($key, $value = null)
   {
+    // Search for a value on all the caches.
     foreach ($this->caches as $i => $cache) {
-      if (!is_null ($v = $cache->get ($key))) {
-        while ($i--)
-          $this->caches[$i]->set ($key, $v);
+      // When a value is found...
+      if (!is_null ($v =
+        $cache->get ($key)) // Note: do NOT send the default value to get() as we do not want to compute it now if the get fails.
+      ) {
+        // Populate the previous caches with the value found.
+        while ($i) {
+          $this->caches[--$i]->set ($key, $v);
+        }
+        // Return the value.
         return $v;
       }
     }
+    // The item is not cached on any of the caches; compute the current value...
     if (is_object ($value) && $value instanceof \Closure)
       $value = $value ();
-    return $this->set ($key, $value) ? $value : null;
+    // and store it on all caches.
+    return isset($value) ? ($this->set ($key, $value) ? $value : null) : null;
   }
 
   function getNamespace ()
@@ -58,10 +67,14 @@ class CompositeCache implements CacheInterface
 
   function getTimestamp ($key)
   {
+    $o = false;
     foreach ($this->caches as $cache)
       if ($v = $cache->getTimestamp ($key))
         return $v;
-    return false;
+      else if ($v === 0)
+        $o = $v;
+    // It returns FALSE only if all caches return FALSE, 0 othwerwise.
+    return $o;
   }
 
   function has ($key)
@@ -112,6 +125,7 @@ class CompositeCache implements CacheInterface
   function set ($key, $value)
   {
     $o = true;
+    // Store the value on all caches.
     foreach ($this->caches as $cache)
       $o = $o && $cache->set ($key, $value);
     return $o;

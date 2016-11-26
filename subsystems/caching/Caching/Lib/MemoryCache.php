@@ -40,7 +40,7 @@ class MemoryCache implements CacheInterface
     }
     if (is_object ($value) && $value instanceof \Closure)
       $value = $value ();
-    return $this->set ($key, $value) ? $value : null;
+    return isset($value) ? ($this->set ($key, $value) ? $value : null) : null;
   }
 
   function getNamespace ()
@@ -56,7 +56,8 @@ class MemoryCache implements CacheInterface
 
   function getTimestamp ($key)
   {
-    return time ();
+    // This cache has no timestamping capability.
+    return false;
   }
 
   function has ($key)
