@@ -7,6 +7,7 @@ use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\Routing\Lib\FactoryRoutable;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Selenia\Platform\Components\Base\PageComponent;
 
 /**
  * Generates a routable that, when invoked, will return a generic PageComponent with the specified template as a view.
@@ -21,7 +22,9 @@ function page ($templateUrl)
   return new FactoryRoutable (function (ViewServiceInterface $viewService) use ($templateUrl) {
     return function ($request, $response) use ($viewService, $templateUrl) {
       $filename = $viewService->resolveTemplatePath ($templateUrl);
-      return Http::response ($response, $viewService->loadFromFile ($filename)->render ());
+      $view     = $viewService->loadFromFile ($filename);
+      $view->getEngine ()->configure (['rootClass' => PageComponent::class]);
+      return Http::response ($response, $view->render ());
     };
   });
 }
@@ -128,6 +131,7 @@ function controller ($ref)
  */
 function dump ()
 {
+  error_clear_last ();
   if (!isCLI ())
     echo "<pre>";
   ob_start ();
@@ -148,7 +152,8 @@ function dump ()
       $type = $type . $len;
     }
     $num = ctype_digit ($prop[0]);
-    return $space . $SEP . color ('dark yellow', str_pad ($prop, $num ? 4 : 22, ' ', $num ? STR_PAD_LEFT : STR_PAD_RIGHT)) .
+    return $space . $SEP .
+           color ('dark yellow', str_pad ($prop, $num ? 4 : 22, ' ', $num ? STR_PAD_LEFT : STR_PAD_RIGHT)) .
            " $SEP " . color ('dark green', str_pad ($type, 25, ' ')) . (strlen ($next) ? "$SEP $next" : '');
   }, $o);
   $o   = preg_replace ('/[\{\}§\]]/', color ('red', '$0'), $o);

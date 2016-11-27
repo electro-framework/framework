@@ -67,7 +67,7 @@ class ViewService implements ViewServiceInterface
     // The injector is not used here. This service only returns instances of View.
     $view = new View ($engineOrClass);
     $view->setSource ($src);
-    $view->compile();
+    $view->compile ();
     return $view;
   }
 

@@ -11,10 +11,10 @@ use Electro\Caching\Lib\MemoryCache;
  */
 class TemplateCache extends CachingFileCompiler
 {
-  public function __construct (FileSystemCache $fsCache)
+  public function __construct (FileSystemCache $fsCache, $enabled = true, $autoSync = true)
   {
     $fsCache->setNamespace ('views/templates');
-    parent::__construct (new CompositeCache([new MemoryCache, $fsCache]));
+    parent::__construct (new CompositeCache([new MemoryCache, $fsCache]), $enabled, $autoSync);
   }
 
 }

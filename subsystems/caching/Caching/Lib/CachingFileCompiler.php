@@ -21,15 +21,15 @@ class CachingFileCompiler
 
   /**
    * @param CacheInterface $underlyingCache A pre-configured caching backend instance.
+   * @param bool           $cachingEnabled  Should the cache be used (TRUE) or always compile the source (FALSE)?
    * @param bool           $autoSync        When FALSE the cache will not check file modification times, so cache
    *                                        entries will never expire.
-   * @param bool           $cachingEnabled  Should the cache be used (TRUE) or always compile the source (FALSE)?
    */
-  public function __construct (CacheInterface $underlyingCache, $autoSync = true, $cachingEnabled = true)
+  public function __construct (CacheInterface $underlyingCache, $cachingEnabled = true, $autoSync = true)
   {
     $this->cache          = $underlyingCache;
-    $this->autoSync       = $autoSync;
     $this->cachingEnabled = $cachingEnabled;
+    $this->autoSync       = $autoSync;
   }
 
   /**

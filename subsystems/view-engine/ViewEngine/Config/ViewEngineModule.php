@@ -1,6 +1,7 @@
 <?php
 namespace Electro\ViewEngine\Config;
 
+use Electro\Caching\Lib\FileSystemCache;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
@@ -24,7 +25,7 @@ class ViewEngineModule implements ModuleInterface
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)
   {
     $kernel->onRegisterServices (
-      function (InjectorInterface $injector) {
+      function (InjectorInterface $injector) use ($kernel) {
         $injector
           ->alias (ViewInterface::class, View::class)//note: this is not used by ViewService.
           ->alias (ViewServiceInterface::class, ViewService::class)
@@ -36,6 +37,13 @@ class ViewEngineModule implements ModuleInterface
           ->share (AssetsService::class)
           ->share (BlocksService::class)
           ->share (ViewEngineSettings::class)
+          ->delegate (TemplateCache::class, function () use ($injector, $kernel) {
+            return new TemplateCache(
+              $injector->make (FileSystemCache::class),
+              true,
+              $kernel->devEnv ()
+            );
+          })
           ->share (TemplateCache::class);
       });
   }
