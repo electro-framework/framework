@@ -7,7 +7,6 @@ use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\Routing\Lib\FactoryRoutable;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Selenia\Platform\Components\Base\PageComponent;
 
 /**
  * Generates a routable that, when invoked, will return a generic PageComponent with the specified template as a view.
@@ -22,8 +21,7 @@ function page ($templateUrl)
   return new FactoryRoutable (function (ViewServiceInterface $viewService) use ($templateUrl) {
     return function ($request, $response) use ($viewService, $templateUrl) {
       $filename = $viewService->resolveTemplatePath ($templateUrl);
-      $view->getEngine ()->configure (['page' => true]);
-      $view     = $viewService->loadFromFile ($filename);
+      $view     = $viewService->loadFromFile ($filename, ['page' => true]);
       return Http::response ($response, $view->render ());
     };
   });
@@ -176,7 +174,7 @@ function dump ()
  * <p>It also requires XDebug to be installed.
  *
  * @see PhpKit\WebConsole\DebugConsole\DebugConsole::trace
- * @return string
+ * @return void
  * @throws Exception
  */
 function trace ()

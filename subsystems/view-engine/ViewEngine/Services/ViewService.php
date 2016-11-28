@@ -37,33 +37,36 @@ class ViewService implements ViewServiceInterface
     $this->cache          = $cache;
   }
 
-  function getEngine ($engineClass)
+  function getEngine ($engineClass, $options = [])
   {
     // The engine class may receive this instance as a $view parameter on the constructor (optional).
+    /** @var ViewEngineInterface $engine */
     $engine = $this->injector->make ($engineClass, [':view' => $this]);
+    if ($options)
+      $engine->configure ($options);
     return $engine;
   }
 
-  function getEngineFromFileName ($path)
+  function getEngineFromFileName ($path, $options = [])
   {
     foreach ($this->patterns as $pattern => $class)
       if (preg_match ($pattern, $path))
-        return $this->getEngine ($class);
+        return $this->getEngine ($class, $options);
     throw new FatalException ("None of the available view engines is capable of handling a file named <b>$path</b>.
 <p>Make sure the file name has one of the supported file extensions or matches a known pattern.");
   }
 
-  function loadFromFile ($path)
+  function loadFromFile ($path, array $options = [])
   {
-    $engine   = $this->getEngineFromFileName ($path);
+    $engine   = $this->getEngineFromFileName ($path, $options);
     $compiled = $engine->loadFromCache ($this->cache, $path);
     return $this->loadFromCompiled ($compiled, $engine);
   }
 
-  function loadFromString ($src, $engineOrClass)
+  function loadFromString ($src, $engineOrClass, array $options = [])
   {
     if (is_string ($engineOrClass))
-      $engineOrClass = $this->getEngine ($engineOrClass);
+      $engineOrClass = $this->getEngine ($engineOrClass, $options);
     // The injector is not used here. This service only returns instances of View.
     $view = new View ($engineOrClass);
     $view->setSource ($src);
