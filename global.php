@@ -22,8 +22,8 @@ function page ($templateUrl)
   return new FactoryRoutable (function (ViewServiceInterface $viewService) use ($templateUrl) {
     return function ($request, $response) use ($viewService, $templateUrl) {
       $filename = $viewService->resolveTemplatePath ($templateUrl);
+      $view->getEngine ()->configure (['page' => true]);
       $view     = $viewService->loadFromFile ($filename);
-      $view->getEngine ()->configure (['rootClass' => PageComponent::class]);
       return Http::response ($response, $view->render ());
     };
   });
