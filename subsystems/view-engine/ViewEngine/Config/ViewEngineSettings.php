@@ -52,7 +52,7 @@ class ViewEngineSettings implements AssignableInterface
    */
   function registerViews (ModuleInfo $moduleInfo)
   {
-    array_unshift ($this->viewsDirectories, "{$this->kernelSettings->baseDirectory}/$moduleInfo->path/$this->moduleViewsPath");
+    array_unshift ($this->viewsDirectories, "$moduleInfo->path/$this->moduleViewsPath");
     return $this;
   }
 
