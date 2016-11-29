@@ -54,6 +54,8 @@ class CsvUtil
         $delimiter = self::autoDetectSeparator ($columns);
       $columns = map (explode ($delimiter, $columns), function ($col) { return preg_replace ("/^[\\s\"\t']|[\\s\"\t']$/", '', $col);});
     }
+    else if (!$delimiter)
+      $delimiter = ',';
 
     // use fgetcsv which tends to work better than str_getcsv in some cases
     $data = [];
