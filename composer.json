@@ -21,7 +21,6 @@
     "php-kit/ext-pdo": "dev-master",
     "php-kit/php-web-console": "dev-master",
     "swiftmailer/swiftmailer": "^5.4.2",
-    "vlucas/phpdotenv": "^2.3.0",
     "zendframework/zend-diactoros": "^1.1.3"
   },
   "autoload": {
