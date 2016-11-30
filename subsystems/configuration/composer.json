@@ -13,9 +13,6 @@
       "email": "claudio.silva@impactwave.com"
     }
   ],
-  "require": {
-    "vlucas/phpdotenv": "^2.3.0"
-  },
   "autoload": {
     "psr-4": {
       "Electro\\Configuration\\": "Configuration"

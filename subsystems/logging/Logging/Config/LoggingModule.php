@@ -35,7 +35,7 @@ class LoggingModule implements ModuleInterface
           ->delegate (LoggerInterface::class, function (KernelSettings $kernelSettings) {
             $logger = new Logger ('main');
             if ($kernelSettings->isConsoleBased)
-              $logger->pushHandler (new StreamHandler('php://stderr', getenv ('DEBUG_LEVEL') ?: Logger::DEBUG));
+              $logger->pushHandler (new StreamHandler('php://stderr', env ('DEBUG_LEVEL') ?: Logger::DEBUG));
             return $logger;
           });
       });

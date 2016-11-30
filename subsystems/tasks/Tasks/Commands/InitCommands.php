@@ -96,7 +96,7 @@ trait InitCommands
       $DB_USERNAME    = '';
       $DB_PASSWORD    = '';
       $DB_CHARSET     = '';
-      $DB_COLLATION   = '';
+      $DB_COLLATION   = 'utf8_unicode_ci   # to know why, see http://stackoverflow.com/questions/766809/whats-the-difference-between-utf8-general-ci-and-utf8-unicode-ci#answer-766996';
       $DB_PORT        = '';
       $DB_UNIX_SOCKET = '';
       $DB_PREFIX      = '';

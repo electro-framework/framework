@@ -1,7 +1,8 @@
 <?php
 namespace Electro\ConsoleApplication;
 
-use Dotenv\Dotenv;
+use Electro\Configuration\Lib\DotEnv;
+use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\BootloaderInterface;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\KernelInterface;
@@ -52,9 +53,13 @@ class ConsoleBootloader implements BootloaderInterface
 
     // Initialize some settings from environment variables
 
-    if (file_exists ("$rootDir/.env")) {
-      $dotenv = new Dotenv ($rootDir);
+    $dotenv = new Dotenv ("$rootDir/.env");
+    try {
       $dotenv->load ();
+    }
+    catch (ConfigException $e) {
+      echo $e->getMessage();
+      return 1;
     }
 
     // Load the kernel's configuration

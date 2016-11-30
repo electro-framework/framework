@@ -40,7 +40,7 @@ class DebuggingModule implements ModuleInterface
 
           // Writing to the logger also writes to the Inspector panel.
           if ($logger instanceof Logger)
-            $logger->pushHandler (new WebConsoleMonologHandler(getenv ('DEBUG_LEVEL') ?: Logger::DEBUG));
+            $logger->pushHandler (new WebConsoleMonologHandler(env ('DEBUG_LEVEL') ?: Logger::DEBUG));
         }
       });
   }

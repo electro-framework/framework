@@ -30,7 +30,7 @@ class MailModule implements ModuleInterface
               env ('EMAIL_SMTP_HOST', 'localhost'),
               env ('EMAIL_SMTP_PORT', 25)
             );
-            if (env ('EMAIL_SMTP_AUTH') == 'true')
+            if (env ('EMAIL_SMTP_AUTH'))
               $transport
                 ->setUsername (env ('EMAIL_SMTP_USERNAME'))
                 ->setPassword (env ('EMAIL_SMTP_PASSWORD'));

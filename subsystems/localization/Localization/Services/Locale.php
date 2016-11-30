@@ -132,7 +132,7 @@ class Locale
   function defaultLang ($lang = null)
   {
     if (is_null ($lang))
-      return $this->defaultLang ?: ($this->defaultLang = getenv ('APP_DEFAULT_LANG'));
+      return $this->defaultLang ?: ($this->defaultLang = env ('APP_DEFAULT_LANG'));
     $this->defaultLang = $lang;
     return $this;
   }
