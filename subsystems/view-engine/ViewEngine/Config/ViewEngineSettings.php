@@ -2,7 +2,6 @@
 namespace Electro\ViewEngine\Config;
 
 use Electro\Interfaces\AssignableInterface;
-use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Traits\ConfigurationTrait;
 
@@ -10,28 +9,18 @@ use Electro\Traits\ConfigurationTrait;
  * Configuration settings for the ViewEngine subsystem.
  *
  * @method $this|string moduleViewsPath (string $v = null) The relative path of the views folder inside a module
+ * @method $this|bool caching (bool $v = null) When TRUE, view rendering is accelerated by caching compiled templates
  */
 class ViewEngineSettings implements AssignableInterface
 {
   use ConfigurationTrait;
 
-  /**
-   * @var KernelSettings
-   */
-  private $kernelSettings;
-  /**
-   * @var string
-   */
+  /** @var bool */
+  private $caching = true;
+  /** @var string */
   private $moduleViewsPath = 'resources/views';
-  /**
-   * @var string[]
-   */
+  /** @var string[] */
   private $viewsDirectories = [];
-
-  public function __construct (KernelSettings $kernelSettings)
-  {
-    $this->kernelSettings = $kernelSettings;
-  }
 
   /**
    * Returns a list of all directories where views can be found.

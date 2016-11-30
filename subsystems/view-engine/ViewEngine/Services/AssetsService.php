@@ -1,9 +1,10 @@
 <?php
 namespace Electro\ViewEngine\Services;
 
-use Matisse\Components\Base\Component;
+use Electro\Kernel\Config\KernelSettings;
 use Electro\Traits\InspectionTrait;
 use Electro\ViewEngine\Lib\AssetsContext;
+use Matisse\Components\Base\Component;
 
 /**
  * Manages external and embedded CSS stylesheets and javascripts.
@@ -19,15 +20,19 @@ class AssetsService
    */
   private $assets;
   /**
+   * @var KernelSettings
+   */
+  private $kernelSettings;
+  /**
    * @var AssetsContext
    */
   private $mainAssets;
 
-  public function __construct ()
+  public function __construct (KernelSettings $kernelSettings)
   {
-    $this->assets = $this->mainAssets = new AssetsContext;
+    $this->assets         = $this->mainAssets = new AssetsContext;
+    $this->kernelSettings = $kernelSettings;
   }
-
 
   /**
    * Adds an inline stylesheet to the HEAD section of the page.
@@ -154,6 +159,39 @@ class AssetsService
         echo $item instanceof Component ? $item->runAndGetContent () : $item;
       echo "</style>";
     }
+  }
+
+  /**
+   * A list of relative file paths of assets published by a module, relative to that module's public folder.
+   *
+   * <p>Registered assets will be automatically loaded by rendered pages when they use the {@see outputScripts} or
+   * {@see outputStyles} methods.
+   * <p>Also, if they are located on a sub-directory of `/resources` , the framework's build process may automatically
+   * concatenate and minify them for a release-grade build.
+   *
+   * @param string   $moduleName
+   * @param string[] $assets
+   * @return $this
+   */
+  function registerAssets ($moduleName, $assets)
+  {
+    $publicUrl = "{$this->kernelSettings->modulesPublishingPath}/$moduleName";
+    // TODO: handle assets on a sub-directory of resources.
+    foreach ($assets as $path) {
+      $path = "$publicUrl/$path";
+      $p    = strrpos ($path, '.');
+      if (!$p) continue;
+      $ext = substr ($path, $p + 1);
+      switch ($ext) {
+        case 'css':
+          $this->addStylesheet ($path);
+          break;
+        case 'js':
+          $this->addScript ($path);
+          break;
+      }
+    }
+    return $this;
   }
 
 }

@@ -265,6 +265,6 @@ class FileSystemCache implements CacheInterface
   {
     if (str_beginsWith ($key, $this->appDir))
       $key = substr ($key, strlen ($this->appDir));
-    return "$this->basePath/" . str_replace ('/', '.', escapeshellcmd ($key));
+    return "$this->basePath/" . preg_replace ('#/|\\\#', '.', escapeshellcmd ($key));
   }
 }

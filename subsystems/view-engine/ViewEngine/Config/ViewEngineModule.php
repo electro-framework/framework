@@ -37,10 +37,10 @@ class ViewEngineModule implements ModuleInterface
           ->share (AssetsService::class)
           ->share (BlocksService::class)
           ->share (ViewEngineSettings::class)
-          ->delegate (TemplateCache::class, function () use ($injector, $kernel) {
+          ->delegate (TemplateCache::class, function (ViewEngineSettings $settings) use ($injector, $kernel) {
             return new TemplateCache(
               $injector->make (FileSystemCache::class),
-              true,
+              $settings->caching (),
               $kernel->devEnv ()
             );
           })

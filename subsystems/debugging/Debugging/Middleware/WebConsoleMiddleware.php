@@ -46,7 +46,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    if (!$this->webConsole) // In case the middlware was registered.
+    if (!$this->webConsole) // In case the middleware was registered.
       return $next ();
     //------------------------------------------------------------------
 

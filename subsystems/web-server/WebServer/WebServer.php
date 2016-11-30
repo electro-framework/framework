@@ -6,6 +6,7 @@ use Electro\Interfaces\Http\MiddlewareStackInterface;
 use Electro\Interfaces\Http\ResponseSenderInterface;
 use Electro\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
 use Electro\Kernel\Config\KernelSettings;
+use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response;
 use Zend\Diactoros\ServerRequestFactory;
@@ -71,20 +72,23 @@ class WebServer
   {
     /** @var ServerRequestInterface $request */
     $request                       = ServerRequestFactory::fromGlobals ();
-    $this->kernelSettings->baseURI = dirnameEx (
+    $baseUrl                       = dirnameEx (
       get ($request->getServerParams (), 'SCRIPT_NAME'),
       $this->kernelSettings->urlDepth + 1
     );
-    $request                       = $request->withAttribute ('originalUri', $request->getUri ());
-    $request                       = $request->withAttribute ('baseUri', $this->kernelSettings->baseURI);
-    $this->request                 = $request->withAttribute ('virtualUri', $this->getVirtualUri ($request));
+    $this->kernelSettings->baseUrl = $baseUrl;
+    ErrorConsole::setEditorUrl (($baseUrl ? "$baseUrl/" : '') . $this->kernelSettings->editorUrl);
+
+    $request       = $request->withAttribute ('originalUri', $request->getUri ());
+    $request       = $request->withAttribute ('baseUri', $this->kernelSettings->baseUrl);
+    $this->request = $request->withAttribute ('virtualUri', $this->getVirtualUri ($request));
   }
 
   protected function getVirtualUri (ServerRequestInterface $request)
   {
     $uri     = $request->getUri ()->getPath ();
-    $baseURI = $request->getAttribute ('baseUri');
-    $vuri    = substr ($uri, strlen ($baseURI) + 1) ?: '';
+    $baseUrl = $request->getAttribute ('baseUri');
+    $vuri    = substr ($uri, strlen ($baseUrl) + 1) ?: '';
     return $vuri;
   }
 

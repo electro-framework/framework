@@ -25,7 +25,7 @@ class EditorLauncherMiddleware implements RequestHandlerInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    if ($request->getAttribute ('virtualUri') != $this->kernelSettings->editorURL)
+    if ($request->getAttribute ('virtualUri') != $this->kernelSettings->editorUrl)
       return $next();
 
     $param        = $request->getQueryParams ();
