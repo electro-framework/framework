@@ -153,7 +153,8 @@ class FileSystemCache implements CacheInterface
 
   function getTimestamp ($key)
   {
-    return @filemtime ($this->toFileName ($key));
+    $f = $this->toFileName ($key);
+    return file_exists ($f) ? @filemtime ($f) : 0;
   }
 
   function has ($key)
@@ -185,7 +186,7 @@ class FileSystemCache implements CacheInterface
     if (is_object ($value) && $value instanceof \Closure)
       return false;
     $path = $this->toFileName ($key);
-    $f    = @fopen ($path, 'w');
+    $f    = file_exists($path) ? @fopen ($path, 'w') : null;
     if (!$f) {
       // Maybe the directory is nonexistent...
       if ($this->createDirIfAbsent ())
