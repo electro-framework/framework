@@ -60,7 +60,7 @@ class ViewService implements ViewServiceInterface
   {
     $engine   = $this->getEngineFromFileName ($path, $options);
     $compiled = $engine->loadFromCache ($this->cache, $path);
-    return $this->loadFromCompiled ($compiled, $engine);
+    return $this->createFromCompiled ($compiled, $engine);
   }
 
   function loadFromString ($src, $engineOrClass, array $options = [])
@@ -101,6 +101,23 @@ class ViewService implements ViewServiceInterface
   }
 
   /**
+   * Creates a {@see View} instance from a compiled template.
+   *
+   * @param mixed                      $compiled
+   * @param string|ViewEngineInterface $engineOrClass
+   * @return View
+   */
+  private function createFromCompiled ($compiled, $engineOrClass)
+  {
+    if (is_string ($engineOrClass))
+      $engineOrClass = $this->getEngine ($engineOrClass);
+    // The injector is not used here. This service only returns instances of View.
+    $view = new View ($engineOrClass);
+    $view->setCompiled ($compiled);
+    return $view;
+  }
+
+  /**
    * Finds the file name extension for a given file path that has no extension.
    *
    * @param string $path The absolute path to a view template, with or without filename extension.
@@ -111,23 +128,6 @@ class ViewService implements ViewServiceInterface
     if (file_exists ($path))
       return $path;
     return FilesystemFlow::glob ("$path.*")->onlyFiles ()->fetchKey ();
-  }
-
-  /**
-   * Creates a {@see View} instance from a compiled template.
-   *
-   * @param mixed                      $compiled
-   * @param string|ViewEngineInterface $engineOrClass
-   * @return View
-   */
-  private function loadFromCompiled ($compiled, $engineOrClass)
-  {
-    if (is_string ($engineOrClass))
-      $engineOrClass = $this->getEngine ($engineOrClass);
-    // The injector is not used here. This service only returns instances of View.
-    $view = new View ($engineOrClass);
-    $view->setCompiled ($compiled);
-    return $view;
   }
 
 }

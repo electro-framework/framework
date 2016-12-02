@@ -57,7 +57,9 @@ class CompositeCache implements CacheInterface
     if (is_object ($value) && $value instanceof \Closure)
       $value = $value ();
     // and store it on all caches.
-    return isset($value) ? ($this->set ($key, $value) ? $value : null) : null;
+    if (isset($value))
+      $this->set ($key, $value);
+    return $value;
   }
 
   function getNamespace ()
@@ -118,7 +120,7 @@ class CompositeCache implements CacheInterface
     $i = count ($this->caches);
     // We must iterate in reverso order, otherwise reading the key concurrently would undo the work being done here.
     while ($i--)
-      $o = $o && $this->caches[$i]->remove ($key);
+      $o = $this->caches[$i]->remove ($key) && $o;
     return $o;
   }
 
@@ -127,7 +129,7 @@ class CompositeCache implements CacheInterface
     $o = true;
     // Store the value on all caches.
     foreach ($this->caches as $cache)
-      $o = $o && $cache->set ($key, $value);
+      $o = $cache->set ($key, $value) && $o;
     return $o;
   }
 

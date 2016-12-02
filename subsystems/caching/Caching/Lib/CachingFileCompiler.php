@@ -65,7 +65,7 @@ class CachingFileCompiler
         // If so, re-compile and re-cache it.
 
         $cacheT  = $this->cache->getTimestamp ($sourceFile);
-        $sourceT = @filemtime ($sourceFile);
+        $sourceT = file_exists ($sourceFile) ? @filemtime ($sourceFile) : false;
         if (!$sourceT)
           $this->fileNotFound ($sourceFile);
 
@@ -107,7 +107,7 @@ class CachingFileCompiler
    */
   function loadAndCompile ($sourceFile, callable $compiler)
   {
-    $sourceCode = @file_get_contents ($sourceFile, FILE_TEXT);
+    $sourceCode = loadFile ($sourceFile, false);
     if (!$sourceCode)
       $this->fileNotFound ($sourceFile);
     return $compiler ($sourceCode);

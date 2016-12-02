@@ -53,7 +53,7 @@ class FileSystemCache implements CacheInterface
   function add ($key, $value)
   {
     $path = $this->toFileName ($key);
-    $f    = @fopen ($path, 'x');
+    $f    = file_exists ($path) ? null : @fopen ($path, 'x'); // mode 'x' returns NULL if file exists
     if (!$f) {
       // Maybe the directory is nonexistent...
       if (!$this->createDirIfAbsent ()) {
@@ -108,7 +108,8 @@ class FileSystemCache implements CacheInterface
         return $v;
     }
     else {
-      $f = @fopen ($path, 'r');
+      $path = $this->toFileName ($key);
+      $f    = file_exists ($path) ? @fopen ($path, 'r') : null;
       if ($f) {
         try {
           if (!flock ($f, LOCK_SH)) // Block if file already locked.
@@ -186,7 +187,7 @@ class FileSystemCache implements CacheInterface
     if (is_object ($value) && $value instanceof \Closure)
       return false;
     $path = $this->toFileName ($key);
-    $f    = file_exists($path) ? @fopen ($path, 'w') : null;
+    $f    = @fopen ($path, 'w');
     if (!$f) {
       // Maybe the directory is nonexistent...
       if ($this->createDirIfAbsent ())
