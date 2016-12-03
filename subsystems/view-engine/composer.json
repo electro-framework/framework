@@ -14,6 +14,8 @@
     }
   ],
   "require": {
+    "php-kit/flow": "^1.0.0",
+    "php-kit/php-web-console": "^0.9.0",
     "subsystems/caching": "self.version"
   },
   "autoload": {

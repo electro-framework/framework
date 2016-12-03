@@ -16,10 +16,14 @@
   "require": {
     "electro/kernel": "self.version",
     "codegyre/robo": "^0.5.3",
-    "ircmaxell/password-compat": "dev-master",
     "league/glide": "^1.0.0",
-    "php-kit/ext-pdo": "dev-master",
-    "php-kit/php-web-console": "dev-master",
+    "monolog/monolog": "^1.17.1",
+    "php-kit/ext-pdo": "^1.0.0",
+    "php-kit/flow": "^1.0.0",
+    "php-kit/php-web-console": "^0.9.0",
+    "php-kit/power-primitives": "^1.0.0",
+    "psr/http-message": "~1.0",
+    "psr/log": "~1.0",
     "swiftmailer/swiftmailer": "^5.4.2",
     "zendframework/zend-diactoros": "^1.1.3"
   },

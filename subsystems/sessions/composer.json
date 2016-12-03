@@ -14,6 +14,7 @@
     }
   ],
   "require": {
+    "psr/http-message": "~1.0",
     "subsystems/http": "self.version"
   },
   "autoload": {

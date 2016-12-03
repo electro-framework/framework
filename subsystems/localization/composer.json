@@ -14,6 +14,9 @@
     }
   ],
   "require": {
+    "php-kit/php-web-console": "^0.9.0",
+    "psr/http-message": "~1.0",
+    "subsystems/debugging": "self.version",
     "subsystems/http": "self.version"
   },
   "autoload": {

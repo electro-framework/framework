@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "php-kit/php-web-console": "dev-master",
+    "php-kit/php-web-console": "^0.9.0",
     "subsystems/http": "self.version"
   },
   "autoload": {

@@ -14,6 +14,9 @@
     }
   ],
   "require": {
+    "codegyre/robo": "^0.5.3",
+    "php-kit/flow": "^1.0.0",
+    "subsystems/console": "self.version"
   },
   "autoload": {
     "psr-4": {

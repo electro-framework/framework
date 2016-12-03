@@ -14,7 +14,6 @@
     }
   ],
   "require": {
-    "ircmaxell/password-compat": "dev-master",
     "subsystems/http": "self.version"
   },
   "autoload": {
