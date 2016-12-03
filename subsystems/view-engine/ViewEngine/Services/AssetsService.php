@@ -1,10 +1,10 @@
 <?php
 namespace Electro\ViewEngine\Services;
 
+use Electro\Interfaces\RenderableInterface;
 use Electro\Kernel\Config\KernelSettings;
 use Electro\Traits\InspectionTrait;
 use Electro\ViewEngine\Lib\AssetsContext;
-use Matisse\Components\Base\Component;
 
 /**
  * Manages external and embedded CSS stylesheets and javascripts.
@@ -37,11 +37,11 @@ class AssetsService
   /**
    * Adds an inline stylesheet to the HEAD section of the page.
    *
-   * @param string|Component $css     CSS source code without style tags.
-   * @param string           $name    An identifier for the stylesheet, to prevent duplication.
-   *                                  When multiple stylesheets with the same name are added, only the last one is
-   *                                  considered.
-   * @param bool             $prepend If true, prepend to current list instead of appending.
+   * @param string|RenderableInterface $css     CSS source code without style tags.
+   * @param string                     $name    An identifier for the stylesheet, to prevent duplication.
+   *                                            When multiple stylesheets with the same name are added, only the last
+   *                                            one is considered.
+   * @param bool                       $prepend If true, prepend to current list instead of appending.
    * @return $this
    */
   function addInlineCss ($css, $name = null, $prepend = false)
@@ -57,11 +57,11 @@ class AssetsService
   /**
    * Adds an inline script to the HEAD section of the page.
    *
-   * @param string|Component $code    Javascript code without the script tags.
-   * @param string           $name    An identifier for the script, to prevent duplication.
-   *                                  When multiple scripts with the same name are added, only the last one is
-   *                                  considered.
-   * @param bool             $prepend If true, prepend to current list instead of appending.
+   * @param string|RenderableInterface $code    Javascript code without the script tags.
+   * @param string                     $name    An identifier for the script, to prevent duplication.
+   *                                            When multiple scripts with the same name are added, only the last one is
+   *                                            considered.
+   * @param bool                       $prepend If true, prepend to current list instead of appending.
    * @return $this
    */
   function addInlineScript ($code, $name = null, $prepend = false)
@@ -141,7 +141,7 @@ class AssetsService
     if (!empty($this->assets->inlineScripts)) {
       echo "<script>";
       foreach ($this->assets->inlineScripts as $item) {
-        $code = trim ($item instanceof Component ? $item->runAndGetContent () : $item);
+        $code = trim ($item instanceof RenderableInterface ? $item->getRendering () : $item);
         $last = substr ($code, -1);
         echo $last != ';' && $last != '}' ? $code . ';' : $code . "\n";
       }
@@ -156,7 +156,7 @@ class AssetsService
     if (!empty($this->assets->inlineCssStyles)) {
       echo "<style>";
       foreach ($this->assets->inlineCssStyles as $item)
-        echo $item instanceof Component ? $item->runAndGetContent () : $item;
+        echo $item instanceof RenderableInterface ? $item->getRendering () : $item;
       echo "</style>";
     }
   }

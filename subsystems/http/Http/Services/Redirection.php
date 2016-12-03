@@ -1,12 +1,11 @@
 <?php
 namespace Electro\Http\Services;
 
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\UriInterface;
 use Electro\Interfaces\Http\RedirectionInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
 use Electro\Interfaces\SessionInterface;
-use Zend\Diactoros\Response;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UriInterface;
 
 /**
  * **Note:** this class assumes a `baseURI` attribute exists on the given ServerRequestInterface instance.
@@ -43,12 +42,6 @@ class Redirection implements RedirectionInterface
     return $this->to ($this->request->getHeaderLine ('Referer') ?: $this->request->getUri (), $status);
   }
 
-  function setRequest (ServerRequestInterface $request)
-  {
-    $this->request = $request;
-    return $this;
-  }
-
   function guest ($url, $status = 302)
   {
     $this->validate ();
@@ -83,6 +76,12 @@ class Redirection implements RedirectionInterface
     return $this->responseFactory->make ($status, '', '', ['Location' => $url]);
   }
 
+  function setRequest (ServerRequestInterface $request)
+  {
+    $this->request = $request;
+    return $this;
+  }
+
   function to ($url, $status = 302)
   {
     $this->validate ();
@@ -92,6 +91,7 @@ class Redirection implements RedirectionInterface
 
   /**
    * Converts the given URL to an absolute URL and returns it as a string.
+   *
    * @param string|UriInterface $url
    * @return string
    */
