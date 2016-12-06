@@ -5,6 +5,7 @@ use Electro\Interfaces\ConsoleIOInterface;
 use InvalidArgumentException;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\Output;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Question\Question;
@@ -18,12 +19,16 @@ define ('CONSOLE_ALIGN_RIGHT', STR_PAD_LEFT);
  */
 class ConsoleIO implements ConsoleIOInterface
 {
+  /** @var bool TRUE until the first line break is output. */
+  private $firstLine = true;
   /** @var string */
   private $indent = '';
   /** @var InputInterface */
   private $input;
   /** @var OutputInterface */
   private $output;
+  /** @var int Verbosity level before the output was muted. */
+  private $prevVerbosity;
   /** @var array A list of width and height. */
   private $terminalSize;
 
@@ -112,8 +117,11 @@ class ConsoleIO implements ConsoleIOInterface
 
   function done ($text = '', $dontExit = false)
   {
-    if (strlen ($text))
+    if (strlen ($text)) {
+      if (!$this->firstLine)
+        $this->nl ();
       $this->say ($text);
+    }
     $this->nl ();
     if (!$dontExit)
       exit (0);
@@ -197,6 +205,13 @@ class ConsoleIO implements ConsoleIOInterface
     return $i - 1;
   }
 
+  function mute ()
+  {
+    $this->prevVerbosity = $this->output->getVerbosity ();
+    $this->output->setVerbosity (Output::VERBOSITY_QUIET);
+    return $this;
+  }
+
   function nl ()
   {
     $this->writeln ();
@@ -243,6 +258,12 @@ class ConsoleIO implements ConsoleIOInterface
     return $this;
   }
 
+  function unmute ()
+  {
+    $this->output->setVerbosity ($this->prevVerbosity);
+    return $this;
+  }
+
   function warn ($text)
   {
     if ($this->output)
@@ -261,10 +282,13 @@ class ConsoleIO implements ConsoleIOInterface
 
   function writeln ($text = '')
   {
-    if ($this->indent)
-      $text = preg_replace ('/^/m', $this->indent, $text);
-    if ($this->output)
-      $this->output->writeln ($text);
+    if ($this->output->getVerbosity() != Output::VERBOSITY_QUIET) {
+      $this->firstLine = false;
+      if ($this->indent)
+        $text = preg_replace ('/^/m', $this->indent, $text);
+      if ($this->output)
+        $this->output->writeln ($text);
+    }
     return $this;
   }
 
@@ -276,7 +300,7 @@ class ConsoleIO implements ConsoleIOInterface
    *
    * @param array $widths
    */
-  protected function adjustColumnWidths (array  &$widths)
+  protected function adjustColumnWidths (array &$widths)
   {
     $t  = $c = 0;
     $li = -1;

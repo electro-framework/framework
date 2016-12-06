@@ -40,19 +40,12 @@ trait InitCommands
        ->banner ("Electro Configuration Wizard");
     $overwrite = get ($opts, 'overwrite');
     if (file_exists ($envPath) && !$overwrite)
-      $io->nl ()->say ("<warning>The application is already configured</warning>")->comment ("Use -o to overwrite the current configuration");
+      $io->nl ()->say ("<warning>The application is already configured</warning>")
+         ->comment ("Use -o to overwrite the current configuration");
     else {
-      $io->title ("Creating required files and directories...");
       $this->nestedExec = true;
       $this->initStorage ();
       $this->initConfig (['overwrite' => true]);
-    }
-    $demoPath = "{$this->kernelSettings->modulesPath}/demo-company";
-    if (file_exists ($demoPath)) {
-      if (!$io->nl ()->confirm ("Do you wish keep the demonstration web pages? [n]")) {
-        /** @var ModuleCommands $this */
-        $this->moduleUninstall ('demo-company/demo-project');
-      }
     }
 
     $io->done ("Initialization completed successfully");
@@ -75,15 +68,17 @@ trait InitCommands
 
     $examplePath = "{$this->kernelSettings->baseDirectory}/.env.example";
     if (file_exists ($examplePath)) {
+      $io->mute ();
       $this->fs->copy ($examplePath, $envPath, true)->run ();
+      $io->unmute ();
       $io->nl ()
          ->comment ("The application has been automatically configured from a project-specific predefined template")
          ->comment ("Please edit the <info>.env</info> file to fill-in any missing required values (ex. database passwords)");
     }
     else {
+      $io->mute ();
       $this->fs->copy ("{$this->settings->scaffoldsPath()}/.env", $envPath, true)->run ();
-
-      $io->title ("Configuring the application...");
+      $io->unmute ();
 
       $LANG = $io->askDefault ("What is the application's main language? (en | pt | ...)", 'en');
       do {
@@ -96,7 +91,8 @@ trait InitCommands
       $DB_USERNAME    = '';
       $DB_PASSWORD    = '';
       $DB_CHARSET     = '';
-      $DB_COLLATION   = 'utf8_unicode_ci   # to know why, see http://stackoverflow.com/questions/766809/whats-the-difference-between-utf8-general-ci-and-utf8-unicode-ci#answer-766996';
+      $DB_COLLATION   =
+        'utf8_unicode_ci   # to know why, see http://stackoverflow.com/questions/766809/whats-the-difference-between-utf8-general-ci-and-utf8-unicode-ci#answer-766996';
       $DB_PORT        = '';
       $DB_UNIX_SOCKET = '';
       $DB_PREFIX      = '';
@@ -137,7 +133,7 @@ trait InitCommands
           }
           break;
       }
-      $io->nl ();
+      $io->mute ();
       (new Replace ($envPath))
         ->from ([
           '%LANG',
@@ -166,6 +162,7 @@ trait InitCommands
           $DB_PREFIX,
         ])
         ->run ();
+      $io->unmute ();
     }
     if (!$this->nestedExec)
       $io->done ("Initialization completed successfully");
@@ -180,6 +177,7 @@ trait InitCommands
    */
   function initStorage ()
   {
+    $this->io->mute ();
     $target = $this->kernelSettings->storagePath;
     if (file_exists ($target))
       (new DeleteDir ($target))->run ();
@@ -187,6 +185,7 @@ trait InitCommands
     (new ChmodEx ($target))->dirs (0775)->files (0664)->run ();
 
     $this->consoleApp->run ('module:refresh');
+    $this->io->unmute ();
 
     if (!$this->nestedExec)
       $this->io->done ("Storage directory created");
