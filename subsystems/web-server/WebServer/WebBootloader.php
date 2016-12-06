@@ -80,7 +80,21 @@ class WebBootloader implements BootloaderInterface
       $onStartUp ($kernel);
 
     // Boot up all modules.
-    $kernel->boot ();
+    try {
+      $kernel->boot ();
+    }
+    catch (ConfigException $e) {
+      $NL    = "<br>\n";
+      echo $e->getMessage () . $NL . $NL;
+
+      if ($e->getCode () == -1)
+        echo sprintf ('Possile error causes:%2$s%2$s- the class name may be misspelled,%2$s- the class may no longer exist,%2$s- module %1$s may be missing or it may be corrupted.%2$s%2$s',
+          str_match ($e->getMessage (), '/from module (\S+)/')[1], $NL);
+
+      $path = "$kernelSettings->storagePath/" . ModulesRegistry::REGISTRY_FILE;
+      if (file_exists ($path))
+        echo "Tip: one possible solution is to remove the '$path' file and run 'workman' to rebuild the module registry.";
+    }
 
     // Finalize.
 

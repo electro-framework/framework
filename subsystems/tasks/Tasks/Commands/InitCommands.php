@@ -40,10 +40,12 @@ trait InitCommands
        ->banner ("Electro Configuration Wizard");
     $overwrite = get ($opts, 'overwrite');
     if (file_exists ($envPath) && !$overwrite)
-      $io->nl ()->say ("<warning>The application is already configured</warning>")
+      $io->say ("<warning>The application is already configured</warning>")
          ->comment ("Use -o to overwrite the current configuration");
     else {
       $this->nestedExec = true;
+      ensureDir ("{$this->kernelSettings->baseDirectory}/{$this->kernelSettings->modulesPath}");
+      ensureDir ("{$this->kernelSettings->baseDirectory}/{$this->kernelSettings->pluginModulesPath}");
       $this->initStorage ();
       $this->initConfig (['overwrite' => true]);
     }
@@ -52,7 +54,7 @@ trait InitCommands
   }
 
   /**
-   * Initializes the application's configuration (.env file)
+   * Initializes the application's environment configuration (.env file)
    *
    * <p>If a `.env.example` file exists, that file will be copied to `.env`, otherwise a new `.env` file is created.
    *
@@ -91,8 +93,8 @@ trait InitCommands
       $DB_USERNAME    = '';
       $DB_PASSWORD    = '';
       $DB_CHARSET     = '';
-      $DB_COLLATION   =
-        'utf8_unicode_ci   # to know why, see http://stackoverflow.com/questions/766809/whats-the-difference-between-utf8-general-ci-and-utf8-unicode-ci#answer-766996';
+      $DB_COLLATION   = 'utf8_unicode_ci   # to know why, see ' .
+                        'http://stackoverflow.com/questions/766809/whats-the-difference-between-utf8-general-ci-and-utf8-unicode-ci#answer-766996';
       $DB_PORT        = '';
       $DB_UNIX_SOCKET = '';
       $DB_PREFIX      = '';

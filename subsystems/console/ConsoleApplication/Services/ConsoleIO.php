@@ -87,7 +87,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   function banner ($text, $width = 0)
   {
-    $this->box ($text, 'fg=white;bg=blue', $width);
+    $this->box ($text, 'fg=white;bg=blue', $width)->nl ();
     return $this;
   }
 
@@ -282,7 +282,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   function writeln ($text = '')
   {
-    if ($this->output->getVerbosity() != Output::VERBOSITY_QUIET) {
+    if ($this->output && $this->output->getVerbosity () != Output::VERBOSITY_QUIET) {
       $this->firstLine = false;
       if ($this->indent)
         $text = preg_replace ('/^/m', $this->indent, $text);
@@ -338,12 +338,15 @@ class ConsoleIO implements ConsoleIOInterface
     foreach ($lines as $line)
       $this->writeln (sprintf ($format, "  $line  "));
     $this->writeln (sprintf ($format, $space));
+    return $this;
   }
 
   private function doAsk (Question $question)
   {
-    if ($this->input && $this->output)
+    if ($this->input && $this->output) {
+      $this->firstLine = false;
       return $this->getDialog ()->ask ($this->input, $this->output, $question);
+    }
   }
 
   private function formatQuestion ($message)

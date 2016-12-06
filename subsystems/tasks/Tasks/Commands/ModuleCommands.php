@@ -377,8 +377,11 @@ trait ModuleCommands
 
     // Remove VCS history
 
-    if (!$opts['keep-repo'])
+    if (!$opts['keep-repo']) {
+      $io->mute ();
       $this->fs->remove ("$path/.git")->run ();
+      $io->unmute ();
+    }
 
     // Install the module's dependencies and register its namespaces
 
@@ -508,6 +511,8 @@ trait ModuleCommands
     }
     $___PSR4_NAMESPACE___ = str_replace ('\\', '\\\\', "$___NAMESPACE___\\");
 
+    $io->mute ();
+
     $path = "{$this->kernelSettings->modulesPath}/$___MODULE___";
     (new CopyDir (["{$this->settings->scaffoldsPath()}/$scaffold" => $path]))->run ();
     $this->fs->rename ("$path/src/Config/___CLASS___.php", "$path/src/Config/$___CLASS___.php")->run ();
@@ -536,10 +541,12 @@ trait ModuleCommands
       ])
       ->run ();
 
+    $io->unmute ();
+
     // Register the module's namespace
     $cfg                  = new ComposerConfigHandler;
     $require              = $cfg->get ('require', []);
-    $require[$moduleName] = '*';
+    $require[$moduleName] = 'self.version';
     $cfg->set ('require', $require);
     $cfg->save ();
 
@@ -550,15 +557,17 @@ trait ModuleCommands
 
   private function removeModuleDirectory ($path)
   {
+    $io = $this->io;
     if (file_exists ($path)) {
+      $io->mute ();
       (new DeleteDir($path))->run ();
       // Remove vendor dir. when it becomes empty.
       $vendorPath = dirname ($path);
       if ($this->isDirectoryEmpty ($vendorPath))
         (new DeleteDir($vendorPath))->run ();
+      $io->unmute ();
     }
-    else $this->io
-      ->warn ("No module files were deleted because none were found on the <info>modules</info> directory");
+    else $io->warn ("No module files were deleted because none were found on the <info>modules</info> directory");
   }
 
 }

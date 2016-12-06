@@ -8,6 +8,7 @@ use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Kernel\Config\KernelModule;
 use Electro\Kernel\Config\KernelSettings;
+use Electro\Kernel\Services\ModulesRegistry;
 
 class ConsoleBootloader implements BootloaderInterface
 {
@@ -58,7 +59,7 @@ class ConsoleBootloader implements BootloaderInterface
       $dotenv->load ();
     }
     catch (ConfigException $e) {
-      echo $e->getMessage();
+      echo $e->getMessage ();
       return 1;
     }
 
@@ -73,7 +74,6 @@ class ConsoleBootloader implements BootloaderInterface
     $kernelSettings->setApplicationRoot ($rootDir, $urlDepth);
 
     // Setup debugging (must be done before instantiating the kernel, but after instantiating its settings).
-
     $this->setupDebugging ($rootDir);
 
     // Boot up the framework's kernel.
@@ -89,7 +89,23 @@ class ConsoleBootloader implements BootloaderInterface
       $onStartUp ($kernel);
 
     // Boot up all modules.
-    $kernel->boot ();
+    try {
+      $kernel->boot ();
+    }
+    catch (ConfigException $e) {
+      $NL    = PHP_EOL;
+      echo $e->getMessage () . $NL . $NL;
+
+      if ($e->getCode () == -1)
+        echo sprintf ('Possile error causes:%2$s%2$s- the class name may be misspelled,%2$s- the class may no longer exist,%2$s- module %1$s may be missing or it may be corrupted.%2$s%2$s',
+          str_match ($e->getMessage (), '/from module (\S+)/')[1], $NL);
+
+      $path = "$kernelSettings->storagePath/" . ModulesRegistry::REGISTRY_FILE;
+      if (file_exists ($path))
+        echo "Tip: one possible solution is to remove the '$path' file and run 'workman' to rebuild the module registry.";
+
+      echo $NL;
+    }
 
     return $kernel->getExitCode ();
   }
@@ -107,8 +123,11 @@ class ConsoleBootloader implements BootloaderInterface
    */
   public function errorHandler ($code = null, $msg = null, $file, $line)
   {
-    if (error_reporting () === 0)
-      return true;
+    if (!error_reporting ()) {
+      if (PHP_MAJOR_VERSION >= 7)
+        error_clear_last ();
+      return false;
+    }
     throw new \ErrorException ($msg, $code, 1, $file, $line);
   }
 
@@ -160,7 +179,8 @@ class ConsoleBootloader implements BootloaderInterface
    */
   private function setupDebugging ($rootDir)
   {
-    register_shutdown_function ([$this, 'shutdown']);
+    // Disabled the shutdown handler to prever interference with Symfony console's error handling.
+//    register_shutdown_function ([$this, 'shutdown']);
     set_error_handler ([$this, 'errorHandler']);
     set_exception_handler ([$this, 'exceptionHandler']);
 
