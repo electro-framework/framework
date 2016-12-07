@@ -95,9 +95,13 @@ class ViewService implements ViewServiceInterface
     }
     // Throw an exception
     $paths = implode ('', map ($dirs, function ($path) {
-      return "<li><path>$path</path>";
+      return "  <li><path>$path</path>
+";
     }));
-    throw new FileNotFoundException($viewName, "<p>Search paths:<ul>$paths</ul>");
+    throw new FileNotFoundException($viewName, "
+<p>Search paths:
+
+<ul>$paths</ul>");
   }
 
   /**

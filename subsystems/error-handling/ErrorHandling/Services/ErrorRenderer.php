@@ -49,13 +49,10 @@ function render (ServerRequestInterface $request, ResponseInterface $response, $
     // Errors may contain an additional `getTitle()` method.
     if (method_exists ($error, 'getTitle')) {
       // The title is assumed to be a plain, one-line string (no formatting). If not, make it so.
-      $title   = strip_tags ($error->getTitle ());
+      $title   = $error->getTitle ();
       $message = $error->getMessage ();
     }
-    else {
-      $title   = strip_tags ($error->getMessage ());
-      $message = '';
-    }
+    else list ($title, $message) = array_pad (explode (PHP_EOL, $error->getMessage (), 2), 2, '');
     $response = $response->withStatus ($status);
   }
   else {
@@ -85,17 +82,23 @@ function render (ServerRequestInterface $request, ResponseInterface $response, $
       $body->write (ob_get_clean ());
     }
   }
-  elseif (Http::clientAccepts ($request, 'application/json')) {
-    $response = $response->withHeader ('Content-Type', 'application/json');
-    $body->write (json_encode (['error' => ['code' => $status, 'message' => $title]]));
-  }
-  elseif (Http::clientAccepts ($request, 'application/xml')) {
-    $response = $response->withHeader ('Content-Type', 'application/xml');
-    $body->write ("<?xml version=\"1.0\"?><error><code>$status</code><message>$title</message></error>");
-  }
-  elseif (Http::clientAccepts ($request, 'text/plain') || Http::clientAccepts ($request, '*/*')) {
-    $response = $response->withHeader ('Content-Type', 'text/plain');
-    $body->write ($title);
+  else {
+    $title = strip_tags ($title);
+    $message = strip_tags ($message);
+
+    if (Http::clientAccepts ($request, 'text/plain') || Http::clientAccepts ($request, '*/*')) {
+      $response = $response->withHeader ('Content-Type', 'text/plain');
+      $body->write ("$title
+$message");
+    }
+    elseif (Http::clientAccepts ($request, 'application/json')) {
+      $response = $response->withHeader ('Content-Type', 'application/json');
+      $body->write (json_encode (['error' => ['code' => $status, 'message' => $title, 'info' => $message]], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    }
+    elseif (Http::clientAccepts ($request, 'application/xml')) {
+      $response = $response->withHeader ('Content-Type', 'application/xml');
+      $body->write ("<?xml version=\"1.0\"?><error><code>$status</code><message>$title</message><info>$message</info></error>");
+    }
   }
 
   // else render nothing
@@ -128,26 +131,26 @@ protected function htmlTemplate ($status, $title, $message)
         margin: 30px 40px 60px 40px;
       }
 
-      kbd {
-        color: #000;
-        font-weight: 100;
-        font-size: 15px;
+      kbd, path {
+        font-weight: bold;
+        letter-spacing: -1px;
+        font-size: smaller;
         font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
       }
 
       h1 {
         font-weight: 300;
-        margin: 0;
-        padding-bottom: 30px;
-        font-size: 28px;
+        margin: 0 0 30px;
+        font-size: 22px;
+        text-align: center;
       }
 
       h5 {
         font-size: 14px;
+        line-height: 15px;
         font-weight: 300;
         margin: 0;
-        color: #BBB;
-        text-align: center;
+        color: #DDD;
         padding: 10px;
       }
 
@@ -163,11 +166,10 @@ protected function htmlTemplate ($status, $title, $message)
         background: #FFF;
         display: table;
         width: 100%;
-        height: 100%;
+        min-height: 300px;
         max-height: 400px;
         max-width: 600px;
         color: #777;
-        text-align: center;
         box-shadow: 1px 1px 5px 0 rgba(0, 0, 0, 0.3);
         border-radius: 5px;
         margin: auto;
@@ -179,7 +181,9 @@ protected function htmlTemplate ($status, $title, $message)
 
       header {
         display: table-cell;
-        padding: 10px 15px;
+        padding: 5px 30px;
+        background: #617477;
+        border-radius: 5px 5px 0 0;
       }
 
       header::after {
@@ -192,7 +196,14 @@ protected function htmlTemplate ($status, $title, $message)
         display: table-cell;
         vertical-align: middle;
         height: 100%;
-        padding-bottom: 56px;
+        padding: 0 30px;
+        text-align: center;
+      }
+
+      .message {
+        display: inline-block;
+        text-align: left;
+        font-size: 16px;
       }
     </style>
   </head>
@@ -207,7 +218,7 @@ protected function htmlTemplate ($status, $title, $message)
       <div class=row2>
         <article>
           <h1><?= $title ?></h1>
-          <p align=center><?= $message ?></p>
+          <div class=message><?= $message ?></div>
         </article>
       </div>
     </div>

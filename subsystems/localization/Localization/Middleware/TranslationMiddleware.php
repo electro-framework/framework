@@ -77,8 +77,9 @@ class TranslationMiddleware implements RequestHandlerInterface
       }
       if (!$trans) {
         $paths = array_map (function ($path) { return "<li>" . ErrorConsole::shortFileName ($path); }, $folders);
-        throw new ConfigException("A translation file for language <b>$lang</b> was not found.<p>Search paths:<ul>" .
-                                  implode ('', $paths) . "</ul>", FlashType::ERROR);
+        throw new ConfigException("A translation file for language <b>$lang</b> was not found.
+<p>Search paths:
+<ul>" . implode ('', $paths) . "</ul>", FlashType::ERROR);
       }
     }
     $out = preg_replace_callback (self::FIND_TRANS_KEY, function ($args) use ($lang) {

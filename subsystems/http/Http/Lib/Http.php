@@ -84,7 +84,8 @@ class Http
    */
   static function jsonResponse (ResponseInterface $response, $data)
   {
-    return self::response ($response, json_encode ($data), 'application/json');
+    return self::response ($response, json_encode ($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+      'application/json');
   }
 
   /**
