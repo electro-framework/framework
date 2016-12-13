@@ -1,6 +1,7 @@
 {
   "name": "___MODULE___",
   "description": "",
+  "version": "1.0.0",
   "license": "proprietary",
   "autoload": {
     "psr-4": {

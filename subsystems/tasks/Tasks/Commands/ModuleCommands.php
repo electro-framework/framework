@@ -511,9 +511,17 @@ trait ModuleCommands
     }
     $___PSR4_NAMESPACE___ = str_replace ('\\', '\\\\', "$___NAMESPACE___\\");
 
+    $path = "{$this->kernelSettings->modulesPath}/$___MODULE___";
+    if (is_dir ($path)) {
+      $io->say ("A directory for that module already exists, but the module is not registered.
+If you proceed, the directory contents will be discarded.");
+      if (!$io->confirm("Proceed"))
+        $io->cancel ();
+      (new DeleteDir($path))->run ();
+    }
+
     $io->mute ();
 
-    $path = "{$this->kernelSettings->modulesPath}/$___MODULE___";
     (new CopyDir (["{$this->settings->scaffoldsPath()}/$scaffold" => $path]))->run ();
     $this->fs->rename ("$path/src/Config/___CLASS___.php", "$path/src/Config/$___CLASS___.php")->run ();
 
