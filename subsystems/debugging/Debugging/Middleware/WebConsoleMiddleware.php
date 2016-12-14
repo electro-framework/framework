@@ -18,10 +18,6 @@ use Psr\Http\Message\ServerRequestInterface;
 class WebConsoleMiddleware implements RequestHandlerInterface
 {
   /**
-   * @var bool
-   */
-  private $webConsole;
-  /**
    * @var InjectorInterface
    */
   private $injector;
@@ -29,6 +25,10 @@ class WebConsoleMiddleware implements RequestHandlerInterface
    * @var KernelSettings
    */
   private $kernelSettings;
+  /**
+   * @var bool
+   */
+  private $webConsole;
 
   /**
    * WebConsoleMiddleware constructor.
@@ -41,7 +41,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
   {
     $this->kernelSettings = $kernelSettings;
     $this->injector       = $injector;
-    $this->webConsole   = $webConsole;
+    $this->webConsole     = $webConsole;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)

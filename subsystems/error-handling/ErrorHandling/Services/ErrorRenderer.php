@@ -26,8 +26,7 @@ private $settings;
  * @param InjectorInterface        $injector
  * @param bool                     $devEnv
  */function __construct (KernelSettings $kernelSettings, ResponseFactoryInterface $responseFactory,
-                         ErrorHandlingSettings $settings,
-                         InjectorInterface $injector, $devEnv)
+                         ErrorHandlingSettings $settings, InjectorInterface $injector, $devEnv)
 {
   $this->kernelSettings  = $kernelSettings;
   $this->responseFactory = $responseFactory;
@@ -60,6 +59,11 @@ function render (ServerRequestInterface $request, ResponseInterface $response, $
     $title   = $response->getReasonPhrase ();
     $message = strval ($response->getBody ());
   }
+
+  // Suppress the display of extra information when on production mode.
+  if (!$this->devEnv)
+    $message = '';
+
   /** @var ResponseInterface $response */
   $response = $response->withBody ($body = $this->responseFactory->makeBody ());
 

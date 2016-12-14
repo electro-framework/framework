@@ -151,7 +151,7 @@ class WebBootloader implements BootloaderInterface
     $settings                    = new DebugConsoleSettings;
     $settings->defaultPanelTitle = 'Inspector';
     $settings->defaultPanelIcon  = 'fa fa-search';
-    DebugConsole::init ($devEnv, $settings);
+    DebugConsole::init ($webConsole, $settings);
 
     // Temporarily set framework path mapping here for errors thrown during modules loading.
     ErrorConsole::setPathsMap ($this->kernelSettings->getMainPathMap ());
