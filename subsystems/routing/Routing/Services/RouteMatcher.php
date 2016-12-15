@@ -1,8 +1,9 @@
 <?php
 namespace Electro\Routing\Services;
-use Psr\Http\Message\ServerRequestInterface;
+
 use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\Http\RouteMatcherInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Implements Electro's standard flavour of the the DSL route pattern matching syntax.
@@ -37,7 +38,8 @@ class RouteMatcher implements RouteMatcherInterface
     // @parameters never match the empty path (which is encoded as a single dot)
     $compiledPattern = preg_replace (
       ['/(?<=[^\*\.])$/', '/\*$/', '/\.\.\.$/', '/\.$/', '/@(\w+)/', '[\[\]\{\}\(\)\.\?]'],
-      ['(?<_next>$)', '(?<_next>.*)', '(?<_next>)', '(?<_next>$)', '(?<$1>(?=(?:$|[^\.]))[^/]*)', '\\$0'], $pathPattern);
+      ['(?<_next>$)', '(?<_next>.*)', '(?<_next>)', '(?<_next>$)', '(?<$1>(?=(?:$|[^\.]))[^/]*)', '\\$0'],
+      $pathPattern);
 
     if (!preg_match ("#^$compiledPattern#", $path, $m2, PREG_OFFSET_CAPTURE))
       return false;
@@ -48,7 +50,7 @@ class RouteMatcher implements RouteMatcherInterface
 
     foreach ($m2 as $k => $v)
       if (is_string ($k) && $k[0] != '_') // exclude reserved _next key
-        $request = $request->withAttribute ('@' . $k, $v[0]);
+        $request = $request->withAttribute ('@' . $k, urldecode ($v[0]));
     $modifiedRequest = $request;
     return true;
   }
