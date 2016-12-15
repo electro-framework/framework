@@ -4,8 +4,10 @@ namespace Electro\Tasks\Commands;
 use Electro\ConsoleApplication\ConsoleApplication;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Kernel\Config\KernelSettings;
+use Electro\Kernel\Services\ModulesRegistry;
 use Electro\Tasks\Config\TasksSettings;
 use Electro\Tasks\Shared\ChmodEx;
+use Electro\Tasks\Tasks\CoreTasks;
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
@@ -19,6 +21,7 @@ use Robo\Task\FileSystem\FilesystemStack;
  * @property ConsoleApplication $consoleApp
  * @property ConsoleIOInterface $io
  * @property FilesystemStack    $fs
+ * @property ModulesRegistry    $modulesRegistry
  */
 trait InitCommands
 {
@@ -49,6 +52,14 @@ trait InitCommands
       $this->initStorage ();
       $this->initConfig (['overwrite' => true]);
     }
+
+    // (Re)initialize all plugins and private modules.
+
+    $io->title('Initializing modules');
+
+    /** @var $this CoreTasks */
+    foreach ($this->modulesRegistry->onlyPrivateOrPlugins ()->getModuleNames () as $moduleName)
+      $this->modulesInstaller->setupModule ($moduleName, true);
 
     $io->done ("Initialization completed successfully");
   }

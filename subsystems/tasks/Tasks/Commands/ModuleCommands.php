@@ -174,10 +174,16 @@ trait ModuleCommands
 
   /**
    * (Re)runs a module's post-installation tasks
+   *
+   * If an argument is not given, a module can be selected interactively from a list of available modules.
+   *
+   * > Tip: you may also use `workman init` to reinitialize all modules.
+   *
+   * @param string $moduleName The full name (vendor-name/module-name) of the module to be reinitialized
    */
-  function moduleReinit ()
+  function moduleReinit ($moduleName = null)
   {
-    if ($this->modulesUtil->selectModule ($moduleName, false, true)) {
+    if ($this->modulesUtil->selectModule ($moduleName)) {
       $this->modulesInstaller->setupModule ($moduleName, true);
       $this->io->done ("Reinitialization complete");
     }
@@ -186,7 +192,7 @@ trait ModuleCommands
   /**
    * Renames a private module
    *
-   * @param string $oldModuleName The full name (vendor-name/module-name) of the module to be tenamed
+   * @param string $oldModuleName The full name (vendor-name/module-name) of the module to be renamed
    * @param string $newModuleName The new name (vendor-name/module-name)
    */
   function moduleRename ($oldModuleName = null, $newModuleName = null)
