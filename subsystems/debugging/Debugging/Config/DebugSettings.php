@@ -1,6 +1,7 @@
 <?php
 namespace Electro\Debugging\Config;
 
+use Electro\Kernel\Services\Kernel;
 use Monolog\Logger;
 
 /**
@@ -22,15 +23,16 @@ class DebugSettings
   /**
    * @var bool TRUE to enable logging of several configuration settings and its display on a web console panel.
    */
-  public $logConfig = true;
+  public $logConfig = false;
   /**
+   * ><p>**Warning**: enabling this will have a severe impact on performance!
    * @var bool TRUE to enable logging of the server-side DOM and its display on a web console panel.
    */
-  public $logDOM = true;
+  public $logDOM = false;
   /**
    * @var bool TRUE to enable logging of database queries and its display on a web console panel.
    */
-  public $logDatabase = true;
+  public $logDatabase = false;
   /**
    * @var bool TRUE to enable logging of inspection commands and its display on a web console panel.
    */
@@ -38,35 +40,35 @@ class DebugSettings
   /**
    * @var bool TRUE to enable logging of the view model and its display on a web console panel.
    */
-  public $logModel = true;
+  public $logModel = false;
   /**
    * @var bool TRUE to enable logging of all defined navigation links and its display on a web console panel.
    */
-  public $logNavigation = true;
+  public $logNavigation = false;
   /**
    * @var bool TRUE to enable logging of profiling data and its display on a web console panel.
    */
-  public $logProfiling = true;
+  public $logProfiling = false;
   /**
    * @var bool TRUE to enable logging of the HTTP request object and its display on a web console panel.
    */
-  public $logRequest = true;
+  public $logRequest = false;
   /**
    * @var bool TRUE to enable logging of the HTTP response object and its display on a web console panel.
    */
-  public $logResponse = true;
+  public $logResponse = false;
   /**
    * @var bool TRUE to enable logging of the traversed routes and middleware and its display on a web console panel.
    */
-  public $logRouting = true;
+  public $logRouting = false;
   /**
    * @var bool TRUE to enable logging of session-related information and its display on a web console panel.
    */
-  public $logSession = true;
+  public $logSession = false;
   /**
    * @var bool TRUE to enable logging of the current view state its display on a web console panel.
    */
-  public $logView = true;
+  public $logView = false;
   /**
    * Indicates whether the Web Console is displayed (TRUE) or not (FALSE).
    *
@@ -76,9 +78,9 @@ class DebugSettings
    */
   public $webConsole;
 
-  public function __construct ()
+  public function __construct (Kernel $kernel)
   {
-    $this->devEnv     = env ('DEV', false);
+    $this->devEnv     = $kernel->devEnv();
     $this->webConsole = env ('CONSOLE', false);
     $this->debugLevel = env ('DEBUG_LEVEL', Logger::DEBUG);
   }

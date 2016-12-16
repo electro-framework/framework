@@ -1,7 +1,7 @@
 <?php
 namespace Electro\ErrorHandling\Services;
 
-use Electro\ErrorHandling\Config\ErrorHandlingSettings;use Electro\Exceptions\HttpException;use Electro\Http\Lib\Http;use Electro\Interfaces\DI\InjectorInterface;use Electro\Interfaces\Http\ErrorRendererInterface;use Electro\Interfaces\Http\ResponseFactoryInterface;use Electro\Interfaces\RenderableInterface;use Electro\Kernel\Config\KernelSettings;use PhpKit\WebConsole\ErrorConsole\ErrorConsole;use Psr\Http\Message\ResponseInterface;use Psr\Http\Message\ServerRequestInterface;
+use Electro\Debugging\Config\DebugSettings;use Electro\ErrorHandling\Config\ErrorHandlingSettings;use Electro\Exceptions\HttpException;use Electro\Http\Lib\Http;use Electro\Interfaces\DI\InjectorInterface;use Electro\Interfaces\Http\ErrorRendererInterface;use Electro\Interfaces\Http\ResponseFactoryInterface;use Electro\Interfaces\RenderableInterface;use Electro\Kernel\Config\KernelSettings;use PhpKit\WebConsole\ErrorConsole\ErrorConsole;use Psr\Http\Message\ResponseInterface;use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Renders an error HTTP response into a format supported by the client.
@@ -24,15 +24,17 @@ private $settings;
  * @param ResponseFactoryInterface $responseFactory
  * @param ErrorHandlingSettings    $settings
  * @param InjectorInterface        $injector
- * @param bool                     $devEnv
- */function __construct (KernelSettings $kernelSettings, ResponseFactoryInterface $responseFactory,
-                         ErrorHandlingSettings $settings, InjectorInterface $injector, $devEnv)
+ * @param DebugSettings            $debugSettings
+ */
+function __construct (KernelSettings $kernelSettings, ResponseFactoryInterface $responseFactory,
+                      ErrorHandlingSettings $settings, InjectorInterface $injector,
+                      DebugSettings $debugSettings)
 {
   $this->kernelSettings  = $kernelSettings;
   $this->responseFactory = $responseFactory;
   $this->settings        = $settings;
   $this->injector        = $injector;
-  $this->devEnv          = $devEnv;
+  $this->devEnv          = $debugSettings->devEnv;
 }
 
 function render (ServerRequestInterface $request, ResponseInterface $response, $error = null)
@@ -87,7 +89,7 @@ function render (ServerRequestInterface $request, ResponseInterface $response, $
     }
   }
   else {
-    $title = strip_tags ($title);
+    $title   = strip_tags ($title);
     $message = strip_tags ($message);
 
     if (Http::clientAccepts ($request, 'text/plain') || Http::clientAccepts ($request, '*/*')) {
@@ -97,7 +99,8 @@ $message");
     }
     elseif (Http::clientAccepts ($request, 'application/json')) {
       $response = $response->withHeader ('Content-Type', 'application/json');
-      $body->write (json_encode (['error' => ['code' => $status, 'message' => $title, 'info' => $message]], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+      $body->write (json_encode (['error' => ['code' => $status, 'message' => $title, 'info' => $message]],
+        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
     }
     elseif (Http::clientAccepts ($request, 'application/xml')) {
       $response = $response->withHeader ('Content-Type', 'application/xml');

@@ -1,6 +1,7 @@
 <?php
 namespace Electro\Debugging\Middleware;
 
+use Electro\Debugging\Config\DebugSettings;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
@@ -18,6 +19,10 @@ use Psr\Http\Message\ServerRequestInterface;
 class WebConsoleMiddleware implements RequestHandlerInterface
 {
   /**
+   * @var bool
+   */
+  private $debugSettings;
+  /**
    * @var InjectorInterface
    */
   private $injector;
@@ -25,10 +30,6 @@ class WebConsoleMiddleware implements RequestHandlerInterface
    * @var KernelSettings
    */
   private $kernelSettings;
-  /**
-   * @var bool
-   */
-  private $webConsole;
 
   /**
    * WebConsoleMiddleware constructor.
@@ -37,16 +38,16 @@ class WebConsoleMiddleware implements RequestHandlerInterface
    * @param InjectorInterface $injector
    * @param bool              $webConsole
    */
-  function __construct (KernelSettings $kernelSettings, InjectorInterface $injector, $webConsole)
+  function __construct (KernelSettings $kernelSettings, InjectorInterface $injector, DebugSettings $debugSettings)
   {
     $this->kernelSettings = $kernelSettings;
     $this->injector       = $injector;
-    $this->webConsole     = $webConsole;
+    $this->debugSettings  = $debugSettings;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    if (!$this->webConsole) // In case the middleware was registered.
+    if (!$this->debugSettings->webConsole)
       return $next ();
     //------------------------------------------------------------------
 
@@ -71,79 +72,80 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     //------------------
     // Request panel
     //------------------
-    $log = DebugConsole::logger ('request');
-    if (!$log->hasRequest ())
-      $log->setRequest ($request);
+    if ($this->debugSettings->logRequest) {
+      $log = DebugConsole::logger ('request');
+      if (!$log->hasRequest ())
+        $log->setRequest ($request);
+    }
 
     //------------------
     // Response panel
     //------------------
-    DebugConsole::logger ('response')->setResponse ($response);
+    if ($this->debugSettings->logResponse)
+      DebugConsole::logger ('response')->setResponse ($response);
 
     //------------------
     // Routing panel
     //------------------
-    $router = $this->injector->make (ApplicationRouterInterface::class);
+    if ($this->debugSettings->logRouting) {
+      $router = $this->injector->make (ApplicationRouterInterface::class);
 
-    $handlers = $router->__debugInfo ()['handlers'];
+      $handlers = $router->__debugInfo ()['handlers'];
 
-    $rootR = $handlers
-      ? implode ('', map ($handlers, function ($r) {
-        return sprintf ('<#row><#type>%s</#type></#row>', is_string ($r) ? $r : typeOf ($r));
-      }))
-      : '<#i><i>empty</i></#i>';
+      $rootR = $handlers
+        ? implode ('', map ($handlers, function ($r) {
+          return sprintf ('<#row><#type>%s</#type></#row>', is_string ($r) ? $r : typeOf ($r));
+        }))
+        : '<#i><i>empty</i></#i>';
 
-    $logger = $this->injector->make (RoutingLogger::class);
-    $log    = $logger->getContent ();
+      $logger = $this->injector->make (RoutingLogger::class);
+      $log    = $logger->getContent ();
 
-    DebugConsole::logger ('routes')
-                ->write ("<#section|REGISTERED ROUTERS>$rootR</#section>" .
-                         "<#section|APPLICATION MIDDLEWARE STACK &nbsp;┊&nbsp; RUN HISTORY>")
-                ->write ($log)
-                ->write ("<#row>Return from ")->typeName ($this)->write ("</#row>")
-                ->write ("<#row><i>(log entries from this point on can't be displayed)</i></#row>")
-                ->write ("</#indent>")
-                ->write ("<#row>Exit stack 1</#row>")
-                ->write ("<#row>End of routing log</#row>")
-                ->write ("</#section>");
+      DebugConsole::logger ('routes')
+                  ->write ("<#section|REGISTERED ROUTERS>$rootR</#section>" .
+                           "<#section|APPLICATION MIDDLEWARE STACK &nbsp;┊&nbsp; RUN HISTORY>")
+                  ->write ($log)
+                  ->write ("<#row>Return from ")->typeName ($this)->write ("</#row>")
+                  ->write ("<#row><i>(log entries from this point on can't be displayed)</i></#row>")
+                  ->write ("</#indent>")
+                  ->write ("<#row>Exit stack 1</#row>")
+                  ->write ("<#row>End of routing log</#row>")
+                  ->write ("</#section>");
+    }
 
     //------------------
     // Navigation panel
     //------------------
-    if ($this->injector->provides (NavigationInterface::class)) {
-      try {
-        /** @var NavigationInterface $navigation */
-        $navigation = $this->injector->make (NavigationInterface::class);
-        DebugConsole::logger ('navigation')->withFilter (function ($k, $v, $o) use ($navigation) {
-          if ($k === 'parent' || $k === 'request') return '...';
-          if ($k === 'IDs' && $o != $navigation->rootLink ()) return '...';
-          return true;
-        }, $navigation);
-      }
-      catch (\Exception $e) {
+    if ($this->debugSettings->logNavigation) {
+      if ($this->injector->provides (NavigationInterface::class)) {
+        try {
+          /** @var NavigationInterface $navigation */
+          $navigation = $this->injector->make (NavigationInterface::class);
+          DebugConsole::logger ('navigation')->withFilter (function ($k, $v, $o) use ($navigation) {
+            if ($k === 'parent' || $k === 'request') return '...';
+            if ($k === 'IDs' && $o != $navigation->rootLink ()) return '...';
+            return true;
+          }, $navigation);
+        }
+        catch (\Exception $e) {
+        }
       }
     }
 
     //------------------
     // Config. panel
     //------------------
-    DebugConsole::logger ('config')->inspect ($this->kernelSettings);
+    if ($this->debugSettings->logConfig)
+      DebugConsole::logger ('config')->inspect ($this->kernelSettings);
 
     //------------------
     // Session panel
     //------------------
-    if ($this->injector->provides (SessionInterface::class)) {
+    if ($this->debugSettings->logSession && $this->injector->provides (SessionInterface::class)) {
       DebugConsole::logger ('session')
                   ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="location.href=\'logout\'">Log out</button>')
                   ->inspect ($this->injector->make (SessionInterface::class));
     }
-
-    //------------------
-    // Tracing panel
-    //------------------
-    $trace = DebugConsole::logger ('trace');
-    if ($trace->hasContent ())
-      DebugConsole::registerPanel ('trace', $trace);
 
     return DebugConsole::outputContentViaResponse ($request, $response, true);
   }

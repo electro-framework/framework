@@ -1,6 +1,7 @@
 <?php
 namespace Electro\Routing\Lib\Debug;
 
+use Electro\Debugging\Config\DebugSettings;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\RouterInterface;
@@ -10,6 +11,7 @@ use Electro\Routing\Lib\FactoryRoutable;
 use Electro\Routing\Services\RoutingLogger;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\Lib\Debug;
+use PhpKit\WebConsole\Loggers\Specialized\PSR7RequestLogger;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -58,7 +60,9 @@ class BaseRouterWithLogging extends BaseRouter
 
   public function __construct (InjectorInterface $injector,
                                RouteMatcherInterface $matcher,
-                               RoutingLogger $routingLogger, $devEnv, CurrentRequestMutator $currentRequestMutator)
+                               RoutingLogger $routingLogger,
+                               CurrentRequestMutator $currentRequestMutator,
+                               DebugSettings $debugSettings)
   {
     parent::__construct ($matcher, $injector, $currentRequestMutator);
 
@@ -68,7 +72,7 @@ class BaseRouterWithLogging extends BaseRouter
     // $routingLogger = new DirectOutputLogger();
 
     $this->routingLogger = $routingLogger;
-    $this->devEnv        = $devEnv;
+    $this->devEnv        = $debugSettings->devEnv;
   }
 
 
@@ -93,7 +97,9 @@ class BaseRouterWithLogging extends BaseRouter
     $this->routingLogger
       ->writef ("<#row>Call %s</#row>", Debug::getType ($handler));
 
-    DebugConsole::logger ('request')->setRequest ($request);
+    $log = DebugConsole::logger ('request');
+    if ($log instanceof PSR7RequestLogger)
+      $log->setRequest ($request);
 
     if ($request && $request != $this->currentRequestMutator->get ()) {
       $this->logRequest ($request, sprintf ('with another %s object:', Debug::getType ($request)));

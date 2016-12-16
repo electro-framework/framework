@@ -63,10 +63,6 @@ class WebBootloader implements BootloaderInterface
     $kernelSettings->isWebBased = true;
     $kernelSettings->setApplicationRoot ($rootDir, $urlDepth);
 
-    // Setup debugging (must be done before instantiating the kernel, but after instantiating its settings).
-
-    $this->setupDebugging ($rootDir);
-
     // Boot up the framework's kernel.
 
     $this->injector->execute ([KernelModule::class, 'register']);
@@ -105,20 +101,6 @@ class WebBootloader implements BootloaderInterface
   }
 
   /**
-   * Last resort error handler.
-   * <p>It is only activated if an error occurs outside of the HTTP handling pipeline.
-   *
-   * @param \Exception|\Error $e
-   */
-  function exceptionHandler ($e)
-  {
-//    if ($this->logger)
-//      $this->logger->error ($e->getMessage (),
-//        ['stackTrace' => str_replace ("{$this->kernelSettings->baseDirectory}/", '', $e->getTraceAsString ())]);
-    DebugConsole::outputContent (true);
-  }
-
-  /**
    * Configures path mappings for the ErrorHandler, so that links to files on symlinked directories are converted to
    * links on the main project tree, allowing easier files editing on an IDE.
    *
@@ -129,32 +111,6 @@ class WebBootloader implements BootloaderInterface
     $map = $this->kernelSettings->getMainPathMap ();
     $map = array_merge ($map, $registry->getPathMappings ());
     ErrorConsole::setPathsMap ($map);
-  }
-
-  /**
-   * @param string $rootDir
-   */
-  private function setupDebugging ($rootDir)
-  {
-    set_exception_handler ([$this, 'exceptionHandler']);
-
-    $devEnv = env ('DEV');
-    $this->injector->defineParam ('devEnv', $devEnv);
-
-    $webConsole = env ('CONSOLE');
-    $this->injector->defineParam ('webConsole', $webConsole);
-
-    ErrorConsole::init ($devEnv, $rootDir);
-    ErrorConsole::setAppName ($this->kernelSettings->appName);
-    // Note: the editorUrl can't be set yet. See: WebServer.
-
-    $settings                    = new DebugConsoleSettings;
-    $settings->defaultPanelTitle = 'Inspector';
-    $settings->defaultPanelIcon  = 'fa fa-search';
-    DebugConsole::init ($webConsole, $settings);
-
-    // Temporarily set framework path mapping here for errors thrown during modules loading.
-    ErrorConsole::setPathsMap ($this->kernelSettings->getMainPathMap ());
   }
 
 }

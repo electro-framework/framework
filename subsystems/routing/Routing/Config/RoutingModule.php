@@ -1,6 +1,7 @@
 <?php
 namespace Electro\Routing\Config;
 
+use Electro\Debugging\Config\DebugSettings;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\MiddlewareAssemblerInterface;
 use Electro\Interfaces\Http\MiddlewareStackInterface;
@@ -32,15 +33,15 @@ class RoutingModule implements ModuleInterface
   {
     $kernel->onRegisterServices (
       function (InjectorInterface $injector) {
-        $injector->execute (function ($webConsole) use ($injector) {
+        $injector->execute (function (DebugSettings $debugSettings) use ($injector) {
           $injector
             //
             // Routing / Middleware classes
             //
             ->alias (RouterInterface::class,
-              $webConsole ? RouterWithLogging::class : Router::class)
+              $debugSettings->webConsole ? RouterWithLogging::class : Router::class)
             ->alias (MiddlewareStackInterface::class,
-              $webConsole ? MiddlewareStackWithLogging::class : MiddlewareStack::class)
+              $debugSettings->webConsole ? MiddlewareStackWithLogging::class : MiddlewareStack::class)
             ->alias (RouteMatcherInterface::class, RouteMatcher::class)
             //
             // The application's root/main router
@@ -59,7 +60,7 @@ class RoutingModule implements ModuleInterface
               })
             ->share (CurrentRequestMutator::class);
 
-          if ($webConsole)
+          if ($debugSettings->webConsole)
             $injector
               ->share (RoutingLogger::class);
         });

@@ -2,6 +2,7 @@
 namespace Electro\WebServer;
 
 use Electro\ContentServer\Middleware\ContentServerMiddleware;
+use Electro\Debugging\Config\DebugSettings;
 use Electro\Debugging\Middleware\WebConsoleMiddleware;
 use Electro\ErrorHandling\Middleware\ErrorHandlingMiddleware;
 use Electro\Http\Middleware\CompressionMiddleware;
@@ -19,14 +20,14 @@ use Electro\Sessions\Middleware\SessionMiddleware;
 class DefaultMiddlewareAssembler implements MiddlewareAssemblerInterface
 {
   /** @var bool */
-  private $webConsole;
-  /** @var bool */
   private $devEnv;
+  /** @var bool */
+  private $webConsole;
 
-  public function __construct ($devEnv, $webConsole)
+  public function __construct (DebugSettings $debugSettings)
   {
-    $this->devEnv       = $devEnv;
-    $this->webConsole = $webConsole;
+    $this->devEnv     = $debugSettings->devEnv;
+    $this->webConsole = $debugSettings->webConsole;
   }
 
   function assemble (MiddlewareStackInterface $stack)
