@@ -59,7 +59,7 @@ class ConsoleBootloader implements BootloaderInterface
       $dotenv->load ();
     }
     catch (ConfigException $e) {
-      echo $e->getMessage ();
+      echo $e->getMessage () . PHP_EOL;
       return 1;
     }
 
