@@ -15,11 +15,15 @@
   ],
   "require": {
     "php-kit/php-web-console": "^0.9.0",
-    "subsystems/http": "self.version"
+    "subsystems/http": "self.version",
+    "subsystems/logging": "self.version"
   },
   "autoload": {
     "psr-4": {
       "Electro\\Debugging\\": "Debugging"
     }
+  },
+  "extra": {
+    "boot-priority": 1
   }
 }

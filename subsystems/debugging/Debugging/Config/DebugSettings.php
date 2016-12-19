@@ -23,16 +23,16 @@ class DebugSettings
   /**
    * @var bool TRUE to enable logging of several configuration settings and its display on a web console panel.
    */
-  public $logConfig = false;
+  public $logConfig = true;
   /**
    * ><p>**Warning**: enabling this will have a severe impact on performance!
    * @var bool TRUE to enable logging of the server-side DOM and its display on a web console panel.
    */
-  public $logDOM = false;
+  public $logDOM = true;
   /**
    * @var bool TRUE to enable logging of database queries and its display on a web console panel.
    */
-  public $logDatabase = false;
+  public $logDatabase = true;
   /**
    * @var bool TRUE to enable logging of inspection commands and its display on a web console panel.
    */
@@ -40,35 +40,35 @@ class DebugSettings
   /**
    * @var bool TRUE to enable logging of the view model and its display on a web console panel.
    */
-  public $logModel = false;
+  public $logModel = true;
   /**
    * @var bool TRUE to enable logging of all defined navigation links and its display on a web console panel.
    */
-  public $logNavigation = false;
+  public $logNavigation = true;
   /**
    * @var bool TRUE to enable logging of profiling data and its display on a web console panel.
    */
-  public $logProfiling = false;
+  public $logProfiling = true;
   /**
    * @var bool TRUE to enable logging of the HTTP request object and its display on a web console panel.
    */
-  public $logRequest = false;
+  public $logRequest = true;
   /**
    * @var bool TRUE to enable logging of the HTTP response object and its display on a web console panel.
    */
-  public $logResponse = false;
+  public $logResponse = true;
   /**
    * @var bool TRUE to enable logging of the traversed routes and middleware and its display on a web console panel.
    */
-  public $logRouting = false;
+  public $logRouting = true;
   /**
    * @var bool TRUE to enable logging of session-related information and its display on a web console panel.
    */
-  public $logSession = false;
+  public $logSession = true;
   /**
    * @var bool TRUE to enable logging of the current view state its display on a web console panel.
    */
-  public $logView = false;
+  public $logView = true;
   /**
    * Indicates whether the Web Console is displayed (TRUE) or not (FALSE).
    *

@@ -35,8 +35,8 @@ class DefaultMiddlewareAssembler implements MiddlewareAssemblerInterface
     $stack
       ->set ([
         ContentServerMiddleware::class,
-        when (!$this->devEnv, CompressionMiddleware::class),
-        when ($this->webConsole, WebConsoleMiddleware::class),
+        !$this->devEnv ? CompressionMiddleware::class : null,
+        $this->webConsole ? WebConsoleMiddleware::class : null,
         ErrorHandlingMiddleware::class,
         TranslationMiddleware::class,
         SessionMiddleware::class,

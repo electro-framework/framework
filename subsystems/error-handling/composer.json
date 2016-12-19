@@ -23,5 +23,8 @@
     "psr-4": {
       "Electro\\ErrorHandling\\": "ErrorHandling"
     }
+  },
+  "extra": {
+    "boot-priority": 2
   }
 }

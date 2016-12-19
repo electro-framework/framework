@@ -36,7 +36,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
    *
    * @param KernelSettings    $kernelSettings
    * @param InjectorInterface $injector
-   * @param bool              $webConsole
+   * @param DebugSettings     $debugSettings
    */
   function __construct (KernelSettings $kernelSettings, InjectorInterface $injector, DebugSettings $debugSettings)
   {

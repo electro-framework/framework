@@ -21,5 +21,8 @@
     "psr-4": {
       "Electro\\Logging\\": "Logging"
     }
+  },
+  "extra": {
+    "boot-priority": 3
   }
 }
