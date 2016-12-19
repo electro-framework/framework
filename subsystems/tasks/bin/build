@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+
+############################################################
+# TASKS
+############################################################
+
+build_sass ()
+{
+  echo "Building SASS stylesheets"
+  sass --update resources/assets/sass:public/dist --style compressed -E "UTF-8" -q || return
+  echo "Done."
+}
+
+build_less ()
+{
+  echo "Building LESS stylesheets"
+  lessc -s resources/assets/less/main.less --source-map=public/dist/main.map --clean-css="--s1" public/dist/main.css || return
+  echo "Done."
+}
+
+build_3rd_party ()
+{
+  echo "Building 3rd party libraries"
+  # CUSTOM BOOTSTRAP BUILD
+  lessc -s resources/assets/less/bootstrap.less --source-map=public/dist/bootstrap.map --clean-css="--s1" public/dist/bootstrap.css || return
+  echo "Done."
+}
+
+############################################################
+# WATCH TASKS
+############################################################
+
+watchers ()
+{
+  export -f build_sass build_less
+
+  watch 'resources/assets/sass/**/*.scss' build_sass
+  watch 'resources/assets/less/**/*.less' build_less
+}
+
+############################################################
+# BUILD
+############################################################
+
+init ()
+{
+  printf "\nSelect module:\n";
+  select i in $(ls -d private/modules/*/*); do
+    cd "$i"
+    return 0
+  done;
+}
+
+build_main_tasks ()
+{
+  build_sass || fail
+  build_less || fail
+  printf "Build completed.\n"
+}
+
+watch_main_tasks ()
+{
+  background_init
+  watchers
+  sleep 2
+  printf "Press Enter/Return to exit\n\n"
+  read -s
+  background_end
+}
+
+
+############################################################
+# AUTOMATIC INSTALLATION
+############################################################
+
+install_tools ()
+{
+  printf "\nWe need to install some build tools.\nPress Enter to continue or Ctrl+C to abort "
+  read
+  which sass     > /dev/null || sudo gem install sass                          || fail
+  which lessc    > /dev/null || sudo npm install -g less less-plugin-clean-css || fail
+  which chokidar > /dev/null || sudo npm install -g chokidar-cli               || fail
+  which bower    > /dev/null || sudo npm install -g bower                      || fail
+  printf "\nInstallation complete.\n"
+}
+
+install_3rd_party ()
+{
+  printf "\nInstalling required Bower components...\n\n"
+  bower install
+}
+
+which sass     > /dev/null || install_tools
+which lessc    > /dev/null || install_tools
+which chokidar > /dev/null || install_tools
+which bower    > /dev/null || install_tools
+[ -d "bower_components" ]  || install_3rd_party
+
+############################################################
+# UTILITY
+############################################################
+
+fail ()
+{
+  local code=$?
+  printf "\nStopped by an error.\n";
+  exit $code
+}
+
+watch ()
+{
+  background_run "chokidar '$1' -c '$2'"
+}
+
+# BACKGROUND TASKS SUPPORT
+
+background_init ()
+{
+  shutdown_script=""
+  trap background_end EXIT
+}
+
+background_run ()
+{
+  eval "$1 &"
+  shutdown_script="${shutdown_script}kill $!;"
+}
+
+background_end ()
+{
+  if [ "$shutdown_script" ]; then
+    eval $shutdown_script
+    unset shutdown_script
+    printf "Stopped.\n"
+  fi
+}
+
+############################################################
+# MAIN
+############################################################
+
+if [ -z "$1" ]; then
+  echo "Syntax:
+    $0 target [--watch]
+
+    target    all  = Include 3rd party libraries in the build
+              main = Exclude 3rd party libraries from the build
+    --watch   Automatically rebuild when changes are detected
+"
+  exit 1
+fi
+
+echo
+init || fail
+
+if [ "$1" == "all" -o "$2" == "all" ]; then
+  build_3rd_party || fail
+fi
+
+if [ "$1" == "--watch" -o "$2" == "--watch" ]; then
+  build_main_tasks
+  watch_main_tasks
+else
+  build_main_tasks
+fi

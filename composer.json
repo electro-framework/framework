@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "electro/kernel": "^0.9.0",
+    "electro/kernel": "self.version",
     "codegyre/robo": "^0.5.3",
     "league/glide": "^1.0.0",
     "monolog/monolog": "^1.17.1",
@@ -54,6 +54,7 @@
     ]
   },
   "bin": [
-    "subsystems/console/bin/workman"
+    "subsystems/console/bin/workman",
+    "subsystems/tasks/bin/build"
   ]
 }
