@@ -1,7 +1,9 @@
 <?php
 namespace Electro\Tasks\Commands;
 
+use Electro\Configuration\Lib\DotEnv;
 use Electro\ConsoleApplication\ConsoleApplication;
+use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Services\ModulesRegistry;
@@ -51,11 +53,12 @@ trait InitCommands
       ensureDir ("{$this->kernelSettings->baseDirectory}/{$this->kernelSettings->pluginModulesPath}");
       $this->initStorage ();
       $this->initConfig (['overwrite' => true]);
+      $this->loadConfig ();
     }
 
     // (Re)initialize all plugins and private modules.
 
-    $io->title('Initializing modules');
+    $io->title ('Initializing modules');
 
     /** @var $this CoreTasks */
     foreach ($this->modulesRegistry->onlyPrivateOrPlugins ()->getModuleNames () as $moduleName)
@@ -202,6 +205,16 @@ trait InitCommands
 
     if (!$this->nestedExec)
       $this->io->done ("Storage directory created");
+  }
+
+  /**
+   * @return void
+   * @throws ConfigException
+   */
+  private function loadConfig ()
+  {
+    $dotenv = new Dotenv ("{$this->kernelSettings->baseDirectory}/.env");
+    $dotenv->load ();
   }
 
 }
