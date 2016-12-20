@@ -23,6 +23,6 @@
     }
   },
   "extra": {
-    "boot-priority": 3
+    "boot-priority": 30
   }
 }
