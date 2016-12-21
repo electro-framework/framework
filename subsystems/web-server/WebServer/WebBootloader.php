@@ -49,7 +49,7 @@ class WebBootloader implements BootloaderInterface
       $dotenv->load ();
     }
     catch (ConfigException $e) {
-      echo $e->getMessage();
+      echo $e->getMessage () . PHP_EOL;
       return 1;
     }
 
@@ -80,7 +80,7 @@ class WebBootloader implements BootloaderInterface
       $kernel->boot ();
     }
     catch (ConfigException $e) {
-      $NL    = "<br>\n";
+      $NL = "<br>\n";
       echo $e->getMessage () . $NL . $NL;
 
       if ($e->getCode () == -1)

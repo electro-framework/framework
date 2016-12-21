@@ -22,5 +22,8 @@
     "psr-4": {
       "Electro\\Tasks\\": "Tasks"
     }
-  }
+  },
+  "bin": [
+    "bin/build"
+  ]
 }

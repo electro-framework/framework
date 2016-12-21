@@ -54,6 +54,7 @@
     ]
   },
   "bin": [
-    "subsystems/console/bin/workman"
+    "subsystems/console/bin/workman",
+    "subsystems/tasks/bin/build"
   ]
 }
