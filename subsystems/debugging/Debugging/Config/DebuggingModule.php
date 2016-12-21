@@ -30,7 +30,6 @@ class DebuggingModule implements ModuleInterface
 //    if ($this->logger)
 //      $this->logger->error ($e->getMessage (),
 //        ['stackTrace' => str_replace ("{$this->kernelSettings->baseDirectory}/", '', $e->getTraceAsString ())]);
-    DebugConsole::outputContent (true);
   }
 
   static function getCompatibleProfiles ()
@@ -62,7 +61,7 @@ class DebuggingModule implements ModuleInterface
         // Temporarily set framework path mapping here for errors thrown during modules loading.
         ErrorConsole::setPathsMap ($kernelSettings->getMainPathMap ());
 
-        set_exception_handler ([__CLASS__, 'exceptionHandler']);
+//        set_exception_handler ([__CLASS__, 'exceptionHandler']);
 
         if ($debugSettings->webConsole) {
           if ($debugSettings->logRequest)

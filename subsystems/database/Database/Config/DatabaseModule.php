@@ -3,6 +3,7 @@ namespace Electro\Database\Config;
 
 use Electro\Database\Lib\DebugConnection;
 use Electro\Database\Services\ModelController;
+use Electro\Debugging\Config\DebugSettings;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModelControllerInterface;
@@ -27,13 +28,13 @@ class DatabaseModule implements ModuleInterface
     $kernel->onRegisterServices (
       function (InjectorInterface $injector) {
         $injector
-          ->delegate (ConnectionInterface::class, function ($webConsole) {
-            return $webConsole ? new DebugConnection : new Connection;
+          ->delegate (ConnectionInterface::class, function (DebugSettings $debugSettings) {
+            return $debugSettings->logDatabase ? new DebugConnection : new Connection;
           })
           ->share (ConnectionsInterface::class)
-          ->delegate (ConnectionsInterface::class, function ($webConsole) {
+          ->delegate (ConnectionsInterface::class, function (DebugSettings $debugSettings) {
             $connections = new Connections;
-            $connections->setConnectionClass ($webConsole ? DebugConnection::class : Connection::class);
+            $connections->setConnectionClass ($debugSettings->logDatabase ? DebugConnection::class : Connection::class);
             return $connections;
           })
           ->alias (ModelControllerInterface::class, ModelController::class)

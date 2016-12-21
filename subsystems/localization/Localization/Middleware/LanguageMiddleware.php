@@ -1,6 +1,7 @@
 <?php
 namespace Electro\Localization\Middleware;
 
+use Electro\Debugging\Config\DebugSettings;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\SessionInterface;
 use Electro\Localization\Config\LocalizationSettings;
@@ -15,9 +16,9 @@ use Psr\Http\Message\ServerRequestInterface;
 class LanguageMiddleware implements RequestHandlerInterface
 {
   /**
-   * @var bool
+   * @var DebugSettings
    */
-  private $webConsole;
+  private $debugSettings;
   /**
    * @var Locale
    */
@@ -40,12 +41,12 @@ class LanguageMiddleware implements RequestHandlerInterface
    * @param bool $webConsole
    */
   function __construct (SessionInterface $session, Locale $locale, LocalizationSettings $settings,
-                           $webConsole)
+                           DebugSettings $debugSettings)
   {
     $this->session  = $session;
     $this->locale   = $locale;
     $this->settings = $settings;
-    $this->webConsole = $webConsole;
+    $this->debugSettings = $debugSettings;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -58,7 +59,7 @@ class LanguageMiddleware implements RequestHandlerInterface
       $this->session->setLang ($lang);
     }
 
-    if ($this->webConsole)
+    if ($this->debugSettings->logConfig)
       DebugConsole::logger ('config')->inspect ($this->locale);
     return $next();
   }

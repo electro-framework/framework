@@ -183,9 +183,6 @@ class ConsoleBootloader implements BootloaderInterface
 //    register_shutdown_function ([$this, 'shutdown']);
     set_error_handler ([$this, 'errorHandler']);
     set_exception_handler ([$this, 'exceptionHandler']);
-
-    $this->injector->defineParam ('devEnv', false);
-    $this->injector->defineParam ('webConsole', false);
   }
 
 }
