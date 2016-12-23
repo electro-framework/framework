@@ -56,7 +56,7 @@ class DebuggingModule implements ModuleInterface
         $settings                    = new DebugConsoleSettings;
         $settings->defaultPanelTitle = 'Inspector';
         $settings->defaultPanelIcon  = 'fa fa-search';
-        DebugConsole::init ($debugSettings->webConsole, $settings);
+        DebugConsole::init ($debugSettings->webConsole, $settings, $debugSettings->logInspections);
 
         // Temporarily set framework path mapping here for errors thrown during modules loading.
         ErrorConsole::setPathsMap ($kernelSettings->getMainPathMap ());

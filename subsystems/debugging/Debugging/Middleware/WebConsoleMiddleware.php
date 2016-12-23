@@ -14,7 +14,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- *
+ * Implements the debugging console for web pages.
  */
 class WebConsoleMiddleware implements RequestHandlerInterface
 {
