@@ -23,13 +23,22 @@ class EditorLauncherMiddleware implements RequestHandlerInterface
     $this->kernelSettings = $kernelSettings;
   }
 
+  /**
+   * @param string $dir The directory to retrieve subdirectories from.
+   * @return false|string[]
+   */
+  static public function getSubdirsOf ($dir)
+  {
+    return dirList ($dir, DIR_LIST_DIRECTORIES, true);
+  }
+
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     if ($request->getAttribute ('virtualUri') != $this->kernelSettings->editorUrl)
       return $next();
 
     $param        = $request->getQueryParams ();
-    $file         = $param['file'];
+    $file         = $this->mapPath ($param['file']);
     $line         = $param['line'];
     $feedbackElem = "parent.document.getElementById ('__feedback')";
 
@@ -74,6 +83,45 @@ class EditorLauncherMiddleware implements RequestHandlerInterface
       $res->write ("<script>$feedbackElem.style.display = 'block'</script>");
 
     return $response;
+  }
+
+  public function getSymlinkedPaths ()
+  {
+    $base = $this->kernelSettings->baseDirectory;
+    return array_prune (map (
+      array_merge (
+        $this->getSubdirsOfDirs ($this->getSubdirsOf ("$base/{$this->kernelSettings->packagesPath}")),
+        $this->getSubdirsOfDirs ($this->getSubdirsOf ("$base/{$this->kernelSettings->pluginModulesPath}"))
+      ),
+      function ($dir, &$k) {
+        $r = realpath ($dir);
+        if ($r == $dir)
+          return null;
+        $k = $r;
+        return $dir;
+      }
+    ));
+  }
+
+  /**
+   * @param string $path
+   * @return string
+   */
+  public function mapPath ($path)
+  {
+    foreach ($this->getSymlinkedPaths () as $real => $symlinked)
+      if (str_beginsWith ($path, $real))
+        return $symlinked . substr ($path, strlen ($real));
+    return $path;
+  }
+
+  /**
+   * @param string[] $dir The directories to retrieve subdirectories from.
+   * @return false|string[]
+   */
+  private function getSubdirsOfDirs (array $dir)
+  {
+    return array_flatten (map ($dir, [__CLASS__, 'getSubdirsOf']));
   }
 
 }
