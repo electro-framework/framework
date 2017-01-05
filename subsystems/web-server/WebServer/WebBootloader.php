@@ -92,25 +92,7 @@ class WebBootloader implements BootloaderInterface
         echo "Tip: one possible solution is to remove the '$path' file and run 'workman' to rebuild the module registry.";
     }
 
-    // Finalize.
-
-    if ($kernel->devEnv ())
-      $this->setDebugPathsMap ($this->injector->make (ModulesRegistry::class));
-
     return $kernel->getExitCode ();
-  }
-
-  /**
-   * Configures path mappings for the ErrorHandler, so that links to files on symlinked directories are converted to
-   * links on the main project tree, allowing easier files editing on an IDE.
-   *
-   * @param ModulesRegistry $registry
-   */
-  private function setDebugPathsMap (ModulesRegistry $registry)
-  {
-    $map = $this->kernelSettings->getMainPathMap ();
-    $map = array_merge ($map, $registry->getPathMappings ());
-    ErrorConsole::setPathsMap ($map);
   }
 
 }

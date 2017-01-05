@@ -37,16 +37,16 @@ class EditorLauncherMiddleware implements RequestHandlerInterface
 
     $res->write ("<script>$feedbackElem.style.display = 'none'</script>");
 
-    exec ("phpstorm --line $line $file", $out, $status);
+    exec ("/Applications/PhpStorm.app/Contents/MacOS/phpstorm --line $line $file", $out, $status);
 
-    if ($status)
-      exec ("/usr/local/bin/phpstorm --line $line $file", $out, $status);
+//    if ($status)
+//      exec ("/usr/local/bin/phpstorm --line $line $file", $out, $status);
 
     if ($status) {
       $res->write ("
       <script>
         $feedbackElem.innerHTML =
-          '<h4>Unable to open the file for editing on PHPStorm / IDEA</h4><p><b>Hint:</b> have you run <code>Tools -> Create Command-line Launcher...</code> yet?<p><b>Hint:</b> try installing the script at <code>/usr/local/bin</code> (on Mac or Linux)';
+          '<h4>Unable to open the file for editing on PHPStorm</h4><p><b>Hint:</b> this feature is only available on MacOS and PHPStorm must be installed on the default Applications folder.';
       </script>");
       $code = 1;
       goto out;

@@ -1,4 +1,5 @@
 <?php
+
 namespace Electro\Debugging\Config;
 
 use Electro\Interfaces\DI\InjectorInterface;
@@ -6,6 +7,7 @@ use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Kernel\Services\ModulesRegistry;
 use Electro\Profiles\WebProfile;
 use Monolog\Logger;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
@@ -47,7 +49,8 @@ class DebuggingModule implements ModuleInterface
         });
 
     $kernel->onConfigure (
-      function (LoggerInterface $logger, DebugSettings $debugSettings, KernelSettings $kernelSettings) {
+      function (LoggerInterface $logger, DebugSettings $debugSettings, KernelSettings $kernelSettings,
+                ModulesRegistry $modulesRegistry) {
 
         ErrorConsole::init ($debugSettings->devEnv, $kernelSettings->baseDirectory);
         ErrorConsole::setAppName ($kernelSettings->appName);
@@ -58,8 +61,11 @@ class DebuggingModule implements ModuleInterface
         $settings->defaultPanelIcon  = 'fa fa-search';
         DebugConsole::init ($debugSettings->webConsole, $settings, $debugSettings->logInspections);
 
-        // Temporarily set framework path mapping here for errors thrown during modules loading.
-        ErrorConsole::setPathsMap ($kernelSettings->getMainPathMap ());
+        // Configures path mappings for the ErrorHandler, so that links to files on symlinked directories are converted
+        // to links on the main project tree, allowing easier files editing on an IDE.
+        $map = $kernelSettings->getMainPathMap ();
+        $map = array_merge ($map, $modulesRegistry->getPathMappings ());
+        ErrorConsole::setPathsMap ($map);
 
 //        set_exception_handler ([__CLASS__, 'exceptionHandler']);
 
