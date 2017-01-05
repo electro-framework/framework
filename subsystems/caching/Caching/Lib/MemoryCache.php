@@ -3,6 +3,12 @@ namespace Electro\Caching\Lib;
 
 use Electro\Interfaces\Caching\CacheInterface;
 
+/**
+ * A volatile cache that always expires at the end of each HTTP request.
+ *
+ * ##### Not shared
+ * Injecting instances of this class will yield different instances each time.
+ */
 class MemoryCache implements CacheInterface
 {
   protected $data      = [];

@@ -3,6 +3,12 @@ namespace Electro\Caching\Lib;
 
 use Electro\Interfaces\Caching\CacheInterface;
 
+/**
+ * A cache that composes several caches in a cascading arrangement.
+ *
+ * ##### Not shared
+ * Injecting instances of this class will yield different instances each time.
+ */
 class CompositeCache implements CacheInterface
 {
   /**

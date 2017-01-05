@@ -11,8 +11,9 @@ use Psr\Log\LogLevel;
  * A cache that stores each item as a file on a filesystem. The item key determines the file name. The item value is
  * stored under a serialized form.
  *
- * ><p>The `/` character on keys will be replaced by `\` to generate a value file name. This means you can't use keys
- * to reference directories under the cache directory.
+ * ><p>The `/` or `\` characters on keys will be replaced by `.` to generate a value file name.
+ * This means you can't use keys to reference directories under the cache directory. For that purpose, use
+ * {@see setNamespace}.
  *
  * <p>You may define which serializer and unserializer functions will be used when saving and loading data.
  * By default, the {@see serialize} and {@see unserialize} functions are used. You can set these via the `serializer`
@@ -21,6 +22,9 @@ use Psr\Log\LogLevel;
  * <p>You may enable the `dataIsCode` option (set it to TRUE) if you are saving and retrieving PHP source code.
  * On this mode, the cache will load and execute files via PHP's `include`, and it will be able to take advantage of
  * PHP's opcode cache.
+ *
+ * ##### Not shared
+ * Injecting instances of this class will yield different instances each time.
  */
 class FileSystemCache implements CacheInterface
 {
@@ -104,8 +108,8 @@ class FileSystemCache implements CacheInterface
     $path = $this->toFileName ($key);
     if ($this->dataIsCode) {
       // Slight possibility of reading truncated data here
-      if (($v = @include $path) !== false)
-        return $v;
+      if (file_exists ($path))
+        return include $path;
     }
     else {
       $path = $this->toFileName ($key);
@@ -137,7 +141,12 @@ class FileSystemCache implements CacheInterface
     if (is_object ($value) && $value instanceof \Closure)
       $value = $value ();
     // Save the value and return it, or NULL if that failed or there's no value to be saved.
-    return isset($value) ? ($this->set ($key, $value) ? $value : null) : null;
+    if (isset($value)) {
+      $v = $this->set ($key, $value) ? $value : null;
+      if (isset($v))
+        return $this->dataIsCode ? include $path : $v;
+    }
+    return null;
   }
 
   function getNamespace ()
@@ -187,7 +196,7 @@ class FileSystemCache implements CacheInterface
     if (is_object ($value) && $value instanceof \Closure)
       return false;
     $path = $this->toFileName ($key);
-    $f    = @fopen ($path, 'w');
+    $f = @fopen ($path, 'w');
     if (!$f) {
       // Maybe the directory is nonexistent...
       if ($this->createDirIfAbsent ())
@@ -206,7 +215,7 @@ class FileSystemCache implements CacheInterface
         $serialize = $this->serializer;
         $value     = $serialize ($value);
       }
-      return fwrite ($f, $value);
+      return fwrite ($f, $value) !== false;
     }
     finally {
       flock ($f, LOCK_UN);

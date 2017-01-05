@@ -7,6 +7,9 @@ use Electro\Interfaces\Caching\CacheInterface;
  * A generic class that allows compilation of source code files to be sped up by using a cache.
  *
  * <p>It supports any compiler and any caching backend.
+ *
+ * ##### Not shared
+ * Injecting instances of this class will yield different instances each time.
  */
 class CachingFileCompiler
 {
