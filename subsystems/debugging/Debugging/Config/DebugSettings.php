@@ -28,7 +28,7 @@ class DebugSettings
    * ><p>**Warning**: enabling this will have a severe impact on performance!
    * @var bool TRUE to enable logging of the server-side DOM and its display on a web console panel.
    */
-  public $logDOM = true;
+  public $logDOM = false;
   /**
    * @var bool TRUE to enable logging of database queries and its display on a web console panel.
    */
