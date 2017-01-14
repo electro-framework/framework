@@ -14,7 +14,8 @@
     }
   ],
   "require": {
-    "subsystems/http": "self.version"
+    "subsystems/http": "self.version",
+    "subsystems/session": "self.version"
   },
   "autoload": {
     "psr-4": {

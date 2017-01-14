@@ -3,6 +3,7 @@ namespace Electro\Authentication\Config;
 
 use Electro\Authentication\Lib\GenericUser;
 use Electro\Interfaces\AssignableInterface;
+use Electro\Kernel\Config\KernelSettings;
 use Electro\Traits\ConfigurationTrait;
 
 /**
@@ -17,19 +18,28 @@ class AuthenticationSettings implements AssignableInterface
 {
   use ConfigurationTrait;
 
+  /**
+   * @var KernelSettings
+   */
+  private $kernelSettings;
   private $loginFormUrl = 'login';
   private $logoutUrl    = 'logout';
   private $urlPrefix    = 'login';
   private $userModel    = GenericUser::class;
 
+  public function __construct (KernelSettings $kernelSettings)
+  {
+    $this->kernelSettings = $kernelSettings;
+  }
+
   function getLoginUrl ()
   {
-    return "$this->urlPrefix/$this->loginFormUrl";
+    return "{$this->kernelSettings->baseUrl}/$this->urlPrefix/$this->loginFormUrl";
   }
 
   function getLogoutUrl ()
   {
-    return "$this->urlPrefix/$this->logoutUrl";
+    return "{$this->kernelSettings->baseUrl}/$this->urlPrefix/$this->logoutUrl";
   }
 
 }

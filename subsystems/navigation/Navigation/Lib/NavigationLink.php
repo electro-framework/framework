@@ -88,6 +88,12 @@ class NavigationLink implements NavigationLinkInterface
     return isset($url) ? $url : '';
   }
 
+  function absoluteUrl ()
+  {
+    $url = $this->url ();
+    return $this->navigation->isAbsolute ($url) ? $url : (string)$this->getRequest ()->getUri ()->withPath ($url);
+  }
+
   function enabled ($enabled = null)
   {
     if (is_null ($enabled))
@@ -115,11 +121,6 @@ class NavigationLink implements NavigationLinkInterface
     )->reindex ()->getIterator ();
   }
 
-  function getOriginalUrl ()
-  {
-    return $this->url;
-  }
-
   function icon ($icon = null)
   {
     if (is_null ($icon)) return $this->icon;
@@ -134,6 +135,12 @@ class NavigationLink implements NavigationLinkInterface
       throw new Fault (Faults::DUPLICATE_LINK_ID, $id);
     $this->id = $id;
     return $this->IDs[$id] = $this;
+  }
+
+  function isAbsolute ()
+  {
+    $url = $this->url ();
+    return isset($url) ? (bool)preg_match ('/^\w+:/', $url) : false;
   }
 
   function isActive ()
@@ -207,7 +214,7 @@ class NavigationLink implements NavigationLinkInterface
 
   function request (ServerRequestInterface $request = null)
   {
-    return $this->navigation->request();
+    return $this->navigation->request ();
   }
 
   function setState ($active, $selected, $current)
@@ -234,13 +241,13 @@ class NavigationLink implements NavigationLinkInterface
       if (is_callable ($url = $this->url))
         $url = $url();
 
-      if (isset($url) && $this->parent && ($url === '' || $url[0] != '/') && !preg_match ('/^\w+:/', $url)
-      ) {
+      // Relative URLs are converted to a full path.
+      if (isset($url) && $this->parent && ($url === '' || $url[0] != '/') && !$this->navigation->isAbsolute ($url)) {
         $base = $this->parent->url ();
         $url  = exists ($base) ? (exists ($url) ? "$base/$url" : $base) : $url;
       }
       else if ($url && $url[0] == '/')
-        $url = $this->getRequest()->getAttribute('baseUri') . $url;
+        $url = $this->getRequest ()->getAttribute ('baseUri') . $url;
 
       $this->url = $url;
 

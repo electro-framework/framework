@@ -71,16 +71,21 @@ class WebServer
   function setup ()
   {
     /** @var ServerRequestInterface $request */
-    $request                       = ServerRequestFactory::fromGlobals ();
-    $baseUrl                       = dirnameEx (
+    $request  = ServerRequestFactory::fromGlobals ();
+    $basePath = dirnameEx (
       get ($request->getServerParams (), 'SCRIPT_NAME'),
       $this->kernelSettings->urlDepth + 1
     );
-    $this->kernelSettings->baseUrl = $baseUrl;
-    ErrorConsole::setEditorUrl (($baseUrl ? "$baseUrl/" : '') . $this->kernelSettings->editorUrl);
+    $uri      = $request->getUri ();
 
-    $request       = $request->withAttribute ('originalUri', $request->getUri ());
-    $request       = $request->withAttribute ('baseUri', $this->kernelSettings->baseUrl);
+    $baseUrl                        = $this->kernelSettings->baseUrl = (string)$uri->withPath ($basePath);
+    $this->kernelSettings->basePath = $basePath;
+
+    ErrorConsole::setEditorUrl (($basePath ? "$basePath/" : '') . $this->kernelSettings->editorUrl);
+
+    $request       = $request->withAttribute ('originalUri', (string)$uri);
+    $request       = $request->withAttribute ('baseUri', $basePath);
+    $request       = $request->withAttribute ('baseUrl', $baseUrl);
     $this->request = $request->withAttribute ('virtualUri', $this->getVirtualUri ($request));
   }
 

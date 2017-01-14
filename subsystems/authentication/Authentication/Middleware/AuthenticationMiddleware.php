@@ -41,9 +41,19 @@ class AuthenticationMiddleware implements RequestHandlerInterface
 
     switch ($request->getMethod ()) {
       case 'GET':
+
+        // LOG IN
+
         if (!$this->session->loggedIn ())
           return $this->redirection->guest ($this->settings->getLoginUrl ());
         break;
+    }
+
+    // LOG OUT
+
+    if ($request->getUri () == $this->settings->getLogoutUrl ()) {
+      $this->session->logout ();
+      return $this->redirection->home ();
     }
 
     return $next();

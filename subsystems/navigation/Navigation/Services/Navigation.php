@@ -74,6 +74,11 @@ class Navigation implements NavigationInterface
     ];
   }
 
+  function absoluteUrlOf ($url)
+  {
+    return $this->isAbsolute ($url) ? $url : (string)$this->request ()->getUri ()->withPath ($url);
+  }
+
   function add ($navigationMap, $prepend = false, $targetId = null)
   {
     if (isset($targetId)) {
@@ -151,6 +156,11 @@ class Navigation implements NavigationInterface
     $link        = $this->link ();
     $link->group = true;
     return $link;
+  }
+
+  function isAbsolute ($url)
+  {
+    return isset($url) ? (bool)preg_match ('/^\w+:/', $url) : false;
   }
 
   /**

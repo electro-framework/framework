@@ -3,6 +3,7 @@ namespace Electro\Debugging\Middleware;
 
 use Electro\Debugging\Config\DebugSettings;
 use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\Http\RedirectionInterface;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Electro\Interfaces\Navigation\NavigationInterface;
@@ -18,6 +19,12 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class WebConsoleMiddleware implements RequestHandlerInterface
 {
+  /**
+   * Request parameter to be added to the current URL for forcing a log out.
+   * The URL path is preserved so that we may clear the correct cookie for the current URL.
+   * This is triggered from a web console button.
+   */
+  const LOGOUT_PARAM = 'debug-logout';
   /**
    * @var bool
    */
@@ -53,6 +60,21 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 
     /** @var ResponseInterface $response */
     $response = $next ();
+    $uri      = $request->getUri ();
+
+    // Allow logging out via web console (this must run after the session middleware)
+
+    if (str_endsWith ($uri->getQuery (), self::LOGOUT_PARAM)) {
+      /** @var SessionInterface $session */
+      $session = $this->injector->make (SessionInterface::class);
+      /** @var RedirectionInterface $redirection */
+      $redirection = $this->injector->make (RedirectionInterface::class);
+      $redirection->setRequest ($request);
+
+      $session->logout ();
+      $query = substr ($uri->getQuery (), 0, -strlen (self::LOGOUT_PARAM));
+      return $redirection->to ($uri->withQuery ($query));
+    }
 
     $contentType = $response->getHeaderLine ('Content-Type');
     $status      = $response->getStatusCode ();
@@ -142,9 +164,16 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     // Session panel
     //------------------
     if ($this->debugSettings->logSession && $this->injector->provides (SessionInterface::class)) {
-      DebugConsole::logger ('session')
-                  ->write ('<button type="button" class="__btn __btn-default" style="position:absolute;right:5px;top:5px" onclick="location.href=\'logout\'">Log out</button>')
-                  ->inspect ($this->injector->make (SessionInterface::class));
+      /** @var SessionInterface $session */
+      $session = $this->injector->make (SessionInterface::class);
+      $logger  = DebugConsole::logger ('session');
+      if ($session->loggedIn ()) {
+        $query = $uri->getQuery ();
+        $query = $query === '' ? self::LOGOUT_PARAM : '&' . self::LOGOUT_PARAM;
+        $url   = $uri->withQuery ($query);
+        $logger->write ("<button type=\"button\" class=\"__btn __btn-default\" style=\"position:absolute;right:5px;top:5px\" onclick=\"location.href='$url'\">Log out</button>");
+      }
+      $logger->inspect ($session);
     }
 
     return DebugConsole::outputContentViaResponse ($request, $response, true);
