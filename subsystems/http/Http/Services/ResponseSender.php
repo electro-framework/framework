@@ -62,14 +62,23 @@ class ResponseSender implements ResponseSenderInterface
       ),
       true, $response->getStatusCode ()
     );
+    $sizeFound = false;
     foreach ($response->getHeaders () as $header => $values) {
       $name  = $this->filterHeader ($header);
+      if ($name == 'Content-Length')
+        $sizeFound = true;
       $first = true;
       foreach ($values as $value) {
         header (sprintf ('%s: %s', $name, $value), $first);
         $first = false;
       }
     }
+    if (!$sizeFound) {
+      $size = $response->getBody ()->getSize ();
+      if (isset($size))
+        header ("Content-Length: $size");
+    }
+
     $time   = round (microtime (true) - $_SERVER['REQUEST_TIME_FLOAT'], 3);
     header ("X-Processing-Time: $time seconds");
   }
