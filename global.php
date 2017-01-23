@@ -11,18 +11,25 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Generates a routable that, when invoked, will return a generic PageComponent with the specified template as a view.
  *
- * <p>Use this to define routes for simple pages that have no controller logic.
+ * <p>Use this to define routes for simple pages that only have a view model (optionally) and no controller logic.
  *
- * @param string $templateUrl
+ * @param string   $templateUrl
+ * @param callable $viewModelFn [optional] A function that receives the HTTP request and returns the view's view model.
+ *                              It may return an array or an object (ex: a {@see ViewModel} instance).
  * @return FactoryRoutable
  */
-function page ($templateUrl)
+function page ($templateUrl, $viewModelFn = null)
 {
-  return new FactoryRoutable (function (ViewServiceInterface $viewService) use ($templateUrl) {
-    return function ($request, $response) use ($viewService, $templateUrl) {
+  return new FactoryRoutable (function (ViewServiceInterface $viewService, InjectorInterface $injector) use (
+    $templateUrl, $viewModelFn
+  ) {
+    return function ($request, $response) use ($viewService, $templateUrl, $viewModelFn, $injector) {
       $filename = $viewService->resolveTemplatePath ($templateUrl);
       $view     = $viewService->loadFromFile ($filename, ['page' => true]);
-      return Http::response ($response, $view->render ());
+      if (!is_callable ($viewModelFn) && is_string ($viewModelFn))
+        $viewModelFn = $injector->make ($viewModelFn);
+      $viewModel = $viewModelFn ? $viewModelFn ($request) : null;
+      return Http::response ($response, $view->render ($viewModel));
     };
   });
 }
