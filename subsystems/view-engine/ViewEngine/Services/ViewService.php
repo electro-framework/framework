@@ -1,4 +1,5 @@
 <?php
+
 namespace Electro\ViewEngine\Services;
 
 use Electro\Exceptions\Fatal\FileNotFoundException;
@@ -6,6 +7,7 @@ use Electro\Exceptions\FatalException;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Views\ViewEngineInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
+use Electro\Traits\EventBroadcasterTrait;
 use Electro\ViewEngine\Config\ViewEngineSettings;
 use Electro\ViewEngine\Lib\TemplateCache;
 use Electro\ViewEngine\Lib\View;
@@ -13,6 +15,8 @@ use PhpKit\Flow\FilesystemFlow;
 
 class ViewService implements ViewServiceInterface
 {
+  use EventBroadcasterTrait;
+
   /**
    * @var TemplateCache
    */
