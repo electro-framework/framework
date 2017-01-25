@@ -1,7 +1,7 @@
 <?php
+
 namespace Electro\Routing\Lib;
 
-use Electro\Exceptions\HttpException;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\RouterInterface;
@@ -72,18 +72,26 @@ abstract class BaseRouter implements RouterInterface
     return empty($this->handlers) ? $next () : $this->route ($this->handlers, $request, $response, $next);
   }
 
-  function add ($handler, $key = null, $before = null, $after = null)
+  function add ($handlers, $key = null, $before = null, $after = null)
   {
-    if ($handler) {
+    if ($handlers) {
+      if (!is_array($handlers))
+        $handlers = [$handlers];
       if (empty($this->handlers))
         $this->handlers = [];
       else if (!is_array ($this->handlers))
         $this->handlers = iterator_to_array ($this->handlers);
       if (isset($before))
-        $this->handlers = array_insertBefore ($this->handlers, $before, $handler, $key);
-      else $this->handlers = array_insertAfter ($this->handlers, $after, $handler, $key);
+        $this->handlers = array_insertBeforeKey ($this->handlers, $before, $handlers);
+      else $this->handlers = array_insertAfterKey ($this->handlers, $after, $handlers);
     }
     return $this;
+  }
+
+  function append ($handlers)
+  {
+    foreach ($handlers as $handler)
+      $this->add ($handler);
   }
 
   /**
@@ -94,6 +102,7 @@ abstract class BaseRouter implements RouterInterface
    * @param ResponseInterface      $response
    * @param callable               $next
    * @return ResponseInterface
+   * @throws \Auryn\InjectionException
    */
   function route ($routable, ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
@@ -135,7 +144,7 @@ abstract class BaseRouter implements RouterInterface
 
   function set ($handlers)
   {
-    // Convert the list to an interable and prunte it of NULL values.
+    // Convert the list to an interable and prunes it of NULL values.
     $this->handlers = Flow::from ($handlers)->where (identity ());
     return $this;
   }
@@ -163,6 +172,7 @@ abstract class BaseRouter implements RouterInterface
    * @param ResponseInterface      $response
    * @param callable               $next
    * @return ResponseInterface
+   * @throws \Auryn\InjectionException
    */
   protected function callHandler (callable $handler, ServerRequestInterface $request, ResponseInterface $response,
                                   callable $next)

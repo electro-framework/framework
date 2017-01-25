@@ -5,6 +5,7 @@ namespace Electro\ViewEngine\Services;
 use Electro\Exceptions\Fatal\FileNotFoundException;
 use Electro\Exceptions\FatalException;
 use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\EventEmitterInterface;
 use Electro\Interfaces\Views\ViewEngineInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\Traits\EventBroadcasterTrait;
@@ -13,7 +14,7 @@ use Electro\ViewEngine\Lib\TemplateCache;
 use Electro\ViewEngine\Lib\View;
 use PhpKit\Flow\FilesystemFlow;
 
-class ViewService implements ViewServiceInterface
+class ViewService implements ViewServiceInterface, EventEmitterInterface
 {
   use EventBroadcasterTrait;
 
@@ -64,7 +65,7 @@ class ViewService implements ViewServiceInterface
   {
     $engine   = $this->getEngineFromFileName ($path, $options);
     $compiled = $engine->loadFromCache ($this->cache, $path);
-    return $this->createFromCompiled ($compiled, $engine);
+    return $this->createFromCompiled ($compiled, $engine, $path);
   }
 
   function loadFromString ($src, $engineOrClass, array $options = [])
@@ -72,7 +73,7 @@ class ViewService implements ViewServiceInterface
     if (is_string ($engineOrClass))
       $engineOrClass = $this->getEngine ($engineOrClass, $options);
     // The injector is not used here. This service only returns instances of View.
-    $view = new View ($engineOrClass);
+    $view = new View ($engineOrClass, null, $this);
     $view->setSource ($src);
     $view->compile ();
     return $view;
@@ -113,14 +114,15 @@ class ViewService implements ViewServiceInterface
    *
    * @param mixed                      $compiled
    * @param string|ViewEngineInterface $engineOrClass
+   * @param string                     $path
    * @return View
    */
-  private function createFromCompiled ($compiled, $engineOrClass)
+  private function createFromCompiled ($compiled, $engineOrClass, $path)
   {
     if (is_string ($engineOrClass))
       $engineOrClass = $this->getEngine ($engineOrClass);
     // The injector is not used here. This service only returns instances of View.
-    $view = new View ($engineOrClass);
+    $view = new View ($engineOrClass, $path, $this);
     $view->setCompiled ($compiled);
     return $view;
   }
