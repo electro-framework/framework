@@ -5,19 +5,16 @@ namespace Electro\ViewEngine\Services;
 use Electro\Exceptions\Fatal\FileNotFoundException;
 use Electro\Exceptions\FatalException;
 use Electro\Interfaces\DI\InjectorInterface;
-use Electro\Interfaces\EventEmitterInterface;
 use Electro\Interfaces\Views\ViewEngineInterface;
+use Electro\Interfaces\Views\ViewInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
-use Electro\Traits\EventBroadcasterTrait;
+use Electro\Interop\ViewModel;
 use Electro\ViewEngine\Config\ViewEngineSettings;
 use Electro\ViewEngine\Lib\TemplateCache;
-use Electro\ViewEngine\Lib\View;
 use PhpKit\Flow\FilesystemFlow;
 
-class ViewService implements ViewServiceInterface, EventEmitterInterface
+class ViewService implements ViewServiceInterface
 {
-  use EventBroadcasterTrait;
-
   /**
    * @var TemplateCache
    */
@@ -41,6 +38,40 @@ class ViewService implements ViewServiceInterface, EventEmitterInterface
     $this->engineSettings = $engineSettings;
     $this->cache          = $cache;
   }
+
+  /**
+   * Attempts to create a view model for the specified view.
+   *
+   * @param ViewInterface $view The target view.
+   * @return ViewModel|null NULL if a view model class could not be determined.
+   * @throws \Auryn\InjectionException
+   */
+  function createViewModelFor (ViewInterface $view)
+  {
+    if ($path = $view->getTemplatePath ()) {
+
+      foreach ($this->engineSettings->getViewModelNamespaces () as $nsPath => $ns) {
+        if (str_beginsWith ($path, $nsPath)) {
+          $remaining = substr ($path, strlen ($nsPath) + 1);
+          $a         = PS ($remaining)->split ('/');
+          $file      = $a->pop ();
+          $nsPrefix  = $a->map ('ucfirst', false)->join ('\\')->S;
+          $class     = ($p = strpos ($file, '.')) !== false
+            ? ucfirst (substr ($file, 0, $p))
+            : ucfirst ($file);
+          $FQN       = PA ([$ns, $nsPrefix, $class])->prune ()->join ('\\')->S;
+          if (class_exists ($FQN)) {
+            $viewModel = $this->injector->make ($FQN);
+            if ($viewModel instanceof ViewModel)
+              return $viewModel;
+            throw new \RuntimeException("Class <kbd>$FQN</kbd> does not implement " . ViewModel::class);
+          }
+        }
+      }
+    }
+    return null;  // VIEWMODEL CLASS NOT FOUND FOR VIEW
+  }
+
 
   function getEngine ($engineClass, $options = [])
   {
@@ -72,8 +103,9 @@ class ViewService implements ViewServiceInterface, EventEmitterInterface
   {
     if (is_string ($engineOrClass))
       $engineOrClass = $this->getEngine ($engineOrClass, $options);
-    // The injector is not used here. This service only returns instances of View.
-    $view = new View ($engineOrClass, null, $this);
+    /** @var ViewInterface $view */
+    $view = $this->injector->make (ViewInterface::class);
+    $view->setEngine ($engineOrClass);
     $view->setSource ($src);
     $view->compile ();
     return $view;
@@ -115,15 +147,18 @@ class ViewService implements ViewServiceInterface, EventEmitterInterface
    * @param mixed                      $compiled
    * @param string|ViewEngineInterface $engineOrClass
    * @param string                     $path
-   * @return View
+   * @return ViewInterface
+   * @throws \Auryn\InjectionException
    */
   private function createFromCompiled ($compiled, $engineOrClass, $path)
   {
     if (is_string ($engineOrClass))
       $engineOrClass = $this->getEngine ($engineOrClass);
-    // The injector is not used here. This service only returns instances of View.
-    $view = new View ($engineOrClass, $path, $this);
+    /** @var ViewInterface $view */
+    $view = $this->injector->make (ViewInterface::class);
+    $view->setEngine ($engineOrClass);
     $view->setCompiled ($compiled);
+    $view->setTemplatePath ($path);
     return $view;
   }
 
@@ -139,5 +174,4 @@ class ViewService implements ViewServiceInterface, EventEmitterInterface
       return $path;
     return FilesystemFlow::glob ("$path.*")->onlyFiles ()->fetchKey ();
   }
-
 }

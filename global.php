@@ -3,32 +3,76 @@ use Electro\Exceptions\Fault;
 use Electro\Faults\Faults;
 use Electro\Http\Lib\Http;
 use Electro\Interfaces\DI\InjectorInterface;
+use Electro\Interfaces\Http\MiddlewareStackInterface;
+use Electro\Interfaces\Navigation\NavigationInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\Routing\Lib\FactoryRoutable;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+
+
+function stack (...$middleware)
+{
+  return new FactoryRoutable (function (MiddlewareStackInterface $stack) use ($middleware) {
+    return $stack->set ($middleware);
+  });
+}
+
+function page ($templateUrl, $actionHandler = null)
+{
+  return view ($templateUrl);
+  return stack (
+    method ('GET', view ($templateUrl)),
+    method ('POST', $actionHandler)
+  );
+}
+
+function action ($map)
+{
+  return 0;
+}
+
+function formPage ($templateUrl)
+{
+  return page ($templateUrl, action ([
+    'submit' => stack (redirectUp ()),
+  ]));
+}
+
+function redirectUp ()
+{
+  return new FactoryRoutable (function (NavigationInterface $navigation) {
+    return function ($request, $response) use ($navigation) {
+      $navigation->getCurrentTrail ();
+      return Http::redirect ($response, $navigation->currentLink ()->parent ()->url ());
+    };
+  });
+}
+
+function redirectToSelf ()
+{
+  return function (ServerRequestInterface $request, $response) {
+    return Http::redirect ($response, (string)$request->getUri ());
+  };
+}
 
 /**
  * Generates a routable that, when invoked, will return a generic PageComponent with the specified template as a view.
  *
  * <p>Use this to define routes for simple pages that only have a view model (optionally) and no controller logic.
  *
- * @param string   $templateUrl
- * @param callable $viewModelFn [optional] A function that receives the HTTP request and returns the view's view model.
- *                              It may return an array or an object (ex: a {@see ViewModel} instance).
+ * @param string $templateUrl
  * @return FactoryRoutable
  */
-function page ($templateUrl, $viewModelFn = null)
+function view ($templateUrl)
 {
   return new FactoryRoutable (function (ViewServiceInterface $viewService, InjectorInterface $injector) use (
-    $templateUrl, $viewModelFn
+    $templateUrl
   ) {
-    return function ($request, $response) use ($viewService, $templateUrl, $viewModelFn, $injector) {
-      $filename = $viewService->resolveTemplatePath ($templateUrl);
-      $view     = $viewService->loadFromFile ($filename, ['page' => true]);
-      if (!is_callable ($viewModelFn) && is_string ($viewModelFn))
-        $viewModelFn = $injector->make ($viewModelFn);
-      $viewModel = $viewModelFn ? $viewModelFn ($request) : null;
+    return function ($request, $response) use ($viewService, $templateUrl, $injector) {
+      $filename  = $viewService->resolveTemplatePath ($templateUrl);
+      $view      = $viewService->loadFromFile ($filename, ['page' => true]);
+      $viewModel = $viewService->createViewModelFor ($view);
       return Http::response ($response, $view->render ($viewModel));
     };
   });
@@ -62,7 +106,34 @@ function redirect ($url, $status = 307)
 function route ($url, callable $handler)
 {
   return function (ServerRequestInterface $request, $response, $next) use ($url, $handler) {
-    return $request->getAttribute ('virtualUri') == $url ? $handler ($request, $response, $next) : $next ();
+    return $request->getAttribute ('virtualUri') == $url ? $handler ($request, $response, back ()) : $next ();
+  };
+}
+
+/**
+ * Generates a middleware that matches a given HTTP verb and on success, calls the given request handler, otherwise it
+ * calls the next middleware.
+ *
+ * @param string   $method
+ * @param callable $handler
+ * @return Closure
+ */
+function method ($method, callable $handler)
+{
+  return function (ServerRequestInterface $request, $response, $next) use ($method, $handler) {
+    return $request->getMethod () == $method ? $handler ($request, $response, back ()) : $next ();
+  };
+}
+
+/**
+ * Creates a middleware that simply reverses the direction of execution on the middlware stack.
+ *
+ * @return Closure
+ */
+function back ()
+{
+  return function ($req, $res) {
+    return $res;
   };
 }
 

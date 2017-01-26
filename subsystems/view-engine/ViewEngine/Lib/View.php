@@ -1,12 +1,13 @@
 <?php
+
 namespace Electro\ViewEngine\Lib;
 
 use Electro\Exceptions\FatalException;
-use Electro\Interfaces\EventEmitterInterface;
 use Electro\Interfaces\Views\ViewEngineInterface;
 use Electro\Interfaces\Views\ViewInterface;
-use Electro\Interfaces\Views\ViewServiceInterface;
+use Electro\Interfaces\Views\ViewModelInterface;
 use Electro\Interop\ViewModel;
+use Electro\ViewEngine\Config\ViewEngineSettings;
 
 class View implements ViewInterface
 {
@@ -15,9 +16,9 @@ class View implements ViewInterface
    */
   private $compiled = null;
   /**
-   * @var EventEmitterInterface
+   * @var ViewEngineSettings
    */
-  private $emitter;
+  private $engineSettings;
   /**
    * @var string
    */
@@ -31,18 +32,9 @@ class View implements ViewInterface
    */
   private $viewEngine;
 
-  /**
-   * View constructor.
-   *
-   * @param ViewEngineInterface   $viewEngine
-   * @param string|null           $templatePath
-   * @param EventEmitterInterface $emitter
-   */
-  public function __construct (ViewEngineInterface $viewEngine, $templatePath, EventEmitterInterface $emitter)
+  public function __construct (ViewEngineSettings $engineSettings)
   {
-    $this->viewEngine = $viewEngine;
-    $this->templatePath = $templatePath;
-    $this->emitter = $emitter;
+    $this->engineSettings = $engineSettings;
   }
 
   function compile ()
@@ -74,11 +66,6 @@ class View implements ViewInterface
     return $this->source;
   }
 
-  function getTemplatePath ()
-  {
-    return $this->templatePath;
-  }
-
   function setSource ($src)
   {
     $this->source   = $src;
@@ -86,17 +73,44 @@ class View implements ViewInterface
     return $this;
   }
 
-  function render (ViewModel $data = null)
+  function getTemplatePath ()
+  {
+    return $this->templatePath;
+  }
+
+  /**
+   * Sets the full filesystem path of the template that originated this view, if a template was loaded.
+   *
+   * <p>This is meaningless for dynamically generated views.
+   *
+   * @return $this
+   */
+  public function setTemplatePath ($path)
+  {
+    $this->templatePath = $path;
+    return $this;
+  }
+
+  function render (ViewModelInterface $data = null)
   {
     if (!$this->compiled)
       $this->compile ();
     $template = $this->compiled ?: $this->source;
     if (is_null ($template))
       throw new FatalException ("No template is set for rendering");
-    if (is_null($data))
-      $data = new ViewModel;
-    $this->emitter->emit(ViewServiceInterface::EVENT_RENDER, $this, $data);
     return $this->viewEngine->render ($template, $data);
+  }
+
+  /**
+   * Sets the view engine to be used for compiling and rendering the view.
+   *
+   * @param ViewEngineInterface $viewEngine
+   * @return $this
+   */
+  public function setEngine (ViewEngineInterface $viewEngine)
+  {
+    $this->viewEngine = $viewEngine;
+    return $this;
   }
 
 }

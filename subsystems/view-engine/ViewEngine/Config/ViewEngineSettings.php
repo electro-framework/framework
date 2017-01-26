@@ -1,4 +1,5 @@
 <?php
+
 namespace Electro\ViewEngine\Config;
 
 use Electro\Interfaces\AssignableInterface;
@@ -19,6 +20,8 @@ class ViewEngineSettings implements AssignableInterface
   private $caching = true;
   /** @var string */
   private $moduleViewsPath = 'resources/views';
+  /** @var array */
+  private $viewModelNamespaces = [];
   /** @var string[] */
   private $viewsDirectories = [];
 
@@ -34,15 +37,36 @@ class ViewEngineSettings implements AssignableInterface
   }
 
   /**
-   * Registers a module's views from its views directory.
+   * Returns a mapping between modules view templates base directories and the corresponding PHP namespaces that will be
+   * used for resolving view template paths to PHP controller classes.
    *
-   * @param ModuleInfo $moduleInfo
-   * @return $this
+   * @return array
    */
-  function registerViews (ModuleInfo $moduleInfo)
+  function getViewModelNamespaces ()
   {
-    array_unshift ($this->viewsDirectories, "$moduleInfo->path/$this->moduleViewsPath");
-    return $this;
+    return $this->viewModelNamespaces;
   }
 
+  /**
+   * Registers the module's views directory as a source for loading templates.
+   *
+   * Additionaly, it may also register a mapping between the given PHP namespace and the module's views directory.
+   * It will be used for resolving PHP ViewModel classes from view template paths.
+   *
+   * <p>The ViewService will search all defined mappings, in the reverse order in which they were defined, to
+   * instantiate the correct ViewModel class with which to render a template that is about to be rendered.
+   * <br> If no suitable mapping is found, no data will be given to the view renderer engine.
+   *
+   * @param ModuleInfo  $moduleInfo
+   * @param string|null $namespace
+   * @return $this
+   */
+  function registerViews (ModuleInfo $moduleInfo, $namespace = null)
+  {
+    $path = "$moduleInfo->path/$this->moduleViewsPath";
+    array_unshift ($this->viewsDirectories, $path);
+    if ($namespace)
+      $this->viewModelNamespaces [$path] = $namespace;
+    return $this;
+  }
 }
