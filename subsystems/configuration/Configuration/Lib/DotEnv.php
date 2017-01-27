@@ -16,7 +16,7 @@ class DotEnv
   public function load ()
   {
     if (file_exists ($this->envFile)) {
-      $ini = @parse_ini_file ($this->envFile, false, INI_SCANNER_RAW);
+      $ini = @parse_ini_file ($this->envFile, false, INI_SCANNER_TYPED);
       if ($ini)
         $this->loadConfig ($ini);
       else {
