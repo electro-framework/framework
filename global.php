@@ -70,8 +70,7 @@ function view ($templateUrl)
     $templateUrl
   ) {
     return function ($request, $response) use ($viewService, $templateUrl, $injector) {
-      $filename  = $viewService->resolveTemplatePath ($templateUrl);
-      $view      = $viewService->loadFromFile ($filename, ['page' => true]);
+      $view      = $viewService->loadFromFile ($templateUrl, ['page' => true]);
       $viewModel = $viewService->createViewModelFor ($view);
       return Http::response ($response, $view->render ($viewModel));
     };

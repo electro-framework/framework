@@ -6,7 +6,9 @@ use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Interfaces\Views\ViewInterface;
+use Electro\Interfaces\Views\ViewModelInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
+use Electro\Interop\ViewModel;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Profiles\WebProfile;
 use Electro\ViewEngine\Lib\TemplateCache;
@@ -44,7 +46,8 @@ class ViewEngineModule implements ModuleInterface
               $kernel->devEnv ()
             );
           })
-          ->share (TemplateCache::class);
+          ->share (TemplateCache::class)
+          ->alias (ViewModelInterface::class, ViewModel::class);
       });
   }
 

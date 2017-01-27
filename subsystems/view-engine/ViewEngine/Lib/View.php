@@ -6,7 +6,6 @@ use Electro\Exceptions\FatalException;
 use Electro\Interfaces\Views\ViewEngineInterface;
 use Electro\Interfaces\Views\ViewInterface;
 use Electro\Interfaces\Views\ViewModelInterface;
-use Electro\Interop\ViewModel;
 use Electro\ViewEngine\Config\ViewEngineSettings;
 
 class View implements ViewInterface
@@ -22,11 +21,11 @@ class View implements ViewInterface
   /**
    * @var string
    */
-  private $source = '';
+  private $path;
   /**
    * @var string
    */
-  private $templatePath;
+  private $source = '';
   /**
    * @var ViewEngineInterface
    */
@@ -61,21 +60,9 @@ class View implements ViewInterface
     return $this->viewEngine;
   }
 
-  function getSource ()
+  function getPath ()
   {
-    return $this->source;
-  }
-
-  function setSource ($src)
-  {
-    $this->source   = $src;
-    $this->compiled = null;
-    return $this;
-  }
-
-  function getTemplatePath ()
-  {
-    return $this->templatePath;
+    return $this->path;
   }
 
   /**
@@ -85,9 +72,21 @@ class View implements ViewInterface
    *
    * @return $this
    */
-  public function setTemplatePath ($path)
+  public function setPath ($path)
   {
-    $this->templatePath = $path;
+    $this->path = $path;
+    return $this;
+  }
+
+  function getSource ()
+  {
+    return $this->source;
+  }
+
+  function setSource ($src)
+  {
+    $this->source   = $src;
+    $this->compiled = null;
     return $this;
   }
 

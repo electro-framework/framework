@@ -7,6 +7,7 @@ use Electro\Exceptions\FatalException;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Views\ViewEngineInterface;
 use Electro\Interfaces\Views\ViewInterface;
+use Electro\Interfaces\Views\ViewModelInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\Interop\ViewModel;
 use Electro\ViewEngine\Config\ViewEngineSettings;
@@ -39,16 +40,9 @@ class ViewService implements ViewServiceInterface
     $this->cache          = $cache;
   }
 
-  /**
-   * Attempts to create a view model for the specified view.
-   *
-   * @param ViewInterface $view The target view.
-   * @return ViewModel|null NULL if a view model class could not be determined.
-   * @throws \Auryn\InjectionException
-   */
-  function createViewModelFor (ViewInterface $view)
+  function createViewModelFor (ViewInterface $view = null, $default = false)
   {
-    if ($path = $view->getTemplatePath ()) {
+    if ($view && $path = $view->getPath ()) {
 
       foreach ($this->engineSettings->getViewModelNamespaces () as $nsPath => $ns) {
         if (str_beginsWith ($path, $nsPath)) {
@@ -69,7 +63,7 @@ class ViewService implements ViewServiceInterface
         }
       }
     }
-    return null;  // VIEWMODEL CLASS NOT FOUND FOR VIEW
+    return $default ? $this->injector->make (ViewModelInterface::class) : null;
   }
 
 
@@ -92,11 +86,14 @@ class ViewService implements ViewServiceInterface
 <p>Make sure the file name has one of the supported file extensions or matches a known pattern.");
   }
 
-  function loadFromFile ($path, array $options = [])
+  function loadFromFile ($viewPath, array $options = [])
   {
-    $engine   = $this->getEngineFromFileName ($path, $options);
-    $compiled = $engine->loadFromCache ($this->cache, $path);
-    return $this->createFromCompiled ($compiled, $engine, $path);
+    if ($viewPath && $viewPath[0] == '/' || $viewPath[0] == '\\')
+      throw new \RuntimeException( "Invalid path <kbd>$viewPath</kbd>; it should be a relative view path");
+    $absolutePath = $this->resolveTemplatePath ($viewPath);
+    $engine   = $this->getEngineFromFileName ($absolutePath, $options);
+    $compiled = $engine->loadFromCache ($this->cache, $absolutePath);
+    return $this->createFromCompiled ($compiled, $engine, $viewPath);
   }
 
   function loadFromString ($src, $engineOrClass, array $options = [])
@@ -146,11 +143,11 @@ class ViewService implements ViewServiceInterface
    *
    * @param mixed                      $compiled
    * @param string|ViewEngineInterface $engineOrClass
-   * @param string                     $path
+   * @param string                     $viewPath A relative view path.
    * @return ViewInterface
    * @throws \Auryn\InjectionException
    */
-  private function createFromCompiled ($compiled, $engineOrClass, $path)
+  private function createFromCompiled ($compiled, $engineOrClass, $viewPath)
   {
     if (is_string ($engineOrClass))
       $engineOrClass = $this->getEngine ($engineOrClass);
@@ -158,7 +155,7 @@ class ViewService implements ViewServiceInterface
     $view = $this->injector->make (ViewInterface::class);
     $view->setEngine ($engineOrClass);
     $view->setCompiled ($compiled);
-    $view->setTemplatePath ($path);
+    $view->setPath ($viewPath);
     return $view;
   }
 

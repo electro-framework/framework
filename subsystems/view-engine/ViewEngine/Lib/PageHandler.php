@@ -60,10 +60,6 @@ class PageHandler implements RequestHandlerInterface
     else return $response;
     $viewModel = new ViewModel;
     $this->viewModel ($viewModel, $request);
-    $this->viewService->on (ViewServiceInterface::EVENT_RENDER,
-      function (ViewInterface $subview, ViewModel $viewModel) use ($view, $request) {
-
-      });
     $response->getBody ()->write ($view->render ($viewModel));
     return $response->withHeader ('Content-Type', $this->contentType);
   }
