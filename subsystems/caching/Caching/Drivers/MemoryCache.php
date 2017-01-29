@@ -1,10 +1,14 @@
 <?php
-namespace Electro\Caching\Lib;
+
+namespace Electro\Caching\Drivers;
 
 use Electro\Interfaces\Caching\CacheInterface;
 
 /**
  * A volatile cache that always expires at the end of each HTTP request.
+ *
+ * <p>Cached data is stored in memory on a serialized form, so that it gets cloned each time it is read and no
+ * references to the original data are kept.
  *
  * ##### Not shared
  * Injecting instances of this class will yield different instances each time.
@@ -18,9 +22,12 @@ class MemoryCache implements CacheInterface
   protected $serializer = 'serialize';
   /** @var callable */
   protected $unserializer = 'unserialize';
+  private   $enabled      = true;
 
   function add ($key, $value)
   {
+    if (!$this->enabled)
+      return true;
     if (!$this->has ($key)) {
       if (is_object ($value) && $value instanceof \Closure)
         $value = $value ();
@@ -33,16 +40,24 @@ class MemoryCache implements CacheInterface
 
   function clear ()
   {
-    unsetAt ($this->data, $this->path);
+    if ($this->enabled)
+      unsetAt ($this->data, $this->path);
     return true;
+  }
+
+  function enable ($enabled = true)
+  {
+    $this->enabled = $enabled;
   }
 
   function get ($key, $value = null)
   {
-    $v = getAt ($this->data, $this->path ? "$this->path.$key" : $key);
-    if (isset($v)) {
-      $unserialize = $this->unserializer;
-      return $unserialize ($v);
+    if ($this->enabled) {
+      $v = getAt ($this->data, $this->path ? "$this->path.$key" : $key);
+      if (isset($v)) {
+        $unserialize = $this->unserializer;
+        return $unserialize ($v);
+      }
     }
     if (is_object ($value) && $value instanceof \Closure)
       $value = $value ();
@@ -68,16 +83,25 @@ class MemoryCache implements CacheInterface
 
   function has ($key)
   {
+    if (!$this->enabled)
+      return false;
     return getAt ($this->data, $this->path ? "$this->path.$key" : $key) != null;
   }
 
   function inc ($key, $value = 1)
   {
+    if (!$this->enabled)
+      return false;
     $v = $this->get ($key);
     if (!is_numeric ($v))
       return false;
     $this->set ($key, $v + $value);
     return true;
+  }
+
+  function isEnabled ()
+  {
+    return $this->enabled;
   }
 
   function prune ()
@@ -87,12 +111,15 @@ class MemoryCache implements CacheInterface
 
   function remove ($key)
   {
-    unsetAt ($this->data, $this->path ? "$this->path.$key" : $key);
+    if ($this->enabled)
+      unsetAt ($this->data, $this->path ? "$this->path.$key" : $key);
     return true;
   }
 
   function set ($key, $value)
   {
+    if (!$this->enabled)
+      return true;
     if (isset($value) && (!is_object ($value) || !$value instanceof \Closure)) {
       $serialize = $this->serializer;
       $value     = $serialize ($value);
@@ -114,4 +141,5 @@ class MemoryCache implements CacheInterface
   {
     // no op
   }
+
 }

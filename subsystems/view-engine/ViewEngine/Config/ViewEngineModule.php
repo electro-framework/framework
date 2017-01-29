@@ -1,7 +1,7 @@
 <?php
 namespace Electro\ViewEngine\Config;
 
-use Electro\Caching\Lib\FileSystemCache;
+use Electro\Caching\Drivers\FileSystemCache;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
