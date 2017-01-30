@@ -1,4 +1,5 @@
 <?php
+
 namespace Electro\Caching\Lib;
 
 use Electro\Interfaces\Caching\CacheInterface;
@@ -41,13 +42,15 @@ class CachingFileCompiler
    * @param string   $sourceFile The filesystem path of the source code file.
    * @param callable $compiler   A function that transforms the source file into the final representation that will be
    *                             cached. It must have a single parameter of type string (the source code).
+   * @param string   $cacheKey   [optional] The key used for caching the compiled code. If not specified, the original
+   *                             file name is used.
    * @return mixed The compiled code.
    */
-  function cache ($sourceFile, callable $compiler)
+  function cache ($sourceFile, callable $compiler, $cacheKey = '')
   {
     $compiled = $this->loadAndCompile ($sourceFile, $compiler);
     // Note: the following call's return status is not checked as the inner cache takes care of logging errors.
-    $this->cache->set ($sourceFile, $compiled);
+    $this->cache->set ($cacheKey ?: $sourceFile, $compiled);
     return $compiled;
   }
 
@@ -58,11 +61,15 @@ class CachingFileCompiler
    * @param string   $sourceFile The filesystem path of the source code file.
    * @param callable $compiler   A function that transforms the source file into the final representation that will be
    *                             cached. It must have a single parameter of type string (the source code).
+   * @param string   $cacheKey   [optional] The key used for caching the compiled code. If not specified, the original
+   *                             file name is used.
    * @return mixed The compiled code.
    */
-  function get ($sourceFile, callable $compiler)
+  function get ($sourceFile, callable $compiler, $cacheKey = '')
   {
     if ($this->cachingEnabled) {
+      if (!$cacheKey)
+        $cacheKey = $sourceFile;
       if ($this->autoSync) {
         // Check if the source code has been modified after the compiled code has been generated and cached.
         // If so, re-compile and re-cache it.
@@ -76,12 +83,12 @@ class CachingFileCompiler
         // But if the cache has no timestamp capability ($cacheT==FALSE), the condition will fail because we'll assume the
         // cache never expires.
         if ($cacheT !== false && $sourceT > $cacheT)
-          return $this->cache ($sourceFile, $compiler);
+          return $this->cache ($sourceFile, $compiler, $cacheKey);
 
         // The source file was not modified, so fetch from the cache.
       }
       //else always fetch from the cache.
-      return $this->cache->get ($sourceFile, function () use ($sourceFile, $compiler) {
+      return $this->cache->get ($cacheKey, function () use ($sourceFile, $compiler) {
         return $this->loadAndCompile ($sourceFile, $compiler);
       });
     }
