@@ -74,7 +74,7 @@ class CachingFileCompiler
         // Check if the source code has been modified after the compiled code has been generated and cached.
         // If so, re-compile and re-cache it.
 
-        $cacheT  = $this->cache->getTimestamp ($sourceFile);
+        $cacheT  = $this->cache->getTimestamp ($cacheKey);
         $sourceT = file_exists ($sourceFile) ? @filemtime ($sourceFile) : false;
         if (!$sourceT)
           $this->fileNotFound ($sourceFile);

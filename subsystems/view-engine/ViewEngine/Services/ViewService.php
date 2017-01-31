@@ -89,10 +89,10 @@ class ViewService implements ViewServiceInterface
   function loadFromFile ($viewPath, array $options = [])
   {
     if ($viewPath && $viewPath[0] == '/' || $viewPath[0] == '\\')
-      throw new \RuntimeException( "Invalid path <kbd>$viewPath</kbd>; it should be a relative view path");
-    $absolutePath = $this->resolveTemplatePath ($viewPath);
-    $engine   = $this->getEngineFromFileName ($absolutePath, $options);
-    $compiled = $engine->loadFromCache ($this->cache, $absolutePath);
+      throw new \RuntimeException("Invalid path <kbd>$viewPath</kbd>; it should be a relative view path");
+    $semiAbsolutePath = $this->resolveTemplatePath ($viewPath);
+    $engine           = $this->getEngineFromFileName ($semiAbsolutePath, $options);
+    $compiled         = $engine->loadFromCache ($this->cache, $semiAbsolutePath);
     return $this->createFromCompiled ($compiled, $engine, $viewPath);
   }
 
@@ -119,11 +119,17 @@ class ViewService implements ViewServiceInterface
     return $this;
   }
 
-  public function resolveTemplatePath ($viewName, &$base = null)
+  public function resolveTemplatePath ($viewPath, &$base = null)
   {
+    // Check if the path is a semi-absolute direct path to the file.
+    if (file_exists ($viewPath)) {
+      $base = '';
+      return $viewPath;
+    }
+    // The path was not a direct path to the file; we must now search for the template on all registered directories.
     $dirs = $this->engineSettings->getDirectories ();
     foreach ($dirs as $base) {
-      $p = "$base/$viewName";
+      $p = "$base/$viewPath";
       if ($p = $this->findTemplate ($p))
         return $p;
     }
@@ -132,7 +138,7 @@ class ViewService implements ViewServiceInterface
       return "  <li><path>$path</path>
 ";
     }));
-    throw new FileNotFoundException($viewName, "
+    throw new FileNotFoundException($viewPath, "
 <p>Search paths:
 
 <ul>$paths</ul>");
