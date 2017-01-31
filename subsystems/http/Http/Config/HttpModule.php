@@ -1,6 +1,8 @@
 <?php
+
 namespace Electro\Http\Config;
 
+use Electro\Http\Lib\CurrentRequest;
 use Electro\Http\Services\Redirection;
 use Electro\Http\Services\ResponseFactory;
 use Electro\Http\Services\ResponseSender;
@@ -8,6 +10,7 @@ use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RedirectionInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
 use Electro\Interfaces\Http\ResponseSenderInterface;
+use Electro\Interfaces\Http\Shared\CurrentRequestInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
@@ -41,7 +44,9 @@ class HttpModule implements ModuleInterface
           ->alias (ResponseFactoryInterface::class, ResponseFactory::class)
           ->alias (ResponseSenderInterface::class, ResponseSender::class)
           ->alias (ServerRequestInterface::class, ServerRequest::class)
-          ->alias (ResponseInterface::class, Response::class);
+          ->alias (ResponseInterface::class, Response::class)
+          ->alias (CurrentRequestInterface::class, CurrentRequest::class)
+          ->share (CurrentRequest::class);
       });
   }
 

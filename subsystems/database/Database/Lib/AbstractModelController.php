@@ -39,7 +39,7 @@ abstract class AbstractModelController implements ModelControllerInterface
   private $extensions = [];
   /**
    * A pipeline of operations to be performed after saving the model.
-   * At this point, the transaction has alread been commited, so no further database operations should be performed.
+   * At this point, the transaction has already been commited, so no further database operations should be performed.
    * You can, though, do other kinds of cleanup operations, like deleting files, for instance.
    *
    * @var callable[]

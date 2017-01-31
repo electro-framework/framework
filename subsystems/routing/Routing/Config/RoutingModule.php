@@ -9,11 +9,11 @@ use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\RouterInterface;
 use Electro\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
 use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
+use Electro\Interfaces\Http\Shared\CurrentRequestInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Profiles\WebProfile;
-use Electro\Routing\Lib\CurrentRequestMutator;
 use Electro\Routing\Middleware\RoutingMiddleware;
 use Electro\Routing\Services\Debug\MiddlewareStackWithLogging;
 use Electro\Routing\Services\Debug\RouterWithLogging;
@@ -57,8 +57,7 @@ class RoutingModule implements ModuleInterface
               function (MiddlewareAssemblerInterface $assembler, MiddlewareStackInterface $stack) {
                 $assembler->assemble ($stack);
                 return $stack;
-              })
-            ->share (CurrentRequestMutator::class);
+              });
 
           if ($debugSettings->webConsole)
             $injector

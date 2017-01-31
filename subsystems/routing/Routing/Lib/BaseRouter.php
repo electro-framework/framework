@@ -5,6 +5,7 @@ namespace Electro\Routing\Lib;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\RouterInterface;
+use Electro\Interfaces\Http\Shared\CurrentRequestInterface;
 use Electro\Interfaces\RenderableInterface;
 use Electro\Traits\InspectionTrait;
 use Iterator;
@@ -33,9 +34,9 @@ abstract class BaseRouter implements RouterInterface
    * Holds the current request for the applications's global middlware stack; updated as the router calls request
    * handlers.
    *
-   * @var CurrentRequestMutator
+   * @var CurrentRequestInterface
    */
-  protected $currentRequestMutator;
+  protected $currentRequest;
   /**
    * **Note:** used by RoutingMiddleware
    *
@@ -60,11 +61,11 @@ abstract class BaseRouter implements RouterInterface
   private $matcher;
 
   public function __construct (RouteMatcherInterface $matcher, InjectorInterface $injector,
-                               CurrentRequestMutator $currentRequestMutator)
+                               CurrentRequestInterface $currentRequest)
   {
-    $this->matcher               = $matcher;
-    $this->injector              = $injector;
-    $this->currentRequestMutator = $currentRequestMutator;
+    $this->matcher        = $matcher;
+    $this->injector       = $injector;
+    $this->currentRequest = $currentRequest;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -75,7 +76,7 @@ abstract class BaseRouter implements RouterInterface
   function add ($handlers, $key = null, $before = null, $after = null)
   {
     if ($handlers) {
-      if (!is_array($handlers))
+      if (!is_array ($handlers))
         $handlers = [$handlers];
       if (empty($this->handlers))
         $this->handlers = [];
@@ -177,7 +178,7 @@ abstract class BaseRouter implements RouterInterface
   protected function callHandler (callable $handler, ServerRequestInterface $request, ResponseInterface $response,
                                   callable $next)
   {
-    $this->currentRequestMutator->set ($request);
+    $this->currentRequest->set ($request);
 
     if ($handler instanceof RenderableInterface) {
       $class = $handler->getContextClass ();

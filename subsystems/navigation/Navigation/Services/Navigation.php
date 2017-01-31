@@ -1,4 +1,5 @@
 <?php
+
 namespace Electro\Navigation\Services;
 
 use Electro\Exceptions\Fault;
@@ -6,7 +7,7 @@ use Electro\Faults\Faults;
 use Electro\Interfaces\Navigation\NavigationInterface;
 use Electro\Interfaces\Navigation\NavigationLinkInterface;
 use Electro\Navigation\Lib\NavigationLink;
-use Electro\Routing\Lib\CurrentRequestMutator;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * TODO: allow inserting maps into IDs that have not yet been defined.
@@ -30,9 +31,9 @@ class Navigation implements NavigationInterface
    */
   private $currentLink;
   /**
-   * @var CurrentRequestMutator
+   * @var ServerRequestInterface
    */
-  private $currentRequestMutator;
+  private $request;
   /**
    * @var NavigationLinkInterface
    */
@@ -42,10 +43,9 @@ class Navigation implements NavigationInterface
    */
   private $selectedLink;
 
-  function __construct (CurrentRequestMutator $currentRequestMutator)
+  function __construct ()
   {
-    $this->rootLink              = $this->group ()->url ('');
-    $this->currentRequestMutator = $currentRequestMutator;
+    $this->rootLink = $this->group ()->url ('');
   }
 
   function IDs ()
@@ -108,24 +108,6 @@ class Navigation implements NavigationInterface
 
   function getCurrentTrail ($offset = 0)
   {
-    if (!isset($this->cachedTrail)) {
-      $request = $this->request ();
-      if (is_null ($request))
-        throw new Fault (Faults::REQUEST_NOT_SET);
-      $url               = $request->getAttribute ('virtualUri');
-      $this->currentLink = null;
-      $this->cachedTrail = [];
-      $this->buildTrail ($this->rootLink, $this->cachedTrail, $url);
-      if ($this->currentLink) {
-        if ($this->currentLink === $this->selectedLink)
-          $this->currentLink->setState (true, true, true);
-        else {
-          $this->currentLink->setState (true, false, true);
-          if ($this->selectedLink)
-            $this->selectedLink->setState (true, true, false);
-        }
-      }
-    }
     return $offset ? array_slice ($this->cachedTrail, $offset) : $this->cachedTrail;
   }
 
@@ -197,7 +179,7 @@ class Navigation implements NavigationInterface
 
   function request ()
   {
-    return $this->currentRequestMutator->get ();
+    return $this->request;
   }
 
   function rootLink (NavigationLinkInterface $rootLink = null)
@@ -211,6 +193,26 @@ class Navigation implements NavigationInterface
   {
     if (!isset($this->cachedTrail)) $this->getCurrentTrail ();
     return $this->selectedLink;
+  }
+
+  public function setRequest (ServerRequestInterface $request)
+  {
+    $this->request = $request;
+    if (is_null ($request))
+      throw new Fault (Faults::REQUEST_NOT_SET);
+    $url               = $request->getAttribute ('virtualUri');
+    $this->currentLink = null;
+    $this->cachedTrail = [];
+    $this->buildTrail ($this->rootLink, $this->cachedTrail, $url);
+    if ($this->currentLink) {
+      if ($this->currentLink === $this->selectedLink)
+        $this->currentLink->setState (true, true, true);
+      else {
+        $this->currentLink->setState (true, false, true);
+        if ($this->selectedLink)
+          $this->selectedLink->setState (true, true, false);
+      }
+    }
   }
 
   private function buildTrail (NavigationLinkInterface $link, array & $trail, $url)

@@ -1,4 +1,5 @@
 <?php
+
 namespace Electro\WebServer;
 
 use Electro\ContentServer\Middleware\ContentServerMiddleware;
