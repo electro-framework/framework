@@ -48,25 +48,32 @@ class ViewEngineSettings implements AssignableInterface
   }
 
   /**
-   * Registers the module's views directory as a source for loading templates.
-   *
-   * Additionaly, it may also register a mapping between the given PHP namespace and the module's views directory.
+   * Registers a mapping between relative view paths and the given PHP namespace.<br>
    * It will be used for resolving PHP ViewModel classes from view template paths.
    *
    * <p>The ViewService will search all defined mappings, in the reverse order in which they were defined, to
    * instantiate the correct ViewModel class with which to render a template that is about to be rendered.
    * <br> If no suitable mapping is found, no data will be given to the view renderer engine.
    *
-   * @param ModuleInfo  $moduleInfo
-   * @param string|null $namespace
+   * @param string $namespace The root namespace for the View Model classes.
    * @return $this
    */
-  function registerViews (ModuleInfo $moduleInfo, $namespace = null)
+  function registerViewModelsNamespace ($namespace)
+  {
+    array_unshift ($this->viewModelNamespaces, $namespace);
+    return $this;
+  }
+
+  /**
+   * Registers the module's views directory as a source for loading templates.
+   *
+   * @param ModuleInfo $moduleInfo
+   * @return $this
+   */
+  function registerViews (ModuleInfo $moduleInfo)
   {
     $path = "$moduleInfo->path/$this->moduleViewsPath";
     array_unshift ($this->viewsDirectories, $path);
-    if ($namespace)
-      $this->viewModelNamespaces [$path] = $namespace;
     return $this;
   }
 }

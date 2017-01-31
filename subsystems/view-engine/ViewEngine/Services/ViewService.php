@@ -10,6 +10,7 @@ use Electro\Interfaces\Views\ViewInterface;
 use Electro\Interfaces\Views\ViewModelInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\Interop\ViewModel;
+use Electro\Kernel\Config\KernelSettings;
 use Electro\ViewEngine\Config\ViewEngineSettings;
 use Electro\ViewEngine\Lib\TemplateCache;
 use PhpKit\Flow\FilesystemFlow;
@@ -29,43 +30,36 @@ class ViewService implements ViewServiceInterface
    */
   private $injector;
   /**
+   * @var KernelSettings
+   */
+  private $kernelSettings;
+  /**
    * @var string[] A map of regular expression patterns to view engine class names.
    */
   private $patterns = [];
 
-  function __construct (ViewEngineSettings $engineSettings, InjectorInterface $injector, TemplateCache $cache)
+  function __construct (ViewEngineSettings $engineSettings, InjectorInterface $injector, TemplateCache $cache,
+                        KernelSettings $kernelSettings)
   {
     $this->injector       = $injector;
     $this->engineSettings = $engineSettings;
     $this->cache          = $cache;
+    $this->kernelSettings = $kernelSettings;
   }
 
   function createViewModelFor (ViewInterface $view = null, $default = false)
   {
     if ($view && $path = $view->getPath ()) {
-
-      foreach ($this->engineSettings->getViewModelNamespaces () as $nsPath => $ns) {
-        if (str_beginsWith ($path, $nsPath)) {
-          $remaining = substr ($path, strlen ($nsPath) + 1);
-          $a         = PS ($remaining)->split ('/');
-          $file      = $a->pop ();
-          $nsPrefix  = $a->map ('ucfirst', false)->join ('\\')->S;
-          $class     = ($p = strpos ($file, '.')) !== false
-            ? ucfirst (substr ($file, 0, $p))
-            : ucfirst ($file);
-          $FQN       = PA ([$ns, $nsPrefix, $class])->prune ()->join ('\\')->S;
-          if (class_exists ($FQN)) {
-            $viewModel = $this->injector->make ($FQN);
-            if ($viewModel instanceof ViewModel)
-              return $viewModel;
-            throw new \RuntimeException("Class <kbd>$FQN</kbd> does not implement " . ViewModel::class);
-          }
-        }
+      $class = $this->getViewModelClass ($path);
+      if (class_exists ($class)) {
+        $viewModel = $this->injector->make ($class);
+        if ($viewModel instanceof ViewModel)
+          return $viewModel;
+        throw new \RuntimeException("Class <kbd>$class</kbd> does not implement " . ViewModel::class);
       }
     }
     return $default ? $this->injector->make (ViewModelInterface::class) : null;
   }
-
 
   function getEngine ($engineClass, $options = [])
   {
@@ -84,6 +78,19 @@ class ViewService implements ViewServiceInterface
         return $this->getEngine ($class, $options);
     throw new FatalException ("None of the available view engines is capable of handling a file named <b>$path</b>.
 <p>Make sure the file name has one of the supported file extensions or matches a known pattern.");
+  }
+
+  function getViewModelClass ($templatePath)
+  {
+    $this->resolveTemplatePath ($templatePath, $base, $viewPath);
+    $class = ucwords (str_replace ('/', '\\', str_segmentsStripLast ($viewPath, '.')), '\\');
+
+    foreach ($this->engineSettings->getViewModelNamespaces () as $ns) {
+      $FQN = "$ns\\$class";
+      if (class_exists ($FQN))
+        return $FQN;
+    }
+    return null;
   }
 
   function loadFromFile ($viewPath, array $options = [])
@@ -119,26 +126,39 @@ class ViewService implements ViewServiceInterface
     return $this;
   }
 
-  public function resolveTemplatePath ($viewPath, &$base = null)
+  public function resolveTemplatePath ($path, &$base = null, &$viewPath = null)
   {
+    if ($path[0] == '/' || $path[0] == '\\')
+      throw new \InvalidArgumentException("Template path must be relative, either from a module's views directory or from the application's base directory");
     // Check if the path is a semi-absolute direct path to the file.
-    if (file_exists ($viewPath)) {
-      $base = '';
-      return $viewPath;
+    if (str_beginsWith ($path, $this->kernelSettings->modulesPath) ||
+        str_beginsWith ($path, $this->kernelSettings->pluginModulesPath)
+    ) {
+      if (func_num_args () > 1) {
+        $dirs = $this->engineSettings->getDirectories ();
+        foreach ($dirs as $base)
+          if (str_beginsWith ($path, $base)) {
+            $viewPath = substr ($path, strlen ($base) + 1);
+            break;
+          }
+      }
+      return $path;
     }
     // The path was not a direct path to the file; we must now search for the template on all registered directories.
     $dirs = $this->engineSettings->getDirectories ();
     foreach ($dirs as $base) {
-      $p = "$base/$viewPath";
-      if ($p = $this->findTemplate ($p))
+      $p = "$base/$path";
+      if ($p = $this->findTemplate ($p)) {
+        $viewPath = $path;
         return $p;
+      }
     }
     // Throw an exception
     $paths = implode ('', map ($dirs, function ($path) {
       return "  <li><path>$path</path>
 ";
     }));
-    throw new FileNotFoundException($viewPath, "
+    throw new FileNotFoundException($path, "
 <p>Search paths:
 
 <ul>$paths</ul>");
