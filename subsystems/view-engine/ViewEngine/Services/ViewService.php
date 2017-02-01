@@ -11,12 +11,19 @@ use Electro\Interfaces\Views\ViewModelInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\Interop\ViewModel;
 use Electro\Kernel\Config\KernelSettings;
+use Electro\Traits\EventsTrait;
 use Electro\ViewEngine\Config\ViewEngineSettings;
 use Electro\ViewEngine\Lib\TemplateCache;
 use PhpKit\Flow\FilesystemFlow;
+use const Electro\Interfaces\Views\CREATE_VIEW_MODEL;
+use const Electro\Interfaces\Views\RENDER;
 
 class ViewService implements ViewServiceInterface
 {
+  use EventsTrait {
+    emit as public;
+  }
+
   /**
    * @var TemplateCache
    */
@@ -51,14 +58,18 @@ class ViewService implements ViewServiceInterface
   {
     if ($view && $path = $view->getPath ()) {
       $class = $this->getViewModelClass ($path);
-      if (class_exists ($class)) {
+      if ($class) {
         $viewModel = $this->injector->make ($class);
-        if ($viewModel instanceof ViewModel)
-          return $viewModel;
-        throw new \RuntimeException("Class <kbd>$class</kbd> does not implement " . ViewModel::class);
+        if (!$viewModel instanceof ViewModel)
+          throw new \RuntimeException("Class <kbd>$class</kbd> does not implement " . ViewModel::class);
       }
     }
-    return $default ? $this->injector->make (ViewModelInterface::class) : null;
+    if (!isset ($viewModel)) {
+      if (!$default) return null;
+      $viewModel = $this->injector->make (ViewModelInterface::class);
+    }
+    $this->emit (CREATE_VIEW_MODEL, $view, $viewModel);
+    return $viewModel;
   }
 
   function getEngine ($engineClass, $options = [])
@@ -118,6 +129,16 @@ class ViewService implements ViewServiceInterface
   public function loadViewTemplate ($path)
   {
     return loadFile ($path);
+  }
+
+  function onCreateViewModel (callable $handler)
+  {
+    return $this->on (CREATE_VIEW_MODEL, $handler);
+  }
+
+  function onRenderView (callable $handler)
+  {
+    return $this->on (RENDER, $handler);
   }
 
   function register ($engineClass, $filePattern)

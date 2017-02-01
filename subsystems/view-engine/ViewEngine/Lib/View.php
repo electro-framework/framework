@@ -6,7 +6,9 @@ use Electro\Exceptions\FatalException;
 use Electro\Interfaces\Views\ViewEngineInterface;
 use Electro\Interfaces\Views\ViewInterface;
 use Electro\Interfaces\Views\ViewModelInterface;
+use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\ViewEngine\Config\ViewEngineSettings;
+use const Electro\Interfaces\Views\RENDER;
 
 class View implements ViewInterface
 {
@@ -30,10 +32,15 @@ class View implements ViewInterface
    * @var ViewEngineInterface
    */
   private $viewEngine;
+  /**
+   * @var ViewServiceInterface
+   */
+  private $viewService;
 
-  public function __construct (ViewEngineSettings $engineSettings)
+  public function __construct (ViewEngineSettings $engineSettings, ViewServiceInterface $viewService)
   {
     $this->engineSettings = $engineSettings;
+    $this->viewService    = $viewService;
   }
 
   function compile ()
@@ -94,9 +101,13 @@ class View implements ViewInterface
   {
     if (!$this->compiled)
       $this->compile ();
+
+    $this->viewService->emit (RENDER, $this, $data);
+
     $template = $this->compiled ?: $this->source;
     if (is_null ($template))
       throw new FatalException ("No template is set for rendering");
+
     return $this->viewEngine->render ($template, $data);
   }
 
