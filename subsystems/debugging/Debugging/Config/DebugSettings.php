@@ -1,7 +1,9 @@
 <?php
+
 namespace Electro\Debugging\Config;
 
 use Electro\Kernel\Services\Kernel;
+use Electro\Logging\Config\LogSettings;
 use Monolog\Logger;
 
 /**
@@ -26,6 +28,7 @@ class DebugSettings
   public $logConfig = true;
   /**
    * ><p>**Warning**: enabling this will have a severe impact on performance!
+   *
    * @var bool TRUE to enable logging of the server-side DOM and its display on a web console panel.
    */
   public $logDOM = false;
@@ -78,11 +81,11 @@ class DebugSettings
    */
   public $webConsole;
 
-  public function __construct (Kernel $kernel)
+  public function __construct (Kernel $kernel, LogSettings $logSettings)
   {
-    $this->devEnv     = $kernel->devEnv();
+    $this->devEnv     = $kernel->devEnv ();
     $this->webConsole = env ('CONSOLE', false);
-    $this->debugLevel = env ('DEBUG_LEVEL', Logger::DEBUG);
+    $this->debugLevel = $logSettings->getLogLevel ();
   }
 
 }

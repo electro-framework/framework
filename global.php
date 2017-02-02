@@ -212,7 +212,7 @@ function dump ()
   ob_start ();
   call_user_func_array ('var_dump', func_get_args ());
   $o = ob_get_clean ();
-  $o = str_replace ('[', '[', $o); // to prevent colision with color escape codes
+  // $o = str_replace ('[', '[', $o); // to prevent colision with color escape codes
   $o = preg_replace ('/\{\s*\}/', '{}', $o); // condense empty arrays
   $o = preg_replace ('/":".*?":(private|protected)/', color ('dark grey', ':$1'), $o); // condense empty arrays
   // Applies formatting if XDEBUG is not installed
@@ -241,6 +241,20 @@ function dump ()
   echo $o;
   if (!isCLI ())
     echo "</pre>";
+}
+
+/**
+ * Returns a textual representation of the given argument.
+ * <p>This is useful for debugging.
+ */
+function getDump ($value)
+{
+  $o = json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_PARTIAL_OUTPUT_ON_ERROR);
+  // Unquote keys
+  $o = preg_replace ('/^(\s*)"([^"]+)": /m','$1$2: ',$o);
+  // Compact arrays that have a single value
+  $o = preg_replace ('/(^|: )\[\s+(\S+)\s+]/','$1[ $2 ]',$o);
+  return $o;
 }
 
 /**

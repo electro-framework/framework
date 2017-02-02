@@ -1,4 +1,5 @@
 <?php
+
 namespace Electro\ConsoleApplication\Config;
 
 use Electro\ConsoleApplication\ConsoleApplication;
@@ -8,7 +9,11 @@ use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Logging\Config\LogSettings;
+use Electro\Logging\Lib\ConsoleLogger;
 use Electro\Profiles\ConsoleProfile;
+use Monolog\Handler\PsrHandler;
+use Monolog\Logger;
 use Symfony\Component\Console\Application as SymfonyConsole;
 
 class ConsoleModule implements ModuleInterface
@@ -37,12 +42,18 @@ class ConsoleModule implements ModuleInterface
             ->share (ConsoleApplication::class);
         })
       //
-      ->onRun (function (ConsoleApplication $consoleApp) use ($kernel) {
+      ->onRun (function (ConsoleApplication $consoleApp, Logger $mainLogger, LogSettings $logSettings) use ($kernel) {
+
         // If no code on the startup process has set the console instance's input/output, set it now.
         if (!$consoleApp->getIO ()->getInput ())
           $consoleApp->setupStandardIO ($_SERVER['argv']);
 
-        // Run the framework's console subsystem, which then runs the terminal-based application.
+        // Configure the main logger.
+        $log = new ConsoleLogger ($consoleApp->getIO ()->getOutput ());
+        $log->setLogFormat ($logSettings->consoleLogFormat);
+        $log->setDateTimeFormat ($logSettings->dateTimeFormat);
+        $mainLogger->pushHandler (new PsrHandler($log));
+
         $kernel->setExitCode ($consoleApp->execute ());
       });
   }
