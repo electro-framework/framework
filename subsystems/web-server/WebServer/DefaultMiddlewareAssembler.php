@@ -4,6 +4,7 @@ namespace Electro\WebServer;
 
 use Electro\ContentServer\Middleware\ContentServerMiddleware;
 use Electro\Debugging\Config\DebugSettings;
+use Electro\Debugging\Middleware\AlternateLogoutMiddleware;
 use Electro\Debugging\Middleware\WebConsoleMiddleware;
 use Electro\ErrorHandling\Middleware\ErrorHandlingMiddleware;
 use Electro\Http\Middleware\CompressionMiddleware;
@@ -40,7 +41,8 @@ class DefaultMiddlewareAssembler implements MiddlewareAssemblerInterface
         $this->webConsole ? WebConsoleMiddleware::class : null,
         ErrorHandlingMiddleware::class,
         TranslationMiddleware::class,
-        SessionMiddleware::class,
+        'session'  => SessionMiddleware::class,
+        $this->webConsole ? AlternateLogoutMiddleware::class : null,
         CsrfMiddleware::class,
         LanguageMiddleware::class,
         PermalinksMiddleware::class,

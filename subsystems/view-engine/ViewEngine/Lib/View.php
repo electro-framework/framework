@@ -9,6 +9,7 @@ use Electro\Interfaces\Views\ViewModelInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\ViewEngine\Config\ViewEngineSettings;
 use const Electro\Interfaces\Views\RENDER;
+use PhpKit\WebConsole\Lib\Debug;
 
 class View implements ViewInterface
 {
@@ -95,6 +96,14 @@ class View implements ViewInterface
     $this->source   = $src;
     $this->compiled = null;
     return $this;
+  }
+
+  function __debugInfo ()
+  {
+    return [
+      'Template path' => $this->path ?: 'null / dynamic template',
+      'View engine' => $this->viewEngine
+    ];
   }
 
   function render (ViewModelInterface $data = null)

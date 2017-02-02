@@ -147,6 +147,14 @@ class ViewService implements ViewServiceInterface
     return $this;
   }
 
+  function __debugInfo ()
+  {
+    return [
+      'View Engine Settings' => $this->engineSettings,
+      'Registered Event Listeners' => $this->listeners
+    ];
+  }
+
   public function resolveTemplatePath ($path, &$base = null, &$viewPath = null)
   {
     if ($path[0] == '/' || $path[0] == '\\')

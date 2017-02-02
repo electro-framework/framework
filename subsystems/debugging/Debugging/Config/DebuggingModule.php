@@ -87,9 +87,9 @@ class DebuggingModule implements ModuleInterface
           if ($debugSettings->logProfiling)
             DebugConsole::registerLogger ('trace', new ConsoleLogger ('Trace', 'fa fa-clock-o big'));
           if ($debugSettings->logView)
-            DebugConsole::registerPanel ('view', new ConsoleLogger ('View', 'fa fa-eye'));
+            DebugConsole::registerPanel ('view', new ConsoleLogger ('View Settings', 'fa fa-eye'));
           if ($debugSettings->logModel)
-            DebugConsole::registerPanel ('model', new ConsoleLogger ('Model', 'fa fa-table'));
+            DebugConsole::registerPanel ('model', new ConsoleLogger ('Views &amp; Models', 'fa fa-table'));
           if ($debugSettings->logDOM)
             DebugConsole::registerPanel ('DOM', new ConsoleLogger ('Server-side DOM', 'fa fa-sitemap'));
 //    DebugConsole::registerPanel ('exceptions', new ConsoleLogger ('Exceptions', 'fa fa-bug'));
