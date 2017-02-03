@@ -14,6 +14,7 @@ class DefaultMainLoggerFactory implements MainLoggerFactoryInterface
     $logger = new Logger('main');
     $logger->pushProcessor (new PsrLogMessageProcessor);
 //    $logger->pushHandler (new StreamHandler()); //NormalizerFormatter
+    return $logger;
   }
 
 }

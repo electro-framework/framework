@@ -4,12 +4,12 @@ namespace Electro\Logging\Config;
 
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\KernelInterface;
-use Electro\Interfaces\Logging\LoggerRegistryInterface;
+use Electro\Interfaces\Logging\LogCentralInterface;
 use Electro\Interfaces\Logging\MainLoggerFactoryInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Logging\Lib\DefaultMainLoggerFactory;
-use Electro\Logging\Services\LoggerRegistry;
+use Electro\Logging\Services\LogCentral;
 use Electro\Profiles\ConsoleProfile;
 use Electro\Profiles\WebProfile;
 use Monolog\Logger;
@@ -42,8 +42,8 @@ class LoggingModule implements ModuleInterface
           //
           // The logger registry.
           //
-          ->alias (LoggerRegistryInterface::class, LoggerRegistry::class)
-          ->share (LoggerRegistryInterface::class)
+          ->alias (LogCentralInterface::class, LogCentral::class)
+          ->share (LogCentralInterface::class)
           //
           // The main Monolog logger, which can also be retrieved as a generic PSR-3 logger.
           //

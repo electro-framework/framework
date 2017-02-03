@@ -2,12 +2,12 @@
 
 namespace Electro\Logging\Services;
 
-use Electro\Interfaces\Logging\LoggerRegistryInterface;
+use Electro\Interfaces\Logging\LogCentralInterface;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-class LoggerRegistry implements LoggerRegistryInterface
+class LogCentral implements LogCentralInterface
 {
   /**
    * @var Logger
