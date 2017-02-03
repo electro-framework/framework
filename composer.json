@@ -14,12 +14,11 @@
     }
   ],
   "require": {
-    "electro/kernel": "self.version",
+    "electro/kernel": "^0.10.0",
     "codegyre/robo": "^0.5.3",
     "league/glide": "^1.0.0",
-    "monolog/monolog": "^1.17.1",
+    "monolog/monolog": "^1.22.0",
     "php-kit/ext-pdo": "^1.0.0",
-    "php-kit/flow": "^1.0.0",
     "php-kit/php-web-console": "^0.9.0",
     "php-kit/power-primitives": "^1.0.0",
     "psr/http-message": "~1.0",
@@ -52,6 +51,11 @@
     "files": [
       "global.php"
     ]
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "0.10.x-dev"
+    }
   },
   "bin": [
     "subsystems/console/bin/workman",
