@@ -2,22 +2,26 @@
 
 namespace Electro\Logging\Services;
 
-use Electro\Interfaces\Logging\LoggersInterface;
+use Electro\Interfaces\Logging\LoggerRegistryInterface;
 use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-class Loggers implements LoggersInterface
+class LoggerRegistry implements LoggerRegistryInterface
 {
+  /**
+   * @var Logger
+   */
+  private $logger;
+  /**
+   * @var LoggerInterface[]
+   */
   private $loggers = [];
 
-  public function __construct () { }
-
-  function make ($name)
+  public function __construct (Logger $logger)
   {
-    return $this->loggers[$name] = new Logger ($name);
+    $this->logger = $logger;
   }
-
 
   function get ($name)
   {
@@ -27,6 +31,16 @@ class Loggers implements LoggersInterface
   function has ($name)
   {
     return isset ($this->loggers[$name]);
+  }
+
+  function make ($name)
+  {
+    return $this->loggers[$name] = new Logger ($name);
+  }
+
+  function makeChannel ($name, $enabled = true)
+  {
+    return $this->loggers[$name] = $this->logger->withName ($name);
   }
 
   function register ($name, LoggerInterface $logger)

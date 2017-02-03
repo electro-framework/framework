@@ -3,12 +3,13 @@
 namespace Electro\Logging\Config;
 
 use Electro\Interfaces\DI\InjectorInterface;
-use Electro\Interfaces\Http\LoggingConfiguratorInterface;
 use Electro\Interfaces\KernelInterface;
+use Electro\Interfaces\Logging\LoggerRegistryInterface;
+use Electro\Interfaces\Logging\MainLoggerFactoryInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
-use Electro\Logging\Lib\DefaultLoggingConfigurator;
-use Electro\Logging\Services\Loggers;
+use Electro\Logging\Lib\DefaultMainLoggerFactory;
+use Electro\Logging\Services\LoggerRegistry;
 use Electro\Profiles\ConsoleProfile;
 use Electro\Profiles\WebProfile;
 use Monolog\Logger;
@@ -41,22 +42,20 @@ class LoggingModule implements ModuleInterface
           //
           // The logger registry.
           //
-          ->share (Loggers::class)
+          ->alias (LoggerRegistryInterface::class, LoggerRegistry::class)
+          ->share (LoggerRegistryInterface::class)
           //
           // The main Monolog logger, which can also be retrieved as a generic PSR-3 logger.
           //
           ->share (Logger::class)
-          ->delegate(Logger::class, function (LoggingConfiguratorInterface $configurator) {
-            $logger = new Logger('main');
-            $configurator->configure($logger);
-            return $logger;
+          ->delegate (Logger::class, function (MainLoggerFactoryInterface $factory) {
+            return $factory->make ();
           })
-          ->define (Logger::class, ['main'])
           ->alias (LoggerInterface::class, Logger::class)
           //
           // Define the default logging configurator; it may be overridden later.
           //
-          ->alias (LoggingConfiguratorInterface::class, DefaultLoggingConfigurator::class);
+          ->alias (MainLoggerFactoryInterface::class, DefaultMainLoggerFactory::class);
       });
   }
 
