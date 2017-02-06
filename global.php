@@ -57,7 +57,7 @@ function redirectToSelf ()
 }
 
 /**
- * Generates a routable that, when invoked, will return a generic PageComponent with the specified template as a view.
+ * Generates a routable that, when invoked, will load and render specified view template.
  *
  * <p>Use this to define routes for simple pages that only have a view model (optionally) and no controller logic.
  *
@@ -70,8 +70,10 @@ function view ($templateUrl)
     $templateUrl
   ) {
     return function ($request, $response) use ($viewService, $templateUrl, $injector) {
-      $view      = $viewService->loadFromFile ($templateUrl, ['page' => true]);
-      $viewModel = $viewService->createViewModelFor ($view);
+      $view                 = $viewService->loadFromFile ($templateUrl);
+      $viewModel            = $viewService->createViewModelFor ($view);
+      $viewModel['request'] = $request;
+      $viewModel->init ();
       return Http::response ($response, $view->render ($viewModel));
     };
   });
@@ -249,11 +251,12 @@ function dump ()
  */
 function getDump ($value)
 {
-  $o = json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_PARTIAL_OUTPUT_ON_ERROR);
+  $o = json_encode ($value,
+    JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_PARTIAL_OUTPUT_ON_ERROR);
   // Unquote keys
-  $o = preg_replace ('/^(\s*)"([^"]+)": /m','$1$2: ',$o);
+  $o = preg_replace ('/^(\s*)"([^"]+)": /m', '$1$2: ', $o);
   // Compact arrays that have a single value
-  $o = preg_replace ('/(^|: )\[\s+(\S+)\s+]/','$1[ $2 ]',$o);
+  $o = preg_replace ('/(^|: )\[\s+(\S+)\s+]/', '$1[ $2 ]', $o);
   return $o;
 }
 
