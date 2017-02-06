@@ -11,8 +11,6 @@ class CurrentRequest implements CurrentRequestInterface
 
   function get ()
   {
-    // if (!$this->instance)
-    //   throw new \RuntimeException ("Trying to read the current HTTP request before it was set");
     return $this->instance;
   }
 

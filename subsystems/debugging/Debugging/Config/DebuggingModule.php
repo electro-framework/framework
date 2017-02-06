@@ -9,15 +9,12 @@ use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Kernel\Services\ModulesRegistry;
 use Electro\Profiles\WebProfile;
-use Monolog\Logger;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\DebugConsole\DebugConsoleSettings;
 use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 use PhpKit\WebConsole\Loggers\ConsoleLogger;
-use PhpKit\WebConsole\Loggers\Handlers\WebConsoleMonologHandler;
 use PhpKit\WebConsole\Loggers\Specialized\PSR7RequestLogger;
 use PhpKit\WebConsole\Loggers\Specialized\PSR7ResponseLogger;
-use Psr\Log\LoggerInterface;
 
 class DebuggingModule implements ModuleInterface
 {
@@ -49,8 +46,7 @@ class DebuggingModule implements ModuleInterface
         });
 
     $kernel->onConfigure (
-      function (LoggerInterface $logger, DebugSettings $debugSettings, KernelSettings $kernelSettings,
-                ModulesRegistry $modulesRegistry) {
+      function (DebugSettings $debugSettings, KernelSettings $kernelSettings, ModulesRegistry $modulesRegistry) {
 
         ErrorConsole::init ($debugSettings->devEnv, $kernelSettings->baseDirectory);
         ErrorConsole::setAppName ($kernelSettings->appName);
@@ -94,9 +90,6 @@ class DebuggingModule implements ModuleInterface
             DebugConsole::registerPanel ('DOM', new ConsoleLogger ('Server-side DOM', 'fa fa-sitemap'));
 //    DebugConsole::registerPanel ('exceptions', new ConsoleLogger ('Exceptions', 'fa fa-bug'));
 
-          // Writing to the logger also writes to the Inspector panel.
-          if ($logger instanceof Logger)
-            $logger->pushHandler (new WebConsoleMonologHandler($debugSettings->debugLevel));
         }
       });
   }

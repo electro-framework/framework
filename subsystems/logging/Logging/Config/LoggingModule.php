@@ -5,15 +5,15 @@ namespace Electro\Logging\Config;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\Logging\LogCentralInterface;
-use Electro\Interfaces\Logging\MainLoggerFactoryInterface;
+use Electro\Interfaces\Logging\LoggingSetupInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
-use Electro\Logging\Lib\DefaultMainLoggerFactory;
+use Electro\Logging\Lib\DefaultLoggingSetup;
 use Electro\Logging\Services\LogCentral;
 use Electro\Profiles\ConsoleProfile;
 use Electro\Profiles\WebProfile;
-use Monolog\Logger;
 use Psr\Log\LoggerInterface;
+use const Electro\Interfaces\Logging\LOG_GENERAL;
 
 /**
  * This subsystem provides a main logger for the application.
@@ -34,28 +34,38 @@ class LoggingModule implements ModuleInterface
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)
   {
     // This module runs before all other modules, so that it becomes enabled as soon as possible.
-    $kernel->onPreRegister (
-      function (InjectorInterface $injector) {
-        $injector
-          ->share (LoggerInterface::class)
-          ->share (LogSettings::class)
-          //
-          // The logger registry.
-          //
-          ->alias (LogCentralInterface::class, LogCentral::class)
-          ->share (LogCentralInterface::class)
-          //
-          // The main Monolog logger, which can also be retrieved as a generic PSR-3 logger.
-          //
-          ->share (Logger::class)
-          ->delegate (Logger::class, function (MainLoggerFactoryInterface $factory) {
-            return $factory->make ();
-          })
-          ->alias (LoggerInterface::class, Logger::class)
-          //
-          // Define the default logging configurator; it may be overridden later.
-          //
-          ->alias (MainLoggerFactoryInterface::class, DefaultMainLoggerFactory::class);
+    $kernel
+      ->onPreRegister (
+        function (InjectorInterface $injector) {
+          $injector
+            //
+            // The main Monolog logger, which can also be retrieved as a generic PSR-3 logger.
+            // It's an alias of the 'general' channel defined on LogCentral.
+            //
+            ->share (LoggerInterface::class)
+            ->delegate (LoggerInterface::class, function (LogCentralInterface $logCentral) {
+              return $logCentral->loggers ()->get (LOG_GENERAL);
+            })
+            //
+            ->share (LogSettings::class)
+            //
+            // The logging central registry.
+            //
+            ->share (LogCentralInterface::class)
+            ->alias (LogCentral::class, LogCentralInterface::class)
+            ->delegate (LogCentralInterface::class, function (LoggingSetupInterface $loggingSetup) {
+              $logCentral = new LogCentral;
+              $loggingSetup->setup ($logCentral);
+              return $logCentral;
+            })
+            //
+            // Define the default logging configurator; it may be overridden later.
+            //
+            ->alias (LoggingSetupInterface::class, DefaultLoggingSetup::class);
+        })
+      //
+      ->onReconfigure (function (LogCentral $logCentral) {
+        $logCentral->setup ();
       });
   }
 

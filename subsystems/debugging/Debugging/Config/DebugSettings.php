@@ -12,11 +12,6 @@ use Monolog\Logger;
 class DebugSettings
 {
   /**
-   * @var int Minimum level that messages must have to be logged to the web console inspector panel. 100 = DEBUG.
-   * @see Logger for debug level constants.
-   */
-  public $debugLevel;
-  /**
    * Indicates whether the application is running in a development (aka debugging) environment (TRUE) or not (FALSE).
    *
    * @var bool
@@ -85,7 +80,6 @@ class DebugSettings
   {
     $this->devEnv     = $kernel->devEnv ();
     $this->webConsole = env ('CONSOLE', false);
-    $this->debugLevel = $logSettings->getLogLevel ();
   }
 
 }
