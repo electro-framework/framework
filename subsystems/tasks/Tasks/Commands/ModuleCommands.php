@@ -560,7 +560,7 @@ If you proceed, the directory contents will be discarded.");
     // Register the module's namespace
     $cfg                  = new ComposerConfigHandler;
     $require              = $cfg->get ('require', []);
-    $require[$moduleName] = 'self.version';
+    $require[$moduleName] = '1.0.0';
     $cfg->set ('require', $require);
     $cfg->save ();
 

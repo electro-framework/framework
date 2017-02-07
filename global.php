@@ -169,7 +169,7 @@ function factory (callable $fn)
  * Returns a route to a controller method or function.
  *
  * <p>The callback will receive as arguments (in order):
- * - The parsed request body (if one exists),
+ * - The parsed request body (for HTTP methods other than GET),
  * - the route parameters,
  * - the request and response objects.
  *
@@ -191,9 +191,8 @@ function controller ($ref)
   return new FactoryRoutable (function (InjectorInterface $injector) use ($ref) {
     $ctrl = $injector->buildExecutable ($ref);
     return function (ServerRequestInterface $request, ResponseInterface $response) use ($ctrl) {
-      $reqBody = $request->getParsedBody ();
       $args    = array_merge (
-        isset($reqBody) ? [$reqBody] : [],
+        $request->getMethod() != 'GET' ? [$request->getParsedBody ()] : [],
         array_values (Http::getRouteParameters ($request)),
         [$request, $response]
       );
