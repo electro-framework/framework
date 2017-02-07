@@ -5,6 +5,7 @@ use Electro\Http\Lib\Http;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\MiddlewareStackInterface;
 use Electro\Interfaces\Navigation\NavigationInterface;
+use Electro\Interfaces\Views\ViewModelInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\Routing\Lib\FactoryRoutable;
 use Psr\Http\Message\ResponseInterface;
@@ -70,10 +71,14 @@ function view ($templateUrl)
     $templateUrl
   ) {
     return function ($request, $response) use ($viewService, $templateUrl, $injector) {
-      $view                 = $viewService->loadFromFile ($templateUrl);
-      $viewModel            = $viewService->createViewModelFor ($view);
-      $viewModel['request'] = $request;
-      $viewModel->init ();
+      $view      = $viewService->loadFromFile ($templateUrl);
+      $viewModel = $viewService->createViewModelFor ($view);
+      if (isset($viewModel)) {
+        if (!is_object ($viewModel) || !($viewModel instanceof ViewModelInterface))
+          throw new RuntimeException(sprintf ("Invalid type of view model (<kbd>%s</kbd>) for view <kbd>%s</kbd>",
+            typeOf ($viewModel), $view->getPath ()));
+        $viewModel['request'] = $request;
+      }
       return Http::response ($response, $view->render ($viewModel));
     };
   });
