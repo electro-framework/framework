@@ -12,16 +12,44 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 
+/**
+ * Creates a middleware that is a stack of middleware callables.
+ *
+ * @param callable[] ...$middleware
+ * @return FactoryRoutable
+ */
 function stack (...$middleware)
 {
-  return new FactoryRoutable (function (MiddlewareStackInterface $stack) use ($middleware) {
+  return factory (function (MiddlewareStackInterface $stack) use ($middleware) {
     return $stack->set ($middleware);
   });
 }
 
+function navigationMiddleware ()
+{
+  return factory (function (NavigationInterface $navigation) {
+    return function ($request, $response, $next) use ($navigation) {
+      $navigation->setRequest ($request);
+      return $next();
+    };
+  });
+}
+
+/**
+ * Creates a middleware that handles an application page, both in rendering (GET) and in handling actions (POST).
+ *
+ * @param string $templateUrl
+ * @param null   $actionHandler
+ * @return FactoryRoutable
+ */
 function page ($templateUrl, $actionHandler = null)
 {
-  return view ($templateUrl);
+  return stack (
+    navigationMiddleware (),
+    view ($templateUrl)
+  );
+
+  //TODO: complete this.
   return stack (
     method ('GET', view ($templateUrl)),
     method ('POST', $actionHandler)
@@ -33,6 +61,14 @@ function action ($map)
   return 0;
 }
 
+/**
+ * Creates a middleware that renders a page with a form and handles its submission.
+ *
+ * TODO: implement this
+ *
+ * @param string $templateUrl
+ * @return FactoryRoutable
+ */
 function formPage ($templateUrl)
 {
   return page ($templateUrl, action ([
@@ -40,16 +76,26 @@ function formPage ($templateUrl)
   ]));
 }
 
+/**
+ * Creates a middleware that redirects to the URL of the parent of the current navigation link.
+ *
+ * @return FactoryRoutable
+ */
 function redirectUp ()
 {
-  return new FactoryRoutable (function (NavigationInterface $navigation) {
+  return factory (function (NavigationInterface $navigation) {
     return function ($request, $response) use ($navigation) {
-      $navigation->getCurrentTrail ();
+      $navigation->setRequest ($request);
       return Http::redirect ($response, $navigation->currentLink ()->parent ()->url ());
     };
   });
 }
 
+/**
+ * Creates a middleware that redirects to the current URL.
+ *
+ * @return Closure
+ */
 function redirectToSelf ()
 {
   return function (ServerRequestInterface $request, $response) {
@@ -67,7 +113,7 @@ function redirectToSelf ()
  */
 function view ($templateUrl)
 {
-  return new FactoryRoutable (function (ViewServiceInterface $viewService, InjectorInterface $injector) use (
+  return factory (function (ViewServiceInterface $viewService, InjectorInterface $injector) use (
     $templateUrl
   ) {
     return function ($request, $response) use ($viewService, $templateUrl, $injector) {
@@ -132,7 +178,7 @@ function method ($method, callable $handler)
 }
 
 /**
- * Creates a middleware that simply reverses the direction of execution on the middlware stack.
+ * Creates a middleware that ends the middleware stack and begins the chained response returning sequence.
  *
  * @return Closure
  */
@@ -149,7 +195,7 @@ function back ()
  * @param string|callable $text The text to be returned.
  * @return Closure
  */
-function simpleResponse ($text)
+function htmlResponse ($text)
 {
   return function ($request, $response) use ($text) { return Http::response ($response, $text); };
 }
@@ -188,15 +234,15 @@ function factory (callable $fn)
  */
 function controller ($ref)
 {
-  return new FactoryRoutable (function (InjectorInterface $injector) use ($ref) {
+  return factory (function (InjectorInterface $injector) use ($ref) {
     $ctrl = $injector->buildExecutable ($ref);
     return function (ServerRequestInterface $request, ResponseInterface $response) use ($ctrl) {
-      $args    = array_merge (
-        $request->getMethod() != 'GET' ? [$request->getParsedBody ()] : [],
+      $args   = array_merge (
+        $request->getMethod () != 'GET' ? [$request->getParsedBody ()] : [],
         array_values (Http::getRouteParameters ($request)),
         [$request, $response]
       );
-      $result  = $ctrl (...$args);
+      $result = $ctrl (...$args);
       switch (true) {
         case $result instanceof ResponseInterface:
           return $result;

@@ -179,6 +179,8 @@ class WebConsoleMiddleware implements RequestHandlerInterface
       /** @var SessionInterface $session */
       $session = $this->injector->make (SessionInterface::class);
       $logger  = DebugConsole::logger ('session');
+
+      // Display a button to force a Log Out.
       if ($session->loggedIn ()) {
         $url   = $request->getUri ();
         $query = $url->getQuery ();
@@ -186,6 +188,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
         $url   = $url->withQuery ($query);
         $logger->write ("<button type=\"button\" class=\"__btn __btn-default\" style=\"position:absolute;right:5px;top:5px\" onclick=\"location.href='$url'\">Log out</button>");
       }
+
       $logger->inspect ($session);
     }
 

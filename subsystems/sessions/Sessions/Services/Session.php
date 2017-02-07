@@ -1,4 +1,5 @@
 <?php
+
 namespace Electro\Sessions\Services;
 
 use Electro\Authentication\Lib\GenericUser;
@@ -6,25 +7,16 @@ use Electro\Exceptions\FlashType;
 use Electro\Interfaces\SessionInterface;
 use Electro\Interfaces\UserInterface;
 use Electro\Traits\AssignableTrait;
-use Electro\Traits\InspectionTrait;
 
 class Session implements SessionInterface
 {
-  use InspectionTrait, AssignableTrait;
-
-  /**
-   * For use with the InpectionTrait.
-   *
-   * @var array
-   */
-  private static $INSPECTABLE = ['isValid', 'lang', 'name', 'user', 'data', 'prevFlash', 'newFlash'];
+  use AssignableTrait;
 
   public $isValid = false;
   /** @var string The session cookie name. */
   public $name;
   /** @var GenericUser The logged-in user or null if not logged-in. */
   public $user;
-
   /** @var array */
   private $data;
   /**
@@ -43,6 +35,18 @@ class Session implements SessionInterface
     $this->data      = [];
     $this->prevFlash = [];
     $this->newFlash  = [];
+  }
+
+  function __debugInfo ()
+  {
+    return [
+      'Session Name'        => $this->name,
+      'Language'            => $this->lang,
+      'Session Data'        => $this->data,
+      'Flash Data'          => $this->newFlash,
+      'Previous Flash Data' => $this->prevFlash,
+      'Current User'        => $this->user ?: '<raw><i>not logged in</i></raw>',
+    ];
   }
 
   /**
