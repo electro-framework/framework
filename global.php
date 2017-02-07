@@ -168,8 +168,14 @@ function factory (callable $fn)
 /**
  * Returns a route to a controller method or function.
  *
- * <p>The callable will receive as arguments the route parameters, followed by the request and the response objects.
- * <p>It can return:
+ * <p>The callback will receive as arguments (in order):
+ * - The parsed request body (if one exists),
+ * - the route parameters,
+ * - the request and response objects.
+ *
+ * The callback, on its function signature, may ommit trailing parameters that it doesn't need.
+ *
+ * <p>The callback may return:
  * - a response object
  * - a string (sent as text/html)
  * - `null` to send an empty response
@@ -185,8 +191,13 @@ function controller ($ref)
   return new FactoryRoutable (function (InjectorInterface $injector) use ($ref) {
     $ctrl = $injector->buildExecutable ($ref);
     return function (ServerRequestInterface $request, ResponseInterface $response) use ($ctrl) {
-      $args   = array_merge (array_values (Http::getRouteParameters ($request)), [$request, $response]);
-      $result = $ctrl (...$args);
+      $reqBody = $request->getParsedBody ();
+      $args    = array_merge (
+        isset($reqBody) ? [$reqBody] : [],
+        array_values (Http::getRouteParameters ($request)),
+        [$request, $response]
+      );
+      $result  = $ctrl (...$args);
       switch (true) {
         case $result instanceof ResponseInterface:
           return $result;
