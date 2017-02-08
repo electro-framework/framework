@@ -160,7 +160,7 @@ function redirectToSelf ()
 function view ($templateUrl)
 {
   return injectable (function (ViewServiceInterface $viewService, InjectorInterface $injector) use ($templateUrl) {
-    return function ($request, $response) use ($viewService, $templateUrl, $injector) {
+    return function (ServerRequestInterface $request, $response) use ($viewService, $templateUrl, $injector) {
       $view      = $viewService->loadFromFile ($templateUrl);
       $viewModel = $viewService->createViewModelFor ($view);
       if (isset($viewModel)) {
@@ -168,6 +168,7 @@ function view ($templateUrl)
           throw new RuntimeException(sprintf ("Invalid type of view model (<kbd>%s</kbd>) for view <kbd>%s</kbd>",
             typeOf ($viewModel), $view->getPath ()));
         $viewModel['request'] = $request;
+        $viewModel['fetch'] = $request->getHeaderLine('X-Fetch');
       }
       return Http::response ($response, $view->render ($viewModel));
     };
