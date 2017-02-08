@@ -1,9 +1,10 @@
 <?php
+
 namespace Electro\Http\Services;
 
 use Electro\Interfaces\Http\ResponseFactoryInterface;
-use Zend\Diactoros\Response;
-use Zend\Diactoros\Stream;
+use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Psr7\Stream;
 
 class ResponseFactory implements ResponseFactoryInterface
 {
@@ -19,7 +20,8 @@ class ResponseFactory implements ResponseFactoryInterface
 
   function makeBody ($content = '', $stream = 'php://memory')
   {
-    $s = new Stream($stream, 'wb+');
+    /** @noinspection PhpParamsInspection */
+    $s = new Stream ($stream, 'wb+');
     if (exists ($content)) $s->write ($content);
     return $s;
   }
