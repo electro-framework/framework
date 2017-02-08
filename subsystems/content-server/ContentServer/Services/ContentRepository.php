@@ -20,4 +20,12 @@ class ContentRepository implements ContentRepositoryInterface
       return rtrim (substr ($this->urlBuilder->getUrl ($path, $params), 1), '?');
     return '';
   }
+
+  public function getFileUrl ($path)
+  {
+    if (exists ($path))
+      return rtrim (substr ($this->urlBuilder->getUrl ($path), 1), '?');
+    return '';
+  }
+
 }
