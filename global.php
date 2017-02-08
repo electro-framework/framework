@@ -2,12 +2,12 @@
 use Electro\Exceptions\Fault;
 use Electro\Faults\Faults;
 use Electro\Http\Lib\Http;
-use Electro\Interfaces\DI\InjectableFunction;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\MiddlewareStackInterface;
 use Electro\Interfaces\Navigation\NavigationInterface;
 use Electro\Interfaces\Views\ViewModelInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
+use Electro\Interop\InjectableFunction;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -29,7 +29,7 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * @param string|array|callable $ref Either a Closure, a 'Class::method' string or a ['Class', 'method'] array or an
  *                                   [$instance, 'method'] array.
- * @return InjectableFunction
+ * @return \Electro\Interop\InjectableFunction
  * @throws Fault If an invalid data type is returned from the controller.
  */
 function controller ($ref)
@@ -67,7 +67,7 @@ function controller ($ref)
  * Creates a middleware that is a stack of middleware callables.
  *
  * @param callable[] ...$middleware
- * @return InjectableFunction
+ * @return \Electro\Interop\InjectableFunction
  */
 function stack (...$middleware)
 {
@@ -91,7 +91,7 @@ function navigationMiddleware ()
  *
  * @param string $templateUrl
  * @param null   $actionHandler
- * @return InjectableFunction
+ * @return \Electro\Interop\InjectableFunction
  */
 function page ($templateUrl, $actionHandler = null)
 {
@@ -118,7 +118,7 @@ function action ($map)
  * TODO: implement this
  *
  * @param string $templateUrl
- * @return InjectableFunction
+ * @return \Electro\Interop\InjectableFunction
  */
 function formPage ($templateUrl)
 {
@@ -130,7 +130,7 @@ function formPage ($templateUrl)
 /**
  * Creates a middleware that redirects to the URL of the parent of the current navigation link.
  *
- * @return InjectableFunction
+ * @return \Electro\Interop\InjectableFunction
  */
 function redirectUp ()
 {
@@ -160,7 +160,7 @@ function redirectToSelf ()
  * <p>Use this to define routes for simple pages that only have a view model (optionally) and no controller logic.
  *
  * @param string $templateUrl
- * @return InjectableFunction
+ * @return \Electro\Interop\InjectableFunction
  */
 function view ($templateUrl)
 {
@@ -255,7 +255,7 @@ function htmlResponse ($text)
  * A shortcut to create a {@see InjectableFunction}.
  *
  * @param callable $fn
- * @return InjectableFunction
+ * @return \Electro\Interop\InjectableFunction
  */
 function injectable (callable $fn)
 {

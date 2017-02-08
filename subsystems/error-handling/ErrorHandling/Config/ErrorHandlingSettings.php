@@ -2,9 +2,9 @@
 namespace Electro\ErrorHandling\Config;
 
 use Electro\Exceptions\Fatal\ConfigException;
-use Electro\Interfaces\DI\InjectableFunction;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RequestHandlerInterface;
+use Electro\Interop\InjectableFunction;
 
 /**
  * Configuration settings for the Error Handling subsystem.

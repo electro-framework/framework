@@ -2,12 +2,12 @@
 
 namespace Electro\Routing\Lib;
 
-use Electro\Interfaces\DI\InjectableFunction;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\RouterInterface;
 use Electro\Interfaces\Http\Shared\CurrentRequestInterface;
 use Electro\Interfaces\RenderableInterface;
+use Electro\Interop\InjectableFunction;
 use Electro\Traits\InspectionTrait;
 use Iterator;
 use PhpKit\Flow\Flow;
@@ -352,7 +352,7 @@ abstract class BaseRouter implements RouterInterface
    * Runs a given factory routable.
    * > The main purpose of this method is to provide a router extension point.
    *
-   * @param InjectableFunction $fn
+   * @param \Electro\Interop\InjectableFunction $fn
    * @return mixed A routable instance.
    * @throws \Auryn\InjectionException
    */

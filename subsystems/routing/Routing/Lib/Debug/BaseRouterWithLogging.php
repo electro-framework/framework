@@ -2,11 +2,11 @@
 namespace Electro\Routing\Lib\Debug;
 
 use Electro\Debugging\Config\DebugSettings;
-use Electro\Interfaces\DI\InjectableFunction;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\RouterInterface;
 use Electro\Interfaces\Http\Shared\CurrentRequestInterface;
+use Electro\Interop\InjectableFunction;
 use Electro\Routing\Lib\BaseRouter;
 use Electro\Routing\Services\RoutingLogger;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
