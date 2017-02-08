@@ -195,21 +195,33 @@ abstract class BaseRouter implements RouterInterface
       return $response->withStatus ($error->getCode (), $msg);
     }*/
 
-    $response = $handler ($request, $response, $next);
+    $newResponse = $handler ($request, $response, $next);
 
-    if (!$response)
+    if (!$newResponse)
       throw new \RuntimeException (sprintf (
         "Request handler <span class=__type>%s</span> did not return a response.",
         Debug::getType ($handler)
       ));
 
-    if (!$response instanceof ResponseInterface)
+    do {
+      if ($newResponse instanceof InjectableFunction) {
+        $instance    = $this->runInjectable ($newResponse);
+        $newResponse = $this->route ($instance, $request, $response, $next);
+        continue;
+      }
+      if (is_callable ($newResponse)) {
+        $newResponse = $this->route ($newResponse, $request, $response, $next);
+        continue;
+      }
+    } while (false);
+
+    if (!$newResponse instanceof ResponseInterface)
       throw new \RuntimeException (sprintf (
-        "Response from request handler <span class=__type>%s</span> is not a <span class=type>ResponseInterface</span> implementation.",
-        Debug::getType ($handler)
+        "Response from request handler <span class=__type>%s</span> is a <span class=type>%s</span>; it should be a <span class=type>ResponseInterface</span> implementation.",
+        Debug::getType ($handler), Debug::getType ($newResponse)
       ));
 
-    return $response;
+    return $newResponse;
   }
 
   /**

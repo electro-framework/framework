@@ -97,13 +97,8 @@ function page ($templateUrl, $actionHandler = null)
 {
   return stack (
     navigationMiddleware (),
-    view ($templateUrl)
-  );
-
-  //TODO: complete this.
-  return stack (
     method ('GET', view ($templateUrl)),
-    method ('POST', $actionHandler)
+    $actionHandler ? method ('POST', $actionHandler) : null
   );
 }
 
@@ -164,9 +159,7 @@ function redirectToSelf ()
  */
 function view ($templateUrl)
 {
-  return injectable (function (ViewServiceInterface $viewService, InjectorInterface $injector) use (
-    $templateUrl
-  ) {
+  return injectable (function (ViewServiceInterface $viewService, InjectorInterface $injector) use ($templateUrl) {
     return function ($request, $response) use ($viewService, $templateUrl, $injector) {
       $view      = $viewService->loadFromFile ($templateUrl);
       $viewModel = $viewService->createViewModelFor ($view);
@@ -224,7 +217,7 @@ function route ($url, callable $handler)
 function method ($method, callable $handler)
 {
   return function (ServerRequestInterface $request, $response, $next) use ($method, $handler) {
-    return $request->getMethod () == $method ? $handler ($request, $response, back ()) : $next ();
+    return $request->getMethod () == $method ? $handler : $next ();
   };
 }
 
