@@ -2,9 +2,9 @@
 namespace Electro\ErrorHandling\Config;
 
 use Electro\Exceptions\Fatal\ConfigException;
+use Electro\Interfaces\DI\InjectableFunction;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RequestHandlerInterface;
-use Electro\Routing\Lib\FactoryRoutable;
 
 /**
  * Configuration settings for the Error Handling subsystem.
@@ -40,8 +40,8 @@ class ErrorHandlingSettings
   {
     $renderer = get ($this->customRenderers, $status);
     if ($renderer) {
-      if ($renderer instanceof FactoryRoutable)
-        return $this->injector->execute ($renderer);
+      if ($renderer instanceof InjectableFunction)
+        return $this->injector->execute ($renderer ());
       if (is_callable ($renderer))
         return $renderer;
       if (is_string ($renderer))

@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "electro/kernel": "self.version"
+    "electro/kernel": "^0.10"
   },
   "autoload": {
     "psr-4": {
@@ -22,6 +22,11 @@
    "files": [
      "global.php"
    ]
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "0.10.x-dev"
+    }
   },
   "bin": [
   ]

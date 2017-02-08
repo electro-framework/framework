@@ -2,12 +2,12 @@
 namespace Electro\Routing\Lib\Debug;
 
 use Electro\Debugging\Config\DebugSettings;
+use Electro\Interfaces\DI\InjectableFunction;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\RouterInterface;
 use Electro\Interfaces\Http\Shared\CurrentRequestInterface;
 use Electro\Routing\Lib\BaseRouter;
-use Electro\Routing\Lib\FactoryRoutable;
 use Electro\Routing\Services\RoutingLogger;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\Lib\Debug;
@@ -195,7 +195,7 @@ class BaseRouterWithLogging extends BaseRouter
   protected function iteration_stepMatchRoute ($key, $routable, ServerRequestInterface $request,
                                                ResponseInterface $response, callable $nextIteration)
   {
-    $this->routingLogger->writef ("<#row><b class=keyword>'%s'</b> <b>matches</b> route pattern <b class=keyword>'$key'</b></#row>",
+    $this->routingLogger->writef ("<#row>Route pattern <b class=keyword>'$key'</b> <b>matches</b> <b class=keyword>'%s'</b></#row>",
       $this->currentRequest->get ()->getRequestTarget ());
 
     return parent::iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
@@ -204,7 +204,7 @@ class BaseRouterWithLogging extends BaseRouter
   protected function iteration_stepNotMatchRoute ($key, $routable, ServerRequestInterface $request,
                                                   ResponseInterface $response, callable $nextIteration)
   {
-    $this->routingLogger->writef ("<#row><b class=keyword>'%s'</b> doesn't match route pattern <b class=keyword>'$key'</b></#row>",
+    $this->routingLogger->writef ("<#row>Route pattern <b class=keyword>'$key'</b> doesn't match <b class=keyword>'%s'</b></#row>",
       $this->currentRequest->get ()->getRequestTarget ());
 
     return parent::iteration_stepNotMatchRoute ($key, $routable, $request, $response, $nextIteration);
@@ -217,10 +217,10 @@ class BaseRouterWithLogging extends BaseRouter
     return parent::iteration_stop ($request, $response, $next);
   }
 
-  protected function runFactory (FactoryRoutable $factory)
+  protected function runInjectable (InjectableFunction $fn)
   {
-    $this->routingLogger->write ("<#row>Factory routable invoked</#row>");
-    return parent::runFactory ($factory);
+    $this->routingLogger->write ("<#row>Injectable routable invoked</#row>");
+    return parent::runInjectable ($fn);
   }
 
   /**

@@ -2,32 +2,83 @@
 use Electro\Exceptions\Fault;
 use Electro\Faults\Faults;
 use Electro\Http\Lib\Http;
+use Electro\Interfaces\DI\InjectableFunction;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\MiddlewareStackInterface;
 use Electro\Interfaces\Navigation\NavigationInterface;
 use Electro\Interfaces\Views\ViewModelInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
-use Electro\Routing\Lib\FactoryRoutable;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
+/**
+ * Returns a route to a controller method or function.
+ *
+ * <p>The callback will receive as arguments (in order):
+ * - The parsed request body (for HTTP methods other than GET),
+ * - the route parameters,
+ * - the request and response objects.
+ *
+ * The callback, on its function signature, may ommit trailing parameters that it doesn't need.
+ *
+ * <p>The callback may return:
+ * - a response object
+ * - a string (sent as text/html)
+ * - `null` to send an empty response
+ * - arrays, objects or scalars will be sent as JSON.
+ *
+ * @param string|array|callable $ref Either a Closure, a 'Class::method' string or a ['Class', 'method'] array or an
+ *                                   [$instance, 'method'] array.
+ * @return InjectableFunction
+ * @throws Fault If an invalid data type is returned from the controller.
+ */
+function controller ($ref)
+{
+  return injectable (function (InjectorInterface $injector) use ($ref) {
+    $ctrl = $injector->buildExecutable ($ref);
+    return function (ServerRequestInterface $request, ResponseInterface $response) use ($ctrl) {
+      $args   = array_merge (
+        $request->getMethod () != 'GET' ? [$request->getParsedBody ()] : [],
+        array_values (Http::getRouteParameters ($request)),
+        [$request, $response]
+      );
+      $result = $ctrl (...$args);
+      switch (true) {
+        case $result instanceof ResponseInterface:
+          return $result;
+        case is_string ($result):
+          break;
+        case is_null ($result):
+          $result = '';
+          break;
+        case is_array ($result):
+        case is_object ($result):
+        case is_scalar ($result):
+          return Http::jsonResponse ($response, $result);
+        default:
+          throw new Fault (Faults::INVALID_RESPONSE_TYPE);
+      }
+      return Http::response ($response, $result);
+    };
+  });
+}
 
 /**
  * Creates a middleware that is a stack of middleware callables.
  *
  * @param callable[] ...$middleware
- * @return FactoryRoutable
+ * @return InjectableFunction
  */
 function stack (...$middleware)
 {
-  return factory (function (MiddlewareStackInterface $stack) use ($middleware) {
+  return injectable (function (MiddlewareStackInterface $stack) use ($middleware) {
     return $stack->set ($middleware);
   });
 }
 
 function navigationMiddleware ()
 {
-  return factory (function (NavigationInterface $navigation) {
+  return injectable (function (NavigationInterface $navigation) {
     return function ($request, $response, $next) use ($navigation) {
       $navigation->setRequest ($request);
       return $next();
@@ -40,7 +91,7 @@ function navigationMiddleware ()
  *
  * @param string $templateUrl
  * @param null   $actionHandler
- * @return FactoryRoutable
+ * @return InjectableFunction
  */
 function page ($templateUrl, $actionHandler = null)
 {
@@ -67,7 +118,7 @@ function action ($map)
  * TODO: implement this
  *
  * @param string $templateUrl
- * @return FactoryRoutable
+ * @return InjectableFunction
  */
 function formPage ($templateUrl)
 {
@@ -79,11 +130,11 @@ function formPage ($templateUrl)
 /**
  * Creates a middleware that redirects to the URL of the parent of the current navigation link.
  *
- * @return FactoryRoutable
+ * @return InjectableFunction
  */
 function redirectUp ()
 {
-  return factory (function (NavigationInterface $navigation) {
+  return injectable (function (NavigationInterface $navigation) {
     return function ($request, $response) use ($navigation) {
       $navigation->setRequest ($request);
       return Http::redirect ($response, $navigation->currentLink ()->parent ()->url ());
@@ -109,11 +160,11 @@ function redirectToSelf ()
  * <p>Use this to define routes for simple pages that only have a view model (optionally) and no controller logic.
  *
  * @param string $templateUrl
- * @return FactoryRoutable
+ * @return InjectableFunction
  */
 function view ($templateUrl)
 {
-  return factory (function (ViewServiceInterface $viewService, InjectorInterface $injector) use (
+  return injectable (function (ViewServiceInterface $viewService, InjectorInterface $injector) use (
     $templateUrl
   ) {
     return function ($request, $response) use ($viewService, $templateUrl, $injector) {
@@ -201,66 +252,14 @@ function htmlResponse ($text)
 }
 
 /**
- * A shortcut to create a {@see FactoryRoutable}.
+ * A shortcut to create a {@see InjectableFunction}.
  *
  * @param callable $fn
- * @return FactoryRoutable
+ * @return InjectableFunction
  */
-function factory (callable $fn)
+function injectable (callable $fn)
 {
-  return new FactoryRoutable ($fn);
-}
-
-/**
- * Returns a route to a controller method or function.
- *
- * <p>The callback will receive as arguments (in order):
- * - The parsed request body (for HTTP methods other than GET),
- * - the route parameters,
- * - the request and response objects.
- *
- * The callback, on its function signature, may ommit trailing parameters that it doesn't need.
- *
- * <p>The callback may return:
- * - a response object
- * - a string (sent as text/html)
- * - `null` to send an empty response
- * - arrays, objects or scalars will be sent as JSON.
- *
- * @param string|array|callable $ref Either a Closure, a 'Class::method' string or a ['Class', 'method'] array or an
- *                                   [$instance, 'method'] array.
- * @return FactoryRoutable
- * @throws Fault If an invalid data type is returned from the controller.
- */
-function controller ($ref)
-{
-  return factory (function (InjectorInterface $injector) use ($ref) {
-    $ctrl = $injector->buildExecutable ($ref);
-    return function (ServerRequestInterface $request, ResponseInterface $response) use ($ctrl) {
-      $args   = array_merge (
-        $request->getMethod () != 'GET' ? [$request->getParsedBody ()] : [],
-        array_values (Http::getRouteParameters ($request)),
-        [$request, $response]
-      );
-      $result = $ctrl (...$args);
-      switch (true) {
-        case $result instanceof ResponseInterface:
-          return $result;
-        case is_string ($result):
-          break;
-        case is_null ($result):
-          $result = '';
-          break;
-        case is_array ($result):
-        case is_object ($result):
-        case is_scalar ($result):
-          return Http::jsonResponse ($response, $result);
-        default:
-          throw new Fault (Faults::INVALID_RESPONSE_TYPE);
-      }
-      return Http::response ($response, $result);
-    };
-  });
+  return new InjectableFunction ($fn);
 }
 
 /**

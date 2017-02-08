@@ -2,6 +2,7 @@
 
 namespace Electro\Routing\Lib;
 
+use Electro\Interfaces\DI\InjectableFunction;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\RouterInterface;
@@ -111,8 +112,8 @@ abstract class BaseRouter implements RouterInterface
       return $next ();
 
     if (is_callable ($routable)) {
-      if ($routable instanceof FactoryRoutable) {
-        $instance = $this->runFactory ($routable);
+      if ($routable instanceof InjectableFunction) {
+        $instance = $this->runInjectable ($routable);
         return $this->route ($instance, $request, $response, $next);
       }
       else $response = $this->callHandler ($routable, $request, $response, $next);
@@ -351,12 +352,13 @@ abstract class BaseRouter implements RouterInterface
    * Runs a given factory routable.
    * > The main purpose of this method is to provide a router extension point.
    *
-   * @param FactoryRoutable $factory
+   * @param InjectableFunction $fn
    * @return mixed A routable instance.
+   * @throws \Auryn\InjectionException
    */
-  protected function runFactory (FactoryRoutable $factory)
+  protected function runInjectable (InjectableFunction $fn)
   {
-    return $factory ($this->injector);
+    return $this->injector->execute ($fn ());
   }
 
 }

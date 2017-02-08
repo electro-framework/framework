@@ -1,15 +1,16 @@
 <?php
+
 namespace Electro\WebServer;
 
 use Electro\Exceptions\Fatal\ConfigException;
+use Electro\Http\Lib\Response;
+use Electro\Http\Lib\ServerRequest;
 use Electro\Interfaces\Http\MiddlewareStackInterface;
 use Electro\Interfaces\Http\ResponseSenderInterface;
 use Electro\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
 use Electro\Kernel\Config\KernelSettings;
 use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 use Psr\Http\Message\ServerRequestInterface;
-use Zend\Diactoros\Response;
-use Zend\Diactoros\ServerRequestFactory;
 
 /**
  * Responds to an HTTP request made to the web application by forwarding it to a PSR-7 compliant HTTP processing
@@ -71,7 +72,7 @@ class WebServer
   function setup ()
   {
     /** @var ServerRequestInterface $request */
-    $request  = ServerRequestFactory::fromGlobals ();
+    $request  = ServerRequest::fromGlobals ();
     $basePath = dirnameEx (
       get ($request->getServerParams (), 'SCRIPT_NAME'),
       $this->kernelSettings->urlDepth + 1

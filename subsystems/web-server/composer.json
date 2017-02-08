@@ -23,8 +23,7 @@
     "subsystems/http": "self.version",
     "subsystems/localization": "self.version",
     "subsystems/routing": "self.version",
-    "subsystems/sessions": "self.version",
-    "zendframework/zend-diactoros": "^1.1.3"
+    "subsystems/sessions": "self.version"
   },
   "autoload": {
     "psr-4": {
