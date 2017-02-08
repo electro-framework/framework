@@ -20,6 +20,7 @@ use Matisse\Parser\DocumentContext;
 use Matisse\Parser\Expression;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\Lib\Debug;
+use PhpKit\WebConsole\Loggers\Specialized\PSR7RequestLogger;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
@@ -161,9 +162,10 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     // Request panel
     //------------------
     if ($this->debugSettings->logRequest) {
+      /** @var PSR7RequestLogger $log */
       $log = DebugConsole::logger ('request');
       if (!$log->hasRequest ())
-        $log->setRequest ($this->currentRequest->get ());
+        $log->setRequest ($this->currentRequest->getInstance ());
     }
 
     //------------------

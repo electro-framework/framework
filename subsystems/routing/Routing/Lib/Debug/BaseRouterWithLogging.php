@@ -101,7 +101,7 @@ class BaseRouterWithLogging extends BaseRouter
     if ($log instanceof PSR7RequestLogger)
       $log->setRequest ($request);
 
-    if ($request && $request != $this->currentRequest->get ()) {
+    if ($request && $request != $this->currentRequest->getInstance ()) {
       $this->logRequest ($request, sprintf ('with another %s object:', Debug::getType ($request)));
 //      $this->currentRequestMutator->set ($request); // DO NOT DO THIS HERE; IT WILL BE DONE ON THE PARENT.
       self::$currentRequestSize = $request->getBody ()->getSize ();
@@ -141,8 +141,8 @@ class BaseRouterWithLogging extends BaseRouter
   {
     $this->routingLogger->writef ("<#row>Begin stack %d</#row>", $stackId);
 
-    if ($currentRequest && $currentRequest != $this->currentRequest->get ()) {
-      if (!$this->currentRequest->get ()) {
+    if ($currentRequest && $currentRequest != $this->currentRequest->getInstance ()) {
+      if (!$this->currentRequest->getInstance ()) {
         $this->routingLogger
           ->writef ("<#indent><table class=\"__console-table with-caption\"><caption>with the initial %s object &nbsp; <a class='fa fa-external-link' href='javascript:openConsoleTab(\"request\")'></a></caption></table></#indent>",
             Debug::getType ($currentRequest));
@@ -150,7 +150,7 @@ class BaseRouterWithLogging extends BaseRouter
       else $this->logRequest ($currentRequest,
         sprintf ('with another %s object:', Debug::getType ($currentRequest))
       );
-      $this->currentRequest->set ($currentRequest);
+      $this->currentRequest->setInstance ($currentRequest);
       self::$currentRequestSize = $currentRequest->getBody ()->getSize ();
     }
 
@@ -186,8 +186,8 @@ class BaseRouterWithLogging extends BaseRouter
   protected function iteration_step ($key, $routable, ServerRequestInterface $request = null,
                                      ResponseInterface $response = null, callable $nextIteration)
   {
-    if ($request && $request != $this->currentRequest->get ()) //NOT SUPPOSED TO HAPPEN?
-      $this->currentRequest->set ($request);
+    if ($request && $request != $this->currentRequest->getInstance ()) //NOT SUPPOSED TO HAPPEN?
+      $this->currentRequest->setInstance ($request);
 
     return parent::iteration_step ($key, $routable, $request, $response, $nextIteration);
   }
@@ -196,7 +196,7 @@ class BaseRouterWithLogging extends BaseRouter
                                                ResponseInterface $response, callable $nextIteration)
   {
     $this->routingLogger->writef ("<#row>Route pattern <b class=keyword>'$key'</b> <b>matches</b> <b class=keyword>'%s'</b></#row>",
-      $this->currentRequest->get ()->getRequestTarget ());
+      $this->currentRequest->getInstance ()->getRequestTarget ());
 
     return parent::iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
   }
@@ -205,7 +205,7 @@ class BaseRouterWithLogging extends BaseRouter
                                                   ResponseInterface $response, callable $nextIteration)
   {
     $this->routingLogger->writef ("<#row>Route pattern <b class=keyword>'$key'</b> doesn't match <b class=keyword>'%s'</b></#row>",
-      $this->currentRequest->get ()->getRequestTarget ());
+      $this->currentRequest->getInstance ()->getRequestTarget ());
 
     return parent::iteration_stepNotMatchRoute ($key, $routable, $request, $response, $nextIteration);
   }
@@ -230,8 +230,8 @@ class BaseRouterWithLogging extends BaseRouter
   private function logRequest ($r, $title, $forceShow = false)
   {
     /** @var ServerRequestInterface $current */
-    $current = $this->currentRequest->get ();
-    $showAll = !$this->currentRequest->get () || $forceShow;
+    $current = $this->currentRequest->getInstance ();
+    $showAll = !$this->currentRequest->getInstance () || $forceShow;
     $icon    = $showAll ? '' : '<sup>*</sup>';
     if ($showAll || $r->getHeaders () != $current->getHeaders ())
       $out['Headers' . $icon] = map ($r->getHeaders (), function ($v) { return implode ('<br>', $v); });

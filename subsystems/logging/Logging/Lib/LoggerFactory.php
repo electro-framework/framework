@@ -97,7 +97,7 @@ class LoggerFactory
       ? function (array $record) {
         /** @var CurrentRequestInterface $currentRequest */
         $currentRequest = $this->injector->make (CurrentRequestInterface::class);
-        $request        = $currentRequest->get ();
+        $request        = $currentRequest->getInstance ();
         if (!$request)
           return $record;
         $proc = new WebProcessor($request->getServerParams (), $this->logSettings->logRequestFields);
