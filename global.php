@@ -168,7 +168,7 @@ function view ($templateUrl)
           throw new RuntimeException(sprintf ("Invalid type of view model (<kbd>%s</kbd>) for view <kbd>%s</kbd>",
             typeOf ($viewModel), $view->getPath ()));
         $viewModel['request'] = $request;
-        $viewModel['fetch'] = $request->getHeaderLine('X-Fetch');
+        $viewModel['fetch']   = $request->getHeaderLine ('X-Requested-With') == 'XMLHttpRequest';
       }
       return Http::response ($response, $view->render ($viewModel));
     };
