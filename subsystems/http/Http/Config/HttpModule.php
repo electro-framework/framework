@@ -15,10 +15,6 @@ use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Profiles\WebProfile;
-use GuzzleHttp\Psr7\Response;
-use GuzzleHttp\Psr7\ServerRequest;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * ### Notes:
@@ -43,10 +39,8 @@ class HttpModule implements ModuleInterface
           ->alias (RedirectionInterface::class, Redirection::class)
           ->alias (ResponseFactoryInterface::class, ResponseFactory::class)
           ->alias (ResponseSenderInterface::class, ResponseSender::class)
-          ->alias (ServerRequestInterface::class, ServerRequest::class)
-          ->alias (ResponseInterface::class, Response::class)
           ->alias (CurrentRequestInterface::class, CurrentRequest::class)
-          ->share (CurrentRequest::class);
+          ->share (CurrentRequestInterface::class);
       });
   }
 

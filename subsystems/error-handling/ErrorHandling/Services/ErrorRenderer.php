@@ -67,7 +67,7 @@ function render (ServerRequestInterface $request, ResponseInterface $response, $
     $message = '';
 
   /** @var ResponseInterface $response */
-  $response = $response->withBody ($body = $this->responseFactory->makeBody ());
+  $response = $response->withBody ($body = $this->responseFactory->makeBodyStream ());
 
   // Otherwise, errors are rendered into a format accepted by the HTML client.
 

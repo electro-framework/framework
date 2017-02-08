@@ -24,7 +24,7 @@ class CompressionMiddleware implements RequestHandlerInterface
       $out = gzencode ($response->getBody (), 1);
       return $response
         ->withHeader ('Content-Encoding', 'gzip')
-        ->withBody ($this->responseFactory->makeBody ($out));
+        ->withBody ($this->responseFactory->makeBodyStream ($out));
     }
     return $response;
   }

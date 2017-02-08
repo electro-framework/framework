@@ -31,9 +31,9 @@ class ContentServerModule implements ModuleInterface
               return ServerFactory::create ([
                 'source'   => $settings->fileArchivePath (),
                 'cache'    => $settings->imagesCachePath (),
-                'response' => new PsrResponseFactory ($responseFactory->makeStream (),
+                'response' => new PsrResponseFactory ($responseFactory->make (),
                   function ($stream) use ($responseFactory) {
-                    return $responseFactory->makeBody ('', $stream);
+                    return $responseFactory->makeBodyStream ('', $stream);
                   }),
               ]);
             })

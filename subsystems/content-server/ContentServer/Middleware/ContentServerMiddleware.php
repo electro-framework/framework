@@ -63,7 +63,7 @@ class ContentServerMiddleware implements RequestHandlerInterface
 
     // Server non-image file.
 
-    return $this->responseFactory->makeStream (fopen ($path, 'rb'), 200, [
+    return $this->responseFactory->makeFromStream (fopen ($path, 'rb'), 200, [
       'Content-Type'   => $mime,
       'Content-Length' => (string)filesize ($path),
       'Cache-Control'  => 'max-age=31536000, public',

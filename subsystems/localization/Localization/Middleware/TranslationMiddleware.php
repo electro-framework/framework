@@ -88,6 +88,6 @@ class TranslationMiddleware implements RequestHandlerInterface
         : preg_replace ('#\r?\n#', '<br>', self::$translation[$lang][$a]);
     }, $response->getBody ());
 
-    return $response->withBody ($this->responseFactory->makeBody ($out));
+    return $response->withBody ($this->responseFactory->makeBodyStream ($out));
   }
 }
