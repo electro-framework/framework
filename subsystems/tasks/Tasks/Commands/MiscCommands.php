@@ -8,6 +8,7 @@ use Electro\ConsoleApplication\ConsoleApplication;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Services\ModulesInstaller;
+use Robo\Task\Composer\Update;
 use Robo\Task\FileSystem\CleanDir;
 use Robo\Task\FileSystem\FilesystemStack;
 use Robo\Task\Vcs\GitStack;
@@ -77,9 +78,10 @@ trait MiscCommands
   {
     (new GitStack)->pull ()->run ();
     $this->cacheClear ();
+    $composerUpdate = (new Update)->printed (self::$SHOW_COMPOSER_OUTPUT);
     $this->clearDir ($this->kernelSettings->packagesPath);
     $this->clearDir ($this->kernelSettings->pluginsPath);
-    $this->composerUpdate ();
+    $composerUpdate->run ();
     $this->modulesInstaller->rebuildRegistry ();
     $this->init ();
   }
