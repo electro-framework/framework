@@ -10,6 +10,7 @@ use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Services\ModulesInstaller;
 use Robo\Task\FileSystem\CleanDir;
 use Robo\Task\FileSystem\FilesystemStack;
+use Robo\Task\Vcs\GitStack;
 
 /**
  * Implements the Electro Task Runner's pre-set build commands.
@@ -32,8 +33,6 @@ trait MiscCommands
   {
     $target = $this->kernelSettings->storagePath . DIRECTORY_SEPARATOR . $this->cachingSettings->cachePath;
     (new CleanDir($target))->run ();
-    if (!$this->nestedExec)
-      $this->io->done ("Cache contents cleared");
   }
 
   /**
@@ -72,11 +71,11 @@ trait MiscCommands
   }
 
   /**
-   * Forces the reinstallation of all packages, clears all caches and reinitializes all modules
+   * Updates the project from Git, clears all caches, forces reinstallation of all packages and reinitializes them
    */
   function rebuild ()
   {
-    $this->initConfig (['overwrite' => true]);
+    (new GitStack)->pull()->run();
     $this->cacheClear ();
     $this->clearDir ($this->app->packagesPath);
     $this->clearDir ($this->app->pluginsPath);
