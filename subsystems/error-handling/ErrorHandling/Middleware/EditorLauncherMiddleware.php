@@ -91,7 +91,7 @@ class EditorLauncherMiddleware implements RequestHandlerInterface
     return array_prune (map (
       array_merge (
         $this->getSubdirsOfDirs ($this->getSubdirsOf ("$base/{$this->kernelSettings->packagesPath}")),
-        $this->getSubdirsOfDirs ($this->getSubdirsOf ("$base/{$this->kernelSettings->pluginModulesPath}"))
+        $this->getSubdirsOfDirs ($this->getSubdirsOf ("$base/{$this->kernelSettings->pluginsPath}"))
       ),
       function ($dir, &$k) {
         $r = realpath ($dir);

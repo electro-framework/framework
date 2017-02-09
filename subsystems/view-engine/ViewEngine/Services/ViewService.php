@@ -161,7 +161,7 @@ class ViewService implements ViewServiceInterface
       throw new \InvalidArgumentException("Template path must be relative, either from a module's views directory or from the application's base directory");
     // Check if the path is a semi-absolute direct path to the file.
     if (str_beginsWith ($path, $this->kernelSettings->modulesPath) ||
-        str_beginsWith ($path, $this->kernelSettings->pluginModulesPath)
+        str_beginsWith ($path, $this->kernelSettings->pluginsPath)
     ) {
       if (func_num_args () > 1) {
         $dirs = $this->engineSettings->getDirectories ();

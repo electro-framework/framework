@@ -7,6 +7,7 @@ use Electro\Interfaces\Logging\LogCentralInterface;
 use Electro\Interfaces\Logging\LoggingSetupInterface;
 use Monolog\Formatter\HtmlFormatter;
 use Monolog\Handler\FingersCrossedHandler;
+use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Monolog\Processor\PsrLogMessageProcessor;
 
@@ -39,6 +40,7 @@ class DefaultLoggingSetup implements LoggingSetupInterface
     $logCentral->handlers ()->register ([
       '#main'            => $logCentral->handlerGroup ('#log-file', '#console', '#web-console'),
       '#stderr'          => $new->stderrHandler (),
+      '#stdout'          => new StreamHandler ('php://stdout', Logger::DEBUG, true, 0644, true),
       '#console'         => $new->consoleHandler (),
       '#web-console'     => $new->webConsoleHandler (),
       '#log-file'        => $new->logFileHandler (),
@@ -51,7 +53,7 @@ class DefaultLoggingSetup implements LoggingSetupInterface
     ]);
     $logCentral
       ->connectLoggersToHandlers ([
-        'general' => ['#stderr'],
+        'general' => ['#main'],
       ])
       ->connectLoggersToProcessors ([
       ])

@@ -17,13 +17,18 @@ class ViewEngineSettings implements AssignableInterface
   use ConfigurationTrait;
 
   /** @var bool */
-  private $caching = true;
+  private $caching;
   /** @var string */
   private $moduleViewsPath = 'resources/views';
-  /** @var array */
+  /** @var array Internal use */
   private $viewModelNamespaces = [];
-  /** @var string[] */
+  /** @var string[] Internal use */
   private $viewsDirectories = [];
+
+  public function __construct ()
+  {
+    $this->caching = env ('CACHING');
+  }
 
   /**
    * Returns a list of all directories where views can be found.

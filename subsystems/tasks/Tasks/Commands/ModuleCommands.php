@@ -40,11 +40,7 @@ trait ModuleCommands
   /**
    * @var bool Should install-plugin prefer stable versions?
    */
-  static $INSTALL_STABLE = false;
-  /**
-   * @var bool Display the output of Composer commands?
-   */
-  static $SHOW_COMPOSER_OUTPUT = true;
+  static $INSTALL_STABLE = true;
 
   /**
    * Installs a plugin or a template
@@ -441,11 +437,6 @@ trait ModuleCommands
     $io->done ("Module <info>$moduleName</info> was uninstalled");
   }
 
-  private function composerUpdate ()
-  {
-    (new Update)->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
-  }
-
   //--------------------------------------------------------------------------------------------------------------------
 
   private function formatModules (& $modules, $stars = false)
@@ -478,17 +469,6 @@ trait ModuleCommands
       $m['description'] = "$stats  {$m['description']}" .
                           ($i ? ' <info>(installed)</info>' : '');
     });
-  }
-
-  /**
-   * Check if a directory is empty.
-   *
-   * @param string $path
-   * @return bool
-   */
-  private function isDirectoryEmpty ($path)
-  {
-    return !count (FilesystemFlow::from ($path)->all ());
   }
 
   /**

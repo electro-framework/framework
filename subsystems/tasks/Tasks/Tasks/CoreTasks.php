@@ -1,4 +1,5 @@
 <?php
+
 namespace Electro\Tasks\Tasks;
 
 use Electro\Caching\Config\CachingSettings;
@@ -13,6 +14,9 @@ use Electro\Tasks\Commands\MiscCommands;
 use Electro\Tasks\Commands\ModuleCommands;
 use Electro\Tasks\Commands\ServerCommands;
 use Electro\Tasks\Config\TasksSettings;
+use PhpKit\Flow\FilesystemFlow;
+use Robo\Task\Composer\Update;
+use Robo\Task\FileSystem\CleanDir;
 use Robo\Task\FileSystem\FilesystemStack;
 
 /**
@@ -26,6 +30,10 @@ class CoreTasks
   use ServerCommands;
   use MiscCommands;
 
+  /**
+   * @var bool Display the output of Composer commands?
+   */
+  static $SHOW_COMPOSER_OUTPUT = true;
   /**
    * @var CachingSettings
    */
@@ -75,7 +83,36 @@ class CoreTasks
     $this->settings         = $settings;
     $this->consoleApp       = $consoleApp;
     $this->fs               = new FilesystemStack;
-    $this->cachingSettings = $cachingSettings;
+    $this->cachingSettings  = $cachingSettings;
+  }
+
+  /**
+   * Clears the content of a directory.
+   *
+   * @param string $path An absolute or relative filesystem path.
+   */
+  private function clearDir ($path)
+  {
+    (new CleanDir($this->app->toAbsolutePath ($path)))->run ();
+  }
+
+  /**
+   * Runs the `composer update` command.
+   */
+  private function composerUpdate ()
+  {
+    (new Update)->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
+  }
+
+  /**
+   * Check if a directory is empty.
+   *
+   * @param string $path
+   * @return bool
+   */
+  private function isDirectoryEmpty ($path)
+  {
+    return !count (FilesystemFlow::from ($path)->all ());
   }
 
 }

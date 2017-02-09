@@ -35,6 +35,7 @@ trait InitCommands
    * Note: this is automatically called after `composer install` runs.
    *
    * @param array $opts
+   * @throws ConfigException
    * @option $overwrite|o Discards the current configuration if it already exists
    */
   function init ($opts = ['overwrite|o' => false])
@@ -50,7 +51,7 @@ trait InitCommands
     else {
       $this->nestedExec = true;
       ensureDir ("{$this->kernelSettings->baseDirectory}/{$this->kernelSettings->modulesPath}");
-      ensureDir ("{$this->kernelSettings->baseDirectory}/{$this->kernelSettings->pluginModulesPath}");
+      ensureDir ("{$this->kernelSettings->baseDirectory}/{$this->kernelSettings->pluginsPath}");
       $this->initStorage ();
       $this->initConfig (['overwrite' => true]);
       $this->loadConfig ();
