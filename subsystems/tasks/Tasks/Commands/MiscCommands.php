@@ -15,7 +15,7 @@ use Robo\Task\Vcs\GitStack;
 /**
  * Implements the Electro Task Runner's pre-set build commands.
  *
- * @property KernelSettings     $app
+ * @property KernelSettings     $kernelSettings
  * @property ConsoleIOInterface $io
  * @property FilesystemStack    $fs
  * @property CachingSettings    $cachingSettings
@@ -75,13 +75,13 @@ trait MiscCommands
    */
   function rebuild ()
   {
-    (new GitStack)->pull()->run();
+    (new GitStack)->pull ()->run ();
     $this->cacheClear ();
-    $this->clearDir ($this->app->packagesPath);
-    $this->clearDir ($this->app->pluginsPath);
+    $this->clearDir ($this->kernelSettings->packagesPath);
+    $this->clearDir ($this->kernelSettings->pluginsPath);
     $this->composerUpdate ();
     $this->modulesInstaller->rebuildRegistry ();
-    $this->init();
+    $this->init ();
   }
 
 }

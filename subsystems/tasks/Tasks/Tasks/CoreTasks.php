@@ -93,7 +93,7 @@ class CoreTasks
    */
   private function clearDir ($path)
   {
-    (new CleanDir($this->app->toAbsolutePath ($path)))->run ();
+    (new CleanDir($this->kernelSettings->toAbsolutePath ($path)))->run ();
   }
 
   /**
