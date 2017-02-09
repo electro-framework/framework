@@ -5,9 +5,11 @@ namespace Electro\Tasks\Commands;
 use Electro\Caching\Config\CachingSettings;
 use Electro\Configuration\Lib\IniFile;
 use Electro\ConsoleApplication\ConsoleApplication;
+use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Services\ModulesInstaller;
+use Electro\Tasks\Shared\Base\ComposerTask;
 use Robo\Task\Composer\Update;
 use Robo\Task\FileSystem\CleanDir;
 use Robo\Task\FileSystem\FilesystemStack;
@@ -73,17 +75,31 @@ trait MiscCommands
 
   /**
    * Updates the project from Git, clears all caches, forces reinstallation of all packages and reinitializes them
+   *
+   * @option $overwrite|o Discards the current .env file if it already exists
+   *
+   * @param array $opts
+   * @throws ConfigException
+   * @throws \Exception
    */
-  function rebuild ()
+  function rebuild ($opts = ['overwrite|o' => false])
   {
+    $cOut = self::$SHOW_COMPOSER_OUTPUT;
+
+    // Git pull
     (new GitStack)->pull ()->run ();
+
     $this->cacheClear ();
-    $composerUpdate = (new Update)->printed (self::$SHOW_COMPOSER_OUTPUT);
+
+    // Reinstall all packages
+    (new ComposerTask)->action ('clearcache')->printed ($cOut)->run ();
+    $composerUpdate = (new Update)->printed ($cOut); // Load class BEFORE its package is removed
     $this->clearDir ($this->kernelSettings->packagesPath);
     $this->clearDir ($this->kernelSettings->pluginsPath);
     $composerUpdate->run ();
+
     $this->modulesInstaller->rebuildRegistry ();
-    $this->init ();
+    $this->init ($opts);
   }
 
 }
