@@ -1,6 +1,7 @@
 <?php
 namespace Electro\Tasks\Tasks;
 
+use Electro\Caching\Config\CachingSettings;
 use Electro\ConsoleApplication\ConsoleApplication;
 use Electro\ConsoleApplication\Lib\ModulesUtil;
 use Electro\ConsoleApplication\Services\ConsoleIO;
@@ -8,6 +9,7 @@ use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Services\ModulesInstaller;
 use Electro\Kernel\Services\ModulesRegistry;
 use Electro\Tasks\Commands\InitCommands;
+use Electro\Tasks\Commands\MiscCommands;
 use Electro\Tasks\Commands\ModuleCommands;
 use Electro\Tasks\Commands\ServerCommands;
 use Electro\Tasks\Config\TasksSettings;
@@ -22,7 +24,12 @@ class CoreTasks
 //  use BuildCommands;
   use ModuleCommands;
   use ServerCommands;
+  use MiscCommands;
 
+  /**
+   * @var CachingSettings
+   */
+  private $cachingSettings;
   /**
    * @var ConsoleApplication
    */
@@ -58,7 +65,7 @@ class CoreTasks
 
   function __construct (ConsoleIO $io, KernelSettings $kernelSettings, ModulesUtil $modulesUtil,
                         ModulesRegistry $registry, ModulesInstaller $installer, TasksSettings $settings,
-                        ConsoleApplication $consoleApp)
+                        ConsoleApplication $consoleApp, CachingSettings $cachingSettings)
   {
     $this->io               = $io;
     $this->modulesUtil      = $modulesUtil;
@@ -68,6 +75,7 @@ class CoreTasks
     $this->settings         = $settings;
     $this->consoleApp       = $consoleApp;
     $this->fs               = new FilesystemStack;
+    $this->cachingSettings = $cachingSettings;
   }
 
 }
