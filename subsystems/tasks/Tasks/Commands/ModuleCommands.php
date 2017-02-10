@@ -1,4 +1,5 @@
 <?php
+
 namespace Electro\Tasks\Commands;
 
 use Electro\ConsoleApplication\Lib\ModulesUtil;
@@ -14,8 +15,6 @@ use Electro\Plugins\IlluminateDatabase\Config\MigrationsSettings;
 use Electro\Tasks\Config\TasksSettings;
 use Electro\Tasks\Shared\InstallPackageTask;
 use Electro\Tasks\Shared\UninstallPackageTask;
-use PhpKit\Flow\FilesystemFlow;
-use Robo\Task\Composer\Update;
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
@@ -387,7 +386,7 @@ trait ModuleCommands
 
     // Install the module's dependencies and register its namespaces
 
-    $this->composerUpdate (); // Note: this also updates the modules registry.
+    $this->doComposerUpdate (); // Note: this also updates the modules registry.
 
     $io->done ("Template <info>$moduleName</info> is now installed on <info>$path</info>");
   }
@@ -404,7 +403,7 @@ trait ModuleCommands
     if (is_link ($module->path)) {
       unlink ($module->path);
       $this->moduleRefresh ();   // We must rebuild the registry BEFORE calling Composer update.
-      $this->composerUpdate ();
+      $this->doComposerUpdate ();
     }
 
     $this->io->done ("Plugin module <info>$moduleName</info> was uninstalled");
@@ -427,7 +426,7 @@ trait ModuleCommands
     $cfg->set ('require', $require);
     $cfg->save ();
 
-    $this->composerUpdate (); // Note: this also updates the modules registry.
+    $this->doComposerUpdate (); // Note: this also updates the modules registry.
 
     // Physically remove the module, as Composer won't do it for private modules.
     // This must be done AFTER 'composer update' removes the symlinks.
@@ -501,7 +500,7 @@ trait ModuleCommands
     if (is_dir ($path)) {
       $io->say ("A directory for that module already exists, but the module is not registered.
 If you proceed, the directory contents will be discarded.");
-      if (!$io->confirm("Proceed"))
+      if (!$io->confirm ("Proceed"))
         $io->cancel ();
       (new DeleteDir($path))->run ();
     }
@@ -544,7 +543,7 @@ If you proceed, the directory contents will be discarded.");
     $cfg->set ('require', $require);
     $cfg->save ();
 
-    $this->composerUpdate (); // It also updates the modules registry
+    $this->doComposerUpdate (); // It also updates the modules registry
 
     $io->done ("Module <info>$___MODULE___</info> was created");
   }

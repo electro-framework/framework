@@ -74,7 +74,7 @@ trait MiscCommands
   }
 
   /**
-   * Updates the project from Git, clears all caches, forces reinstallation of all packages and reinitializes them
+   * Forces reinstallation and reinitialization of all packages and clears all cache contents
    *
    * @option $overwrite|o Discards the current .env file if it already exists
    *
@@ -82,12 +82,9 @@ trait MiscCommands
    * @throws ConfigException
    * @throws \Exception
    */
-  function rebuild ($opts = ['overwrite|o' => false])
+  function reinstall ($opts = ['overwrite|o' => false])
   {
     $cOut = self::$SHOW_COMPOSER_OUTPUT;
-
-    // Git pull
-    (new GitStack)->pull ()->run ();
 
     $this->cacheClear ();
 
@@ -100,6 +97,23 @@ trait MiscCommands
 
     $this->modulesInstaller->rebuildRegistry ();
     $this->init ($opts);
+  }
+
+  /**
+   * Switches to 'dev' stability and tries to pull the latest commits for all framework packages and plugins
+   */
+  function updateLatest ()
+  {
+    $cOut = self::$SHOW_COMPOSER_OUTPUT;
+
+    // Git pull
+    (new GitStack)->pull ()->run ();
+
+    $this->cacheClear ();
+
+    //TODO
+
+    $this->doComposerUpdate();
   }
 
 }

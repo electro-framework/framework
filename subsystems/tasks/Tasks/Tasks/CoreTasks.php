@@ -13,6 +13,7 @@ use Electro\Tasks\Commands\InitCommands;
 use Electro\Tasks\Commands\MiscCommands;
 use Electro\Tasks\Commands\ModuleCommands;
 use Electro\Tasks\Commands\ServerCommands;
+use Electro\Tasks\Commands\UpdateCommand;
 use Electro\Tasks\Config\TasksSettings;
 use PhpKit\Flow\FilesystemFlow;
 use Robo\Task\Composer\Update;
@@ -27,6 +28,7 @@ class CoreTasks
   use InitCommands;
 //  use BuildCommands;
   use ModuleCommands;
+  use UpdateCommand;
   use ServerCommands;
   use MiscCommands;
 
@@ -99,7 +101,7 @@ class CoreTasks
   /**
    * Runs the `composer update` command.
    */
-  private function composerUpdate ()
+  private function doComposerUpdate ()
   {
     (new Update)->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
   }
