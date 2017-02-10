@@ -162,17 +162,29 @@ function view ($templateUrl)
   return injectable (function (ViewServiceInterface $viewService, InjectorInterface $injector) use ($templateUrl) {
     return function (ServerRequestInterface $request, $response) use ($viewService, $templateUrl, $injector) {
       $view      = $viewService->loadFromFile ($templateUrl);
-      $viewModel = $viewService->createViewModelFor ($view);
-      if (isset($viewModel)) {
-        if (!is_object ($viewModel) || !($viewModel instanceof ViewModelInterface))
-          throw new RuntimeException(sprintf ("Invalid type of view model (<kbd>%s</kbd>) for view <kbd>%s</kbd>",
-            typeOf ($viewModel), $view->getPath ()));
-        $viewModel['request'] = $request;
-        $viewModel['fetch']   = $request->getHeaderLine ('X-Requested-With') == 'XMLHttpRequest';
-      }
+      $viewModel = initPageViewModel ($viewService->createViewModelFor ($view), $request);
       return Http::response ($response, $view->render ($viewModel));
     };
   });
+}
+
+/**
+ * Initializes a view model for a root template (i.e. the first to be rendered on response to a HTTP request).
+ *
+ * @param ViewModelInterface     $viewModel
+ * @param ServerRequestInterface $request
+ * @return ViewModelInterface
+ */
+function initPageViewModel (ViewModelInterface $viewModel, ServerRequestInterface $request)
+{
+  if (isset($viewModel)) {
+    if (!is_object ($viewModel) || !($viewModel instanceof ViewModelInterface))
+      throw new RuntimeException(sprintf ("Invalid view model type: <kbd>%s</kbd>)", typeOf ($viewModel)));
+    $viewModel['props'] = Http::getRouteParameters($request);
+    $viewModel['fetch'] = $request->getHeaderLine ('X-Requested-With') == 'XMLHttpRequest';
+    $viewModel->init ();
+  }
+  return $viewModel;
 }
 
 /**
