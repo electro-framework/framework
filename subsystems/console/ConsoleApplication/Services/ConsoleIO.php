@@ -112,7 +112,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   function confirm ($question)
   {
-    return $this->doAsk (new ConfirmationQuestion($this->formatQuestion ($question . ' (y/n)'), false));
+    return $this->doAsk (new ConfirmationQuestion($this->formatQuestion ($question . ' (y/N)'), false));
   }
 
   function done ($text = '', $dontExit = false)

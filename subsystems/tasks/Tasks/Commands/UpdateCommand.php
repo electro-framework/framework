@@ -71,7 +71,7 @@ trait UpdateCommand
 
       foreach ($config->get ('extra', []) as $k => $v)
         if (in_array ($k, self::$ALLOW_EXTRA_KEYS))
-          $extra[$k] = array_merge_recursive (get ($extra, $k, []), $v);
+          $extra[$k] = array_replace_recursive (get ($extra, $k, []), $v);
     }
 
     ksort ($requires);

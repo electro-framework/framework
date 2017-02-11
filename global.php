@@ -171,11 +171,11 @@ function view ($templateUrl)
 /**
  * Initializes a view model for a root template (i.e. the first to be rendered on response to a HTTP request).
  *
- * @param ViewModelInterface     $viewModel
- * @param ServerRequestInterface $request
+ * @param ViewModelInterface|null $viewModel
+ * @param ServerRequestInterface  $request
  * @return ViewModelInterface
  */
-function initPageViewModel (ViewModelInterface $viewModel, ServerRequestInterface $request)
+function initPageViewModel (ViewModelInterface $viewModel = null, ServerRequestInterface $request)
 {
   if (isset($viewModel)) {
     if (!is_object ($viewModel) || !($viewModel instanceof ViewModelInterface))
