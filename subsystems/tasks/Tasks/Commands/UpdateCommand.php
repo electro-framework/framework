@@ -16,6 +16,8 @@ use Electro\Kernel\Services\ModulesRegistry;
  */
 trait UpdateCommand
 {
+  public static $ALLOW_EXTRA_KEYS = ['bower'];
+
   /**
    * Rebuilds the project's composer.json to reflect the dependencies of all project modules and installs/updates them
    */
@@ -26,7 +28,7 @@ trait UpdateCommand
       $this->io->error ("A <error-info>$rootFile</error-info> file was not found at the project's root directory");
     $targetConfig = json_load ($rootFile, true);
 
-    $requires = $requiredBy = $psr4s = $bins = $files = [];
+    $requires = $requiredBy = $psr4s = $bins = $files = $extra = [];
     $modules  = $this->modulesRegistry->onlyPrivate ()->getModules ();
 
     foreach ($modules as $module) {
@@ -64,6 +66,12 @@ trait UpdateCommand
 
       foreach ($config->get ('bin', []) as $file)
         $bins[] = "$module->path/$file";
+
+      // Merge 'extra' section
+
+      foreach ($config->get ('extra', []) as $k => $v)
+        if (in_array ($k, self::$ALLOW_EXTRA_KEYS))
+          $extra[$k] = array_merge_recursive (get ($extra, $k, []), $v);
     }
 
     ksort ($requires);
@@ -77,6 +85,7 @@ trait UpdateCommand
     $targetConfig['autoload']['psr-4'] = array_merge (get ($targetConfig['autoload'], 'psr-4', []), $psr4s);
     $targetConfig['autoload']['files'] = array_merge (get ($targetConfig['autoload'], 'files', []), $files);
     $targetConfig['bin']               = array_merge (get ($targetConfig, 'bin', []), $bins);
+    $targetConfig['extra']             = array_merge (get ($targetConfig, 'extra', []), $extra);
 
     $currentConfig = file_get_contents ('composer.json');
     $targetCfgStr  = json_print ($targetConfig);

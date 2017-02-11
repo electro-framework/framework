@@ -8,7 +8,7 @@
 define ('DIR_LIST_DIRECTORIES', 2);
 chdir (dirname (__DIR__));
 
-$targetConfig = json_load ('composer.template', true);
+$targetConfig = json_load ('composer.template.json', true);
 
 $requires = $psr4s = $bins = $files = [];
 

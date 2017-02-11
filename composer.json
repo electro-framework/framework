@@ -15,6 +15,7 @@
   ],
   "require": {
     "electro/kernel": "^0.10",
+    "php-kit/composer-bower-plugin": "^1.2.0",
     "codegyre/robo": "^0.5.3",
     "guzzlehttp/guzzle": "^6.2.2",
     "league/glide": "^1.0.0",
