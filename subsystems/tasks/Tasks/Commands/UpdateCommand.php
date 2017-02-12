@@ -95,10 +95,22 @@ trait UpdateCommand
     $targetConfig['require'] = array_merge ($targetConfig['require'], $requires);
     if (!isset($targetConfig['autoload']))
       $targetConfig['autoload'] = [];
+
     $targetConfig['autoload']['psr-4'] = array_merge (get ($targetConfig['autoload'], 'psr-4', []), $psr4s);
-    $targetConfig['autoload']['files'] = array_merge (get ($targetConfig['autoload'], 'files', []), $files);
-    $targetConfig['bin']               = array_merge (get ($targetConfig, 'bin', []), $bins);
-    $targetConfig['extra']             = array_merge (get ($targetConfig, 'extra', []), $extra);
+
+    $files = array_merge (get ($targetConfig['autoload'], 'files', []), $files);
+    $bins  = array_merge (get ($targetConfig, 'bin', []), $bins);
+    $extra = array_merge (get ($targetConfig, 'extra', []), $extra);
+
+    if ($files)
+      $targetConfig['autoload']['files'] = $files;
+    else unset ($targetConfig['autoload']['files']);
+    if ($bins)
+      $targetConfig['bin'] = $bins;
+    else unset ($targetConfig['bin']);
+    if ($extra)
+      $targetConfig['extra'] = $extra;
+    else unset ($targetConfig['extra']);
 
     $currentConfig = file_get_contents ('composer.json');
     $targetCfgStr  = json_print ($targetConfig);
