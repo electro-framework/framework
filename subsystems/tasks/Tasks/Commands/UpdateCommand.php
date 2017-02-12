@@ -23,6 +23,19 @@ trait UpdateCommand
    */
   function updateComposer ()
   {
+    $this->io->writeln ("composer.json has been <info>updated</info>")->nl ();
+
+    $this->regenerateComposer ();
+    $this->doComposerUpdate ();
+
+    $this->io->done ("The project is <info>updated</info>");
+  }
+
+  /**
+   * Regenerates the root composer.json file.
+   */
+  protected function regenerateComposer ()
+  {
     $rootFile = 'composer.root.json';
     if (!fileExists ($rootFile))
       $this->io->error ("A <error-info>$rootFile</error-info> file was not found at the project's root directory");
@@ -93,10 +106,6 @@ trait UpdateCommand
       $this->io->done ("<info>No changes</info> were made to composer.json");
 
     file_put_contents ('composer.json', $targetCfgStr);
-    $this->io->writeln ("composer.json has been <info>updated</info>")->nl ();
-
-    $this->doComposerUpdate ();
-
-    $this->io->done ("The project is <info>updated</info>");
   }
+
 }

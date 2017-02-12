@@ -1,7 +1,9 @@
 <?php
+
 namespace Electro\ConsoleApplication\Lib;
 
 use Electro\ConsoleApplication\Services\ConsoleIO;
+use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Kernel\Services\ModulesRegistry;
 
 /**
@@ -34,9 +36,24 @@ class ModulesUtil
    *                                 <p>Callback syntax: <code>function (ModuleInfo $module):bool</code>
    * @param bool     $suppressErrors Do not abort execution with an error message if the module name is not valid.
    * @return bool false if the specified module name does not match an installed module
-   * @internal param bool $onlyEnabled Display only modules that are enabled.
    */
-  function selectModule (& $moduleName, callable $filter = null, $suppressErrors = false)
+  function selectInstalledModule (& $moduleName, callable $filter = null, $suppressErrors = false)
+  {
+    return $this->selectModule ($moduleName, $this->registry->onlyPrivateOrPlugins ()->only ($filter)->getModules (),
+      $suppressErrors);
+  }
+
+  /**
+   * Validate the given module name or ask the user to select a module from the given list of modules.
+   *
+   * <p>This method is available to console tasks only.
+   *
+   * @param string       $moduleName
+   * @param ModuleInfo[] $modules        The set of allowable modules
+   * @param bool         $suppressErrors Do not abort execution with an error message if the module name is not valid.
+   * @return bool false if the specified module name does not match one of the eligible modules
+   */
+  function selectModule (& $moduleName, array $modules, $suppressErrors = false)
   {
     if ($moduleName) {
       if (!ModulesRegistry::validateModuleName ($moduleName)) {
@@ -47,15 +64,14 @@ class ModulesUtil
         if ($suppressErrors) return false;
         $this->io->error ("Module $moduleName is not installed");
       }
-      if ($filter && !$filter($this->registry->getModule ($moduleName))) {
+      if (!isset ($modules[$moduleName])) {
         if ($suppressErrors) return false;
-        $this->io->error ("Module $moduleName can't be renamed");
+        $this->io->error ("$moduleName is not a valid module name for this operation");
       }
     }
     else {
-      $modules = $this->registry->onlyPrivateOrPlugins ()->only ($filter)->getModuleNames ();
       if ($modules) {
-        $i = $this->io->menu ("Select a module:", $modules);
+        $i = $this->io->menu ("Select a module:", array_keys ($modules));
         if ($i < 0) $this->io->cancel ();
         $moduleName = $modules[$i];
       }

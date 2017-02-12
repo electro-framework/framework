@@ -14,7 +14,6 @@ use Electro\Lib\PackagistAPI;
 use Electro\Plugins\IlluminateDatabase\Config\MigrationsSettings;
 use Electro\Tasks\Config\TasksSettings;
 use Electro\Tasks\Shared\InstallPackageTask;
-use Electro\Tasks\Shared\UninstallPackageTask;
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
@@ -36,10 +35,6 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 trait ModuleCommands
 {
-  /**
-   * @var bool Should install-plugin prefer stable versions?
-   */
-  static $INSTALL_STABLE = true;
 
   /**
    * Installs a plugin or a template
@@ -50,10 +45,13 @@ trait ModuleCommands
    * @param array  $opts
    * @option $search|s Search for modules having the specified text word or prefix somewhere on the name or description
    * @option $stars Sort the list by stars, instead of downloads
+   * @option $unstable|u When set, the latest development version is installed instead of the latest stable version
+   *                           (for plugins only)
    * @option $keep-repo|k When set, the hidden .git directory is not removed from the template's directory
+   *                           (for templates only)
    */
   function install ($moduleType = null, $moduleName = null,
-                    $opts = ['search|s' => '', 'stars' => false, 'keep-repo|k' => false])
+                    $opts = ['search|s' => '', 'stars' => false, 'unstable|u' => false, 'keep-repo|k' => false])
   {
     $io = $this->io;
     if (!$moduleType)
@@ -66,10 +64,12 @@ trait ModuleCommands
     switch ($moduleType) {
       case 'plugin';
         $io->banner ("PLUGINS");
-        return $this->moduleInstallPlugin ($moduleName, $opts);
+        $this->installPlugin ($moduleName, $opts);
+        return;
       case 'template';
         $io->banner ("TEMPLATES");
-        return $this->moduleInstallTemplate ($moduleName, $opts);
+        $this->installTemplate ($moduleName, $opts);
+        return;
     }
   }
 
@@ -104,7 +104,7 @@ trait ModuleCommands
    */
   function moduleCleanup ($moduleName = '', $opts = ['suppress-errors|s' => false])
   {
-    if ($this->modulesUtil->selectModule ($moduleName, null, true)) {
+    if ($this->modulesUtil->selectInstalledModule ($moduleName, null, true)) {
       $this->modulesInstaller->cleanUpModule ($moduleName);
       $this->io->done ("Cleanup complete");
     }
@@ -119,7 +119,7 @@ trait ModuleCommands
    */
   function moduleDisable ($moduleName = null)
   {
-    $this->modulesUtil->selectModule ($moduleName);
+    $this->modulesUtil->selectInstalledModule ($moduleName);
 
     $module          = $this->modulesRegistry->getModule ($moduleName);
     $module->enabled = false;
@@ -135,7 +135,7 @@ trait ModuleCommands
    */
   function moduleEnable ($moduleName = null)
   {
-    $this->modulesUtil->selectModule ($moduleName);
+    $this->modulesUtil->selectInstalledModule ($moduleName);
 
     $module          = $this->modulesRegistry->getModule ($moduleName);
     $module->enabled = true;
@@ -178,7 +178,7 @@ trait ModuleCommands
    */
   function moduleReinit ($moduleName = null)
   {
-    if ($this->modulesUtil->selectModule ($moduleName)) {
+    if ($this->modulesUtil->selectInstalledModule ($moduleName)) {
       $this->modulesInstaller->setupModule ($moduleName, true);
       $this->io->done ("Reinitialization complete");
     }
@@ -192,7 +192,7 @@ trait ModuleCommands
    */
   function moduleRename ($oldModuleName = null, $newModuleName = null)
   {
-    $this->modulesUtil->selectModule ($oldModuleName,
+    $this->modulesUtil->selectInstalledModule ($oldModuleName,
       function (ModuleInfo $module) { return $module->type == ModuleInfo::TYPE_PRIVATE; });
 
     $this->io->writeln ("Uninstalling <info>$oldModuleName</info>")->nl ();
@@ -248,19 +248,11 @@ trait ModuleCommands
   function uninstall ($moduleName = null)
   {
     if (!$moduleName) {
-      $composerCfg = new ComposerConfigHandler;
-      $required    = array_keys ($composerCfg->get ('require'));
+      $privateModules = $this->modulesRegistry->onlyPrivate ()->getModules ();
+      $plugins        = $this->modulesRegistry->onlyPluginsRequiredByModules ()->getModules ();
 
-      $availableModules = [];
-      foreach ($required as $mod)
-        if ($this->modulesRegistry->isPrivateModule ($mod) || $this->modulesRegistry->isPlugin ($mod))
-          $availableModules[] = $mod;
-
-      $this->modulesUtil->selectModule ($moduleName, function (ModuleInfo $module) use ($availableModules) {
-        return in_array ($module->name, $availableModules);
-      });
+      $this->modulesUtil->selectModule ($moduleName, array_merge ($privateModules, $plugins));
     }
-
     $this->io->writeln ("Uninstalling <info>$moduleName</info>")->nl ();
 
     if ($this->modulesRegistry->isPlugin ($moduleName))
@@ -276,8 +268,10 @@ trait ModuleCommands
    * @param array  $opts
    * @option $search|s Search for plugins having the specified text word or prefix somewhere on the name or description
    * @option $stars Sort the list by stars, instead of downloads
+   * @option $unstable|u When set, the latest development version is installed instead of the latest stable version
    */
-  protected function moduleInstallPlugin ($moduleName = null, $opts = ['search|s' => '', 'stars' => false])
+  protected function installPlugin ($moduleName = null,
+                                    $opts = ['search|s' => '', 'stars' => false, 'unstable|u' => false])
   {
     $io = $this->io;
     if (!$moduleName) {
@@ -304,11 +298,25 @@ trait ModuleCommands
       $moduleName = $modules[$sel]['name'];
     }
 
+    // Select target module where the plugin will be registered
+
+    $io->writeln ('<question>Where should the plugin be registered?</question>');
+    $modules = $this->modulesRegistry->onlyPrivate ()->getModules ();
+    $this->modulesUtil->selectModule ($targetModuleName, $modules);
+
     // Install module via Composer
 
-    $version = self::$INSTALL_STABLE ? '' : ':dev-master';
-    // Note: this also updates the modules registry.
-    (new InstallPackageTask("$moduleName$version"))->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
+    $version      = $opts['unstable'] ? ':dev-master' : '';
+    $targetModule = $this->modulesRegistry->getModule ($targetModuleName);
+
+    // Add package reference to the targat module's composer.json
+    $task = new InstallPackageTask("$moduleName$version");
+    $task->dir ($targetModule->path)
+         ->option ('--no-update')
+         ->printed (self::$SHOW_COMPOSER_OUTPUT)
+         ->run ();
+
+    $this->doComposerUpdate ();
 
     $io->done ("Plugin <info>$moduleName</info> is now installed");
   }
@@ -326,8 +334,8 @@ trait ModuleCommands
    *                           description
    * @option $stars Sort the list by stars, instead of downloads
    */
-  protected function moduleInstallTemplate ($moduleName = null,
-                                            $opts = ['keep-repo|k' => false, 'search|s' => '', 'stars' => false])
+  protected function installTemplate ($moduleName = null,
+                                      $opts = ['keep-repo|k' => false, 'search|s' => '', 'stars' => false])
   {
     $io = $this->io;
 
@@ -395,18 +403,16 @@ trait ModuleCommands
   {
     $module = $this->modulesRegistry->getModule ($moduleName);
 
-    // This also updates the modules registry.
-    (new UninstallPackageTask($moduleName))->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
-
-    // When using the global 'php-kit/composer-shared-packages-plugin', a symlink will be left after the uninstallation.
-    // If that's the case, we need to remove it, otherwise the module will remain registered.
-    if (is_link ($module->path)) {
-      unlink ($module->path);
-      $this->moduleRefresh ();   // We must rebuild the registry BEFORE calling Composer update.
-      $this->doComposerUpdate ();
+    $privateModules = $this->modulesRegistry->onlyPrivate ()->getModules ();
+    foreach ($privateModules as $priv) {
+      $cfg = $priv->getComposerConfig ();
+      if (isset($cfg->get ('require')[$moduleName])) {
+        $cfg->unrequire ($moduleName)->save ();
+        $this->doComposerUpdate ();
+        $this->io->done ("Plugin <info>$moduleName</info> was uninstalled");
+      };
     }
-
-    $this->io->done ("Plugin module <info>$moduleName</info> was uninstalled");
+    $this->io->error ("Plugin <info>$moduleName</info> was not found on any project module");
   }
 
   protected function uninstallProjectModule ($moduleName)
@@ -419,19 +425,12 @@ trait ModuleCommands
     // Unregister the module now, otherwise a class not found error will be displayed when moduleRefresh is called.
     $this->modulesRegistry->unregisterModule ($moduleName) or exit (1);
 
-    // Uninstall the module's dependencies and unregister its namespaces.
-    $cfg     = new ComposerConfigHandler;
-    $require = $cfg->get ('require', []);
-    unset ($require[$moduleName]);
-    $cfg->set ('require', $require);
-    $cfg->save ();
-
-    $this->doComposerUpdate (); // Note: this also updates the modules registry.
-
-    // Physically remove the module, as Composer won't do it for private modules.
-    // This must be done AFTER 'composer update' removes the symlinks.
+    // Physically remove the module.
     $path = "{$this->kernelSettings->modulesPath}/$moduleName";
     $this->removeModuleDirectory ($path);
+
+    $this->regenerateComposer (); // The module and its dependencies will no longer be considered.
+    $this->doComposerUpdate ();   // This also updates the modules registry.
 
     $io->done ("Module <info>$moduleName</info> was uninstalled");
   }
@@ -560,7 +559,7 @@ If you proceed, the directory contents will be discarded.");
         (new DeleteDir($vendorPath))->run ();
       $io->unmute ();
     }
-    else $io->warn ("No module files were deleted because none were found on the <info>modules</info> directory");
+    else $io->warn ("No module files were deleted because none were found on the <info>$path</info> directory");
   }
 
 }

@@ -296,7 +296,7 @@ function dump ()
     }
     $num = ctype_digit ($prop[0]);
     return $space . $SEP .
-           color ('dark yellow', str_pad ($prop, $num ? 4 : 22, ' ', $num ? STR_PAD_LEFT : STR_PAD_RIGHT)) .
+           color ('dark yellow', str_pad ($prop, $num ? 4 : 28, ' ', $num ? STR_PAD_LEFT : STR_PAD_RIGHT)) .
            " $SEP " . color ('dark green', str_pad ($type, 25, ' ')) . (strlen ($next) ? "$SEP $next" : '');
   }, $o);
   $o   = preg_replace ('/[\{\}§\]]/', color ('red', '$0'), $o);
