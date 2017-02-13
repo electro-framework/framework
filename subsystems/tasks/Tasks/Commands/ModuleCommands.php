@@ -14,6 +14,7 @@ use Electro\Lib\PackagistAPI;
 use Electro\Plugins\IlluminateDatabase\Config\MigrationsSettings;
 use Electro\Tasks\Config\TasksSettings;
 use Electro\Tasks\Shared\InstallPackageTask;
+use Robo\Task\Composer\DumpAutoload;
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
@@ -63,11 +64,9 @@ trait ModuleCommands
     else $io->nl ();
     switch ($moduleType) {
       case 'plugin';
-        $io->banner ("PLUGINS");
         $this->installPlugin ($moduleName, $opts);
         return;
       case 'template';
-        $io->banner ("TEMPLATES");
         $this->installTemplate ($moduleName, $opts);
         return;
     }
@@ -273,7 +272,12 @@ trait ModuleCommands
   protected function installPlugin ($moduleName = null,
                                     $opts = ['search|s' => '', 'stars' => false, 'unstable|u' => false])
   {
-    $io = $this->io;
+    $io      = $this->io;
+    $modules = $this->modulesRegistry->onlyPrivate ()->getModules ();
+
+    if (!$modules)
+      $io->error ("You can't install plugins until you have created one or more project modules");
+
     if (!$moduleName) {
 
       // Search
@@ -287,6 +291,7 @@ trait ModuleCommands
 
       // Show menu
 
+      $io->banner ("PLUGINS");
       $sel = $io->menu ('Select a plugin module to install:',
         array_getColumn ($modules, 'fname'), -1,
         array_getColumn ($modules, 'description'),
@@ -301,7 +306,6 @@ trait ModuleCommands
     // Select target module where the plugin will be registered
 
     $io->writeln ('<question>Where should the plugin be registered?</question>');
-    $modules = $this->modulesRegistry->onlyPrivate ()->getModules ();
     $this->modulesUtil->selectModule ($targetModuleName, $modules);
 
     // Install module via Composer
@@ -310,13 +314,14 @@ trait ModuleCommands
     $targetModule = $this->modulesRegistry->getModule ($targetModuleName);
 
     // Add package reference to the targat module's composer.json
-    $task = new InstallPackageTask("$moduleName$version");
+    $task = new InstallPackageTask ("$moduleName$version");
     $task->dir ($targetModule->path)
          ->option ('--no-update')
          ->printed (self::$SHOW_COMPOSER_OUTPUT)
          ->run ();
 
-    $this->doComposerUpdate ();
+    $this->regenerateComposer (); // The module and its dependencies will no longer be considered.
+    $this->doComposerUpdate ();   // This also updates the modules registry.
 
     $io->done ("Plugin <info>$moduleName</info> is now installed");
   }
@@ -352,6 +357,7 @@ trait ModuleCommands
 
       // Show menu
 
+      $io->banner ("TEMPLATES");
       $sel = $io->menu ('Select a template module to install:',
         array_getColumn ($modules, 'fname'), -1,
         array_getColumn ($modules, 'description'),
@@ -392,23 +398,21 @@ trait ModuleCommands
       $io->unmute ();
     }
 
-    // Install the module's dependencies and register its namespaces
-
-    $this->doComposerUpdate (); // Note: this also updates the modules registry.
+    $this->regenerateComposer (); // Install the module's dependencies and register its namespaces.
+    $this->doComposerUpdate ();   // This also updates the modules registry.
 
     $io->done ("Template <info>$moduleName</info> is now installed on <info>$path</info>");
   }
 
   protected function uninstallPlugin ($moduleName)
   {
-    $module = $this->modulesRegistry->getModule ($moduleName);
-
     $privateModules = $this->modulesRegistry->onlyPrivate ()->getModules ();
     foreach ($privateModules as $priv) {
       $cfg = $priv->getComposerConfig ();
       if (isset($cfg->get ('require')[$moduleName])) {
         $cfg->unrequire ($moduleName)->save ();
-        $this->doComposerUpdate ();
+        $this->regenerateComposer (); // The plugin and its dependencies will no longer be considered.
+        $this->doComposerUpdate ();   // This also updates the modules registry.
         $this->io->done ("Plugin <info>$moduleName</info> was uninstalled");
       };
     }
@@ -535,7 +539,8 @@ If you proceed, the directory contents will be discarded.");
 
     $io->unmute ();
 
-    // Register the module's namespace
+    // Merge the module's composer.json into the project's root composer.json
+    $this->composerUpdate ();
     $cfg                  = new ComposerConfigHandler;
     $require              = $cfg->get ('require', []);
     $require[$moduleName] = '1.0.0';

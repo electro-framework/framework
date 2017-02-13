@@ -5,6 +5,7 @@ namespace Electro\Tasks\Commands;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Kernel\Services\ModulesRegistry;
+use Robo\Task\Composer\DumpAutoload;
 
 /**
  * Defines a command that rebuilds the project's composer.json file by merging relevant sections from the project
@@ -20,13 +21,18 @@ trait UpdateCommand
 
   /**
    * Rebuilds the project's composer.json to reflect the dependencies of all project modules and installs/updates them
+   *
+   * @param array $opts
+   * @option $no-update When set, no package will be modified, only the autoloader will be updated
    */
-  function updateComposer ()
+  function composerUpdate ($opts = ['no-update' => false])
   {
     $this->io->writeln ("composer.json has been <info>updated</info>")->nl ();
 
     $this->regenerateComposer ();
-    $this->doComposerUpdate ();
+    if (get ($opts, 'no-update'))
+      (new DumpAutoload)->run ();
+    else $this->doComposerUpdate ();
 
     $this->io->done ("The project is <info>updated</info>");
   }

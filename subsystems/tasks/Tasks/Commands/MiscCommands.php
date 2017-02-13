@@ -99,21 +99,4 @@ trait MiscCommands
     $this->init ($opts);
   }
 
-  /**
-   * Switches to 'dev' stability and tries to pull the latest commits for all framework packages and plugins
-   */
-  function updateLatest ()
-  {
-    $cOut = self::$SHOW_COMPOSER_OUTPUT;
-
-    // Git pull
-    (new GitStack)->pull ()->run ();
-
-    $this->cacheClear ();
-
-    //TODO
-
-    $this->doComposerUpdate();
-  }
-
 }
