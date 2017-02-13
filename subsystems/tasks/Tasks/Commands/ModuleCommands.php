@@ -536,15 +536,8 @@ If you proceed, the directory contents will be discarded.");
 
     $io->unmute ();
 
-    // Merge the module's composer.json into the project's root composer.json
-    $this->composerUpdate ();
-    $cfg                  = new ComposerConfigHandler;
-    $require              = $cfg->get ('require', []);
-    $require[$moduleName] = '1.0.0';
-    $cfg->set ('require', $require);
-    $cfg->save ();
-
-    $this->doComposerUpdate (); // It also updates the modules registry
+    $this->regenerateComposer (); // It also updates the modules registry
+    $this->doComposerUpdate ();
 
     $io->done ("Module <info>$___MODULE___</info> was created");
   }

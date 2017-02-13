@@ -42,6 +42,10 @@ trait UpdateCommand
    */
   protected function regenerateComposer ()
   {
+    // We MUST regenerate the module registry now, so that the `getModules()` call below will pick up the current
+    // modules, NOT the previously registered ones.
+    $this->moduleRefresh ();
+
     $rootFile = 'composer.root.json';
     if (!fileExists ($rootFile))
       $this->io->error ("A <error-info>$rootFile</error-info> file was not found at the project's root directory");
@@ -124,8 +128,6 @@ trait UpdateCommand
       $this->io->done ("<info>No changes</info> were made to composer.json");
 
     file_put_contents ('composer.json', $targetCfgStr);
-
-    $this->moduleRefresh ();
   }
 
 }
