@@ -9,12 +9,10 @@ use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Kernel\Services\ModulesInstaller;
 use Electro\Kernel\Services\ModulesRegistry;
-use Electro\Lib\ComposerConfigHandler;
 use Electro\Lib\PackagistAPI;
 use Electro\Plugins\IlluminateDatabase\Config\MigrationsSettings;
 use Electro\Tasks\Config\TasksSettings;
 use Electro\Tasks\Shared\InstallPackageTask;
-use Robo\Task\Composer\DumpAutoload;
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
@@ -40,7 +38,8 @@ trait ModuleCommands
   /**
    * Installs a plugin or a template
    *
-   * @param string $moduleType Either <info>plugin</info>|<info>template</info>. If not specified, it will be asked for
+   * @param string $moduleType Either <info>plugin</info>|<info>template</info>|<info>package</info>.
+   *                           If not specified, it will be asked for
    * @param string $moduleName A full module name (in <comment>vendor/package</comment> format), If not specified, a
    *                           list of installable modules will be displayed for the user to pick one
    * @param array  $opts
@@ -56,19 +55,30 @@ trait ModuleCommands
   {
     $io = $this->io;
     if (!$moduleType)
-      $moduleType = ['plugin', 'template']
+      $moduleType = ['plugin', 'template', 'package']
       [$io->menu ('What type of module do you want to install?', [
         'Plugin',
         'Template',
+        'Standalone package',
       ], 0)];
     else $io->nl ();
     switch ($moduleType) {
-      case 'plugin';
+      case 'plugin':
         $this->installPlugin ($moduleName, $opts);
         return;
-      case 'template';
+      case 'template':
         $this->installTemplate ($moduleName, $opts);
         return;
+      case 'package':
+        if (!$moduleName) {
+          $moduleName = $io->ask ("Type in the full package name (vendor/package format):");
+          if (!$moduleName)
+            $io->cancel ();
+        }
+        $this->installPlugin ($moduleName, $opts);
+        return;
+      default:
+        $io->error ("Invalid module type: <error-info>$moduleType</error-info>");
     }
   }
 
