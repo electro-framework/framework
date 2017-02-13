@@ -71,9 +71,10 @@ class ModulesUtil
     }
     else {
       if ($modules) {
-        $i = $this->io->menu ("Select a module:", array_keys ($modules));
+        $moduleNames = array_keys ($modules);
+        $i = $this->io->menu ("Select a module:", $moduleNames);
         if ($i < 0) $this->io->cancel ();
-        $moduleName = $modules[$i];
+        $moduleName = $moduleNames[$i];
       }
       else {
         if ($suppressErrors) return false;
