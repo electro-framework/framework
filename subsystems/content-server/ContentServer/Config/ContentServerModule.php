@@ -1,4 +1,5 @@
 <?php
+
 namespace Electro\ContentServer\Config;
 
 use Electro\ContentServer\Services\ContentRepository;
@@ -26,17 +27,17 @@ class ContentServerModule implements ModuleInterface
     $kernel->onRegisterServices (
       function (InjectorInterface $injector) {
         $injector
-          ->delegate (Server::class,
-            function (ResponseFactoryInterface $responseFactory, ContentServerSettings $settings) {
-              return ServerFactory::create ([
-                'source'   => $settings->fileArchivePath (),
-                'cache'    => $settings->imagesCachePath (),
-                'response' => new PsrResponseFactory ($responseFactory->make (),
-                  function ($stream) use ($responseFactory) {
-                    return $responseFactory->makeBodyStream ('', $stream);
-                  }),
-              ]);
-            })
+          ->delegate (Server::class, function (ResponseFactoryInterface $responseFactory,
+                                               ContentServerSettings $settings) {
+            return ServerFactory::create ([
+              'source'   => $settings->fileArchivePath (),
+              'cache'    => $settings->imagesCachePath (),
+              'response' => new PsrResponseFactory ($responseFactory->make (),
+                function ($stream) use ($responseFactory) {
+                  return $responseFactory->makeBodyStream ('', $stream);
+                }),
+            ]);
+          })
           ->share (Server::class)
           ->delegate (ContentRepositoryInterface::class, function (ContentServerSettings $settings) {
             $urlBuilder = UrlBuilderFactory::create ($settings->fileBaseUrl ());
