@@ -426,9 +426,6 @@ trait ModuleCommands
     $io = $this->io;
     $io->nl ();
 
-    // Unregister the module now, otherwise a class not found error will be displayed when moduleRefresh is called.
-    $this->modulesRegistry->unregisterModule ($moduleName) or exit (1);
-
     // Physically remove the module.
     $path = "{$this->kernelSettings->modulesPath}/$moduleName";
     $this->removeModuleDirectory ($path);

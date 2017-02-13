@@ -124,6 +124,8 @@ trait UpdateCommand
       $this->io->done ("<info>No changes</info> were made to composer.json");
 
     file_put_contents ('composer.json', $targetCfgStr);
+
+    $this->moduleRefresh ();
   }
 
 }
