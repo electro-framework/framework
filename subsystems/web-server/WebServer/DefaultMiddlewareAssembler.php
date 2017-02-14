@@ -2,7 +2,7 @@
 
 namespace Electro\WebServer;
 
-use Electro\ContentServer\Middleware\ContentServerMiddleware;
+use Electro\ContentRepository\Middleware\ContentServerMiddleware;
 use Electro\Debugging\Config\DebugSettings;
 use Electro\Debugging\Middleware\AlternateLogoutMiddleware;
 use Electro\Debugging\Middleware\WebConsoleMiddleware;

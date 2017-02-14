@@ -1,8 +1,8 @@
 <?php
 
-namespace Electro\ContentServer\Config;
+namespace Electro\ContentRepository\Config;
 
-use Electro\ContentServer\Services\ContentRepository;
+use Electro\ContentRepository\Services\ContentRepository;
 use Electro\Interfaces\ContentRepositoryInterface;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
@@ -15,7 +15,7 @@ use League\Glide\Server;
 use League\Glide\ServerFactory;
 use League\Glide\Urls\UrlBuilderFactory;
 
-class ContentServerModule implements ModuleInterface
+class ContentRepositoryModule implements ModuleInterface
 {
   static function getCompatibleProfiles ()
   {
@@ -28,10 +28,10 @@ class ContentServerModule implements ModuleInterface
       function (InjectorInterface $injector) {
         $injector
           ->delegate (Server::class, function (ResponseFactoryInterface $responseFactory,
-                                               ContentServerSettings $settings) {
+                                               ContentRepositorySettings $settings) {
             return ServerFactory::create ([
-              'source'   => $settings->fileArchivePath (),
-              'cache'    => $settings->imagesCachePath (),
+              'source'   => $settings->fileArchivePath,
+              'cache'    => $settings->imagesCachePath,
               'response' => new PsrResponseFactory ($responseFactory->make (),
                 function ($stream) use ($responseFactory) {
                   return $responseFactory->makeBodyStream ('', $stream);
@@ -44,7 +44,7 @@ class ContentServerModule implements ModuleInterface
             return new ContentRepository ($urlBuilder);
           })
           ->share (ContentRepositoryInterface::class)
-          ->share (ContentServerSettings::class);
+          ->share (ContentRepositorySettings::class);
       });
   }
 

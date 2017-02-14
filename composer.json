@@ -34,7 +34,7 @@
       "Electro\\Caching\\": "subsystems/caching/Caching",
       "Electro\\Configuration\\": "subsystems/configuration/Configuration",
       "Electro\\ConsoleApplication\\": "subsystems/console/ConsoleApplication",
-      "Electro\\ContentServer\\": "subsystems/content-server/ContentServer",
+      "Electro\\ContentRepository\\": "subsystems/content-repository/ContentRepository",
       "Electro\\Database\\": "subsystems/database/Database",
       "Electro\\Debugging\\": "subsystems/debugging/Debugging",
       "Electro\\ErrorHandling\\": "subsystems/error-handling/ErrorHandling",

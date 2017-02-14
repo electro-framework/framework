@@ -1,5 +1,5 @@
 <?php
-namespace Electro\ContentServer\Services;
+namespace Electro\ContentRepository\Services;
 
 use Electro\Interfaces\ContentRepositoryInterface;
 use League\Glide\Urls\UrlBuilder;
