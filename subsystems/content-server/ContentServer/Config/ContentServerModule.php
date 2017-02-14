@@ -39,8 +39,8 @@ class ContentServerModule implements ModuleInterface
             ]);
           })
           ->share (Server::class)
-          ->delegate (ContentRepositoryInterface::class, function (ContentServerSettings $settings) {
-            $urlBuilder = UrlBuilderFactory::create ($settings->fileBaseUrl ());
+          ->delegate (ContentRepositoryInterface::class, function (Server $server) {
+            $urlBuilder = UrlBuilderFactory::create ($server->getBaseUrl());
             return new ContentRepository ($urlBuilder);
           })
           ->share (ContentRepositoryInterface::class)
