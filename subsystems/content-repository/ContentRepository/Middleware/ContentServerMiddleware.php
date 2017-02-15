@@ -5,7 +5,6 @@ namespace Electro\ContentRepository\Middleware;
 use Electro\ContentRepository\Config\ContentRepositorySettings;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
-use Electro\Kernel\Config\KernelSettings;
 use League\Glide\Server;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -15,10 +14,6 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class ContentServerMiddleware implements RequestHandlerInterface
 {
-  /**
-   * @var KernelSettings
-   */
-  private $app;
   /**
    * @var Server
    */
