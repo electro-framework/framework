@@ -1,8 +1,8 @@
 <?php
+
 namespace Electro\ContentRepository\Middleware;
 
 use Electro\ContentRepository\Config\ContentRepositorySettings;
-use Electro\ContentRepository\Lib\FileUtil;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
 use Electro\Kernel\Config\KernelSettings;
@@ -32,7 +32,8 @@ class ContentServerMiddleware implements RequestHandlerInterface
    */
   private $settings;
 
-  function __construct (ResponseFactoryInterface $responseFactory, Server $glideServer, ContentRepositorySettings $settings)
+  function __construct (ResponseFactoryInterface $responseFactory, Server $glideServer,
+                        ContentRepositorySettings $settings)
   {
     $this->responseFactory = $responseFactory;
     $this->glideServer     = $glideServer;
@@ -46,30 +47,43 @@ class ContentServerMiddleware implements RequestHandlerInterface
       return $next ();
 
     // Strip prefix from URL
-    $url = substr ($url, strlen ($this->settings->fileBaseUrl) + 1);
+    $url    = substr ($url, strlen ($this->settings->fileBaseUrl) + 1);
+    $params = $request->getQueryParams ();
 
-    $path = "{$this->settings->fileArchivePath}/$url";
+    // If the request requests a resized image:
 
-    if (!file_exists ($path))
-      return $this->responseFactory->make (404, "Not found: $path", 'text/plain');
+    if (isset($params['w']) || isset($params['h'])) {
+      $cachedPath = $this->glideServer->makeImage ($url, $params); // Generates a new image ONLY if it isn't cached yet.
+      $cache      = $this->glideServer->getCache ();
+      return $this->outputFile (
+        $cache->readStream ($cachedPath),
+        $cache->getSize ($cachedPath),
+        $cache->getMimetype ($cachedPath)
+      );
+    }
 
-    $mime = FileUtil::getMimeType ($path);
+    // Otherwise, serve the source file (if it exists).
 
-    // Serve image file.
+    if ($this->glideServer->sourceFileExists ($url)) {
+      $source = $this->glideServer->getSource ();
+      return $this->outputFile (
+        $source->readStream ($url),
+        $source->getSize ($url),
+        $source->getMimetype ($url)
+      );
+    }
 
-    if (FileUtil::isImageType ($mime))
-      // Use image manipulation parameters extracted from the request.
-      return $this->glideServer->getImageResponse ($url, $request->getQueryParams ());
+    return $this->responseFactory->make (404, "Not found: $url", 'text/plain');
+  }
 
-    // Serve non-image file.
-
-    return $this->responseFactory->makeFromStream (fopen ($path, 'rb'), 200, [
+  private function outputFile ($stream, $size, $mime)
+  {
+    return $this->responseFactory->makeFromStream ($stream, 200, [
       'Content-Type'   => $mime,
-      'Content-Length' => (string)filesize ($path),
+      'Content-Length' => $size,
       'Cache-Control'  => 'max-age=31536000, public',
       'Expires'        => date_create ('+1 years')->format ('D, d M Y H:i:s') . ' GMT',
     ]);
-
   }
 
 }

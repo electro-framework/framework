@@ -8,21 +8,22 @@ class FileUtil
   /**
    * Returns the MIME type for the given file.
    *
-   * @param string $filename
+   * @param string      $filePath
+   * @param string|null $ext [optional] Filename extension. If not specified, it will be extracted from the file path.
    * @return string
    */
-  static function getMimeType ($filename)
+  static function getMimeType ($filePath, $ext = null)
   {
     if (function_exists ('finfo_open')) {
       $finfo = finfo_open (FILEINFO_MIME_TYPE);
-      $mime  = finfo_file ($finfo, $filename);
+      $mime  = finfo_file ($finfo, $filePath);
       finfo_close ($finfo);
       // When FILEINFO fails to detect the MIME type it returns a wrong text type or the generic octet-stream type.
       // In those cases, we must use the file extension to determine the MIME type.
       if (!str_beginsWith ($mime, 'text/') && $mime != 'application/octet-stream')
         return $mime;
     }
-    $ext = pathinfo ($filename, PATHINFO_EXTENSION);
+    $ext = $ext ?: pathinfo ($filePath, PATHINFO_EXTENSION);
     if (array_key_exists ($ext, MIME_TYPES))
       return MIME_TYPES[$ext];
     return 'application/octet-stream';
