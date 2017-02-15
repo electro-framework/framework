@@ -215,17 +215,18 @@ class Session implements SessionInterface
 
   function setUser (UserInterface $user)
   {
-    $this->user    = array_toClass ([
-      'id'               => $user->idField (),
-      'active'           => $user->activeField (),
-      'username'         => $user->usernameField (),
-      'password'         => $user->passwordField (),
-      'token'            => $user->tokenField (),
-      'registrationDate' => $user->registrationDateField (),
-      'lastLogin'        => $user->lastLoginField (),
-      'role'             => $user->roleField (),
-      'realName'         => $user->realNameField (),
-    ], GenericUser::class);
+    $this->user = $user;
+//    $this->user    = array_toClass ([
+//      'id'               => $user->idField (),
+//      'active'           => $user->activeField (),
+//      'username'         => $user->usernameField (),
+//      'password'         => $user->passwordField (),
+//      'token'            => $user->tokenField (),
+//      'registrationDate' => $user->registrationDateField (),
+//      'lastLogin'        => $user->lastLoginField (),
+//      'role'             => $user->roleField (),
+//      'realName'         => $user->realNameField (),
+//    ], GenericUser::class);
     $this->isValid = true;
   }
 
