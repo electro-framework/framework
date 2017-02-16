@@ -12,6 +12,24 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
+ * Returns a middleware handler that calls a given non-static class method.
+ *
+ * <p>When the handler is execute, the class will be instantiated from the injector and the target method will be
+ * invoked.
+ *
+ * @param string $class
+ * @param string $method
+ * @return InjectableFunction
+ */
+function handler ($class, $method)
+{
+  return injectable (function (InjectorInterface $injector) use ($class, $method) {
+    $o = $injector->make ($class);
+    return fn ([$o, $method]);
+  });
+}
+
+/**
  * Returns a route to a controller method or function.
  *
  * <p>The callback will receive as arguments (in order):
@@ -180,7 +198,7 @@ function initPageViewModel (ViewModelInterface $viewModel = null, ServerRequestI
   if (isset($viewModel)) {
     if (!is_object ($viewModel) || !($viewModel instanceof ViewModelInterface))
       throw new RuntimeException(sprintf ("Invalid view model type: <kbd>%s</kbd>)", typeOf ($viewModel)));
-    $viewModel['props'] = Http::getRouteParameters($request);
+    $viewModel['props'] = Http::getRouteParameters ($request);
     $viewModel['fetch'] = $request->getHeaderLine ('X-Requested-With') == 'XMLHttpRequest';
     $viewModel->init ();
   }
