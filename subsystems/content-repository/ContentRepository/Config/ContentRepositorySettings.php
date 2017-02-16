@@ -8,6 +8,12 @@ namespace Electro\ContentRepository\Config;
 class ContentRepositorySettings
 {
   /**
+   * Filesystem driver to use. Currently it supports 'local' and 'S3'
+   *
+   * @var string
+   */
+  public $driver;
+  /**
    * @var string
    */
   public $fileArchivePath = 'private/storage/files';
@@ -27,5 +33,10 @@ class ContentRepositorySettings
    * @var int Currently not used.
    */
   public $originalImageQuality = 95;
+
+  public function __construct ()
+  {
+    $this->driver = env ('CONTENT_REPOSITORY_DRIVER', 'local');
+  }
 
 }
