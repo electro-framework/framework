@@ -39,7 +39,7 @@ class Redirection implements RedirectionInterface
   function back ($status = 302)
   {
     $this->validate ();
-    return $this->to ($this->request->getHeaderLine ('Referer') ?: $this->request->getUri (), $status);
+    return $this->to ($this->request->getHeaderLine ('Referer') ?: $this->request->getAttribute ('baseUri'), $status);
   }
 
   function guest ($url, $status = 302)
