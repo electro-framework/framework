@@ -16,6 +16,7 @@ use Electro\Profiles\WebProfile;
 use League\Glide\Server;
 use League\Glide\ServerFactory;
 use League\Glide\Urls\UrlBuilderFactory;
+use Psr\Log\LoggerInterface;
 
 class ContentRepositoryModule implements ModuleInterface
 {
@@ -57,11 +58,11 @@ class ContentRepositoryModule implements ModuleInterface
             ]);
           })
           ->share (Server::class)
-          ->delegate (ContentRepositoryInterface::class, function (Server $server,
-                                                                   ContentRepositorySettings $settings) {
-            $urlBuilder = UrlBuilderFactory::create ($settings->fileBaseUrl);
-            return new ContentRepository ($server, $urlBuilder);
-          })
+          ->delegate (ContentRepositoryInterface::class,
+            function (Server $server, ContentRepositorySettings $settings, LoggerInterface $logger) {
+              $urlBuilder = UrlBuilderFactory::create ($settings->fileBaseUrl);
+              return new ContentRepository ($server, $urlBuilder, $logger);
+            })
           ->share (ContentRepositoryInterface::class)
           ->share (ContentRepositorySettings::class)
           ->share (S3Filesystem::class);

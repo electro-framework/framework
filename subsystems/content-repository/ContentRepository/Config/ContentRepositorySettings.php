@@ -36,7 +36,7 @@ class ContentRepositorySettings
 
   public function __construct ()
   {
-    $this->driver = env ('CONTENT_REPOSITORY_DRIVER', 'local');
+    $this->driver = env ('REPOSITORY_DRIVER', 'local');
   }
 
 }
