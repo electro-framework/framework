@@ -14,7 +14,7 @@ class S3Filesystem extends Filesystem
 {
   public function __construct (S3Settings $settings)
   {
-    $client = S3Client::factory ([
+    $client = new S3Client ([
       'credentials' => [
         'key'    => $settings->key,
         'secret' => $settings->secret,
@@ -23,7 +23,7 @@ class S3Filesystem extends Filesystem
       'version'     => '2006-03-01',
     ]);
 
-    $adapter = new AwsS3Adapter($client, $settings->bucket);
+    $adapter = new AwsS3Adapter ($client, $settings->bucket);
     parent::__construct ($adapter);
   }
 
