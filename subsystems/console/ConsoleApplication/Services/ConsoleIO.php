@@ -1,4 +1,5 @@
 <?php
+
 namespace Electro\ConsoleApplication\Services;
 
 use Electro\Interfaces\ConsoleIOInterface;
@@ -19,12 +20,16 @@ define ('CONSOLE_ALIGN_RIGHT', STR_PAD_LEFT);
  */
 class ConsoleIO implements ConsoleIOInterface
 {
+  /** @var string */
+  private $doneMessage = '';
   /** @var bool TRUE until the first line break is output. */
   private $firstLine = true;
   /** @var string */
   private $indent = '';
   /** @var InputInterface */
   private $input;
+  /** @var int */
+  private $nestingCounter = 0;
   /** @var OutputInterface */
   private $output;
   /** @var int Verbosity level before the output was muted. */
@@ -91,6 +96,12 @@ class ConsoleIO implements ConsoleIOInterface
     return $this;
   }
 
+  function begin ()
+  {
+    ++$this->nestingCounter;
+    return $this;
+  }
+
   function cancel ($message = 'Canceled')
   {
     if ($this->getInput ()->isInteractive ())
@@ -117,14 +128,15 @@ class ConsoleIO implements ConsoleIOInterface
 
   function done ($text = '', $dontExit = false)
   {
-    if (strlen ($text)) {
+    if (!--$this->nestingCounter) {
+      $text = $text ?: $this->doneMessage;
       if (!$this->firstLine)
         $this->nl ();
-      $this->say ($text);
+      if (strlen ($text))
+        $this->writeln ($text);
+      if (!$dontExit)
+        exit (0);
     }
-    $this->nl ();
-    if (!$dontExit)
-      exit (0);
   }
 
   function error ($text, $width = 0, $status = 1)
@@ -212,9 +224,10 @@ class ConsoleIO implements ConsoleIOInterface
     return $this;
   }
 
-  function nl ()
+  function nl ($count = 1)
   {
-    $this->writeln ();
+    while ($count--)
+      $this->writeln ();
     return $this;
   }
 
@@ -228,6 +241,11 @@ class ConsoleIO implements ConsoleIOInterface
     if ($this->output)
       $this->output->getFormatter ()->setStyle ($name, $style);
     return $this;
+  }
+
+  function setDoneMessage ($message)
+  {
+    $this->doneMessage = $message;
   }
 
   function table (array $headers, array $data, array $widths, array $align = null)
