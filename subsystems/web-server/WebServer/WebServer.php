@@ -72,30 +72,26 @@ class WebServer
   function setup ()
   {
     /** @var ServerRequestInterface $request */
-    $request  = ServerRequest::fromGlobals ();
-    $basePath = dirnameEx (
-      get ($request->getServerParams (), 'SCRIPT_NAME'),
-      $this->kernelSettings->urlDepth + 1
-    );
-    $uri      = $request->getUri ();
+    $request    = ServerRequest::fromGlobals ();
+    $uri        = $request->getUri ();
+    $basePath   = dirnameEx ($request->getServerParams () ['SCRIPT_NAME'], $this->kernelSettings->urlDepth + 1);
+    $scheme     = $uri->getScheme () ?: 'http';
+    $port       = $uri->getPort ();
+    $baseUrl    = sprintf ('%s://%s%s%s', $scheme, $uri->getHost (),
+      $port == 80 && $scheme == 'http' || $port == 443 && $scheme == 'https' ? '' : ":$port",
+      $basePath);
+    $virtualUri = ltrim (substr ($uri->getPath (), strlen ($basePath)), '/');
+    $query      = $uri->getQuery ();
 
-    $baseUrl                        = $this->kernelSettings->baseUrl = (string)$uri->withPath ($basePath);
+    $this->kernelSettings->baseUrl  = $baseUrl;
     $this->kernelSettings->basePath = $basePath;
 
     ErrorConsole::setEditorUrl (($basePath ? "$basePath/" : '') . $this->kernelSettings->editorUrl);
 
-    $request       = $request->withAttribute ('originalUri', (string)$uri);
+    $request       = $request->withAttribute ('originalUri', $baseUrl . $virtualUri . ($query ? "?$query" : $query));
     $request       = $request->withAttribute ('baseUri', $basePath);
     $request       = $request->withAttribute ('baseUrl', $baseUrl);
-    $this->request = $request->withAttribute ('virtualUri', $this->getVirtualUri ($request));
-  }
-
-  protected function getVirtualUri (ServerRequestInterface $request)
-  {
-    $uri     = $request->getUri ()->getPath ();
-    $baseUrl = $request->getAttribute ('baseUri');
-    $vuri    = substr ($uri, strlen ($baseUrl) + 1) ?: '';
-    return $vuri;
+    $this->request = $request->withAttribute ('virtualUri', $virtualUri);
   }
 
 }
