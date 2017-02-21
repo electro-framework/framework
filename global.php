@@ -21,9 +21,9 @@ use Psr\Http\Message\ServerRequestInterface;
  * @param string $method
  * @return InjectableFunction
  */
-function handler ($class, $method)
+function handlerMethod ($class, $method)
 {
-  return injectable (function (InjectorInterface $injector) use ($class, $method) {
+  return injectableWrapper (function (InjectorInterface $injector) use ($class, $method) {
     $o = $injector->make ($class);
     return fn ([$o, $method]);
   });
@@ -52,7 +52,7 @@ function handler ($class, $method)
  */
 function controller ($ref)
 {
-  return injectable (function (InjectorInterface $injector) use ($ref) {
+  return injectableWrapper (function (InjectorInterface $injector) use ($ref) {
     $ctrl = $injector->buildExecutable ($ref);
     return function (ServerRequestInterface $request, ResponseInterface $response) use ($ctrl) {
       $args   = array_merge (
@@ -89,14 +89,14 @@ function controller ($ref)
  */
 function stack (...$middleware)
 {
-  return injectable (function (MiddlewareStackInterface $stack) use ($middleware) {
+  return injectableWrapper (function (MiddlewareStackInterface $stack) use ($middleware) {
     return $stack->set ($middleware);
   });
 }
 
 function navigationMiddleware ()
 {
-  return injectable (function (NavigationInterface $navigation) {
+  return injectableWrapper (function (NavigationInterface $navigation) {
     return function ($request, $response, $next) use ($navigation) {
       $navigation->setRequest ($request);
       return $next();
@@ -147,7 +147,7 @@ function formPage ($templateUrl)
  */
 function redirectUp ()
 {
-  return injectable (function (NavigationInterface $navigation) {
+  return injectableWrapper (function (NavigationInterface $navigation) {
     return function ($request, $response) use ($navigation) {
       $navigation->setRequest ($request);
       return Http::redirect ($response, $navigation->currentLink ()->parent ()->url ());
@@ -177,7 +177,8 @@ function redirectToSelf ()
  */
 function view ($templateUrl)
 {
-  return injectable (function (ViewServiceInterface $viewService, InjectorInterface $injector) use ($templateUrl) {
+  return injectableWrapper (function (ViewServiceInterface $viewService, InjectorInterface $injector) use ($templateUrl
+  ) {
     return function (ServerRequestInterface $request, $response) use ($viewService, $templateUrl, $injector) {
       $view      = $viewService->loadFromFile ($templateUrl);
       $viewModel = initPageViewModel ($viewService->createViewModelFor ($view), $request);
@@ -278,12 +279,49 @@ function htmlResponse ($text)
 /**
  * A shortcut to create a {@see InjectableFunction}.
  *
+ * ###### Ex:
+ *     injectableWrapper (function (Service1 $a, Service2 $b) {
+ *       return function ($req, $res, $next) use ($a, $b) { ... };
+ *     })
+ *
  * @param callable $fn
  * @return \Electro\Interop\InjectableFunction
  */
-function injectable (callable $fn)
+function injectableWrapper (callable $fn)
 {
   return new InjectableFunction ($fn);
+}
+
+/**
+ * Creates an injectable request handler directly from a handler function.
+ *
+ * <p>The given handler should define extra injectable parameters after the 3 standard middleware ones ($request,
+ * $response and $next).
+ *
+ * ###### Ex:
+ *     injectableHandler (function ($req, $res, $next, Service1 $a, Service2 $b) { ... })
+ *
+ * @param callable $fn
+ * @return \Electro\Interop\InjectableFunction|\Closure
+ */
+function injectableHandler (callable $fn)
+{
+  $ref = reflectionOfCallable ($fn);
+  /** @var \ReflectionParameter[] $argsRef */
+  $argsRef = $ref->getParameters ();
+  if (count ($argsRef) < 4)
+    return $fn;
+  $argsRef = array_slice ($argsRef, 3); // Discard $req, $res and $next
+  return new InjectableFunction (function (InjectorInterface $injector) use ($argsRef, $fn) {
+    $args = [];
+    foreach ($argsRef as $ar)
+      if ($ar->hasType ())
+        $args[] = $injector->make ((string)$ar->getType ());
+      else throw new \InvalidArgumentException ("Untyped arguments are not supported for injectable handlers");
+    return function ($req, $res, $next) use ($args, $fn) {
+      return $fn ($req, $res, $next, ...$args);
+    };
+  });
 }
 
 /**
