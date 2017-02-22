@@ -1,4 +1,5 @@
 <?php
+
 namespace Electro\Navigation\Lib;
 
 use Electro\Exceptions\Fault;
@@ -261,6 +262,21 @@ class NavigationLink implements NavigationLinkInterface
     return $this;
   }
 
+  function urlOf (...$params)
+  {
+    $this->available = true;
+    $i               = 0;
+    $url             = preg_replace_callback ('/@\w+/', function ($m) use ($params, &$i) {
+      $v = get ($params, $i++);
+      if (is_null ($v)) {
+        $this->available = false;
+        return ''; //to preg_replace
+      }
+      return $v;
+    }, $this->url);
+    return $url;
+  }
+
   function visible ($visible = null)
   {
     if (is_null ($visible))
@@ -280,7 +296,7 @@ class NavigationLink implements NavigationLinkInterface
   {
     $request         = null;
     $this->available = true;
-    $url             = preg_replace_callback ('/@\w+/', function ($m) use ($request) {
+    $url             = preg_replace_callback ('/@\w+/', function ($m) use (&$request) {
       if (!$request)
         $request = $this->getRequest (); // Call only if it's truly required.
       $v = $request->getAttribute ($m[0]);
