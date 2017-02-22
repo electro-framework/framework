@@ -57,7 +57,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    if (!$this->debugSettings->webConsole)
+    if (!$this->debugSettings->webConsole || $request->hasHeader('X-Requested-With'))
       return $next ();
 
     //------------------------------------------------------------------
