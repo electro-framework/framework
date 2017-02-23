@@ -22,14 +22,14 @@ class Block
 
   /**
    * @param string|Component[] $content
-   * @return Component[]
+   * @return string|Component[]
    */
   static private function checkContent ($content)
   {
-    if (!is_array ($content) && !is_string ($content))
+    if (!is_array ($content) && !is_string ($content) && isset($content))
       throw new \InvalidArgumentException(sprintf ("Block content must be <kbd>string|Component[]</kbd>, %s given",
         Debug::typeInfoOf ($content)));
-    return $content;
+    return isset($content) ? $content : '';
   }
 
   function __debugInfo ()

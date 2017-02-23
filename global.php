@@ -54,31 +54,60 @@ function controller ($ref)
 {
   return injectableWrapper (function (InjectorInterface $injector) use ($ref) {
     $ctrl = $injector->buildExecutable ($ref);
-    return function (ServerRequestInterface $request, ResponseInterface $response) use ($ctrl) {
-      $args   = array_merge (
+    return autoResponse (function (ServerRequestInterface $request, ResponseInterface $response) use ($ctrl) {
+      $args = array_merge (
         $request->getMethod () != 'GET' ? [$request->getParsedBody ()] : [],
         array_values (Http::getRouteParameters ($request)),
         [$request, $response]
       );
-      $result = $ctrl (...$args);
-      switch (true) {
-        case $result instanceof ResponseInterface:
-          return $result;
-        case is_string ($result):
-          break;
-        case is_null ($result):
-          $result = '';
-          break;
-        case is_array ($result):
-        case is_object ($result):
-        case is_scalar ($result):
-          return Http::jsonResponse ($response, $result);
-        default:
-          throw new Fault (Faults::INVALID_RESPONSE_TYPE);
-      }
-      return Http::response ($response, $result);
-    };
+      return $ctrl (...$args);
+    });
   });
+}
+
+/**
+ * @param callable $handler function ($request, $response, $next):mixed
+ * @return InjectableFunction
+ */
+function autoResponse (callable $handler)
+{
+  return nonMiddleware ($handler, function ($request, ResponseInterface $response, $result) {
+    switch (true) {
+      case $result instanceof ResponseInterface:
+        return $result;
+      case is_string ($result):
+        break;
+      case is_null ($result):
+        $result = '';
+        break;
+      case is_array ($result):
+      case is_object ($result):
+      case is_scalar ($result):
+        return Http::jsonResponse ($response, $result);
+      default:
+        throw new Fault (Faults::INVALID_RESPONSE_TYPE);
+    }
+    return Http::response ($response, $result);
+  });
+}
+
+/**
+ * Generates a middleware that executes a non-middleware callable, feeds its result (which may be of any type) to the
+ * given consumer and returns the resulting response.
+ *
+ * @param callable $fn       function ($request, $response, $next):mixed
+ * @param callable $consumer function ($request, $response, $value):ResponseInterface
+ * @return InjectableFunction
+ */
+function nonMiddleware (callable $fn, callable $consumer)
+{
+  return injectableHandler (
+    function (ServerRequestInterface $request, ResponseInterface $response, $next,
+              InjectorInterface $injector) use ($fn, $consumer) {
+      while ($fn instanceof InjectableFunction)
+        $fn = $injector->execute ($fn ());
+      return $consumer ($request, $response, $fn ($request, $response, $next));
+    });
 }
 
 /**
@@ -181,7 +210,7 @@ function view ($templateUrl)
   ) {
     return function (ServerRequestInterface $request, $response) use ($viewService, $templateUrl, $injector) {
       $view      = $viewService->loadFromFile ($templateUrl);
-      $viewModel = initPageViewModel ($viewService->createViewModelFor ($view), $request);
+      $viewModel = initPageViewModel ($viewService->createViewModelFor ($view, true), $request);
       return Http::response ($response, $view->render ($viewModel));
     };
   });
