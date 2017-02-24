@@ -7,14 +7,16 @@
 build_sass ()
 {
   echo "Building SASS stylesheets"
-  sass --update resources/assets/sass:public/dist --style compressed -E "UTF-8" -q || return
+  sass --update resources/assets/scss:public/dist --style compressed -E "UTF-8" -q --cache-location\
+  ../../../storage/tmp/.sass-cache/$(basename `pwd`) || return
   echo "Done."
 }
 
 build_less ()
 {
   echo "Building LESS stylesheets"
-  lessc -s resources/assets/less/main.less --source-map=public/dist/main.map --clean-css="--s1" public/dist/main.css || return
+  lessc -s resources/assets/less/main.less --source-map=public/dist/main.map --clean-css="--s1" public/dist/main.css\
+   || return
   echo "Done."
 }
 
@@ -22,7 +24,8 @@ build_3rd_party ()
 {
   echo "Building 3rd party libraries"
   # CUSTOM BOOTSTRAP BUILD
-  lessc -s resources/assets/less/bootstrap.less --source-map=public/dist/bootstrap.map --clean-css="--s1" public/dist/bootstrap.css || return
+  lessc -s resources/assets/less/bootstrap.less --source-map=public/dist/bootstrap.map --clean-css="--s1"\
+  public/dist/bootstrap.css || return
   echo "Done."
 }
 
@@ -54,7 +57,7 @@ init ()
 build_main_tasks ()
 {
   build_sass || fail
-  build_less || fail
+  #build_less || fail
   printf "Build completed.\n"
 }
 
@@ -94,7 +97,7 @@ which sass     > /dev/null || install_tools
 which lessc    > /dev/null || install_tools
 which chokidar > /dev/null || install_tools
 which bower    > /dev/null || install_tools
-[ -d "bower_components" ]  || install_3rd_party
+[ -d "lib" ]  || install_3rd_party
 
 ############################################################
 # UTILITY
@@ -150,7 +153,6 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-echo
 init || fail
 
 if [ "$1" == "all" -o "$2" == "all" ]; then
