@@ -1,4 +1,5 @@
 <?php
+
 namespace Electro\Http\Lib;
 
 use Psr\Http\Message\ResponseInterface;
@@ -41,6 +42,17 @@ class Http
   static function field (ServerRequestInterface $request, $name, $def = null)
   {
     return get ($request->getParsedBody (), $name, $def);
+  }
+
+  /**
+   * Returns the referer URL in virtual URI format.
+   *
+   * @param ServerRequestInterface $request
+   * @return string
+   */
+  static function getRefererVirtualUri (ServerRequestInterface $request)
+  {
+    return Http::relativePathOf ($request->getHeaderLine ('Referer'));
   }
 
   /**
@@ -103,6 +115,28 @@ class Http
   static function redirect (ResponseInterface $response, $url, $status = 307)
   {
     return $response->withStatus ($status)->withHeader ('Location', $url);
+  }
+
+  /**
+   * Converts an URL to be relative to the root URL or to application's base URL (if a request object is given).
+   *
+   * <p>Ex: `http://domain.com/news/1 --> news/1`
+   *
+   * @param string                      $url
+   * @param ServerRequestInterface|null $request
+   * @return mixed|string
+   */
+  static function relativePathOf ($url, ServerRequestInterface $request = null)
+  {
+    $url = preg_replace ('#\?.*#', '', $url);
+    if ($request) {
+      $base = $request->getAttribute ('baseUrl');
+      $len  = strlen ($base);
+      if (substr ($url, 0, $len) == $base)
+        $url = substr ($url, $len + 1);
+    }
+    else return preg_replace ('#^https?://[^/]*#', '', $url);
+    return $url;
   }
 
   /**

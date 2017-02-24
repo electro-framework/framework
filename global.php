@@ -229,7 +229,7 @@ function initPageViewModel (ViewModelInterface $viewModel = null, ServerRequestI
     if (!is_object ($viewModel) || !($viewModel instanceof ViewModelInterface))
       throw new RuntimeException(sprintf ("Invalid view model type: <kbd>%s</kbd>)", typeOf ($viewModel)));
     $viewModel['props'] = Http::getRouteParameters ($request);
-    $viewModel['fetch'] = $request->getHeaderLine ('X-Requested-With') == 'XMLHttpRequest';
+    $viewModel['fetch'] = $request->getAttribute ('isFetch');
     $viewModel->init ();
   }
   return $viewModel;
