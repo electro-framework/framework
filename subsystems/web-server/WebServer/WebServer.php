@@ -78,7 +78,7 @@ class WebServer
     $scheme     = $uri->getScheme () ?: 'http';
     $port       = $uri->getPort ();
     $baseUrl    = sprintf ('%s://%s%s%s', $scheme, $uri->getHost (),
-      $port == 80 && $scheme == 'http' || $port == 443 && $scheme == 'https' ? '' : ":$port",
+      $port ? ($port == 80 && $scheme == 'http' || $port == 443 && $scheme == 'https' ? '' : ":$port") : '',
       $basePath);
     $virtualUri = ltrim (substr ($uri->getPath (), strlen ($basePath)), '/');
     $query      = $uri->getQuery ();
