@@ -21,7 +21,7 @@ class URLNotFoundMiddleware implements RequestHandlerInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $path = either ($request->getAttribute ('virtualUri', '<i>not set</i>'), '<i>empty</i>');
+    $path     = either ($request->getAttribute ('virtualUri', '<i>not set</i>'), '<i>empty</i>');
     $realPath = $request->getUri ()->getPath ();
     return Http::response ($response, "<br><br><table align=center cellspacing=20 style='text-align:left'>
 <tr><th>Virtual&nbsp;URL:<td><kbd>$path</kbd>

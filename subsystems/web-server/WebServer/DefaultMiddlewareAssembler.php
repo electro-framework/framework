@@ -9,6 +9,7 @@ use Electro\Debugging\Middleware\WebConsoleMiddleware;
 use Electro\ErrorHandling\Middleware\ErrorHandlingMiddleware;
 use Electro\Http\Middleware\CompressionMiddleware;
 use Electro\Http\Middleware\CsrfMiddleware;
+use Electro\Http\Middleware\FetchMiddleware;
 use Electro\Http\Middleware\URLNotFoundMiddleware;
 use Electro\Http\Middleware\WelcomeMiddleware;
 use Electro\Interfaces\Http\MiddlewareAssemblerInterface;
@@ -36,18 +37,19 @@ class DefaultMiddlewareAssembler implements MiddlewareAssemblerInterface
   {
     $stack
       ->set ([
-        ContentServerMiddleware::class,
-        !$this->devEnv ? CompressionMiddleware::class : null,
-        $this->webConsole ? WebConsoleMiddleware::class : null,
-        ErrorHandlingMiddleware::class,
-        TranslationMiddleware::class,
+        0          => ContentServerMiddleware::class,
+        1          => !$this->devEnv ? CompressionMiddleware::class : null,
+        2          => $this->webConsole ? WebConsoleMiddleware::class : null,
+        3          => ErrorHandlingMiddleware::class,
+        4          => TranslationMiddleware::class,
         'session'  => SessionMiddleware::class,
-        $this->webConsole ? AlternateLogoutMiddleware::class : null,
-        CsrfMiddleware::class,
-        LanguageMiddleware::class,
-        PermalinksMiddleware::class,
+        5          => $this->webConsole ? AlternateLogoutMiddleware::class : null,
+        6          => CsrfMiddleware::class,
+        7          => LanguageMiddleware::class,
+        8          => PermalinksMiddleware::class,
+        9          => FetchMiddleware::class,
         'router'   => ApplicationRouterInterface::class,
-        WelcomeMiddleware::class,
+        10         => WelcomeMiddleware::class,
         'notFound' => URLNotFoundMiddleware::class,
       ]);
   }

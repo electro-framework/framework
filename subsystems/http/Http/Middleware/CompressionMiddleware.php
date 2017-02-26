@@ -1,9 +1,10 @@
 <?php
 namespace Electro\Http\Middleware;
-use Psr\Http\Message\ResponseInterface;
-use Psr\Http\Message\ServerRequestInterface;
+
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Applies gzip compression to the HTTP response.

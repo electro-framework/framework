@@ -9,7 +9,7 @@ class WelcomeMiddleware implements RequestHandlerInterface
 {
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    if ($request->getAttribute('virtualUri') != '')
+    if ($request->getAttribute ('virtualUri') != '')
       return $next ();
     $o = <<<'HTML'
 <!doctype html>

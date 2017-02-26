@@ -1,8 +1,9 @@
 <?php
 namespace Electro\Http\Middleware;
+
+use Electro\Interfaces\Http\RequestHandlerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Electro\Interfaces\Http\RequestHandlerInterface;
 
 /**
  * Verifies CSRF tokens for form POST requests.
