@@ -88,7 +88,7 @@ class WebServer
 
     ErrorConsole::setEditorUrl (($basePath ? "$basePath/" : '') . $this->kernelSettings->editorUrl);
 
-    $request       = $request->withAttribute ('originalUri', $baseUrl . $virtualUri . ($query ? "?$query" : $query));
+    $request       = $request->withAttribute ('originalUri', "$baseUrl/$virtualUri" . ($query ? "?$query" : ''));
     $request       = $request->withAttribute ('baseUri', $basePath);
     $request       = $request->withAttribute ('baseUrl', $baseUrl);
     $this->request = $request->withAttribute ('virtualUri', $virtualUri);
