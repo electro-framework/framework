@@ -272,7 +272,7 @@ class NavigationLink implements NavigationLinkInterface
         $this->available = false;
         return ''; //to preg_replace
       }
-      return $v;
+      return urlencode ($v);
     }, $this->url);
     return $url;
   }
