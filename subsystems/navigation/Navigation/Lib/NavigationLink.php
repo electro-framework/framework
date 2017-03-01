@@ -266,6 +266,7 @@ class NavigationLink implements NavigationLinkInterface
   {
     $this->available = true;
     $i               = 0;
+    $this->url(); // Calculate full URL, if it has not been done yet
     $url             = preg_replace_callback ('/@\w+/', function ($m) use ($params, &$i) {
       $v = get ($params, $i++);
       if (is_null ($v)) {
