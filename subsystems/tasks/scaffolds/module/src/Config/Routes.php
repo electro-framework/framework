@@ -20,7 +20,7 @@ class Routes implements RequestHandlerInterface
   {
     return $this->router
       ->add ([
-        '.' => simpleResponse ('It works!'),
+        '.' => htmlResponse ('It works!'),
       ])
       ->__invoke ($request, $response, $next);
   }
