@@ -29,6 +29,10 @@ class ViewService implements ViewServiceInterface
    */
   private $cache;
   /**
+   * @var ViewInterface
+   */
+  private $currentView = null;
+  /**
    * @var ViewEngineSettings
    */
   private $engineSettings;
@@ -54,6 +58,14 @@ class ViewService implements ViewServiceInterface
     $this->kernelSettings = $kernelSettings;
   }
 
+  function __debugInfo ()
+  {
+    return [
+      'View Engine Settings'       => $this->engineSettings,
+      'Registered Event Listeners' => $this->listeners,
+    ];
+  }
+
   function createViewModelFor (ViewInterface $view = null, $default = false)
   {
     if ($view && $path = $view->getPath ()) {
@@ -70,6 +82,13 @@ class ViewService implements ViewServiceInterface
     }
     $this->emit (CREATE_VIEW_MODEL, $view, $viewModel);
     return $viewModel;
+  }
+
+  public function currentView (ViewInterface $view = null)
+  {
+    if (isset($View))
+      return $this->currentView = $view;
+    return $this->currentView;
   }
 
   function getEngine ($engineClass, $options = [])
@@ -126,11 +145,6 @@ class ViewService implements ViewServiceInterface
     return $view;
   }
 
-  public function loadViewTemplate ($path)
-  {
-    return loadFile ($path);
-  }
-
   function onCreateViewModel (callable $handler)
   {
     return $this->on (CREATE_VIEW_MODEL, $handler);
@@ -145,14 +159,6 @@ class ViewService implements ViewServiceInterface
   {
     $this->patterns[$filePattern] = $engineClass;
     return $this;
-  }
-
-  function __debugInfo ()
-  {
-    return [
-      'View Engine Settings' => $this->engineSettings,
-      'Registered Event Listeners' => $this->listeners
-    ];
   }
 
   public function resolveTemplatePath ($path, &$base = null, &$viewPath = null)
