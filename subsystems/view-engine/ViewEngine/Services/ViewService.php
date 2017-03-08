@@ -84,9 +84,9 @@ class ViewService implements ViewServiceInterface
     return $viewModel;
   }
 
-  public function currentView (ViewInterface $view = null)
+  function currentView (ViewInterface $view = null)
   {
-    if (isset($View))
+    if (isset($view))
       return $this->currentView = $view;
     return $this->currentView;
   }
@@ -108,6 +108,15 @@ class ViewService implements ViewServiceInterface
         return $this->getEngine ($class, $options);
     throw new FatalException ("None of the available view engines is capable of handling a file named <b>$path</b>.
 <p>Make sure the file name has one of the supported file extensions or matches a known pattern.");
+  }
+
+  function getModuleOfPath ($path)
+  {
+    $path = $this->resolveTemplatePath ($path);
+    $l    = strlen ($this->kernelSettings->modulesPath);
+    $sep  = $path[$l];
+    $path = substr ($path, $l + 1);
+    return str_segmentsFirst ($path, $sep, 2);
   }
 
   function getViewModelClass ($templatePath)
@@ -161,7 +170,7 @@ class ViewService implements ViewServiceInterface
     return $this;
   }
 
-  public function resolveTemplatePath ($path, &$base = null, &$viewPath = null)
+  function resolveTemplatePath ($path, &$base = null, &$viewPath = null)
   {
     if ($path[0] == '/' || $path[0] == '\\')
       throw new \InvalidArgumentException("Template path must be relative, either from a module's views directory or from the application's base directory");

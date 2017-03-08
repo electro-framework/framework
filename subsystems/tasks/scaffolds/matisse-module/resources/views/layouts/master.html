@@ -1,16 +1,27 @@
-<Import service="app"/>
+<Import services="app navigation session"/>
+
+<Content of=title byDefault value={navigation.currentLink.title}/>
+<Content of=description byDefault value="My default page description"/>
+
+<AssetsGroup prepend>
+  <!-- Put your base Style and Script elements here -->
+</AssetsGroup>
 
 <Content prependTo=head>
   <meta charset="UTF-8">
-  <title>{pageTitle}</title>
+  <title>{#title + ' - ' + app.appName}</title>
   <base href="{app.baseUrl}/">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <link rel="shortcut icon" href="{app.favicon}">
+  <meta name="author" content="The author">
+  <meta name="description" content="{#description}">
+  <link rel="icon" href="{'i/favicon.png'|assetUrl}" type="image/png" />
+  <!-- Mobile -->
+  <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
 </Content>
 
 <!DOCTYPE HTML>
-<html>
-  <head>
+<html lang="{session.getLang}" {#htmlAttrs|*}>
+  <head {#headAttrs|*}>
     {#head|*}
     <Include styles/>
   </head>
