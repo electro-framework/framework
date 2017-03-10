@@ -203,7 +203,7 @@ class FileSystemCache implements CacheInterface
     if (is_object ($value) && $value instanceof \Closure)
       return false;
     $path = $path ?: $this->toFileName ($key);
-    $f    = @fopen ($path, 'w');
+    $f = file_exists ($path) ? @fopen ($path, 'w') : null;
     if (!$f) {
       // Maybe the directory is nonexistent...
       if ($this->createDirIfAbsent ())
