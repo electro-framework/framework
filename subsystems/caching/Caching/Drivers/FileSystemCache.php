@@ -203,7 +203,7 @@ class FileSystemCache implements CacheInterface
     if (is_object ($value) && $value instanceof \Closure)
       return false;
     $path = $path ?: $this->toFileName ($key);
-    $f = file_exists ($path) ? @fopen ($path, 'w') : null;
+    $f = file_exists ($path) || is_writable ($this->basePath) ? @fopen ($path, 'w') : null;
     if (!$f) {
       // Maybe the directory is nonexistent...
       if ($this->createDirIfAbsent ())
@@ -246,7 +246,7 @@ class FileSystemCache implements CacheInterface
    *
    * <p>A return value of TRUE means the previous file access operation should be reattempted.
    *
-   * @return bool TRUE if the directory has been successfully created now, FALSE if it already existed or it couldnt be
+   * @return bool TRUE if the directory has been successfully created now, FALSE if it already existed or it couldn't be
    *              created.
    */
   private function createDirIfAbsent ()
