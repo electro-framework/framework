@@ -228,11 +228,39 @@ function initPageViewModel (ViewModelInterface $viewModel = null, ServerRequestI
   if (isset($viewModel)) {
     if (!is_object ($viewModel) || !($viewModel instanceof ViewModelInterface))
       throw new RuntimeException(sprintf ("Invalid view model type: <kbd>%s</kbd>)", typeOf ($viewModel)));
-    $viewModel['props'] = Http::getRouteParameters ($request);
+    $props              = get ($viewModel, 'props');
+    $params             = Http::getRouteParameters ($request);
+    $viewModel['props'] = $props ? array_merge ($props, $params) : $params;
     $viewModel['fetch'] = $request->getAttribute ('isFetch');
     $viewModel->init ();
   }
   return $viewModel;
+}
+
+/**
+ * A middleware that sets a listener for the CREATE_VIEW_MODEL event.
+ *
+ * @param callable $fn function (ViewModelInterface, ViewInterface)
+ * @return Closure|InjectableFunction
+ */
+function onCreateViewModel (callable $fn)
+{
+  return injectableHandler (function ($req, $res, callable $next, ViewServiceInterface $viewService) use ($fn) {
+    $viewService->onCreateViewModel ($fn);
+    return $next();
+  });
+}
+
+/**
+ * An empty (no operation) middleware that just forwards the request to the next middleware on the stack.
+ *
+ * @return Closure
+ */
+function forward ()
+{
+  return function ($req, $res, $next) {
+    return $next ();
+  };
 }
 
 /**

@@ -111,7 +111,7 @@ class View implements ViewInterface
       $this->compile ();
 
     $this->viewService->currentView ($this);
-    $this->viewService->emit (RENDER, $this, $data);
+    $this->viewService->emit (RENDER, $data, $this);
 
     $template = $this->compiled ?: $this->source;
     if (is_null ($template))

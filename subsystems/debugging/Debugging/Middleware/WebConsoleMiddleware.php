@@ -123,7 +123,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
       };
 
       $renderCount = 0;
-      $viewService->onRenderView (function (ViewInterface $view, ViewModelInterface $viewModel = null) use (
+      $viewService->onRenderView (function (ViewModelInterface $viewModel, ViewInterface $view) use (
         $VMFilter, &$renderCount
       ) {
         ++$renderCount;

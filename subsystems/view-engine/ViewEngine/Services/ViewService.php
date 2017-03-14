@@ -80,7 +80,7 @@ class ViewService implements ViewServiceInterface
       if (!$default) return null;
       $viewModel = $this->injector->make (ViewModelInterface::class);
     }
-    $this->emit (CREATE_VIEW_MODEL, $view, $viewModel);
+    $this->emit (CREATE_VIEW_MODEL, $viewModel, $view);
     return $viewModel;
   }
 
