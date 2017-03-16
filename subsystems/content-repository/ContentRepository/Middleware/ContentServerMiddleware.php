@@ -68,7 +68,8 @@ class ContentServerMiddleware implements RequestHandlerInterface
         return $this->outputFile (
           $source->readStream ($url),
           $source->getSize ($url),
-          $source->getMimetype ($url)
+          $source->getMimetype ($url),
+          isset($params['f']) ? "attachment; filename=\"{$params['f']}\"" : 'inline'
         );
       }
     }
@@ -78,11 +79,12 @@ class ContentServerMiddleware implements RequestHandlerInterface
     return $this->responseFactory->make (404, "Not found: $url", 'text/plain');
   }
 
-  private function outputFile ($stream, $size, $mime)
+  private function outputFile ($stream, $size, $mime, $contentDisposition = 'inline')
   {
     return $this->responseFactory->makeFromStream ($stream, 200, [
       'Content-Type'   => $mime,
       'Content-Length' => $size,
+      'Content-Disposition' => $contentDisposition,
       'Cache-Control'  => 'max-age=31536000, public',
       'Expires'        => date_create ('+1 years')->format ('D, d M Y H:i:s') . ' GMT',
     ]);
