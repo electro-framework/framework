@@ -31,8 +31,8 @@ class Http
       return $url;
 
     if ($url != '' && $url[0] != '/')
-      $url = "/$url";
-    return $request->getAttribute ('baseUrl') . $url;
+      $url = $request->getAttribute ('baseUrl') . "/$url";
+    return (string)$request->getUri ()->withPath ($url);
   }
 
   /**
