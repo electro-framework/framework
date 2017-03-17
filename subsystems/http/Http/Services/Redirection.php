@@ -1,6 +1,7 @@
 <?php
 namespace Electro\Http\Services;
 
+use Electro\Http\Lib\Http;
 use Electro\Interfaces\Http\RedirectionInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
 use Electro\Interfaces\SessionInterface;
@@ -97,12 +98,7 @@ class Redirection implements RedirectionInterface
    */
   protected function normalizeUrl ($url)
   {
-    $url = strval ($url);
-    if (!$url)
-      return strval ($this->request->getUri ());
-    if ($url[0] != '/' && substr ($url, 0, 4) != 'http')
-      $url = $this->request->getAttribute ('baseUri') . "/$url";
-    return $url;
+    return Http::absoluteUrlOf ((string)$url, $this->request);
   }
 
   protected function validate ()

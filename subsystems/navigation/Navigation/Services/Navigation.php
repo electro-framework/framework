@@ -4,6 +4,7 @@ namespace Electro\Navigation\Services;
 
 use Electro\Exceptions\Fault;
 use Electro\Faults\Faults;
+use Electro\Http\Lib\Http;
 use Electro\Interfaces\Navigation\NavigationInterface;
 use Electro\Interfaces\Navigation\NavigationLinkInterface;
 use Electro\Navigation\Lib\NavigationLink;
@@ -76,7 +77,7 @@ class Navigation implements NavigationInterface
 
   function absoluteUrlOf ($url)
   {
-    return $this->isAbsolute ($url) ? $url : (string)$this->request ()->getUri ()->withPath ($url);
+    return Http::absoluteUrlOf ($url, $this->request ());
   }
 
   function add ($navigationMap, $prepend = false, $targetId = null)
@@ -142,7 +143,7 @@ class Navigation implements NavigationInterface
 
   function isAbsolute ($url)
   {
-    return isset($url) ? (bool)preg_match ('/^\w+:/', $url) : false;
+    return Http::isAbsoluteUrl ($url);
   }
 
   /**

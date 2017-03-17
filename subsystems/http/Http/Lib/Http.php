@@ -19,6 +19,23 @@ class Http
   const UNAUTHORIZED       = 401;
 
   /**
+   * Converts an URL into an absolute form (with scheme://domain/path).
+   *
+   * @param  string                $url     An absolute or relative URL.
+   * @param ServerRequestInterface $request A server request that will be used to build the absolute URL.
+   * @return string The absolute URL.
+   */
+  static function absoluteUrlOf ($url, ServerRequestInterface $request)
+  {
+    if (self::isAbsoluteUrl ($url))
+      return $url;
+
+    if ($url != '' && $url[0] != '/')
+      $url = "/$url";
+    return $request->getAttribute ('baseUrl') . $url;
+  }
+
+  /**
    * Checks if the HTTP client accepts the given content type.
    *
    * @param ServerRequestInterface $request
@@ -71,6 +88,17 @@ class Http
       }
       return null;
     });
+  }
+
+  /**
+   * Checks if a given URL matches is on absolute form (scheme://domain/path).
+   *
+   * @param string $url
+   * @return bool
+   */
+  static function isAbsoluteUrl ($url)
+  {
+    return isset($url) ? (bool)preg_match ('#^\w+://\w#', $url) : false;
   }
 
   /**
