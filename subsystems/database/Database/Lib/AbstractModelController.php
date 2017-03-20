@@ -81,34 +81,6 @@ abstract class AbstractModelController implements ModelControllerInterface
 
   abstract function loadModel ($modelClass, $subModelPath = '', $id = null);
 
-  /**
-   * Override to provide an implementation of beginning a database transaction.
-   */
-  abstract protected function beginTransaction ();
-
-  /**
-   * Override to provide an implementation of a database transaction commit.
-   */
-  abstract protected function commit ();
-
-  /**
-   * Override to provide an implementation of a database transaction rollback.
-   */
-  abstract protected function rollback ();
-
-  /**
-   * Attempts to save the given model on the database.
-   *
-   * <p>If the model type is unsupported by the specific controller implementation, the method will do nothing and
-   * return `null`.
-   * <p>If the model could not be save due to another reason, the method should returm `false`.
-   * > <p>This is usually only overriden by controller subclasses that implement support for a specific ORM.
-   *
-   * @param mixed $model
-   * @return bool|null true if the model was saved.
-   */
-  abstract protected function save ($model);
-
   function get ($path)
   {
     $root = "$this->modelRootPath.";
@@ -166,8 +138,12 @@ abstract class AbstractModelController implements ModelControllerInterface
 
       case 'GET':
         $old = $this->session->getOldInput ();
-        if ($old)
-          $this->merge ($this->parseFormData ($old));
+        if ($old) {
+          $data = [];
+          foreach ($old as $k => $v)
+            $data[str_replace ('model/', '', $k)] = $v;
+          $this->merge ($this->parseFormData ($data));
+        }
         break;
 
       case 'POST':
@@ -262,6 +238,34 @@ abstract class AbstractModelController implements ModelControllerInterface
     $this->requestedId = $this->request->getAttribute ("@$routeParam");
     return $this;
   }
+
+  /**
+   * Override to provide an implementation of beginning a database transaction.
+   */
+  abstract protected function beginTransaction ();
+
+  /**
+   * Override to provide an implementation of a database transaction commit.
+   */
+  abstract protected function commit ();
+
+  /**
+   * Override to provide an implementation of a database transaction rollback.
+   */
+  abstract protected function rollback ();
+
+  /**
+   * Attempts to save the given model on the database.
+   *
+   * <p>If the model type is unsupported by the specific controller implementation, the method will do nothing and
+   * return `null`.
+   * <p>If the model could not be save due to another reason, the method should returm `false`.
+   * > <p>This is usually only overriden by controller subclasses that implement support for a specific ORM.
+   *
+   * @param mixed $model
+   * @return bool|null true if the model was saved.
+   */
+  abstract protected function save ($model);
 
   /**
    * Saves all sub-models on the model that can be automatically saved.
