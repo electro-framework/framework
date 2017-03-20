@@ -30,8 +30,11 @@ class Http
     if (self::isAbsoluteUrl ($url))
       return $url;
 
-    if ($url != '' && $url[0] != '/')
-      $url = $request->getAttribute ('baseUrl') . "/$url";
+    $base = $request->getAttribute ('baseUri');
+    if ($url == '')
+      $url = $base;
+    elseif ($url[0] != '/')
+      $url = "$base/$url";
     return (string)$request->getUri ()->withPath ($url);
   }
 
