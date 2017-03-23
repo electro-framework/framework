@@ -32,43 +32,12 @@ class ConsoleIO implements ConsoleIOInterface
   private $nestingCounter = 0;
   /** @var OutputInterface */
   private $output;
+  /** @var bool TRUE if the previous line is empty. Prevents the output of redundand empty lines via nl() */
+  private $prevLineIsEmpty = false;
   /** @var int Verbosity level before the output was muted. */
   private $prevVerbosity;
   /** @var array A list of width and height. */
   private $terminalSize;
-
-  private static function tabular (array $data, array $widths, array $align = null, $glue = ' ',
-                                   $pad = ' ', $marker = '…')
-  {
-    $out = [];
-    if (empty($align))
-      $align = [];
-    foreach ($widths as $i => $w)
-      switch (get ($align, $i, 'L')) {
-        case 'L':
-          $align[$i] = STR_PAD_RIGHT;
-          break;
-        case 'R':
-          $align[$i] = STR_PAD_LEFT;
-          break;
-        case 'C':
-          $align[$i] = STR_PAD_BOTH;
-          break;
-        default:
-          throw new InvalidArgumentException ("Invalid value for align: $align[$i]");
-      }
-    foreach ($widths as $i => $w) {
-      $s = strval (get ($data, $i));
-      $l = taggedStrLen ($s);
-      if ($l > $w) {
-        $out[] = taggedStrCrop ($s, $w, $marker);
-//        echo taggedStrLen (taggedStrCrop ($s, $w - mb_strlen ($overflow, 'UTF-8')) . $overflow);
-
-      }
-      else $out[] = taggedStrPad ($s, $w, $align[$i], $pad);
-    }
-    return implode ($glue, $out);
-  }
 
   function ask ($question, $hideAnswer = false)
   {
@@ -92,8 +61,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   function banner ($text, $width = 0)
   {
-    $this->box ($text, 'fg=white;bg=blue', $width)->nl ();
-    return $this;
+    return $this->box ($text, 'fg=white;bg=blue', $width)->nl ();
   }
 
   function begin ()
@@ -118,7 +86,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   function comment ($text)
   {
-    return $this->say ("<comment>$text</comment>");
+    return $this->writeln ("<comment>$text</comment>");
   }
 
   function confirm ($question)
@@ -126,16 +94,14 @@ class ConsoleIO implements ConsoleIOInterface
     return $this->doAsk (new ConfirmationQuestion($this->formatQuestion ($question . ' (y/N)'), false));
   }
 
-  function done ($text = '', $dontExit = false)
+  function done ($text = '')
   {
-    if (!--$this->nestingCounter) {
+    if (--$this->nestingCounter <= 0) {
       $text = $text ?: $this->doneMessage;
-      if (!$this->firstLine)
-        $this->nl ();
+      $this->nl ();
       if (strlen ($text))
         $this->writeln ($text);
-      if (!$dontExit)
-        exit (0);
+      $this->nl ();
     }
   }
 
@@ -184,7 +150,7 @@ class ConsoleIO implements ConsoleIOInterface
       return $defaultIndex;
     $pad   = strlen (count ($options));
     $width = empty ($options) ? 0 : max (array_map ('taggedStrLen', $options));
-    $this->nl ()->writeln ("<question>$question</question>")->nl ();
+    $this->writeln ("<question>$question</question>")->nl ();
     foreach ($options as $i => $option) {
       $this->write ("    <fg=cyan>" . str_pad ($i + 1, $pad, ' ', STR_PAD_LEFT) . ".</fg=cyan> ");
       $this->writeln (isset($secondColumn)
@@ -226,8 +192,11 @@ class ConsoleIO implements ConsoleIOInterface
 
   function nl ($count = 1)
   {
-    while ($count--)
-      $this->writeln ();
+    if (!$this->firstLine && !$this->prevLineIsEmpty) {
+      while ($count--)
+        $this->output->writeln ('');
+      $this->prevLineIsEmpty = true;
+    }
     return $this;
   }
 
@@ -261,6 +230,7 @@ class ConsoleIO implements ConsoleIOInterface
       $this->writeln ('│ ' . self::tabular ($row, $widths, $align, '│ ') . '│');
     }
     $this->writeln ('└─' . self::tabular ([], $widths, null, '┴─', '─') . '┘');
+    return $this;
   }
 
   public function terminalSize (array $terminalSize = null)
@@ -272,8 +242,7 @@ class ConsoleIO implements ConsoleIOInterface
 
   function title ($text)
   {
-    $this->nl ()->writeln ("<title>$text</title>")->nl ();
-    return $this;
+    return $this->nl ()->writeln ("<title>$text</title>")->nl ();
   }
 
   function unmute ()
@@ -284,29 +253,30 @@ class ConsoleIO implements ConsoleIOInterface
 
   function warn ($text)
   {
-    if ($this->output)
-      $this->output->writeln ("<warning> $text </warning>");
-    return $this;
+    return $this->writeln ("<warning> $text </warning>");
   }
 
   function write ($text)
   {
-    if ($this->indent)
-      $text = preg_replace ('/^/m', $this->indent, $text);
-    if ($this->output)
-      $this->output->write ($text);
+    if ($this->output && $this->output->getVerbosity () != Output::VERBOSITY_QUIET) {
+      $this->prevLineIsEmpty = false;
+      if ($this->firstLine) {
+        $this->firstLine = false;
+        if ($this->output->isDecorated ())
+          $this->output->writeln ('');
+      }
+      if ($this->indent)
+        $text = preg_replace ('/^/m', $this->indent, $text);
+      if ($this->output)
+        $this->output->write ($text);
+    }
     return $this;
   }
 
   function writeln ($text = '')
   {
-    if ($this->output && $this->output->getVerbosity () != Output::VERBOSITY_QUIET) {
-      $this->firstLine = false;
-      if ($this->indent)
-        $text = preg_replace ('/^/m', $this->indent, $text);
-      if ($this->output)
-        $this->output->writeln ($text);
-    }
+    $this->write ($text);
+    $this->output->writeln ('');
     return $this;
   }
 
@@ -342,6 +312,39 @@ class ConsoleIO implements ConsoleIOInterface
     }
   }
 
+  private static function tabular (array $data, array $widths, array $align = null, $glue = ' ',
+                                   $pad = ' ', $marker = '…')
+  {
+    $out = [];
+    if (empty($align))
+      $align = [];
+    foreach ($widths as $i => $w)
+      switch (get ($align, $i, 'L')) {
+        case 'L':
+          $align[$i] = STR_PAD_RIGHT;
+          break;
+        case 'R':
+          $align[$i] = STR_PAD_LEFT;
+          break;
+        case 'C':
+          $align[$i] = STR_PAD_BOTH;
+          break;
+        default:
+          throw new InvalidArgumentException ("Invalid value for align: $align[$i]");
+      }
+    foreach ($widths as $i => $w) {
+      $s = strval (get ($data, $i));
+      $l = taggedStrLen ($s);
+      if ($l > $w) {
+        $out[] = taggedStrCrop ($s, $w, $marker);
+//        echo taggedStrLen (taggedStrCrop ($s, $w - mb_strlen ($overflow, 'UTF-8')) . $overflow);
+
+      }
+      else $out[] = taggedStrPad ($s, $w, $align[$i], $pad);
+    }
+    return implode ($glue, $out);
+  }
+
   private function box ($text, $colors, $width = 0, $align = CONSOLE_ALIGN_CENTER)
   {
     $lines = explode (PHP_EOL, $text);
@@ -362,7 +365,8 @@ class ConsoleIO implements ConsoleIOInterface
   private function doAsk (Question $question)
   {
     if ($this->input && $this->output) {
-      $this->firstLine = false;
+      $this->prevLineIsEmpty = false;
+      $this->firstLine       = false;
       return $this->getDialog ()->ask ($this->input, $this->output, $question);
     }
   }

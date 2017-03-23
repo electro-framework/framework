@@ -424,6 +424,7 @@ trait ModuleCommands
         $this->regenerateComposer (); // The plugin and its dependencies will no longer be considered.
         $this->doComposerUpdate ();   // This also updates the modules registry.
         $this->io->done ("Plugin <info>$moduleName</info> was uninstalled");
+        return;
       };
     }
     $this->io->error ("Plugin <info>$moduleName</info> was not found on any project module");

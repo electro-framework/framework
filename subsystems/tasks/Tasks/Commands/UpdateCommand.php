@@ -124,8 +124,10 @@ trait UpdateCommand
 
     $currentConfig = file_get_contents ('composer.json');
     $targetCfgStr  = json_print ($targetConfig);
-    if ($currentConfig == $targetCfgStr)
+    if ($currentConfig == $targetCfgStr) {
       $this->io->done ("<info>No changes</info> were made to composer.json");
+      return;
+    }
 
     file_put_contents ('composer.json', $targetCfgStr);
   }

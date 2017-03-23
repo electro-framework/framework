@@ -31,16 +31,19 @@ class ModulesUtil
    *
    * <p>This method is available to console tasks only.
    *
-   * @param string   $moduleName     A variable reference. If empty, it will be set to the selected module name.
-   * @param callable $filter         Display only modules that match a filtering condition.
-   *                                 <p>Callback syntax: <code>function (ModuleInfo $module):bool</code>
-   * @param bool     $suppressErrors Do not abort execution with an error message if the module name is not valid.
+   * @param string   $moduleName       A variable reference. If empty, it will be set to the selected module name.
+   * @param callable $filter           Display only modules that match a filtering condition.
+   *                                   <p>Callback syntax: <code>function (ModuleInfo $module):bool</code>
+   * @param bool     $suppressErrors   Do not abort execution with an error message if the module name is not valid.
+   * @param callable $secondColMapper  [optional] If given, a function that receives a module name and should return
+   *                                   text be displayed next to that module name on the menu, on a second column.
    * @return bool false if the specified module name does not match an installed module
    */
-  function selectInstalledModule (& $moduleName, callable $filter = null, $suppressErrors = false)
+  function selectInstalledModule (& $moduleName, callable $filter = null, $suppressErrors = false,
+                                  callable $secondColMapper = null)
   {
     return $this->selectModule ($moduleName, $this->registry->onlyPrivateOrPlugins ()->only ($filter)->getModules (),
-      $suppressErrors);
+      $suppressErrors, $secondColMapper);
   }
 
   /**
@@ -49,11 +52,13 @@ class ModulesUtil
    * <p>This method is available to console tasks only.
    *
    * @param string       $moduleName
-   * @param ModuleInfo[] $modules        The set of allowable modules
-   * @param bool         $suppressErrors Do not abort execution with an error message if the module name is not valid.
+   * @param ModuleInfo[] $modules         The set of allowable modules
+   * @param bool         $suppressErrors  Do not abort execution with an error message if the module name is not valid.
+   * @param callable     $secondColMapper [optional] If given, a function that receives a module name and should return
+   *                                      text be displayed next to that module name on the menu, on a second column.
    * @return bool false if the specified module name does not match one of the eligible modules
    */
-  function selectModule (& $moduleName, array $modules, $suppressErrors = false)
+  function selectModule (& $moduleName, array $modules, $suppressErrors = false, callable $secondColMapper = null)
   {
     if ($moduleName) {
       if (!ModulesRegistry::validateModuleName ($moduleName)) {
@@ -72,7 +77,8 @@ class ModulesUtil
     else {
       if ($modules) {
         $moduleNames = array_keys ($modules);
-        $i = $this->io->menu ("Select a module:", $moduleNames);
+        $col2        = $secondColMapper ? map ($moduleNames, $secondColMapper) : null;
+        $i           = $this->io->menu ("Select a module:", $moduleNames, -1, $col2);
         if ($i < 0) $this->io->cancel ();
         $moduleName = $moduleNames[$i];
       }
