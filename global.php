@@ -371,10 +371,12 @@ function injectableHandler (callable $fn)
   $argsRef = array_slice ($argsRef, 3); // Discard $req, $res and $next
   return new InjectableFunction (function (InjectorInterface $injector) use ($argsRef, $fn) {
     $args = [];
-    foreach ($argsRef as $ar)
-      if ($ar->hasType ())
-        $args[] = $injector->make ((string)$ar->getClass()->getName());
+    foreach ($argsRef as $ar) {
+      $type = $ar->getClass ();
+      if ($type)
+        $args[] = $injector->make ($type->getName ());
       else throw new \InvalidArgumentException ("Untyped arguments are not supported for injectable handlers");
+    }
     return function ($req, $res, $next) use ($args, $fn) {
       return $fn ($req, $res, $next, ...$args);
     };
