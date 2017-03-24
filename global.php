@@ -373,7 +373,7 @@ function injectableHandler (callable $fn)
     $args = [];
     foreach ($argsRef as $ar)
       if ($ar->hasType ())
-        $args[] = $injector->make ((string)$ar->getType ());
+        $args[] = $injector->make ((string)$ar->getClass()->getName());
       else throw new \InvalidArgumentException ("Untyped arguments are not supported for injectable handlers");
     return function ($req, $res, $next) use ($args, $fn) {
       return $fn ($req, $res, $next, ...$args);
