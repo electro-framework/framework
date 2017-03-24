@@ -283,9 +283,9 @@ trait ModuleCommands
                                     $opts = ['search|s' => '', 'stars' => false, 'unstable|u' => false])
   {
     $io      = $this->io;
-    $modules = $this->modulesRegistry->onlyPrivate ()->getModules ();
+    $privateModules = $this->modulesRegistry->onlyPrivate ()->getModules ();
 
-    if (!$modules)
+    if (!$privateModules)
       $io->error ("You can't install plugins until you have created one or more project modules");
 
     if (!$moduleName) {
@@ -316,7 +316,7 @@ trait ModuleCommands
     // Select target module where the plugin will be registered
 
     $io->writeln ('<question>Where should the plugin be registered?</question>');
-    $this->modulesUtil->selectModule ($targetModuleName, $modules);
+    $this->modulesUtil->selectModule ($targetModuleName, $privateModules);
 
     // Install module via Composer
 
