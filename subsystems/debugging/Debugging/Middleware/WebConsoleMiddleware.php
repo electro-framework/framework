@@ -2,6 +2,7 @@
 
 namespace Electro\Debugging\Middleware;
 
+use Electro\Database\Lib\DebugStatement;
 use Electro\Debugging\Config\DebugSettings;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RequestHandlerInterface;
@@ -241,6 +242,12 @@ class WebConsoleMiddleware implements RequestHandlerInterface
         }
       }
     }
+
+    //----------------------------------------------------------------------------------------
+    // Database panel
+    //----------------------------------------------------------------------------------------
+    if ($this->debugSettings->logDatabase)
+      DebugStatement::endLog();  // close the previous panel, if one is open.
 
     //----------------------------------------------------------------------------------------
     // View panel (again)

@@ -2,71 +2,35 @@
 namespace Electro\Database\Lib;
 
 use Electro\Traits\DecoratorTrait;
-use PDOException;
 use PhpKit\ExtPDO\ExtPDO;
-use PhpKit\WebConsole\DebugConsole\DebugConsole;
 
+/**
+ * @property ExtPDO $decorated
+ */
 class DebugPDO
 {
   use DecoratorTrait;
-
-  static private $SQL_KEYWORDS = [
-    'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'JOIN', 'LEFT', 'RIGHT', 'OUTER',
-    'ORDER BY', 'GROUP BY', 'HAVING', 'LIMIT', 'UNION',
-  ];
 
   public function __construct (ExtPDO $pdo)
   {
     $this->decorated = $pdo;
   }
 
-  public function exec ($query, $params = null)
+  function __debugInfo ()
   {
-    return $this->logQuery ('exec', $query, $params, false);
+    return [
+      'decorated' => $this->decorated,
+    ];
   }
 
-  public function query ($query, $params = null)
+  public function prepare ($statement, array $driver_options = [])
   {
-    return $this->logQuery ('query', $query, $params, true);
+    return new DebugStatement ($this->decorated->prepare ($statement, $driver_options), $statement);
   }
 
-  private function highlightQuery ($msg, array $keywords, $baseStyle)
+  public function query ($statement, $mode = PDO::ATTR_DEFAULT_FETCH_MODE, $arg3 = null, array $ctorargs = array())
   {
-    $msg = preg_replace ("#`[^`]*`#", '<span class=dbcolumn>$0</span>', $msg);
-    $msg = DebugConsole::highlight ($msg, $keywords, $baseStyle);
-    return "<#i>$msg</#i>";
-  }
-
-  private function logQuery ($method, $query, array $params = null, $isSelect)
-  {
-    /** @var \PDOStatement $st */
-    $st        = null;
-    $showQuery = function ($dur = null) use ($query, $params, &$st, $isSelect) {
-      $query = trim ($query);
-      DebugConsole::logger ('database')
-                  ->inspect ('<#section|SQL QUERY>', $this->highlightQuery ($query, self::$SQL_KEYWORDS, 'identifier'));
-      if (!empty($params))
-        DebugConsole::logger ('database')->write ("<#header>Parameters</#header>")->inspect ($params);
-      DebugConsole::logger ('database')
-                  ->write (sprintf ("<#footer>Query took <b>%s</b> milliseconds" .
-                                    ($isSelect ? '' : ' and affected <b>%d</b> records') . "</#footer>",
-                    $dur * 1000, $st ? $st->rowCount () : 0));
-      DebugConsole::logger ('database')->write ('</#section>');
-    };
-
-    $start = microtime (true);
-    try {
-      $st = $this->decorated->$method ($query, $params);
-    }
-    catch (PDOException $e) {
-      $showQuery ();
-      DebugConsole::logger ('database')->write ('<#footer><#alert>Query failed!</#alert></#footer>');
-      DebugConsole::throwErrorWithLog ($e);
-    }
-    $end = microtime (true);
-    $dur = round ($end - $start, 4);
-    $showQuery ($dur);
-    return $st;
+    return new DebugStatement ($this->decorated->query ($statement, $mode, $arg3, $ctorargs), $statement);
   }
 
 
