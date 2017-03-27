@@ -141,7 +141,7 @@ class AssetsService
     if (!empty($this->assets->inlineScripts)) {
       echo "<script>";
       foreach ($this->assets->inlineScripts as $item) {
-        $code = trim ($item instanceof RenderableInterface ? $item->getRendering () : $item);
+        $code = trim ((string)$item);
         $last = substr ($code, -1);
         echo $last != ';' && $last != '}' ? $code . ';' : $code . "\n";
       }
@@ -156,7 +156,7 @@ class AssetsService
     if (!empty($this->assets->inlineCssStyles)) {
       echo "<style>";
       foreach ($this->assets->inlineCssStyles as $item)
-        echo $item instanceof RenderableInterface ? $item->getRendering () : $item;
+        echo $item;
       echo "</style>";
     }
   }
