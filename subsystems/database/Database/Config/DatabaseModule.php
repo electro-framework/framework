@@ -29,12 +29,13 @@ class DatabaseModule implements ModuleInterface
       function (InjectorInterface $injector) {
         $injector
           ->delegate (ConnectionInterface::class, function (DebugSettings $debugSettings) {
-            return $debugSettings->logDatabase ? new DebugConnection : new Connection;
+            return $debugSettings->webConsole && $debugSettings->logDatabase ? new DebugConnection : new Connection;
           })
           ->share (ConnectionsInterface::class)
           ->delegate (ConnectionsInterface::class, function (DebugSettings $debugSettings) {
             $connections = new Connections;
-            $connections->setConnectionClass ($debugSettings->logDatabase ? DebugConnection::class : Connection::class);
+            $connections->setConnectionClass ($debugSettings->webConsole && $debugSettings->logDatabase
+              ? DebugConnection::class : Connection::class);
             return $connections;
           })
           ->alias (ModelControllerInterface::class, ModelController::class)
