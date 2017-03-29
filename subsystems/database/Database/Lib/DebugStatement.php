@@ -4,6 +4,7 @@ namespace Electro\Database\Lib;
 
 use PDO;
 use PDOException;
+use PhpKit\ExtPDO\ExtPDO;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 
 /**
@@ -17,42 +18,27 @@ use PhpKit\WebConsole\DebugConsole\DebugConsole;
  */
 class DebugStatement extends \PDOStatement
 {
-  /** @var static|null */
-  private static $currentStatement = null;
   /** @var string The SQL command, always in lower case (ex: 'select') */
   protected $command;
   /** @var \PDOStatement */
   protected $decorated;
-  protected $doProfiling = true;
-  protected $fetchCount  = 0;
+  protected $fetchCount = 0;
   /** @var bool */
   protected $isSelect;
   /** @var array */
   protected $params = [];
   /** @var string The full SQL query */
   protected $query;
+  /** @var ExtPDO */
+  private $pdo;
 
-  public function __construct (\PDOStatement $statement, $query)
+  public function __construct (\PDOStatement $statement, $query, $pdo)
   {
     $this->decorated = $statement;
     $this->query     = trim ($query);
     $this->command   = strtolower (str_extractSegment ($this->query, '/\s/')[0]);
     $this->isSelect  = $this->command == 'select';
-  }
-
-  static function endLog ()
-  {
-    $st = static::$currentStatement;
-    if ($st) {
-      static::$currentStatement = null;
-      $count                    = $st->isSelect ? $st->fetchCount : $st->rowCount ();
-      DebugConsole::logger ('database')
-                  ->write (sprintf ('; <b>%d</b> %s %s</#footer></#section>',
-                    $count,
-                    $count == 1 ? 'record' : 'records',
-                    $st->isSelect ? 'fetched' : 'affected'
-                  ));
-    }
+    $this->pdo       = $pdo;
   }
 
   function __debugInfo ()
@@ -84,9 +70,7 @@ class DebugStatement extends \PDOStatement
 
   public function closeCursor ()
   {
-    $this->doProfiling = true;
-    $this->fetchCount  = 0;
-    $this->params      = [];
+    $this->params = [];
     return $this->decorated->closeCursor ();
   }
 
@@ -112,20 +96,20 @@ class DebugStatement extends \PDOStatement
 
   public function execute ($params = null)
   {
-    if ($params)
+    if (isset($params))
       $this->params = $params;
     $this->logQuery ();
-    return $this->profile (function () use ($params) {
+    $this->countRows ();
+    $r = $this->profile (function () use ($params) {
       return $this->decorated->execute ($params);
     });
+    $this->endLog ();
+    return $r;
   }
 
   public function fetch ($fetch_style = null, $cursor_orientation = PDO::FETCH_ORI_NEXT, $cursor_offset = 0)
   {
-    $r = $this->decorated->fetch ($fetch_style, $cursor_orientation, $cursor_offset);
-    if ($r !== false)
-      ++$this->fetchCount;
-    return $r;
+    return $this->decorated->fetch ($fetch_style, $cursor_orientation, $cursor_offset);
   }
 
   public function fetchAll ($fetch_style = null, $fetch_argument = null, $ctor_args = null)
@@ -133,36 +117,27 @@ class DebugStatement extends \PDOStatement
     $count = func_num_args ();
     switch ($count) {
       case 0:
-        $r = $this->decorated->fetchAll ();
+        return $this->decorated->fetchAll ();
         break;
       case 1:
-        $r = $this->decorated->fetchAll ($fetch_style);
+        return $this->decorated->fetchAll ($fetch_style);
         break;
       case 2:
-        $r = $this->decorated->fetchAll ($fetch_style, $fetch_argument);
+        return $this->decorated->fetchAll ($fetch_style, $fetch_argument);
         break;
       default:
-        $r = $this->decorated->fetchAll ($fetch_style, $fetch_argument, $ctor_args);
+        return $this->decorated->fetchAll ($fetch_style, $fetch_argument, $ctor_args);
     }
-    if ($r !== false)
-      $this->fetchCount += count ($r);
-    return $r;
   }
 
   public function fetchColumn ($column_number = 0)
   {
-    $r = $this->decorated->fetchColumn ($column_number);
-    if ($r !== false)
-      ++$this->fetchCount;
-    return $r;
+    return $this->decorated->fetchColumn ($column_number);
   }
 
   public function fetchObject ($class_name = "stdClass", $ctor_args = null)
   {
-    $r = $this->decorated->fetchObject ($class_name, $ctor_args);
-    if ($r !== false)
-      ++$this->fetchCount;
-    return $r;
+    return $this->decorated->fetchObject ($class_name, $ctor_args);
   }
 
   public function getAttribute ($attribute)
@@ -177,8 +152,6 @@ class DebugStatement extends \PDOStatement
 
   public function nextRowset ()
   {
-    $this->doProfiling = true;
-    $this->fetchCount  = 0;
     return $this->decorated->nextRowset ();
   }
 
@@ -197,16 +170,46 @@ class DebugStatement extends \PDOStatement
     return $this->decorated->setFetchMode ($mode);
   }
 
-  private function logDuration ($dur)
+  protected function countRows ()
+  {
+    $query = preg_replace ('/^\s*(SELECT\s+)(?:[\s\S]+?)(\s+FROM\s+)/i', '$1COUNT(*)$2', $this->query);
+    try {
+      $this->fetchCount = null;
+      $st               = $this->pdo->select ($query, $this->params);
+      if (!$st)
+        return;
+      $this->fetchCount = $st->fetchColumn (0);
+      $st->closeCursor ();
+    }
+    catch (PDOException $e) {
+      // do nothing
+    }
+  }
+
+  protected function endLog ()
+  {
+    $log   = DebugConsole::logger ('database');
+    $count = $this->isSelect ? $this->fetchCount : $this->rowCount ();
+    if (is_null ($count)) {
+      $log->write ('; unknown result set size');
+    }
+    else
+      $log->write (sprintf ('; <b>%d</b> %s %s',
+        $count,
+        $count == 1 ? 'record' : 'records',
+        $this->isSelect ? 'returned' : 'affected'
+      ));
+    $log->write ('</#footer></#section>');
+  }
+
+  protected function logDuration ($dur)
   {
     DebugConsole::logger ('database')
                 ->write (sprintf ('<#footer>Query took <b>%s</b> milliseconds', $dur * 1000));
   }
 
-  private function logQuery ()
+  protected function logQuery ()
   {
-    static::endLog (); // close the previous panel, if one is open.
-    static::$currentStatement = $this;
     DebugConsole::logger ('database')
                 ->inspect ("<#section|SQL " . ($this->isSelect ? 'QUERY' : 'STATEMENT') . ">",
                   SqlFormatter::highlightQuery ($this->query));
@@ -214,27 +217,20 @@ class DebugStatement extends \PDOStatement
       DebugConsole::logger ('database')->write ("<#header>Parameters</#header>")->inspect ($this->params);
   }
 
-  private function profile (callable $action)
+  protected function profile (callable $action)
   {
-    if ($this->doProfiling) {
-      $start = microtime (true);
-      try {
-        $r = $action ();
-      }
-      catch (PDOException $e) {
-        DebugConsole::logger ('database')->write ('<#footer><#alert>Query failed!</#alert></#footer>');
-        DebugConsole::throwErrorWithLog ($e);
-      }
-      $end = microtime (true);
-      $dur = round ($end - $start, 4);
-      $this->logDuration ($dur);
-      $this->doProfiling = false;
-      if (!$this->isSelect)
-        static::endLog ();
-      /** @noinspection PhpUndefinedVariableInspection */
-      return $r;
+    $start = microtime (true);
+    try {
+      $r = $action ();
     }
-    return $action ();
+    catch (PDOException $e) {
+      DebugConsole::logger ('database')->write ('<#footer><#alert>Query failed!</#alert></#footer>');
+      DebugConsole::throwErrorWithLog ($e);
+    }
+    $end = microtime (true);
+    $dur = round ($end - $start, 4);
+    $this->logDuration ($dur);
+    /** @noinspection PhpUndefinedVariableInspection */
+    return $r;
   }
-
 }
