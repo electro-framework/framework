@@ -64,7 +64,7 @@ class DebugStatement extends \PDOStatement
 
   public function bindValue ($parameter, $value, $data_type = PDO::PARAM_STR)
   {
-    $this->params[$parameter] = $value;
+    $this->params[is_numeric ($parameter) ? $parameter - 1 : $parameter] = $value;
     return $this->decorated->bindValue ($parameter, $value, $data_type);
   }
 
@@ -172,7 +172,7 @@ class DebugStatement extends \PDOStatement
 
   protected function countRows ()
   {
-    $query = preg_replace ('/^\s*(SELECT\s+)(?:[\s\S]+?)(\s+FROM\s+)/i', '$1COUNT(*)$2', $this->query);
+    $query = preg_replace ('/^\s*(SELECT\s+)(?:.+?)(\s+FROM\b)/is', '$1COUNT(*)$2', $this->query);
     try {
       $this->fetchCount = null;
       $st               = $this->pdo->select ($query, $this->params);
@@ -182,7 +182,10 @@ class DebugStatement extends \PDOStatement
       $st->closeCursor ();
     }
     catch (PDOException $e) {
-      // do nothing
+      DebugConsole::logger ('database')
+                  ->log ('notice',
+                    sprintf ("<p>While inspecting a database query, an error occurred computing the size of its result set:</p>%s<p><br>Failed inspection query:</p>%s",
+                      $e->getMessage (), SqlFormatter::highlightQuery ($query)));
     }
   }
 
