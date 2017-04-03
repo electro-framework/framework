@@ -17,6 +17,11 @@ class NavigationLink implements NavigationLinkInterface
 {
   use InspectionTrait;
 
+  private static $INSPECTABLE = [
+    'active', 'available', 'cachedUrl', 'current', 'enabled', 'group', 'icon', 'id', 'links', 'selected', 'title',
+    'url', 'visible', 'visibleIfUnavailable',
+  ];
+
   /**
    * Note: this will be assigned a reference to an array on a {@see NavigationInterface} instance.
    *
@@ -266,8 +271,8 @@ class NavigationLink implements NavigationLinkInterface
   {
     $this->available = true;
     $i               = 0;
-    $this->url(); // Calculate full URL, if it has not been done yet
-    $url             = preg_replace_callback ('/@\w+/', function ($m) use ($params, &$i) {
+    $this->url (); // Calculate full URL, if it has not been done yet
+    $url = preg_replace_callback ('/@\w+/', function ($m) use ($params, &$i) {
       $v = get ($params, $i++);
       if (is_null ($v)) {
         $this->available = false;
