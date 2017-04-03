@@ -2,9 +2,9 @@
 
 namespace Electro\Debugging\Config;
 
+use Agrozapp\Website\Config\WebsiteProfile;
 use Electro\Kernel\Services\Kernel;
 use Electro\Logging\Config\LogSettings;
-use Monolog\Logger;
 
 /**
  * Settings for the Debugging subsystem.
@@ -76,10 +76,21 @@ class DebugSettings
    */
   public $webConsole;
 
+  /**
+   * @var bool For use by {@see webConsoleIsAvailable}
+   */
+  private $isWebProfile;
+
   public function __construct (Kernel $kernel, LogSettings $logSettings)
   {
-    $this->devEnv     = $kernel->devEnv ();
-    $this->webConsole = env ('CONSOLE', false);
+    $this->devEnv       = $kernel->devEnv ();
+    $this->webConsole   = env ('CONSOLE', false);
+    $this->isWebProfile = $kernel->getProfile () instanceof WebsiteProfile;;
+  }
+
+  function isWebConsoleAvailable ()
+  {
+    return $this->webConsole && $this->isWebProfile;
   }
 
 }
