@@ -22,13 +22,14 @@ class DebugStatement extends \PDOStatement
   protected $command;
   /** @var \PDOStatement */
   protected $decorated;
-  protected $fetchCount = 0;
   /** @var bool */
   protected $isSelect;
   /** @var array */
   protected $params = [];
   /** @var string The full SQL query */
   protected $query;
+  /** @var int Either the number of rows returned from a SELECT query or how many rows were affected by a INSERT/UPDATE/DELETE query */
+  protected $rowCount = 0;
   /** @var ExtPDO */
   private $pdo;
 
@@ -47,7 +48,7 @@ class DebugStatement extends \PDOStatement
       'decorated'  => $this->decorated,
       'query'      => $this->query,
       'params'     => $this->params,
-      'fetchCount' => $this->fetchCount,
+      'fetchCount' => $this->rowCount,
     ];
   }
 
@@ -172,13 +173,17 @@ class DebugStatement extends \PDOStatement
 
   protected function countRows ()
   {
-    $query = preg_replace ('/^\s*(SELECT\s+)(?:.+?)(\s+FROM\b)/is', '$1COUNT(*)$2', $this->query);
+    if (!$this->isSelect) {
+      $this->rowCount = $this->rowCount ();
+      return;
+    }
+    $query = sprintf ('SELECT COUNT(*) FROM (%s) AS __countQuery', $this->query);
     try {
-      $this->fetchCount = null;
-      $st               = $this->pdo->select ($query, $this->params);
+      $this->rowCount = null;
+      $st             = $this->pdo->select ($query, $this->params);
       if (!$st)
         return;
-      $this->fetchCount = $st->fetchColumn (0);
+      $this->rowCount = $st->fetchColumn (0);
       $st->closeCursor ();
     }
     catch (PDOException $e) {
@@ -192,7 +197,7 @@ class DebugStatement extends \PDOStatement
   protected function endLog ()
   {
     $log   = DebugConsole::logger ('database');
-    $count = $this->isSelect ? $this->fetchCount : $this->rowCount ();
+    $count = $this->rowCount;
     if (is_null ($count)) {
       $log->write ('; unknown result set size');
     }
