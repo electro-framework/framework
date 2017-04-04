@@ -27,6 +27,13 @@ class RouteMatcher implements RouteMatcherInterface
     if ($methods && !in_array ($request->getMethod (), explode ('|', rtrim ($methods))))
       return false;
 
+    // The dot matches an empty path.
+    if ($pathPattern == '.')
+      return !strlen ($path);
+
+    if ($path == '[empty-segment]') // remove marker
+      $path = '';
+
     // The asterisk matches any path.
     if ($pathPattern == '*')
       return true;
@@ -37,14 +44,15 @@ class RouteMatcher implements RouteMatcherInterface
 
     // @parameters never match the empty path (which is encoded as a single dot)
     $compiledPattern = preg_replace (
-      ['/(?<=[^\*\.])$/', '/\*$/', '/\.\.\.$/', '/\.$/', '/@(\w+)/', '[\[\]\{\}\(\)\.\?]'],
-      ['(?<_next>$)', '(?<_next>.*)', '(?<_next>)', '(?<_next>$)', '(?<$1>(?=(?:$|[^\.]))[^/]*)', '\\$0'],
+      ['/(?<=[^\*\.])$/', '/\*$/', '/\.\.\.$/', '/@(\w+)/', '[\[\]\{\}\(\)\.\?]'],
+      ['(?<_next>$)', '(?<_next>.*)', '(?=\/|$)(?<_next>)', '(?<$1>(?=(?:$|[^\.]))[^/]*)', '\\$0'],
       $pathPattern);
 
     if (!preg_match ("#^$compiledPattern#", $path, $m2, PREG_OFFSET_CAPTURE))
       return false;
 
-    $newPath = substr ($path, $m2['_next'][1] + 1);
+    $p = $m2['_next'][1];
+    $newPath = substr($path, $p, 2) == '/' ? '[empty-segment]' : substr ($path, $p + 1);
     if ($path != $newPath)
       $request = $request->withRequestTarget ($newPath === false ? '' : $newPath);
 
