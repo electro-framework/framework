@@ -21,9 +21,9 @@ abstract class AbstractModelController implements ModelControllerInterface
    */
   protected $modelRootPath = 'model';
   /**
-   * @var array
+   * @var array|null If null, all route parameters are used as presets.
    */
-  protected $presets = [];
+  protected $presets = null;
   /**
    * @var ServerRequestInterface
    */
@@ -136,7 +136,8 @@ abstract class AbstractModelController implements ModelControllerInterface
     $rp = Http::getRouteParameters ($request);
     if ($rp) {
       $o = [];
-      foreach ($this->presets as $k => $v) {
+      $presets = isset($this->presets) ? $this->presets : array_keys ($rp);
+      foreach ($presets as $k => $v) {
         if (is_integer ($k))
           $k = $v;
         $o[$v] = get ($rp, $k);
