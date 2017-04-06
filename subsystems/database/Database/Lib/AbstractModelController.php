@@ -12,11 +12,6 @@ use Selenia\Platform\Config\PlatformModule;
 abstract class AbstractModelController implements ModelControllerInterface
 {
   /**
-   * @var string A dot-separated path to the main sub-model.
-   * @see setMainSubModelPath
-   */
-  protected $mainSubModelPath = '';
-  /**
    * @var array|object
    */
   protected $model = [];
@@ -25,6 +20,10 @@ abstract class AbstractModelController implements ModelControllerInterface
    * @see setModelRootPath
    */
   protected $modelRootPath = 'model';
+  /**
+   * @var array
+   */
+  protected $presets = [];
   /**
    * @var ServerRequestInterface
    */
@@ -81,6 +80,13 @@ abstract class AbstractModelController implements ModelControllerInterface
 
   abstract function loadModel ($modelClass, $subModelPath = '', $id = null);
 
+  /**
+   * Override to provide an implementation of setting the primary key's name and value for subsequent model load
+   * operations.
+   * @inheritdoc
+   */
+  abstract function withRequestedId ($routeParam = 'id', $primaryKey = null);
+
   function get ($path)
   {
     $root = "$this->modelRootPath.";
@@ -130,7 +136,11 @@ abstract class AbstractModelController implements ModelControllerInterface
     $rp = Http::getRouteParameters ($request);
     if ($rp) {
       $o = [];
-      setAt ($o, $this->mainSubModelPath, $rp);
+      foreach ($this->presets as $k => $v) {
+        if (is_integer ($k))
+          $k = $v;
+        $o[$v] = get ($rp, $k);
+      }
       $this->merge ($o);
     }
 
@@ -194,6 +204,12 @@ abstract class AbstractModelController implements ModelControllerInterface
     else $this->handlersForSave[] = $task;
   }
 
+  function preset (array $presets)
+  {
+    $this->presets = $presets;
+    return $this;
+  }
+
   function registerExtension ($extension)
   {
     $this->extensions[] = $extension;
@@ -223,20 +239,9 @@ abstract class AbstractModelController implements ModelControllerInterface
     return $this;
   }
 
-  function setMainSubModelPath ($path)
-  {
-    $this->mainSubModelPath = $path;
-  }
-
   function setModelRootPath ($path)
   {
     $this->modelRootPath = $path;
-  }
-
-  function withRequestedId ($routeParam = 'id')
-  {
-    $this->requestedId = $this->request->getAttribute ("@$routeParam");
-    return $this;
   }
 
   /**

@@ -10,6 +10,8 @@ class ModelController extends AbstractModelController
 {
   /** @var ExtPDO */
   private $pdo;
+  /** @var string A field name. */
+  private $primaryKey;
 
   public function __construct (SessionInterface $session, ConnectionInterface $connection)
   {
@@ -17,6 +19,32 @@ class ModelController extends AbstractModelController
     $driver = $connection->driver ();
     if ($driver && $driver != 'none')
       $this->pdo = $connection->getPdo ();
+  }
+
+  function loadData ($collection, $subModelPath = '', $id = null, $primaryKey = 'id')
+  {
+    $id                = $id ?: $this->requestedId;
+    $this->requestedId = $id;
+    $primaryKey        = $primaryKey ?: $this->primaryKey;
+    $this->primaryKey  = $primaryKey;
+
+    $data = $this->sql->query ("SELECT * FROM $collection WHERE $primaryKey=?", [$id])->fetch ();
+    if ($subModelPath === '')
+      $this->model = $data;
+    else setAt ($this->model, $subModelPath, $data);
+    return $data;
+  }
+
+  function loadModel ($modelClass, $subModelPath = '', $id = null)
+  {
+    // Does nothing; this implementation (obviously) does not support an ORM.
+  }
+
+  function withRequestedId ($routeParam = 'id', $primaryKey = null)
+  {
+    $this->requestedId = $this->request->getAttribute ("@$routeParam");
+    $this->primaryKey  = $primaryKey ?: 'id';
+    return $this;
   }
 
   /**
@@ -33,23 +61,6 @@ class ModelController extends AbstractModelController
   protected function commit ()
   {
     $this->pdo->commit ();
-  }
-
-  function loadData ($collection, $subModelPath = '', $id = null, $primaryKey = 'id')
-  {
-    $id                = $this->requestedId ?: $id;
-    $this->requestedId = $id;
-
-    $data = $this->sql->query ("SELECT * FROM $collection WHERE $primaryKey=?", [$id])->fetch ();
-    if ($subModelPath === '')
-      $this->model = $data;
-    else setAt ($this->model, $subModelPath, $data);
-    return $data;
-  }
-
-  function loadModel ($modelClass, $subModelPath = '', $id = null)
-  {
-    // Does nothing; this implementation (obviously) does not support an ORM.
   }
 
   /**
