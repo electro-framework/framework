@@ -4,6 +4,7 @@ namespace Electro\Navigation\Lib;
 
 use Electro\Exceptions\Fault;
 use Electro\Faults\Faults;
+use Electro\Http\Lib\Http;
 use Electro\Interfaces\Navigation\NavigationInterface;
 use Electro\Interfaces\Navigation\NavigationLinkInterface;
 use Electro\Traits\InspectionTrait;
@@ -96,8 +97,7 @@ class NavigationLink implements NavigationLinkInterface
 
   function absoluteUrl ()
   {
-    $url = $this->url ();
-    return $this->navigation->isAbsolute ($url) ? $url : (string)$this->getRequest ()->getUri ()->withPath ($url);
+    return Http::absoluteUrlOf ($this->url (), $this->getRequest ());
   }
 
   function enabled ($enabled = null)

@@ -12,10 +12,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Returns a middleware handler that calls a given non-static class method.
- *
- * <p>When the handler is execute, the class will be instantiated from the injector and the target method will be
- * invoked.
+ * Returns a middleware that, when executed, instantiates a class from the injector and calls a request handler method
+ * on it.
  *
  * @param string $class
  * @param string $method
@@ -123,13 +121,16 @@ function stack (...$middleware)
   });
 }
 
+/**
+ * Middleware to initialize the navigation service with the current request.
+ *
+ * @return InjectableFunction
+ */
 function navigationMiddleware ()
 {
-  return injectableWrapper (function (NavigationInterface $navigation) {
-    return function ($request, $response, $next) use ($navigation) {
-      $navigation->setRequest ($request);
-      return $next();
-    };
+  return injectableHandler (function ($request, $response, $next, NavigationInterface $navigation) {
+    $navigation->setRequest ($request);
+    return $next();
   });
 }
 
@@ -170,17 +171,48 @@ function formPage ($templateUrl)
 }
 
 /**
- * Creates a middleware that redirects to the URL of the parent of the current navigation link.
+ * Generates a routable that, when invoked, will return an HTTP redirection response.
+ *
+ * @param string $url    The target URL.
+ * @param int    $status HTTP status code.
+ *                       <p>Valid redirection values should be:
+ *                       <p>302 - Found (client will always send a GET request and original URL will not be cached)
+ *                       <p>303 - See Other
+ *                       <p>307 - Temporary Redirect
+ *                       <p>308 - Permanent Redirect
+ * @return Closure
+ */
+function redirect ($url, $status = 302)
+{
+  return function ($request, $response) use ($url, $status) {
+    return Http::redirect ($response, $url, $status);
+  };
+}
+
+/**
+ * Creates a middleware that redirects to the URL of the specified navigation link.
+ *
+ * @param string $navigationId
+ * @return InjectableFunction
+ */
+function redirectTo ($navigationId)
+{
+  return injectableHandler (function ($request, $response, $next, NavigationInterface $navigation) use ($navigationId) {
+    $navigation->setRequest ($request);
+    return Http::redirect ($response, $navigation[$navigationId]->absoluteUrl ());
+  });
+}
+
+/**
+ * Creates a middleware that redirects to the URL of current navigation link's parent.
  *
  * @return \Electro\Interop\InjectableFunction
  */
 function redirectUp ()
 {
-  return injectableWrapper (function (NavigationInterface $navigation) {
-    return function ($request, $response) use ($navigation) {
-      $navigation->setRequest ($request);
-      return Http::redirect ($response, $navigation->currentLink ()->parent ()->url ());
-    };
+  return injectableHandler (function ($request, $response, $next, NavigationInterface $navigation) {
+    $navigation->setRequest ($request);
+    return Http::redirect ($response, $navigation->currentLink ()->parent ()->absoluteUrl ());
   });
 }
 
@@ -206,13 +238,12 @@ function redirectToSelf ()
  */
 function view ($templateUrl)
 {
-  return injectableWrapper (function (ViewServiceInterface $viewService, InjectorInterface $injector) use ($templateUrl
-  ) {
-    return function (ServerRequestInterface $request, $response) use ($viewService, $templateUrl, $injector) {
-      $view      = $viewService->loadFromFile ($templateUrl);
-      $viewModel = initPageViewModel ($viewService->createViewModelFor ($view, true), $request);
-      return Http::response ($response, $view->render ($viewModel));
-    };
+  return injectableHandler (function (ServerRequestInterface $request, $response, $next,
+                                      ViewServiceInterface $viewService, InjectorInterface $injector)
+  use ($templateUrl) {
+    $view      = $viewService->loadFromFile ($templateUrl);
+    $viewModel = initPageViewModel ($viewService->createViewModelFor ($view, true), $request);
+    return Http::response ($response, $view->render ($viewModel));
   });
 }
 
@@ -260,24 +291,6 @@ function forward ()
 {
   return function ($req, $res, $next) {
     return $next ();
-  };
-}
-
-/**
- * Generates a routable that, when invoked, will return an HTTP redirection response.
- *
- * @param string $url    The target URL.
- * @param int    $status HTTP status code.
- *                       <p>Valid redirection values should be:
- *                       <p>303 - See Other
- *                       <p>307 - Temporary Redirect
- *                       <p>308 - Permanent Redirect
- * @return Closure
- */
-function redirect ($url, $status = 307)
-{
-  return function ($request, $response) use ($url, $status) {
-    return Http::redirect ($response, $url, $status);
   };
 }
 

@@ -134,16 +134,21 @@ class Http
   /**
    * Simplifies setting response object properties to return a simple HTTP redirection response.
    *
+   * <p>**Warning:** the given URL, if relative, will be relative to the request's URL, NOT to the application's base
+   * URL.
+   *
    * @param ResponseInterface $response    An existing, pristine, response object.
    * @param string            $url         The target URL.
    * @param int               $status      HTTP status code.
    *                                       <p>Valid redirection values should be:
+   *                                       <p>302 - Found (client will always send a GET request and original URL will
+   *                                       not be cached)
    *                                       <p>303 - See Other
    *                                       <p>307 - Temporary Redirect
    *                                       <p>308 - Permanent Redirect
    * @return ResponseInterface A new response object.
    */
-  static function redirect (ResponseInterface $response, $url, $status = 307)
+  static function redirect (ResponseInterface $response, $url, $status = 302)
   {
     return $response->withStatus ($status)->withHeader ('Location', $url);
   }
