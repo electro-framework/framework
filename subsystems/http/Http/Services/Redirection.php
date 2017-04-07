@@ -99,7 +99,7 @@ class Redirection implements RedirectionInterface
   {
     $url = strval ($url);
     if (!$url)
-      return strval ($this->request->getUri ());
+      return $this->request->getAttribute ('baseUrl');
     if ($url[0] != '/' && substr ($url, 0, 4) != 'http')
       $url = $this->request->getAttribute ('baseUri') . "/$url";
     return $url;
