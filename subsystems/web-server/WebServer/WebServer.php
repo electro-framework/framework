@@ -72,16 +72,23 @@ class WebServer
   function setup ()
   {
     /** @var ServerRequestInterface $request */
-    $request    = ServerRequest::fromGlobals ();
-    $uri        = $request->getUri ();
-    $basePath   = dirnameEx ($request->getServerParams () ['SCRIPT_NAME'], $this->kernelSettings->urlDepth + 1);
-    $scheme     = $uri->getScheme () ?: 'http';
-    $port       = $uri->getPort ();
-    $baseUrl    = sprintf ('%s://%s%s%s', $scheme, $uri->getHost (),
+    $request        = ServerRequest::fromGlobals ();
+    $uri            = $request->getUri ();
+    $scriptName     = $request->getServerParams () ['SCRIPT_NAME'];
+    $realBasePath   = dirname ($scriptName);
+    $basePath       = dirnameEx ($scriptName, $this->kernelSettings->urlDepth + 1);
+    $scheme         = $uri->getScheme () ?: 'http';
+    $port           = $uri->getPort ();
+    $baseUrl        = sprintf ('%s://%s%s%s', $scheme, $uri->getHost (),
       $port ? ($port == 80 && $scheme == 'http' || $port == 443 && $scheme == 'https' ? '' : ":$port") : '',
       $basePath);
-    $virtualUri = ltrim (substr ($uri->getPath (), strlen ($basePath)), '/');
-    $query      = $uri->getQuery ();
+    $path           = $uri->getPath ();
+    $virtualUri     = ltrim (substr ($path, strlen ($basePath)), '/');
+    $realVirtualUri = substr ($path, strlen ($realBasePath));
+    // Strip trailing slash from virtual URI if it matches a real URI (ex: for sub-applications that have their own index.php on a subfolder)
+    if (substr ($realVirtualUri, -1) == '/')
+      $virtualUri = rtrim ($virtualUri, '/');
+    $query = $uri->getQuery ();
 
     $this->kernelSettings->baseUrl  = $baseUrl;
     $this->kernelSettings->basePath = $basePath;

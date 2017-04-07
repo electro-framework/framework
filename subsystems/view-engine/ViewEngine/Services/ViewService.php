@@ -191,7 +191,7 @@ class ViewService implements ViewServiceInterface
     // The path was not a direct path to the file; we must now search for the template on all registered directories.
     $dirs = $this->engineSettings->getDirectories ();
     foreach ($dirs as $base) {
-      $p = "$base/$path";
+      $p = normalizePath ("$base/$path");
       if ($p = $this->findTemplate ($p)) {
         $viewPath = $path;
         return $p;
