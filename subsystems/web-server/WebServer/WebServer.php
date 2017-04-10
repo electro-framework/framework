@@ -72,22 +72,25 @@ class WebServer
   function setup ()
   {
     /** @var ServerRequestInterface $request */
-    $request        = ServerRequest::fromGlobals ();
-    $uri            = $request->getUri ();
-    $scriptName     = $request->getServerParams () ['SCRIPT_NAME'];
-    $realBasePath   = dirname ($scriptName);
-    $basePath       = dirnameEx ($scriptName, $this->kernelSettings->urlDepth + 1);
-    $scheme         = $uri->getScheme () ?: 'http';
-    $port           = $uri->getPort ();
-    $baseUrl        = sprintf ('%s://%s%s%s', $scheme, $uri->getHost (),
+    $request       = ServerRequest::fromGlobals ();
+    $uri           = $request->getUri ();
+    $scriptName    = $request->getServerParams () ['SCRIPT_NAME'];
+    $appBasePath   = dirname ($scriptName);
+    $basePath      = dirnameEx ($scriptName, $this->kernelSettings->urlDepth + 1);
+    $scheme        = $uri->getScheme () ?: 'http';
+    $port          = $uri->getPort ();
+    $baseUrl       = sprintf ('%s://%s%s%s', $scheme, $uri->getHost (),
       $port ? ($port == 80 && $scheme == 'http' || $port == 443 && $scheme == 'https' ? '' : ":$port") : '',
       $basePath);
-    $path           = $uri->getPath ();
-    $virtualUri     = ltrim (substr ($path, strlen ($basePath)), '/');
-    $realVirtualUri = substr ($path, strlen ($realBasePath));
+    $path          = $uri->getPath ();
+    $virtualUri    = ltrim (substr ($path, strlen ($basePath)), '/');
+    $appVirtualUri = substr ($path, strlen ($appBasePath));
     // Strip trailing slash from virtual URI if it matches a real URI (ex: for sub-applications that have their own index.php on a subfolder)
-    if (substr ($realVirtualUri, -1) == '/')
+    if ($appVirtualUri == '/')
       $virtualUri = rtrim ($virtualUri, '/');
+    $appBaseUri = substr ($appBasePath, strlen ($basePath) + 1);
+    if ($appBaseUri === false)
+      $appBaseUri = '';
     $query = $uri->getQuery ();
 
     $this->kernelSettings->baseUrl  = $baseUrl;
@@ -98,6 +101,7 @@ class WebServer
     $request       = $request->withAttribute ('originalUri', "$baseUrl/$virtualUri" . ($query ? "?$query" : ''));
     $request       = $request->withAttribute ('baseUri', $basePath);
     $request       = $request->withAttribute ('baseUrl', $baseUrl);
+    $request       = $request->withAttribute ('appBaseUri', $appBaseUri);
     $this->request = $request->withAttribute ('virtualUri', $virtualUri);
   }
 
