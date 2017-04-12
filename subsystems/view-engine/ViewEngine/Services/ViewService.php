@@ -239,6 +239,7 @@ class ViewService implements ViewServiceInterface
   {
     if (file_exists ($path))
       return $path;
-    return FilesystemFlow::glob ("$path.*")->onlyFiles ()->fetchKey ();
+    //http://stackoverflow.com/questions/16396334/why-does-globiterator-produce-a-different-output-than-the-glob-function
+	return FilesystemFlow::glob (getcwd()."/$path.*")->onlyFiles ()->fetchKey ();
   }
 }
