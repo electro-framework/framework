@@ -78,7 +78,8 @@ class WebServer
     );
     $uri      = $request->getUri ();
 
-    $baseUrl                        = $this->kernelSettings->baseUrl = (string)$uri->withPath ($basePath);
+    $baseUrl                        =
+    $this->kernelSettings->baseUrl = str_segmentsStripLast ((string)$uri->withPath ($basePath), '?', 1);
     $this->kernelSettings->basePath = $basePath;
 
     ErrorConsole::setEditorUrl (($basePath ? "$basePath/" : '') . $this->kernelSettings->editorUrl);
