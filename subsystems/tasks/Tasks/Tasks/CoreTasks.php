@@ -16,7 +16,7 @@ use Electro\Tasks\Commands\ServerCommands;
 use Electro\Tasks\Commands\UpdateCommand;
 use Electro\Tasks\Config\TasksSettings;
 use PhpKit\Flow\FilesystemFlow;
-use Robo\Task\Composer\Update;
+use Electro\Tasks\Shared\Base\ComposerTask;
 use Robo\Task\FileSystem\CleanDir;
 use Robo\Task\FileSystem\FilesystemStack;
 
@@ -103,7 +103,7 @@ class CoreTasks
    */
   private function doComposerUpdate ()
   {
-    (new Update)->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
+    (new ComposerTask)->action('update')->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
   }
 
   /**

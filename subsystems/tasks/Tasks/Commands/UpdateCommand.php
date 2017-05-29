@@ -5,7 +5,7 @@ namespace Electro\Tasks\Commands;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Kernel\Services\ModulesRegistry;
-use Robo\Task\Composer\DumpAutoload;
+use Electro\Tasks\Shared\Base\ComposerTask;
 
 /**
  * Defines a command that rebuilds the project's composer.json file by merging relevant sections from the project
@@ -31,7 +31,7 @@ trait UpdateCommand
 
     $this->regenerateComposer ();
     if (get ($opts, 'no-update'))
-      (new DumpAutoload)->run ();
+      (new ComposerTask)->action('dump-autoload')->option('--optimize')->run ();
     else $this->doComposerUpdate ();
 
     $this->io->done ("The project is <info>updated</info>");

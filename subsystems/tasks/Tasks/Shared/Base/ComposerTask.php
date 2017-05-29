@@ -6,6 +6,11 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class ComposerTask extends Base
 {
+  public function __construct()
+  {
+    parent::__construct(strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'?'C:\\ProgramData\\ComposerSetup\\bin\\composer':null);
+  }
+  
   function action ($action)
   {
     $this->action = $action;

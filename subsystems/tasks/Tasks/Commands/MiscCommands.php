@@ -10,7 +10,6 @@ use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Services\ModulesInstaller;
 use Electro\Tasks\Shared\Base\ComposerTask;
-use Robo\Task\Composer\Update;
 use Robo\Task\FileSystem\CleanDir;
 use Robo\Task\FileSystem\FilesystemStack;
 use Robo\Task\Vcs\GitStack;
@@ -90,7 +89,7 @@ trait MiscCommands
 
     // Reinstall all packages
     (new ComposerTask)->action ('clearcache')->printed ($cOut)->run ();
-    $composerUpdate = (new Update)->printed ($cOut); // Load class BEFORE its package is removed
+    $composerUpdate = (new ComposerTask)->action('update')->printed ($cOut); // Load class BEFORE its package is removed
     $this->clearDir ($this->kernelSettings->packagesPath);
     $this->clearDir ($this->kernelSettings->pluginsPath);
     $composerUpdate->run ();
