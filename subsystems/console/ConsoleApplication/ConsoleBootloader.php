@@ -54,7 +54,7 @@ class ConsoleBootloader implements BootloaderInterface
 
     // Initialize some settings from environment variables
 
-    $dotenv = new Dotenv ("$rootDir/.env");
+    $dotenv = new Dotenv ("$rootDir/project.env","$rootDir/.env");
     try {
       $dotenv->load ();
     }
