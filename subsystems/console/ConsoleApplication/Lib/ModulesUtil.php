@@ -61,17 +61,14 @@ class ModulesUtil
   function selectModule (& $moduleName, array $modules, $suppressErrors = false, callable $secondColMapper = null)
   {
     if ($moduleName) {
-      if (!ModulesRegistry::validateModuleName ($moduleName)) {
-        if ($suppressErrors) return false;
-        $this->io->error ("Invalid module name $moduleName. Correct syntax: vendor-name/product-name");
-      }
+      $this->validateModuleName ($moduleName);
       if (!$this->registry->isInstalled ($moduleName)) {
         if ($suppressErrors) return false;
-        $this->io->error ("Module $moduleName is not installed");
+        $this->io->error ("Module <error-info>$moduleName</error-info> is not installed");
       }
       if (!isset ($modules[$moduleName])) {
         if ($suppressErrors) return false;
-        $this->io->error ("$moduleName is not a valid module name for this operation");
+        $this->io->error ("<error-info>$moduleName</error-info> is not a valid module name for this operation");
       }
     }
     else {
@@ -86,6 +83,22 @@ class ModulesUtil
         if ($suppressErrors) return false;
         $this->io->error ("No modules are available");
       }
+    }
+    return true;
+  }
+
+  /**
+   * Checks if the given name is a valid module name and aborts execution if it's not.
+   *
+   * @param string $name           A module name in `vendor-name/package-name` format.
+   * @param bool   $suppressErrors Do not abort execution with an error message if the module name is not valid.
+   * @return bool FALSE if the name is not valid and $suppressErrors=true; TRUE if the name is valid.
+   */
+  public function validateModuleName ($name, $suppressErrors = false)
+  {
+    if (!ModulesRegistry::validateModuleName ($name)) {
+      if ($suppressErrors) return false;
+      $this->io->error ("Invalid module name <error-info>$name</error-info>. Correct syntax: <error-info>vendor-name/product-name</error-info>");
     }
     return true;
   }

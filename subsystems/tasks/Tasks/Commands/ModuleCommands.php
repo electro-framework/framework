@@ -13,6 +13,7 @@ use Electro\Lib\PackagistAPI;
 use Electro\Plugins\IlluminateDatabase\Config\MigrationsSettings;
 use Electro\Tasks\Config\TasksSettings;
 use Electro\Tasks\Shared\InstallPackageTask;
+use PhpKit\Flow\FilesystemFlow;
 use Robo\Task\File\Replace;
 use Robo\Task\FileSystem\CopyDir;
 use Robo\Task\FileSystem\DeleteDir;
@@ -34,7 +35,6 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 trait ModuleCommands
 {
-
   /**
    * Installs a plugin or a template
    *
@@ -198,17 +198,69 @@ trait ModuleCommands
    *
    * @param string $oldModuleName The full name (vendor-name/module-name) of the module to be renamed
    * @param string $newModuleName The new name (vendor-name/module-name)
+   * @throws \Exception
    */
   function moduleRename ($oldModuleName = null, $newModuleName = null)
   {
+    $io = $this->io;
     $this->modulesUtil->selectInstalledModule ($oldModuleName,
       function (ModuleInfo $module) { return $module->type == ModuleInfo::TYPE_PRIVATE; });
 
-    $this->io->writeln ("Uninstalling <info>$oldModuleName</info>")->nl ();
+    if (!$newModuleName)
+      $newModuleName = $io->ask ("New module name:");
+    if (!$newModuleName)
+      $io->cancel ();
+    $this->modulesUtil->validateModuleName ($newModuleName);
 
-    if ($this->modulesRegistry->isPlugin ($oldModuleName))
-      $this->uninstallPlugin ($oldModuleName);
-    else $this->uninstallProjectModule ($oldModuleName);
+    $module       = $this->modulesRegistry->getModule ($oldModuleName);
+    $oldNamespace = $module->getNamespace ();
+    $newNamespace = ModuleInfo::moduleNameToNamespace ($newModuleName);
+
+    $io->writeln ("Renaming <info>$oldModuleName</info> to <info>$newModuleName</info>")->nl ()
+       ->begin ()->indent (1);
+
+    // Update the module's composer.json
+
+    $composerJson = $module->getComposerConfig ();
+    $composerJson->set ('name', $newModuleName);
+    $psr4    = $composerJson->get ('autoload.psr-4', []);
+    $srcPath = get ($psr4, "$oldNamespace\\");
+    if (!$srcPath)
+      $io->error ("A valid PSR-4 namespace declaration was not found");
+    unset ($psr4["$oldNamespace\\"]);
+    $psr4["$newNamespace\\"] = $srcPath;
+    $composerJson->set ('autoload.psr-4', $psr4);
+    $composerJson->save ();
+    $io->writeln ("$oldModuleName/<info>composer.json</info> updated");
+
+    // Rename namespaces
+
+    $io->title ("Renaming namespace <info>$oldNamespace</info> to <info>$newNamespace</info>")
+       ->indent (3);
+    $basePath = "$module->path/$srcPath";
+    foreach (FilesystemFlow::glob ("$basePath/**/*.php")->onlyFiles () as $path => $finfo)
+      self::fileReplaceStr ($path, '/\b%s\b/', $oldNamespace, $newNamespace);
+    $io->indent (1)->writeln ('');
+
+    // Rename directories
+
+    // $io->writeln ("Renaming the module's directories");
+    $oldPath = getcwd () . "/$module->path";
+    $newPath = getcwd () . '/' . dirnameEx ($module->path, 2) . "/$newModuleName";
+    $medPath = dirname ($oldPath) . '/' . basename ($newPath);
+    if (!file_exists ($medPath))
+      $this->fs->rename ($oldPath, $medPath)->run ();
+    if (!file_exists ($newPath))
+      $this->fs->rename (dirname ($oldPath), dirname ($newPath))->run ();
+
+    // Update the main composer.json and the autoloader
+
+    $io->title ("Updating the project's Composer configuration");
+    $this->composerUpdate (['no-update' => true]);
+
+    $io->indent (0)->done (); // End the begin() above
+
+    $io->done ("Done.");
   }
 
   /**
@@ -229,7 +281,7 @@ trait ModuleCommands
         $module->name,
         $module->enabled ? '<info>Yes</info>' : '<red>No</red>',
         $module->enabled && $module->bootstrapper && !$module->errorStatus ? '<info>Yes</info>' : '<red>No</red>',
-        $module->errorStatus ? "<error>$module->errorStatus</error>" : '<info>OK</info>',
+        $module->errorStatus ? " < error>$module->errorStatus </error > " : '<info>OK</info>',
       ];
     $this->io->table ([
       'Module',
@@ -262,7 +314,7 @@ trait ModuleCommands
 
       $this->modulesUtil->selectModule ($moduleName, array_merge ($privateModules, $plugins));
     }
-    $this->io->writeln ("Uninstalling <info>$moduleName</info>")->nl ();
+    $this->io->writeln ("Uninstalling < info>$moduleName </info > ")->nl ();
 
     if ($this->modulesRegistry->isPlugin ($moduleName))
       $this->uninstallPlugin ($moduleName);
@@ -282,7 +334,7 @@ trait ModuleCommands
   protected function installPlugin ($moduleName = null,
                                     $opts = ['search|s' => '', 'stars' => false, 'unstable|u' => false])
   {
-    $io      = $this->io;
+    $io             = $this->io;
     $privateModules = $this->modulesRegistry->onlyPrivate ()->getModules ();
 
     if (!$privateModules)
@@ -292,7 +344,7 @@ trait ModuleCommands
 
       // Search
 
-      $modules = (new PackagistAPI)->type ('electro-plugin')->query ($opts['search'])->search (true);
+      $modules = (new PackagistAPI)->type ('electro - plugin')->query ($opts['search'])->search (true);
 
       if (empty($modules))
         $io->error ("No matching plugins were found");
@@ -315,15 +367,15 @@ trait ModuleCommands
 
     // Select target module where the plugin will be registered
 
-    $io->writeln ('<question>Where should the plugin be registered?</question>');
+    $io->writeln (' < question>Where should the plugin be registered ?</question > ');
     $this->modulesUtil->selectModule ($targetModuleName, $privateModules);
 
     // Install module via Composer
 
-    $version      = $opts['unstable'] ? ':dev-master' : '';
+    $version      = $opts['unstable'] ? ':dev - master' : '';
     $targetModule = $this->modulesRegistry->getModule ($targetModuleName);
 
-    // Add package reference to the targat module's composer.json
+    // Add package reference to the targat module's composer . json
     $task = new InstallPackageTask ("$moduleName$version");
     $task->dir ($targetModule->path)
          ->option ('--no-update')
@@ -349,8 +401,9 @@ trait ModuleCommands
    *                           description
    * @option $stars Sort the list by stars, instead of downloads
    */
-  protected function installTemplate ($moduleName = null,
-                                      $opts = ['keep-repo|k' => false, 'search|s' => '', 'stars' => false])
+  protected
+  function installTemplate ($moduleName = null,
+                            $opts = ['keep-repo|k' => false, 'search|s' => '', 'stars' => false])
   {
     $io = $this->io;
 
@@ -414,7 +467,8 @@ trait ModuleCommands
     $io->done ("Template <info>$moduleName</info> is now installed on <info>$path</info>");
   }
 
-  protected function uninstallPlugin ($moduleName)
+  protected
+  function uninstallPlugin ($moduleName)
   {
     $privateModules = $this->modulesRegistry->onlyPrivate ()->getModules ();
     foreach ($privateModules as $priv) {
@@ -430,7 +484,8 @@ trait ModuleCommands
     $this->io->error ("Plugin <info>$moduleName</info> was not found on any project module");
   }
 
-  protected function uninstallProjectModule ($moduleName)
+  protected
+  function uninstallProjectModule ($moduleName)
   {
     $this->modulesInstaller->cleanUpModule ($moduleName);
 
@@ -447,9 +502,24 @@ trait ModuleCommands
     $io->done ("Module <info>$moduleName</info> was uninstalled");
   }
 
+  /**
+   * Searches and replaces text on a given file.
+   *
+   * @param string $file
+   * @param string $pattern A regular expression, where %s will be expanded to $value
+   * @param string $value   A value for the pattern; it will be escaped for regexp.
+   * @param string $to
+   *
+   */
+  private static function fileReplaceStr ($file, $pattern, $value, $to)
+  {
+    (new Replace ($file))->regex (sprintf ($pattern, preg_quote ($value)))->to ($to)->run ();
+  }
+
   //--------------------------------------------------------------------------------------------------------------------
 
-  private function formatModules (& $modules, $stars = false)
+  private
+  function formatModules (& $modules, $stars = false)
   {
     $modules = filter ($modules, function ($mod) {
       $info = (new PackagistAPI)->get ($mod['name'])['package'];
@@ -487,7 +557,8 @@ trait ModuleCommands
    * @param string|null $moduleName The full name (vendor-name/module-name) of the module to be created
    * @param string      $scaffold   The scaffold's folder name.
    */
-  private function makeModuleFromScaffold ($moduleName, $scaffold)
+  private
+  function makeModuleFromScaffold ($moduleName, $scaffold)
   {
     $io = $this->io;
 
@@ -553,7 +624,8 @@ If you proceed, the directory contents will be discarded.");
     $io->done ("Module <info>$___MODULE___</info> was created");
   }
 
-  private function removeModuleDirectory ($path)
+  private
+  function removeModuleDirectory ($path)
   {
     $io = $this->io;
     if (file_exists ($path)) {
