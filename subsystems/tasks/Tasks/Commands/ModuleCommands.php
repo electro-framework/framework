@@ -211,13 +211,22 @@ trait ModuleCommands
     if (!$newModuleName)
       $io->cancel ();
     $this->modulesUtil->validateModuleName ($newModuleName);
+    if ($this->modulesRegistry->isInstalled ($newModuleName))
+      $io->error ("The <error-info>$newModuleName</error-info> module is already installed");
 
     $module       = $this->modulesRegistry->getModule ($oldModuleName);
     $oldNamespace = $module->getNamespace ();
     $newNamespace = ModuleInfo::moduleNameToNamespace ($newModuleName);
+    $oldBootPath  = $module->getBootstrapperPath ();
+    $oldClassName = str_segmentsLast ($module->getBootstrapperClass (), '\\');
+    $oldPath      = $module->path;
+    $newPath      = dirnameEx ($module->path, 2) . "/$newModuleName";
+    if (fileExists ($newPath))
+      $io->error ("The target path already exists (<error-info>$newPath</error-info>).\nPlease remove it or select a different module name");
 
-    $io->writeln ("Renaming <info>$oldModuleName</info> to <info>$newModuleName</info>")->nl ()
-       ->begin ()->indent (1);
+    $io->title ("Renaming <info>$oldModuleName</info> to <info>$newModuleName</info>")
+       ->begin ()
+       ->indent (1);
 
     // Update the module's composer.json
 
@@ -235,23 +244,47 @@ trait ModuleCommands
 
     // Rename namespaces
 
-    $io->title ("Renaming namespace <info>$oldNamespace</info> to <info>$newNamespace</info>")
-       ->indent (3);
+    $io->title ("Renaming namespace <info>$oldNamespace</info> to <info>$newNamespace</info>");
     $basePath = "$module->path/$srcPath";
     foreach (FilesystemFlow::glob ("$basePath/**/*.php")->onlyFiles () as $path => $finfo)
-      self::fileReplaceStr ($path, '/\b%s\b/', $oldNamespace, $newNamespace);
-    $io->indent (1)->writeln ('');
+      $this->fileReplaceStr ($path, '/\b%s\b/', $oldNamespace, $newNamespace);
+    $io->writeln ('');
+
+    // Rename the module's bootstrap class (if any)
+
+    if ($module->bootstrapper) {
+      $io->writeln ("Renaming the module's bootstrap class");
+      $module->name = $newModuleName;
+      $newBootPath  = $module->getBootstrapperPath ();
+      $newClassName = str_segmentsLast ($module->getBootstrapperClass (), '\\');
+      $this->fileReplaceStr ($oldBootPath, '/(class\s+)%s/', $oldClassName, "\$1$newClassName");
+      $io->writeln ("  Renaming the class file")
+         ->mute ();
+      $this->fs->rename ($oldBootPath, $newBootPath)->run ();
+      $io->unmute ();
+    }
+    else $io->writeln ("The module has no bootstrapper.");
 
     // Rename directories
 
-    // $io->writeln ("Renaming the module's directories");
-    $oldPath = getcwd () . "/$module->path";
-    $newPath = getcwd () . '/' . dirnameEx ($module->path, 2) . "/$newModuleName";
-    $medPath = dirname ($oldPath) . '/' . basename ($newPath);
-    if (!file_exists ($medPath))
-      $this->fs->rename ($oldPath, $medPath)->run ();
-    if (!file_exists ($newPath))
-      $this->fs->rename (dirname ($oldPath), dirname ($newPath))->run ();
+    $io->nl ()->writeln ("Renaming the module's directories")
+       ->indent (2)->writeln ("Moving <info>$oldPath</info> to <info>$newPath</info>");
+    // $io->mute ();
+    $oldVendorDir = dirname ($oldPath);
+    $newVendorDir = dirname ($newPath);
+
+    // Ensure the target vendor dir exists
+    if (!fileExists ($newVendorDir))
+      $this->fs->mkdir ($newVendorDir)->run ();
+
+    // Move the module's directory
+    $this->fs->rename ($oldPath, $newPath)->run ();
+
+    // Remove the original vendor dir if it becomes empty
+    $this->removeDirIfEmpty ($oldVendorDir);
+
+    // $io->unmute ();
+    $io->indent (1);
 
     // Update the main composer.json and the autoloader
 
@@ -511,8 +544,9 @@ trait ModuleCommands
    * @param string $to
    *
    */
-  private static function fileReplaceStr ($file, $pattern, $value, $to)
+  private function fileReplaceStr ($file, $pattern, $value, $to)
   {
+    $this->io->write ('  ');
     (new Replace ($file))->regex (sprintf ($pattern, preg_quote ($value)))->to ($to)->run ();
   }
 
@@ -633,8 +667,7 @@ If you proceed, the directory contents will be discarded.");
       (new DeleteDir($path))->run ();
       // Remove vendor dir. when it becomes empty.
       $vendorPath = dirname ($path);
-      if ($this->isDirectoryEmpty ($vendorPath))
-        (new DeleteDir($vendorPath))->run ();
+      $this->removeDirIfEmpty ($vendorPath);
       $io->unmute ();
     }
     else $io->warn ("No module files were deleted because none were found on the <info>$path</info> directory");

@@ -15,9 +15,10 @@ use Electro\Tasks\Commands\ModuleCommands;
 use Electro\Tasks\Commands\ServerCommands;
 use Electro\Tasks\Commands\UpdateCommand;
 use Electro\Tasks\Config\TasksSettings;
-use PhpKit\Flow\FilesystemFlow;
 use Electro\Tasks\Shared\Base\ComposerTask;
+use PhpKit\Flow\FilesystemFlow;
 use Robo\Task\FileSystem\CleanDir;
+use Robo\Task\FileSystem\DeleteDir;
 use Robo\Task\FileSystem\FilesystemStack;
 
 /**
@@ -103,7 +104,7 @@ class CoreTasks
    */
   private function doComposerUpdate ()
   {
-    (new ComposerTask)->action('update')->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
+    (new ComposerTask)->action ('update')->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
   }
 
   /**
@@ -115,6 +116,21 @@ class CoreTasks
   private function isDirectoryEmpty ($path)
   {
     return !count (FilesystemFlow::from ($path)->all ());
+  }
+
+  /**
+   * Removes a directory if it's empty.
+   *
+   * @param string $path
+   * @return bool TRUE if the directory was removed.
+   */
+  private function removeDirIfEmpty ($path)
+  {
+    if ($this->isDirectoryEmpty ($path)) {
+      (new DeleteDir ($path))->run ();
+      return true;
+    }
+    return false;
   }
 
 }
