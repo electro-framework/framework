@@ -85,17 +85,13 @@ trait InitCommands
 
     $examplePath = "{$this->kernelSettings->baseDirectory}/.env.example";
     if (file_exists ($examplePath)) {
-      $io->mute ();
-      $this->fs->copy ($examplePath, $envPath, true)->run ();
-      $io->unmute ();
+      $this->fs->copy ($examplePath, $envPath, true);
       $io->nl ()
          ->comment ("The application has been automatically configured from a project-specific predefined template")
          ->comment ("Please edit the <info>.env</info> file to fill-in any missing required values (ex. database passwords)");
     }
     else {
-      $io->mute ();
-      $this->fs->copy ("{$this->settings->scaffoldsPath()}/.env", $envPath, true)->run ();
-      $io->unmute ();
+      $this->fs->copy ("{$this->settings->scaffoldsPath()}/.env", $envPath, true);
 
       $LANG = $io->askDefault ("What is the application's main language? (en | pt | ...)", 'en');
       do {

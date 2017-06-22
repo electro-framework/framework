@@ -228,6 +228,10 @@ trait ModuleCommands
        ->begin ()
        ->indent (1);
 
+    foreach (FilesystemFlow::recursiveGlob ('.', "index.php")->onlyFiles () as $path => $finfo)
+      echo "$path\n";
+    exit;
+
     // Update the module's composer.json
 
     $composerJson = $module->getComposerConfig ();
@@ -242,53 +246,62 @@ trait ModuleCommands
     $composerJson->save ();
     $io->writeln ("$oldModuleName/<info>composer.json</info> updated");
 
+
     // Rename namespaces
 
     $io->title ("Renaming namespace <info>$oldNamespace</info> to <info>$newNamespace</info>");
-    $basePath = "$module->path/$srcPath";
-    foreach (FilesystemFlow::glob ("$basePath/**/*.php")->onlyFiles () as $path => $finfo)
+
+    // Rename namespace references on all private modules
+    foreach (FilesystemFlow::recursiveGlob ($this->kernelSettings->modulesPath, "*.php")->onlyFiles () as $path => $finfo)
+      $this->fileReplaceStr ($path, '/\b%s\b/', $oldNamespace, $newNamespace);
+
+    // Rename namespace references on all of the project's front controller files
+    foreach (FilesystemFlow::recursiveGlob ('.', "index.php")->onlyFiles () as $path => $finfo)
       $this->fileReplaceStr ($path, '/\b%s\b/', $oldNamespace, $newNamespace);
     $io->writeln ('');
+
 
     // Rename the module's bootstrap class (if any)
 
     if ($module->bootstrapper) {
-      $io->writeln ("Renaming the module's bootstrap class");
+      $io->title ("Renaming the module's bootstrap class")->write (' Renaming class');
       $module->name = $newModuleName;
       $newBootPath  = $module->getBootstrapperPath ();
       $newClassName = str_segmentsLast ($module->getBootstrapperClass (), '\\');
       $this->fileReplaceStr ($oldBootPath, '/(class\s+)%s/', $oldClassName, "\$1$newClassName");
-      $io->writeln ("  Renaming the class file")
-         ->mute ();
-      $this->fs->rename ($oldBootPath, $newBootPath)->run ();
-      $io->unmute ();
+      $io->writeln (" Renaming file");
+      $this->fs->rename ($oldBootPath, $newBootPath);
     }
     else $io->writeln ("The module has no bootstrapper.");
 
+
     // Rename directories
 
-    $io->nl ()->writeln ("Renaming the module's directories")
-       ->indent (2)->writeln ("Moving <info>$oldPath</info> to <info>$newPath</info>");
-    // $io->mute ();
+    $io->title ("Renaming the module's directories")
+       ->indent (2)
+       ->writeln ("Moving <info>$oldPath</info> to <info>$newPath</info>")
+       ->write (' ');
+
     $oldVendorDir = dirname ($oldPath);
     $newVendorDir = dirname ($newPath);
 
     // Ensure the target vendor dir exists
     if (!fileExists ($newVendorDir))
-      $this->fs->mkdir ($newVendorDir)->run ();
+      $this->fs->mkdir ($newVendorDir);
 
     // Move the module's directory
-    $this->fs->rename ($oldPath, $newPath)->run ();
+    $this->fs->rename ($oldPath, $newPath);
 
     // Remove the original vendor dir if it becomes empty
     $this->removeDirIfEmpty ($oldVendorDir);
 
-    // $io->unmute ();
     $io->indent (1);
+
 
     // Update the main composer.json and the autoloader
 
-    $io->title ("Updating the project's Composer configuration");
+    $io->title ("Updating the project's Composer configuration")
+       ->indent (2);
     $this->composerUpdate (['no-update' => true]);
 
     $io->indent (0)->done (); // End the begin() above
@@ -488,11 +501,8 @@ trait ModuleCommands
 
     // Remove VCS history
 
-    if (!$opts['keep-repo']) {
-      $io->mute ();
-      $this->fs->remove ("$path/.git")->run ();
-      $io->unmute ();
-    }
+    if (!$opts['keep-repo'])
+      $this->fs->remove ("$path/.git");
 
     $this->regenerateComposer (); // Install the module's dependencies and register its namespaces.
     $this->doComposerUpdate ();   // This also updates the modules registry.
@@ -546,7 +556,6 @@ trait ModuleCommands
    */
   private function fileReplaceStr ($file, $pattern, $value, $to)
   {
-    $this->io->write ('  ');
     (new Replace ($file))->regex (sprintf ($pattern, preg_quote ($value)))->to ($to)->run ();
   }
 
@@ -624,7 +633,7 @@ If you proceed, the directory contents will be discarded.");
     $io->mute ();
 
     (new CopyDir (["{$this->settings->scaffoldsPath()}/$scaffold" => $path]))->run ();
-    $this->fs->rename ("$path/src/Config/___CLASS___.php", "$path/src/Config/$___CLASS___.php")->run ();
+    $this->fs->rename ("$path/src/Config/___CLASS___.php", "$path/src/Config/$___CLASS___.php");
 
     foreach
     ([

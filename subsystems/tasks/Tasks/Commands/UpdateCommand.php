@@ -28,7 +28,7 @@ trait UpdateCommand
   function composerUpdate ($opts = ['no-update' => false])
   {
     $this->regenerateComposer ();
-    $this->io->writeln ("composer.json has been <info>updated</info>")->nl ();
+    $this->io->writeln ("composer.json has been <info>updated</info>")->nl ()->write ('- ');
 
     if (get ($opts, 'no-update'))
       (new ComposerTask)->action('dump-autoload')->option('--optimize')->run ();

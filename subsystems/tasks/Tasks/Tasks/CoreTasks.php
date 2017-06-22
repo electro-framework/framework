@@ -20,6 +20,7 @@ use PhpKit\Flow\FilesystemFlow;
 use Robo\Task\FileSystem\CleanDir;
 use Robo\Task\FileSystem\DeleteDir;
 use Robo\Task\FileSystem\FilesystemStack;
+use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * The preset Electro console tasks configuration for Electro's task runner.
@@ -46,7 +47,7 @@ class CoreTasks
    */
   private $consoleApp;
   /**
-   * @var FilesystemStack
+   * @var Filesystem
    */
   private $fs;
   /**
@@ -85,7 +86,7 @@ class CoreTasks
     $this->modulesInstaller = $installer;
     $this->settings         = $settings;
     $this->consoleApp       = $consoleApp;
-    $this->fs               = new FilesystemStack;
+    $this->fs               = new Filesystem;
     $this->cachingSettings  = $cachingSettings;
   }
 
