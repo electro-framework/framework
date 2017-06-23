@@ -228,9 +228,6 @@ trait ModuleCommands
        ->begin ()
        ->indent (1);
 
-    foreach (FilesystemFlow::recursiveGlob ('.', "index.php")->onlyFiles () as $path => $finfo)
-      echo "$path\n";
-    exit;
 
     // Update the module's composer.json
 
