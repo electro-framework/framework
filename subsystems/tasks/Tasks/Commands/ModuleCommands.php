@@ -221,6 +221,9 @@ trait ModuleCommands
     $oldClassName = str_segmentsLast ($module->getBootstrapperClass (), '\\');
     $oldPath      = $module->path;
     $newPath      = dirnameEx ($module->path, 2) . "/$newModuleName";
+    $modulesPath  = $this->kernelSettings->modulesPublishingPath;
+    $oldUrl       = "$modulesPath/$oldModuleName";
+    $newUrl       = "$modulesPath/$newModuleName";
     if (fileExists ($newPath))
       $io->error ("The target path already exists (<error-info>$newPath</error-info>).\nPlease remove it or select a different module name");
 
@@ -249,13 +252,22 @@ trait ModuleCommands
     $io->title ("Renaming namespace <info>$oldNamespace</info> to <info>$newNamespace</info>");
 
     // Rename namespace references on all private modules
-    foreach (FilesystemFlow::recursiveGlob ($this->kernelSettings->modulesPath, "*.php")->onlyFiles () as $path => $finfo)
+    foreach (FilesystemFlow::recursiveGlob ($this->kernelSettings->modulesPath, "*.php")
+                           ->onlyFiles () as $path => $finfo)
       $this->fileReplaceStr ($path, '/\b%s\b/', $oldNamespace, $newNamespace);
 
     // Rename namespace references on all of the project's front controller files
     foreach (FilesystemFlow::recursiveGlob ('.', "index.php")->onlyFiles () as $path => $finfo)
       $this->fileReplaceStr ($path, '/\b%s\b/', $oldNamespace, $newNamespace);
-    $io->writeln ('');
+
+
+    // Rename asset URLs
+
+    $io->title ("Renaming URLs from <info>$oldUrl</info> to <info>$newUrl</info>");
+
+    // Rename namespace references on all private modules
+    foreach (FilesystemFlow::recursiveFrom ($module->path)->onlyFiles () as $path => $finfo)
+      $this->fileReplaceStr ($path, '/\b%s\b/', $oldUrl, $newUrl);
 
 
     // Rename the module's bootstrap class (if any)
@@ -302,6 +314,8 @@ trait ModuleCommands
     $this->composerUpdate (['no-update' => true]);
 
     $io->indent (0)->done (); // End the begin() above
+
+    $this->modulePublish ();
 
     $io->done ("Done.");
   }
@@ -547,13 +561,21 @@ trait ModuleCommands
    *
    * @param string $file
    * @param string $pattern A regular expression, where %s will be expanded to $value
-   * @param string $value   A value for the pattern; it will be escaped for regexp.
-   * @param string $to
+   * @param string $from    The value to be matched via the pattern; it will be escaped for regexp.
+   * @param string $to      The replacement value.
    *
    */
-  private function fileReplaceStr ($file, $pattern, $value, $to)
+  private function fileReplaceStr ($file, $pattern, $from, $to)
   {
-    (new Replace ($file))->regex (sprintf ($pattern, preg_quote ($value)))->to ($to)->run ();
+    $this->io->mute ();
+    $r =
+      (new Replace ($file))->regex (sprintf ($pattern, preg_quote ($from, $pattern[0])))->to ($to)->run ()->getData ();
+    $this->io->unmute ();
+    $count = $r['replaced'];
+    if ($count)
+      $this->io->indent (2)
+               ->writeln ("<info>$file</info> updated; $count item" . ($count == 1 ? '' : 's') . " replaced")
+               ->indent (1);
   }
 
   //--------------------------------------------------------------------------------------------------------------------
