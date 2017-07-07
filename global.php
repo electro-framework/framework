@@ -90,8 +90,8 @@ function autoResponse (callable $handler)
 }
 
 /**
- * Generates a middleware that executes a non-middleware callable, feeds its result (which may be of any type) to the
- * given consumer and returns the resulting response.
+ * Generates a middleware that executes a non-middleware provisionable callable and feeds its result (which may be of
+ * any type) to the given consumer middleware.
  *
  * @param callable $fn       function ($request, $response, $next):mixed
  * @param callable $consumer function ($request, $response, $value):ResponseInterface
@@ -100,8 +100,8 @@ function autoResponse (callable $handler)
 function nonMiddleware (callable $fn, callable $consumer)
 {
   return injectableHandler (
-    function (ServerRequestInterface $request, ResponseInterface $response, $next,
-              InjectorInterface $injector) use ($fn, $consumer) {
+    function (ServerRequestInterface $request, ResponseInterface $response, $next, InjectorInterface $injector)
+    use ($fn, $consumer) {
       while ($fn instanceof InjectableFunction)
         $fn = $injector->execute ($fn ());
       return $consumer ($request, $response, $fn ($request, $response, $next));
@@ -347,7 +347,7 @@ function htmlResponse ($text)
 }
 
 /**
- * A shortcut to create a {@see InjectableFunction}.
+ * A shortcut to create an {@see InjectableFunction}.
  *
  * ###### Ex:
  *     injectableWrapper (function (Service1 $a, Service2 $b) {

@@ -6,12 +6,22 @@ use Electro\Interfaces\SessionInterface;
 use PhpKit\ExtPDO\ExtPDO;
 use PhpKit\ExtPDO\Interfaces\ConnectionInterface;
 
+/**
+ * A Model Controller that implements a simple, low-level, database access using PDO.
+ *
+ * <p>Models are simple arrays.
+ * <p>Nested (sub)models are only partially supported by this implementation; to save them, the caller must handle it
+ * (him)herself.
+ */
 class ModelController extends AbstractModelController
 {
+  /** @var string The virtual table name. */
+  protected $collection;
+  protected $model = [];
   /** @var ExtPDO */
-  private $pdo;
+  protected $pdo;
   /** @var string A field name. */
-  private $primaryKey;
+  protected $primaryKey = 'id';
 
   public function __construct (SessionInterface $session, ConnectionInterface $connection)
   {
@@ -21,29 +31,30 @@ class ModelController extends AbstractModelController
       $this->pdo = $connection->getPdo ();
   }
 
-  function loadData ($collection, $subModelPath = '', $id = null, $primaryKey = 'id')
+  function loadModel ($collection, $subModelPath = '', $id = null, $primaryKey = null)
   {
     $id                = $id ?: $this->requestedId;
     $this->requestedId = $id;
-    $primaryKey        = $primaryKey ?: $this->primaryKey;
-    $this->primaryKey  = $primaryKey;
+    $this->primaryKey  = $primaryKey = $primaryKey ?: $this->primaryKey;
+    $this->collection  = $collection;
 
-    $data = $this->sql->query ("SELECT * FROM $collection WHERE $primaryKey=?", [$id])->fetch ();
+    $data = $this->pdo->query ("SELECT * FROM $collection WHERE $primaryKey=?", [$id])->fetch ();
     if ($subModelPath === '')
       $this->model = $data;
     else setAt ($this->model, $subModelPath, $data);
     return $data;
   }
 
-  function loadModel ($modelClass, $subModelPath = '', $id = null)
+  function saveModel ()
   {
-    // Does nothing; this implementation (obviously) does not support an ORM.
+    $this->doSave ($this->model);
+    return true;
   }
 
-  function withRequestedId ($routeParam = 'id', $primaryKey = null)
+  function withRequestedId ($routeParam = 'id', $primaryKey = 'id')
   {
     $this->requestedId = $this->request->getAttribute ("@$routeParam");
-    $this->primaryKey  = $primaryKey ?: 'id';
+    $this->primaryKey  = $primaryKey;
     return $this;
   }
 
@@ -64,28 +75,30 @@ class ModelController extends AbstractModelController
   }
 
   /**
+   * Encapsulates the saving functionality common to this class and its subclasses.
+   *
+   * @param array $data
+   */
+  protected function doSave (array $data)
+  {
+    list ($columns, $values) = array_divide ($data);
+    if (isset($model[$this->primaryKey])) {
+      $exp      = implode (',', array_map (function ($col) { return "\"$col\"=?"; }, $columns));
+      $values[] = $model[$this->primaryKey];
+      $this->pdo->exec ("UPDATE $this->collection SET $exp WHERE $this->primaryKey=?", $values);
+    }
+    else {
+      $markers = array_fill (0, count ($columns), '?');
+      $this->pdo->exec ("INSERT INTO $this->collection ($columns) VALUES ($markers)", $values);
+    }
+  }
+
+  /**
    * Override to provide an implementation of a database transaction rollback.
    */
   protected function rollback ()
   {
     $this->pdo->rollBack ();
-  }
-
-  /**
-   * Attempts to save the given model on the database.
-   *
-   * <p>If the model type is unsupported by the specific controller implementation, the method will do nothing and
-   * return `false`.
-   * > <p>This is usually only overriden by controller subclasses that implement support for a specific ORM.
-   *
-   * @param mixed $model
-   * @param array $options Driver/ORM-specific options.
-   * @return bool true if the model was saved.
-   */
-  protected function save ($model, array $options = [])
-  {
-    // Does nothing; there's no automated saving support on this implementation yet.
-    return null;
   }
 
 }

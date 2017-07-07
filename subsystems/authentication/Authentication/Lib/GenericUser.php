@@ -46,6 +46,11 @@ class GenericUser implements UserInterface
     ];
   }
 
+  function getUsers ()
+  {
+    return [];
+  }
+
   function idField ($set = null)
   {
     if (isset($set))

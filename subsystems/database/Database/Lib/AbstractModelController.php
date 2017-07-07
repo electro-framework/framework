@@ -14,7 +14,7 @@ abstract class AbstractModelController implements ModelControllerInterface
   /**
    * @var array|object
    */
-  protected $model = [];
+  protected $model = null;
   /**
    * @var string A dot-separated path to the root/main model.
    * @see setModelRootPath
@@ -75,17 +75,6 @@ abstract class AbstractModelController implements ModelControllerInterface
     $this->session         = $session;
     $this->handlersForSave = [[$this, 'builtInSaveHandler']];
   }
-
-  abstract function loadData ($collection, $subModelPath = '', $id = null, $primaryKey = 'id');
-
-  abstract function loadModel ($modelClass, $subModelPath = '', $id = null);
-
-  /**
-   * Override to provide an implementation of setting the primary key's name and value for subsequent model load
-   * operations.
-   * @inheritdoc
-   */
-  abstract function withRequestedId ($routeParam = 'id', $primaryKey = null);
 
   function get ($path)
   {
@@ -246,34 +235,6 @@ abstract class AbstractModelController implements ModelControllerInterface
   }
 
   /**
-   * Override to provide an implementation of beginning a database transaction.
-   */
-  abstract protected function beginTransaction ();
-
-  /**
-   * Override to provide an implementation of a database transaction commit.
-   */
-  abstract protected function commit ();
-
-  /**
-   * Override to provide an implementation of a database transaction rollback.
-   */
-  abstract protected function rollback ();
-
-  /**
-   * Attempts to save the given model on the database.
-   *
-   * <p>If the model type is unsupported by the specific controller implementation, the method will do nothing and
-   * return `null`.
-   * <p>If the model could not be save due to another reason, the method should returm `false`.
-   * > <p>This is usually only overriden by controller subclasses that implement support for a specific ORM.
-   *
-   * @param mixed $model
-   * @return bool|null true if the model was saved.
-   */
-  abstract protected function save ($model);
-
-  /**
    * Saves all sub-models on the model that can be automatically saved.
    *
    * <p>Although not common, you may override this if the model has some unsupported format that can not be handled by
@@ -289,6 +250,10 @@ abstract class AbstractModelController implements ModelControllerInterface
     return true;
   }
 
+  /**
+   * The default save handler.
+   * @return bool
+   */
   private function builtInSaveHandler ()
   {
     $def = $this->overrideDefaultHandler;
