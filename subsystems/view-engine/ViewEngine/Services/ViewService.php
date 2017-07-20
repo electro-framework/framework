@@ -122,7 +122,7 @@ class ViewService implements ViewServiceInterface
   function getViewModelClass ($templatePath)
   {
     $this->resolveTemplatePath ($templatePath, $base, $viewPath);
-    $class = ucwords (str_replace ('/', '\\', str_segmentsStripLast ($viewPath, '.')), '\\');
+    $class = str_replace (['-', '_'], '',str_replace ('/', '\\', ucwords(str_segmentsStripLast ($viewPath, '.'),'\\/-_')));//capitalize class names on "-_" characters from the template
 
     foreach ($this->engineSettings->getViewModelNamespaces () as $ns) {
       $FQN = "$ns\\$class";
