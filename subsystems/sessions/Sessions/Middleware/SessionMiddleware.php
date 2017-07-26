@@ -72,10 +72,6 @@ class SessionMiddleware implements RequestHandlerInterface
     // Setup current session to be saved on shutdown.
     $_SESSION['#data'] = $session;
 
-    $flashMessage = $session->getFlashMessage ();
-    if ($flashMessage)
-      $this->renderFlashMessage ($flashMessage['type'], $flashMessage['message']);
-
     // Run the next middleware, catching any flash message exceptions.
 
     try {
@@ -89,24 +85,6 @@ class SessionMiddleware implements RequestHandlerInterface
         $session->flashInput ($post);
 
       return $this->redirection->refresh ();
-    }
-  }
-
-  /**
-   * Sets the `statusMessage` content block to a rendered HTML status message.
-   * <p>Override to define a different template or rendering mechanism.
-   *
-   * @param int    $status
-   * @param string $message
-   */
-  protected function renderFlashMessage ($status, $message)
-  {
-    if (!is_null ($status)) {
-      $class = get (self::$FLASH_CLASSES, $status);
-      $class = $class ? " alert-$class" : '';
-      $msg   = "<div id=status class='alert$class' role=alert><div>$message</div></div>";
-      $this->blocksService->getBlock ('statusMessage')->set ($msg);
-      $this->assetsService->addInlineScript ('setTimeout(function(){$("#status").fadeOut()},5000)');
     }
   }
 
