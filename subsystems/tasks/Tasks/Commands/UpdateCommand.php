@@ -52,6 +52,8 @@ trait UpdateCommand
     $targetConfig = json_load ($rootFile, true);
 
     $requires = $requiredBy = $psr4s = $bins = $files = $extra = [];
+    $repositories = array_get ($targetConfig, 'repositories', []);
+
     $modules  = $this->modulesRegistry->onlyPrivate ()->getModules ();
 
     foreach ($modules as $module) {
@@ -95,6 +97,12 @@ trait UpdateCommand
       foreach ($config->get ('extra', []) as $k => $v)
         if (in_array ($k, self::$ALLOW_EXTRA_KEYS))
           $extra[$k] = array_replace_recursive (get ($extra, $k, []), $v);
+
+      // Merge 'repositories' section
+
+      foreach ($config->get ('repositories', []) as $repo)
+        if (is_null(array_find($repositories, 'url', $repo['url'])))
+          $repositories[] = $repo;
     }
 
     ksort ($requires);
@@ -121,6 +129,9 @@ trait UpdateCommand
     if ($extra)
       $targetConfig['extra'] = $extra;
     else unset ($targetConfig['extra']);
+    if ($repositories)
+      $targetConfig['repositories'] = $repositories;
+    else unset ($targetConfig['repositories']);
 
     $currentConfig = file_get_contents ('composer.json');
     $targetCfgStr  = json_print ($targetConfig);
