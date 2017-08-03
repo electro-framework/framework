@@ -52,7 +52,7 @@ trait UpdateCommand
     $targetConfig = json_load ($rootFile, true);
 
     $requires = $requiredBy = $psr4s = $bins = $files = $extra = [];
-    $repositories = array_get ($targetConfig, 'repositories', []);
+    $repositories = get ($targetConfig, 'repositories', []);
 
     $modules  = $this->modulesRegistry->onlyPrivate ()->getModules ();
 
