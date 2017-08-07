@@ -371,7 +371,7 @@ trait ModuleCommands
 
       $this->modulesUtil->selectModule ($moduleName, array_merge ($privateModules, $plugins));
     }
-    $this->io->writeln ("Uninstalling < info>$moduleName </info > ")->nl ();
+    $this->io->writeln ("Uninstalling <info>$moduleName</info>")->nl ();
 
     if ($this->modulesRegistry->isPlugin ($moduleName))
       $this->uninstallPlugin ($moduleName);
