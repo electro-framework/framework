@@ -273,13 +273,15 @@ trait ModuleCommands
     // Rename the module's bootstrap class (if any)
 
     if ($module->bootstrapper) {
-      $io->title ("Renaming the module's bootstrap class")->write (' Renaming class');
       $module->name = $newModuleName;
       $newBootPath  = $module->getBootstrapperPath ();
       $newClassName = str_segmentsLast ($module->getBootstrapperClass (), '\\');
+      $io->title ("Renaming the module's bootstrap class")->write (' Renaming class');
       $this->fileReplaceStr ($oldBootPath, '/(class\s+)%s/', $oldClassName, "\$1$newClassName");
-      $io->writeln (" Renaming file");
-      $this->fs->rename ($oldBootPath, $newBootPath);
+      if ($oldClassName != $newClassName) {
+        $io->writeln (" Renaming file to <info>$newBootPath</info>");
+        $this->fs->rename ($oldBootPath, $newBootPath);
+      }
     }
     else $io->writeln ("The module has no bootstrapper.");
 
