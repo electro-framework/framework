@@ -426,7 +426,8 @@ trait ModuleCommands
 
     // Select target module where the plugin will be registered
 
-    $io->writeln (' < question>Where should the plugin be registered ?</question > ');
+    $io->writeln ('<question>Where should the plugin be registered ?</question>
+');
     $this->modulesUtil->selectModule ($targetModuleName, $privateModules);
 
     // Install module via Composer
