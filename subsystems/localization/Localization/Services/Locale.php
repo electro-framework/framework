@@ -19,6 +19,14 @@ class Locale
     'fr' => 'fr-FR',
     'es' => 'es-ES',
   ];
+
+	private static $SHORT_CODES = [
+		'en-US' => 'en',
+		'pt-PT' => 'pt',
+		'fr-FR' => 'fr',
+		'es-ES' => 'en',
+	];
+
   private static $LOCALES  = [
     'en-US' => ['name' => 'en-US', 'label' => 'English', 'compatibleWith' => ['en_US', 'en_US.UTF-8', 'us']],
     'pt-PT' => ['name' => 'pt-PT', 'label' => 'Português', 'compatibleWith' => ['pt_PT', 'pt_PT.UTF-8', 'ptg']],
@@ -206,4 +214,12 @@ class Locale
     return $this;
   }
 
+	/**
+	 * Return the short code of name of current Locale
+	 * @return mixed
+	 */
+	function shortCode()
+	{
+		return get(self::$SHORT_CODES,$this->name);
+	}
 }
