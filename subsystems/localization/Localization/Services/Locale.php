@@ -1,8 +1,8 @@
 <?php
 namespace Electro\Localization\Services;
 
-use RuntimeException;
 use Electro\Traits\InspectionTrait;
+use RuntimeException;
 
 /**
  * A service that provides localization settings that apply to the current URL.
@@ -13,25 +13,23 @@ class Locale
 
   static $INSPECTABLE = ['name', 'label', 'available', 'selectionMode'];
 
-  private static $DEFAULTS = [
+  static $DEFAULTS = [
     'en' => 'en-US',
     'pt' => 'pt-PT',
     'fr' => 'fr-FR',
     'es' => 'es-ES',
   ];
-
-	private static $SHORT_CODES = [
-		'en-US' => 'en',
-		'pt-PT' => 'pt',
-		'fr-FR' => 'fr',
-		'es-ES' => 'en',
-	];
-
-  private static $LOCALES  = [
+  static $LOCALES = [
     'en-US' => ['name' => 'en-US', 'label' => 'English', 'compatibleWith' => ['en_US', 'en_US.UTF-8', 'us']],
     'pt-PT' => ['name' => 'pt-PT', 'label' => 'Português', 'compatibleWith' => ['pt_PT', 'pt_PT.UTF-8', 'ptg']],
     'fr-FR' => ['name' => 'fr-FR', 'label' => 'Français', 'compatibleWith' => ['fr_FR', 'fr_FR.UTF-8', 'fr']],
     'es-ES' => ['name' => 'es-ES', 'label' => 'Español', 'compatibleWith' => ['es_ES', 'es_ES.UTF-8', 'es']],
+  ];
+  private static $SHORT_CODES = [
+    'en-US' => 'en',
+    'pt-PT' => 'pt',
+    'fr-FR' => 'fr',
+    'es-ES' => 'es',
   ];
   /**
    * A list of locale names supported by the application.
@@ -214,12 +212,14 @@ class Locale
     return $this;
   }
 
-	/**
-	 * Return the short code of name of current Locale
-	 * @return mixed
-	 */
-	function shortCode()
-	{
-		return get(self::$SHORT_CODES,$this->name);
-	}
+  /**
+   * Return the short code of name of current Locale
+   *
+   * @param string $locale
+   * @return mixed
+   */
+  function shortCode ($locale = null)
+  {
+    return get (self::$SHORT_CODES,$locale ?: $this->name);
+  }
 }

@@ -59,4 +59,8 @@ class LocalizationSettings implements AssignableInterface
     return $this;
   }
 
+  function moduleHasTranslations (ModuleInfo $moduleInfo)
+  {
+    echo "$moduleInfo->path/{$this->moduleLangPath}";exit;
+  }
 }
