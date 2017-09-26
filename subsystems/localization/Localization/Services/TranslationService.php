@@ -4,6 +4,7 @@ namespace Electro\Localization\Services;
 
 use Electro\Kernel\Services\ModulesRegistry;
 use Electro\Localization\Config\LocalizationSettings;
+use Selenia\Platform\Models\TranslationData;
 
 class TranslationService
 {
@@ -19,12 +20,17 @@ class TranslationService
    * @var ModulesRegistry
    */
   private $modulesRegistry;
+  /**
+   * @var TranslationData
+   */
+  private $translationData;
 
-  function __construct (ModulesRegistry $modulesRegistry, LocalizationSettings $localizationSettings, Locale $locale)
+  function __construct (ModulesRegistry $modulesRegistry, LocalizationSettings $localizationSettings, Locale $locale, TranslationData $translationData)
   {
     $this->modulesRegistry = $modulesRegistry;
     $this->localizationSettings = $localizationSettings;
     $this->locale = $locale;
+    $this->translationData = $translationData;
   }
 
   /**
@@ -49,10 +55,9 @@ class TranslationService
 
     sort($modules);
     $module = $modulesRegistry->getModule($modules[0]);
-    $resourcesLangPath = $this->getResourcesLangPath($module)."/$localeName.ini";
+    $path = $this->getResourcesLangPath($module)."/$localeName.ini";
 
-    $translations = fileExists($resourcesLangPath) ? parse_ini_file($resourcesLangPath) : [];
-    return get ($translations,$key);
+    return $this->translationData->get($key, $path);
   }
 
   /**
@@ -62,6 +67,8 @@ class TranslationService
   {
     $translations = [];
     $modules = $this->getAllModulesOfProject();
+    sort($modules);
+
     foreach ($modules as $module)
     {
       $trans = $this->getTranslationsOfModule($module);
@@ -99,13 +106,19 @@ class TranslationService
   {
     $translations = [];
     $resourcesLangPath = $this->getResourcesLangPath($module);
-    if (fileExists($resourcesLangPath))
-    {
-      $iniFiles = preg_grep ('~\.(ini)$~', array_diff (scandir ($resourcesLangPath), ['..', '.']));
-      foreach ($iniFiles as $iniFile)
-        $translations[str_replace('.ini', '', $iniFile)] = parse_ini_file ("$resourcesLangPath/$iniFile");
-    }
+    $iniFiles = $this->getIniFilesOfModule($module);
+    foreach ($iniFiles as $file => $data)
+      $translations[str_replace('.ini', '', $data)] = parse_ini_file ("$resourcesLangPath/$data");
+
     return $translations;
+  }
+
+  function getIniFilesOfModule($module)
+  {
+    $resourcesLangPath = $this->getResourcesLangPath($module);
+    if (fileExists($resourcesLangPath))
+      return preg_grep ('~\.(ini)$~', array_diff (scandir ($resourcesLangPath), ['..', '.']));
+    else return [];
   }
 
   /**

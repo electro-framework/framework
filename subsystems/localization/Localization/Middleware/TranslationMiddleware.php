@@ -62,14 +62,16 @@ class TranslationMiddleware implements RequestHandlerInterface
     if (!$this->settings->translation || !$lang)
       return $response;
 
-    if (!isset(self::$translation[$lang])) {
+    if (!isset(self::$translation[$lang]))
+    {
       // Load and merge all translation files now.
 
       self::$translation[$lang] = [];
 
       $trans   =& self::$translation[$lang];
       $folders = $this->settings->languageFolders;
-      foreach ($folders as $folder) {
+      foreach ($folders as $folder)
+      {
         $path     = "$folder/$lang.ini";
         $newTrans = fileExists ($path) ? parse_ini_file ($path) : null;
         if ($newTrans)
