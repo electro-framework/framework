@@ -49,6 +49,12 @@ class TranslationService
       $localeName = $this->locale->locale();
 
     $modules = $this->getAvailableModulesOfKey($key);
+    $privateModule = "";
+    foreach ($modules as $module)
+      if ($this->modulesRegistry->isPrivateModule($module))
+        $privateModule = $module;
+
+    if ($privateModule) $modules = [$privateModule];
 
     if (!$modules)
       return $key;
@@ -78,15 +84,29 @@ class TranslationService
         {
           foreach ($value as $key => $val)
           {
+            $langsAvailable = $this->getAvailableLangsOfKey($key);
+
             if (!isset($translations[$key]))
             {
-              $langsAvailable = $this->getAvailableLangsOfKey($key);
               $translations[$key] = [
                 'key' => $key,
                 'value' => $val,
                 'module' => $module->name,
                 'locale' => implode(', ', $langsAvailable)
               ];
+            }
+            else
+            {
+              $isPrivateModulo = $this->modulesRegistry->isPrivateModule($module->name);
+              if ($isPrivateModulo)
+              {
+                $translations[$key] = [
+                  'key' => $key,
+                  'value' => $val,
+                  'module' => $module->name,
+                  'locale' => implode(', ', $langsAvailable)
+                ];
+              }
             }
           }
         }
