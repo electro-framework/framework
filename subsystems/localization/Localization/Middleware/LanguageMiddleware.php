@@ -17,7 +17,6 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class LanguageMiddleware implements RequestHandlerInterface
 {
-
   /**
    * @var DebugSettings
    */

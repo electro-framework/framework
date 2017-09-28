@@ -37,7 +37,7 @@ class Locale
    *
    * @var string[]
    */
-  private $available = ['en-US'];
+  private $available = ['pt-PT'];
   /**
    * A two letter code for default site language. NULL if i18n is disabled.
    * <p>This is set on the environment (ex: .env).
