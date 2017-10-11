@@ -28,15 +28,6 @@ class NavigationModule implements ModuleInterface
             ->share (NavigationInterface::class, 'navigation')
             ->alias (NavigationLinkInterface::class, NavigationLink::class)
             ->share (NavigationSettings::class);
-        })
-      //
-      ->onReconfigure (
-        function (InjectorInterface $injector, NavigationSettings $settings, NavigationInterface $navigation) {
-          foreach ($settings->getProviders () as $provider) {
-            if (is_string ($provider))
-              $provider = $injector->make ($provider);
-            $provider->defineNavigation ($navigation);
-          }
         });
   }
 

@@ -17,6 +17,7 @@ use Electro\Interfaces\Http\MiddlewareStackInterface;
 use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Electro\Localization\Middleware\LanguageMiddleware;
 use Electro\Localization\Middleware\TranslationMiddleware;
+use Electro\Navigation\Middleware\NavigationMiddleware;
 use Electro\Routing\Middleware\PermalinksMiddleware;
 use Electro\Sessions\Middleware\SessionMiddleware;
 
@@ -37,20 +38,21 @@ class DefaultMiddlewareAssembler implements MiddlewareAssemblerInterface
   {
     $stack
       ->set ([
-        0          => ContentServerMiddleware::class,
-        1          => !$this->devEnv ? CompressionMiddleware::class : null,
-        2          => $this->webConsole ? WebConsoleMiddleware::class : null,
-        3          => TranslationMiddleware::class,
-        4          => ErrorHandlingMiddleware::class,
-        'session'  => SessionMiddleware::class,
-        5          => $this->webConsole ? AlternateLogoutMiddleware::class : null,
-        6          => CsrfMiddleware::class,
-        7          => LanguageMiddleware::class,
-        8          => PermalinksMiddleware::class,
-        9          => FetchMiddleware::class,
-        'router'   => ApplicationRouterInterface::class,
-        10         => WelcomeMiddleware::class,
-        'notFound' => URLNotFoundMiddleware::class,
+        0            => ContentServerMiddleware::class,
+        1            => !$this->devEnv ? CompressionMiddleware::class : null,
+        2            => $this->webConsole ? WebConsoleMiddleware::class : null,
+        3            => TranslationMiddleware::class,
+        4            => ErrorHandlingMiddleware::class,
+        'session'    => SessionMiddleware::class,
+        'navigation' => NavigationMiddleware::class,
+        5            => $this->webConsole ? AlternateLogoutMiddleware::class : null,
+        6            => CsrfMiddleware::class,
+        7            => LanguageMiddleware::class,
+        8            => PermalinksMiddleware::class,
+        9            => FetchMiddleware::class,
+        'router'     => ApplicationRouterInterface::class,
+        10           => WelcomeMiddleware::class,
+        'notFound'   => URLNotFoundMiddleware::class,
       ]);
   }
 
