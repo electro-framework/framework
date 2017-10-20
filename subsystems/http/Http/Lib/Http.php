@@ -101,7 +101,7 @@ class Http
    */
   static function isAbsoluteUrl ($url)
   {
-    return isset($url) ? (bool)preg_match ('#^\w+://\w#', $url) : false;
+    return isset($url) ? (bool)preg_match ('#^\w+:#', $url) : false;
   }
 
   /**
