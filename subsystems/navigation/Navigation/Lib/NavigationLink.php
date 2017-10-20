@@ -254,9 +254,9 @@ class NavigationLink implements NavigationLinkInterface
       }
       else if ($url && $url[0] == '/')
         $url = $this->getRequest ()->getAttribute ('baseUri') . $url;
-      else if(!isset($url) && $this->parent)
+      else if($url === '' && $this->parent)
         $url = $this->parent->url ();
-      
+
       $this->url = $url;
 
       if (exists ($url))
@@ -266,6 +266,7 @@ class NavigationLink implements NavigationLinkInterface
     }
     //else DO NOT CACHE IT YET!
     $this->url = $url;
+    $this->cachedUrl = null;  // Clear the cache.
     return $this;
   }
 
