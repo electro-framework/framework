@@ -303,8 +303,14 @@ function forward ()
  */
 function route ($url, callable $handler)
 {
-  return function (ServerRequestInterface $request, $response, $next) use ($url, $handler) {
-    return $request->getAttribute ('virtualUri') == $url ? $handler ($request, $response, back ()) : $next ();
+  $cache = null; // speeds up subsequent route() calls.
+  return function (ServerRequestInterface $request, $response, $next) use ($url, $handler, &$cache) {
+    return $url == ($cache
+      ?: (
+        $cache = str_replace ($request->getAttribute ('appBaseUri') . '/', '', $request->getAttribute ('virtualUri'))
+      )
+    )
+      ? $handler : $next ();
   };
 }
 
