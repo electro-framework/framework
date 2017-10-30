@@ -199,6 +199,8 @@ class NavigationLink implements NavigationLinkInterface
       $link->parent ($this);
       if (is_string ($key) && !exists ($link->rawUrl ()))
         $link->url ($key);
+      else
+        $link->url ('');//initialize child because it will get the parent's id      
     }
     if ($prepend)
       $this->links = array_merge ($navigationMap, $this->links);
