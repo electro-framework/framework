@@ -403,7 +403,7 @@ trait ModuleCommands
 
       // Search
 
-      $modules = (new PackagistAPI)->type ('electro - plugin')->query ($opts['search'])->search (true);
+      $modules = (new PackagistAPI)->type ('electro-plugin')->query ($opts['search'])->search (true);
 
       if (empty($modules))
         $io->error ("No matching plugins were found");
