@@ -6,6 +6,7 @@ use Electro\Interfaces\Http\MiddlewareAssemblerInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Profiles\ApiProfile;
 use Electro\Profiles\WebProfile;
 use Electro\WebServer\DefaultMiddlewareAssembler;
 use Electro\WebServer\WebServer;
@@ -14,7 +15,7 @@ class WebServerModule implements ModuleInterface
 {
   static function getCompatibleProfiles ()
   {
-    return [WebProfile::class];
+    return [WebProfile::class, ApiProfile::class];
   }
 
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)

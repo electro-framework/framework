@@ -9,13 +9,14 @@ use Electro\Interfaces\Http\Shared\ApplicationMiddlewareInterface;
 use Electro\Interfaces\KernelInterface;
 use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Profiles\ApiProfile;
 use Electro\Profiles\WebProfile;
 
 class ErrorHandlingModule implements ModuleInterface
 {
   static function getCompatibleProfiles ()
   {
-    return [WebProfile::class];
+    return [WebProfile::class, ApiProfile::class];
   }
 
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)

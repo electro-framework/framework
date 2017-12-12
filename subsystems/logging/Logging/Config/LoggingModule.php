@@ -10,6 +10,7 @@ use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Logging\Lib\DefaultLoggingSetup;
 use Electro\Logging\Services\LogCentral;
+use Electro\Profiles\ApiProfile;
 use Electro\Profiles\ConsoleProfile;
 use Electro\Profiles\WebProfile;
 use Psr\Log\LoggerInterface;
@@ -28,7 +29,7 @@ class LoggingModule implements ModuleInterface
 {
   static function getCompatibleProfiles ()
   {
-    return [WebProfile::class, ConsoleProfile::class];
+    return [WebProfile::class, ConsoleProfile::class, ApiProfile::class];
   }
 
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)

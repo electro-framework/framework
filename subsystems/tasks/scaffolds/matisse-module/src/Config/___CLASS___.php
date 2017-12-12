@@ -7,6 +7,7 @@ use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Navigation\Config\NavigationSettings;
+use Electro\Profiles\ApiProfile;
 use Matisse\Config\MatisseSettings;
 use Electro\Profiles\WebProfile;
 use Electro\ViewEngine\Config\ViewEngineSettings;
@@ -16,7 +17,7 @@ class ___CLASS___ implements ModuleInterface
 {
   static function getCompatibleProfiles ()
   {
-    return [WebProfile::class];
+    return [WebProfile::class, ApiProfile::class];
   }
 
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)

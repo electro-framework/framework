@@ -10,6 +10,7 @@ use Electro\Interfaces\Views\ViewModelInterface;
 use Electro\Interfaces\Views\ViewServiceInterface;
 use Electro\Interop\ViewModel;
 use Electro\Kernel\Lib\ModuleInfo;
+use Electro\Profiles\ApiProfile;
 use Electro\Profiles\WebProfile;
 use Electro\ViewEngine\Lib\TemplateCache;
 use Electro\ViewEngine\Lib\View;
@@ -21,7 +22,7 @@ class ViewEngineModule implements ModuleInterface
 {
   static function getCompatibleProfiles ()
   {
-    return [WebProfile::class];
+    return [WebProfile::class, ApiProfile::class];
   }
 
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)

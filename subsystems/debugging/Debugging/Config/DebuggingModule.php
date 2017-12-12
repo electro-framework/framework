@@ -8,6 +8,7 @@ use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Kernel\Services\ModulesRegistry;
+use Electro\Profiles\ApiProfile;
 use Electro\Profiles\WebProfile;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
 use PhpKit\WebConsole\DebugConsole\DebugConsoleSettings;
@@ -33,7 +34,7 @@ class DebuggingModule implements ModuleInterface
 
   static function getCompatibleProfiles ()
   {
-    return [WebProfile::class];
+    return [WebProfile::class, ApiProfile::class];
   }
 
   static function startUp (KernelInterface $kernel, ModuleInfo $moduleInfo)

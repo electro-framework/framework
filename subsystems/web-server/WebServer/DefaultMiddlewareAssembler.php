@@ -2,7 +2,6 @@
 
 namespace Electro\WebServer;
 
-use Electro\ContentRepository\Middleware\ContentServerMiddleware;
 use Electro\Debugging\Config\DebugSettings;
 use Electro\Debugging\Middleware\AlternateLogoutMiddleware;
 use Electro\Debugging\Middleware\WebConsoleMiddleware;
@@ -38,20 +37,19 @@ class DefaultMiddlewareAssembler implements MiddlewareAssemblerInterface
   {
     $stack
       ->set ([
-        0            => ContentServerMiddleware::class,
-        1            => !$this->devEnv ? CompressionMiddleware::class : null,
-        2            => $this->webConsole ? WebConsoleMiddleware::class : null,
-        3            => TranslationMiddleware::class,
-        4            => ErrorHandlingMiddleware::class,
+        0            => !$this->devEnv ? CompressionMiddleware::class : null,
+        1            => $this->webConsole ? WebConsoleMiddleware::class : null,
+        2            => TranslationMiddleware::class,
+        3            => ErrorHandlingMiddleware::class,
         'session'    => SessionMiddleware::class,
         'navigation' => NavigationMiddleware::class,
-        5            => $this->webConsole ? AlternateLogoutMiddleware::class : null,
-        6            => CsrfMiddleware::class,
-        7            => LanguageMiddleware::class,
-        8            => PermalinksMiddleware::class,
-        9            => FetchMiddleware::class,
+        4            => $this->webConsole ? AlternateLogoutMiddleware::class : null,
+        5            => CsrfMiddleware::class,
+        6            => LanguageMiddleware::class,
+        7            => PermalinksMiddleware::class,
+        8            => FetchMiddleware::class,
         'router'     => ApplicationRouterInterface::class,
-        10           => WelcomeMiddleware::class,
+        9            => WelcomeMiddleware::class,
         'notFound'   => URLNotFoundMiddleware::class,
       ]);
   }
