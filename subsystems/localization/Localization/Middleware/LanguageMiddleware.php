@@ -72,7 +72,7 @@ class LanguageMiddleware implements RequestHandlerInterface
     }
 
     if (!$this->locale->isAvailable ($lang))
-      return Http::response ($response, "Not found", 'text/html', 404);
+      return Http::response ($response, "Language <code>$lang</code> not found", 'text/html', 404);
 
     $this->locale->locale ($lang);
     $this->session->setLang ($lang);
