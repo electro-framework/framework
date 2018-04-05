@@ -15,7 +15,10 @@ use PhpKit\ExtPDO\Interfaces\ConnectionInterface;
  */
 class ModelController extends AbstractModelController
 {
-  /** @var string The virtual table name. */
+  /**
+   * @var string The collection or table name.
+   * It may or may not be used by descendentant classes.
+   */
   protected $collection;
   protected $model = [];
   /** @var ExtPDO */
@@ -31,14 +34,17 @@ class ModelController extends AbstractModelController
       $this->pdo = $connection->getPdo ();
   }
 
-  function loadModel ($collection, $subModelPath = '', $id = null, $primaryKey = null)
+  function loadModel ($modelClassOrCollection, $subModelPath = '', $id = null, $primaryKey = null)
   {
     $id                = $id ?: $this->requestedId;
     $this->requestedId = $id;
     $this->primaryKey  = $primaryKey = $primaryKey ?: $this->primaryKey;
-    $this->collection  = $collection;
+    $this->collection  = $modelClassOrCollection;
 
-    $data = $this->pdo->query ("SELECT * FROM $collection WHERE $primaryKey=?", [$id])->fetch ();
+    if (class_exists ($modelClassOrCollection))
+      throw new \RuntimeException ("The current Model Controller only supports raw array models.");
+
+    $data = $this->pdo->query ("SELECT * FROM $modelClassOrCollection WHERE $primaryKey=?", [$id])->fetch ();
     if ($subModelPath === '')
       $this->model = $data;
     else setAt ($this->model, $subModelPath, $data);

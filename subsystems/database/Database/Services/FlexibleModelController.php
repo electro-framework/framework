@@ -12,18 +12,18 @@ class FlexibleModelController extends ModelController
   /** @var FlexibleModel */
   protected $model;
 
-  function loadModel ($collection, $subModelPath = '', $id = null, $primaryKey = 'id')
+  function loadModel ($modelClassOrCollection, $subModelPath = '', $id = null, $primaryKey = null)
   {
-    if (!is_subclass_of ($collection, FlexibleModel::class))
-      throw new \InvalidArgumentException ("The '$collection' collection class is not a valid subclass of " .
+    if (!is_subclass_of ($modelClassOrCollection, FlexibleModel::class))
+      throw new \InvalidArgumentException ("The '$modelClassOrCollection' collection class is not a valid subclass of " .
                                            FlexibleModel::class);
     /** @var FlexibleModel $instance */
-    $instance   = is_string($collection) ? new $collection : $collection;
+    $instance   = is_string($modelClassOrCollection) ? new $modelClassOrCollection : $modelClassOrCollection;
 
     $id                = $id ?: $this->requestedId;
     $this->requestedId = $id;
     $this->primaryKey  = $primaryKey = $primaryKey ?: $this->primaryKey ?:  $instance::PRIMARY_KEY_FIELD;
-    $this->collection  = $instance::TABLE ?: $collection;
+    $this->collection  = $instance::TABLE ?: $modelClassOrCollection;
 
     $data = $this->pdo->query ("SELECT * FROM $this->collection WHERE \"$primaryKey\"=?", [$id])->fetch ();
 
