@@ -11,7 +11,9 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- *
+ * TODO: handle expired session on POST request (i.e. retry the POST when authenticated).
+ * TODO: handle HTTP Basic Authentication.
+ * TODO: handle API authentication (OAuth, etc).
  */
 class AuthenticationMiddleware implements RequestHandlerInterface
 {
@@ -39,6 +41,13 @@ class AuthenticationMiddleware implements RequestHandlerInterface
   {
     $this->redirection->setRequest ($request);
 
+    // LOG OUT
+
+    if ($request->getUri () == $this->settings->getLogoutUrl ()) {
+      $this->session->logout ();
+      return $this->redirection->home ();
+    }
+
     switch ($request->getMethod ()) {
       case 'GET':
 
@@ -49,68 +58,19 @@ class AuthenticationMiddleware implements RequestHandlerInterface
         break;
     }
 
-    // LOG OUT
-
-    if ($request->getUri () == $this->settings->getLogoutUrl ()) {
-      $this->session->logout ();
-      return $this->redirection->home ();
+    try {
+      return $next();
     }
+    catch (AuthenticationException $flash) {
+      $this->session->flashMessage ($flash->getMessage (), $flash->getCode (), $flash->getTitle ());
 
-    return $next();
-  }
+      $post = $request->getParsedBody ();
+      if (is_array ($post))
+        $this->session->flashInput ($post);
 
-  /**
-   * TODO: authenticate via HTTP Basic Authentication
-   * This code was copy/pasted fom an old controller; it must be rewritten.
-   *
-   * @return bool|string
-   * <li> True is a login form should be displayed.
-   * <li> False to proceed as a normal request.
-   * <li> <code>'retry'</code> to retry GET request by redirecting to same URI.
-   */
-  protected function authenticate ()
-  {
-    global $application, $session;
-    $authenticate = false;
-    if (isset($session) && $application->requireLogin) {
-      $this->getActionAndParam ($action, $param);
-      $authenticate = true;
-      if ($action == 'login') {
-        $prevPost = get ($_POST, '_prevPost');
-        try {
-          $this->login ();
-          if ($prevPost)
-            $_POST = unserialize (urldecode ($prevPost));
-          else $_POST = [];
-          $_REQUEST = array_merge ($_POST, $_GET);
-          if (empty($_POST))
-            $_SERVER['REQUEST_METHOD'] = 'GET';
-          if ($this->wasPosted ())
-            $authenticate = false; // user is now logged in; proceed as a normal request
-          else $authenticate = 'retry';
-        }
-        catch (AuthenticationException $e) {
-          $this->setStatus (FlashType::WARNING, $e->getMessage ());
-          // note: if $prevPost === false, it keeps that value instead of (erroneously) storing the login form data
-          if ($action)
-            $this->prevPost = isset($prevPost) ? $prevPost : urlencode (serialize ($_POST));
-        }
-      }
-      else {
-        $authenticate = !$session->validate ();
-        if ($authenticate && $action)
-          $this->prevPost = urlencode (serialize ($_POST));
-        if ($this->isWebService) {
-          $username = get ($_SERVER, 'PHP_AUTH_USER');
-          $password = get ($_SERVER, 'PHP_AUTH_PW');
-          if ($username) {
-            $session->login ($application->defaultLang, $username, $password);
-            $authenticate = false;
-          }
-        }
-      }
+      $this->session->reflashPreviousUrl ();
+      return $this->redirection->refresh ();
     }
-    return $authenticate;
   }
 
 }
