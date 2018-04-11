@@ -35,16 +35,15 @@ function handlerMethod ($class, $method)
  * - the route parameters,
  * - the request and response objects.
  *
- * The callback, on its function signature, may ommit trailing parameters that it doesn't need.
+ * > **Note:** the callback, on its function signature, may omit trailing parameters that it doesn't need.
  *
- * <p>The callback may return:
- * - a response object
- * - a string (sent as text/html)
- * - `null` to send an empty response
- * - arrays, objects or scalars will be sent as JSON.
+ * <p>The value returned from the callback (which can be any kind of value) will be converted to a
+ * {@see ResponseInterface} and that will be the response returned from the middleware this function generates.
  *
- * @param string|array|callable $ref Either a Closure, a 'Class::method' string or a ['Class', 'method'] array or an
- *                                   [$instance, 'method'] array.
+ * <p>See {@see autoResponse()} for more information about the automated response generation and the conversion process.
+ *
+ * @param callable $ref Either a Closure, a 'Class::method' string or a ['Class', 'method'] array or an
+ *                      [$instance, 'method'] array.
  * @return \Electro\Interop\InjectableFunction
  * @throws Fault If an invalid data type is returned from the controller.
  */
@@ -64,6 +63,21 @@ function controller ($ref)
 }
 
 /**
+ * Returns a middleware that invokes the given provisionable callable and processes the resulting return value in order
+ * to automatically generate the most appropriate HTTP response from it.
+ *
+ * <p>The conversion to a {@see ResponseInterface} is performed by these rules:
+ *
+ * Callback return value | Generated response
+ * ----------------------|-------------------
+ * a response object     | no change
+ * a callable/middleware | no change
+ * a string              | a text/html response
+ * `null`                | an empty response
+ * an array              | a JSON response
+ * an object             | a JSON response
+ * a scalar (ex. boolean)| a JSON response
+ *
  * @param callable $handler function ($request, $response, $next):mixed
  * @return InjectableFunction
  */
@@ -72,7 +86,9 @@ function autoResponse (callable $handler)
   return nonMiddleware ($handler, function ($request, ResponseInterface $response, $result) {
     switch (true) {
       case $result instanceof ResponseInterface:
+      case $result instanceof Closure:
         return $result;
+        break;
       case is_string ($result):
         break;
       case is_null ($result):
@@ -92,6 +108,12 @@ function autoResponse (callable $handler)
 /**
  * Generates a middleware that executes a non-middleware provisionable callable and feeds its result (which may be of
  * any type) to the given consumer middleware.
+ *
+ * <p>While the callable is an {@see InjectableFunction}, it is called until another type of callable is obtained,
+ * then that value is used as the final callable to be invoked.
+ *
+ * <p>The return value from this function is a middleware that, when executed, returns the result of invoking the provided
+ * (or resolved from the provided) callable.
  *
  * @param callable $fn       function ($request, $response, $next):mixed
  * @param callable $consumer function ($request, $response, $value):ResponseInterface
