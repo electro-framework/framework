@@ -270,10 +270,11 @@ abstract class BaseRouter implements RouterInterface
   {
     if ($this->routingEnabled && !is_int ($key)) {
       // Route matching:
-      if (!$this->matcher->match ($key, $request, $request))  // note: $request may be modified.
+      $newRequest = $this->matcher->match ($key, $request, $request);
+      if (!$newRequest)
         return $this->iteration_stepNotMatchRoute ($key, $routable, $request, $response, $nextIteration);
 
-      return $this->iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
+      return $this->iteration_stepMatchRoute ($key, $routable, $newRequest, $response, $nextIteration);
     }
     // Else, a middleware unconditional invocation will be performed.
     return $this->iteration_stepMatchMiddleware ($key, $routable, $request, $response, $nextIteration);

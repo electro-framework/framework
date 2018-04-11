@@ -12,9 +12,8 @@ class RouteMatcher implements RouteMatcherInterface
 {
   const SYNTAX = '/^ ([A-Z\|]+\s)? ( \. | \* | \+ | (?: [\w\-\/@]+) (?:\*|\.\.\.)? ) $/x';
 
-  function match ($pattern, ServerRequestInterface $request, ServerRequestInterface &$modifiedRequest)
+  function match ($pattern, ServerRequestInterface $request)
   {
-    $modifiedRequest = $request;
     $path            = $request->getRequestTarget ();
     if ($path == '.') $path = '';
 
@@ -29,21 +28,21 @@ class RouteMatcher implements RouteMatcherInterface
 
     // The dot matches an empty path.
     if ($pathPattern == '.')
-      return !strlen ($path);
+      return !strlen ($path) ? $request : false;
 
     if ($path == '[empty-segment]') // remove marker
     {
       $path = '';
-      $modifiedRequest = $request = $request->withRequestTarget ('');
+      $request = $request->withRequestTarget ('');
     }
 
     // The asterisk matches any path.
     if ($pathPattern == '*')
-      return true;
+      return $request;
 
     // The plus matches any non-empty path.
     if ($pathPattern == '+')
-      return !!strlen ($path);
+      return strlen ($path) ? $request : false;
 
     // @parameters never match the empty path (which is encoded as a single dot)
     $compiledPattern = preg_replace (
@@ -64,8 +63,8 @@ class RouteMatcher implements RouteMatcherInterface
     foreach ($m2 as $k => $v)
       if (is_string ($k) && $k[0] != '_') // exclude reserved _next key
         $request = $request->withAttribute ('@' . $k, urldecode ($v[0]));
-    $modifiedRequest = $request;
-    return true;
+
+    return $request;
   }
 
 }
