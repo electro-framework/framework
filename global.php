@@ -86,7 +86,7 @@ function autoResponse (callable $handler)
   return nonMiddleware ($handler, function ($request, ResponseInterface $response, $result) {
     switch (true) {
       case $result instanceof ResponseInterface:
-      case $result instanceof Closure:
+      case $result instanceof \Closure:
         return $result;
         break;
       case is_string ($result):
