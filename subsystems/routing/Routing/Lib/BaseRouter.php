@@ -10,6 +10,7 @@ use Electro\Interfaces\RenderableInterface;
 use Electro\Interop\InjectableFunction;
 use Electro\Traits\InspectionTrait;
 use Iterator;
+use League\Glide\Server;
 use PhpKit\Flow\Flow;
 use PhpKit\WebConsole\Lib\Debug;
 use Psr\Http\Message\ResponseInterface;
@@ -125,8 +126,10 @@ abstract class BaseRouter implements RouterInterface
       elseif (is_array ($routable))
         $routable = new \ArrayIterator($routable);
 
-      if ($routable instanceof Iterator)
-        $response = $this->iteration_start ($routable, $request, $response, $next, ++self::$stackCounter);
+      if ($routable instanceof Iterator) {
+        $response = $this->iteration_start ($routable, $request, $response, ++self::$stackCounter);
+        return $response ?: $this->iteration_stop ($request, $response, $next);
+      }
 
       elseif (is_string ($routable)) {
         $routable = $this->injector->make ($routable);
@@ -219,39 +222,69 @@ abstract class BaseRouter implements RouterInterface
    * > This method also functions as a router extension point.
    *
    * @param Iterator               $it
-   * @param ServerRequestInterface $originalRequest
-   * @param ResponseInterface      $originalResponse
-   * @param callable               $nextHandlerAfterIteration
-   * @param int                    $stackId For use by logging/debuggin decorators.
-   * @return ResponseInterface
+   * @param ServerRequestInterface $request
+   * @param ResponseInterface      $response
+   * @param int                    $stackId For use by logging/debugging decorators.
+   * @return ResponseInterface|null
+   * @throws \Auryn\InjectionException
    */
-  protected function iteration_start (Iterator $it, ServerRequestInterface $originalRequest,
-                                      ResponseInterface $originalResponse, callable $nextHandlerAfterIteration,
+  protected function iteration_start (Iterator $it,
+                                      ServerRequestInterface $request,
+                                      ResponseInterface $response,
                                       $stackId)
   {
-    $currentRequest       = $originalRequest;
-    $currentResponse      = $originalResponse;
-    $nextIterationClosure =
-      function (ServerRequestInterface $request = null, ResponseInterface $response = null, $first = false)
-      use (
-        $it, &$nextIterationClosure, $nextHandlerAfterIteration, &$currentRequest, &$currentResponse,
-        $stackId, $originalRequest //, $originalResponse
-      ) {
+    inspect ("BEGIN", $request->getRequestTarget ());
+    $this->stackId = $stackId;
+    $middleware    = [];
+    $patterns      = [];
+    // Split the iteration into a list of middleware and a map of route patterns.
+    foreach ($it as $key => $routable)
+      if (is_int ($key))
+        $middleware[] = $routable;
+      else $patterns[$key] = $routable;
 
-        $request  = $currentRequest = ($request ?: $currentRequest);
-        $response = $currentResponse = ($response ?: $currentResponse);
-
-        if ($first) $it->rewind ();
-        else $it->next ();
-
-        $this->stackId = $stackId; // for use on iteration_step() and iteration_stop()
-
-        return $it->valid ()
-          ? $this->iteration_step ($it->key (), $it->current (), $request, $response, $nextIterationClosure)
-          : $this->iteration_stop ($originalRequest, $response, $nextHandlerAfterIteration);
+    if ($middleware) {
+      $prevReq = $request;
+      $prevRes = $response;
+      // Define the middleware iterator
+      $next = function ($req = null, $res = null) use (&$middleware, &$next, &$patterns, &$prevReq, &$prevRes) {
+        $req = $req ?: $prevReq;
+        $res = $res ?: $prevRes;
+        $prevReq = $req;
+        $prevRes= $res;
+        if ($middleware) {
+          $handler = array_shift ($middleware);
+          return $this->route ($handler, $req, $res, $next);
+        }
+        // The end of the stack was reached.
+        return $this->routingEnabled ? $this->match_patterns ($patterns, $req, $res) : null;
       };
+      // Run the middleware.
+      return $next ($request, $response);
+    }
 
-    return $nextIterationClosure ($currentRequest, $currentResponse, true);
+    // No middleware; just match the patterns.
+    return $this->routingEnabled ? $this->match_patterns ($patterns, $request, $response) : null;
+  }
+
+  /**
+   * @param array                  $patterns
+   * @param ServerRequestInterface $request
+   * @param ResponseInterface      $response
+   * @return ResponseInterface|null
+   * @throws \Auryn\InjectionException
+   */
+  protected function match_patterns (array $patterns, ServerRequestInterface $request,
+                                     ResponseInterface $response)
+  {
+    inspect ("MATCH PATTERNS", $request->getRequestTarget ());
+    foreach ($patterns as $key => $routable) {
+      $newReq = $this->iteration_step ($key, $routable, $request, $response);
+      if ($newReq)
+        return $this->iteration_stepMatchRoute ($key, $routable, $newReq, $response);
+      else $this->iteration_stepNotMatchRoute ($key, $routable, $request, $response);
+    }
+    return null; // No match was found.
   }
 
   /**
@@ -262,22 +295,14 @@ abstract class BaseRouter implements RouterInterface
    * @param mixed                       $routable
    * @param ServerRequestInterface|null $request
    * @param ResponseInterface|null      $response
-   * @param callable                    $nextIteration
-   * @return ResponseInterface
+   * @return boolean|ServerRequestInterface false if the pattern doesn't match the path, a modified request instance
+   *                                                otherwise.
    */
   protected function iteration_step ($key, $routable, ServerRequestInterface $request = null,
-                                     ResponseInterface $response = null, callable $nextIteration)
+                                     ResponseInterface $response = null)
   {
-    if ($this->routingEnabled && !is_int ($key)) {
-      // Route matching:
-      $newRequest = $this->matcher->match ($key, $request, $request);
-      if (!$newRequest)
-        return $this->iteration_stepNotMatchRoute ($key, $routable, $request, $response, $nextIteration);
-
-      return $this->iteration_stepMatchRoute ($key, $routable, $newRequest, $response, $nextIteration);
-    }
-    // Else, a middleware unconditional invocation will be performed.
-    return $this->iteration_stepMatchMiddleware ($key, $routable, $request, $response, $nextIteration);
+    inspect ("PATTERN", $request->getRequestTarget ());
+    return $this->matcher->match ($key, $request);
   }
 
   /**
@@ -290,10 +315,12 @@ abstract class BaseRouter implements RouterInterface
    * @param ResponseInterface      $response
    * @param callable               $nextIteration
    * @return ResponseInterface
+   * @throws \Auryn\InjectionException
    */
   protected function iteration_stepMatchMiddleware ($key, $routable, ServerRequestInterface $request,
                                                     ResponseInterface $response, callable $nextIteration)
   {
+    inspect ("MIDDLEWARE", $key);
     return $this->route ($routable, $request, $response, $nextIteration);
   }
 
@@ -305,13 +332,14 @@ abstract class BaseRouter implements RouterInterface
    * @param mixed                  $routable
    * @param ServerRequestInterface $request
    * @param ResponseInterface      $response
-   * @param callable               $nextIteration
    * @return ResponseInterface
+   * @throws \Auryn\InjectionException
    */
   protected function iteration_stepMatchRoute ($key, $routable, ServerRequestInterface $request,
-                                               ResponseInterface $response, callable $nextIteration)
+                                               ResponseInterface $response)
   {
-    return $this->route ($routable, $request, $response, $nextIteration);
+    inspect ("MATCH $key", $request->getRequestTarget ());
+    return $this->route ($routable, $request, $response, back ());
   }
 
   /**
@@ -322,13 +350,11 @@ abstract class BaseRouter implements RouterInterface
    * @param mixed                  $routable
    * @param ServerRequestInterface $request
    * @param ResponseInterface      $response
-   * @param callable               $nextIteration
-   * @return ResponseInterface
    */
   protected function iteration_stepNotMatchRoute ($key, $routable, ServerRequestInterface $request,
-                                                  ResponseInterface $response, callable $nextIteration)
+                                                  ResponseInterface $response)
   {
-    return $nextIteration ($request);
+    inspect ("NOT MATCH $key", $request->getRequestTarget ());
   }
 
   /**
@@ -343,6 +369,7 @@ abstract class BaseRouter implements RouterInterface
   protected function iteration_stop (ServerRequestInterface $request, ResponseInterface $response,
                                      callable $next)
   {
+    inspect ("END", $request->getRequestTarget ());
     return $next ($request, $response);
   }
 

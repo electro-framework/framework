@@ -136,8 +136,7 @@ class BaseRouterWithLogging extends BaseRouter
   }
 
   protected function iteration_start (\Iterator $it, ServerRequestInterface $currentRequest,
-                                      ResponseInterface $currentResponse, callable $nextHandlerAfterIteration,
-                                      $stackId)
+                                      ResponseInterface $currentResponse, $stackId)
   {
     $this->routingLogger->writef ("<#row>Begin stack %d</#row>", $stackId);
 
@@ -167,8 +166,7 @@ class BaseRouterWithLogging extends BaseRouter
     $this->routingLogger->write ("<#indent>");
 
     try {
-      $finalResponse = parent::iteration_start ($it, $currentRequest, $currentResponse,
-        $nextHandlerAfterIteration, $stackId);
+      $finalResponse = parent::iteration_start ($it, $currentRequest, $currentResponse, $stackId);
 
       return $finalResponse;
     }
@@ -183,31 +181,42 @@ class BaseRouterWithLogging extends BaseRouter
     }
   }
 
+  protected function match_patterns (array $patterns, ServerRequestInterface $request,
+                                     ResponseInterface $response) {
+    return parent::  match_patterns ($patterns, $request, $response);
+  }
+
   protected function iteration_step ($key, $routable, ServerRequestInterface $request = null,
-                                     ResponseInterface $response = null, callable $nextIteration)
+                                     ResponseInterface $response = null)
   {
     if ($request && $request != $this->currentRequest->getInstance ()) //NOT SUPPOSED TO HAPPEN?
       $this->currentRequest->setInstance ($request);
 
-    return parent::iteration_step ($key, $routable, $request, $response, $nextIteration);
+    return parent::iteration_step ($key, $routable, $request, $response);
+  }
+
+  protected function iteration_stepMatchMiddleware ($key, $routable, ServerRequestInterface $request,
+                                                    ResponseInterface $response, callable $nextIteration)
+  {
+    return parent::iteration_stepMatchMiddleware ($key, $routable, $request, $response, $nextIteration);
   }
 
   protected function iteration_stepMatchRoute ($key, $routable, ServerRequestInterface $request,
-                                               ResponseInterface $response, callable $nextIteration)
+                                               ResponseInterface $response)
   {
     $this->routingLogger->writef ("<#row>Route pattern <b class=keyword>'$key'</b> <b>matches</b> <b class=keyword>'%s'</b></#row>",
       $this->currentRequest->getInstance ()->getRequestTarget ());
 
-    return parent::iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
+    return parent::iteration_stepMatchRoute ($key, $routable, $request, $response);
   }
 
   protected function iteration_stepNotMatchRoute ($key, $routable, ServerRequestInterface $request,
-                                                  ResponseInterface $response, callable $nextIteration)
+                                                  ResponseInterface $response)
   {
     $this->routingLogger->writef ("<#row>Route pattern <b class=keyword>'$key'</b> doesn't match <b class=keyword>'%s'</b></#row>",
       $this->currentRequest->getInstance ()->getRequestTarget ());
 
-    return parent::iteration_stepNotMatchRoute ($key, $routable, $request, $response, $nextIteration);
+    parent::iteration_stepNotMatchRoute ($key, $routable, $request, $response);
   }
 
   protected function iteration_stop (ServerRequestInterface $request, ResponseInterface $response, callable $next)
