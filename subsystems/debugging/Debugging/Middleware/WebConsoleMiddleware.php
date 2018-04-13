@@ -204,7 +204,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
 
       $rootR = $handlers
         ? implode ('', map ($handlers, function ($r) {
-          return sprintf ('<#row><#type>%s</#type></#row>', is_string ($r) ? $r : typeOf ($r));
+          return sprintf ('<#row><span class="__type">%s</span></#row>', is_string ($r) ? $r : typeOf ($r));
         }))
         : '<#i><i>empty</i></#i>';
 
@@ -218,7 +218,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
                   ->write ("<#row>Return from ")->typeName ($this)->write ("</#row>")
                   ->write ("<#row><i>(log entries from this point on can't be displayed)</i></#row>")
                   ->write ("</#indent>")
-                  ->write ("<#row>Exit stack 1</#row>")
+                  ->write ("<#row>Exit middleware stack</#row>")
                   ->write ("<#row>End of routing log</#row>")
                   ->write ("</#section>");
     }
