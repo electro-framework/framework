@@ -170,10 +170,11 @@ class BaseRouterWithLogging extends BaseRouter
     }
     catch (\Throwable $e) {
       $this->unwind ($e);
-      $this->routingLogger->write ("</#indent>");
     }
     catch (\Exception $e) {
       $this->unwind ($e);
+    }
+    finally {
       $this->routingLogger->write ("</#indent>");
     }
   }
