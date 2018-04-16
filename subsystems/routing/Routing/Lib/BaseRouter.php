@@ -99,7 +99,7 @@ abstract class BaseRouter implements RouterInterface
    * @return ResponseInterface
    * @throws \Auryn\InjectionException
    */
-  function route ($routable, ServerRequestInterface $request, ResponseInterface $response, callable $next)
+  protected function route ($routable, ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     if (is_null ($routable))
       return $next ();

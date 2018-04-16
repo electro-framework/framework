@@ -15,7 +15,10 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Provides the inspection aspect of a RouterInterface implementation.
+ * An extension to BaseRouter that adds in-depth logging of the routing process for display on the web console.
+ *
+ * > **Note:** {@see RoutingMiddleware} never has extended logging, as this class extends BaseRouter only, not
+ * RoutingMiddleware, so the main application router has no xxxWithLogging subclass.
  *
  * @property RouterInterface $decorated
  */
@@ -77,18 +80,10 @@ class BaseRouterWithLogging extends BaseRouter
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $type = Debug::shortenType (get_parent_class ($this));
-    $this->routingLogger->writef ("<#row>Enter %s</#row>", $type);
     self::$currentRequestSize  = $request->getBody ()->getSize ();
     self::$currentResponseSize = $response->getBody ()->getSize ();
-    try {
-      return parent::__invoke ($request, $response, $next);
-    }
-    finally {
-      $this->routingLogger->writef ("<#row>Exit %s</#row>", $type);
-    }
+    return parent::__invoke ($request, $response, $next);
   }
-
 
   protected function callHandler (callable $handler, ServerRequestInterface $request, ResponseInterface $response,
                                   callable $next)
@@ -136,12 +131,13 @@ class BaseRouterWithLogging extends BaseRouter
   protected function handleIterableRoutable (\Iterator $it, ServerRequestInterface $currentRequest,
                                              ResponseInterface $currentResponse, callable $next)
   {
-    $this->routingLogger->writef ("<#row>Start %s</#row>", $this->routingEnabled ? 'routing node' : 'middleware stack');
+    $this->routingLogger->writef ("<#row>Start %s</#row><#indent>", $this->routingEnabled ? 'routing node' : 'middleware stack');
+    // Note: the message "Exit middleware stack" for the first middleware is never output here; it is so on WebConsoleMiddleware.
 
     if ($currentRequest && $currentRequest != $this->currentRequest->getInstance ()) {
       if (!$this->currentRequest->getInstance ()) {
         $this->routingLogger
-          ->writef ("<#indent><table class=\"__console-table with-caption\"><caption>with the initial %s object &nbsp; <a class='fa fa-external-link' href='javascript:openConsoleTab(\"request\")'></a></caption></table></#indent>",
+          ->writef ("<table class=\"__console-table with-caption\"><caption>with the initial %s object &nbsp; <a class='fa fa-external-link' href='javascript:openConsoleTab(\"request\")'></a></caption></table>",
             Debug::getType ($currentRequest));
       }
       else $this->logRequest ($currentRequest,
@@ -161,21 +157,32 @@ class BaseRouterWithLogging extends BaseRouter
       self::$currentResponseSize = $currentResponse->getBody ()->getSize ();
     }
 
-    $this->routingLogger->write ("<#indent>");
+    $msg = sprintf("</#indent><#row>Finish %s</#row>",
+      $this->routingEnabled ? 'routing node' : 'middleware stack');
+    $matched = true;
 
     try {
-      $finalResponse = parent::handleIterableRoutable ($it, $currentRequest, $currentResponse, $next);
+      $finalResponse = parent::handleIterableRoutable ($it, $currentRequest, $currentResponse,
+        function (...$args) use ($next, &$matched, $msg) {
+          // When running middleare, we will unindent only when returning from rest of the chain.
+          if ($this->routingEnabled) {
+            $matched = false;
+            $this->routingLogger->write ($msg);
+          }
+          return $next (...$args);
+        });
+      if ($matched)
+        $this->routingLogger->write ($msg);
 
       return $finalResponse;
     }
     catch (\Throwable $e) {
+      $this->routingLogger->write ($msg);
       $this->unwind ($e);
     }
     catch (\Exception $e) {
+      $this->routingLogger->write ($msg);
       $this->unwind ($e);
-    }
-    finally {
-      $this->routingLogger->write ("</#indent>");
     }
   }
 
@@ -223,8 +230,7 @@ class BaseRouterWithLogging extends BaseRouter
 
   protected function iteration_stop (ServerRequestInterface $request, ResponseInterface $response = null)
   {
-    $this->routingLogger->writef ("</#indent><#row>Finish %s</#row>",
-      $this->routingEnabled ? 'routing node' : 'middleware stack');
+    parent::iteration_stop ($request, $response);
   }
 
   /**
@@ -246,10 +252,7 @@ class BaseRouterWithLogging extends BaseRouter
     if ($showAll || $r->getBody ()->getSize () != self::$currentRequestSize)
       $out['Size' . $icon] = $r->getBody ()->getSize ();
 
-    $this->routingLogger
-      ->write ("<div class='indent'>")
-      ->simpleTable ($out, $title)
-      ->write ('</div>');
+    $this->routingLogger->simpleTable ($out, $title);
   }
 
   /**
@@ -269,10 +272,7 @@ class BaseRouterWithLogging extends BaseRouter
     if ($showAll || $r->getBody ()->getSize () != self::$currentResponseSize)
       $out['Size' . $icon] = $r->getBody ()->getSize ();
 
-    $this->routingLogger
-      ->write ('<div class=\'indent\'>')
-      ->simpleTable ($out, $title)
-      ->write ('</div>');
+    $this->routingLogger->simpleTable ($out, $title);
   }
 
   private function unwind ($e)
