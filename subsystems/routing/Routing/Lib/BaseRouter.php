@@ -71,6 +71,8 @@ abstract class BaseRouter implements RouterInterface
   {
     if ($handlers) {
       if (!is_array ($handlers))
+        $handlers = isset($key) ? [$key => $handlers] : [$handlers];
+      if (!is_array ($handlers))
         $handlers = [$handlers];
       if (empty($this->handlers))
         $this->handlers = [];

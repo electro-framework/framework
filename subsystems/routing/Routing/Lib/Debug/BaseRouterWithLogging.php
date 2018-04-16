@@ -110,7 +110,7 @@ class BaseRouterWithLogging extends BaseRouter
     $response = parent::callHandler ($handler, $request, $response, $next);
 
 
-    $this->routingLogger->writef ("<#row>Return from %s</#row>", Debug::getType ($handler));
+    $this->routingLogger->writef ("<#row>Returning from %s</#row>", Debug::getType ($handler));
 
     if ($response !== self::$currentResponse) {
       $this->logResponse ($response, sprintf ('with a new %s object:', Debug::getType ($response)));
@@ -208,7 +208,7 @@ class BaseRouterWithLogging extends BaseRouter
   {
     $t = is_string ($routable) ? Debug::shortenType ($routable) : Debug::getType ($routable);
     $this->routingLogger
-      ->write ("<#row>Call #<b>$key</b>: $t</#row>");
+      ->write ("<#row>Calling middleware #<b>$key</b>: $t</#row>");
     return parent::iteration_stepMatchMiddleware ($key, $routable, $request, $response, $nextIteration);
   }
 

@@ -57,29 +57,31 @@ class RoutingMiddleware extends MiddlewareStack
     return parent::__invoke ($request, $response, $next);
   }
 
-  function route ($routable, ServerRequestInterface $request, ResponseInterface $response, callable $next)
+  protected function iteration_stepMatchMiddleware ($key, $routable, ServerRequestInterface $request,
+                                                    ResponseInterface $response, callable $next)
   {
     if ($this->debugSettings->webConsole) {
       if (is_string ($routable)) {
         $c = $routable;
         $c = str_extract ($c, '#\\\\(\w+)\\\\Config#');
-        $c = "routing of module <kbd>$c</kbd>";
+        $c = "of module <kbd>$c</kbd>";
       }
       elseif (is_array ($routable))
-        return parent::route ($routable, $request, $response, $next);
-      else $c = 'routing of ' . Debug::getType ($routable);
+        return parent::iteration_stepMatchMiddleware ($key, $routable, $request, $response, $next);
+      else $c = "of type " . Debug::getType ($routable);
 
       $matched = true;
-      $this->routingLogger->write ("<#row>Entering $c</#row><#indent>");
+      $this->routingLogger->write ("<#row>Entering router #<b>$key</b> $c</#row><#indent>");
 
       try {
-        $res = parent::route ($routable, $request, $response, function (...$args) use ($next, &$matched) {
-          $matched = false;
-          $this->routingLogger->write ("</#indent><#row>Exit routing tree with <b>no route found</b></#row>");
-          return $next (...$args);
-        });
+        $res = parent::iteration_stepMatchMiddleware ($key, $routable, $request, $response,
+          function (...$args) use ($next, &$matched) {
+            $matched = false;
+            $this->routingLogger->write ("</#indent><#row>Exiting router with <b>no route found</b></#row>");
+            return $next (...$args);
+          });
         if ($matched)
-          $this->routingLogger->write ("</#indent><#row>Exiting routing tree</#row>");
+          $this->routingLogger->write ("</#indent><#row>Exiting router</#row>");
 
         return $res;
       }
@@ -92,8 +94,7 @@ class RoutingMiddleware extends MiddlewareStack
         throw $e;
       }
     }
-    return parent::route ($routable, $request, $response, $next);
+    return parent::iteration_stepMatchMiddleware ($key, $routable, $request, $response, $next);
   }
-
 
 }
