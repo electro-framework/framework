@@ -6,6 +6,7 @@ use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Electro\Interfaces\Http\Shared\CurrentRequestInterface;
+use Electro\Routing\Lib\Debug\RouterLoggingTrait;
 use Electro\Routing\Services\MiddlewareStack;
 use Electro\Routing\Services\RoutingLogger;
 use PhpKit\WebConsole\Lib\Debug;
@@ -25,6 +26,8 @@ class RoutingMiddleware extends MiddlewareStack
   implements ApplicationRouterInterface /* for call-signature compatibility */
 
 {
+  use RouterLoggingTrait;
+
   /**
    * @var DebugSettings
    */
@@ -70,29 +73,14 @@ class RoutingMiddleware extends MiddlewareStack
         return parent::iteration_stepMatchMiddleware ($key, $routable, $request, $response, $next);
       else $c = "of type " . Debug::getType ($routable);
 
-      $matched = true;
       $this->routingLogger->write ("<#row>Entering router #<b>$key</b> $c</#row><#indent>");
 
-      try {
-        $res = parent::iteration_stepMatchMiddleware ($key, $routable, $request, $response,
-          function (...$args) use ($next, &$matched) {
-            $matched = false;
-            $this->routingLogger->write ("</#indent><#row>Exiting router with <b>no route found</b></#row>");
-            return $next (...$args);
-          });
-        if ($matched)
-          $this->routingLogger->write ("</#indent><#row>Exiting router</#row>");
-
-        return $res;
-      }
-      catch (\Throwable $e) {
-        $this->routingLogger->write ("</#indent>");
-        throw $e;
-      }
-      catch (\Exception $e) {
-        $this->routingLogger->write ("</#indent>");
-        throw $e;
-      }
+      return $this->logMiddlewareBlock (
+        function ($req, $res, $nx) use ($key, $routable) {
+          return parent::iteration_stepMatchMiddleware ($key, $routable, $req, $res, $nx);
+        },
+        $request, $response, $next, "<#row>Exiting router with <b>no route found</b></#row>",
+        "</#indent><#row>Exiting router</#row>", true);
     }
     return parent::iteration_stepMatchMiddleware ($key, $routable, $request, $response, $next);
   }

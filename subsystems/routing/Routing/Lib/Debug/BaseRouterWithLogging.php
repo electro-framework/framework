@@ -5,6 +5,7 @@ use Electro\Debugging\Config\DebugSettings;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\RouterInterface;
+use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Electro\Interfaces\Http\Shared\CurrentRequestInterface;
 use Electro\Routing\Lib\BaseRouter;
 use Electro\Routing\Services\RoutingLogger;
@@ -24,6 +25,8 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class BaseRouterWithLogging extends BaseRouter
 {
+  use RouterLoggingTrait;
+
   /**
    * The current request body size; updated as the router calls request handlers.
    * > This is used for debugging only.
@@ -44,12 +47,6 @@ class BaseRouterWithLogging extends BaseRouter
    * @var int
    */
   static private $currentResponseSize = 0;
-  /**
-   * Are we currently unwinding the handler stacks due to a thrown exception?
-   *
-   * @var bool
-   */
-  static private $unwinding = false;
 
   /**
    * @var bool
@@ -131,7 +128,8 @@ class BaseRouterWithLogging extends BaseRouter
   protected function handleIterableRoutable (\Iterator $it, ServerRequestInterface $currentRequest,
                                              ResponseInterface $currentResponse, callable $next)
   {
-    $this->routingLogger->writef ("<#row>Start %s</#row><#indent>", $this->routingEnabled ? 'routing node' : 'middleware stack');
+    $this->routingLogger->writef ("<#row>Start %s</#row><#indent>",
+      $this->routingEnabled ? 'routing node' : 'middleware stack');
     // Note: the message "Exit middleware stack" for the first middleware is never output here; it is so on WebConsoleMiddleware.
 
     if ($currentRequest && $currentRequest != $this->currentRequest->getInstance ()) {
@@ -157,33 +155,12 @@ class BaseRouterWithLogging extends BaseRouter
       self::$currentResponseSize = $currentResponse->getBody ()->getSize ();
     }
 
-    $msg = sprintf("</#indent><#row>Finish %s</#row>",
-      $this->routingEnabled ? 'routing node' : 'middleware stack');
-    $matched = true;
+    $msg = sprintf ("<#row>Finish %s</#row>", $this->routingEnabled ? 'routing node' : 'middleware stack');
+    // return parent::handleIterableRoutable ($it, $currentRequest, $currentResponse, $next);
 
-    try {
-      $finalResponse = parent::handleIterableRoutable ($it, $currentRequest, $currentResponse,
-        function (...$args) use ($next, &$matched, $msg) {
-          // When running middleare, we will unindent only when returning from rest of the chain.
-          if ($this->routingEnabled) {
-            $matched = false;
-            $this->routingLogger->write ($msg);
-          }
-          return $next (...$args);
-        });
-      if ($matched)
-        $this->routingLogger->write ($msg);
-
-      return $finalResponse;
-    }
-    catch (\Throwable $e) {
-      $this->routingLogger->write ($msg);
-      $this->unwind ($e);
-    }
-    catch (\Exception $e) {
-      $this->routingLogger->write ($msg);
-      $this->unwind ($e);
-    }
+    return $this->logMiddlewareBlock (
+      function ($req, $res, $nx) use ($it) { return parent::handleIterableRoutable ($it, $req, $res, $nx); },
+      $currentRequest, $currentResponse, $next, $msg);
   }
 
   protected function match_patterns (array $patterns, ServerRequestInterface $request,
@@ -209,6 +186,17 @@ class BaseRouterWithLogging extends BaseRouter
     $t = is_string ($routable) ? Debug::shortenType ($routable) : Debug::getType ($routable);
     $this->routingLogger
       ->write ("<#row>Calling middleware #<b>$key</b>: $t</#row>");
+
+    if ($routable == ApplicationRouterInterface::class) {
+      $this->routingLogger->write ("<#indent>");
+      try {
+        $res = parent::iteration_stepMatchMiddleware ($key, $routable, $request, $response, $nextIteration);
+      }
+      finally {
+        $this->routingLogger->write ("</#indent>");
+        return $res;
+      }
+    }
     return parent::iteration_stepMatchMiddleware ($key, $routable, $request, $response, $nextIteration);
   }
 
@@ -273,14 +261,6 @@ class BaseRouterWithLogging extends BaseRouter
       $out['Size' . $icon] = $r->getBody ()->getSize ();
 
     $this->routingLogger->simpleTable ($out, $title);
-  }
-
-  private function unwind ($e)
-  {
-    $this->routingLogger->writef ("<#row>%sUnwinding the stack...</#row>",
-      self::$unwinding ? '' : '<span class=__alert>' . Debug::getType ($e) . '</span> ');
-    self::$unwinding = true;
-    throw $e;
   }
 
 }
