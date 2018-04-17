@@ -6,8 +6,8 @@ use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Electro\Interfaces\Http\Shared\CurrentRequestInterface;
+use Electro\Routing\Lib\BaseRouter;
 use Electro\Routing\Lib\Debug\RouterLoggingTrait;
-use Electro\Routing\Services\MiddlewareStack;
 use Electro\Routing\Services\RoutingLogger;
 use PhpKit\WebConsole\Lib\Debug;
 use Psr\Http\Message\ResponseInterface;
@@ -22,7 +22,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * > **Note:** unline {@see BaseRouter} this class provides its own route trace logging; it's not dependent on a
  * subclass like {@see BaseRouterWithLogging}.
  */
-class RoutingMiddleware extends MiddlewareStack
+class RoutingMiddleware extends BaseRouter
   implements ApplicationRouterInterface /* for call-signature compatibility */
 
 {
