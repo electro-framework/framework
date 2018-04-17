@@ -1,6 +1,8 @@
 <?php
 namespace Electro\Routing\Lib\Debug;
 
+use PhpKit\WebConsole\Lib\Debug;
+
 trait RouterLoggingTrait
 {
   /**
@@ -42,7 +44,6 @@ trait RouterLoggingTrait
         });
       if ($matched)
         $this->routingLogger->write ("</#indent>$returnMessage");
-
       return $finalResponse;
     }
     catch (\Throwable $e) {

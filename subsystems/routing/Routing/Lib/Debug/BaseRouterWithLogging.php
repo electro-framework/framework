@@ -189,14 +189,11 @@ class BaseRouterWithLogging extends BaseRouter
 
     if ($routable == ApplicationRouterInterface::class) {
       $this->routingLogger->write ("<#indent>");
-      try {
-        $res = parent::iteration_stepMatchMiddleware ($key, $routable, $request, $response, $nextIteration);
-      }
-      finally {
-        $this->routingLogger->write ("</#indent>");
-        return $res;
-      }
+      return $this->logMiddlewareBlock (function ($req, $res, $nx) use ($key, $routable) {
+        return parent::iteration_stepMatchMiddleware ($key, $routable, $req, $res, $nx);
+      }, $request, $response, $nextIteration);
     }
+
     return parent::iteration_stepMatchMiddleware ($key, $routable, $request, $response, $nextIteration);
   }
 
