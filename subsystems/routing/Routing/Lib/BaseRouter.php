@@ -235,16 +235,16 @@ abstract class BaseRouter implements RouterInterface
         return false;
       });
     }
-    // Note that $patterns will only be filled when the iterator stops. At this point it's still empty.
+    // Note that the $patterns array will only be completely filled when the iterator stops. At this point it's still empty.
 
     $exit = function ($req, $res) use (&$patterns) {
       // The end of the stack was reached.
 
       if ($patterns)
-        $res = $this->match_patterns ($patterns, $req, $res);
+        return $this->match_patterns ($patterns, $req, $res);
 
-      $this->iteration_stop ($req, $res);
-      return $res;
+      // No route at all.
+      return null;
     };
 
     $it->rewind ();
@@ -303,26 +303,29 @@ abstract class BaseRouter implements RouterInterface
 
 
   /**
+   * Iterates a list of routing patterns.
+   *
+   * <p>If a match is found, the iteration stops and this will return the response from invoking the matching handler.
+   * <p>If no match is found, this returns `null`.
+   *
+   * > **Note:** this is only called if `$patterns` is not empty.
+   *
    * @param array                  $patterns
    * @param ServerRequestInterface $request
    * @param ResponseInterface      $response
-   * @return ResponseInterface|null
+   * @return ResponseInterface|null null if no matching route was found.
    * @throws \Auryn\InjectionException
    */
   protected function match_patterns (array $patterns, ServerRequestInterface $request,
                                      ResponseInterface $response)
   {
-    if ($patterns) {
-      // inspect ("MATCH PATTERNS", $request->getRequestTarget ());
-      foreach ($patterns as $key => $routable) {
-        $newReq = $this->iteration_step ($key, $routable, $request, $response);
-        if ($newReq)
-          return $this->iteration_stepMatchRoute ($key, $routable, $newReq, $response);
-        else $this->iteration_stepNotMatchRoute ($key, $routable, $request, $response);
-      }
-      // inspect ("NO MATCHES FOUND");
+    foreach ($patterns as $key => $routable) {
+      $newReq = $this->iteration_step ($key, $routable, $request, $response);
+      if ($newReq)
+        return $this->iteration_stepMatchRoute ($key, $routable, $newReq, $response, $request);
+      $this->iteration_stepNotMatchRoute ($key, $routable, $request, $response);
     }
-    // else inspect ("SKIP EMPTY MATCHES");
+    $this->iteration_stop ($request);
     return null; // No match was found.
   }
 
@@ -340,7 +343,6 @@ abstract class BaseRouter implements RouterInterface
   protected function iteration_step ($key, $routable, ServerRequestInterface $request = null,
                                      ResponseInterface $response = null)
   {
-    // inspect ("TEST $key", $request->getRequestTarget ());
     return $this->matcher->match ($key, $request);
   }
 
@@ -370,11 +372,12 @@ abstract class BaseRouter implements RouterInterface
    * @param mixed                  $routable
    * @param ServerRequestInterface $request
    * @param ResponseInterface      $response
+   * @param ServerRequestInterface $parentRequest The request object from the parent routing node.
    * @return ResponseInterface
    * @throws \Auryn\InjectionException
    */
   protected function iteration_stepMatchRoute ($key, $routable, ServerRequestInterface $request,
-                                               ResponseInterface $response)
+                                               ResponseInterface $response, ServerRequestInterface $parentRequest)
   {
     return $this->route ($routable, $request, $response, back ());
   }
@@ -398,9 +401,8 @@ abstract class BaseRouter implements RouterInterface
    * > The main purpose of this method is to provide a router extension point.
    *
    * @param ServerRequestInterface $request
-   * @param ResponseInterface      $response
    */
-  protected function iteration_stop (ServerRequestInterface $request, ResponseInterface $response = null)
+  protected function iteration_stop (ServerRequestInterface $request)
   {
   }
 
