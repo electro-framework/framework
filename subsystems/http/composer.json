@@ -15,7 +15,8 @@
   ],
   "require": {
     "psr/http-message": "~1.0",
-    "guzzlehttp/guzzle": "^6.2.2"
+    "guzzlehttp/guzzle": "^6.2.2",
+    "hansott/psr7-cookies": "*"
   },
   "autoload": {
     "psr-4": {
