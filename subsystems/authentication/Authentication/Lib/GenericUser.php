@@ -6,6 +6,8 @@ use Electro\Interfaces\UserInterface;
 class GenericUser implements UserInterface
 {
   public $active;
+  public $email;
+  public $enabled;
   public $id;
   public $lastLogin;
   public $password;
@@ -13,13 +15,25 @@ class GenericUser implements UserInterface
   public $registrationDate;
   public $role;
   public $token;
+  public $updatedAt;
   public $username;
 
-  function activeField ($set = null)
+  function __sleep ()
   {
-    if (isset($set))
-      $this->active = $set;
-    return $this->active;
+    return [
+      'active', 'id', 'lastLogin', 'realName', 'registrationDate', 'updatedAt', 'role', 'token', 'email', 'password',
+      'enabled',
+    ];
+  }
+
+  function __wakeup ()
+  {
+
+  }
+
+  public function findByEmail ($email)
+  {
+    return false;
   }
 
   public function findById ($id)
@@ -32,17 +46,26 @@ class GenericUser implements UserInterface
     return false;
   }
 
-  public function getRecord ()
+  public function findByToken ($token)
+  {
+    return false;
+  }
+
+  public function getFields ()
   {
     return [
-      'active'           => $this->activeField (),
-      'id'               => $this->idField (),
-      'lastLogin'        => $this->lastLoginField (),
-      'realName'         => $this->realNameField (),
-      'registrationDate' => $this->registrationDateField (),
-      'role'             => $this->roleField (),
-      'token'            => $this->tokenField (),
-      'username'         => $this->usernameField (),
+      'active'           => $this->active,
+      'id'               => $this->id,
+      'lastLogin'        => $this->lastLogin,
+      'realName'         => $this->realName,
+      'registrationDate' => $this->registrationDate,
+      'updatedAt'        => $this->updatedAt,
+      'role'             => $this->role,
+      'token'            => $this->token,
+      'username'         => $this->username,
+      'email'            => $this->email,
+      'password'         => '',
+      'enabled'          => $this->enabled,
     ];
   }
 
@@ -51,68 +74,21 @@ class GenericUser implements UserInterface
     return [];
   }
 
-  function idField ($set = null)
+  function mergeFields ($data)
   {
-    if (isset($set))
-      $this->id = $set;
-    return $this->id;
-  }
-
-  function lastLoginField ($set = null)
-  {
-    if (isset($set))
-      $this->lastLogin = $set;
-    return $this->lastLogin;
   }
 
   function onLogin ()
   {
-    $this->lastLogin = date ('Y-m-d H:i:s');
+    return false;
   }
 
-  function passwordField ($set = null)
+  function remove ()
   {
-    if (isset($set))
-      $this->password = password_hash ($set, PASSWORD_BCRYPT);
-    return $this->password;
   }
 
-  function realNameField ($set = null)
+  function submit ()
   {
-    if (isset($set))
-      return $this->realName = $set;
-    return $this->realName;
-  }
-
-  function registrationDateField ($set = null)
-  {
-    if (isset($set))
-      $this->registrationDate = $set;
-    return $this->registrationDate;
-  }
-
-  function roleField ($set = null)
-  {
-    if (isset($set))
-      $this->role = $set;
-    return $this->role;
-  }
-
-  function tokenField ($set = null)
-  {
-    if (isset($set))
-      $this->token = $set;
-    return $this->token;
-  }
-
-  function usernameField ($set = null)
-  {
-    if (isset($set)) {
-      $this->username = $set;
-      if (is_null ($this->realName))
-        $this->realName = ucfirst ($this->username);
-    }
-    return $this->username;
   }
 
   function verifyPassword ($password)
