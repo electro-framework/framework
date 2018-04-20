@@ -16,7 +16,6 @@ use Electro\Interfaces\Http\MiddlewareStackInterface;
 use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Electro\Localization\Middleware\LanguageMiddleware;
 use Electro\Localization\Middleware\TranslationMiddleware;
-use Electro\Navigation\Middleware\NavigationMiddleware;
 use Electro\Routing\Middleware\PermalinksMiddleware;
 use Electro\Sessions\Middleware\SessionMiddleware;
 
@@ -42,7 +41,6 @@ class DefaultMiddlewareAssembler implements MiddlewareAssemblerInterface
         2            => TranslationMiddleware::class,
         3            => ErrorHandlingMiddleware::class,
         'session'    => SessionMiddleware::class,
-        'navigation' => NavigationMiddleware::class,
         4            => $this->webConsole ? AlternateLogoutMiddleware::class : null,
         5            => CsrfMiddleware::class,
         6            => LanguageMiddleware::class,
