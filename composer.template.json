@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "electro/kernel": "^0.10",
+    "electro/kernel": "^1.0.0-beta1",
     "php-kit/composer-bower-plugin": "^1.2.0"
   },
   "autoload": {
@@ -26,7 +26,7 @@
   },
   "extra": {
     "branch-alias": {
-      "dev-master": "0.10.x-dev"
+      "dev-master": "1.0.0.x-dev"
     }
   },
   "bin": [
