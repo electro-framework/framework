@@ -10,6 +10,7 @@ The standard configuration provides two profiles:
 
 1. The `WebProfile` - the standard functionality for web applications.
 1. The `ConsoleProfile` - the standard functionality for console-based applications.
+1. The `ApiProfile` - functionality relevant for web-based APIs (ex: REST APIs).
 
 See the framework's documentation to know more about profiles.
 
