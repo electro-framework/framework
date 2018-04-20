@@ -5,8 +5,8 @@ use Electro\Debugging\Config\DebugSettings;
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\RouteMatcherInterface;
 use Electro\Interfaces\Http\RouterInterface;
+use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
 use Electro\Interfaces\Http\Shared\CurrentRequestInterface;
-use Electro\Interop\InjectableFunction;
 use Electro\Routing\Lib\BaseRouter;
 use Electro\Routing\Services\RoutingLogger;
 use PhpKit\WebConsole\DebugConsole\DebugConsole;
@@ -16,12 +16,17 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Provides the inspection aspect of a RouterInterface implementation.
+ * An extension to BaseRouter that adds in-depth logging of the routing process for display on the web console.
+ *
+ * > **Note:** {@see RoutingMiddleware} never has extended logging, as this class extends BaseRouter only, not
+ * RoutingMiddleware, so the main application router has no xxxWithLogging subclass.
  *
  * @property RouterInterface $decorated
  */
 class BaseRouterWithLogging extends BaseRouter
 {
+  use RouterLoggingTrait;
+
   /**
    * The current request body size; updated as the router calls request handlers.
    * > This is used for debugging only.
@@ -42,12 +47,6 @@ class BaseRouterWithLogging extends BaseRouter
    * @var int
    */
   static private $currentResponseSize = 0;
-  /**
-   * Are we currently unwinding the handler stacks due to a thrown exception?
-   *
-   * @var bool
-   */
-  static private $unwinding = false;
 
   /**
    * @var bool
@@ -78,46 +77,37 @@ class BaseRouterWithLogging extends BaseRouter
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $this->routingLogger->write ("<#row>Enter new Router</#row>");
     self::$currentRequestSize  = $request->getBody ()->getSize ();
     self::$currentResponseSize = $response->getBody ()->getSize ();
-    try {
-      return parent::__invoke ($request, $response, $next);
-    }
-    finally {
-      $this->routingLogger->writef ("<#row>Exit %s</#row>", Debug::getType ($this));
-    }
+    return parent::__invoke ($request, $response, $next);
   }
-
 
   protected function callHandler (callable $handler, ServerRequestInterface $request, ResponseInterface $response,
                                   callable $next)
   {
     /** Router $this */
-    $this->routingLogger
-      ->writef ("<#row>Call %s</#row>", Debug::getType ($handler));
 
     $log = DebugConsole::logger ('request');
     if ($log instanceof PSR7RequestLogger)
       $log->setRequest ($request);
 
+    $this->routingLogger->writef ("<#row>Calling handler of type %s</#row>", Debug::getType ($handler));
+
     if ($request && $request != $this->currentRequest->getInstance ()) {
-      $this->logRequest ($request, sprintf ('with another %s object:', Debug::getType ($request)));
+      $this->logRequest ($request, sprintf ('with another %s object:', Debug::getType ($request)), false, true);
 //      $this->currentRequestMutator->set ($request); // DO NOT DO THIS HERE; IT WILL BE DONE ON THE PARENT.
       self::$currentRequestSize = $request->getBody ()->getSize ();
     }
 
     if ($response && $response != self::$currentResponse) {
-      $this->logRequest ($request, sprintf ('with a new %s object:', Debug::getType ($response)));
+      $this->logRequest ($request, sprintf ('with a new %s object:', Debug::getType ($response)), false, true);
       self::$currentResponse     = $response;
       self::$currentResponseSize = $response->getBody ()->getSize ();
     }
 
-
     $response = parent::callHandler ($handler, $request, $response, $next);
 
-
-    $this->routingLogger->writef ("<#row>Return from %s</#row>", Debug::getType ($handler));
+    $this->routingLogger->writef ("<#row>Returning from %s</#row>", Debug::getType ($handler));
 
     if ($response !== self::$currentResponse) {
       $this->logResponse ($response, sprintf ('with a new %s object:', Debug::getType ($response)));
@@ -135,16 +125,17 @@ class BaseRouterWithLogging extends BaseRouter
     return $response;
   }
 
-  protected function iteration_start (\Iterator $it, ServerRequestInterface $currentRequest,
-                                      ResponseInterface $currentResponse, callable $nextHandlerAfterIteration,
-                                      $stackId)
+  protected function handleIterableRoutable (\Iterator $it, ServerRequestInterface $currentRequest,
+                                             ResponseInterface $currentResponse, callable $next)
   {
-    $this->routingLogger->writef ("<#row>Begin stack %d</#row>", $stackId);
+    $this->routingLogger->writef ("<#row>Start %s</#row><#indent>",
+      $this->routingEnabled ? 'routing subtree' : 'middleware stack');
+    // Note: the message "Exit middleware stack" for the first middleware is never output here; it is so on WebConsoleMiddleware.
 
     if ($currentRequest && $currentRequest != $this->currentRequest->getInstance ()) {
       if (!$this->currentRequest->getInstance ()) {
         $this->routingLogger
-          ->writef ("<#indent><table class=\"__console-table with-caption\"><caption>with the initial %s object &nbsp; <a class='fa fa-external-link' href='javascript:openConsoleTab(\"request\")'></a></caption></table></#indent>",
+          ->writef ("<table class=\"__console-table with-caption\"><caption>with the initial %s object &nbsp; <a class='fa fa-external-link' href='javascript:openConsoleTab(\"request\")'></a></caption></table>",
             Debug::getType ($currentRequest));
       }
       else $this->logRequest ($currentRequest,
@@ -158,76 +149,87 @@ class BaseRouterWithLogging extends BaseRouter
       $this->logResponse ($currentResponse,
         sprintf ('with %s %s object:',
           self::$currentResponse ? 'a new' : 'the initial',
-          Debug::getType ($currentResponse))
+          Debug::getType ($currentResponse)),
+        self::$currentResponse
       );
       self::$currentResponse     = $currentResponse;
       self::$currentResponseSize = $currentResponse->getBody ()->getSize ();
     }
 
-    $this->routingLogger->write ("<#indent>");
+    $msg = $this->routingEnabled ? "<#row>Finish routing subtree</#row>" : "<#row>Finish middleware stack</#row>";
 
-    try {
-      $finalResponse = parent::iteration_start ($it, $currentRequest, $currentResponse,
-        $nextHandlerAfterIteration, $stackId);
+    return $this->logMiddlewareBlock (
+      function ($req, $res, $nx) use ($it) { return parent::handleIterableRoutable ($it, $req, $res, $nx); },
+      $currentRequest, $currentResponse, $next, $msg);
+  }
 
-      return $finalResponse;
-    }
-    catch (\Throwable $e) {
-      $this->unwind ($e);
-    }
-    catch (\Exception $e) {
-      $this->unwind ($e);
-    }
-    finally {
-      $this->routingLogger->writef ("</#indent><#row>Exit stack %d</#row>", $stackId);
-    }
+  protected function match_patterns (array $patterns, ServerRequestInterface $request,
+                                     ResponseInterface $response)
+  {
+    $this->routingLogger->writef ("<#row>Matching URL path <b class=keyword>'%s'</b></#row>",
+      $this->currentRequest->getInstance ()->getRequestTarget ());
+    return parent::  match_patterns ($patterns, $request, $response);
   }
 
   protected function iteration_step ($key, $routable, ServerRequestInterface $request = null,
-                                     ResponseInterface $response = null, callable $nextIteration)
+                                     ResponseInterface $response = null)
   {
     if ($request && $request != $this->currentRequest->getInstance ()) //NOT SUPPOSED TO HAPPEN?
       $this->currentRequest->setInstance ($request);
 
-    return parent::iteration_step ($key, $routable, $request, $response, $nextIteration);
+    return parent::iteration_step ($key, $routable, $request, $response);
+  }
+
+  protected function iteration_stepMatchMiddleware ($key, $routable, ServerRequestInterface $request,
+                                                    ResponseInterface $response, callable $nextIteration)
+  {
+    $t = is_string ($routable) ? Debug::shortenType ($routable) : Debug::getType ($routable);
+    $this->routingLogger
+      ->write ("<#row>Calling middleware #<b>$key</b>: $t</#row>");
+
+    if ($routable == ApplicationRouterInterface::class) {
+      $this->routingLogger->write ("<#indent>");
+      return $this->logMiddlewareBlock (function ($req, $res, $nx) use ($key, $routable) {
+        return parent::iteration_stepMatchMiddleware ($key, $routable, $req, $res, $nx);
+      }, $request, $response, $nextIteration);
+    }
+
+    return parent::iteration_stepMatchMiddleware ($key, $routable, $request, $response, $nextIteration);
   }
 
   protected function iteration_stepMatchRoute ($key, $routable, ServerRequestInterface $request,
-                                               ResponseInterface $response, callable $nextIteration)
+                                               ResponseInterface $response, ServerRequestInterface $parentRequest)
   {
-    $this->routingLogger->writef ("<#row>Route pattern <b class=keyword>'$key'</b> <b>matches</b> <b class=keyword>'%s'</b></#row>",
-      $this->currentRequest->getInstance ()->getRequestTarget ());
+    $this->routingLogger->write ("<#row>Route pattern <b class=keyword>'$key'</b> <b style='color:green'>MATCHES</b></#row>");
 
-    return parent::iteration_stepMatchRoute ($key, $routable, $request, $response, $nextIteration);
+    $r = parent::iteration_stepMatchRoute ($key, $routable, $request, $response, $parentRequest);
+
+    $this->routingLogger->writef ("<#row><i>Note: no more patterns are tested for URL path <b>'%s'</b> because of the previous match</i></#row>",
+      $parentRequest->getRequestTarget ());
+    return $r;
   }
 
   protected function iteration_stepNotMatchRoute ($key, $routable, ServerRequestInterface $request,
-                                                  ResponseInterface $response, callable $nextIteration)
+                                                  ResponseInterface $response)
   {
-    $this->routingLogger->writef ("<#row>Route pattern <b class=keyword>'$key'</b> doesn't match <b class=keyword>'%s'</b></#row>",
-      $this->currentRequest->getInstance ()->getRequestTarget ());
+    $this->routingLogger->write ("<#row>Route pattern <b class=keyword>'$key'</b> doesn't match</#row>");
 
-    return parent::iteration_stepNotMatchRoute ($key, $routable, $request, $response, $nextIteration);
+    parent::iteration_stepNotMatchRoute ($key, $routable, $request, $response);
   }
 
-  protected function iteration_stop (ServerRequestInterface $request, ResponseInterface $response, callable $next)
+  protected function iteration_stop (ServerRequestInterface $request)
   {
-    $this->routingLogger->writef ("<#row>End of stack %d</#row>", $this->stackId);
+    $this->routingLogger->writef ("<#row>No more patterns for URL path <b class=keyword>'%s'</b></#row>",
+      $request->getRequestTarget ());
 
-    return parent::iteration_stop ($request, $response, $next);
-  }
-
-  protected function runInjectable (InjectableFunction $fn)
-  {
-    $this->routingLogger->write ("<#row>Injectable routable invoked</#row>");
-    return parent::runInjectable ($fn);
+    parent::iteration_stop ($request);
   }
 
   /**
    * @param ServerRequestInterface $r
    * @param                        $title
    */
-  private function logRequest ($r, $title, $forceShow = false)
+  private function logRequest ($r, $title, $forceShow = false, $indent = false)
   {
     /** @var ServerRequestInterface $current */
     $current = $this->currentRequest->getInstance ();
@@ -242,17 +244,18 @@ class BaseRouterWithLogging extends BaseRouter
     if ($showAll || $r->getBody ()->getSize () != self::$currentRequestSize)
       $out['Size' . $icon] = $r->getBody ()->getSize ();
 
-    $this->routingLogger
-      ->write ("<div class='indent'>")
-      ->simpleTable ($out, $title)
-      ->write ('</div>');
+    if ($indent)
+      $this->routingLogger->write ('<#indent>');
+    $this->routingLogger->simpleTable ($out, $title);
+    if ($indent)
+      $this->routingLogger->write ('</#indent>');
   }
 
   /**
    * @param ResponseInterface $r
    * @param                   $title
    */
-  private function logResponse ($r, $title)
+  private function logResponse ($r, $title, $indent = true)
   {
     $showAll = !self::$currentResponse;
     $icon    = $showAll ? '' : '<sup>*</sup>';
@@ -265,18 +268,11 @@ class BaseRouterWithLogging extends BaseRouter
     if ($showAll || $r->getBody ()->getSize () != self::$currentResponseSize)
       $out['Size' . $icon] = $r->getBody ()->getSize ();
 
-    $this->routingLogger
-      ->write ('<div class=\'indent\'>')
-      ->simpleTable ($out, $title)
-      ->write ('</div>');
-  }
-
-  private function unwind ($e)
-  {
-    $this->routingLogger->writef ("<#row>%sUnwinding the stack...</#row>",
-      self::$unwinding ? '' : '<span class=__alert>' . Debug::getType ($e) . '</span> ');
-    self::$unwinding = true;
-    throw $e;
+    if ($indent)
+      $this->routingLogger->write ('<#indent>');
+    $this->routingLogger->simpleTable ($out, $title);
+    if ($indent)
+      $this->routingLogger->write ('</#indent>');
   }
 
 }

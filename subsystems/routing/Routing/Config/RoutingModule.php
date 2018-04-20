@@ -40,8 +40,10 @@ class RoutingModule implements ModuleInterface
             //
             ->alias (RouterInterface::class,
               $debugSettings->webConsole ? RouterWithLogging::class : Router::class)
+              // $debugSettings->webConsole ? Router::class : Router::class)
             ->alias (MiddlewareStackInterface::class,
               $debugSettings->webConsole ? MiddlewareStackWithLogging::class : MiddlewareStack::class)
+              // $debugSettings->webConsole ? MiddlewareStack::class : MiddlewareStack::class)
             ->alias (RouteMatcherInterface::class, RouteMatcher::class)
             //
             // The application's root/main router

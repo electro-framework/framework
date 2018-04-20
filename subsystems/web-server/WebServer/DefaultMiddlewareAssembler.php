@@ -36,18 +36,18 @@ class DefaultMiddlewareAssembler implements MiddlewareAssemblerInterface
   {
     $stack
       ->set ([
-        0            => !$this->devEnv ? CompressionMiddleware::class : null,
-        1            => $this->webConsole ? WebConsoleMiddleware::class : null,
-        2            => TranslationMiddleware::class,
-        3            => ErrorHandlingMiddleware::class,
+        'compress'   => !$this->devEnv ? CompressionMiddleware::class : null,
+        'webConsole' => $this->webConsole ? WebConsoleMiddleware::class : null,
+        'trans'      => TranslationMiddleware::class,
+        'error'      => ErrorHandlingMiddleware::class,
         'session'    => SessionMiddleware::class,
-        4            => $this->webConsole ? AlternateLogoutMiddleware::class : null,
-        5            => CsrfMiddleware::class,
-        6            => LanguageMiddleware::class,
-        7            => PermalinksMiddleware::class,
-        8            => FetchMiddleware::class,
+        'altLogout'  => $this->webConsole ? AlternateLogoutMiddleware::class : null,
+        'csrf'       => CsrfMiddleware::class,
+        'lang'       => LanguageMiddleware::class,
+        'permalinks' => PermalinksMiddleware::class,
+        'fetch'      => FetchMiddleware::class,
         'router'     => ApplicationRouterInterface::class,
-        9            => WelcomeMiddleware::class,
+        'welcome'    => WelcomeMiddleware::class,
         'notFound'   => URLNotFoundMiddleware::class,
       ]);
   }
