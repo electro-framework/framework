@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "electro/kernel": "^1.0.0-beta.1",
+    "electro/kernel": "^1.0.0",
     "php-kit/composer-bower-plugin": "^1.2.0",
     "codegyre/robo": "^0.5.3",
     "guzzlehttp/guzzle": "^6.2.2",
@@ -57,7 +57,7 @@
   },
   "extra": {
     "branch-alias": {
-      "dev-master": "0.10.x-dev"
+      "dev-master": "1.0.x-dev"
     }
   },
   "bin": [
