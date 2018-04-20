@@ -21,7 +21,8 @@ class GenericUser implements UserInterface
   function __sleep ()
   {
     return [
-      'active', 'id', 'lastLogin', 'realName', 'registrationDate', 'updatedAt', 'role', 'token', 'email', 'password',
+      'active', 'id', 'lastLogin', 'username', 'realName', 'registrationDate', 'updatedAt', 'role', 'token', 'email',
+      'password',
       'enabled',
     ];
   }
@@ -76,16 +77,21 @@ class GenericUser implements UserInterface
 
   function mergeFields ($data)
   {
-    if (exists (get ($data, 'password')))
-      $this->password = password_hash (get ($data, 'password'), PASSWORD_BCRYPT);
+    $pass = get ($data, 'password');
+    $data = array_merge ($this->getFields (), $data);
+    unset ($data['password']);
 
-    $this->active   = get ($data, 'active', 0);
-    $this->enabled  = get ($data, 'enabled', 1);
-    $this->realName = get ($data, 'realName');
-    $this->email    = get ($data, 'email');
-    $this->token    = get ($data, 'token');
-    $this->username = get ($data, 'username');
-    $this->role     = get ($data, 'role', UserInterface::USER_ROLE_STANDARD);
+    if (exists ($pass))
+      $data['password'] = password_hash ($pass, PASSWORD_BCRYPT);
+
+    if (array_key_exists ('active', $data)) $this->active = $data['active'];
+    if (array_key_exists ('enabled', $data)) $this->enabled = $data['enabled'];
+    if (array_key_exists ('realName', $data)) $this->realName = $data['realName'];
+    if (array_key_exists ('email', $data)) $this->email = $data['email'];
+    if (array_key_exists ('token', $data)) $this->token = $data['token'];
+    if (array_key_exists ('username', $data)) $this->username = $data['username'];
+    if (array_key_exists ('role', $data)) $this->role = $data['role'];
+    if (array_key_exists ('password', $data)) $this->password = $data['password'];
   }
 
   function onLogin ()
