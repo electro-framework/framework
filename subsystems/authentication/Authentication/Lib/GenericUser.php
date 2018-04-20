@@ -76,6 +76,16 @@ class GenericUser implements UserInterface
 
   function mergeFields ($data)
   {
+    if (exists (get ($data, 'password')))
+      $this->password = password_hash (get ($data, 'password'), PASSWORD_BCRYPT);
+
+    $this->active   = get ($data, 'active', 0);
+    $this->enabled  = get ($data, 'enabled', 1);
+    $this->realName = get ($data, 'realName');
+    $this->email    = get ($data, 'email');
+    $this->token    = get ($data, 'token');
+    $this->username = get ($data, 'username');
+    $this->role     = get ($data, 'role', UserInterface::USER_ROLE_STANDARD);
   }
 
   function onLogin ()
