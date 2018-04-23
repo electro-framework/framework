@@ -64,7 +64,7 @@ abstract class BaseRouter implements RouterInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    return empty($this->handlers) ? $next () : $this->route ($this->handlers, $request, $response, $next);
+    return empty($this->handlers) ? $next ($request, $response) : $this->route ($this->handlers, $request, $response, $next);
   }
 
   function add ($handlers, $key = null, $before = null, $after = null)
