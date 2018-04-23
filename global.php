@@ -358,7 +358,8 @@ function method ($method, callable $handler)
  */
 function back ()
 {
-  return function ($req, $res) {
+  // Note: routing middleware will not provide any arguments to this function.
+  return function ($req = null, $res = null) {
     return $res;
   };
 }
