@@ -245,7 +245,7 @@ class WebConsoleMiddleware implements RequestHandlerInterface
     //----------------------------------------------------------------------------------------
     // View panel (again)
     //----------------------------------------------------------------------------------------
-    if ($this->debugSettings->logView) {
+    if ($this->debugSettings->logView && class_exists (Expression::class)) {
       $expMap = Expression::$translationCache;
       ksort ($expMap);
       DebugConsole::logger ('view')
