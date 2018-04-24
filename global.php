@@ -166,7 +166,6 @@ function navigationMiddleware ()
 function page ($templateUrl, $actionHandler = null)
 {
   return stack (
-    navigationMiddleware (),
     method ('GET', view ($templateUrl)),
     $actionHandler ? method ('POST', $actionHandler) : null
   );

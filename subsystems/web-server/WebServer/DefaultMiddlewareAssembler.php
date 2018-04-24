@@ -14,8 +14,11 @@ use Electro\Http\Middleware\WelcomeMiddleware;
 use Electro\Interfaces\Http\MiddlewareAssemblerInterface;
 use Electro\Interfaces\Http\MiddlewareStackInterface;
 use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
+use Electro\Kernel\Services\Kernel;
 use Electro\Localization\Middleware\LanguageMiddleware;
 use Electro\Localization\Middleware\TranslationMiddleware;
+use Electro\Navigation\Middleware\NavigationMiddleware;
+use Electro\Profiles\WebProfile;
 use Electro\Routing\Middleware\PermalinksMiddleware;
 use Electro\Sessions\Middleware\SessionMiddleware;
 
@@ -23,13 +26,16 @@ class DefaultMiddlewareAssembler implements MiddlewareAssemblerInterface
 {
   /** @var bool */
   private $devEnv;
+  /** @var \Electro\Interfaces\ProfileInterface */
+  private $profile;
   /** @var bool */
   private $webConsole;
 
-  public function __construct (DebugSettings $debugSettings)
+  public function __construct (DebugSettings $debugSettings, Kernel $kernel)
   {
     $this->devEnv     = $debugSettings->devEnv;
     $this->webConsole = $debugSettings->webConsole;
+    $this->profile    = $kernel->getProfile ();
   }
 
   function assemble (MiddlewareStackInterface $stack)
@@ -45,9 +51,10 @@ class DefaultMiddlewareAssembler implements MiddlewareAssemblerInterface
         'csrf'       => CsrfMiddleware::class,
         'lang'       => LanguageMiddleware::class,
         'permalinks' => PermalinksMiddleware::class,
-        'fetch'      => FetchMiddleware::class,
+        'fetch'      => $this->profile instanceof WebProfile ? FetchMiddleware::class : null,
+        'nav'        => $this->profile instanceof WebProfile ? NavigationMiddleware::class : null,
         'router'     => ApplicationRouterInterface::class,
-        'welcome'    => WelcomeMiddleware::class,
+        'welcome'    => $this->profile instanceof WebProfile ? WelcomeMiddleware::class : null,
         'notFound'   => URLNotFoundMiddleware::class,
       ]);
   }
