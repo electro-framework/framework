@@ -23,7 +23,8 @@ class SessionsModule implements ModuleInterface
       function (InjectorInterface $injector) {
         $injector
           ->alias (SessionInterface::class, Session::class)
-          ->share (Session::class, 'session');
+          ->share (Session::class, 'session')
+          ->share (SessionSettings::class);
       });
   }
 

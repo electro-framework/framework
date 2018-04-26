@@ -7,7 +7,7 @@ use Electro\Interfaces\AssignableInterface;
 use Electro\Interfaces\Http\RedirectionInterface;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\SessionInterface;
-use Electro\Kernel\Config\KernelSettings;
+use Electro\Sessions\Config\SessionSettings;
 use Electro\ViewEngine\Services\AssetsService;
 use Electro\ViewEngine\Services\BlocksService;
 use Psr\Http\Message\ResponseInterface;
@@ -28,32 +28,33 @@ class SessionMiddleware implements RequestHandlerInterface
   private $assetsService;
   /** @var BlocksService */
   private $blocksService;
-  /** @var KernelSettings */
-  private $kernelSettings;
   /** @var RedirectionInterface */
   private $redirection;
   /** @var SessionInterface */
   private $session;
+  /**
+   * @var SessionSettings
+   */
+  private $settings;
 
-  function __construct (SessionInterface $session, KernelSettings $kernelSettings, RedirectionInterface $redirection,
-                        BlocksService $blocksService, AssetsService $assetsService)
+  function __construct (SessionInterface $session, RedirectionInterface $redirection,
+                        BlocksService $blocksService, AssetsService $assetsService, SessionSettings $sessionSettings)
   {
-    $this->kernelSettings = $kernelSettings;
-    $this->redirection    = $redirection;
-    $this->session        = $session;
-    $this->blocksService  = $blocksService;
-    $this->assetsService  = $assetsService;
+    $this->redirection   = $redirection;
+    $this->session       = $session;
+    $this->blocksService = $blocksService;
+    $this->assetsService = $assetsService;
+    $this->settings      = $sessionSettings;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $settings = $this->kernelSettings;
-    $session  = $this->session;
+    $session = $this->session;
     $this->redirection->setRequest ($request);
 
     // Start the sessions engine.
 
-    session_name ($settings->name);
+    session_name ($this->settings->sessionName);
     $name = session_name ();
     session_start ();
 
