@@ -432,7 +432,7 @@ trait ModuleCommands
 
     // Install module via Composer
 
-    $version      = $opts['unstable'] ? ':dev - master' : '';
+    $version      = $opts['unstable'] ? ':dev-master' : '';
     $targetModule = $this->modulesRegistry->getModule ($targetModuleName);
 
     // Add package reference to the targat module's composer . json
