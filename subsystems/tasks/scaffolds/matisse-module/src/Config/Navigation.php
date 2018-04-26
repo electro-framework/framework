@@ -8,12 +8,12 @@ class Navigation implements NavigationProviderInterface
 {
   function defineNavigation (NavigationInterface $nav)
   {
-    $nav->add ([
-      '' => $nav
-        ->link ()
-        ->id ('home')
-        ->title ('Homepage'),
-    ]);
+    // $nav->add ([
+    //   '' => $nav
+    //     ->link ()
+    //     ->id ('homepage')
+    //     ->title ('Homepage'),
+    // ]);
   }
 
 }
