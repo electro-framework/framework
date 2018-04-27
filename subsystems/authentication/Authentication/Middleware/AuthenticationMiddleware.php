@@ -58,10 +58,7 @@ class AuthenticationMiddleware implements RequestHandlerInterface
     $this->redirection->setRequest ($request);
     $cookies  = RequestCookies::createFromRequest ($request);
     $settings = $this->sessionSettings;
-
-    $sessionName = $settings->sessionName;
-    $rememberMeTokenName = $settings->rememberMeTokenName;
-    $cookieName = $sessionName . "_" . $rememberMeTokenName;
+    $cookieName = $settings->sessionName . "_" . $settings->rememberMeTokenName;
 
     // LOG OUT
 
