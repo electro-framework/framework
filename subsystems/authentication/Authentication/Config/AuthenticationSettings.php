@@ -25,7 +25,7 @@ class AuthenticationSettings implements AssignableInterface
   private $loginFormUrl = 'login';
   private $logoutUrl    = 'logout';
   private $urlPrefix    = 'login';
-  private $userModel    = GenericUser::class;
+  private $userModel    = GenericUser::class; // Accessed via userModel()
 
   public function __construct (KernelSettings $kernelSettings)
   {

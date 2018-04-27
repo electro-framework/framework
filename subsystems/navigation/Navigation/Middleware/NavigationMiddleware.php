@@ -45,6 +45,8 @@ class NavigationMiddleware implements RequestHandlerInterface
       $provider->defineNavigation ($this->navigation);
     }
 
+    $this->navigation->setRequest ($request);
+
     return $next ();
   }
 
