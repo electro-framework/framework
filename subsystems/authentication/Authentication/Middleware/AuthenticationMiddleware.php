@@ -58,15 +58,20 @@ class AuthenticationMiddleware implements RequestHandlerInterface
     $this->redirection->setRequest ($request);
     $cookies  = RequestCookies::createFromRequest ($request);
     $settings = $this->sessionSettings;
+
+    $sessionName = $settings->sessionName;
+    $rememberMeTokenName = $settings->rememberMeTokenName;
+    $cookieName = $sessionName . "_" . $rememberMeTokenName;
+
     // LOG OUT
 
     if ($request->getUri () == $this->settings->getLogoutUrl ()) {
       $response = $this->redirection->home ();
 
       $this->session->logout ();
-      if ($cookies->has ($settings->sessionName . "_" . $settings->rememberMeTokenName)) {
+      if ($cookies->has ($cookieName)) {
         $cookie   =
-          SetCookie::thatDeletesCookie ($settings->sessionName . "_" . $settings->rememberMeTokenName,
+          SetCookie::thatDeletesCookie ($cookieName,
             $request->getAttribute ('baseUri'));
         $response = $cookie->addToResponse ($response);
       }
@@ -77,8 +82,8 @@ class AuthenticationMiddleware implements RequestHandlerInterface
       case 'GET':
         // LOG IN
         if (!$this->session->loggedIn ()) {
-          if ($cookies->has ($settings->sessionName . "_" . $settings->rememberMeTokenName)) {
-            $token = $cookies->get ($settings->sessionName . "_" . $settings->rememberMeTokenName)
+          if ($cookies->has ($cookieName)) {
+            $token = $cookies->get ($cookieName)
                              ->getValue ();
             $user  = $this->user;
             if ($user->findByToken ($token)) {
