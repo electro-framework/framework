@@ -8,11 +8,13 @@ use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\SessionInterface;
 use Electro\Interfaces\UserInterface;
 use Electro\Kernel\Config\KernelSettings;
+use Electro\Sessions\Config\SessionSettings;
 use GuzzleHttp\Psr7\ServerRequest;
 use HansOtt\PSR7Cookies\RequestCookies;
 use HansOtt\PSR7Cookies\SetCookie;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+
 
 /**
  * TODO: handle expired session on POST request (i.e. retry the POST when authenticated).
@@ -28,6 +30,10 @@ class AuthenticationMiddleware implements RequestHandlerInterface
   private $redirection;
   private $session;
   /**
+   * @var SessionSettings
+   */
+  private $sessionSettings;
+  /**
    * @var AuthenticationSettings
    */
   private $settings;
@@ -37,30 +43,30 @@ class AuthenticationMiddleware implements RequestHandlerInterface
   private $user;
 
   function __construct (KernelSettings $kernelSettings, SessionInterface $session, RedirectionInterface $redirection,
-                        AuthenticationSettings $settings, UserInterface $user)
+                        AuthenticationSettings $settings, UserInterface $user, SessionSettings $sessionSettings)
   {
-    $this->session        = $session;
-    $this->kernelSettings = $kernelSettings;
-    $this->redirection    = $redirection;
-    $this->settings       = $settings;
-    $this->user           = $user;
+    $this->session         = $session;
+    $this->kernelSettings  = $kernelSettings;
+    $this->redirection     = $redirection;
+    $this->settings        = $settings;
+    $this->user            = $user;
+    $this->sessionSettings = $sessionSettings;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     $this->redirection->setRequest ($request);
-    $serverRequest = ServerRequest::fromGlobals ();
-    $cookies       = RequestCookies::createFromRequest ($serverRequest);
-
+    $cookies  = RequestCookies::createFromRequest ($request);
+    $settings = $this->sessionSettings;
     // LOG OUT
 
     if ($request->getUri () == $this->settings->getLogoutUrl ()) {
       $response = $this->redirection->home ();
 
       $this->session->logout ();
-      if ($cookies->has ($this->kernelSettings->name . "/" . $this->kernelSettings->rememberMeTokenName)) {
+      if ($cookies->has ($settings->sessionName . "_" . $settings->rememberMeTokenName)) {
         $cookie   =
-          SetCookie::thatDeletesCookie ($this->kernelSettings->name . "/" . $this->kernelSettings->rememberMeTokenName,
+          SetCookie::thatDeletesCookie ($settings->sessionName . "_" . $settings->rememberMeTokenName,
             $request->getAttribute ('baseUri'));
         $response = $cookie->addToResponse ($response);
       }
@@ -71,13 +77,14 @@ class AuthenticationMiddleware implements RequestHandlerInterface
       case 'GET':
         // LOG IN
         if (!$this->session->loggedIn ()) {
-          if ($cookies->has ($this->kernelSettings->name . "/" . $this->kernelSettings->rememberMeTokenName)) {
-            $token = $cookies->get ($this->kernelSettings->name . "/" . $this->kernelSettings->rememberMeTokenName)
+          if ($cookies->has ($settings->sessionName . "_" . $settings->rememberMeTokenName)) {
+            $token = $cookies->get ($settings->sessionName . "_" . $settings->rememberMeTokenName)
                              ->getValue ();
             $user  = $this->user;
-            $user->findByToken ($token);
-            $this->session->setUser ($user);
-            return $next();
+            if ($user->findByToken ($token)) {
+              $this->session->setUser ($user);
+              return $next();
+            }
           }
           return $this->redirection->guest ($this->settings->getLoginUrl ());
         }
@@ -98,5 +105,4 @@ class AuthenticationMiddleware implements RequestHandlerInterface
       return $this->redirection->refresh ();
     }
   }
-
 }
