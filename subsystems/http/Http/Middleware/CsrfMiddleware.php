@@ -33,36 +33,34 @@ class CsrfMiddleware implements RequestHandlerInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $session      = $this->session;
-    $post         = $request->getParsedBody ();
-    $errorMessage = 'Csrf Token invalid.';
+    if (!$this->httpSettings->useCsrfToken ()) return $next();
 
-    if (exists ($request->getHeader ('X-CSRF-Token'))) {
-      if ($this->httpSettings->useCsrfToken ()) {
-        if (array_key_exists ('token', $post)) {
-          if ($post['token'] != $session->token ()) return $response->withStatus (403, $errorMessage);
-          else return $response = $next();
+    $session      = $this->session;
+    $errorMessage = 'Csrf Token invalid.';
+    $requestMethod = $request->getMethod ();
+
+    $headerXCSRFToken = $request->getHeaderLine ('X-CSRF-Token');
+    if (exists ($headerXCSRFToken)) {
+      if ($headerXCSRFToken != $session->token ())
+        return $response->withStatus (403, $errorMessage);
+      else return $response = $next();
+    }
+    else {
+      if ($requestMethod == 'GET') $session->regenerateToken ();
+      else if ($requestMethod == 'POST') {
+        $headerContentType = $request->getHeaderLine ('Content-Type');
+        if ($headerContentType == "application/x-www-form-urlencoded" ||
+            $headerContentType == "multipart/form-data"
+        ) {
+          $post = $request->getParsedBody ();
+
+          if (array_key_exists ('token', $post)) {
+            if ($post['token'] != $session->token ()) return $response->withStatus (403, $errorMessage);
+          }
+          else return $response->withStatus (403, $errorMessage);
         }
         else return $response->withStatus (403, $errorMessage);
       }
     }
-    else {
-      if ($this->httpSettings->useCsrfToken ()) {
-        if ($request->getMethod () == 'GET') $session->regenerateToken ();
-        else if ($request->getMethod () == 'POST') {
-          if ($request->getHeader ('Content-Type')[0] == "application/x-www-form-urlencoded" ||
-              $request->getHeader ('Content-Type')[0] == "multipart/form-data"
-          ) {
-            if (array_key_exists ('token', $post)) {
-              if ($post['token'] != $session->token ()) return $response->withStatus (403, $errorMessage);
-            }
-            else return $response->withStatus (403, $errorMessage);
-          }
-          else return $response->withStatus (403, $errorMessage);
-        }
-      }
-      $response = $next();
-    }
-    return $response;
   }
 }
