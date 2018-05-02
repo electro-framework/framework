@@ -27,37 +27,40 @@ class CsrfMiddleware implements RequestHandlerInterface
    */
   public function __construct (SessionInterface $session, HttpSettings $httpSettings)
   {
-    $this->session = $session;
+    $this->session      = $session;
     $this->httpSettings = $httpSettings;
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $session = $this->session;
+    $session      = $this->session;
+    $post         = $request->getParsedBody ();
+    $errorMessage = 'Csrf Token invalid.';
 
-    if($this->httpSettings->useCsrfToken ()){
-      if ($request->getMethod () == 'POST') {
-        $post = $request->getParsedBody ();
-
+    if (exists ($request->getHeader ('X-CSRF-Token'))) {
+      if ($this->httpSettings->useCsrfToken ()) {
         if (array_key_exists ('token', $post)) {
-          if ($post['token'] != $session->token ()) {
-            return $response->withStatus (403,'Csrf Token invalid.');
-          }
+          if ($post['token'] != $session->token ()) return $response->withStatus (403, $errorMessage);
           else return $response = $next();
         }
-        else {
-          return $response->withStatus (403,'Csrf Token not exist.');
-        }
-      }
-      else if ($request->getMethod () == 'GET') {
-        $session->regenerateToken ();
-
-        /** @var ResponseInterface $response */
-        $response = $next();
+        else return $response->withStatus (403, $errorMessage);
       }
     }
     else {
-      /** @var ResponseInterface $response */
+      if ($this->httpSettings->useCsrfToken ()) {
+        if ($request->getMethod () == 'GET') $session->regenerateToken ();
+        else if ($request->getMethod () == 'POST') {
+          if ($request->getHeader ('Content-Type')[0] == "application/x-www-form-urlencoded" ||
+              $request->getHeader ('Content-Type')[0] == "multipart/form-data"
+          ) {
+            if (array_key_exists ('token', $post)) {
+              if ($post['token'] != $session->token ()) return $response->withStatus (403, $errorMessage);
+            }
+            else return $response->withStatus (403, $errorMessage);
+          }
+          else return $response->withStatus (403, $errorMessage);
+        }
+      }
       $response = $next();
     }
     return $response;
