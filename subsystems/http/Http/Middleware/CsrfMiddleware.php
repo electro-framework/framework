@@ -35,18 +35,19 @@ class CsrfMiddleware implements RequestHandlerInterface
   {
     if (!$this->httpSettings->useCsrfToken ()) return $next();
 
-    $session      = $this->session;
-    $errorMessage = 'Csrf Token invalid.';
+    $session       = $this->session;
+    $errorMessage  = 'Csrf Token invalid.';
     $requestMethod = $request->getMethod ();
 
     $headerXCSRFToken = $request->getHeaderLine ('X-CSRF-Token');
     if (exists ($headerXCSRFToken)) {
-      if ($headerXCSRFToken != $session->token ())
-        return $response->withStatus (403, $errorMessage);
-      else return $response = $next();
+      if ($headerXCSRFToken == $session->token ()) return $response = $next();
     }
     else {
-      if ($requestMethod == 'GET') $session->regenerateToken ();
+      if ($requestMethod == 'GET') {
+        $session->regenerateToken ();
+        return $next();
+      }
       else if ($requestMethod == 'POST') {
         $headerContentType = $request->getHeaderLine ('Content-Type');
         if ($headerContentType == "application/x-www-form-urlencoded" ||
@@ -55,12 +56,11 @@ class CsrfMiddleware implements RequestHandlerInterface
           $post = $request->getParsedBody ();
 
           if (array_key_exists ('token', $post)) {
-            if ($post['token'] != $session->token ()) return $response->withStatus (403, $errorMessage);
+            if ($post['token'] == $session->token ()) return $next();
           }
-          else return $response->withStatus (403, $errorMessage);
         }
-        else return $response->withStatus (403, $errorMessage);
       }
     }
+    return $response->withStatus (403, $errorMessage);
   }
 }
