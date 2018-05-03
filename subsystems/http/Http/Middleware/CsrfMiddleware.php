@@ -33,15 +33,17 @@ class CsrfMiddleware implements RequestHandlerInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    if (!$this->httpSettings->useCsrfToken ()) return $next();
+    if (!$this->httpSettings->useCsrfToken ())
+      return $next();
 
     $session       = $this->session;
     $errorMessage  = 'Csrf Token invalid.';
     $requestMethod = $request->getMethod ();
 
     $headerXCSRFToken = $request->getHeaderLine ('X-CSRF-Token');
-    if (exists ($headerXCSRFToken)) {
-      if ($headerXCSRFToken == $session->token ()) return $response = $next();
+    if ($headerXCSRFToken) {
+      if ($headerXCSRFToken == $session->token ())
+        return $next();
     }
     else {
       if ($requestMethod == 'GET') {
@@ -54,10 +56,8 @@ class CsrfMiddleware implements RequestHandlerInterface
             $headerContentType == "multipart/form-data"
         ) {
           $post = $request->getParsedBody ();
-
-          if (array_key_exists ('token', $post)) {
-            if ($post['token'] == $session->token ()) return $next();
-          }
+          if (isset ($post['token']) && $post['token'] == $session->token ())
+            return $next();
         }
       }
     }
