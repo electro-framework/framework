@@ -3,9 +3,37 @@
 namespace Electro\Tasks\Commands;
 
 use Electro\Interfaces\ConsoleIOInterface;
+use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Kernel\Services\ModulesRegistry;
 use Electro\Tasks\Shared\Base\ComposerTask;
+
+const BAT_TEMPLATE = <<<'CMD'
+@ECHO OFF
+setlocal DISABLEDELAYEDEXPANSION
+SET BIN_TARGET=%~dp0/../___BIN_PATH___
+php "%BIN_TARGET%" %*
+CMD;
+
+const BIN_TEMPLATE = <<<'BASH'
+#!/usr/bin/env sh
+
+dir=$(d=${0%[/\\]*}; cd "$d" > /dev/null; cd "../___BIN_DIR___" && pwd)
+
+# See if we are running in Cygwin by checking for cygpath program
+if command -v 'cygpath' >/dev/null 2>&1; then
+	# Cygwin paths start with /cygdrive/ which will break windows PHP,
+	# so we need to translate the dir path to windows format. However
+	# we could be using cygwin PHP which does not require this, so we
+	# test if the path to PHP starts with /cygdrive/ rather than /usr/bin
+	if [[ $(which php) == /cygdrive/* ]]; then
+		dir=$(cygpath -m "$dir");
+	fi
+fi
+
+dir=$(echo $dir | sed 's/ /\ /g')
+"${dir}/___BIN_FILE___" "$@"
+BASH;
 
 /**
  * Defines a command that rebuilds the project's composer.json file by merging relevant sections from the project
@@ -14,6 +42,10 @@ use Electro\Tasks\Shared\Base\ComposerTask;
  *
  * @property ModulesRegistry    $modulesRegistry
  * @property ConsoleIOInterface $io
+ */
+
+/**
+ * @property KernelSettings $kernelSettings
  */
 trait UpdateCommand
 {
@@ -31,7 +63,7 @@ trait UpdateCommand
     $this->io->writeln ("composer.json has been <info>updated</info>")->nl ()->write ('- ');
 
     if (get ($opts, 'no-update'))
-      (new ComposerTask)->action('dump-autoload')->option('--optimize')->run ();
+      (new ComposerTask)->action ('dump-autoload')->option ('--optimize')->run ();
     else $this->doComposerUpdate ();
 
     $this->io->done ("The project is <info>updated</info>");
@@ -51,10 +83,10 @@ trait UpdateCommand
       $this->io->error ("A <error-info>$rootFile</error-info> file was not found at the project's root directory");
     $targetConfig = json_load ($rootFile, true);
 
-    $requires = $requiredBy = $psr4s = $bins = $files = $extra = [];
+    $requires     = $requiredBy = $psr4s = $bins = $files = $extra = [];
     $repositories = get ($targetConfig, 'repositories', []);
 
-    $modules  = $this->modulesRegistry->onlyPrivate ()->getModules ();
+    $modules = $this->modulesRegistry->onlyPrivate ()->getModules ();
 
     foreach ($modules as $module) {
       $config = $module->getComposerConfig ();
@@ -101,7 +133,7 @@ trait UpdateCommand
       // Merge 'repositories' section
 
       foreach ($config->get ('repositories', []) as $repo)
-        if (is_null(array_find($repositories, 'url', $repo['url'])))
+        if (is_null (array_find ($repositories, 'url', $repo['url'])))
           $repositories[] = $repo;
     }
 
@@ -133,6 +165,9 @@ trait UpdateCommand
       $targetConfig['repositories'] = $repositories;
     else unset ($targetConfig['repositories']);
 
+    if ($bins)
+      $this->publishBinaries ($bins);
+
     $currentConfig = file_get_contents ('composer.json');
     $targetCfgStr  = json_print ($targetConfig);
     if ($currentConfig == $targetCfgStr) {
@@ -141,6 +176,35 @@ trait UpdateCommand
     }
 
     file_put_contents ('composer.json', $targetCfgStr);
+  }
+
+  private function publishBinaries (array $binaries)
+  {
+    $isWindows     = strtoupper (substr (PHP_OS, 0, 3)) === 'WIN';
+    $baseDir       = $this->kernelSettings->baseDirectory;
+    $publishingDir = "$baseDir/bin";
+    foreach ($binaries as $binary) {
+      $binFile       = basename ($binary);
+      $binDir        = dirname ($binary);
+      $publishedFile = "$publishingDir/$binFile";
+      $pathToPublish = "$baseDir/$binary";
+      if (file_exists ($publishedFile))
+        unlink ($publishedFile);
+      if (!$isWindows) {
+        // On Mac or Linux use relative paths for symlinks.
+        $relativeTarget = getRelativePath ("./$publishedFile", "./$pathToPublish");
+        symlink ($relativeTarget, $publishedFile);
+      }
+      else {
+        // Create Unix-style proxy file
+        $script = str_replace (['___BIN_DIR___', '___BIN_FILE___'], [$binDir, $binFile], BIN_TEMPLATE);
+        file_put_contents ($publishedFile, $script);
+
+        // Create Windows batch file
+        $script = str_replace ('___BIN_PATH___', $binary, BAT_TEMPLATE);
+        file_put_contents ("$publishedFile.bat", $script);
+      }
+    }
   }
 
 }
