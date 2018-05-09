@@ -41,7 +41,7 @@ class ConsoleModule implements ModuleInterface
       ->onRun (function (ConsoleApplication $consoleApp) use ($kernel) {
         // If no code on the startup process has set the console instance's input/output, set it now.
         if (!$consoleApp->getIO ()->getInput ())
-          $consoleApp->setupStandardIO ($_SERVER['argv']);
+          $consoleApp->setupStandardIO (get ($_SERVER, 'argv', []));
 
         $kernel->setExitCode ($consoleApp->execute ());
       });
