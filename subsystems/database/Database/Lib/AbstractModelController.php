@@ -138,12 +138,8 @@ abstract class AbstractModelController implements ModelControllerInterface
 
       case 'GET':
         $old = $this->session->getOldInput ();
-        if ($old) {
-          $data = [];
-          foreach ($old as $k => $v)
-            $data[str_replace ('model/', '', $k)] = $v;
-          $this->merge ($this->parseFormData ($data));
-        }
+        if ($old)
+          $this->merge ($this->parseFormData ($old));
         break;
 
       case 'POST':
@@ -277,7 +273,8 @@ abstract class AbstractModelController implements ModelControllerInterface
   /**
    * Constructs a tree-like structure from flat form-submitted data.
    *
-   * > <p>**Note:** keys with slashes are expanded into nested arrays.
+   * <p>Keys with slashes are expanded into nested arrays.
+   * <p>Keys not starting with {@see modelRootPath} are excluded.
    *
    * @param array $data
    * @return array
