@@ -109,16 +109,19 @@ class BaseRouterWithLogging extends BaseRouter
 
     $this->routingLogger->writef ("<#row>Returning from %s</#row>", Debug::getType ($handler));
 
-    if ($response !== self::$currentResponse) {
-      $this->logResponse ($response, sprintf ('with a new %s object:', Debug::getType ($response)));
-      self::$currentResponse     = $response;
-      self::$currentResponseSize = $response->getBody ()->getSize ();
-    }
-    else {
-      $newSize = $response->getBody ()->getSize ();
-      if ($newSize != self::$currentResponseSize) {
-        $this->logResponse ($response, sprintf ('with a modified %s body:', Debug::getType ($response)));
-        self::$currentResponseSize = $newSize;
+    // $response may be null if the middleware was a route that did not match.
+    if ($response) {
+      if ($response !== self::$currentResponse) {
+        $this->logResponse ($response, sprintf ('with a new %s object:', Debug::getType ($response)));
+        self::$currentResponse     = $response;
+        self::$currentResponseSize = $response->getBody ()->getSize ();
+      }
+      else {
+        $newSize = $response->getBody ()->getSize ();
+        if ($newSize != self::$currentResponseSize) {
+          $this->logResponse ($response, sprintf ('with a modified %s body:', Debug::getType ($response)));
+          self::$currentResponseSize = $newSize;
+        }
       }
     }
 
