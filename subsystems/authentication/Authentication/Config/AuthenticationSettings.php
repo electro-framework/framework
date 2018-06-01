@@ -34,12 +34,18 @@ class AuthenticationSettings implements AssignableInterface
 
   function getLoginUrl ()
   {
-    return "{$this->kernelSettings->baseUrl}/$this->urlPrefix/$this->loginFormUrl";
+    if ($this->urlPrefix)
+      return "{$this->kernelSettings->baseUrl}/$this->urlPrefix/$this->loginFormUrl";
+    else
+      return "{$this->kernelSettings->baseUrl}/$this->loginFormUrl";
   }
 
   function getLogoutUrl ()
   {
-    return "{$this->kernelSettings->baseUrl}/$this->urlPrefix/$this->logoutUrl";
+    if ($this->urlPrefix)
+      return "{$this->kernelSettings->baseUrl}/$this->urlPrefix/$this->logoutUrl";
+    else
+      return "{$this->kernelSettings->baseUrl}/$this->logoutUrl";
   }
 
 }
