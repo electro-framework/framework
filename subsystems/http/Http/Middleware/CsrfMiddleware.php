@@ -53,7 +53,7 @@ class CsrfMiddleware implements RequestHandlerInterface
       else if ($requestMethod == 'POST') {
         $headerContentType = $request->getHeaderLine ('Content-Type');
         if ($headerContentType == "application/x-www-form-urlencoded" ||
-            $headerContentType == "multipart/form-data"
+            strpos ($headerContentType, "multipart/form-data") !== false
         ) {
           $post = $request->getParsedBody ();
           if (isset ($post['token']) && $post['token'] == $session->token ())
