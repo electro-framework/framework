@@ -26,7 +26,7 @@
     "php-kit/power-primitives": "^1.0.0",
     "psr/http-message": "~1.0",
     "psr/log": "~1.0",
-    "swiftmailer/swiftmailer": "^5.4.2"
+    "swiftmailer/swiftmailer": "^6.1.2"
   },
   "autoload": {
     "psr-4": {
