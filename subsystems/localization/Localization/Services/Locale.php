@@ -11,25 +11,19 @@ class Locale
 {
   use InspectionTrait;
 
-  static $INSPECTABLE = ['name', 'label', 'available', 'selectionMode'];
-
-  static $DEFAULTS = [
+  static $DEFAULTS    = [
     'en' => 'en-US',
     'pt' => 'pt-PT',
     'fr' => 'fr-FR',
     'es' => 'es-ES',
   ];
+  static $INSPECTABLE = ['name', 'label', 'available', 'selectionMode'];
+
   static $LOCALES = [
     'en-US' => ['name' => 'en-US', 'label' => 'English', 'compatibleWith' => ['en_US', 'en_US.UTF-8', 'us']],
     'pt-PT' => ['name' => 'pt-PT', 'label' => 'Português', 'compatibleWith' => ['pt_PT', 'pt_PT.UTF-8', 'ptg']],
     'fr-FR' => ['name' => 'fr-FR', 'label' => 'Français', 'compatibleWith' => ['fr_FR', 'fr_FR.UTF-8', 'fr']],
     'es-ES' => ['name' => 'es-ES', 'label' => 'Español', 'compatibleWith' => ['es_ES', 'es_ES.UTF-8', 'es']],
-  ];
-  private static $SHORT_CODES = [
-    'en-US' => 'en',
-    'pt-PT' => 'pt',
-    'fr-FR' => 'fr',
-    'es-ES' => 'es',
   ];
   /**
    * A list of locale names supported by the application.
@@ -59,6 +53,28 @@ class Locale
    * @var string
    */
   private $selectionMode = 'session';
+
+  /**
+   * Adds a new locale to the list of supported locales.
+   *
+   * Nota: adding a locale does not mean it is enabled for the application. See {@see available()}
+   *
+   * @param string $shortCode  Ex. "en"
+   * @param array  $localeInfo Ex. <kbd>[<br>
+   *                           'name' => 'en-US',<br>
+   *                           'label' => 'English',<br>
+   *                           'compatibleWith' => ['en_US', 'en_US.UTF-8', 'us']<br>
+   *                           ]
+   *                           </kbd>
+   */
+  static function add ($shortCode, array $localeInfo)
+  {
+    $name = $localeInfo['name'] ?? null;
+    if (!$name)
+      throw new \InvalidArgumentException;
+    static::$LOCALES[$name]       = $localeInfo;
+    static::$DEFAULTS[$shortCode] = $name;
+  }
 
   /**
    * Returns a map of `$name => [...locale data...]` for all known locales.
@@ -93,15 +109,6 @@ class Locale
   static function normalize ($name)
   {
     return strlen ($name) == 2 ? get (self::$DEFAULTS, $name) : $name;
-  }
-
-  /**
-   * @param string $name
-   * @throws RuntimeException
-   */
-  private static function invalidName ($name)
-  {
-    throw new RuntimeException("Unsupported locale name: $name");
   }
 
   /**
@@ -213,13 +220,22 @@ class Locale
   }
 
   /**
-   * Return the short code of name of current Locale
+   * Return the short code of a specifica locale, or of the current Locale if none is specified.
    *
-   * @param string $locale
+   * @param string|null $locale
    * @return mixed
    */
   function shortCode ($locale = null)
   {
-    return get (self::$SHORT_CODES,$locale ?: $this->name);
+    return get (array_flip (self::$DEFAULTS), $locale ?: $this->name);
+  }
+
+  /**
+   * @param string $name
+   * @throws RuntimeException
+   */
+  private static function invalidName ($name)
+  {
+    throw new RuntimeException("Unsupported locale name: $name");
   }
 }
