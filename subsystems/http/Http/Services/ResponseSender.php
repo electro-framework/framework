@@ -63,11 +63,12 @@ class ResponseSender implements ResponseSenderInterface
       true, $response->getStatusCode ()
     );
     $sizeFound = false;
+    $sentHeaders = headers_list();
     foreach ($response->getHeaders () as $header => $values) {
       $name  = $this->filterHeader ($header);
       if ($name == 'Content-Length')
         $sizeFound = true;
-      $first = true;
+      $first = count(array_filter($sentHeaders, function($var) use ($name){return stripos($var, $name) === 0;}))==0;
       foreach ($values as $value) {
         header (sprintf ('%s: %s', $name, $value), $first);
         $first = false;
