@@ -273,7 +273,7 @@ class NavigationLink implements NavigationLinkInterface
     return $this;
   }
 
-  function urlOf (...$params)
+  function urlOf (array $params)
   {
     $this->available = true;
     $i               = 0;
@@ -281,8 +281,10 @@ class NavigationLink implements NavigationLinkInterface
     $url = preg_replace_callback ('/@\w+/', function ($m) use ($params, &$i) {
       $v = get ($params, $i++);
       if (is_null ($v)) {
-        $this->available = false;
-        return ''; //to preg_replace
+        $paramName = $m[0];
+        $v = get ($params, $paramName);
+        if (is_null ($v))
+          return ''; //to preg_replace
       }
       return urlencode ($v);
     }, $this->url);

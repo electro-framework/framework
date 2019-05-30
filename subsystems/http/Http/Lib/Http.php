@@ -21,7 +21,7 @@ class Http
   /**
    * Converts an URL into an absolute form (with scheme://domain/path).
    *
-   * @param  string                $url     An absolute or relative URL.
+   * @param string                 $url     An absolute or relative URL.
    * @param ServerRequestInterface $request A server request that will be used to build the absolute URL.
    * @return string The absolute URL.
    */
@@ -151,6 +151,18 @@ class Http
   static function redirect (ResponseInterface $response, $url, $status = 302)
   {
     return $response->withStatus ($status)->withHeader ('Location', $url);
+  }
+
+  /**
+   * @param ResponseInterface $response
+   * @param string            $url
+   * @param array             $parameters
+   * @param int               $status
+   * @return ResponseInterface
+   */
+  static function redirectWithParams (ResponseInterface $response, $url, array $parameters, $status = 302)
+  {
+    return $response->withStatus ($status)->withHeader ('Location', $url . '?' . http_build_query ($parameters));
   }
 
   /**
