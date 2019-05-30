@@ -64,7 +64,11 @@ class NavigationLink implements NavigationLinkInterface
   private $selected = false;
   /** @var string|callable */
   private $title = '';
-  /** @var string|callable|null When null, the value will be computed on demand */
+  /**
+   * The raw computed URL, with @ placeholders and all. This is not the same as $rawUrl.
+   * <p>When null, the value will be computed on demand
+   * @var string|callable|null
+   */
   private $url = null;
   /** @var bool|callable */
   private $visible = true;
@@ -256,7 +260,6 @@ class NavigationLink implements NavigationLinkInterface
         $url = $this->getRequest ()->getAttribute ('baseUri') . $url;
       else if($url === '' && $this->parent)
         $url = $this->parent->url ();
-
       $this->url = $url;
 
       if (exists ($url))
