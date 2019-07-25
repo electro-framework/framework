@@ -66,7 +66,7 @@ class TranslationMiddleware implements RequestHandlerInterface
     if (!$this->settings->translation || !$lang)
       return $response;
     // Only translate some content types.
-    if (!in_array ($request->getHeader ('Content-Type')[0] ?? '', self::COMPRESSIBLE_CONTENT_TYPES))
+    if (!in_array ($response->getHeader ('Content-Type')[0] ?? 'text/html', self::COMPRESSIBLE_CONTENT_TYPES))
       return $response;
 
     if (!isset(self::$translation[$lang])) {

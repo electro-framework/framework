@@ -29,7 +29,7 @@ class CompressionMiddleware implements RequestHandlerInterface
     $response = $next();
 
     if (strpos ($request->getHeaderLine ('accept-encoding'), 'gzip') !== false) {
-      if (in_array ($request->getHeader ('Content-Type')[0] ?? '', self::COMPRESSIBLE_CONTENT_TYPES)) {
+      if (in_array ($response->getHeader ('Content-Type')[0] ?? 'text/html', self::COMPRESSIBLE_CONTENT_TYPES)) {
         $out = gzencode ($response->getBody (), 1);
         return $response
           ->withHeader ('Content-Encoding', 'gzip')
