@@ -11,6 +11,13 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class CompressionMiddleware implements RequestHandlerInterface
 {
+  const COMPRESSIBLE_CONTENT_TYPES = [
+    'text/html',
+    'text/plain',
+    'application/json',
+    'application/xml',
+  ];
+
   function __construct (ResponseFactoryInterface $responseFactory)
   {
     $this->responseFactory = $responseFactory;
@@ -22,10 +29,12 @@ class CompressionMiddleware implements RequestHandlerInterface
     $response = $next();
 
     if (strpos ($request->getHeaderLine ('accept-encoding'), 'gzip') !== false) {
-      $out = gzencode ($response->getBody (), 1);
-      return $response
-        ->withHeader ('Content-Encoding', 'gzip')
-        ->withBody ($this->responseFactory->makeBodyStream ($out));
+      if (in_array ($request->getHeader ('Content-Type')[0] ?? '', self::COMPRESSIBLE_CONTENT_TYPES)) {
+        $out = gzencode ($response->getBody (), 1);
+        return $response
+          ->withHeader ('Content-Encoding', 'gzip')
+          ->withBody ($this->responseFactory->makeBodyStream ($out));
+      }
     }
     return $response;
   }

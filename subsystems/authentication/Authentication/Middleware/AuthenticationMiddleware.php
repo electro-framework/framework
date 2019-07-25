@@ -9,7 +9,6 @@ use Electro\Interfaces\SessionInterface;
 use Electro\Interfaces\UserInterface;
 use Electro\Kernel\Config\KernelSettings;
 use Electro\Sessions\Config\SessionSettings;
-use GuzzleHttp\Psr7\ServerRequest;
 use HansOtt\PSR7Cookies\RequestCookies;
 use HansOtt\PSR7Cookies\SetCookie;
 use Psr\Http\Message\ResponseInterface;
@@ -56,8 +55,8 @@ class AuthenticationMiddleware implements RequestHandlerInterface
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
     $this->redirection->setRequest ($request);
-    $cookies  = RequestCookies::createFromRequest ($request);
-    $settings = $this->sessionSettings;
+    $cookies    = RequestCookies::createFromRequest ($request);
+    $settings   = $this->sessionSettings;
     $cookieName = $settings->sessionName . "_" . $settings->rememberMeTokenName;
 
     // LOG OUT
@@ -75,22 +74,17 @@ class AuthenticationMiddleware implements RequestHandlerInterface
       return $response;
     }
 
-    switch ($request->getMethod ()) {
-      case 'GET':
-        // LOG IN
-        if (!$this->session->loggedIn ()) {
-          if ($cookies->has ($cookieName)) {
-            $token = $cookies->get ($cookieName)
-                             ->getValue ();
-            $user  = $this->user;
-            if ($user->findByToken ($token)) {
-              $this->session->setUser ($user);
-              return $next();
-            }
-          }
-          return $this->redirection->guest ($this->settings->getLoginUrl ());
+    if (!$this->session->loggedIn ()) {
+      if ($cookies->has ($cookieName)) {
+        $token = $cookies->get ($cookieName)
+                         ->getValue ();
+        $user  = $this->user;
+        if ($user->findByToken ($token)) {
+          $this->session->setUser ($user);
+          return $next();
         }
-        break;
+      }
+      return $this->redirection->guest ($this->settings->getLoginUrl ());
     }
 
     try {
