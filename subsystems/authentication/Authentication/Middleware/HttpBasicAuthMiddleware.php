@@ -9,6 +9,11 @@ use Electro\Kernel\Config\KernelSettings;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
+/**
+ * **Note:** to make this work properly on a server with FastCGI, make sure the following line is present on .htaccess:
+ *
+ *     SetEnvIf Authorization .+ HTTP_AUTHORIZATION=$0
+ */
 class HttpBasicAuthMiddleware implements RequestHandlerInterface
 {
   /** @var SessionInterface */
@@ -24,7 +29,7 @@ class HttpBasicAuthMiddleware implements RequestHandlerInterface
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
   {
-    $authHeader = $request->getHeaderLine ('Authorization');
+    $authHeader = $request->getHeaderLine ('Authorization') ?: $request->getHeaderLine ('WWW-Authenticate');
     if ($authHeader) {
       $authHeader  = explode (' ', $authHeader, 2);
       $type        = $authHeader[0] ?? '';
