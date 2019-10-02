@@ -27,14 +27,19 @@ class MailModule implements ModuleInterface
       function (InjectorInterface $injector) {
         $injector
           ->delegate (Swift_Mailer::class, function () use ($injector) {
+
             $transport = new \Swift_SmtpTransport(
               env ('EMAIL_SMTP_HOST', 'localhost'),
               env ('EMAIL_SMTP_PORT', 25)
             );
+
             if (env ('EMAIL_SMTP_AUTH'))
               $transport
                 ->setUsername (env ('EMAIL_SMTP_USERNAME'))
                 ->setPassword (env ('EMAIL_SMTP_PASSWORD'));
+
+						if (env ('EMAIL_SMTP_SECURE'))
+								$transport->setEncryption(env ('EMAIL_SMTP_SECURE'));
 
             $mailer = new Swift_Mailer ($transport);
             $logger = new Swift_Plugins_Loggers_ArrayLogger (self::MAX_LOG_SIZE);
