@@ -41,7 +41,8 @@ class HttpModule implements ModuleInterface
           ->alias (ResponseFactoryInterface::class, ResponseFactory::class)
           ->alias (ResponseSenderInterface::class, ResponseSender::class)
           ->alias (CurrentRequestInterface::class, CurrentRequest::class)
-          ->share (CurrentRequestInterface::class, 'request');
+          ->share (CurrentRequestInterface::class, 'request')
+          ->share (HttpSettings::class);
       });
   }
 
