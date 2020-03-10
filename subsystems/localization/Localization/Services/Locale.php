@@ -20,10 +20,10 @@ class Locale
   static $INSPECTABLE = ['name', 'label', 'available', 'selectionMode'];
 
   static $LOCALES = [
-    'en-US' => ['name' => 'en-US', 'label' => 'English', 'compatibleWith' => ['en_US', 'en_US.UTF-8', 'us']],
-    'pt-PT' => ['name' => 'pt-PT', 'label' => 'Português', 'compatibleWith' => ['pt_PT', 'pt_PT.UTF-8', 'ptg']],
-    'fr-FR' => ['name' => 'fr-FR', 'label' => 'Français', 'compatibleWith' => ['fr_FR', 'fr_FR.UTF-8', 'fr']],
-    'es-ES' => ['name' => 'es-ES', 'label' => 'Español', 'compatibleWith' => ['es_ES', 'es_ES.UTF-8', 'es']],
+    'en-US' => ['name' => 'en-US', 'label' => 'English', 'compatibleWith' => ['en_US.UTF-8', 'en_US', 'us']],
+    'pt-PT' => ['name' => 'pt-PT', 'label' => 'Português', 'compatibleWith' => ['pt_PT.UTF-8', 'pt_PT', 'ptg']],
+    'fr-FR' => ['name' => 'fr-FR', 'label' => 'Français', 'compatibleWith' => ['fr_FR.UTF-8', 'fr_FR', 'fr']],
+    'es-ES' => ['name' => 'es-ES', 'label' => 'Español', 'compatibleWith' => ['es_ES.UTF-8', 'es_ES', 'es']],
   ];
   /**
    * A list of locale names supported by the application.
