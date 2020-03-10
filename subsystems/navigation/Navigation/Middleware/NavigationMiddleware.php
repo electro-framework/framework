@@ -11,7 +11,9 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Defines the navigation tree by calling each registered navigation provider.
+ * Defines the navigation tree by calling each registered navigation provider and registers a CurrentRequest
+ * object that will allow the Navigation service to, later on, compute the navigation URLs based on the latest
+ * routing info.
  */
 class NavigationMiddleware implements RequestHandlerInterface
 {
@@ -31,6 +33,7 @@ class NavigationMiddleware implements RequestHandlerInterface
     $this->settings       = $settings;
     $this->injector       = $injector;
     $this->currentRequest = $currentRequest;
+    $this->navigation->setRequest ($currentRequest);
   }
 
   function __invoke (ServerRequestInterface $request, ResponseInterface $response, callable $next)
@@ -39,13 +42,12 @@ class NavigationMiddleware implements RequestHandlerInterface
 
     $this->currentRequest->setInstance ($request);
 
+    // Setup navigation from each registered provider.
     foreach ($this->settings->getProviders () as $provider) {
       if (is_string ($provider))
         $provider = $this->injector->make ($provider);
       $provider->defineNavigation ($this->navigation);
     }
-
-    $this->navigation->setRequest ($request);
 
     return $next ();
   }

@@ -90,6 +90,11 @@ class Redirection implements RedirectionInterface
     return $this->responseFactory->make ($status, '', '', ['Location' => $url]);
   }
 
+  function toUrlWithParams($url, array $parameters, $status = 302)
+  {
+    return $this->to ("$url?" . http_build_query ($parameters), $status);
+  }
+
   /**
    * Converts the given URL to an absolute URL and returns it as a string.
    *

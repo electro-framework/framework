@@ -16,7 +16,7 @@ class LanguageSettings
       $languages[$iniFile] = $iniFile;
     }
     if (!$languages)
-      return [Locale::$DEFAULTS['pt']];
+      return [Locale::normalize (env ('APP_DEFAULT_LANG', 'en'))];
     else
       return array_keys($languages);
   }

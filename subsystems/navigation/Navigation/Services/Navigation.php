@@ -109,6 +109,11 @@ class Navigation implements NavigationInterface
 
   function getCurrentTrail ($offset = 0)
   {
+    if (!$this->cachedTrail) {
+      if ($this->request)
+        $this->setRequest ($this->request);
+      else throw new \RuntimeException("Can't compute current navigation trail without a request object being set");
+    }
     return $offset ? array_slice ($this->cachedTrail, $offset) : $this->cachedTrail;
   }
 

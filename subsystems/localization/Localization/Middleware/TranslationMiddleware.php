@@ -17,6 +17,10 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class TranslationMiddleware implements RequestHandlerInterface
 {
+  const COMPRESSIBLE_CONTENT_TYPES = [
+    'text/html',
+  ];
+
   const FIND_TRANS_KEY = '#\$([A-Z][A-Z0-9_]*)#';
   /**
    * The i18n cached translation table.
@@ -61,17 +65,18 @@ class TranslationMiddleware implements RequestHandlerInterface
     // because loaded modules can change this setting.
     if (!$this->settings->translation || !$lang)
       return $response;
+    // Only translate some content types.
+    if (!in_array ($response->getHeader ('Content-Type')[0] ?? 'text/html', self::COMPRESSIBLE_CONTENT_TYPES))
+      return $response;
 
-    if (!isset(self::$translation[$lang]))
-    {
+    if (!isset(self::$translation[$lang])) {
       // Load and merge all translation files now.
 
       self::$translation[$lang] = [];
 
       $trans   =& self::$translation[$lang];
       $folders = $this->settings->languageFolders;
-      foreach ($folders as $folder)
-      {
+      foreach ($folders as $folder) {
         $path     = "$folder/$lang.ini";
         $newTrans = fileExists ($path) ? parse_ini_file ($path) : null;
         if ($newTrans)

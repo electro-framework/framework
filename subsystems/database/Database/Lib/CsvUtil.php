@@ -3,9 +3,18 @@ namespace Electro\Database\Lib;
 
 use Electro\Exceptions\Fatal\FileNotFoundException;
 use ErrorException;
+use GuzzleHttp\Psr7\StreamWrapper;
+use Psr\Http\Message\ResponseInterface;
 
 class CsvUtil
 {
+  static function autoDetectSeparator ($line)
+  {
+    if (strpos ($line, ';') !== false) return ';';
+    if (strpos ($line, "\t") !== false) return "\t";
+    return ',';
+  }
+
   /**
    * Loads CSV-formatted data from a file, parses it and returns an array of arrays.
    *
@@ -52,7 +61,8 @@ class CsvUtil
     if (is_string ($columns)) {
       if (!$delimiter)
         $delimiter = self::autoDetectSeparator ($columns);
-      $columns = map (explode ($delimiter, $columns), function ($col) { return preg_replace ("/^[\\s\"\t']|[\\s\"\t']$/", '', $col);});
+      $columns = map (explode ($delimiter, $columns),
+        function ($col) { return preg_replace ("/^[\\s\"\t']|[\\s\"\t']$/", '', $col); });
     }
     else if (!$delimiter)
       $delimiter = ',';
@@ -79,11 +89,39 @@ class CsvUtil
     return $data;
   }
 
-  static function autoDetectSeparator ($line)
+  /**
+   * Outputs data in CSV format to an HTTP response stream.
+   *
+   * Note: you should set the response content type yourself.
+   *
+   * @param array|\Traversable $data            Iterable data to be output. It may be comprised of records of either
+   *                                            arrays or objects.
+   * @param ResponseInterface  $response        An HTTP response object defining where to stream the data to.
+   * @param string             $delimiter       The field delimiter character.
+   * @param callable|null      $tap             An optional function that will receive each record being output and
+   *                                            returns a modified one in array format.
+   *                                            If not set, the default behaviour is to simply cast the record to an
+   *                                            array.
+   *                                            Note: the number and order of fields returned on each call must be
+   *                                            consistent.
+   *
+   * @return ResponseInterface
+   */
+  static function outputCSV ($data, ResponseInterface $response, $delimiter = ',', callable $tap = null)
   {
-    if (strpos ($line, ';') !== false) return ';';
-    if (strpos ($line, "\t") !== false) return "\t";
-    return ',';
+    $first = true;
+    $f     = StreamWrapper::getResource ($response->getBody ());
+    foreach ($data as $r) {
+      if ($tap)
+        $a = $tap ($r);
+      else $a = (array)$r;
+      if ($first) {
+        $first = false;
+        fputcsv ($f, array_keys ($a), $delimiter);
+      }
+      fputcsv ($f, $a, $delimiter);
+    }
+    return $response;
   }
 
   /**

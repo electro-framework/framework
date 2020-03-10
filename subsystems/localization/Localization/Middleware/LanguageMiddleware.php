@@ -3,6 +3,7 @@
 namespace Electro\Localization\Middleware;
 
 use Electro\Debugging\Config\DebugSettings;
+use Electro\Exceptions\HttpException;
 use Electro\Http\Lib\Http;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\SessionInterface;
@@ -72,7 +73,8 @@ class LanguageMiddleware implements RequestHandlerInterface
     }
 
     if (!$this->locale->isAvailable ($lang))
-      return Http::response ($response, "Language <code>$lang</code> not found", 'text/html', 404);
+      // DO NOT return an HTTP response, as it will trigger a navigation error (request not set)
+      throw new HttpException(404, '', "Language <kbd>$lang</kbd> not found");
 
     $this->locale->locale ($lang);
     $this->session->setLang ($lang);

@@ -1,0 +1,42 @@
+{
+  "electro_log": {
+    "title":       "Electro Logs",
+    "description": "The Electro framework log format",
+    "url":         "",
+    "regex":       {
+      "std": {
+        "pattern": "^\\[(?<timestamp>\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?)] (?<channel>\\w+)\\.(?<level>[A-Z]+): (?<message>[^\\{]*?)(?<body>\\{.*})"
+      }
+    },
+    "level-field": "level",
+    "level":       {
+      "error":   "ERROR",
+      "debug":   "DEBUG",
+      "info":    "INFO",
+      "warning": "WARNING"
+    },
+    "value":       {
+      "timestamp":        {
+        "kind":       "string",
+        "identifier": false
+      },
+      "channel":        {
+        "kind":       "string",
+        "identifier": true
+      },
+      "level":      {
+        "kind":       "string",
+        "identifier": true
+      },
+      "body":         {
+        "kind":       "json",
+        "identifier": false
+      }
+    },
+    "sample":      [
+      {
+        "line": "[2019-07-17 09:50:04] general.DEBUG: Some message {\"client_id\":6,\"client_name\":\"Demo client\"} []"
+      }
+    ]
+  }
+}
