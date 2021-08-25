@@ -9,3 +9,36 @@ use Electro\Profiles\ConsoleProfile;
 require getcwd () . "/private/src/Bootloader.php";
 
 exit (App\Bootloader::make ()->boot (new ConsoleProfile));
+
+function env ($var, $default = '')
+{
+  global $__ENV;
+  static $MAP = [
+    'false' => false,
+    'off'   => false,
+    'no'    => false,
+    'none'  => false,
+    'true'  => true,
+    'on'    => true,
+    'yes'   => true,
+    'null'  => null,
+  ];
+  $v = isset($__ENV[$var]) ? $__ENV[$var] : getenv ($var);
+
+  if ($v === false)
+    return $default;
+  $v = trim ($v);
+  if (isset($MAP[$v]))
+    $v = $MAP[$v];
+  elseif (is_numeric ($v))
+    return intval ($v);
+  if ($v === '' || is_null ($v))
+    return $default;
+  if ($v[0] == '[' || $v[0] == '{') {
+    $o = json_decode ($v);
+    if (is_null ($o))
+      throw new RuntimeException("Invalid configuration value: $v");
+    return $o;
+  }
+  return $v;
+}
