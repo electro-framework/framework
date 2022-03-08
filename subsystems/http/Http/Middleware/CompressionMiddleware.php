@@ -8,12 +8,15 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * Applies gzip compression to the HTTP response.
+ * Applies gzip compression to the HTTP response, if appropriate.
  *
  * The response will be compressed only if the client declares support for GZIP compression, the response content type
  * is a text-based format with size > 1000 and the status code is in the 200..300 range.
  *
  * >Note: short responses that may fit into a network packet are not worth compressing.
+ *
+ * >Note: gzip is used and not deflate because historically, "deflate" was problematic because early Microsoft IIS servers
+ * >would send raw deflate data instead of zlib data. To work around that, it became common to just use gzip.
  */
 class CompressionMiddleware implements RequestHandlerInterface
 {
