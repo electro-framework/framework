@@ -1,4 +1,5 @@
 <?php
+
 namespace Electro\Http\Middleware;
 
 use Electro\Interfaces\Http\RequestHandlerInterface;
@@ -9,18 +10,21 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Applies gzip compression to the HTTP response.
  *
- * The response will be compressed only if its content type is a text-based format and the client declares support for
- * GZIP compression.
+ * The response will be compressed only if the client declares support for GZIP compression, the response content type
+ * is a text-based format with size > 1000 and the status code is in the 200..300 range.
+ *
+ * >Note: short responses that may fit into a network packet are not worth compressing.
  */
 class CompressionMiddleware implements RequestHandlerInterface
 {
   /**
-   * Note: all content types beginning with 'text/' or ending in 'xml' (ex: 'application/xml' or 'application/xhtml+xml')
-   * are already supported, so they are not included here.
+   * Note: all content types beginning with 'text/' or ending in 'xml' (ex: 'application/xml' or
+   * 'application/xhtml+xml') are already supported, so they are not included here.
    */
   const ADDITIONAL_CONTENT_TYPES = [
     'application/json',
   ];
+  const MIN_CONTENT_SIZE         = 1000;
 
   function __construct (ResponseFactoryInterface $responseFactory)
   {
@@ -32,19 +36,22 @@ class CompressionMiddleware implements RequestHandlerInterface
     /** @var ResponseInterface $response */
     $response = $next();
 
-    if (strpos ($request->getHeaderLine ('accept-encoding'), 'gzip') !== false) {
+    $status = $response->getStatusCode ();
+    if ($status >= 200 && $status < 300 && strpos ($request->getHeaderLine ('accept-encoding'), 'gzip') !== false) {
       $contentType = $response->getHeaderLine ('content-type') ?? '';
-      if (substr($contentType, 0, 5) == 'text/' || substr($contentType, -3) == 'xml' ||
+      if (substr ($contentType, 0, 5) == 'text/' || substr ($contentType, -3) == 'xml' ||
           in_array ($contentType, self::ADDITIONAL_CONTENT_TYPES)) {
         $uncompressed = $response->getBody ();
-        $out = gzencode ($uncompressed, 1);
-        //If the compression failed, return the uncompressed response.
-        if ($out === false)
-          $out = $uncompressed;
-        return $response
-          ->withHeader ('Content-Encoding', 'gzip')
-          ->withHeader ('Content-Length', strlen ($out))
-          ->withBody ($this->responseFactory->makeBodyStream ($out));
+        if (strlen ($uncompressed) >= self::MIN_CONTENT_SIZE) {
+          $out = gzencode ($uncompressed, 1);
+          //If the compression failed, return the uncompressed response.
+          if ($out === false)
+            $out = $uncompressed;
+          return $response
+            ->withHeader ('Content-Encoding', 'gzip')
+            ->withHeader ('Content-Length', strlen ($out))
+            ->withBody ($this->responseFactory->makeBodyStream ($out));
+        }
       }
     }
     return $response;
