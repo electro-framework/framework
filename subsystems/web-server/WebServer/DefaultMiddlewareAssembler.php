@@ -14,6 +14,7 @@ use Electro\Http\Middleware\WelcomeMiddleware;
 use Electro\Interfaces\Http\MiddlewareAssemblerInterface;
 use Electro\Interfaces\Http\MiddlewareStackInterface;
 use Electro\Interfaces\Http\Shared\ApplicationRouterInterface;
+use Electro\Interfaces\ProfileInterface;
 use Electro\Kernel\Services\Kernel;
 use Electro\Localization\Middleware\LanguageMiddleware;
 use Electro\Localization\Middleware\TranslationMiddleware;
@@ -26,7 +27,7 @@ class DefaultMiddlewareAssembler implements MiddlewareAssemblerInterface
 {
   /** @var bool */
   private $devEnv;
-  /** @var \Electro\Interfaces\ProfileInterface */
+  /** @var ProfileInterface */
   private $profile;
   /** @var bool */
   private $webConsole;
@@ -40,6 +41,8 @@ class DefaultMiddlewareAssembler implements MiddlewareAssemblerInterface
 
   function assemble (MiddlewareStackInterface $stack)
   {
+    // $isWebApp will be false if the profile is ApiProfile.
+    $isWebApp = $this->profile instanceof WebProfile;
     $stack
       ->set ([
         'compress'   => !$this->devEnv ? CompressionMiddleware::class : null,
@@ -51,10 +54,10 @@ class DefaultMiddlewareAssembler implements MiddlewareAssemblerInterface
         'csrf'       => CsrfMiddleware::class,
         'lang'       => LanguageMiddleware::class,
         'permalinks' => PermalinksMiddleware::class,
-        'fetch'      => $this->profile instanceof WebProfile ? FetchMiddleware::class : null,
-        'nav'        => $this->profile instanceof WebProfile ? NavigationMiddleware::class : null,
+        'fetch'      => $isWebApp ? FetchMiddleware::class : null,
+        'nav'        => $isWebApp ? NavigationMiddleware::class : null,
         'router'     => ApplicationRouterInterface::class,
-        'welcome'    => $this->profile instanceof WebProfile ? WelcomeMiddleware::class : null,
+        'welcome'    => $isWebApp ? WelcomeMiddleware::class : null,
         'notFound'   => URLNotFoundMiddleware::class,
       ]);
   }
