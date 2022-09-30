@@ -28,8 +28,8 @@ class DebugStatement extends \PDOStatement
   protected $params = [];
   /** @var string The full SQL query */
   protected $query;
-  /** @var int Either the number of rows returned from a SELECT query or how many rows were affected by a INSERT/UPDATE/DELETE query */
-  protected $rowCount = 0;
+  /** @var int Number of rows fetched from a SELECT, -1 if no fetch function called (must have been an INSERT/UPDATE/DELETE statement)*/
+  protected $fetchedCount = -1;
   /** @var ExtPDO */
   private $pdo;
 
@@ -48,7 +48,7 @@ class DebugStatement extends \PDOStatement
       'decorated'  => $this->decorated,
       'query'      => $this->query,
       'params'     => $this->params,
-      'fetchCount' => $this->rowCount,
+      'fetchCount' => $this->rowCount (),
     ];
   }
 
@@ -100,7 +100,6 @@ class DebugStatement extends \PDOStatement
     if (isset($params))
       $this->params = $params;
     $this->logQuery ();
-    $this->countRows ();
     $r = $this->profile (function () use ($params) {
       return $this->decorated->execute ($params);
     });
@@ -110,34 +109,40 @@ class DebugStatement extends \PDOStatement
 
   public function fetch ($fetch_style = null, $cursor_orientation = PDO::FETCH_ORI_NEXT, $cursor_offset = 0)
   {
+	  $this->fetchedCount++;
     return $this->decorated->fetch ($fetch_style, $cursor_orientation, $cursor_offset);
   }
 
   public function fetchAll ($fetch_style = null, $fetch_argument = null, $ctor_args = null)
   {
+	  $return = null;
     $count = func_num_args ();
     switch ($count) {
       case 0:
-        return $this->decorated->fetchAll ();
+        $return = $this->decorated->fetchAll ();
         break;
       case 1:
-        return $this->decorated->fetchAll ($fetch_style);
+        $return = $this->decorated->fetchAll ($fetch_style);
         break;
       case 2:
-        return $this->decorated->fetchAll ($fetch_style, $fetch_argument);
+        $return = $this->decorated->fetchAll ($fetch_style, $fetch_argument);
         break;
       default:
-        return $this->decorated->fetchAll ($fetch_style, $fetch_argument, $ctor_args);
+        $return = $this->decorated->fetchAll ($fetch_style, $fetch_argument, $ctor_args);
     }
+	$this->fetchedCount = count($return);
+	return $return;
   }
 
   public function fetchColumn ($column_number = 0)
   {
+	  $this->fetchedCount++;
     return $this->decorated->fetchColumn ($column_number);
   }
 
   public function fetchObject ($class_name = "stdClass", $ctor_args = null)
   {
+	  $this->fetchedCount++;
     return $this->decorated->fetchObject ($class_name, $ctor_args);
   }
 
@@ -158,7 +163,10 @@ class DebugStatement extends \PDOStatement
 
   public function rowCount ()
   {
-    return $this->decorated->rowCount ();
+	  if($this->fetchedCount<0)
+		return $this->decorated->rowCount ();
+	  else
+		  return $this->fetchedCount;
   }
 
   public function setAttribute ($attribute, $value)
@@ -171,33 +179,10 @@ class DebugStatement extends \PDOStatement
     return $this->decorated->setFetchMode ($mode);
   }
 
-  protected function countRows ()
-  {
-    if (!$this->isSelect) {
-      $this->rowCount = $this->rowCount ();
-      return;
-    }
-    $query = sprintf ('SELECT COUNT(*) FROM (%s) AS __countQuery', $this->query);
-    try {
-      $this->rowCount = null;
-      $st             = $this->pdo->select ($query, $this->params);
-      if (!$st)
-        return;
-      $this->rowCount = $st->fetchColumn (0);
-      $st->closeCursor ();
-    }
-    catch (PDOException $e) {
-      DebugConsole::logger ('database')
-                  ->log ('notice',
-                    sprintf ("<p>While inspecting a database query, an error occurred computing the size of its result set:</p>%s<p><br>Failed inspection query:</p>%s",
-                      $e->getMessage (), SqlFormatter::highlightQuery ($query)));
-    }
-  }
-
   protected function endLog ()
   {
     $log   = DebugConsole::logger ('database');
-    $count = $this->rowCount;
+    $count = $this->rowCount ();
     if (is_null ($count)) {
       $log->write ('; unknown result set size');
     }
