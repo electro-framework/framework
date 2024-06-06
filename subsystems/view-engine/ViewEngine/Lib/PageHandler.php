@@ -75,8 +75,8 @@ class PageHandler implements RequestHandlerInterface
    */
   protected function setup ()
   {
-    $this->middleware->add (fn ([$this, 'render']), 'render');
-  }
+    $this->middleware->add(_fn([$this, 'render']), 'render');
+	}
 
   /**
    * Allows subclasses to define the view's view model.

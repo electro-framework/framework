@@ -14,20 +14,19 @@
     }
   ],
   "require": {
-    "electro/kernel": "^1.0.0",
-    "php-kit/composer-bower-plugin": "^1.2.0",
-    "codegyre/robo": "^0.5.3",
-    "guzzlehttp/guzzle": "^6.2.2",
-    "hansott/psr7-cookies": "^2.0.0",
-    "league/glide": "^1.0.0",
-    "monolog/monolog": "^1.22.0",
-    "php-kit/ext-pdo": "^1.0.0",
-    "php-kit/flow": "^1.0.0",
-    "php-kit/php-web-console": "^0.9.0",
-    "php-kit/power-primitives": "^1.0.0",
-    "psr/http-message": "~1.0",
-    "psr/log": "~1.0",
-    "swiftmailer/swiftmailer": "^6.1.2"
+    "electro/kernel": "dev-master",
+    "codegyre/robo": "*",
+    "guzzlehttp/guzzle": "*",
+    "hansott/psr7-cookies": "*",
+    "league/glide": "*",
+    "monolog/monolog": "*",
+    "php-kit/ext-pdo": "dev-latest",
+    "php-kit/flow": "dev-latest",
+    "php-kit/php-web-console": "dev-latest",
+    "php-kit/power-primitives": "dev-latest",
+    "psr/http-message": "*",
+    "psr/log": "*",
+    "swiftmailer/swiftmailer": "*"
   },
   "autoload": {
     "psr-4": {

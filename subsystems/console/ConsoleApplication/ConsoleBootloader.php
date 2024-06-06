@@ -121,8 +121,8 @@ class ConsoleBootloader implements BootloaderInterface
    * @return bool
    * @throws \ErrorException
    */
-  public function errorHandler ($code = null, $msg = null, $file, $line)
-  {
+  public function errorHandler($code, $msg, $file, $line)
+	{
     if (!error_reporting ()) {
       if (PHP_MAJOR_VERSION >= 7)
         error_clear_last ();

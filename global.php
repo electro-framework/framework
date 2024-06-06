@@ -23,8 +23,8 @@ function handlerMethod ($class, $method)
 {
   return injectableWrapper (function (InjectorInterface $injector) use ($class, $method) {
     $o = $injector->make ($class);
-    return fn ([$o, $method]);
-  });
+    return _fn([$o, $method]);
+	});
 }
 
 /**
