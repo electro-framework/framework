@@ -10,6 +10,7 @@ use Robo\Result;
 use Robo\Runner;
 use Robo\TaskInfo;
 use Symfony\Component\Console\Application as SymfonyConsole;
+use Symfony\Component\Console\Terminal as SymfonyTerminal;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
@@ -51,15 +52,15 @@ class ConsoleApplication extends Runner
    * @param SymfonyConsole    $console
    * @param InjectorInterface $injector
    */
-  function __construct (ConsoleIO $io, ConsoleSettings $settings, SymfonyConsole $console, InjectorInterface $injector)
-  {
+  function __construct(ConsoleIO $io, ConsoleSettings $settings, SymfonyConsole $console, SymfonyTerminal $terminal, InjectorInterface $injector)
+	{
     $this->io       = $io;
     $this->console  = $console;
     $this->injector = $injector;
     $this->settings = $settings;
-    $console->setAutoExit (false);
-    $io->terminalSize ($console->getTerminalDimensions ());
-  }
+    $console->setAutoExit(false);
+		$io->terminalSize([$terminal->getWidth(), $terminal->getHeight()]);
+	}
 
   /**
    * Runs the console.
@@ -70,7 +71,7 @@ class ConsoleApplication extends Runner
    * @param InputInterface|null $input Overrides the input, if specified.
    * @return int 0 if everything went fine, or an error code
    */
-  function execute($input = null, $appName = null, $appVersion = null, $output = null)
+  function executeOverride($input = null)
 	{
     $this->stopOnFail ();
     $this->customizeColors ();
@@ -118,12 +119,12 @@ class ConsoleApplication extends Runner
    * @return int 0 if everything went fine, or an error code
    * @throws \Exception
    */
-  function run ($name, array $args = [])
-  {
+  function runOverride($name, array $args = [])
+	{
     $args  = array_merge (['', $name], $args);
     $input = $this->prepareInput ($args);
-    return $this->execute ($input);
-  }
+    return $this->executeOverride($input);
+	}
 
   /**
    * Runs the specified console command, with the given arguments, as if it was invoked from the command line
