@@ -138,8 +138,7 @@ class ConsoleApplication extends Runner
    * @return int 0 if everything went fine, or an error code
    * @throws \Exception
    */
-  function runAndCapture ($name, array $args = [], &$outStr, OutputInterface $output = null, $decorated = true,
-                          $verbosity = OutputInterface::VERBOSITY_NORMAL)
+  function runAndCapture($name, array $args = [], &$outStr = null, OutputInterface $output = null, $decorated = true, $verbosity = OutputInterface::VERBOSITY_NORMAL)
   {
     $args = array_merge (['', $name], $args);
     if ($output) {
