@@ -70,8 +70,8 @@ class ConsoleApplication extends Runner
    * @param InputInterface|null $input Overrides the input, if specified.
    * @return int 0 if everything went fine, or an error code
    */
-  function execute ($input = null)
-  {
+  function execute($input = null, $appName = null, $appVersion = null, $output = null)
+	{
     $this->stopOnFail ();
     $this->customizeColors ();
 
