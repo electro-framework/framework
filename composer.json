@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "electro/kernel": "dev-master",
+    "electro/kernel": "dev-latest",
     "codegyre/robo": "*",
     "guzzlehttp/guzzle": "*",
     "hansott/psr7-cookies": "*",
