@@ -1,16 +1,19 @@
 <?php
 namespace Electro\ConsoleApplication;
 
+use App\Bootloader;
 use Electro\ConsoleApplication\Config\ConsoleSettings;
 use Electro\ConsoleApplication\Services\ConsoleIO;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Interfaces\DI\InjectorInterface;
+use Exception;
+use ReflectionMethod;
+use ReflectionProperty;
 use Robo\Config;
 use Robo\Result;
 use Robo\Runner;
 use Robo\TaskInfo;
 use Symfony\Component\Console\Application as SymfonyConsole;
-use Symfony\Component\Console\Terminal as SymfonyTerminal;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
@@ -18,6 +21,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Terminal as SymfonyTerminal;
 
 /**
  * Represents a console-based Electro application.
@@ -117,13 +121,12 @@ class ConsoleApplication extends Runner
    * @param string   $name Command name.
    * @param string[] $args Command arguments.
    * @return int 0 if everything went fine, or an error code
-   * @throws \Exception
+   * @throws Exception
    */
   function runOverride($name, array $args = [])
 	{
-    $args  = array_merge (['', $name], $args);
-    $input = $this->prepareInput ($args);
-    return $this->executeOverride($input);
+    $args = array_merge(['', $name], $args);
+		return $this->executeOverride(new ArgvInput($args));
 	}
 
   /**
@@ -137,7 +140,7 @@ class ConsoleApplication extends Runner
    * @param bool            $decorated Set to false to disable colorized output.
    * @param int             $verbosity One of the OutputInterface::VERBOSITY constants.
    * @return int 0 if everything went fine, or an error code
-   * @throws \Exception
+   * @throws Exception
    */
   function runAndCapture($name, array $args = [], &$outStr = null, OutputInterface $output = null, $decorated = true, $verbosity = OutputInterface::VERBOSITY_NORMAL)
   {
@@ -147,8 +150,8 @@ class ConsoleApplication extends Runner
       $decorated = $output->isDecorated ();
     }
     $out    = new BufferedOutput ($verbosity, $decorated);
-    $r      = $this->console->run ($this->prepareInput ($args), $out);
-    $outStr = $out->fetch ();
+    $r = $this->console->run(new ArgvInput($args), $out);
+		$outStr = $out->fetch ();
     return $r;
   }
 
@@ -156,7 +159,7 @@ class ConsoleApplication extends Runner
    * Sets up the ConsoleApplication instance to runs the specified console command from within a Composer execution
    * context.
    *
-   * @see \App\Bootloader
+   * @see Bootloader
    *
    * @param string                       $name Command name.
    * @param string[]                     $args Command arguments.
@@ -169,8 +172,8 @@ class ConsoleApplication extends Runner
       $io = $event->getIO ();
 
       // Check for the presence of the -q|--quiet option.
-      $r = new \ReflectionProperty($io, 'input');
-      $r->setAccessible (true);
+      $r = new ReflectionProperty($io, 'input');
+			$r->setAccessible (true);
       /** @var ArgvInput $input */
       $input = $r->getValue ($io);
       if ($input->getOption ('quiet'))
@@ -205,8 +208,8 @@ class ConsoleApplication extends Runner
    */
   function setupStandardIO ($args, OutputInterface $output = null)
   {
-    $input = $this->prepareInput ($args);
-    if (!$output) {
+    $input = new ArgvInput($args);
+		if (!$output) {
       // Color support manual override:
       $hasColorSupport = in_array ('--ansi', $args) ? true : (in_array ('--no-ansi', $args) ? false : null);
       $output          = new ConsoleOutput (ConsoleOutput::VERBOSITY_NORMAL, $hasColorSupport);
@@ -214,8 +217,8 @@ class ConsoleApplication extends Runner
     $this->io->setInput ($input);
     $this->io->setOutput ($output);
     // Robo Command classes can access the current output via Config::get('output')
-    Config::setOutput ($output);
-  }
+    //Config::setOutput ($output);
+	}
 
   /**
    * @param SymfonyConsole $app
@@ -225,8 +228,8 @@ class ConsoleApplication extends Runner
   {
     $commandNames = array_filter (get_class_methods ($className),
       function ($m) use ($className) {
-        $method = new \ReflectionMethod($className, $m);
-        return !in_array ($m, ['__construct']) && !$method->isStatic (); // Reject constructors and static methods.
+        $method = new ReflectionMethod($className, $m);
+				return !in_array ($m, ['__construct']) && !$method->isStatic (); // Reject constructors and static methods.
       });
 
     $passThrough = $this->passThroughArgs;
@@ -276,5 +279,4 @@ class ConsoleApplication extends Runner
       ->setColor ('error-info', new OutputFormatterStyle ('yellow', 'red'))
       ->setColor ('kbd', new OutputFormatterStyle ('green'));
   }
-
 }
