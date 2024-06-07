@@ -16,7 +16,7 @@
   "require": {
     "php-kit/php-web-console": "dev-latest",
     "psr/http-message": "*",
-    "psr/log": "*",
+    "psr/log": "^2.0",
     "subsystems/http": "self.version"
   },
   "autoload": {

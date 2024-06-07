@@ -19,13 +19,13 @@
     "guzzlehttp/guzzle": "*",
     "hansott/psr7-cookies": "*",
     "league/glide": "*",
-    "monolog/monolog": "*",
+    "monolog/monolog": "^2.5",
     "php-kit/ext-pdo": "dev-latest",
     "php-kit/flow": "dev-latest",
     "php-kit/php-web-console": "dev-latest",
     "php-kit/power-primitives": "dev-latest",
     "psr/http-message": "*",
-    "psr/log": "*",
+    "psr/log": "^2.0",
     "swiftmailer/swiftmailer": "*"
   },
   "autoload": {
