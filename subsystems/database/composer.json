@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "php-kit/ext-pdo": "^1.0.0"
+    "php-kit/ext-pdo": "dev-latest"
   },
   "autoload": {
     "psr-4": {

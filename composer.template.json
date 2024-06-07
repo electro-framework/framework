@@ -14,8 +14,7 @@
     }
   ],
   "require": {
-    "electro/kernel": "^1.0.0",
-    "php-kit/composer-bower-plugin": "^1.2.0"
+    "electro/kernel": "dev-latest"
   },
   "autoload": {
     "psr-4": {

@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "league/glide": "^1.0.0",
+    "league/glide": "*",
     "subsystems/http": "self.version"
   },
   "autoload": {

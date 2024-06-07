@@ -9,6 +9,6 @@
     }
   },
   "require": {
-    "electro-modules/matisse": "^0.10"
+    "electro-modules/matisse": "dev-latest"
   }
 }

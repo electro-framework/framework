@@ -14,8 +14,8 @@
     }
   ],
   "require": {
-    "codegyre/robo": "^0.5.3",
-    "php-kit/flow": "^1.0.0",
+    "consolidation/robo": "*",
+    "php-kit/flow": "dev-latest",
     "subsystems/console": "self.version"
   },
   "autoload": {

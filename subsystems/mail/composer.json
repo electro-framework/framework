@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "swiftmailer/swiftmailer": "^5.4.2"
+    "symfony/mailer": "*"
   },
   "autoload": {
     "psr-4": {
