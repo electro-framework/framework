@@ -38,7 +38,7 @@ class LogHandlerRef implements HandlerInterface
 		return $this->handler()->getFormatter();
 	}
 
-	function handle(LogRecord $record): bool
+	function handle(array $record): bool
 	{
 		return $this->handler()->handle($record);
 	}
@@ -48,7 +48,7 @@ class LogHandlerRef implements HandlerInterface
 		$this->handler()->handleBatch($records);
 	}
 
-	function isHandling(LogRecord $record): bool
+	function isHandling(array $record): bool
 	{
 		return $this->handler()->isHandling($record);
 	}
