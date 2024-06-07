@@ -1,75 +1,83 @@
 <?php
-
 namespace Electro\Logging\Lib;
 
 use Electro\Interop\Logging\Handlers;
 use Monolog\Formatter\FormatterInterface;
 use Monolog\Handler\HandlerInterface;
+use Monolog\LogRecord;
 
 /**
  * A handler proxy referencing by name a handler that may not yet be registered when the proxy is instantiated.
  */
 class LogHandlerRef implements HandlerInterface
 {
-  /** @var HandlerInterface */
-  protected $handler = null;
-  /** @var Handlers */
-  private $handlers;
-  /** @var string */
-  private $name;
 
-  /**
-   * RegisteredHandlerRef constructor.
-   *
-   * @param Handlers $handlers The handler registry.
-   * @param string   $name     The handler registration name.
-   */
-  function __construct (Handlers $handlers, $name)
-  {
-    $this->handlers = $handlers;
-    $this->name     = $name;
-  }
+	/** @var HandlerInterface */
+	protected $handler = null;
 
-  function getFormatter ()
-  {
-    return $this->handler ()->getFormatter ();
-  }
+	/** @var Handlers */
+	private $handlers;
 
-  function handle (array $record)
-  {
-    return $this->handler ()->handle ($record);
-  }
+	/** @var string */
+	private $name;
 
-  function handleBatch (array $records)
-  {
-    return $this->handler ()->handleBatch ($records);
-  }
+	/**
+	 * RegisteredHandlerRef constructor.
+	 *
+	 * @param Handlers $handlers The handler registry.
+	 * @param string   $name     The handler registration name.
+	 */
+	function __construct(Handlers $handlers, $name)
+	{
+		$this->handlers = $handlers;
+		$this->name = $name;
+	}
 
-  function isHandling (array $record)
-  {
-    return $this->handler ()->isHandling ($record);
-  }
+	function getFormatter()
+	{
+		return $this->handler()->getFormatter();
+	}
 
-  function popProcessor ()
-  {
-    return $this->handler ()->popProcessor ();
-  }
+	function handle(LogRecord $record): bool
+	{
+		return $this->handler()->handle($record);
+	}
 
-  function pushProcessor ($callback)
-  {
-    $this->handler ()->pushProcessor ($callback);
-    return $this;
-  }
+	function handleBatch(array $records): void
+	{
+		$this->handler()->handleBatch($records);
+	}
 
-  function setFormatter (FormatterInterface $formatter)
-  {
-    $this->handler ()->setFormatter ($formatter);
-    return $this;
-  }
+	function isHandling(LogRecord $record): bool
+	{
+		return $this->handler()->isHandling($record);
+	}
 
-  private function handler ()
-  {
-    return $this->handler ?: $this->handlers->get ($this->name);
-  }
+	function popProcessor()
+	{
+		return $this->handler()->popProcessor();
+	}
+
+	function pushProcessor($callback)
+	{
+		$this->handler()->pushProcessor($callback);
+		return $this;
+	}
+
+	function setFormatter(FormatterInterface $formatter)
+	{
+		$this->handler()->setFormatter($formatter);
+		return $this;
+	}
+
+	private function handler()
+	{
+		return $this->handler ?: $this->handlers->get($this->name);
+	}
+
+	public function close(): void
+	{
+		$this->handler()->close();
+	}
 
 }
