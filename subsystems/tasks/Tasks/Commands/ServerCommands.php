@@ -89,8 +89,10 @@ PID: <info>$pid</info>");
    */
   private function getPID ()
   {
-    $pid = @file_get_contents ($this->PID_FILE);
-    return $pid ? intval ($pid) : false;
+		if (!file_exists($this->PID_FILE))
+			return false;
+		$pid = file_get_contents($this->PID_FILE);
+		return $pid ? intval ($pid) : false;
   }
 
 }

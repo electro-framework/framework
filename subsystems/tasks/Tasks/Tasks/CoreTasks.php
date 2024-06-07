@@ -105,8 +105,8 @@ class CoreTasks
    */
   private function doComposerUpdate ()
   {
-    (new ComposerTask)->action ('update')->printed (self::$SHOW_COMPOSER_OUTPUT)->run ();
-  }
+    (new ComposerTask)->action('update')->printOutput(self::$SHOW_COMPOSER_OUTPUT)->run();
+	}
 
   /**
    * Check if a directory is empty.
