@@ -28,20 +28,27 @@ class MailModule implements ModuleInterface
         $injector
           ->delegate (Swift_Mailer::class, function () use ($injector) {
 
-            $transport = new \Swift_SmtpTransport(
-              env ('EMAIL_SMTP_HOST', 'localhost'),
-              env ('EMAIL_SMTP_PORT', 25)
-            );
+			 $transport = $injector->make(\Swift_Transport_EsmtpTransport::class);
 
-            if (env ('EMAIL_SMTP_AUTH'))
+			 $this->setHost(env('EMAIL_SMTP_HOST', 'localhost'));
+						$this->setPort(env('EMAIL_SMTP_PORT', 25));
+						if (env('EMAIL_SMTP_SECURE'))
+							$this->setEncryption(env('EMAIL_SMTP_SECURE'));
+
+				/* 		$transport = new \Swift_SmtpTransport(
+						  env ('EMAIL_SMTP_HOST', 'localhost'),
+						  env ('EMAIL_SMTP_PORT', 25)
+						  ); */
+
+						if (env ('EMAIL_SMTP_AUTH'))
               $transport
                 ->setUsername (env ('EMAIL_SMTP_USERNAME'))
                 ->setPassword (env ('EMAIL_SMTP_PASSWORD'));
 
-						if (env ('EMAIL_SMTP_SECURE'))
-								$transport->setEncryption(env ('EMAIL_SMTP_SECURE'));
+//						if (env ('EMAIL_SMTP_SECURE'))
+//								$transport->setEncryption(env ('EMAIL_SMTP_SECURE'));
 
-            $mailer = new Swift_Mailer ($transport);
+						$mailer = new Swift_Mailer ($transport);
             $logger = new Swift_Plugins_Loggers_ArrayLogger (self::MAX_LOG_SIZE);
             $mailer->registerPlugin (new Swift_Plugins_LoggerPlugin ($logger));
             // Create run-time custom property to allow easy access to the logger.

@@ -413,8 +413,8 @@ function injectableHandler (callable $fn)
   return new InjectableFunction (function (InjectorInterface $injector) use ($argsRef, $fn) {
     $args = [];
     foreach ($argsRef as $ar) {
-      $type = $ar->getClass ();
-      if ($type)
+      $type = $ar->getType();
+				if ($type)
         $args[] = $injector->make ($type->getName ());
       else throw new \InvalidArgumentException ("Untyped arguments are not supported for injectable handlers");
     }

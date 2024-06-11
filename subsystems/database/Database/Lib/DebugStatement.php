@@ -52,51 +52,51 @@ class DebugStatement extends \PDOStatement
     ];
   }
 
-  public function bindColumn ($column, &$param, $type = null, $maxlen = null, $driverdata = null)
-  {
+  public function bindColumn($column, &$param, $type = null, $maxlen = null, $driverdata = null): bool
+	{
     return $this->decorated->bindColumn ($column, $param, $type, $maxlen, $driverdata);
   }
 
   public function bindParam ($parameter, &$variable, $data_type = PDO::PARAM_STR, $length = null,
-                             $driver_options = null)
-  {
+                             $driver_options = null): bool
+	{
     return $this->decorated->bindParam ($parameter, $variable, $data_type, $length, $driver_options);
   }
 
-  public function bindValue ($parameter, $value, $data_type = PDO::PARAM_STR)
-  {
+  public function bindValue($parameter, $value, $data_type = PDO::PARAM_STR): bool
+	{
     $this->params[is_numeric ($parameter) ? $parameter - 1 : $parameter] = $value;
     return $this->decorated->bindValue ($parameter, $value, $data_type);
   }
 
-  public function closeCursor ()
-  {
+  public function closeCursor(): bool
+	{
     $this->params = [];
     return $this->decorated->closeCursor ();
   }
 
-  public function columnCount ()
-  {
+  public function columnCount(): int
+	{
     return $this->decorated->columnCount ();
   }
 
-  public function debugDumpParams ()
-  {
+  public function debugDumpParams(): bool
+	{
     return $this->decorated->debugDumpParams ();
   }
 
-  public function errorCode ()
-  {
+  public function errorCode(): string
+	{
     return $this->decorated->errorCode ();
   }
 
-  public function errorInfo ()
-  {
+  public function errorInfo(): array
+	{
     return $this->decorated->errorInfo ();
   }
 
-  public function execute ($params = null)
-  {
+  public function execute($params = null): bool
+	{
     if (isset($params))
       $this->params = $params;
     $this->logQuery ();
@@ -107,14 +107,14 @@ class DebugStatement extends \PDOStatement
     return $r;
   }
 
-  public function fetch ($fetch_style = null, $cursor_orientation = PDO::FETCH_ORI_NEXT, $cursor_offset = 0)
-  {
+  public function fetch($fetch_style = null, $cursor_orientation = PDO::FETCH_ORI_NEXT, $cursor_offset = 0): mixed
+	{
 	  $this->fetchedCount++;
     return $this->decorated->fetch ($fetch_style, $cursor_orientation, $cursor_offset);
   }
 
-  public function fetchAll ($fetch_style = null, $fetch_argument = null, $ctor_args = null)
-  {
+  public function fetchAll($fetch_style = null, $fetch_argument = null, mixed ...$ctor_args): array
+	{
 	  $return = null;
     $count = func_num_args ();
     switch ($count) {
@@ -134,48 +134,48 @@ class DebugStatement extends \PDOStatement
 	return $return;
   }
 
-  public function fetchColumn ($column_number = 0)
-  {
+  public function fetchColumn($column_number = 0): mixed
+	{
 	  $this->fetchedCount++;
     return $this->decorated->fetchColumn ($column_number);
   }
 
-  public function fetchObject ($class_name = "stdClass", $ctor_args = null)
-  {
+  public function fetchObject($class_name = "stdClass", $ctor_args = null): object|false
+	{
 	  $this->fetchedCount++;
     return $this->decorated->fetchObject ($class_name, $ctor_args);
   }
 
-  public function getAttribute ($attribute)
-  {
+  public function getAttribute($attribute): mixed
+	{
     return $this->decorated->getAttribute ($attribute);
   }
 
-  public function getColumnMeta ($column)
-  {
+  public function getColumnMeta($column): array|false
+	{
     return $this->decorated->getColumnMeta ($column);
   }
 
-  public function nextRowset ()
-  {
+  public function nextRowset(): bool
+	{
     return $this->decorated->nextRowset ();
   }
 
-  public function rowCount ()
-  {
+  public function rowCount(): int
+	{
 	  if($this->fetchedCount<0)
 		return $this->decorated->rowCount ();
 	  else
 		  return $this->fetchedCount;
   }
 
-  public function setAttribute ($attribute, $value)
-  {
+  public function setAttribute($attribute, $value): bool
+	{
     return $this->decorated->setAttribute ($attribute, $value);
   }
 
-  public function setFetchMode ($mode, $params = null)
-  {
+  public function setFetchMode($mode, mixed ...$params)
+	{
     return $this->decorated->setFetchMode ($mode);
   }
 
