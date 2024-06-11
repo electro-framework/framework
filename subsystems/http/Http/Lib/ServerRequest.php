@@ -2,7 +2,12 @@
 
 namespace Electro\Http\Lib;
 
+use DOMDocument;
 use GuzzleHttp\Psr7\LazyOpenStream;
+use Psr\Http\Message\ServerRequestInterface;
+use RuntimeException;
+use function getallheaders;
+use function GuzzleHttp\json_decode;
 
 /**
  * Server-side HTTP request
@@ -22,11 +27,11 @@ class ServerRequest extends \GuzzleHttp\Psr7\ServerRequest
    *
    * @return static
    */
-  public static function fromGlobals ()
-  {
+  public static function fromGlobals(): ServerRequestInterface
+	{
     $method   = isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : 'GET';
-    $headers  = function_exists ('getallheaders') ? getallheaders () : [];
-    $uri      = self::getUriFromGlobals ();
+    $headers = function_exists('getallheaders') ? getallheaders() : [];
+		$uri      = self::getUriFromGlobals ();
     $body     = new LazyOpenStream('php://input', 'r+');
     $protocol = isset ($_SERVER['SERVER_PROTOCOL']) ? str_replace ('HTTP/', '', $_SERVER['SERVER_PROTOCOL']) : '1.1';
 
@@ -46,12 +51,12 @@ class ServerRequest extends \GuzzleHttp\Psr7\ServerRequest
         return $body;
       switch ($this->getHeaderLine ('Content-Type')) {
         case 'application/json':
-          return json_decode ($this->getBody ()->getContents ());
-        case 'application/xml':
-          $xml = new \DOMDocument;
-          if (!$xml->loadXML ($this->getBody ()->getContents ()))
-            throw new \RuntimeException ("Invalid XML request body");
-          return $xml;
+          return json_decode($this->getBody()->getContents());
+				case 'application/xml':
+          $xml = new DOMDocument;
+					if (!$xml->loadXML ($this->getBody ()->getContents ()))
+            throw new RuntimeException("Invalid XML request body");
+					return $xml;
         // In case of an empty $_POST, return an empty array.
         case 'application/x-www-form-urlencoded':
         case 'multipart/form-data':
