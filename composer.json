@@ -15,7 +15,7 @@
   ],
   "require": {
     "electro/kernel": "dev-latest",
-    "codegyre/robo": "*",
+    "consolidation/robo": "*",
     "guzzlehttp/guzzle": "*",
     "hansott/psr7-cookies": "*",
     "league/glide": "*",
