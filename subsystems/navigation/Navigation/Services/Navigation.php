@@ -117,8 +117,8 @@ class Navigation implements NavigationInterface
     return $offset ? array_slice ($this->cachedTrail, $offset) : $this->cachedTrail;
   }
 
-  function getIterator ()
-  {
+  function getIterator(): \Traversable
+	{
     return $this->rootLink->getIterator ();
   }
 
@@ -163,23 +163,23 @@ class Navigation implements NavigationInterface
     return $link;
   }
 
-  function offsetExists ($offset)
-  {
+  function offsetExists($offset): bool
+	{
     return isset($this->IDs[$offset]);
   }
 
-  function offsetGet ($offset)
-  {
+  function offsetGet($offset): mixed
+	{
     return $this->IDs[$offset];
   }
 
-  function offsetSet ($offset, $value)
-  {
+  function offsetSet($offset, $value): void
+	{
     throw new Fault (Faults::PROPERTY_IS_READ_ONLY, $offset);
   }
 
-  function offsetUnset ($offset)
-  {
+  function offsetUnset($offset): void
+	{
     throw new Fault (Faults::PROPERTY_IS_READ_ONLY, $offset);
   }
 

@@ -1,25 +1,26 @@
 {
-  "name": "subsystems/authentication",
-  "description": "Electro framework's authentication subsystem",
-  "license": "MIT",
-  "authors": [
-    {
-      "name": "Impactwave",
-      "email": "impactwave@impactwave.com",
-      "homepage": "http://impactwave.com"
-    },
-    {
-      "name": "Cláudio Silva",
-      "email": "claudio.silva@impactwave.com"
-    }
-  ],
-  "require": {
-    "subsystems/http": "self.version",
-    "subsystems/session": "self.version"
-  },
-  "autoload": {
-    "psr-4": {
-      "Electro\\Authentication\\": "Authentication"
-    }
-  }
+	"name": "subsystems/authentication",
+	"description": "Electro framework's authentication subsystem",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Impactwave",
+			"email": "impactwave@impactwave.com",
+			"homepage": "http://impactwave.com"
+		},
+		{
+			"name": "Cláudio Silva",
+			"email": "claudio.silva@impactwave.com"
+		}
+	],
+	"require": {
+		"hansott/psr7-cookies": "*",
+		"subsystems/http": "self.version",
+		"subsystems/session": "self.version"
+	},
+	"autoload": {
+		"psr-4": {
+			"Electro\\Authentication\\": "Authentication"
+		}
+	}
 }

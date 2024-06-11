@@ -119,8 +119,8 @@ class NavigationLink implements NavigationLinkInterface
     )->reindex ()->getIterator ();
   }
 
-  function getIterator ()
-  {
+  function getIterator(): \Traversable
+	{
     return Flow::from ($this->links)->reindex ()->getIterator ();
   }
 

@@ -4,7 +4,7 @@ namespace Electro\ContentRepository\Lib;
 
 use Electro\Interfaces\DI\InjectorInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
-use League\Flysystem\FilesystemInterface;
+use League\Flysystem\FilesystemOperator;
 use League\Glide\Responses\PsrResponseFactory;
 
 /**
@@ -27,8 +27,8 @@ class GlideResponseFactory extends PsrResponseFactory
     $this->injector = $injector;
   }
 
-  public function create (FilesystemInterface $cache, $path)
-  {
+  public function create(FilesystemOperator $cache, $path)
+	{
     /** @var ResponseFactoryInterface $factory */
     $factory              = $this->injector->make (ResponseFactoryInterface::class);
     $this->response       = $factory->make ();
