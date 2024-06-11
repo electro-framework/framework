@@ -271,7 +271,7 @@ class ConsoleApplication extends Runner
 				//Config::setOutput($output);// Call to undefined method Robo\Config::setOutput()
 
 				$roboTasks = $this->injector->make($className);
-				$res = call_user_func_array([$roboTasks, $commandName], $args);
+				$res = call_user_func_array([$roboTasks, $commandName], array_values($args)); // Cannot use positional argument after named argument
 				// Restore the setting to the main output stream.
 				//Config::setOutput($this->io->getOutput());
 				if (is_int($res))
