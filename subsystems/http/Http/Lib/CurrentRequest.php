@@ -1,5 +1,4 @@
 <?php
-
 namespace Electro\Http\Lib;
 
 use Electro\Interfaces\Http\Shared\CurrentRequestInterface;
@@ -9,166 +8,168 @@ use Psr\Http\Message\UriInterface;
 
 class CurrentRequest implements CurrentRequestInterface
 {
-  /** @var ServerRequestInterface */
-  private $instance = null;
 
-  public function getAttribute ($name, $default = null)
-  {
-    return $this->instance->getAttribute ($name, $default);
-  }
+	/** @var ServerRequestInterface */
+	private $instance = null;
 
-  public function getAttributes ()
-  {
-    return $this->instance->getAttributes ();
-  }
+	public function getAttribute($name, $default = null)
+	{
+		return $this->instance->getAttribute($name, $default);
+	}
 
-  public function getBody ()
-  {
-    return $this->instance->getBody ();
-  }
+	public function getAttributes(): array
+	{
+		return $this->instance->getAttributes();
+	}
 
-  public function getCookieParams ()
-  {
-    return $this->instance->getCookieParams ();
-  }
+	public function getBody(): StreamInterface
+	{
+		return $this->instance->getBody();
+	}
 
-  public function getHeader ($name)
-  {
-    return $this->instance->getHeader ($name);
-  }
+	public function getCookieParams(): array
+	{
+		return $this->instance->getCookieParams();
+	}
 
-  public function getHeaderLine ($name)
-  {
-    return $this->instance->getHeaderLine ($name);
-  }
+	public function getHeader($name): array
+	{
+		return $this->instance->getHeader($name);
+	}
 
-  public function getHeaders ()
-  {
-    return $this->instance->getHeaders ();
-  }
+	public function getHeaderLine($name): string
+	{
+		return $this->instance->getHeaderLine($name);
+	}
 
-  function getInstance ()
-  {
-    return $this->instance;
-  }
+	public function getHeaders(): array
+	{
+		return $this->instance->getHeaders();
+	}
 
-  function setInstance (ServerRequestInterface $req)
-  {
-    $this->instance = $req;
-  }
+	function getInstance()
+	{
+		return $this->instance;
+	}
 
-  public function getMethod ()
-  {
-    return $this->instance->getMethod ();
-  }
+	function setInstance(ServerRequestInterface $req)
+	{
+		$this->instance = $req;
+	}
 
-  public function getParsedBody ()
-  {
-    return $this->instance->getParsedBody ();
-  }
+	public function getMethod(): string
+	{
+		return $this->instance->getMethod();
+	}
 
-  public function getProtocolVersion ()
-  {
-    return $this->instance->getProtocolVersion ();
-  }
+	public function getParsedBody()
+	{
+		return $this->instance->getParsedBody();
+	}
 
-  public function getQueryParams ()
-  {
-    return $this->instance->getQueryParams ();
-  }
+	public function getProtocolVersion(): string
+	{
+		return $this->instance->getProtocolVersion();
+	}
 
-  public function getRequestTarget ()
-  {
-    return $this->instance->getRequestTarget ();
-  }
+	public function getQueryParams(): array
+	{
+		return $this->instance->getQueryParams();
+	}
 
-  public function getServerParams ()
-  {
-    return $this->instance->getServerParams ();
-  }
+	public function getRequestTarget(): string
+	{
+		return $this->instance->getRequestTarget();
+	}
 
-  public function getUploadedFiles ()
-  {
-    return $this->instance->getUploadedFiles ();
-  }
+	public function getServerParams(): array
+	{
+		return $this->instance->getServerParams();
+	}
 
-  public function getUri ()
-  {
-    return $this->instance->getUri ();
-  }
+	public function getUploadedFiles(): array
+	{
+		return $this->instance->getUploadedFiles();
+	}
 
-  public function hasHeader ($name)
-  {
-    return $this->instance->hasHeader ($name);
-  }
+	public function getUri(): UriInterface
+	{
+		return $this->instance->getUri();
+	}
 
-  public function withAddedHeader ($name, $value)
-  {
-    return $this->instance->withAddedHeader ($name, $value);
-  }
+	public function hasHeader($name): bool
+	{
+		return $this->instance->hasHeader($name);
+	}
 
-  public function withAttribute ($name, $value)
-  {
-    return $this->instance->withAttribute ($name, $value);
-  }
+	public function withAddedHeader($name, $value): ServerRequestInterface
+	{
+		return $this->instance->withAddedHeader($name, $value);
+	}
 
-  public function withBody (StreamInterface $body)
-  {
-    return $this->instance->withBody ($body);
-  }
+	public function withAttribute($name, $value): ServerRequestInterface
+	{
+		return $this->instance->withAttribute($name, $value);
+	}
 
-  public function withCookieParams (array $cookies)
-  {
-    return $this->instance->withCookieParams ($cookies);
-  }
+	public function withBody(StreamInterface $body): ServerRequestInterface
+	{
+		return $this->instance->withBody($body);
+	}
 
-  public function withHeader ($name, $value)
-  {
-    return $this->instance->withHeader ($name, $value);
-  }
+	public function withCookieParams(array $cookies): ServerRequestInterface
+	{
+		return $this->instance->withCookieParams($cookies);
+	}
 
-  public function withMethod ($method)
-  {
-    return $this->instance->withMethod ($method);
-  }
+	public function withHeader($name, $value): ServerRequestInterface
+	{
+		return $this->instance->withHeader($name, $value);
+	}
 
-  public function withParsedBody ($data)
-  {
-    return $this->instance->withParsedBody ($data);
-  }
+	public function withMethod($method): ServerRequestInterface
+	{
+		return $this->instance->withMethod($method);
+	}
 
-  public function withProtocolVersion ($version)
-  {
-    return $this->instance->withProtocolVersion ($version);
-  }
+	public function withParsedBody($data): ServerRequestInterface
+	{
+		return $this->instance->withParsedBody($data);
+	}
 
-  public function withQueryParams (array $query)
-  {
-    return $this->instance->withQueryParams ($query);
-  }
+	public function withProtocolVersion($version): ServerRequestInterface
+	{
+		return $this->instance->withProtocolVersion($version);
+	}
 
-  public function withRequestTarget ($requestTarget)
-  {
-    return $this->instance->withRequestTarget ($requestTarget);
-  }
+	public function withQueryParams(array $query): ServerRequestInterface
+	{
+		return $this->instance->withQueryParams($query);
+	}
 
-  public function withUploadedFiles (array $uploadedFiles)
-  {
-    return $this->instance->withUploadedFiles ($uploadedFiles);
-  }
+	public function withRequestTarget($requestTarget): ServerRequestInterface
+	{
+		return $this->instance->withRequestTarget($requestTarget);
+	}
 
-  public function withUri (UriInterface $uri, $preserveHost = false)
-  {
-    return $this->instance->withUri ($uri, $preserveHost);
-  }
+	public function withUploadedFiles(array $uploadedFiles): ServerRequestInterface
+	{
+		return $this->instance->withUploadedFiles($uploadedFiles);
+	}
 
-  public function withoutAttribute ($name)
-  {
-    return $this->instance->withoutAttribute ($name);
-  }
+	public function withUri(UriInterface $uri, $preserveHost = false): ServerRequestInterface
+	{
+		return $this->instance->withUri($uri, $preserveHost);
+	}
 
-  public function withoutHeader ($name)
-  {
-    return $this->instance->withoutHeader ($name);
-  }
+	public function withoutAttribute($name): ServerRequestInterface
+	{
+		return $this->instance->withoutAttribute($name);
+	}
+
+	public function withoutHeader($name): ServerRequestInterface
+	{
+		return $this->instance->withoutHeader($name);
+	}
+
 }
