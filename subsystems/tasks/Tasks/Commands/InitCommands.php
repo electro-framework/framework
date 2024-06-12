@@ -1,7 +1,7 @@
 <?php
 namespace Electro\Tasks\Commands;
 
-use Electro\Configuration\Lib\DotEnv;
+use Dotenv\Dotenv;
 use Electro\ConsoleApplication\ConsoleApplication;
 use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\ConsoleIOInterface;
@@ -210,8 +210,8 @@ trait InitCommands
    */
   private function loadConfig ()
   {
-    $dotenv = new Dotenv ("{$this->kernelSettings->baseDirectory}/.env");
-    $dotenv->load ();
+		$dotenv = Dotenv::createImmutable($this->kernelSettings->baseDirectory, ["project.env", ".env"], false);
+		$dotenv->load ();
   }
 
 }

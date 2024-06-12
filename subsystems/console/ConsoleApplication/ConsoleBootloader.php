@@ -1,7 +1,7 @@
 <?php
 namespace Electro\ConsoleApplication;
 
-use Electro\Configuration\Lib\DotEnv;
+use Dotenv\Dotenv;
 use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\BootloaderInterface;
 use Electro\Interfaces\DI\InjectorInterface;
@@ -54,8 +54,8 @@ class ConsoleBootloader implements BootloaderInterface
 
     // Initialize some settings from environment variables
 
-    $dotenv = new Dotenv ("$rootDir/project.env","$rootDir/.env");
-    try {
+    $dotenv = Dotenv::createImmutable($rootDir, ["project.env", ".env"], false);
+		try {
       $dotenv->load ();
     }
     catch (ConfigException $e) {
