@@ -110,13 +110,13 @@ class DebugStatement extends \PDOStatement
   public function fetch($fetch_style = null, $cursor_orientation = PDO::FETCH_ORI_NEXT, $cursor_offset = 0): mixed
 	{
 	  $this->fetchedCount++;
-    return $this->decorated->fetch ($fetch_style, $cursor_orientation, $cursor_offset);
+		return $this->decorated->fetch ($fetch_style, $cursor_orientation, $cursor_offset);
   }
 
   public function fetchAll($fetch_style = null, $fetch_argument = null, mixed ...$ctor_args): array
 	{
 	  $return = null;
-    $count = func_num_args ();
+		$count = func_num_args ();
     switch ($count) {
       case 0:
         $return = $this->decorated->fetchAll ();
@@ -137,13 +137,13 @@ class DebugStatement extends \PDOStatement
   public function fetchColumn($column_number = 0): mixed
 	{
 	  $this->fetchedCount++;
-    return $this->decorated->fetchColumn ($column_number);
+		return $this->decorated->fetchColumn ($column_number);
   }
 
   public function fetchObject($class_name = "stdClass", $ctor_args = null): object|false
 	{
 	  $this->fetchedCount++;
-    return $this->decorated->fetchObject ($class_name, $ctor_args);
+		return $this->decorated->fetchObject ($class_name, $ctor_args);
   }
 
   public function getAttribute($attribute): mixed
@@ -163,8 +163,8 @@ class DebugStatement extends \PDOStatement
 
   public function rowCount(): int
 	{
-	  if($this->fetchedCount<0)
-		return $this->decorated->rowCount ();
+	  if ($this->fetchedCount < 0)
+			return $this->decorated->rowCount ();
 	  else
 		  return $this->fetchedCount;
   }
