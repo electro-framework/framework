@@ -14,8 +14,8 @@
     }
   ],
   "require": {
-    "php-kit/flow": "dev-master",
-    "php-kit/php-web-console": "dev-master",
+    "php-kit/flow": "dev-latest",
+    "php-kit/php-web-console": "dev-latest",
     "subsystems/caching": "self.version"
   },
   "autoload": {

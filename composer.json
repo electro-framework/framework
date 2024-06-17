@@ -26,7 +26,8 @@
     "php-kit/power-primitives": "dev-latest",
     "psr/http-message": "*",
     "psr/log": "^2.0",
-    "symfony/mailer": "*"
+    "symfony/mailer": "*",
+    "vlucas/phpdotenv": "*"
   },
   "autoload": {
     "psr-4": {
@@ -60,7 +61,7 @@
     }
   },
   "bin": [
-    "subsystems/console/bin/workman",
-    "subsystems/tasks/bin/build"
+    "subsystems/tasks/bin/build",
+    "subsystems/console/bin/workman"
   ]
 }
