@@ -55,8 +55,8 @@ class ConsoleBootloader implements BootloaderInterface
     // Initialize some settings from environment variables
 
     $dotenv = Dotenv::createImmutable($rootDir, ["project.env", ".env"], false);
-		try {
-      $dotenv->load ();
+    try {
+      $dotenv->safeLoad ();
     }
     catch (ConfigException $e) {
       echo $e->getMessage () . PHP_EOL;
