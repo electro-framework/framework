@@ -62,7 +62,8 @@ class LoggingModule implements ModuleInterface
             //
             // Define the default logging configurator; it may be overridden later.
             //
-            ->alias (LoggingSetupInterface::class, DefaultLoggingSetup::class);
+            ->alias (LoggingSetupInterface::class, DefaultLoggingSetup::class)
+            ->set ('logger', LoggerInterface::class);
         })
       //
       ->onReconfigure (function (LogCentral $logCentral) {

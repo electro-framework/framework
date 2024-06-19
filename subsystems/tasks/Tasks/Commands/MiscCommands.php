@@ -33,7 +33,7 @@ trait MiscCommands
   function cacheClear ()
   {
     $target = $this->kernelSettings->storagePath . DIRECTORY_SEPARATOR . $this->cachingSettings->cachePath;
-    (new CleanDir($target))->run ();
+    $this->task (CleanDir::class, $target)->run ();
   }
 
   /**
@@ -87,9 +87,9 @@ trait MiscCommands
     $this->cacheClear ();
 
     // Reinstall all packages
-    (new ComposerTask)->action ('clearcache')->printed ($cOut)->run ();
+    $this->task (ComposerTask::class)->action ('clearcache')->printed ($cOut)->run ();
     $composerUpdate =
-      (new ComposerTask)->action ('update')->printed ($cOut); // Load class BEFORE its package is removed
+      $this->task (ComposerTask::class)->action ('update')->printed ($cOut); // Load class BEFORE its package is removed
     $this->clearDir ($this->kernelSettings->packagesPath);
     $this->clearDir ($this->kernelSettings->pluginsPath);
     $composerUpdate->run ();

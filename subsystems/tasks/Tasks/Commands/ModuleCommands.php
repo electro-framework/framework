@@ -436,7 +436,7 @@ trait ModuleCommands
     $targetModule = $this->modulesRegistry->getModule ($targetModuleName);
 
     // Add package reference to the targat module's composer . json
-    $task = new InstallPackageTask ("$moduleName$version");
+    $task = $this->task (InstallPackageTask::class, "$moduleName$version");
     $task->dir ($targetModule->path)
          ->option ('--no-update')
          ->printed (self::$SHOW_COMPOSER_OUTPUT)
@@ -511,7 +511,7 @@ trait ModuleCommands
     // Clone the repo.
 
     $path = "{$this->kernelSettings->modulesPath}/$moduleName";
-    (new GitStack)->cloneRepo ($moduleUrl, $path)->printed (false)->run ();
+    $this->task (GitStack::class)->cloneRepo ($moduleUrl, $path)->printed (false)->run ();
 
     // Remove VCS history
 
@@ -572,7 +572,7 @@ trait ModuleCommands
   {
     $this->io->mute ();
     $r =
-      (new Replace ($file))->regex (sprintf ($pattern, preg_quote ($from, $pattern[0])))->to ($to)->run ()->getData ();
+      $this->task (Replace::class, $file)->regex (sprintf ($pattern, preg_quote ($from, $pattern[0])))->to ($to)->run ()->getData ();
     $this->io->unmute ();
     $count = $r['replaced'];
     if ($count)
@@ -649,12 +649,12 @@ trait ModuleCommands
 If you proceed, the directory contents will be discarded.");
       if (!$io->confirm ("Proceed"))
         $io->cancel ();
-      (new DeleteDir($path))->run ();
+      $this->task (DeleteDir::class, $path)->run ();
     }
 
     $io->mute ();
 
-    (new CopyDir (["{$this->settings->scaffoldsPath()}/$scaffold" => $path]))->run ();
+    $this->task (CopyDir::class, ["{$this->settings->scaffoldsPath()}/$scaffold" => $path])->run ();
     $this->fs->rename ("$path/src/Config/___CLASS___.php", "$path/src/Config/$___CLASS___.php");
 
     foreach
@@ -664,7 +664,7 @@ If you proceed, the directory contents will be discarded.");
        "$path/src/Config/Routes.php",
        "$path/composer.json",
      ]
-     as $file) (new Replace ($file))
+     as $file) $this->task (Replace::class, $file)
       ->from ([
         '___MODULE___',
         '___CLASS___',
@@ -695,7 +695,7 @@ If you proceed, the directory contents will be discarded.");
     $io = $this->io;
     if (file_exists ($path)) {
       $io->mute ();
-      (new DeleteDir($path))->run ();
+      $this->task (DeleteDir::class, $path)->run ();
       // Remove vendor dir. when it becomes empty.
       $vendorPath = dirname ($path);
       $this->removeDirIfEmpty ($vendorPath);

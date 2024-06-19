@@ -1,7 +1,7 @@
 <?php
 namespace Electro\ConsoleApplication;
 
-use Dotenv\Dotenv;
+use Electro\Configuration\Lib\DotEnvLoader;
 use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\BootloaderInterface;
 use Electro\Interfaces\DI\InjectorInterface;
@@ -54,14 +54,7 @@ class ConsoleBootloader implements BootloaderInterface
 
     // Initialize some settings from environment variables
 
-    $dotenv = Dotenv::createImmutable($rootDir, ["project.env", ".env"], false);
-    try {
-      $dotenv->safeLoad ();
-    }
-    catch (ConfigException $e) {
-      echo $e->getMessage () . PHP_EOL;
-      return 1;
-    }
+    DotEnvLoader::load ($rootDir);
 
     // Load the kernel's configuration
 
@@ -97,7 +90,7 @@ class ConsoleBootloader implements BootloaderInterface
       echo $e->getMessage () . $NL . $NL;
 
       if ($e->getCode () == -1)
-        echo sprintf ('Possile error causes:%2$s%2$s- the class name may be misspelled,%2$s- the class may no longer exist,%2$s- module %1$s may be missing or it may be corrupted.%2$s%2$s',
+        echo sprintf ('Possible error causes:%2$s%2$s- the class name may be misspelled,%2$s- the class may no longer exist,%2$s- module %1$s may be missing or it may be corrupted.%2$s%2$s',
           str_match ($e->getMessage (), '/from module (\S+)/')[1], $NL);
 
       $path = "$kernelSettings->storagePath/" . ModulesRegistry::REGISTRY_FILE;
@@ -122,7 +115,7 @@ class ConsoleBootloader implements BootloaderInterface
    * @throws \ErrorException
    */
   public function errorHandler($code, $msg, $file, $line)
-	{
+  {
     if (!error_reporting ()) {
       if (PHP_MAJOR_VERSION >= 7)
         error_clear_last ();

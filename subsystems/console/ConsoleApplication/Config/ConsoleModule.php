@@ -44,7 +44,7 @@ class ConsoleModule implements ModuleInterface
           $consoleApp->setupStandardIO (get ($_SERVER, 'argv', []));
 
         $kernel->setExitCode($consoleApp->executeOverride());
-			});
+      });
   }
 
 }

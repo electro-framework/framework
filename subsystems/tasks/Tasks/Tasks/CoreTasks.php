@@ -19,14 +19,16 @@ use Electro\Tasks\Shared\Base\ComposerTask;
 use PhpKit\Flow\FilesystemFlow;
 use Robo\Task\FileSystem\CleanDir;
 use Robo\Task\FileSystem\DeleteDir;
-use Robo\Task\FileSystem\FilesystemStack;
+use Robo\TaskAccessor;
+use Robo\Tasks;
 use Symfony\Component\Filesystem\Filesystem;
 
 /**
  * The preset Electro console tasks configuration for Electro's task runner.
  */
-class CoreTasks
+class CoreTasks extends Tasks
 {
+  // use TaskAccessor;
   use InitCommands;
 //  use BuildCommands;
   use ModuleCommands;
@@ -53,7 +55,7 @@ class CoreTasks
   /**
    * @var ConsoleIO
    */
-  private $io;
+  protected $io;
   /**
    * @var KernelSettings
    */
@@ -97,7 +99,7 @@ class CoreTasks
    */
   private function clearDir ($path)
   {
-    (new CleanDir($this->kernelSettings->toAbsolutePath ($path)))->run ();
+    $this->task (CleanDir::class, $this->kernelSettings->toAbsolutePath ($path))->run ();
   }
 
   /**
@@ -105,8 +107,8 @@ class CoreTasks
    */
   private function doComposerUpdate ()
   {
-    (new ComposerTask)->action('update')->printOutput(self::$SHOW_COMPOSER_OUTPUT)->run();
-	}
+    $this->task (ComposerTask::class)->action('update')->printOutput(self::$SHOW_COMPOSER_OUTPUT)->run();
+  }
 
   /**
    * Check if a directory is empty.
@@ -128,7 +130,7 @@ class CoreTasks
   private function removeDirIfEmpty ($path)
   {
     if ($this->isDirectoryEmpty ($path)) {
-      (new DeleteDir ($path))->run ();
+      $this->task (DeleteDir::class, $path)->run ();
       return true;
     }
     return false;

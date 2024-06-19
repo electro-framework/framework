@@ -1,6 +1,9 @@
 <?php
 namespace Electro\ConsoleApplication\Lib;
 
+use ReflectionNamedType;
+use ReflectionUnionType;
+
 class TaskInfo extends \Robo\TaskInfo
 {
     const PARAM_IS_REQUIRED = '__param_is_required__';

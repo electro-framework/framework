@@ -8,6 +8,8 @@ use Electro\Interfaces\ModuleInterface;
 use Electro\Kernel\Lib\ModuleInfo;
 use Electro\Profiles\ConsoleProfile;
 use Electro\Tasks\Tasks\CoreTasks;
+use Robo\Config\Config;
+use Robo\Robo;
 
 class TasksModule implements ModuleInterface
 {

@@ -1,7 +1,7 @@
 <?php
 namespace Electro\WebServer;
 
-use Dotenv\Dotenv;
+use Electro\Configuration\Lib\DotEnvLoader;
 use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\BootloaderInterface;
 use Electro\Interfaces\DI\InjectorInterface;
@@ -9,9 +9,6 @@ use Electro\Interfaces\KernelInterface;
 use Electro\Kernel\Config\KernelModule;
 use Electro\Kernel\Config\KernelSettings;
 use Electro\Kernel\Services\ModulesRegistry;
-use PhpKit\WebConsole\DebugConsole\DebugConsole;
-use PhpKit\WebConsole\DebugConsole\DebugConsoleSettings;
-use PhpKit\WebConsole\ErrorConsole\ErrorConsole;
 
 /**
  * Provides the standard bootstrap sequence for web applications.
@@ -44,14 +41,7 @@ class WebBootloader implements BootloaderInterface
 
     // Initialize some settings from environment variables
 
-    $dotenv = Dotenv::createMutable($rootDir, ["project.env", ".env"], false);
-		try {
-      $dotenv->load();
-		}
-    catch (ConfigException $e) {
-      echo $e->getMessage () . PHP_EOL;
-      return 1;
-    }
+    DotEnvLoader::load ($rootDir);
 
     // Load the kernel's configuration.
 

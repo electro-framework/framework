@@ -7,10 +7,15 @@ use Electro\ConsoleApplication\Services\ConsoleIO;
 use Electro\Interfaces\ConsoleIOInterface;
 use Electro\Interfaces\DI\InjectorInterface;
 use Exception;
+use Psr\Container\ContainerInterface;
+use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use ReflectionProperty;
+use Robo\Collection\CollectionBuilder;
+use Robo\Common\ConfigAwareTrait;
 use Robo\Config;
 use Robo\Result;
+use Robo\Robo;
 use Robo\Runner;
 use Electro\ConsoleApplication\Lib\TaskInfo;
 use Symfony\Component\Console\Application as SymfonyConsole;
@@ -29,8 +34,9 @@ use Symfony\Component\Console\Terminal as SymfonyTerminal;
 /**
  * Represents a console-based Electro application.
  */
-class ConsoleApplication extends Runner
+class ConsoleApplication
 {
+  use ConfigAwareTrait;
 
 	/**
 	 * @var SymfonyConsole
@@ -52,6 +58,11 @@ class ConsoleApplication extends Runner
 	 */
 	private $settings;
 
+        /**
+         * @var ContainerInterface
+         */
+        private $roboContainer;
+
 	/**
 	 * ConsoleApplication constructor.
 	 *
@@ -65,13 +76,21 @@ class ConsoleApplication extends Runner
 	 */
 	function __construct(ConsoleIO $io, ConsoleSettings $settings, SymfonyConsole $console, SymfonyTerminal $terminal, InjectorInterface $injector)
 	{
-		$this->io = $io;
-		$this->console = $console;
-		$this->injector = $injector;
-		$this->settings = $settings;
-		$console->setAutoExit(false);
-		$io->terminalSize([$terminal->getWidth(), $terminal->getHeight()]);
-	}
+          $this->io = $io;
+          $this->console = $console;
+          $this->injector = $injector;
+          $this->settings = $settings;
+          $console->setAutoExit(false);
+          $io->terminalSize([$terminal->getWidth(), $terminal->getHeight()]);
+
+          $config = new Config\Config();
+          $container = Robo::createContainer($this->console, $config);
+          // $container->add('logger', function () use ($injector) {
+          //   return $injector->make(LoggerInterface::class);
+          // });
+          Robo::finalizeContainer($container);
+          $this->roboContainer = $container;
+        }
 
 	/**
 	 * Runs the console.
@@ -271,9 +290,16 @@ class ConsoleApplication extends Runner
 				//Config::setOutput($output);// Call to undefined method Robo\Config::setOutput()
 
 				$roboTasks = $this->injector->make($className);
+                                $builder = new CollectionBuilder($roboTasks);
+                                $builder->setConfig (Robo::config());
+                                $builder->setLogger ($this->injector->make ('logger'));
+                                $roboTasks->setBuilder ($builder);
+                                $roboTasks->setContainer($this->roboContainer);
 				$res = call_user_func_array([$roboTasks, $commandName], array_values($args)); // Cannot use positional argument after named argument
-				// Restore the setting to the main output stream.
+
+                                // Restore the setting to the main output stream.
 				//Config::setOutput($this->io->getOutput());
+
 				if (is_int($res))
 					return $res;
 				if (is_bool($res))
@@ -336,7 +362,7 @@ class ConsoleApplication extends Runner
 			$shortcut = '';
 			if (strpos($name, '|'))
 			{
-				list($fullname, $shortcut) = explode('|', $name, 2);
+				[$fullname, $shortcut] = explode('|', $name, 2);
 			}
 
 			if (is_bool($val))

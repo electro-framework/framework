@@ -42,7 +42,7 @@ trait BuildCommands
    */
   function update ()
   {
-    $this->io->say ("Hello World!");
+    $this->io->say ("'update' is not yet implemented");
   }
 
   /**
@@ -51,7 +51,7 @@ trait BuildCommands
    */
   private function cleanApp ()
   {
-    (new CleanDir ('public_html/dist'))->run ();
+    $this->task (CleanDir::class, 'public_html/dist')->run ();
   }
 
   /**
@@ -60,7 +60,7 @@ trait BuildCommands
    */
   private function cleanLibs ()
   {
-    (new CleanDir ('public_html/lib'))->run ();
+    $this->task (CleanDir::class, 'public_html/lib')->run ();
   }
 
   /**
@@ -69,7 +69,7 @@ trait BuildCommands
    */
   private function cleanModules ()
   {
-    (new CleanDir('public_html/modules'))->run ();
+    $this->task (CleanDir::class, 'public_html/modules')->run ();
   }
 
 }

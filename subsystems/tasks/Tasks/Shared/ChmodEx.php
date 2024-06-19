@@ -4,8 +4,9 @@ use Robo\Common\TaskIO;
 use Robo\Contract\TaskInterface;
 use Robo\Exception\TaskException;
 use Robo\Result;
+use Robo\Task\BaseTask;
 
-class ChmodEx implements TaskInterface
+class ChmodEx extends BaseTask
 {
   use TaskIO;
 

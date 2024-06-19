@@ -1,7 +1,7 @@
 <?php
 namespace Electro\Tasks\Commands;
 
-use Dotenv\Dotenv;
+use Electro\Configuration\Lib\DotEnvLoader;
 use Electro\ConsoleApplication\ConsoleApplication;
 use Electro\Exceptions\Fatal\ConfigException;
 use Electro\Interfaces\ConsoleIOInterface;
@@ -103,8 +103,8 @@ trait InitCommands
       $DB_HOST        = '';
       $DB_USERNAME    = '';
       $DB_PASSWORD    = '';
-      $DB_CHARSET     = 'utf8              ; must be set or the collation will not take affect';
-      $DB_COLLATION   = 'utf8_unicode_ci   ; to know why, see ' .
+      $DB_CHARSET     = 'utf8              # must be set or the collation will not take affect';
+      $DB_COLLATION   = 'utf8_unicode_ci   # to know why, see ' .
                         'http://stackoverflow.com/questions/766809/whats-the-difference-between-utf8-general-ci-and-utf8-unicode-ci#answer-766996';
       $DB_PORT        = '';
       $DB_UNIX_SOCKET = '';
@@ -147,7 +147,7 @@ trait InitCommands
           break;
       }
       $io->mute ();
-      (new Replace ($envPath))
+      $this->task(Replace::class, $envPath)
         ->from ([
           '%LANG',
           '%DB_DRIVER',
@@ -190,15 +190,14 @@ trait InitCommands
    */
   function initStorage ()
   {
-    $this->io->mute ();
+    //$this->io->mute ();
     $target = $this->kernelSettings->storagePath;
     if (file_exists ($target))
-      (new DeleteDir ($target))->run ();
-    (new CopyDir (["{$this->settings->scaffoldsPath()}/storage" => $target]))->run ();
-    (new ChmodEx ($target))->dirs (0775)->files (0664)->run ();
-
-    $this->consoleApp->run ('module:refresh');
-    $this->io->unmute ();
+      $this->task(DeleteDir::class, $target)->run ();
+    $this->task(CopyDir::class, ["{$this->settings->scaffoldsPath()}/storage" => $target])->run ();
+    $this->task(ChmodEx::class, $target)->dirs (0775)->files (0664)->run ();
+    $this->consoleApp->runCommand ('module:refresh');
+    //$this->io->unmute ();
 
     if (!$this->nestedExec)
       $this->io->done ("Storage directory created");
@@ -210,8 +209,7 @@ trait InitCommands
    */
   private function loadConfig ()
   {
-		$dotenv = Dotenv::createImmutable($this->kernelSettings->baseDirectory, ["project.env", ".env"], false);
-		$dotenv->load ();
+    DotEnvLoader::load ($this->kernelSettings->baseDirectory);
   }
 
 }
