@@ -53,7 +53,7 @@ function render (ServerRequestInterface $request, ResponseInterface $response, $
       $title   = $error->getTitle ();
       $message = $error->getMessage ();
     }
-    else list ($title, $message) = array_pad (explode (PHP_EOL, $error->getMessage (), 2), 2, '');
+    else [$title, $message] = array_pad (explode (PHP_EOL, $error->getMessage (), 2), 2, '');
     $response = $response->withStatus ($status);
   }
   else {
@@ -63,8 +63,10 @@ function render (ServerRequestInterface $request, ResponseInterface $response, $
   }
 
   // Suppress the display of extra information when on production mode.
-  if (!$this->devEnv)
-    $message = '';
+  if (!$this->devEnv) {
+    $title   = "An error occurred";
+    $message = 'We are working on it. Please try again later.';
+  }
 
   /** @var ResponseInterface $response */
   $response = $response->withBody ($body = $this->responseFactory->makeBodyStream ());
