@@ -8,9 +8,15 @@ class ComposerTask extends Base
 {
   public function __construct()
   {
-    parent::__construct(strtoupper(substr(PHP_OS, 0, 3)) === 'WIN'?'C:\\ProgramData\\ComposerSetup\\bin\\composer':null);
+    if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN')
+      parent::__construct('C:\\ProgramData\\ComposerSetup\\bin\\composer');
+    else {
+      $cmd = $this->findExecutablePhar('composer');
+      $cmd = str_replace (' ', '\\ ', $cmd);
+      parent::__construct($cmd);
+    }
   }
-  
+
   function action ($action)
   {
     $this->action = $action;
