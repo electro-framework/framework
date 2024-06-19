@@ -20,14 +20,6 @@ use Psr\Http\Message\ServerRequestInterface;
  */
 class CompressionMiddleware implements RequestHandlerInterface
 {
-<<<<<<< HEAD
-  const COMPRESSIBLE_CONTENT_TYPES = [
-    'text/html',
-    'text/plain',
-    'application/json',
-    'application/xml',
-  ];
-=======
   /**
    * Note: all content types beginning with 'text/' or ending in 'xml' (ex: 'application/xml' or
    * 'application/xhtml+xml') are already supported, so they are not included here.
@@ -36,7 +28,10 @@ class CompressionMiddleware implements RequestHandlerInterface
     'application/json',
   ];
   const MIN_CONTENT_SIZE         = 1000;
->>>>>>> v0.10
+  /**
+   * @var ResponseFactoryInterface
+   */
+  private $responseFactory;
 
   function __construct (ResponseFactoryInterface $responseFactory)
   {
@@ -48,14 +43,6 @@ class CompressionMiddleware implements RequestHandlerInterface
     /** @var ResponseInterface $response */
     $response = $next();
 
-<<<<<<< HEAD
-    if (strpos ($request->getHeaderLine ('accept-encoding'), 'gzip') !== false) {
-      if (in_array ($response->getHeader ('Content-Type')[0] ?? 'text/html', self::COMPRESSIBLE_CONTENT_TYPES)) {
-        $out = gzencode ($response->getBody (), 1);
-        return $response
-          ->withHeader ('Content-Encoding', 'gzip')
-          ->withBody ($this->responseFactory->makeBodyStream ($out));
-=======
     $status = $response->getStatusCode ();
     if ($status >= 200 && $status < 300 && strpos ($request->getHeaderLine ('accept-encoding'), 'gzip') !== false) {
       $contentType = $response->getHeaderLine ('content-type') ?? '';
@@ -72,7 +59,6 @@ class CompressionMiddleware implements RequestHandlerInterface
             ->withHeader ('Content-Length', strlen ($out))
             ->withBody ($this->responseFactory->makeBodyStream ($out));
         }
->>>>>>> v0.10
       }
     }
     return $response;
