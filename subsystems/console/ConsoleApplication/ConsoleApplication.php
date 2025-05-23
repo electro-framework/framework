@@ -112,7 +112,7 @@ class ConsoleApplication
 		{
 			if (!class_exists($class))
 			{
-				$this->getOutput()->writeln("<error>Task class '$class' was not found</error>");
+				$this->io->getOutput()->writeln("<error>Task class '$class' was not found</error>");
 				exit(1);
 			}
 			$this->mergeTasks($this->console, $class);
