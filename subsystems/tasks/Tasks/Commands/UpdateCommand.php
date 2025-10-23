@@ -133,7 +133,7 @@ trait UpdateCommand
       // Merge 'repositories' section
 
       foreach ($config->get ('repositories', []) as $repo)
-        if (is_null (array_find ($repositories, 'url', $repo['url'])))
+        if (is_null (array_find_by_key ($repositories, 'url', $repo['url'])))
           $repositories[] = $repo;
     }
 
