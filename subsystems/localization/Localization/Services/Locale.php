@@ -67,7 +67,7 @@ class Locale
    *                           ]
    *                           </kbd>
    */
-  static function add ($shortCode, array $localeInfo)
+  static function add($shortCode, array $localeInfo)
   {
     $name = $localeInfo['name'] ?? null;
     if (!$name)
@@ -81,7 +81,7 @@ class Locale
    *
    * @return array
    */
-  static function getAll ()
+  static function getAll()
   {
     return self::$LOCALES;
   }
@@ -92,9 +92,9 @@ class Locale
    * @param string $name Locale name. Either a 2 char or 5 char ISO identifier.
    * @return bool
    */
-  static function isValid ($name)
+  static function isValid($name)
   {
-    if ($name = self::normalize ($name))
+    if ($name = self::normalize($name))
       return isset(self::$LOCALES[$name]);
     return false;
   }
@@ -106,9 +106,9 @@ class Locale
    * @param string $name
    * @return string|null `null` if the name not valid.
    */
-  static function normalize ($name)
+  static function normalize($name)
   {
-    return strlen ($name) == 2 ? get (self::$DEFAULTS, $name) : $name;
+    return strlen($name) == 2 ? get(self::$DEFAULTS, $name) : $name;
   }
 
   /**
@@ -120,15 +120,15 @@ class Locale
    * @return $this|string[] $this for chaining, or the currently available locale names.
    * @throws RuntimeException
    */
-  function available (array $names = null)
+  function available(array|null $names = null)
   {
-    if (is_null ($names))
+    if (is_null($names))
       return $this->available;
     if (isset($names))
       $this->available = map ($names, function ($code) {
-        $name = self::normalize ($code);
+        $name = self::normalize($code);
         if (!$name || !isset(self::$LOCALES[$name]))
-          self::invalidName ($code);
+          self::invalidName($code);
         return $name;
       });
     return $this;
@@ -142,10 +142,10 @@ class Locale
    * @param string $lang Either a 2 letter or 5 character code. Ex: 'en' or 'en-US'.
    * @return $this|string
    */
-  function defaultLang ($lang = null)
+  function defaultLang($lang = null)
   {
-    if (is_null ($lang))
-      return $this->defaultLang ?: ($this->defaultLang = env ('APP_DEFAULT_LANG'));
+    if (is_null($lang))
+      return $this->defaultLang ?: ($this->defaultLang = env('APP_DEFAULT_LANG'));
     $this->defaultLang = $lang;
     return $this;
   }
@@ -155,7 +155,7 @@ class Locale
    *
    * @return array A map of `$name => [...locale data...]`
    */
-  function getAvailableExt ()
+  function getAvailableExt()
   {
     return map ($this->available, function ($name) { return self::$LOCALES[$name]; });
   }
@@ -165,7 +165,7 @@ class Locale
    *
    * @return string
    */
-  function getLabel ()
+  function getLabel()
   {
     return $this->label;
   }
@@ -176,10 +176,10 @@ class Locale
    * @param string $name Locale name. Either a 2 char or 5 char ISO identifier.
    * @return bool
    */
-  function isAvailable ($name)
+  function isAvailable($name)
   {
-    if ($name = self::normalize ($name))
-      return in_array ($name, $this->available);
+    if ($name = self::normalize($name))
+      return in_array($name, $this->available);
     return false;
   }
 
@@ -191,19 +191,19 @@ class Locale
    * @return $this|string $this for chaining, or the current locale name, after conversion.
    * @throws RuntimeException
    */
-  function locale ($name = null)
+  function locale($name = null)
   {
-    if (is_null ($name))
+    if (is_null($name))
       return $this->name;
     $data = null;
-    if ($name = self::normalize ($name))
-      $data = get (self::$LOCALES, $name);
+    if ($name = self::normalize($name))
+      $data = get(self::$LOCALES, $name);
     if (!$data)
-      self::invalidName ($name);
+      self::invalidName($name);
 
     $this->name  = $data['name'];
     $this->label = $data['label'];
-    setlocale (LC_ALL, $data['compatibleWith']);
+    setlocale(LC_ALL, $data['compatibleWith']);
     return $this;
   }
 
@@ -211,9 +211,9 @@ class Locale
    * @param string $mode Either 'session' or 'url'.
    * @return $this|string
    */
-  function selectionMode ($mode = null)
+  function selectionMode($mode = null)
   {
-    if (is_null ($mode))
+    if (is_null($mode))
       return $this->selectionMode;
     $this->selectionMode = $mode;
     return $this;
@@ -225,16 +225,16 @@ class Locale
    * @param string|null $locale
    * @return mixed
    */
-  function shortCode ($locale = null)
+  function shortCode($locale = null)
   {
-    return get (array_flip (self::$DEFAULTS), $locale ?: $this->name);
+    return get(array_flip(self::$DEFAULTS), $locale ?: $this->name);
   }
 
   /**
    * @param string $name
    * @throws RuntimeException
    */
-  private static function invalidName ($name)
+  private static function invalidName($name)
   {
     throw new RuntimeException("Unsupported locale name: $name");
   }
