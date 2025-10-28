@@ -17,7 +17,7 @@ class ConsoleBootloader implements BootloaderInterface
    */
   private $injector;
 
-  function __construct (InjectorInterface $injector)
+  function __construct(InjectorInterface $injector)
   {
     $this->injector = $injector;
   }
@@ -27,80 +27,80 @@ class ConsoleBootloader implements BootloaderInterface
    * @param mixed $arg
    * @return string
    */
-  static public function formatErrorArg ($arg)
+  static public function formatErrorArg($arg)
   {
-    if (is_object ($arg))
+    if (is_object($arg))
       switch (get_class ($arg)) {
         case \ReflectionMethod::class:
           /** @var \ReflectionMethod $arg */
-          return sprintf ('ReflectionMethod<%s::$s>', $arg->getDeclaringClass ()->getName (), $arg->getName ());
+          return sprintf('ReflectionMethod<%s::$s>', $arg->getDeclaringClass()->getName(), $arg->getName());
         case \ReflectionFunction::class:
           /** @var \ReflectionFunction $arg */
-          return sprintf ('ReflectionFunction<function at %s line %d>', $arg->getFileName (), $arg->getStartLine ());
+          return sprintf('ReflectionFunction<function at %s line %d>', $arg->getFileName(), $arg->getStartLine());
         case \ReflectionParameter::class:
           /** @var \ReflectionParameter $arg */
-          return sprintf ('ReflectionParameter<$%s>', $arg->getName ());
+          return sprintf('ReflectionParameter<$%s>', $arg->getName());
         default:
-          return typeOf ($arg);
+          return typeOf($arg);
       }
-    if (is_array ($arg))
-      return sprintf ('[%s]', implode (',', map ($arg, [__CLASS__, 'formatErrorArg'])));
-    return str_replace ('\\\\', '\\', var_export ($arg, true));
+    if (is_array($arg))
+      return sprintf('[%s]', implode(',', map($arg, [__CLASS__, 'formatErrorArg'])));
+    return str_replace('\\\\', '\\', var_export($arg, true));
   }
 
-  function boot ($rootDir, $urlDepth = 0, callable $onStartUp = null)
+  function boot($rootDir, $urlDepth = 0, callable $onStartUp = null)
   {
-    $rootDir = normalizePath ($rootDir);
+    $rootDir = normalizePath($rootDir);
 
     // Initialize some settings from environment variables
 
-    DotEnvLoader::load ($rootDir);
+    DotEnvLoader::load($rootDir);
 
     // Load the kernel's configuration
 
     /** @var KernelSettings $kernelSettings */
     $kernelSettings = $this->injector
-      ->share (KernelSettings::class, 'app')
-      ->make (KernelSettings::class);
+      ->share(KernelSettings::class, 'app')
+      ->make(KernelSettings::class);
 
     $kernelSettings->isConsoleBased = true;
-    $kernelSettings->setApplicationRoot ($rootDir, $urlDepth);
+    $kernelSettings->setApplicationRoot($rootDir, $urlDepth);
 
     // Setup debugging (must be done before instantiating the kernel, but after instantiating its settings).
-    $this->setupDebugging ($rootDir);
+    $this->setupDebugging($rootDir);
 
     // Boot up the framework's kernel.
 
-    $this->injector->execute ([KernelModule::class, 'register']);
+    $this->injector->execute([KernelModule::class, 'register']);
 
     // Boot up the framework/application's modules.
 
     /** @var KernelInterface $kernel */
-    $kernel = $this->injector->make (KernelInterface::class);
+    $kernel = $this->injector->make(KernelInterface::class);
 
     if ($onStartUp)
-      $onStartUp ($kernel);
+      $onStartUp($kernel);
 
     // Boot up all modules.
     try {
-      $kernel->boot ();
+      $kernel->boot();
     }
     catch (ConfigException $e) {
       $NL    = PHP_EOL;
-      echo $e->getMessage () . $NL . $NL;
+      echo $e->getMessage() . $NL . $NL;
 
-      if ($e->getCode () == -1)
+      if ($e->getCode() == -1)
         echo sprintf ('Possible error causes:%2$s%2$s- the class name may be misspelled,%2$s- the class may no longer exist,%2$s- module %1$s may be missing or it may be corrupted.%2$s%2$s',
           str_match ($e->getMessage (), '/from module (\S+)/')[1], $NL);
 
       $path = "$kernelSettings->storagePath/" . ModulesRegistry::REGISTRY_FILE;
-      if (file_exists ($path))
+      if (file_exists($path))
         echo "Tip: one possible solution is to remove the '$path' file and run 'workman' to rebuild the module registry.";
 
       echo $NL;
     }
 
-    return $kernel->getExitCode ();
+    return $kernel->getExitCode();
   }
 
   /**
@@ -116,12 +116,15 @@ class ConsoleBootloader implements BootloaderInterface
    */
   public function errorHandler($code, $msg, $file, $line)
   {
-    if (!error_reporting ()) {
+    if (!error_reporting())
+    {
       if (PHP_MAJOR_VERSION >= 7)
-        error_clear_last ();
+        error_clear_last();
       return false;
     }
-    throw new \ErrorException ($msg, $code, 1, $file, $line);
+    if ($code === E_DEPRECATED)
+      return;
+    throw new \ErrorException($msg, $code, 1, $file, $line);
   }
 
   /**
@@ -130,52 +133,52 @@ class ConsoleBootloader implements BootloaderInterface
    * @internal
    * @param \Exception|\Throwable $exception
    */
-  function exceptionHandler ($exception)
+  function exceptionHandler($exception)
   {
     $NL    = PHP_EOL;
-    $stack = $exception->getTrace ();
+    $stack = $exception->getTrace();
     if ($exception instanceof \ErrorException)
-      array_shift ($stack);
-    $c = count ($stack);
+      array_shift($stack);
+    $c = count($stack);
     echo sprintf ("{$NL}Unhandled exception: %s$NL{$NL}Stack trace:$NL$NL%4d. Throw %s$NL      from %s, line %d$NL$NL",
-      color ('red', $exception->getMessage ()),
+      color('red', $exception->getMessage()),
       $c + 1,
-      color ('yellow', get_class ($exception)),
-      $exception->getFile (),
-      $exception->getLine ()
+      color('yellow', get_class($exception)),
+      $exception->getFile(),
+      $exception->getLine()
     );
     foreach ($stack as $i => $l)
       echo sprintf ("%4d. Call %s$NL      from %s, line %d$NL$NL",
         $c - $i,
         color ('yellow', sprintf ('%s%s (%s)',
-          isset($l['class']) ? $l['class'] . get ($l, 'type', '::') : '',
+          isset($l['class']) ? $l['class'] . get($l, 'type', '::') : '',
           $l['function'],
           implode (',', map ($l['args'], [__CLASS__, 'formatErrorArg']))
         )),
-        get ($l, 'file', 'an unknown location'),
-        get ($l, 'line')
+        get($l, 'file', 'an unknown location'),
+        get($l, 'line')
       );
   }
 
   /**
    * Displays errors not catched during the app's execution.
    */
-  public function shutdown ()
+  public function shutdown()
   {
-    $error = error_get_last ();
-    if (!is_array ($error)) return;
-    echo sprintf ("ERROR: %s \nin %s:%d\n", color ('red', $error['message']), $error['file'], $error['line']);
+    $error = error_get_last();
+    if (!is_array($error)) return;
+    echo sprintf("ERROR: %s \nin %s:%d\n", color('red', $error['message']), $error['file'], $error['line']);
   }
 
   /**
    * @param string $rootDir
    */
-  private function setupDebugging ($rootDir)
+  private function setupDebugging($rootDir)
   {
     // Disabled the shutdown handler to prever interference with Symfony console's error handling.
-//    register_shutdown_function ([$this, 'shutdown']);
-    set_error_handler ([$this, 'errorHandler']);
-    set_exception_handler ([$this, 'exceptionHandler']);
+    //    register_shutdown_function ([$this, 'shutdown']);
+    set_error_handler([$this, 'errorHandler']);
+    set_exception_handler([$this, 'exceptionHandler']);
   }
 
 }
