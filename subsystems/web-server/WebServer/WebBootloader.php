@@ -30,59 +30,59 @@ class WebBootloader implements BootloaderInterface
    */
   private $kernelSettings;
 
-  function __construct (InjectorInterface $injector)
+  function __construct(InjectorInterface $injector)
   {
     $this->injector = $injector;
   }
 
-  function boot ($rootDir, $urlDepth = 0, callable $onStartUp = null)
+  function boot($rootDir, $urlDepth = 0, callable|null $onStartUp = null)
   {
-    $rootDir = normalizePath ($rootDir);
+    $rootDir = normalizePath($rootDir);
 
     // Initialize some settings from environment variables
 
-    DotEnvLoader::load ($rootDir);
+    DotEnvLoader::load($rootDir);
 
     // Load the kernel's configuration.
 
     /** @var KernelSettings $kernelSettings */
     $kernelSettings = $this->kernelSettings = $this->injector
-      ->share (KernelSettings::class, 'app')
-      ->make (KernelSettings::class);
+      ->share(KernelSettings::class, 'app')
+      ->make(KernelSettings::class);
 
     $kernelSettings->isWebBased = true;
-    $kernelSettings->setApplicationRoot ($rootDir, $urlDepth);
+    $kernelSettings->setApplicationRoot($rootDir, $urlDepth);
 
     // Boot up the framework's kernel.
 
-    $this->injector->execute ([KernelModule::class, 'register']);
+    $this->injector->execute([KernelModule::class, 'register']);
 
     // Boot up the framework's subsytems and the application's modules.
 
     /** @var KernelInterface $kernel */
-    $kernel = $this->injector->make (KernelInterface::class);
+    $kernel = $this->injector->make(KernelInterface::class);
 
     if ($onStartUp)
-      $onStartUp ($kernel);
+      $onStartUp($kernel);
 
     // Boot up all modules.
     try {
-      $kernel->boot ();
+      $kernel->boot();
     }
     catch (ConfigException $e) {
       $NL = "<br>\n";
-      echo $e->getMessage () . $NL . $NL;
+      echo $e->getMessage() . $NL . $NL;
 
-      if ($e->getCode () == -1)
+      if ($e->getCode() == -1)
         echo sprintf ('Possile error causes:%2$s%2$s- the class name may be misspelled,%2$s- the class may no longer exist,%2$s- module %1$s may be missing or it may be corrupted.%2$s%2$s',
           str_match ($e->getMessage (), '/from module (\S+)/')[1], $NL);
 
       $path = "$kernelSettings->storagePath/" . ModulesRegistry::REGISTRY_FILE;
-      if (file_exists ($path))
+      if (file_exists($path))
         echo "Tip: one possible solution is to remove the '$path' file and run 'workman' to rebuild the module registry.";
     }
 
-    return $kernel->getExitCode ();
+    return $kernel->getExitCode();
   }
 
 }

@@ -19,12 +19,12 @@ use Psr\Http\Message\ServerRequestInterface;
  * @param string $method
  * @return InjectableFunction
  */
-function handlerMethod ($class, $method)
+function handlerMethod($class, $method)
 {
   return injectableWrapper (function (InjectorInterface $injector) use ($class, $method) {
-    $o = $injector->make ($class);
+    $o = $injector->make($class);
     return _fn([$o, $method]);
-	});
+  });
 }
 
 /**
@@ -47,17 +47,17 @@ function handlerMethod ($class, $method)
  * @return \Electro\Interop\InjectableFunction
  * @throws Fault If an invalid data type is returned from the controller.
  */
-function controller ($ref)
+function controller($ref)
 {
   return injectableWrapper (function (InjectorInterface $injector) use ($ref) {
-    $ctrl = $injector->buildExecutable ($ref);
+    $ctrl = $injector->buildExecutable($ref);
     return autoResponse (function (ServerRequestInterface $request, ResponseInterface $response) use ($ctrl) {
-      $args = array_merge (
-        $request->getMethod () != 'GET' ? [$request->getParsedBody ()] : [],
-        array_values (Http::getRouteParameters ($request)),
+      $args = array_merge(
+        $request->getMethod() != 'GET' ? [$request->getParsedBody()] : [],
+        array_values(Http::getRouteParameters($request)),
         [$request, $response]
       );
-      return $ctrl (...$args);
+      return $ctrl(...$args);
     });
   });
 }
@@ -81,27 +81,27 @@ function controller ($ref)
  * @param callable $handler function ($request, $response, $next):mixed
  * @return InjectableFunction
  */
-function autoResponse (callable $handler)
+function autoResponse(callable $handler)
 {
   return nonMiddleware ($handler, function ($request, ResponseInterface $response, $result) {
     switch (true) {
       case $result instanceof ResponseInterface:
-      case is_callable ($result):
+      case is_callable($result):
         return $result;
         break;
-      case is_string ($result):
+      case is_string($result):
         break;
-      case is_null ($result):
+      case is_null($result):
         $result = '';
         break;
-      case is_array ($result):
-      case is_object ($result):
-      case is_scalar ($result):
-        return Http::jsonResponse ($response, $result);
+      case is_array($result):
+      case is_object($result):
+      case is_scalar($result):
+        return Http::jsonResponse($response, $result);
       default:
-        throw new Fault (Faults::INVALID_RESPONSE_TYPE);
+        throw new Fault(Faults::INVALID_RESPONSE_TYPE);
     }
-    return Http::response ($response, $result);
+    return Http::response($response, $result);
   });
 }
 
@@ -119,14 +119,14 @@ function autoResponse (callable $handler)
  * @param callable $consumer function ($request, $response, $value):ResponseInterface
  * @return InjectableFunction
  */
-function nonMiddleware (callable $fn, callable $consumer)
+function nonMiddleware(callable $fn, callable $consumer)
 {
-  return injectableHandler (
+  return injectableHandler(
     function (ServerRequestInterface $request, ResponseInterface $response, $next, InjectorInterface $injector)
     use ($fn, $consumer) {
       while ($fn instanceof InjectableFunction)
-        $fn = $injector->execute ($fn ());
-      return $consumer ($request, $response, $fn ($request, $response, $next));
+        $fn = $injector->execute($fn());
+      return $consumer($request, $response, $fn($request, $response, $next));
     });
 }
 
@@ -136,10 +136,10 @@ function nonMiddleware (callable $fn, callable $consumer)
  * @param callable[] ...$middleware
  * @return \Electro\Interop\InjectableFunction
  */
-function stack (...$middleware)
+function stack(...$middleware)
 {
   return injectableWrapper (function (MiddlewareStackInterface $stack) use ($middleware) {
-    return $stack->set ($middleware);
+    return $stack->set($middleware);
   });
 }
 
@@ -148,10 +148,10 @@ function stack (...$middleware)
  *
  * @return InjectableFunction
  */
-function navigationMiddleware ()
+function navigationMiddleware()
 {
   return injectableHandler (function ($request, $response, $next, NavigationInterface $navigation) {
-    $navigation->setRequest ($request);
+    $navigation->setRequest($request);
     return $next();
   });
 }
@@ -163,15 +163,15 @@ function navigationMiddleware ()
  * @param null   $actionHandler
  * @return \Electro\Interop\InjectableFunction
  */
-function page ($templateUrl, $actionHandler = null)
+function page($templateUrl, $actionHandler = null)
 {
-  return stack (
-    method ('GET', view ($templateUrl)),
-    $actionHandler ? method ('POST', $actionHandler) : null
+  return stack(
+    method('GET', view($templateUrl)),
+    $actionHandler ? method('POST', $actionHandler) : null
   );
 }
 
-function action ($map)
+function action($map)
 {
   return 0;
 }
@@ -184,10 +184,10 @@ function action ($map)
  * @param string $templateUrl
  * @return \Electro\Interop\InjectableFunction
  */
-function formPage ($templateUrl)
+function formPage($templateUrl)
 {
-  return page ($templateUrl, action ([
-    'submit' => stack (redirectUp ()),
+  return page($templateUrl, action([
+    'submit' => stack(redirectUp()),
   ]));
 }
 
@@ -203,10 +203,10 @@ function formPage ($templateUrl)
  *                       <p>308 - Permanent Redirect
  * @return Closure
  */
-function redirect ($url, $status = 302)
+function redirect($url, $status = 302)
 {
   return function ($request, $response) use ($url, $status) {
-    return Http::redirect ($response, $url, $status);
+    return Http::redirect($response, $url, $status);
   };
 }
 
@@ -216,11 +216,11 @@ function redirect ($url, $status = 302)
  * @param string $navigationId
  * @return InjectableFunction
  */
-function redirectTo ($navigationId)
+function redirectTo($navigationId)
 {
   return injectableHandler (function ($request, $response, $next, NavigationInterface $navigation) use ($navigationId) {
-    $navigation->setRequest ($request);
-    return Http::redirect ($response, $navigation[$navigationId]->absoluteUrl ());
+    $navigation->setRequest($request);
+    return Http::redirect($response, $navigation[$navigationId]->absoluteUrl());
   });
 }
 
@@ -229,11 +229,11 @@ function redirectTo ($navigationId)
  *
  * @return \Electro\Interop\InjectableFunction
  */
-function redirectUp ()
+function redirectUp()
 {
   return injectableHandler (function ($request, $response, $next, NavigationInterface $navigation) {
-    $navigation->setRequest ($request);
-    return Http::redirect ($response, $navigation->currentLink ()->parent ()->absoluteUrl ());
+    $navigation->setRequest($request);
+    return Http::redirect($response, $navigation->currentLink()->parent()->absoluteUrl());
   });
 }
 
@@ -242,10 +242,10 @@ function redirectUp ()
  *
  * @return Closure
  */
-function redirectToSelf ()
+function redirectToSelf()
 {
   return function (ServerRequestInterface $request, $response) {
-    return Http::redirect ($response, (string)$request->getUri ());
+    return Http::redirect($response, (string)$request->getUri());
   };
 }
 
@@ -257,14 +257,14 @@ function redirectToSelf ()
  * @param string $templateUrl
  * @return \Electro\Interop\InjectableFunction
  */
-function view ($templateUrl)
+function view($templateUrl)
 {
   return injectableHandler (function (ServerRequestInterface $request, $response, $next,
                                       ViewServiceInterface $viewService, InjectorInterface $injector)
   use ($templateUrl) {
-    $view      = $viewService->loadFromFile ($templateUrl);
-    $viewModel = initPageViewModel ($viewService->createViewModelFor ($view, true), $request);
-    return Http::response ($response, $view->render ($viewModel));
+    $view      = $viewService->loadFromFile($templateUrl);
+    $viewModel = initPageViewModel($viewService->createViewModelFor($view, true), $request);
+    return Http::response($response, $view->render($viewModel));
   });
 }
 
@@ -275,16 +275,17 @@ function view ($templateUrl)
  * @param ServerRequestInterface  $request
  * @return ViewModelInterface
  */
-function initPageViewModel (ViewModelInterface $viewModel = null, ServerRequestInterface $request)
+function initPageViewModel(ViewModelInterface $viewModel, ServerRequestInterface $request)
 {
-  if (isset($viewModel)) {
-    if (!is_object ($viewModel) || !($viewModel instanceof ViewModelInterface))
-      throw new RuntimeException(sprintf ("Invalid view model type: <kbd>%s</kbd>)", typeOf ($viewModel)));
-    $props              = get ($viewModel, 'props');
-    $params             = Http::getRouteParameters ($request);
-    $viewModel['props'] = $props ? array_merge ($props, $params) : $params;
-    $viewModel['fetch'] = $request->getAttribute ('isFetch');
-    $viewModel->init ();
+  if (isset($viewModel))
+  {
+    if (!is_object($viewModel) || !($viewModel instanceof ViewModelInterface))
+      throw new RuntimeException(sprintf("Invalid view model type: <kbd>%s</kbd>)", typeOf($viewModel)));
+    $props              = get($viewModel, 'props');
+    $params             = Http::getRouteParameters($request);
+    $viewModel['props'] = $props ? array_merge($props, $params) : $params;
+    $viewModel['fetch'] = $request->getAttribute('isFetch');
+    $viewModel->init();
   }
   return $viewModel;
 }
@@ -295,10 +296,10 @@ function initPageViewModel (ViewModelInterface $viewModel = null, ServerRequestI
  * @param callable $fn function (ViewModelInterface, ViewInterface)
  * @return Closure|InjectableFunction
  */
-function onCreateViewModel (callable $fn)
+function onCreateViewModel(callable $fn)
 {
   return injectableHandler (function ($req, $res, callable $next, ViewServiceInterface $viewService) use ($fn) {
-    $viewService->onCreateViewModel ($fn);
+    $viewService->onCreateViewModel($fn);
     return $next();
   });
 }
@@ -308,10 +309,10 @@ function onCreateViewModel (callable $fn)
  *
  * @return Closure
  */
-function forward ()
+function forward()
 {
   return function ($req, $res, $next) {
-    return $next ();
+    return $next();
   };
 }
 
@@ -322,16 +323,16 @@ function forward ()
  * @param callable $handler
  * @return Closure
  */
-function route ($url, callable $handler)
+function route($url, callable $handler)
 {
   $cache = null; // speeds up subsequent route() calls.
   return function (ServerRequestInterface $request, $response, $next) use ($url, $handler, &$cache) {
     return $url == ($cache
       ?: (
-        $cache = str_replace ($request->getAttribute ('appBaseUri') . '/', '', $request->getAttribute ('virtualUri'))
+        $cache = str_replace($request->getAttribute('appBaseUri') . '/', '', $request->getAttribute('virtualUri'))
       )
     )
-      ? $handler : $next ();
+      ? $handler : $next();
   };
 }
 
@@ -343,10 +344,10 @@ function route ($url, callable $handler)
  * @param callable $handler
  * @return Closure
  */
-function method ($method, callable $handler)
+function method($method, callable $handler)
 {
   return function (ServerRequestInterface $request, $response, $next) use ($method, $handler) {
-    return $request->getMethod () == $method ? $handler : $next ();
+    return $request->getMethod() == $method ? $handler : $next();
   };
 }
 
@@ -355,7 +356,7 @@ function method ($method, callable $handler)
  *
  * @return Closure
  */
-function back ()
+function back()
 {
   // Note: routing middleware will not provide any arguments to this function.
   return function ($req = null, $res = null) {
@@ -369,7 +370,7 @@ function back ()
  * @param string|callable $text The text to be returned.
  * @return Closure
  */
-function htmlResponse ($text)
+function htmlResponse($text)
 {
   return function ($request, $response) use ($text) { return Http::response ($response, $text); };
 }
@@ -385,9 +386,9 @@ function htmlResponse ($text)
  * @param callable $fn
  * @return \Electro\Interop\InjectableFunction
  */
-function injectableWrapper (callable $fn)
+function injectableWrapper(callable $fn)
 {
-  return new InjectableFunction ($fn);
+  return new InjectableFunction($fn);
 }
 
 /**
@@ -402,24 +403,24 @@ function injectableWrapper (callable $fn)
  * @param callable $fn
  * @return \Electro\Interop\InjectableFunction|\Closure
  */
-function injectableHandler (callable $fn)
+function injectableHandler(callable $fn)
 {
-  $ref = reflectionOfCallable ($fn);
+  $ref = reflectionOfCallable($fn);
   /** @var \ReflectionParameter[] $argsRef */
-  $argsRef = $ref->getParameters ();
-  if (count ($argsRef) < 4)
+  $argsRef = $ref->getParameters();
+  if (count($argsRef) < 4)
     return $fn;
-  $argsRef = array_slice ($argsRef, 3); // Discard $req, $res and $next
+  $argsRef = array_slice($argsRef, 3); // Discard $req, $res and $next
   return new InjectableFunction (function (InjectorInterface $injector) use ($argsRef, $fn) {
     $args = [];
     foreach ($argsRef as $ar) {
       $type = $ar->getType();
       if ($type)
-        $args[] = $injector->make ($type->getName ());
-      else throw new \InvalidArgumentException ("Untyped arguments are not supported for injectable handlers");
+        $args[] = $injector->make($type->getName());
+      else throw new \InvalidArgumentException("Untyped arguments are not supported for injectable handlers");
     }
     return function ($req, $res, $next) use ($args, $fn) {
-      return $fn ($req, $res, $next, ...$args);
+      return $fn($req, $res, $next, ...$args);
     };
   });
 }
@@ -428,42 +429,42 @@ function injectableHandler (callable $fn)
  * Outputs a formatted representation of the given arguments to the browser, clearing any existing output.
  * <p>This is useful for debugging.
  */
-function dump ()
+function dump()
 {
-  error_clear_last ();
-  if (!isCLI ())
+  error_clear_last();
+  if (!isCLI())
     echo "<pre>";
-  ob_start ();
-  call_user_func_array ('var_dump', func_get_args ());
-  $o = ob_get_clean ();
+  ob_start();
+  call_user_func_array('var_dump', func_get_args());
+  $o = ob_get_clean();
   // $o = str_replace ('[', '[', $o); // to prevent colision with color escape codes
-  $o = preg_replace ('/\{\s*\}/', '{}', $o); // condense empty arrays
-  $o = preg_replace ('/":".*?":(private|protected)/', color ('dark grey', ':$1'), $o); // condense empty arrays
+  $o = preg_replace('/\{\s*\}/', '{}', $o); // condense empty arrays
+  $o = preg_replace('/":".*?":(private|protected)/', color('dark grey', ':$1'), $o); // condense empty arrays
   // Applies formatting if XDEBUG is not installed
-  $SEP = color ('dark grey', '|');
+  $SEP = color('dark grey', '|');
   $o   = preg_replace_callback ('/^(\s*)\["?(.*?)"?\]=>\n\s*(\S+) *(\S)?/m', function ($m) use ($SEP) {
     $m[] = '';
-    list (, $space, $prop, $type, $next) = $m;
-    $z = explode ('(', $type, 2);
+    list(, $space, $prop, $type, $next) = $m;
+    $z = explode('(', $type, 2);
     if (count ($z) > 1) {
-      list ($type, $len) = $z;
-      $len  = color ('dark cyan', " ($len");
+      list($type, $len) = $z;
+      $len  = color('dark cyan', " ($len");
       $type = $type . $len;
     }
-    $num = ctype_digit ($prop[0]);
+    $num = ctype_digit($prop[0]);
     return $space . $SEP .
-           color ('dark yellow', str_pad ($prop, $num ? 4 : 28, ' ', $num ? STR_PAD_LEFT : STR_PAD_RIGHT)) .
-           " $SEP " . color ('dark green', str_pad ($type, 25, ' ')) . (strlen ($next) ? "$SEP $next" : '');
+      color('dark yellow', str_pad($prop, $num ? 4 : 28, ' ', $num ? STR_PAD_LEFT : STR_PAD_RIGHT)) .
+      " $SEP " . color('dark green', str_pad($type, 25, ' ')) . (strlen($next) ? "$SEP $next" : '');
   }, $o);
-  $o   = preg_replace ('/[\{\}§\]]/', color ('red', '$0'), $o);
-  $o   = str_replace ('"', color ('dark cyan', '"'), $o);
+  $o   = preg_replace('/[\{\}§\]]/', color('red', '$0'), $o);
+  $o   = str_replace('"', color('dark cyan', '"'), $o);
   $o   = preg_replace ('/^(\s*object)\((.*?)\)(.*?(?=\{))/m',
     '$1(' . color ('dark purple', '$2') . ')' . color ('dark cyan', '$3'), $o);
   $o   =
     preg_replace ('/^(\s*\w+)\((\d+)\)/m', str_pad (color ('dark green', '$1') . color ('dark cyan', ' ($2)'), 31, ' '),
       $o);
   echo $o;
-  if (!isCLI ())
+  if (!isCLI())
     echo "</pre>";
 }
 
@@ -471,14 +472,14 @@ function dump ()
  * Returns a textual representation of the given argument.
  * <p>This is useful for debugging.
  */
-function getDump ($value)
+function getDump($value)
 {
   $o = json_encode ($value,
     JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_PARTIAL_OUTPUT_ON_ERROR);
   // Unquote keys
-  $o = preg_replace ('/^(\s*)"([^"]+)": /m', '$1$2: ', $o);
+  $o = preg_replace('/^(\s*)"([^"]+)": /m', '$1$2: ', $o);
   // Compact arrays that have a single value
-  $o = preg_replace ('/(^|: )\[\s+(\S+)\s+]/', '$1[ $2 ]', $o);
+  $o = preg_replace('/(^|: )\[\s+(\S+)\s+]/', '$1[ $2 ]', $o);
   return $o;
 }
 
@@ -493,7 +494,7 @@ function getDump ($value)
  * @return void
  * @throws Exception
  */
-function trace ()
+function trace()
 {
-  PhpKit\WebConsole\DebugConsole\DebugConsole::trace ();
+  PhpKit\WebConsole\DebugConsole\DebugConsole::trace();
 }
