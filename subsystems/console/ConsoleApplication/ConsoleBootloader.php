@@ -153,7 +153,7 @@ class ConsoleBootloader implements BootloaderInterface
         color ('yellow', sprintf ('%s%s (%s)',
           isset($l['class']) ? $l['class'] . get($l, 'type', '::') : '',
           $l['function'],
-          implode (',', map ($l['args'], [__CLASS__, 'formatErrorArg']))
+          implode (',', map (isset($l['args'])?$l['args']:[], [__CLASS__, 'formatErrorArg']))
         )),
         get($l, 'file', 'an unknown location'),
         get($l, 'line')
