@@ -14,10 +14,12 @@ use ReflectionProperty;
 use Robo\Collection\CollectionBuilder;
 use Robo\Common\ConfigAwareTrait;
 use Robo\Config;
+use Robo\Contract\BuilderAwareInterface;
 use Robo\Result;
 use Robo\Robo;
 use Robo\Runner;
 use Electro\ConsoleApplication\Lib\TaskInfo;
+use Robo\Tasks;
 use Symfony\Component\Console\Application as SymfonyConsole;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
@@ -112,7 +114,7 @@ class ConsoleApplication
 		{
 			if (!class_exists($class))
 			{
-				$this->getOutput()->writeln("<error>Task class '$class' was not found</error>");
+				$this->io->getOutput()->writeln("<error>Task class '$class' was not found</error>");
 				exit(1);
 			}
 			$this->mergeTasks($this->console, $class);
@@ -289,13 +291,19 @@ class ConsoleApplication
 				// output capture.
 				//Config::setOutput($output);// Call to undefined method Robo\Config::setOutput()
 
-				$roboTasks = $this->injector->make($className);
-                                $builder = new CollectionBuilder($roboTasks);
-                                $builder->setConfig (Robo::config());
-                                $builder->setLogger ($this->injector->make ('logger'));
-                                $roboTasks->setBuilder ($builder);
-                                $roboTasks->setContainer($this->roboContainer);
-				$res = call_user_func_array([$roboTasks, $commandName], array_values($args)); // Cannot use positional argument after named argument
+        $roboTasks = $this->injector->make ($className);
+
+        // Avoid calling setBuilder() and setContainer() on every console command.
+        if ($roboTasks instanceof Tasks){
+          $builder   = new CollectionBuilder($roboTasks);
+          $builder->setConfig (Robo::config ());
+          $builder->setLogger ($this->injector->make ('logger'));
+          $roboTasks->setBuilder ($builder);
+          $roboTasks->setContainer ($this->roboContainer);
+        }
+
+        $res =
+          call_user_func_array ([$roboTasks, $commandName], array_values ($args)); // Cannot use positional argument after named argument
 
                                 // Restore the setting to the main output stream.
 				//Config::setOutput($this->io->getOutput());
