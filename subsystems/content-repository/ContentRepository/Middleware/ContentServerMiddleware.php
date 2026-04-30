@@ -2,6 +2,7 @@
 
 namespace Electro\ContentRepository\Middleware;
 
+
 use Electro\ContentRepository\Config\ContentRepositorySettings;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
@@ -51,13 +52,15 @@ class ContentServerMiddleware implements RequestHandlerInterface
       // If the request requests a resized image:
 
       if (isset($params['w']) || isset($params['h'])) {
+
         $cachedPath =
           $this->glideServer->makeImage ($url, $params); // Generates a new image ONLY if it isn't cached yet.
+        error_clear_last ();
         $cache      = $this->glideServer->getCache ();
         return $this->outputFile (
           $cache->readStream ($cachedPath),
-          $cache->getSize ($cachedPath),
-          $cache->getMimetype ($cachedPath)
+          $cache->fileSize ($cachedPath),
+          $cache->mimeType ($cachedPath)
         );
       }
 
@@ -67,8 +70,8 @@ class ContentServerMiddleware implements RequestHandlerInterface
         $source = $this->glideServer->getSource ();
         return $this->outputFile (
           $source->readStream ($url),
-          $source->getSize ($url),
-          $source->getMimetype ($url),
+          $source->fileSize ($url),
+          $source->mimeType ($url),
           isset($params['f']) ? "attachment; filename=\"{$params['f']}\"" : 'inline'
         );
       }
