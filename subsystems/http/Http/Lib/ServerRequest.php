@@ -4,6 +4,7 @@ namespace Electro\Http\Lib;
 
 use DOMDocument;
 use GuzzleHttp\Psr7\LazyOpenStream;
+use GuzzleHttp\Utils;
 use Psr\Http\Message\ServerRequestInterface;
 use RuntimeException;
 use function getallheaders;
@@ -46,12 +47,15 @@ class ServerRequest extends \GuzzleHttp\Psr7\ServerRequest
 
   public function getParsedBody ()
   {
+    $contentType = $this->getHeaderLine('Content-Type');
+    $mediaType = strtolower(trim(explode(';', $contentType, 2)[0]));
+
     if ($this->getMethod () != 'GET') {
       if ($body = parent::getParsedBody ())
         return $body;
-      switch ($this->getHeaderLine ('Content-Type')) {
+      switch ($mediaType) {
         case 'application/json':
-          return json_decode($this->getBody()->getContents());
+          return Utils::jsonDecode($this->getBody()->getContents());
 				case 'application/xml':
           $xml = new DOMDocument;
 					if (!$xml->loadXML ($this->getBody ()->getContents ()))
