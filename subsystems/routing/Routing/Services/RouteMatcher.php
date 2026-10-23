@@ -33,7 +33,7 @@ class RouteMatcher implements RouteMatcherInterface
     if ($path == '[empty-segment]') // remove marker
     {
       $path = '';
-      $request = $request->withRequestTarget ('');
+      //$request = $request->withRequestTarget ('');
     }
 
     // The asterisk matches any path.
@@ -57,7 +57,7 @@ class RouteMatcher implements RouteMatcherInterface
     $newPath = substr($path, $p, 2) == '/' ? '[empty-segment]' : substr ($path, $p + 1);
     if ($newPath === false)
       $newPath = '';
-    if ($path != $newPath)
+    if ($path != $newPath && $newPath != '')
       $request = $request->withRequestTarget ($newPath);
 
     foreach ($m2 as $k => $v)
