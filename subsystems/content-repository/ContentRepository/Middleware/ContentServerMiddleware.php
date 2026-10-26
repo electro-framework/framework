@@ -86,7 +86,7 @@ class ContentServerMiddleware implements RequestHandlerInterface
   {
     return $this->responseFactory->makeFromStream ($stream, 200, [
       'Content-Type'   => $mime,
-      'Content-Length' => $size,
+      'Content-Length' => strval($size),
       'Content-Disposition' => $contentDisposition,
       'Cache-Control'  => 'max-age=31536000, public',
       'Expires'        => date_create ('+1 years')->format ('D, d M Y H:i:s') . ' GMT',
