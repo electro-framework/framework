@@ -55,7 +55,7 @@ class ServerRequest extends \GuzzleHttp\Psr7\ServerRequest
         return $body;
       switch ($mediaType) {
         case 'application/json':
-          return Utils::jsonDecode($this->getBody()->getContents());
+          return \json_decode($this->getBody()->getContents());
 				case 'application/xml':
           $xml = new DOMDocument;
 					if (!$xml->loadXML ($this->getBody ()->getContents ()))
