@@ -72,7 +72,7 @@ class ContentRepositoryModule implements ModuleInterface
 
 		if ($kernel->getProfile() instanceof WebProfile)
 			$kernel->onConfigure(function (ApplicationMiddlewareInterface $middlewareStack) {
-				$middlewareStack->add(ContentServerMiddleware::class, null, 0);
+				$middlewareStack->add(ContentServerMiddleware::class, 'content', 'trans');
 			});
 	}
 
