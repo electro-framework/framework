@@ -361,7 +361,11 @@ abstract class BaseRouter implements RouterInterface
   protected function iteration_stepMatchMiddleware ($key, $routable, ServerRequestInterface $request,
                                                     ResponseInterface $response, callable $nextIteration)
   {
-    return $this->route ($routable, $request, $response, $nextIteration);
+    $res = $this->route ($routable, $request, $response, $nextIteration);
+    // A nested iterable used as middleware that finds no route must let the outer iteration continue.
+    if ($res === null && !is_callable ($routable))
+      return $nextIteration ($request, $response);
+    return $res;
   }
 
   /**
