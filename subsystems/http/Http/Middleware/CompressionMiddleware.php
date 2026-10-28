@@ -56,7 +56,7 @@ class CompressionMiddleware implements RequestHandlerInterface
             $out = $uncompressed;
           return $response
             ->withHeader ('Content-Encoding', 'gzip')
-            ->withHeader ('Content-Length', strlen ($out))
+            ->withHeader ('Content-Length', strval(strlen ($out)))
             ->withBody ($this->responseFactory->makeBodyStream ($out));
         }
       }
