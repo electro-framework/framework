@@ -65,8 +65,10 @@ class Navigation implements NavigationInterface
       'All URLs<sup>*</sup><br>' .
       '<i>(in scanning order)</i>' => map ($this->rootLink->getDescendants (),
         function (NavigationLinkInterface $link, &$i) {
-          $i = $link->rawUrl ();
-          return $link->url ();
+          $url = $link->url ();
+		  $raw = $link->rawUrl ();
+		  $i   = is_string ($raw) ? $raw : $url; // the key must never be a Closure
+		  return $url;
         }),
       'Trail<sup>*</sup>'          => map ($this->getCurrentTrail (), $linkToUrl),
       'Visible trail<sup>*</sup>'  => map ($this->getVisibleTrail (), $linkToUrl),
