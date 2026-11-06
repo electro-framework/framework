@@ -15,9 +15,11 @@
   ],
   "require": {
     "electro/kernel": "dev-latest",
+    "aws/aws-sdk-php": "^3.402",
     "consolidation/robo": "*",
     "guzzlehttp/guzzle": "*",
     "hansott/psr7-cookies": "*",
+    "league/flysystem-aws-s3-v3": "^3.35",
     "league/glide": "*",
     "monolog/monolog": "^2.5",
     "php-kit/ext-pdo": "dev-latest",
