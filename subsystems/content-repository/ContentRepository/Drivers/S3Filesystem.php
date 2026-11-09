@@ -4,7 +4,7 @@ namespace Electro\ContentRepository\Drivers;
 
 use Aws\S3\S3Client;
 use Electro\ContentRepository\Config\S3Settings;
-use League\Flysystem\AwsS3v3\AwsS3Adapter;
+use League\Flysystem\AwsS3V3\AwsS3V3Adapter;
 use League\Flysystem\Filesystem;
 
 /**
@@ -23,7 +23,7 @@ class S3Filesystem extends Filesystem
       'version'     => '2006-03-01',
     ]);
 
-    $adapter = new AwsS3Adapter ($client, $settings->bucket);
+    $adapter = new AwsS3V3Adapter ($client, $settings->bucket);
     parent::__construct ($adapter);
   }
 

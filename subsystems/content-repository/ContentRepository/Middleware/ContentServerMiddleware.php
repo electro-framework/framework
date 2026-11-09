@@ -6,6 +6,7 @@ namespace Electro\ContentRepository\Middleware;
 use Electro\ContentRepository\Config\ContentRepositorySettings;
 use Electro\Interfaces\Http\RequestHandlerInterface;
 use Electro\Interfaces\Http\ResponseFactoryInterface;
+use League\Flysystem\FilesystemException;
 use League\Glide\Filesystem\FileNotFoundException;
 use League\Glide\Server;
 use Psr\Http\Message\ResponseInterface;
@@ -76,7 +77,7 @@ class ContentServerMiddleware implements RequestHandlerInterface
         );
       }
     }
-    catch (FileNotFoundException $e)
+    catch (FileNotFoundException|FilesystemException $e)
     {}
 
     return $this->responseFactory->make (404, "Not found: $url", 'text/plain');

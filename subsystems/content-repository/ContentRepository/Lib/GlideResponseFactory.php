@@ -36,6 +36,6 @@ class GlideResponseFactory extends PsrResponseFactory
     {
       return $factory->makeBodyStream('', $stream);
     };
-    parent::create($cache, $path);
+    return parent::create($cache, $path);
   }
 }

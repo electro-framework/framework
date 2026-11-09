@@ -4,8 +4,7 @@ namespace Electro\ContentRepository\Services;
 
 use Electro\ContentRepository\Lib\FileUtil;
 use Electro\Interfaces\ContentRepositoryInterface;
-use League\Flysystem\FileNotFoundException;
-use League\Flysystem\UnreadableFileException;
+use League\Flysystem\FilesystemException;
 use League\Glide\Server;
 use League\Glide\Urls\UrlBuilder;
 use Psr\Http\Message\UploadedFileInterface;
@@ -36,10 +35,7 @@ class ContentRepository implements ContentRepositoryInterface
     try {
       $source->delete ($virtualPath);
     }
-    catch (FileNotFoundException $e) {
-      $this->logger->warning ($e->getMessage ());
-    }
-    catch (UnreadableFileException $e) {
+    catch (FilesystemException $e) {
       $this->logger->warning ($e->getMessage ());
     }
 
@@ -47,10 +43,7 @@ class ContentRepository implements ContentRepositoryInterface
     try {
       $this->server->deleteCache ($virtualPath);
     }
-    catch (FileNotFoundException $e) {
-      $this->logger->warning ($e->getMessage ());
-    }
-    catch (UnreadableFileException $e) {
+    catch (FilesystemException $e) {
       $this->logger->warning ($e->getMessage ());
     }
 
@@ -58,18 +51,18 @@ class ContentRepository implements ContentRepositoryInterface
 
     $dir = $virtualPath;
     while ($dir = dirnameEx ($dir)) {
-      $list = $source->listContents ($dir);
-      if ($list && (count ($list) > 1 || $list[0]['basename'][0] != '.')) // Ignore single hidden file (ex: .DS_Store)
+      $list = $source->listContents ($dir)->toArray ();
+      if ($list && (count ($list) > 1 || basename ($list[0]->path ())[0] != '.')) // Ignore single hidden file (ex: .DS_Store)
         break;
-      else $source->deleteDir ($dir);
+      else $source->deleteDirectory ($dir);
     }
 
     $dir = $virtualPath;
     while ($dir = dirnameEx ($dir)) {
-      $list = $cache->listContents ($dir);
-      if ($list && (count ($list) > 1 || $list[0]['basename'][0] != '.')) // Ignore single hidden file (ex: .DS_Store)
+      $list = $cache->listContents ($dir)->toArray ();
+      if ($list && (count ($list) > 1 || basename ($list[0]->path ())[0] != '.')) // Ignore single hidden file (ex: .DS_Store)
         break;
-      else $cache->deleteDir ($dir);
+      else $cache->deleteDirectory ($dir);
     }
   }
 
