@@ -108,6 +108,8 @@ class Locale
    */
   static function normalize($name)
   {
+    if($name == null)
+      return $name;
     return strlen($name) == 2 ? get(self::$DEFAULTS, $name) : $name;
   }
 
